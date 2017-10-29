@@ -1,6 +1,6 @@
 defmodule Scenic.Utilities.EnumTest do
   use ExUnit.Case, async: true
-  doctest Exui
+  doctest Scenic
 
   @test_list  [0, 1, 2, 3, 4, 5, 6]
   @test_map   %{a: 0, b: 1, c: 2, d: 3, e: 4, f: 5, g: 6}

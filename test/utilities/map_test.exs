@@ -1,6 +1,6 @@
 defmodule Scenic.Utilities.MapTest do
   use ExUnit.Case, async: true
-  doctest Exui
+  doctest Scenic
 
   @map_1      %{a: 1, b: 2, c: 3, d: 4}
   @map_2      %{a: 1, c: 3, d: 14, f: 15}

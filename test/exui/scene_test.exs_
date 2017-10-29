@@ -11,7 +11,7 @@ end
 #==============================================================================
 defmodule Scenic.SceneTest do
   use ExUnit.Case
-  doctest Exui
+  doctest Scenic
 
   alias Scenic.Scene
   alias Scenic.Scene.GraphM

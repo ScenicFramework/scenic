@@ -5,7 +5,7 @@
 
 defmodule Scenic.Primitive.TransformTest do
   use ExUnit.Case, async: true
-  doctest Exui
+  doctest Scenic
 
 #  import IEx
 

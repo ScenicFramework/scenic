@@ -5,7 +5,7 @@
 
 defmodule Scenic.Primitive.StyleTest do
   use ExUnit.Case, async: true
-  doctest Exui
+  doctest Scenic
 
   alias Scenic.Primitive.Style
 

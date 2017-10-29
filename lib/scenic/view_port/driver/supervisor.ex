@@ -8,7 +8,7 @@ defmodule Scenic.ViewPort.Driver.Supervisor do
 
   @name       :vp_drivers
 
-#  import IEx
+  import IEx
 
   #============================================================================
   # setup the viewport supervisor - start with no drivers
@@ -18,8 +18,9 @@ defmodule Scenic.ViewPort.Driver.Supervisor do
   end
 
   def init( :ok ) do
+pry()
     # get the requested default drivers from the config
-    children = case Application.get_env(:scenic, Exui)[:view_ports] do
+    children = case Application.get_env(:scenic, Scenic)[:view_ports] do
       nil -> []
       view_ports -> view_ports
     end

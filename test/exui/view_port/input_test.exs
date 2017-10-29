@@ -7,7 +7,7 @@
 
 defmodule Scenic.ViewPort.InputTest do
   use ExUnit.Case, async: true
-  doctest Exui
+  doctest Scenic
 
   alias Scenic.ViewPort.Context
   alias Scenic.ViewPort.Input

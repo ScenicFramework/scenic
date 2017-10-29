@@ -5,7 +5,7 @@
 
 defmodule Scenic.Primitive.QuadTest do
   use ExUnit.Case, async: true
-  doctest Exui
+  doctest Scenic
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Quad

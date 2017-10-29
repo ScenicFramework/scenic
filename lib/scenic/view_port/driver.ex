@@ -3,7 +3,7 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-# each platform-specific version of exui_platform must implement
+# each platform-specific version of scenic_platform must implement
 # a complient version of Scenic.ViewPort. There won't be any conflics
 # as by definition, there should be only one platform adapter in the
 # deps of any one build-type of a project.

@@ -5,7 +5,7 @@
 
 defmodule Scenic.GraphTest do
   use ExUnit.Case, async: true
-  doctest Exui
+  doctest Scenic
 
   alias Scenic.Graph
   alias Scenic.Primitive
