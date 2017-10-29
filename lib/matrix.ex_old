@@ -9,7 +9,7 @@
 # will actually go out to optimized hardware instructions that expect binary data in
 # this form. So it is much easier if we start that way.
 
-# Additionally, the exui renderer will be much faster it it can stream the data to the GPU
+# Additionally, the scenic renderer will be much faster it it can stream the data to the GPU
 # as is, instead of converting to binary every frame. In other words, if you want to manipulate
 # the transforms yourself, use the Matrix.Utils functions, but store the data in binary format.
 # in this way, we pay the transform to binary cost up front, instead of repeatedly at

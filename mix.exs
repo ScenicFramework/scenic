@@ -1,4 +1,4 @@
-defmodule ExuiMath.Mixfile do
+defmodule ScenicMath.Mixfile do
   use Mix.Project
 
   def project do
