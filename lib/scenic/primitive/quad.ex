@@ -5,6 +5,7 @@
 
 defmodule Scenic.Primitive.Quad do
   use Scenic.Primitive
+  alias Scenic.Math
 
 #  alias Scenic.Primitive
 #  alias Scenic.Primitive.Style
@@ -98,6 +99,25 @@ defmodule Scenic.Primitive.Quad do
       round( (x0 + x1 + x2 + x3) / 4 ),
       round( (y0 + y1 + y2 + y3) / 4 ),
     }
+  end
+
+
+  #------------------------------------
+  def expand({p0, p1, p2, p3}, width) do
+    # find the new parallel lines
+    l01 = Math.Line.parallel( {p0, p1}, width )
+    l12 = Math.Line.parallel( {p1, p2}, width )
+    l23 = Math.Line.parallel( {p2, p3}, width )
+    l30 = Math.Line.parallel( {p3, p0}, width )
+
+    # calc the new poins from the intersections of the lines
+    p0 = Math.Line.intersection( l30, l01 )
+    p1 = Math.Line.intersection( l01, l12 )
+    p2 = Math.Line.intersection( l12, l23 )
+    p3 = Math.Line.intersection( l23, l30 )
+
+    # return the expanded quad
+    {p0, p1, p2, p3}
   end
 
 end
