@@ -10,7 +10,7 @@ defmodule Scenic.Primitive.Quad do
 #  alias Scenic.Primitive.Style
 
 
-  @styles   [:hidden, :color]
+  @styles   [:hidden, :color, :border_color, :border_width]
 
 
   #============================================================================
