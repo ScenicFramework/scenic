@@ -17,11 +17,11 @@ defmodule Scenic.Primitive.Text do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Text data must be a point and a bitstring. Like this: {{x0,y0}, a_string}"
+  def info(), do: "Text data must be a point and a bitstring. Like this: {{x,y}, a_string}"
 
   #--------------------------------------------------------
-  def verify( {{x0, y0}, text} ) when
-    is_number(x0) and is_number(y0) and is_bitstring(text), do: true
+  def verify( {{x, y}, text} ) when
+    is_number(x) and is_number(y) and is_bitstring(text), do: true
   def verify( _ ), do: false
 
   #--------------------------------------------------------
@@ -78,8 +78,8 @@ defmodule Scenic.Primitive.Text do
 
   #--------------------------------------------------------
   def default_pin( data )
-  def default_pin( {{x0, y0}, _} ) do
-    {x0, y0}
+  def default_pin( {{x, y}, _} ) do
+    {x, y}
   end
 
 end

@@ -1102,7 +1102,7 @@ defmodule Scenic.Graph do
   # get the primitive map as a list of minimal primitives - used to send the actual
   # drawable primitives to the viewport
 
-  def minimal( %Graph{primitive_map: p_map} = g ) do
+  def minimal( %Graph{primitive_map: p_map} ) do
     Enum.map(p_map, fn({k,p})-> { k, Primitive.minimal(p) } end)
   end
 
