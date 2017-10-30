@@ -8,7 +8,7 @@ defmodule Scenic.ViewPort do
   alias Scenic.Graph
 
 
-#  import IEx
+  import IEx
 
   @name                 :view_port
 
@@ -48,6 +48,11 @@ defmodule Scenic.ViewPort do
     end
   end
 
+  #--------------------------------------------------------
+  def driver_message( message, view_port_id \\ :view_port ) do
+    GenServer.cast( view_port_id, {:driver_message, message} )
+  end
+
   #============================================================================
   # setup the viewport
 
@@ -57,11 +62,13 @@ defmodule Scenic.ViewPort do
 
   def init( supervisor ) do
     init_context_tracking()
+    {:ok, _} = Registry.register(:viewport_registry, :client_message, {__MODULE__, :driver_message} )
     {:ok, %{supervisor: supervisor}}
   end
 
   #============================================================================
   # internal support
+
   #--------------------------------------------------------
   def handle_cast( {:set_scene, scene_id}, state ) when is_pid(scene_id) or is_atom(scene_id) do
 
@@ -78,6 +85,13 @@ defmodule Scenic.ViewPort do
     {:noreply, Map.put(state, :scene, scene_id)}
   end
 
+
+  #--------------------------------------------------------
+  def handle_cast( {:driver_message, msg}, state ) do
+IO.inspect(msg)
+    # save the scene and return
+    {:noreply, state}
+  end
 
   #============================================================================
   # use an ets table to prevent two scenes from trying to update the viewport at
