@@ -88,7 +88,7 @@ defmodule Scenic.Primitive do
       end
 
       # the default behaviour is to do nothing
-      # this is the case for groups and lines
+      # this is the case for groups, lines, and polygons
       def expand( data ), do: data
 
       #--------------------------------------------------------
