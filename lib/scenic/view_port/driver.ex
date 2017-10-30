@@ -59,7 +59,11 @@ defmodule Scenic.ViewPort.Driver do
   
   #----------------------------------------------
   def set_graph( list ),    do: dispatch( :set_graph, list )
-  def update_graph( list ), do: dispatch( :update_graph, list )
+
+  def update_graph( [] ), do: :ok
+  def update_graph( list ) do
+    dispatch( :update_graph, list )
+  end
 
   #----------------------------------------------
   defp dispatch( action, data ) do

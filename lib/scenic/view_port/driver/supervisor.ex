@@ -19,7 +19,7 @@ defmodule Scenic.ViewPort.Driver.Supervisor do
 
   def init( :ok ) do
     # get the requested default drivers from the config
-    children = case Application.get_env(:scenic, Scenic)[:view_ports] do
+    children = case Application.get_env(:scenic, Scenic)[:drivers] do
       nil -> []
       view_ports -> view_ports
     end
