@@ -21,8 +21,8 @@ defmodule Scenic.Primitive.Sector do
 
   #--------------------------------------------------------
   def verify( {{x, y}, start, finish, radius} ) when
-    is_number(x0) and is_number(y0) and
-    is_number(start) and is_number(start) and is_number(radius), do: true
+    is_number(x) and is_number(y) and is_number(start) and
+    is_number(finish) and is_number(radius), do: true
   def verify( _ ), do: false
 
   #--------------------------------------------------------
