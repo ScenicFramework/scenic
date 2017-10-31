@@ -20,11 +20,11 @@ defmodule Scenic.Scene do
   @callback init( any ) :: {:ok, any}
   @callback init_graph(any) :: {:ok, map, any}
 
-#  @default_heartbeat        16
-#  @default_heartbeat        32
-#  @default_heartbeat        64
-  @default_heartbeat        250
-#  @default_heartbeat        1300
+#  @half_heartbeat_ms        16
+#  @half_heartbeat_ms        32
+#  @half_heartbeat_ms        64
+  @half_heartbeat_ms        250
+#  @half_heartbeat_ms        500
 
 
   #===========================================================================
@@ -122,7 +122,7 @@ defmodule Scenic.Scene do
       graph:              graph,
       vp_context:         nil,
       heart_timer:        nil,
-      last_heart:         nil
+      last_sync:          nil
     }
 
     {:ok, state}
@@ -188,9 +188,10 @@ defmodule Scenic.Scene do
     |> Map.put(:graph, graph)
     |> Map.put(:vp_context, context)
     |> Map.put(:scene_state, scene_state)
+    |> Map.put(:last_sync, :os.system_time(:millisecond))
 
     # reset the viewport with this scene's graph
-    Kernel.apply(ViewPort, :set_graph, [context, graph])
+    ViewPort.set_graph(context, graph)
 
     # return the transformed state
     {:noreply, state}
@@ -210,6 +211,21 @@ defmodule Scenic.Scene do
     |> Map.put(:graph, graph)
     |> Map.put(:scene_state, scene_state)
     {:noreply, state}
+  end
+
+  #--------------------------------------------------------
+  # a graphic driver is requesting an update
+  def handle_cast(:update_driver, state) do
+    { :noreply, do_sync( state ) }
+  end
+
+  #--------------------------------------------------------
+  # a graphic driver is requesting a full graph reset
+  def handle_cast(:reset_driver, %{ vp_context: context, graph: graph } = state) do
+    # reset the viewport with this scene's graph
+    ViewPort.set_graph(context, graph)
+    state = Map.put( state, :last_sync, :os.system_time(:millisecond) )
+    { :noreply, state }
   end
 
 
@@ -235,20 +251,14 @@ defmodule Scenic.Scene do
 
   #--------------------------------------------------------
   # this message is the scene's heartbeat telling it to tick any animations and update the view_port
-  def handle_info(:heartbeat, %{ graph: graph, vp_context: context } = state) do
-    # tick any recurring actions
-    graph = Graph.tick_recurring_actions( graph )
-
-    # send the graph to the view_port
-    state = case ViewPort.update_graph( context, graph ) do
-      :ok ->            state
-      :context_lost ->  stop_heartbeat( state )
+  def handle_info(:heartbeat, %{ graph: graph, vp_context: context, last_sync: last_sync } = state) do
+    time = :os.system_time(:millisecond)
+    state = cond do
+      last_sync == nil                          -> do_sync(state)
+      (time - last_sync) >= @half_heartbeat_ms  -> do_sync(state)
+      true                                      -> state
     end
-
-    # reset the deltas
-    graph = Graph.reset_deltas( graph )
-
-    {:noreply, Map.put(state, :graph, graph) }
+    {:noreply, state }
   end
 
 
@@ -275,7 +285,7 @@ defmodule Scenic.Scene do
   # heartbeat helpers
 
   defp start_heartbeat( %{heart_timer: nil} = state ) do
-    {:ok, tref} = :timer.send_interval(@default_heartbeat, :heartbeat)
+    {:ok, tref} = :timer.send_interval(@half_heartbeat_ms + @half_heartbeat_ms, :heartbeat)
     Map.put(state, :heart_timer, tref)
   end
   defp start_heartbeat( state ), do: state
@@ -287,6 +297,25 @@ defmodule Scenic.Scene do
     Map.put(state, :heart_timer, nil)
   end
 
+  #------------------------------------
+  def do_sync( %{vp_context: context, graph: graph} = state ) do
+    # tick any recurring actions
+    graph = Graph.tick_recurring_actions( graph )
+
+    # send the graph to the view_port
+    state = case ViewPort.update_graph( context, graph ) do
+      :ok ->            state
+      :context_lost ->  stop_heartbeat( state )
+    end
+
+    # reset the deltas
+    graph = Graph.reset_deltas( graph )
+
+    # update and return the state
+    state
+    |> Map.put( :graph, graph )
+    |> Map.put( :last_sync, :os.system_time(:millisecond) )
+  end
 
 
 end
