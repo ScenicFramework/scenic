@@ -87,6 +87,12 @@ defmodule Scenic.ViewPort do
 
 
   #--------------------------------------------------------
+  def handle_cast( {:driver_message, :sync}, %{scene: scene_id} = state ) do
+    GenServer.cast( scene_id, :sync )
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
   def handle_cast( {:driver_message, msg}, state ) do
 IO.inspect(msg)
     # save the scene and return
