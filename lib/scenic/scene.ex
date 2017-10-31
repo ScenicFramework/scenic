@@ -237,16 +237,9 @@ defmodule Scenic.Scene do
     { :noreply, state }
   end
 
-  def handle_cast(_,state) do
-    pry()
-    { :noreply, state }
-  end
-
-
   #--------------------------------------------------------
   # generic cast. give the scene a chance to handle it
   def handle_cast(msg, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-    pry()
     {:noreply, graph, scene_state} = mod.handle_cast(msg, graph, scene_state)
     state = state
     |> Map.put(:graph, graph)
