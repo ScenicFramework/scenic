@@ -120,5 +120,19 @@ defmodule Scenic.Primitive.RoundedRectangle do
     }
   end
 
+  #--------------------------------------------------------
+  def expand( { {x,y}, w, h, r }, width ) do
+    smaller = cond do
+      w < h -> w
+      true -> h
+    end
+    {
+      {x - width, y - width},
+      w + width + width,
+      h + width + width,
+      # radius of the border should be proportionally larger
+      round((r / smaller) * (smaller + width + width))
+    }
+  end
 
 end

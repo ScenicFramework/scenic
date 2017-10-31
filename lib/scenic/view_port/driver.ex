@@ -14,6 +14,16 @@ defmodule Scenic.ViewPort.Driver do
 
   @callback set_graph(list, pid) :: atom
   @callback update_graph(list, pid) :: atom
+  @callback driver_cast(any, pid) :: atom
+
+
+  #===========================================================================
+  # generic apis for sending a message to the drivers
+
+  #--------------------------------------------------------
+  def cast( message ) do
+    dispatch( :driver_cast, message )
+  end
 
   #===========================================================================
   # the using macro for scenes adopting this behavioiur
@@ -21,6 +31,25 @@ defmodule Scenic.ViewPort.Driver do
     quote do
       use GenServer
       @behaviour Scenic.ViewPort.Driver
+
+
+      def send_client_message( message ),
+        do: Scenic.ViewPort.Driver.send_client_message( message )
+        
+      def driver_cast( message, pid ) do
+        GenServer.cast( pid, {:driver_cast, message})
+      end
+
+      def handle_cast({:driver_cast, :identify}, state) do
+        send_client_message( {:driver_identify, __MODULE__, self()} )
+        {:noreply, state}
+      end
+
+      #--------------------------------------------------------
+      defoverridable [
+        handle_cast:            2,
+      ]
+
     end # quote
   end # defmacro
 
@@ -30,7 +59,10 @@ defmodule Scenic.ViewPort.Driver do
   
   #----------------------------------------------
   def set_graph( list ),    do: dispatch( :set_graph, list )
-  def update_graph( list ), do: dispatch( :update_graph, list )
+
+  def update_graph( list ) do
+    dispatch( :update_graph, list )
+  end
 
   #----------------------------------------------
   defp dispatch( action, data ) do
@@ -49,6 +81,9 @@ defmodule Scenic.ViewPort.Driver do
     :ok
   end
 
+
+  #----------------------------------------------
+  def send_client_message( message ), do: dispatch( :client_message, message )
 
 end
 

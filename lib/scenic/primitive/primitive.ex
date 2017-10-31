@@ -25,6 +25,7 @@ defmodule Scenic.Primitive do
   @callback deserialize( binary, atom ) :: any
 
   @callback default_pin( any ) :: {integer, integer}
+  @callback expand( any ) :: any
 
 
 
@@ -86,11 +87,16 @@ defmodule Scenic.Primitive do
         end)
       end
 
+      # the default behaviour is to do nothing
+      # this is the case for groups, lines, and polygons
+      def expand( data ), do: data
+
       #--------------------------------------------------------
       defoverridable [
         build:          2,
         add_to_graph:   3,
-        filter_styles:  1
+        filter_styles:  1,
+        expand:         1
       ]
     end # quote
   end # defmacro
