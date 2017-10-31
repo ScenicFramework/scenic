@@ -17,12 +17,12 @@ defmodule Scenic.ViewPort.Driver do
 
   import IEx
 
-  @callback set_graph(list, pid) :: atom
-  @callback update_graph(list, pid) :: atom
+#  @callback set_graph(list, pid) :: atom
+#  @callback update_graph(list, pid) :: atom
 #  @callback driver_cast(any, pid) :: atom
 
-#  @callback handle_set_graph( map ) :: {:noreply, map}
-#  @callback handle_update_graph( map ) :: {:noreply, map}
+  @callback handle_set_graph( list, map ) :: {:noreply, map}
+  @callback handle_update_graph( list, map ) :: {:noreply, map}
   @callback handle_sync( map ) :: {:noreply, map}
 
 
@@ -30,10 +30,6 @@ defmodule Scenic.ViewPort.Driver do
 
   #===========================================================================
   # generic apis for sending a message to the drivers
-  #--------------------------------------------------------
-#  def cast( message ) do
-#    dispatch( :driver_cast, message )
-#  end
 
   #----------------------------------------------
   def set_graph( list ),    do: dispatch( :set_graph, list )
@@ -71,19 +67,7 @@ defmodule Scenic.ViewPort.Driver do
 
       def sync_interval(),  do: unquote(use_opts[:sync_interval])
 
-
       def handle_sync( state ),         do: { :noreply, state }
-
-
-#      def driver_cast( message, pid ) do
-#        GenServer.cast( pid, {:driver_cast, message})
-#      end
-
-#      def handle_cast({:driver_cast, :identify}, state) do
-#        ViewPort.Driver.send_client_message( {:driver_identify, __MODULE__, self()} )
-#        {:noreply, state}
-#      end
-
 
       # simple, do-nothing default handlers
       def handle_call(msg, from, state),  do: { :noreply, state }
@@ -168,8 +152,14 @@ defmodule Scenic.ViewPort.Driver do
   #--------------------------------------------------------
   # update the graph
   def handle_cast({:update_graph, deltas}, %{driver_module: mod, driver_state: d_state} = state) do
-    { :noreply, d_state } = mod.handle_update_graph( deltas, d_state )
-
+    # don't call handle_update_graph if the list is empty
+    d_state = case deltas do
+      []      -> d_state
+      deltas  ->
+        { :noreply, d_state } = mod.handle_update_graph( deltas, d_state )
+        d_state
+    end
+    
     state = state
     |> Map.put( :driver_state, d_state )
     |> Map.put( :last_msg, :os.system_time(:millisecond) )
