@@ -1,0 +1,325 @@
+
+defmodule Scenic.SceneTest.Scene do
+  use Scenic.Scene
+
+  def initialize( state, _opts ) do
+    {:ok, Map.put(state, :test_was_here, true) }
+  end
+end
+
+
+#==============================================================================
+defmodule Scenic.SceneTest do
+  use ExUnit.Case
+  doctest Scenic
+
+  alias Scenic.Scene
+  alias Scenic.Scene.GraphM
+
+#  import IEx
+
+  @scene_name   :test_scene
+
+  @recurring_mods_key    :recurring_mods
+
+  @graph_count GraphM.build( fn(gp) ->
+    Scenic.ElementM.Div.add( gp, id: :one, data: 1 )
+    |> Scenic.ElementM.Div.add( id: :two, data: 2 )
+    |> Scenic.ElementM.Div.add( id: :three, data: 3, builder: fn(gp)->
+      Scenic.ElementM.Div.add( gp, id: :four, data: 4 )
+    end)
+    |> Scenic.ElementM.Div.add( id: :two, data: 2 )
+  end)
+
+
+
+  @state %{private: %{
+    graph:                    @graph_count,
+    recurring_mods:           %{},
+    profile:                  %{}
+  }}
+  
+
+
+  #============================================================================
+  # do_init(module, {start_opts, use_opts})
+
+  test "do_init sets the scene name from use_opts" do
+    {:ok, state} = Scene.do_init(Scenic.SceneTest.Scene, {[],[name: @scene_name]})
+    assert Scene.get_private(state, :scene_name) == @scene_name
+  end
+
+  test "do_init sets the scene name from start_opts" do
+    {:ok, state} = Scene.do_init(Scenic.SceneTest.Scene, {[name: @scene_name],[]})
+    assert Scene.get_private(state, :scene_name) == @scene_name
+  end
+
+  test "do_init preferres the scene name from start_opts" do
+    {:ok, state} = Scene.do_init(Scenic.SceneTest.Scene, {[name: :start_name],[name: @scene_name]})
+    assert Scene.get_private(state, :scene_name) == :start_name
+  end
+
+  test "do_init sets up the graph" do
+    {:ok, state} = Scene.do_init(Scenic.SceneTest.Scene, {[],[name: @scene_name]})
+    assert Scene.get_private(state, :graph) == nil
+  end
+
+  test "do_init sets up the profile" do
+    {:ok, state} = Scene.do_init(Scenic.SceneTest.Scene, {[],[name: @scene_name]})
+    assert Scene.get_private(state, :profile) == %{}
+  end
+
+  test "do_init sets the timer as requestedf from use_opts" do
+    {:ok, state} = Scene.do_init(Scenic.SceneTest.Scene, {[],[name: @scene_name, update_timer: 10000]})
+    assert Scene.get_private(state, :update_timer) == 10000
+    {_offset, _tref} = Scene.get_private(state, :update_timer_tref)
+  end
+
+  test "do_init sets the timer as requested from start_opts" do
+    {:ok, state} = Scene.do_init(Scenic.SceneTest.Scene, {[update_timer: 20000],[name: @scene_name, update_timer: 10000]})
+    assert Scene.get_private(state, :update_timer) == 20000
+    {_offset, _tref} = Scene.get_private(state, :update_timer_tref)
+  end
+
+  test "do_init calls the scene's intialize to finish up" do
+    {:ok, state} = Scene.do_init(Scenic.SceneTest.Scene, {[],[name: @scene_name]})
+    assert state[:test_was_here] == true
+  end
+
+
+  #============================================================================
+  # get_private(state, key, default \\ nil)
+  test "get_private gets keyed value from private sub map in state" do
+    assert Scene.get_private(%{private: %{test: 1}}, :test) == 1
+  end
+
+  test "get_private returns nil if private missing" do
+    assert Scene.get_private(%{}, :missing) == nil
+  end
+
+  test "get_private returns nil if key missing" do
+    assert Scene.get_private(%{private: %{}}, :missing) == nil
+  end
+
+  test "get_private returns passed in default if key missing" do
+    assert Scene.get_private(%{}, :missing, 0) == 0
+    assert Scene.get_private(%{private: %{}}, :missing, 0) == 0
+  end
+
+  #============================================================================
+  # put_private(state, key, value)
+  test "put_private sets a new value into exising private sub-map" do
+    assert Scene.put_private(%{private: %{}}, :test, 123) == %{
+      private: %{
+        test: 123
+      }
+    }
+  end
+
+  test "put_private sets a new value into new private sub-map" do
+    assert Scene.put_private(%{}, :test, 123) == %{
+      private: %{
+        test: 123
+      }
+    }
+   end
+
+  test "put_private sets replaces existing value" do
+    assert Scene.put_private(%{private: %{test: 321}}, :test, 123) == %{
+      private: %{
+        test: 123
+      }
+    }
+  end
+
+
+
+  #============================================================================
+  # def do_get_graph( state )
+
+  test "do_get_graph gets the graph" do
+    assert Scene.do_get_graph(%{private: %{graph: 1234}}) == 1234
+  end
+
+
+
+  #============================================================================
+  # def do_add_recurring_modification( state, uid, action )
+
+  test "do_add_recurring_modification creates an element's recurring transformation list" do
+    assert Scene.get_private(@state, @recurring_mods_key) == %{}
+    action = fn(e, _, s) -> {:continue, Map.put(e, :name, e.name <> " Transformed!"), s + 1} end
+
+    graph = Scene.get_private(@state, :graph)
+    [uid] = GraphM.resolve_id(graph, :one)
+    {state, _} = Scene.do_add_recurring_modification( @state, uid, 0, action)
+    %{^uid => [{_, ^action, 0}]} = Scene.get_private(state, @recurring_mods_key)
+  end
+
+
+  test "do_add_recurring_modification_id accepts ids which are unrolled into all matching uids" do
+    assert Scene.get_private(@state, @recurring_mods_key) == %{}
+    action = fn(e, _, s) -> {:continue, Map.put(e, :name, e.name <> " Transformed!"), s} end
+
+    graph = Scene.get_private(@state, :graph)
+    [uid_a, uid_b] = GraphM.resolve_id(graph, :two)
+    {state, _} = Scene.do_add_recurring_modification_id( @state, :two, 0, action)
+    %{
+      ^uid_a => [{_, ^action, 0}],
+      ^uid_b => [{_, ^action, 0}]
+    } = Scene.get_private(state, @recurring_mods_key)
+  end
+
+  test "do_add_recurring_modification adds to an element's recurring transformation list" do
+    assert Scene.get_private(@state, @recurring_mods_key) == %{}
+    action_0 = fn(e, _, s) -> {:continue, Map.put(e, :data, e.data + 1), s + 1} end
+    action_1 = fn(e, _, s) -> {:stop, Map.put(e, :data, e.data + 1), s + 1} end
+    action_2 = fn(e, _, s) -> {:continue, Map.put(e, :data, e.data + 1), s + 1} end
+
+    graph = Scene.get_private(@state, :graph)
+    [uid] = GraphM.resolve_id(graph, :one)
+
+    {state, _} = Scene.do_add_recurring_modification( @state, uid, 0, action_0)
+    %{
+      ^uid => [{_, ^action_0, 0}]
+    } = Scene.get_private(state, @recurring_mods_key)
+
+    {state, _} = Scene.do_add_recurring_modification( state, uid, 1, action_1)
+    %{
+      ^uid => [{_, ^action_1, 1}, {_, ^action_0, 0}]
+    } = Scene.get_private(state, @recurring_mods_key)
+
+    {state, _} = Scene.do_add_recurring_modification( state, uid, 2, action_2)
+    %{
+      ^uid => [{_, ^action_2, 2}, {_, ^action_1, 1}, {_, ^action_0, 0}]
+    } = Scene.get_private(state, @recurring_mods_key)
+  end
+
+  test "do_add_recurring_modification does nothing if an invalid/missing id" do
+    assert Scene.get_private(@state, @recurring_mods_key) == %{}
+    action = fn(e, s) -> {:continue, Map.put(e, :name, e.name <> " Transformed!"), s + 1} end
+
+    {state, _} = Scene.do_add_recurring_modification_id( @state, :missing, 0, action)
+    assert Scene.get_private(state, @recurring_mods_key) == %{}
+  end
+
+
+
+  #============================================================================
+  # run_recurring_modifications( state )
+
+  test "run_recurring_modifications runs the transformations - pipeable adds" do
+    # create action functions
+    action_0 = fn(e, _, s)-> {:continue, Map.put(e, :data, e.data + 1), s <> " there"} end
+    action_1 = fn(e, _, s)-> {:continue, Map.put(e, :data, e.data + 5), s + 1} end
+    action_2 = fn(e, _, _s)-> {:stop, Map.put(e, :data, e.data + 10)} end
+
+    # add the actions to the recurring map - note multiple actions for element :one
+    state = Scene.do_add_recurring_modification_id!( @state, :one, "hi", action_0 )
+      |> Scene.do_add_recurring_modification_id!( :three, 10, action_2 )
+      |> Scene.do_add_recurring_modification_id!( :one, 0, action_1 )
+      |> Scene.do_add_recurring_modification_id!( :one, 20, action_2 )
+
+    graph = Scene.get_private(@state, :graph)
+    [uid_one] = GraphM.resolve_id(graph, :one)
+    [uid_three] = GraphM.resolve_id(graph, :three)
+
+    # verify setup
+    active_mods = Scene.get_private(state, @recurring_mods_key)
+    [{_, ^action_2, 20}, {_, ^action_1, 0}, {_, ^action_0, "hi"}] =active_mods[uid_one]
+    [{_, ^action_2, 10}] = active_mods[uid_three]
+
+    # run the transformations
+    state = Scene.do_run_recurring_modifications( state )
+
+    # retreive the modified graph
+    graph = Scene.get_private(state, :graph)
+
+    # check that both are transformed as expected
+    assert GraphM.get(graph, uid_one).data == 1 + 1 + 5 + 10
+    assert GraphM.get(graph, uid_three).data == 3 + 10
+
+    # check that the action list for element one shows that action 2 is gone
+    active_mods = Scene.get_private(state, @recurring_mods_key)
+    [{_, ^action_1, 1}, {_, ^action_0, "hi there"}] =active_mods[uid_one]
+
+    # check that element two is no longer in the list
+    assert active_mods[uid_three] == nil
+  end
+
+
+  #============================================================================
+  # cancel_recurring_modification(state, {:recurring_modification, uid, mod_id})
+
+  test "cancel_recurring_modification works" do
+    # create action functions
+    action_0 = fn(e, _, s)-> {:continue, Map.put(e, :data, e.data + 1), s <> " there"} end
+    action_1 = fn(e, _, s)-> {:continue, Map.put(e, :data, e.data + 5), s + 1} end
+    action_2 = fn(e, _, _s)-> {:stop, Map.put(e, :data, e.data + 10)} end
+
+    # add the actions to the recurring map - note multiple actions for element :one
+    {state, _} = Scene.do_add_recurring_modification_id( @state, :one, "hi", action_0 )
+    {state, [mod_1]} = Scene.do_add_recurring_modification_id( state, :three, 10, action_2 )
+    {state, [mod_2]} = Scene.do_add_recurring_modification_id( state, :one, 0, action_1 )
+    {state, _} = Scene.do_add_recurring_modification_id( state, :one, 20, action_2 )
+
+    graph = Scene.get_private(@state, :graph)
+    [uid_one] = GraphM.resolve_id(graph, :one)
+    [uid_three] = GraphM.resolve_id(graph, :three)
+
+    # verify setup
+    active_mods = Scene.get_private(state, @recurring_mods_key)
+    [{_, ^action_2, 20}, {_, ^action_1, 0}, {_, ^action_0, "hi"}] =active_mods[uid_one]
+    [{_, ^action_2, 10}] = active_mods[uid_three]
+
+    # cancel and verify
+    state = Scene.do_cancel_recurring_modification( state, mod_2 )
+    active_mods = Scene.get_private(state, @recurring_mods_key)
+    [{_, ^action_2, 20}, {_, ^action_0, "hi"}] =active_mods[uid_one]
+
+    # cancel and verify
+    state = Scene.do_cancel_recurring_modification( state, mod_1 )
+    active_mods = Scene.get_private(state, @recurring_mods_key)
+    [] =active_mods[uid_three]
+  end
+
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

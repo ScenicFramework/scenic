@@ -1,0 +1,150 @@
+#
+#  Created by Boyd Multerer on 6/17/17.
+#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#
+
+defmodule Scenic.Primitive.Style.FontTest do
+  use ExUnit.Case, async: true
+  doctest Scenic
+
+  alias Scenic.Primitive.Style.Font
+
+#  import IEx
+
+  @font_folder_path Mix.Project.build_path
+    |> String.split( "/" )
+    |> Enum.drop( -2 )
+    |> List.insert_at(-1, "fonts")
+    |> Enum.join( "/" )
+
+  @dflag_bling      2
+  @type_code        0x0040
+
+  @font_one         @font_folder_path <> "/test/font_one.ttf"
+  @font_two         @font_folder_path <> "/test/font_two.ttf"
+  @font_invalid     @font_folder_path <> "/test/not_a_font.ttf"
+
+  #============================================================================
+  # build( size, font_path )
+  test "build works" do
+    length = String.length( @font_one )
+    assert Font.build(16, @font_one) == {Font, <<
+      @dflag_bling  :: size(8),
+      @type_code    :: unsigned-integer-size(16)-native,
+      16            :: unsigned-integer-size(8)-native,
+      length        :: unsigned-integer-size(16)-native,
+      @font_one    :: binary
+    >>}
+  end
+
+  test "build! works" do
+    length = String.length( @font_one )
+    assert Font.build!(16, @font_one) == {Font, <<
+      @dflag_bling  :: size(8),
+      @type_code    :: unsigned-integer-size(16)-native,
+      16            :: unsigned-integer-size(8)-native,
+      length        :: unsigned-integer-size(16)-native,
+      @font_one    :: binary
+    >>}
+  end
+
+  test "build enforces that the font is at least a real file" do
+    {:error, :enoent, msg} = Font.build( 16, "not_a_file.ttf" )
+    assert is_bitstring( msg )
+  end
+
+  test "build enforces that the font is not a folder" do
+    {:error, :eisdir, msg} = Font.build( 16, @font_folder_path )
+    assert is_bitstring( msg )
+  end
+
+  test "build enforces that the file content is a ttf" do
+    {:error, :einval, msg} = Font.build( 16, @font_invalid )
+    assert is_bitstring( msg )
+  end
+
+  test "build! raises if the font is not a real ttf file" do
+    assert_raise Font.FileError, fn ->
+      Font.build!(16, @font_invalid)
+    end
+  end
+
+  test "build accepts a float as the font size (truncates it to an int)" do
+    ref = Font.build( 26.4, @font_one )
+    assert Font.get(ref) ==  { 26, @font_one }
+  end
+
+  test "build clamps font size to a minimum of 2" do
+    ref = Font.build( 1, @font_one )
+    assert Font.get(ref) ==  { 2, @font_one }
+  end
+
+  test "build clamps font size to a maximum of 80" do
+    ref = Font.build( 100, @font_one )
+    assert Font.get(ref) ==  { 80, @font_one }
+  end
+
+  #============================================================================
+  # get( font )
+
+  test "get works" do
+    ref = Font.build( 16, @font_one )
+    assert Font.get(ref) == { 16, @font_one }
+  end
+
+  #============================================================================
+  # put( font, size, font_path )
+
+  test "put works" do
+    ref = Font.build( 16, @font_one )
+      |> Font.put( 24, @font_two )
+    assert Font.get(ref) ==  { 24, @font_two }
+  end
+
+  test "put enforces that the font is at least a real file" do
+    font = Font.build( 16, @font_one )
+    {:error, :enoent, msg} = Font.put( font, 24, "missing.ttf" )
+    assert is_bitstring( msg )
+  end
+
+  test "put! raises if the font is not a real file" do
+    font = Font.build!(16, @font_one)
+    assert_raise Font.FileError, fn ->
+      Font.put!(font, "not_a_file.ttf")
+    end
+    assert_raise Font.FileError, fn ->
+      Font.put!(font, 24, "not_a_file.ttf")
+    end
+  end
+
+  test "put sets just the font size given an integer" do
+    ref = Font.build( 16, @font_one )
+      |> Font.put( 24 )
+    assert Font.get(ref) ==  { 24, @font_one }
+  end
+
+  test "put sets just the font size given a float" do
+    ref = Font.build( 16, @font_one )
+      |> Font.put( 24.3 )
+    assert Font.get(ref) ==  { 24, @font_one }
+  end
+
+  test "put sets just the font name" do
+    ref = Font.build( 16, @font_one )
+      |> Font.put( @font_two )
+    assert Font.get(ref) ==  { 16, @font_two }
+  end
+
+  test "put clamps font size to a minimum of 2" do
+    ref = Font.build( 16, @font_one )
+      |> Font.put( 1 )
+    assert Font.get(ref) ==  { 2, @font_one }
+  end
+
+  test "put clamps font size to a maximum of 80" do
+    ref = Font.build( 16, @font_one )
+      |> Font.put( 100 )
+    assert Font.get(ref) ==  { 80, @font_one }
+  end
+
+end

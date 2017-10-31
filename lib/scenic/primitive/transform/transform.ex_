@@ -1,0 +1,328 @@
+#
+#  Created by Boyd Multerer on 5/6/17.
+#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#
+
+# the primitive style is not a primitive element in itself.
+# this is a type of styling that is applied to other primitive elements
+
+defmodule Scenic.Primitive.Transform do
+  alias Scenic.Math.MatrixBin
+  alias Scenic.Math.Matrix.Utils
+  alias Scenic.Math.Vector
+#  import IEx
+
+  @dflag      3
+
+  @identity   MatrixBin.identity()
+
+  @mx_code    0x01
+
+
+  #===========================================================================
+  defmodule Error do
+    defexception [ message: nil ]
+  end
+
+  # {pin, rot, scale, translate, dev, final}
+  # pin         -> a point
+  # rot         -> rotation in radians
+  # scale       -> percentage 1 equals 100%
+  # translate   -> a point to translate by post rot and scale
+  # mx          -> regular matrix to mul in, provided by dev
+  # local       -> computed matrix from the previous values
+
+  #============================================================================
+  def build( opts )
+  def build( [] ), do: nil
+  def build( opts ) when is_list(opts) do
+    {
+      prep_pin_opt( opts[:pin] ),
+      prep_rot_opt( opts[:rot]    || opts[:rotate] || opts[:rotation] ),
+      prep_scale_opt( opts[:scl]  || opts[:scale] ),
+      prep_trns_opt(
+        opts[:pos] || opts[:position] ||opts[:trans] ||
+        opts[:translate] || opts[:translation] ),
+      prep_mx_opt( opts[:mx]      || opts[:matrix] ),
+      {nil,nil}     # computed matrix, binary data
+    }
+    |> calculate_local()
+  end
+
+
+  defp prep_pin_opt( pin )
+  defp prep_pin_opt( nil ),    do: nil
+  defp prep_pin_opt( {x,y} ) when is_number(x) and is_number(y), do: {x,y}
+  defp prep_pin_opt( {x,y,z} ) when is_number(x) and is_number(y) and is_number(z), do: {x,y,z}
+  defp prep_pin_opt( _ ) do
+    raise Error, message: "pin option must be a point in the form {x,y} or {x,y,z}"
+  end
+
+  defp prep_rot_opt( pin )
+  defp prep_rot_opt( nil ),     do: nil
+  defp prep_rot_opt( r ) when is_number(r),   do: {r,:z}
+  defp prep_rot_opt( {r,:x} ),   do: {r,:x}
+  defp prep_rot_opt( {r,:y} ),   do: {r,:y}
+  defp prep_rot_opt( {r,:z} ),   do: {r,:z}
+  defp prep_rot_opt( {x,y,z} ) when is_number(x) and is_number(y) and is_number(z), do: {x,y,z}
+  defp prep_rot_opt( _ ) do
+    raise Error, message: "rotation option must be radians or radians and axis. ex: 1.1 or {1.1,:z}"
+  end
+
+  defp prep_scale_opt( percent )
+  defp prep_scale_opt( nil ),    do: nil
+  defp prep_scale_opt( pct ) when is_number(pct), do: pct
+  defp prep_scale_opt( {x,y} ) when is_number(x) and is_number(y), do: {x,y}
+  defp prep_scale_opt( {x,y,z} ) when is_number(x) and is_number(y) and is_number(z), do: {x,y,z}
+  defp prep_scale_opt( _ ) do
+    raise Error, message: "scale option must be a percentage. ex: 0.4 for  {0.5,1.1}"
+  end
+
+  defp prep_trns_opt( vector )
+  defp prep_trns_opt( nil ),    do: nil
+#  defp prep_trns_opt( {0,0} ),  do: nil
+  defp prep_trns_opt( {x,y} ) when is_number(x) and is_number(y), do: {x,y}
+  defp prep_trns_opt( {x,y,z} ) when is_number(x) and is_number(y) and is_number(z), do: {x,y,z}
+  defp prep_trns_opt( _ ) do
+    raise Error, message: "translate option must be a vector in the form {x,y} or {x,y,z}"
+  end
+
+  defp prep_mx_opt( matrix )
+  defp prep_mx_opt( nil ),    do: nil
+  defp prep_mx_opt( matrix ) when is_tuple(matrix),   do: matrix
+  defp prep_mx_opt( matrix ) when is_binary(matrix),  do: matrix
+  defp prep_mx_opt( _ ) do
+    raise Error, message: "matrix option must be a matrix from the Scenic.Math.MatrixBin library"
+  end
+
+
+
+  #============================================================================
+  # generic put
+  def put( transform, type, value)
+
+  def put( nil, type, value),       do: build( [{type, value}] )
+
+  def put( {_,rot,scl,trns,mx,_}, :pin, value) do
+    v = prep_pin_opt( value )
+    {v, rot, scl, trns, mx, nil}
+  end
+
+  def put( tx, :rot, value),        do: put(tx, :rotation, value)
+  def put( tx, :rotate, value),     do: put(tx, :rotation, value)
+  def put( {pin,_,scl,trns,mx,_}, :rotation, value) do
+    v = prep_rot_opt( value )
+    {pin, v, scl, trns, mx, nil}
+  end
+
+  def put( tx, :scl, value),        do: put(tx, :scale, value)
+  def put( {pin,rot,_,trns,mx,_}, :scale, value) do
+    v = prep_scale_opt( value )
+    {pin, rot, v, trns, mx, nil}
+  end
+
+  def put( tx, :trans, value),      do: put(tx, :translation, value)
+  def put( tx, :translate, value),  do: put(tx, :translation, value)
+  def put( {pin,rot,scl,_,mx,_}, :translation, value) do
+    v = prep_trns_opt( value )
+    {pin, rot, scl, v, mx, nil}
+  end
+
+  def put( tx, :mx, value),        do: put(tx, :matrix, value)
+  def put( {pin,rot,scl,trns,_,_}, :matrix, value) do
+    v = prep_mx_opt( value )
+    {pin, rot, scl, trns, v, nil}
+  end
+
+
+  #============================================================================
+  def get_pin( transform )
+  def get_pin( nil ),                       do: nil
+  def get_pin( {pin,_,_,_,_,_} ),         do: pin
+
+  def put_pin( transform, point )
+  def put_pin( transform, pin ) do
+    transform
+    |> put( :pin, pin )
+    |> calculate_local()
+  end
+
+  #============================================================================
+  def get_rotation( transform )
+  def get_rotation( nil ),                  do: nil
+  def get_rotation( {_,rot,_,_,_,_} ),      do: rot
+
+  def put_rotation( transform, rotation )
+  def put_rotation( transform, rotation ) do
+    transform
+    |> put( :rotation, rotation )
+    |> calculate_local()
+  end
+
+  #============================================================================
+  def get_scale( transform )
+  def get_scale( nil ),                     do: nil
+  def get_scale( {_,_,scale,_,_,_} ),       do: scale
+
+  def put_scale( transform, scale )
+  def put_scale( transform, scale ) do
+    transform
+    |> put( :scale, scale )
+    |> calculate_local()
+  end
+
+  #============================================================================
+  def get_translation( transform )
+  def get_translation( nil ),               do: nil
+  def get_translation( {_,_,_,trns,_,_} ),  do: trns
+
+  def put_translation( transform, vector )
+  def put_translation( transform, vector ) do
+    transform
+    |> put( :translation, vector )
+    |> calculate_local()
+  end
+
+  #============================================================================
+  def get_matrix( transform )
+  def get_matrix( nil ),                    do: nil
+  def get_matrix( {_,_,_,_,mx,_} ),         do: mx
+
+  def put_matrix( transform, matrix )
+  def put_matrix( transform, matrix ) do
+    transform
+    |> put( :matrix, matrix )
+    |> calculate_local()
+  end
+
+  #============================================================================
+  def get_local( transform )
+  def get_local( nil ),                     do: nil
+  def get_local( {_,_,_,_,_,nil} = tx ) do
+    tx
+    |> calculate_local()
+    |> get_local()
+  end
+  def get_local( {_,_,_,_,_,fin} ),         do: fin
+
+  #============================================================================
+  # calculate the final as required. Should be relatively rare. If it turns
+  # out not to be, then precalc in calculate_local and cache in tuple. This
+  # trade-off saves on memory
+  def get_data( transform )
+  def get_data( nil ),                      do: nil
+  def get_data( {_,nil,nil,nil,nil,nil} ),  do: nil
+  def get_data( {_,_,_,_,_,nil} = tx ) do
+    tx
+    |> calculate_local()
+    |> get_data()
+  end
+  def get_data( {_,_,_,_,_,final} ) do
+    mx_bin = Utils.to_binary(final, :row)
+
+    # build the binary data blob that can be sent to the client
+    <<
+      @dflag    :: size(8),
+      @mx_code  :: size(8),
+      mx_bin    :: binary
+    >>
+  end
+
+  #============================================================================
+  def calculate_local( nil ), do: nil
+  def calculate_local( {pin,nil,nil,nil,nil,_} ), do: {pin,nil,nil,nil,nil,nil}
+  def calculate_local( {pin,rot,scl,trns,dev,_} ) do
+    # start with identity - which is like multiplying by 1
+    local = @identity
+      |> multiply_partial( :mx, dev )
+      |> multiply_partial( :translate, trns )
+      |> rotate_and_scale( pin, rot, scl )
+
+    { pin,rot,scl,trns,dev, local }
+  end
+
+  defp multiply_partial(mx, type, value)
+
+  defp multiply_partial(mx, _, nil), do: mx
+
+  defp multiply_partial(mx, :inv_pin, point) do
+    MatrixBin.translate( mx, Vector.invert( point ) )
+  end
+
+  defp multiply_partial(mx, :pin, point),       do: MatrixBin.translate( mx, point )
+  defp multiply_partial(mx, :scale, pct),       do: MatrixBin.scale( mx, pct )
+  defp multiply_partial(mx, :rotate, rot),      do: MatrixBin.rotate( mx, rot )
+  defp multiply_partial(mx, :translate, trns),  do: MatrixBin.translate(mx, trns)
+  defp multiply_partial(mx, :mx, dev_mx),       do: MatrixBin.mul( mx, dev_mx )
+
+
+  defp rotate_and_scale( mx, pin, rot, scl )
+  defp rotate_and_scale( mx, _, nil, nil ), do: mx
+  defp rotate_and_scale( mx, pin, rot, scl ) do
+    mx
+    |> multiply_partial( :pin, pin )
+    |> multiply_partial( :rotate, rot )
+    |> multiply_partial( :scale, scl )
+    |> multiply_partial( :inv_pin, pin )
+  end
+
+
+  #============================================================================
+  # experimental
+
+#  def calc_inverse_matrix(graph, primitive) do
+#    final = calc_inherited_final_matrix(graph, primitive)
+#    inverse = MatrixBin.invert(final)
+#    {final, inverse}
+#  end
+#
+
+  alias Scenic.Graph
+  alias Scenic.Primitive
+
+
+  def calc_final_matrix_up(graph, primitive) do
+    gather_matrix_list(graph, primitive)
+    |> Enum.reverse()
+    |> MatrixBin.mul()
+#    |> mul_stack()
+  end
+
+  def calc_final_matrix_down(graph, primitive) do
+    gather_matrix_list(graph, primitive)
+    |> MatrixBin.mul()
+#    |> mul_stack()
+  end
+
+  def gather_matrix_list(graph, primitive, list \\ [])
+  def gather_matrix_list(_, nil, list), do: list
+  def gather_matrix_list(graph, primitive, list) do
+    parent = Graph.get(graph, Primitive.get_parent_uid(primitive))
+
+    case Primitive.get_local_matrix(primitive) do
+      nil -> gather_matrix_list(graph, parent, list)
+      mx  -> gather_matrix_list(graph, parent, [ mx | list])
+    end
+  end
+
+  def mul_stack( matrix_list, mx \\ nil )
+  def mul_stack( [], mx ),              do: mx
+  def mul_stack( [head | tail], nil ),  do: mul_stack( tail, head )
+  def mul_stack( [head | tail], mx ) do
+    mul_stack( tail, MatrixBin.mul(mx, head) )
+  end
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
