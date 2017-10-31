@@ -14,7 +14,7 @@ defmodule Scenic.Scene do
   alias Scenic.Graph
   alias Scenic.ViewPort
 
-#  import IEx
+  import IEx
 
 
   @callback init( any ) :: {:ok, any}
@@ -23,7 +23,7 @@ defmodule Scenic.Scene do
 #  @half_heartbeat_ms        16
 #  @half_heartbeat_ms        32
 #  @half_heartbeat_ms        64
-  @half_heartbeat_ms        250
+#  @half_heartbeat_ms        250
 #  @half_heartbeat_ms        500
 
 
@@ -145,7 +145,7 @@ defmodule Scenic.Scene do
         {:noreply, graph, scene_state} = mod.handle_context_lost( context, graph, scene_state )
 
         state = state
-        |> stop_heartbeat()
+#        |> stop_heartbeat()
         |> Map.put(:vp_context, nil)
         |> Map.put(:graph, graph)
         |> Map.put(:scene_state, scene_state)
@@ -184,7 +184,7 @@ defmodule Scenic.Scene do
 
     # save the context, graph, and the scene state
     state = state
-    |> start_heartbeat()
+#    |> start_heartbeat()
     |> Map.put(:graph, graph)
     |> Map.put(:vp_context, context)
     |> Map.put(:scene_state, scene_state)
@@ -204,28 +204,54 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
+  # a graphic driver is requesting an update
+  def handle_cast(:vp_update, %{vp_context: context, graph: graph} = state) do
+    # tick any recurring actions
+    graph = Graph.tick_recurring_actions( graph )
+
+    # send the graph to the view_port
+    state = case ViewPort.update_graph( context, graph ) do
+      :ok ->            state
+      :context_lost ->
+#        stop_heartbeat( state )
+        state
+    end
+
+    # reset the deltas
+    graph = Graph.reset_deltas( graph )
+
+    # update and return the state
+    state
+    |> Map.put( :graph, graph )
+    |> Map.put( :last_sync, :os.system_time(:millisecond) )
+
+    { :noreply, state }
+  end
+
+  #--------------------------------------------------------
+  # a graphic driver is requesting a full graph reset
+  def handle_cast(:vp_reset, %{ vp_context: context, graph: graph } = state) do
+    # reset the viewport with this scene's graph
+    ViewPort.set_graph(context, graph)
+    state = Map.put( state, :last_sync, :os.system_time(:millisecond) )
+    { :noreply, state }
+  end
+
+  def handle_cast(_,state) do
+    pry()
+    { :noreply, state }
+  end
+
+
+  #--------------------------------------------------------
   # generic cast. give the scene a chance to handle it
   def handle_cast(msg, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+    pry()
     {:noreply, graph, scene_state} = mod.handle_cast(msg, graph, scene_state)
     state = state
     |> Map.put(:graph, graph)
     |> Map.put(:scene_state, scene_state)
     {:noreply, state}
-  end
-
-  #--------------------------------------------------------
-  # a graphic driver is requesting an update
-  def handle_cast(:update_driver, state) do
-    { :noreply, do_sync( state ) }
-  end
-
-  #--------------------------------------------------------
-  # a graphic driver is requesting a full graph reset
-  def handle_cast(:reset_driver, %{ vp_context: context, graph: graph } = state) do
-    # reset the viewport with this scene's graph
-    ViewPort.set_graph(context, graph)
-    state = Map.put( state, :last_sync, :os.system_time(:millisecond) )
-    { :noreply, state }
   end
 
 
@@ -251,15 +277,15 @@ defmodule Scenic.Scene do
 
   #--------------------------------------------------------
   # this message is the scene's heartbeat telling it to tick any animations and update the view_port
-  def handle_info(:heartbeat, %{ graph: graph, vp_context: context, last_sync: last_sync } = state) do
-    time = :os.system_time(:millisecond)
-    state = cond do
-      last_sync == nil                          -> do_sync(state)
-      (time - last_sync) >= @half_heartbeat_ms  -> do_sync(state)
-      true                                      -> state
-    end
-    {:noreply, state }
-  end
+#  def handle_info(:heartbeat, %{ graph: graph, vp_context: context, last_sync: last_sync } = state) do
+#    time = :os.system_time(:millisecond)
+#    state = cond do
+#      last_sync == nil                          -> do_sync(state)
+#      (time - last_sync) >= @half_heartbeat_ms  -> do_sync(state)
+#      true                                      -> state
+#    end
+#    {:noreply, state }
+#  end
 
 
   #--------------------------------------------------------
@@ -284,38 +310,39 @@ defmodule Scenic.Scene do
   #===========================================================================
   # heartbeat helpers
 
-  defp start_heartbeat( %{heart_timer: nil} = state ) do
-    {:ok, tref} = :timer.send_interval(@half_heartbeat_ms + @half_heartbeat_ms, :heartbeat)
-    Map.put(state, :heart_timer, tref)
-  end
-  defp start_heartbeat( state ), do: state
+#  defp start_heartbeat( %{heart_timer: nil} = state ) do
+#    {:ok, tref} = :timer.send_interval(@half_heartbeat_ms + @half_heartbeat_ms, :heartbeat)
+#    Map.put(state, :heart_timer, tref)
+#    state
+#  end
+#  defp start_heartbeat( state ), do: state
+#
+# 
+#  defp stop_heartbeat( %{heart_timer: nil} = state ), do: state
+#  defp stop_heartbeat( %{heart_timer: tref} = state ) do
+#    :timer.cancel( tref )
+#    Map.put(state, :heart_timer, nil)
+#  end
 
- 
-  defp stop_heartbeat( %{heart_timer: nil} = state ), do: state
-  defp stop_heartbeat( %{heart_timer: tref} = state ) do
-    :timer.cancel( tref )
-    Map.put(state, :heart_timer, nil)
-  end
-
-  #------------------------------------
-  def do_sync( %{vp_context: context, graph: graph} = state ) do
-    # tick any recurring actions
-    graph = Graph.tick_recurring_actions( graph )
-
-    # send the graph to the view_port
-    state = case ViewPort.update_graph( context, graph ) do
-      :ok ->            state
-      :context_lost ->  stop_heartbeat( state )
-    end
-
-    # reset the deltas
-    graph = Graph.reset_deltas( graph )
-
-    # update and return the state
-    state
-    |> Map.put( :graph, graph )
-    |> Map.put( :last_sync, :os.system_time(:millisecond) )
-  end
+#  #------------------------------------
+#  def do_sync( %{vp_context: context, graph: graph} = state ) do
+#    # tick any recurring actions
+#    graph = Graph.tick_recurring_actions( graph )
+#
+#    # send the graph to the view_port
+#    state = case ViewPort.update_graph( context, graph ) do
+#      :ok ->            state
+#      :context_lost ->  stop_heartbeat( state )
+#    end
+#
+#    # reset the deltas
+#    graph = Graph.reset_deltas( graph )
+#
+#    # update and return the state
+#    state
+#    |> Map.put( :graph, graph )
+#    |> Map.put( :last_sync, :os.system_time(:millisecond) )
+#  end
 
 
 end
