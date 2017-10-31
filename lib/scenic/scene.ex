@@ -14,25 +14,13 @@ defmodule Scenic.Scene do
   alias Scenic.Graph
   alias Scenic.ViewPort
 
-  import IEx
-
+#  import IEx
 
   @callback init( any ) :: {:ok, any}
   @callback init_graph(any) :: {:ok, map, any}
 
-#  @half_heartbeat_ms        16
-#  @half_heartbeat_ms        32
-#  @half_heartbeat_ms        64
-#  @half_heartbeat_ms        250
-#  @half_heartbeat_ms        500
-
-
   #===========================================================================
   # calls for setting up a scene inside of a supervisor
-
-#  def worker( scene_module, id, args \\ [] ) when is_atom(id) do
-#    Supervisor.child_spec({Scenic.Scene, {scene_module, id, args} }, [])
-#  end
 
   def child_spec({scene_module, id}), do: child_spec({scene_module, id, nil})
   def child_spec({scene_module, id, args}) do
@@ -44,7 +32,6 @@ defmodule Scenic.Scene do
       shutdown: 500
     }
   end
-
 
   #===========================================================================
   # main APIs. In general if the first parameter is an atom or a pid, then it is coming
@@ -133,8 +120,6 @@ defmodule Scenic.Scene do
   # if the viewport says the context has lost (probably because it is showing a different scene),
   # then it sends the scene that is being replaced, the context_lost message
   def handle_call({:context_lost, context}, _from, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-#    IO.puts( ":context_lost #{inspect(context)}" )
-
     # do nothing if this isn't the scene's current context
     state
     |> is_current_context?( context ) 
@@ -145,7 +130,6 @@ defmodule Scenic.Scene do
         {:noreply, graph, scene_state} = mod.handle_context_lost( context, graph, scene_state )
 
         state = state
-#        |> stop_heartbeat()
         |> Map.put(:vp_context, nil)
         |> Map.put(:graph, graph)
         |> Map.put(:scene_state, scene_state)
@@ -174,7 +158,6 @@ defmodule Scenic.Scene do
   # if the viewport says the context has lost (probably because it is showing a different scene),
   # then it sends the scene that is being replaced, the context_lost message
   def handle_cast({:context_gained, context}, %{scene_module: mod, scene_state: scene_state, graph: graph} = state) do
-#    IO.puts( ":context_gained #{inspect(context)}" )
 
     # tick any recurring actions before rendering
     graph = Graph.tick_recurring_actions(graph)
@@ -184,7 +167,6 @@ defmodule Scenic.Scene do
 
     # save the context, graph, and the scene state
     state = state
-#    |> start_heartbeat()
     |> Map.put(:graph, graph)
     |> Map.put(:vp_context, context)
     |> Map.put(:scene_state, scene_state)
@@ -210,12 +192,7 @@ defmodule Scenic.Scene do
     graph = Graph.tick_recurring_actions( graph )
 
     # send the graph to the view_port
-    state = case ViewPort.update_graph( context, graph ) do
-      :ok ->            state
-      :context_lost ->
-#        stop_heartbeat( state )
-        state
-    end
+    ViewPort.update_graph( context, graph )
 
     # reset the deltas
     graph = Graph.reset_deltas( graph )
@@ -269,19 +246,6 @@ defmodule Scenic.Scene do
 
 
   #--------------------------------------------------------
-  # this message is the scene's heartbeat telling it to tick any animations and update the view_port
-#  def handle_info(:heartbeat, %{ graph: graph, vp_context: context, last_sync: last_sync } = state) do
-#    time = :os.system_time(:millisecond)
-#    state = cond do
-#      last_sync == nil                          -> do_sync(state)
-#      (time - last_sync) >= @half_heartbeat_ms  -> do_sync(state)
-#      true                                      -> state
-#    end
-#    {:noreply, state }
-#  end
-
-
-  #--------------------------------------------------------
   # generic info. give the scene a chance to handle it
   def handle_info(msg, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
     {:noreply, graph, scene_state} = mod.handle_info(msg, graph, scene_state)
@@ -299,43 +263,6 @@ defmodule Scenic.Scene do
       _ -> false
     end
   end
-
-  #===========================================================================
-  # heartbeat helpers
-
-#  defp start_heartbeat( %{heart_timer: nil} = state ) do
-#    {:ok, tref} = :timer.send_interval(@half_heartbeat_ms + @half_heartbeat_ms, :heartbeat)
-#    Map.put(state, :heart_timer, tref)
-#    state
-#  end
-#  defp start_heartbeat( state ), do: state
-#
-# 
-#  defp stop_heartbeat( %{heart_timer: nil} = state ), do: state
-#  defp stop_heartbeat( %{heart_timer: tref} = state ) do
-#    :timer.cancel( tref )
-#    Map.put(state, :heart_timer, nil)
-#  end
-
-#  #------------------------------------
-#  def do_sync( %{vp_context: context, graph: graph} = state ) do
-#    # tick any recurring actions
-#    graph = Graph.tick_recurring_actions( graph )
-#
-#    # send the graph to the view_port
-#    state = case ViewPort.update_graph( context, graph ) do
-#      :ok ->            state
-#      :context_lost ->  stop_heartbeat( state )
-#    end
-#
-#    # reset the deltas
-#    graph = Graph.reset_deltas( graph )
-#
-#    # update and return the state
-#    state
-#    |> Map.put( :graph, graph )
-#    |> Map.put( :last_sync, :os.system_time(:millisecond) )
-#  end
 
 
 end

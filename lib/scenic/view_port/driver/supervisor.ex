@@ -9,28 +9,19 @@ defmodule Scenic.ViewPort.Driver.Supervisor do
 
   @name       :vp_drivers
 
-  import IEx
+#  import IEx
 
   #============================================================================
-  # setup the viewport supervisor - start with no drivers
+  # setup the viewport supervisor - get the list of drivers from the config
 
   def start_link( ) do
     Supervisor.start_link(__MODULE__, :ok, name: @name)
   end
 
   def init( :ok ) do
-
-    drivers = Application.get_env(:scenic, Scenic)[:drivers]
-    children = Enum.map(drivers, fn(driver) ->
-      { Driver, driver }
-    end)
-
-    Supervisor.init(children, strategy: :one_for_one)
+    Application.get_env(:scenic, Scenic)[:drivers]
+    |> Enum.map( &{Driver, &1} )
+    |> Supervisor.init( strategy: :one_for_one )
   end
-
-
-  #============================================================================
-  # internal support
-
 
 end

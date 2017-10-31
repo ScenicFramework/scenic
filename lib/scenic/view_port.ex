@@ -8,7 +8,7 @@ defmodule Scenic.ViewPort do
   alias Scenic.Graph
 
 
-  import IEx
+#  import IEx
 
   @name                 :view_port
 
@@ -99,9 +99,7 @@ defmodule Scenic.ViewPort do
 
   #--------------------------------------------------------
   def handle_cast( {:driver_message, msg}, state ) do
-IO.inspect(msg)
-pry()
-    # save the scene and return
+    IO.puts("Unknown driver message at ViewPort: #{inspect(msg)}")
     {:noreply, state}
   end
 
@@ -116,7 +114,6 @@ pry()
   defp init_context_tracking() do
     case :ets.info(@context_table) do
       :undefined ->
-#        IO.puts "initialize context tracking ets table"
         :ets.new( @context_table, [:named_table, :set, :public] )
       _ -> @context_table
     end

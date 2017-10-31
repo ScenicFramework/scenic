@@ -15,16 +15,11 @@ defmodule Scenic.ViewPort.Driver do
   require Logger
   alias Scenic.ViewPort
 
-  import IEx
-
-#  @callback set_graph(list, pid) :: atom
-#  @callback update_graph(list, pid) :: atom
-#  @callback driver_cast(any, pid) :: atom
+#  import IEx
 
   @callback handle_set_graph( list, map ) :: {:noreply, map}
   @callback handle_update_graph( list, map ) :: {:noreply, map}
   @callback handle_sync( map ) :: {:noreply, map}
-
 
   @sync_message   :timer_sync
 

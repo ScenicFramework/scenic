@@ -16,17 +16,12 @@ defmodule Scenic.ViewPort.Supervisor do
   end
 
   def init( :ok ) do
-    children = [
+    [
       supervisor(Registry, [:duplicate, :viewport_registry]),
       {Scenic.ViewPort, self()},
       supervisor(Scenic.ViewPort.Driver.Supervisor, [])
     ]
-    Supervisor.init(children, strategy: :rest_for_one)
+    |> Supervisor.init( strategy: :rest_for_one )
   end
-
-
-  #============================================================================
-  # internal support
-
 
 end
