@@ -5,10 +5,11 @@
 
 defmodule Scenic.ViewPort.Driver.Supervisor do
   use Supervisor
+  alias Scenic.ViewPort.Driver
 
   @name       :vp_drivers
 
-#  import IEx
+  import IEx
 
   #============================================================================
   # setup the viewport supervisor - start with no drivers
@@ -18,11 +19,11 @@ defmodule Scenic.ViewPort.Driver.Supervisor do
   end
 
   def init( :ok ) do
-    # get the requested default drivers from the config
-    children = case Application.get_env(:scenic, Scenic)[:drivers] do
-      nil -> []
-      view_ports -> view_ports
-    end
+
+    drivers = Application.get_env(:scenic, Scenic)[:drivers]
+    children = Enum.map(drivers, fn(driver) ->
+      { Driver, driver }
+    end)
 
     Supervisor.init(children, strategy: :one_for_one)
   end

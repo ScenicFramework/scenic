@@ -4,7 +4,7 @@
 #
 
 defmodule Scenic.ViewPort do
-  use Scenic.ViewPort.Driver
+  use GenServer
   alias Scenic.Graph
 
 
@@ -62,7 +62,7 @@ defmodule Scenic.ViewPort do
 
   def init( supervisor ) do
     init_context_tracking()
-    {:ok, _} = Registry.register(:viewport_registry, :client_message, {__MODULE__, :driver_message} )
+    {:ok, _} = Registry.register(:viewport_registry, :client_message, :driver_message )
     {:ok, %{supervisor: supervisor}}
   end
 
@@ -71,7 +71,6 @@ defmodule Scenic.ViewPort do
 
   #--------------------------------------------------------
   def handle_cast( {:set_scene, scene_id}, state ) when is_pid(scene_id) or is_atom(scene_id) do
-
     # Generate a new context
     new_context = make_context()
 
