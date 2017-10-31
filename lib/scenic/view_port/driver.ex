@@ -31,9 +31,9 @@ defmodule Scenic.ViewPort.Driver do
   #===========================================================================
   # generic apis for sending a message to the drivers
   #--------------------------------------------------------
-  def cast( message ) do
-    dispatch( :driver_cast, message )
-  end
+#  def cast( message ) do
+#    dispatch( :driver_cast, message )
+#  end
 
   #----------------------------------------------
   def set_graph( list ),    do: dispatch( :set_graph, list )
@@ -71,8 +71,6 @@ defmodule Scenic.ViewPort.Driver do
 
       def sync_interval(),  do: unquote(use_opts[:sync_interval])
 
-#      def send_client_message( message ),
-#        do: Scenic.ViewPort.Driver.send_client_message( message )
 
       def handle_sync( state ),         do: { :noreply, state }
 
@@ -171,7 +169,7 @@ defmodule Scenic.ViewPort.Driver do
   # update the graph
   def handle_cast({:update_graph, deltas}, %{driver_module: mod, driver_state: d_state} = state) do
     { :noreply, d_state } = mod.handle_update_graph( deltas, d_state )
-    
+
     state = state
     |> Map.put( :driver_state, d_state )
     |> Map.put( :last_msg, :os.system_time(:millisecond) )
