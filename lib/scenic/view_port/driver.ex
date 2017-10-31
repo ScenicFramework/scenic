@@ -15,7 +15,7 @@ defmodule Scenic.ViewPort.Driver do
   require Logger
   alias Scenic.ViewPort
 
-#  import IEx
+  import IEx
 
   @callback handle_set_graph( list, map ) :: {:noreply, map}
   @callback handle_update_graph( list, map ) :: {:noreply, map}
@@ -58,11 +58,11 @@ defmodule Scenic.ViewPort.Driver do
     quote do
       @behaviour Scenic.ViewPort.Driver
 
-      def init(_),          do: {:ok, nil}
+      def init(_),                        do: {:ok, nil}
 
-      def sync_interval(),  do: unquote(use_opts[:sync_interval])
+      def default_sync_interval(),        do: unquote(use_opts[:sync_interval])
 
-      def handle_sync( state ),         do: { :noreply, state }
+      def handle_sync( state ),           do: { :noreply, state }
 
       # simple, do-nothing default handlers
       def handle_call(msg, from, state),  do: { :noreply, state }
@@ -104,12 +104,16 @@ defmodule Scenic.ViewPort.Driver do
     state = %{
       driver_module:  module,
       driver_state:   driver_state,
+      sync_interval:  nil
     }
 
-    state = case module.sync_interval() do
+    # get the sync_interval to use
+
+    state = case (opts[:sync_interval] || module.default_sync_interval()) do
       nil -> state
       interval -> 
         state
+        |> Map.put( :sync_interval, interval )
         |> Map.put( :last_msg, :os.system_time(:millisecond) )
         |> Map.put( :timer, :timer.send_interval(interval, @sync_message) )
     end
@@ -175,9 +179,10 @@ defmodule Scenic.ViewPort.Driver do
   #--------------------------------------------------------
   # there may be more than one driver sending update messages to the
   # scene. Go no faster than the fastest one
-  def handle_info(@sync_message, %{last_msg: last_msg, driver_module: mod, driver_state: d_state} = state) do
+  def handle_info(@sync_message,
+  %{last_msg: last_msg, driver_module: mod, driver_state: d_state, sync_interval: sync_interval} = state) do
     cur_time = :os.system_time(:millisecond)
-    case (cur_time - last_msg) > mod.sync_interval() do
+    case (cur_time - last_msg) > sync_interval do
       true  ->
         send_client_message( :update )
         { :noreply, d_state } = mod.handle_sync( d_state )
