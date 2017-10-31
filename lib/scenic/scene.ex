@@ -20,9 +20,10 @@ defmodule Scenic.Scene do
   @callback init( any ) :: {:ok, any}
   @callback init_graph(any) :: {:ok, map, any}
 
-  @default_heartbeat        16
+#  @default_heartbeat        16
 #  @default_heartbeat        32
 #  @default_heartbeat        64
+  @default_heartbeat        250
 #  @default_heartbeat        1300
 
 
@@ -120,7 +121,8 @@ defmodule Scenic.Scene do
       scene_state:        scene_state,
       graph:              graph,
       vp_context:         nil,
-      heart_timer:        nil
+      heart_timer:        nil,
+      last_heart:         nil
     }
 
     {:ok, state}
