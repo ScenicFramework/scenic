@@ -10,10 +10,6 @@ defmodule Scenic.Primitive.Style.ColorTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Color
 
-#  @dflag_bling      2
-#  @type_code        1
-
-
 
   #============================================================================
   # verify - various forms

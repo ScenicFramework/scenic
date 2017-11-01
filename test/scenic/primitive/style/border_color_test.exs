@@ -10,11 +10,6 @@ defmodule Scenic.Primitive.Style.BorderColorTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.BorderColor
 
-#  @dflag_bling      2
-#  @type_code        0x0022
-
-
-
 
   #============================================================================
   # verify - various forms

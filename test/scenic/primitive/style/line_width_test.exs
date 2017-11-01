@@ -10,15 +10,11 @@ defmodule Scenic.Primitive.Style.LineWidthTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.LineWidth
 
-#  @dflag_bling      2
-#  @type_code        0x0020
-
-
 
   #============================================================================
   # verify - various forms
 
-  test "verfy works for a single color" do
+  test "verfy works" do
     assert LineWidth.verify( 10 )
     assert LineWidth.verify( 0 )
     assert LineWidth.verify( 255 )
@@ -50,7 +46,7 @@ defmodule Scenic.Primitive.Style.LineWidthTest do
   #============================================================================
   # deserialize
   
-  test "deserialize works" do
+  test "derserialize works" do
     assert LineWidth.deserialize( <<7, 2, 3>> )    == {:ok, 7, <<2, 3>>}
   end
 

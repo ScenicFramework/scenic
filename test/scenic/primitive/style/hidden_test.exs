@@ -10,13 +10,6 @@ defmodule Scenic.Primitive.Style.HiddenTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Hidden
 
-#  @dflag_bling      2
-#  @type_code        0x0010
-
-
-
-
-
 
   #============================================================================
   # verify - various forms

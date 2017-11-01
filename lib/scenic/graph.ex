@@ -750,6 +750,7 @@ defmodule Scenic.Graph do
             graph
             |> put_delta_base( uid, p_original )
             |> put( uid, p_modified )
+            |> calculate_transforms( uid )
 
           _ ->  raise Error, message: "Action must return a valid primitive"
         end
