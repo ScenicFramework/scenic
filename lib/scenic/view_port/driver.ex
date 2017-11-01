@@ -30,25 +30,16 @@ defmodule Scenic.ViewPort.Driver do
   def set_graph( list ),    do: dispatch( :set_graph, list )
   def update_graph( list ), do: dispatch( :update_graph, list )
 
-  #----------------------------------------------
-  defp dispatch( action, data ) do
-    # dispatch the call to any listening drivers
-    Registry.dispatch(:viewport_registry, action, fn(entries) ->
-      for {pid, msg} <- entries do
-        try do
-          GenServer.cast(pid, {msg, data})
-        catch
-          kind, reason ->
-            formatted = Exception.format(kind, reason, System.stacktrace)
-            Logger.error "Registry.dispatch/3 failed with #{formatted}"
-        end
-      end
-    end)
-    :ok
-  end
 
   #----------------------------------------------
   def send_client_message( message ), do: dispatch( :client_message, message )
+
+  #----------------------------------------------
+  # identify the current, loaded drivers
+  def identify() do
+    Registry.match(:viewport_registry, :set_graph, :_)
+    |> Enum.reduce( [], fn({pid, {mod,_}},acc) -> [{mod, pid} | acc] end)
+  end
 
 
 
@@ -94,9 +85,9 @@ defmodule Scenic.ViewPort.Driver do
   def init( {module, opts} ) do
 
     # set up the driver with the viewport registry
-    {:ok, _} = Registry.register(:viewport_registry, :set_graph,    :set_graph )
-    {:ok, _} = Registry.register(:viewport_registry, :update_graph, :update_graph )
-    {:ok, _} = Registry.register(:viewport_registry, :driver_cast,  :driver_cast )
+    {:ok, _} = Registry.register(:viewport_registry, :set_graph,    {module, :set_graph} )
+    {:ok, _} = Registry.register(:viewport_registry, :update_graph, {module, :update_graph} )
+    {:ok, _} = Registry.register(:viewport_registry, :driver_cast,  {module, :driver_cast} )
 
     # let the driver initialize itself
     {:ok, driver_state} = module.init( opts )
@@ -198,6 +189,26 @@ defmodule Scenic.ViewPort.Driver do
   def handle_info(msg, %{driver_module: mod, driver_state: d_state} = state) do
     { :noreply, d_state } = mod.handle_info( msg, d_state )
     { :noreply, Map.put(state, :driver_state, d_state) }
+  end
+
+  #============================================================================
+  # helpers
+
+  #----------------------------------------------
+  defp dispatch( action, data ) do
+    # dispatch the call to any listening drivers
+    Registry.dispatch(:viewport_registry, action, fn(entries) ->
+      for {pid, msg} <- entries do
+        try do
+          GenServer.cast(pid, {msg, data})
+        catch
+          kind, reason ->
+            formatted = Exception.format(kind, reason, System.stacktrace)
+            Logger.error "Registry.dispatch/3 failed with #{formatted}"
+        end
+      end
+    end)
+    :ok
   end
 
 
