@@ -1,5 +1,5 @@
 #
-#  Created by Boyd Multerer on 5/8/17.
+#  Created by Boyd Multerer on 5/8/17. Re-written on 11/01/17
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
@@ -9,116 +9,134 @@ defmodule Scenic.Primitive.RoundedRectangleTest do
 
   alias Scenic.Primitive
   alias Scenic.Primitive.RoundedRectangle
-  alias Scenic.Primitive.Style
-  
 
-  #============================================================================
-  test "type_code" do
-    assert RoundedRectangle.type_code() == <<5 :: unsigned-integer-size(16)-native>>
-  end
+
+  @data     {{10,12}, 40, 80, 10}
+
 
   #============================================================================
   # build / add
 
   test "build works" do
-    p = RoundedRectangle.build( {{10,11}, 40, 80, 4} )
+    p = RoundedRectangle.build( @data )
     assert Primitive.get_parent_uid(p) == -1
     assert Primitive.get_module(p) == RoundedRectangle
-    assert Primitive.get_data(p) == <<
-      10 :: unsigned-integer-size(16)-native,
-      11 :: unsigned-integer-size(16)-native,
-      40 :: unsigned-integer-size(16)-native,
-      80 :: unsigned-integer-size(16)-native,
-      4  :: unsigned-integer-size(16)-native
-    >>
+    assert Primitive.get(p) == @data
   end
 
 
   #============================================================================
-  # get / put
+  # verify
 
-  test "get works" do
-    rrect = RoundedRectangle.build( {{10,11}, 40, 80, 4} )
-    assert RoundedRectangle.get(rrect) == { {10,11}, 40, 80, 4 }
+  test "verify passes valid data" do
+    assert RoundedRectangle.verify( @data ) == true
   end
 
-  test "put works" do
-    rrect = RoundedRectangle.build( {{10,11}, 40, 80, 4} )
-      |> RoundedRectangle.put( {110,111}, 100, 30, 5 )
-    assert RoundedRectangle.get(rrect) == { {110,111}, 100, 30, 5 }
+  test "verify fails invalid data" do
+    assert RoundedRectangle.verify( {{10,11}, 40, 80, 666} )   == false
+    assert RoundedRectangle.verify( {10, 40, 80} )             == false
+    assert RoundedRectangle.verify( {{10,11,12}, 40, 80} )     == false
+    assert RoundedRectangle.verify( {{10,11}, 40, :banana} )   == false
+    assert RoundedRectangle.verify( {{10,:banana}, 40, 80} )   == false
+    assert RoundedRectangle.verify( :banana )                  == false
   end
-
 
   #============================================================================
   # styles
 
-  test "put_style accepts Hidden" do
-    p = RoundedRectangle.build( {{10,11}, 40, 80, 4} )
-      |> Primitive.put_style( Style.Hidden.build(true) )
-    assert Primitive.get_style(p, Style.Hidden)  ==  Style.Hidden.build(true)
+  test "valid_styles works" do
+    assert RoundedRectangle.valid_styles() == [:hidden, :color, :border_color, :border_width]
   end
 
-  test "put_style accepts Color" do
-    rrect = RoundedRectangle.build( {{10,11}, 40, 80, 4} )
-      |> RoundedRectangle.put_style( Style.Color.build(:red) )
-    assert Primitive.get_style(rrect, Style.Color)  ==  Style.Color.build(:red)
+  #============================================================================
+  # transform helpers
+
+  test "default_pin returns the center of the rect" do
+    assert RoundedRectangle.default_pin(@data) == {30, 52}
   end
 
-  test "put_style accepts Color4" do
-    rrect = RoundedRectangle.build( {{10,11}, 40, 80, 4} )
-      |> RoundedRectangle.put_style( Style.Color4.build(:red, :green, :burly_wood, :cornsilk) )
-    assert Primitive.get_style(rrect, Style.Color4) ==  Style.Color4.build(:red, :green, :burly_wood, :cornsilk)
+  test "centroid returns the center of the rect" do
+    assert RoundedRectangle.centroid(@data) == {30, 52}
   end
 
-  test "put_style is exclusive between Color and Color4" do
-    rrect = RoundedRectangle.build( {{10,11}, 40, 80, 4} )
-      |> RoundedRectangle.put_style( Style.Color.build(:green) )
-    assert Primitive.get_style(rrect, Style.Color)  ==  Style.Color.build(:green)
-    assert Primitive.get_style(rrect, Style.Color4)  ==  nil
-
-    rrect = RoundedRectangle.put_style( rrect, Style.Color4.build(:red, :green, :burly_wood, :cornsilk) )
-    assert Primitive.get_style(rrect, Style.Color)  ==  nil
-    assert Primitive.get_style(rrect, Style.Color4) ==  Style.Color4.build(:red, :green, :burly_wood, :cornsilk)
-    
-    rrect = RoundedRectangle.put_style( rrect, Style.Color.build(:cornsilk) )
-    assert Primitive.get_style(rrect, Style.Color)  ==  Style.Color.build(:cornsilk)
-    assert Primitive.get_style(rrect, Style.Color4) ==  nil
+  test "expand expands the data" do
+    assert RoundedRectangle.expand(@data, 10) == {{0,2}, 60, 100, 15}
   end
 
+  #============================================================================
+  # point containment
+  test "contains_point? returns true if it contains the point" do
+    assert RoundedRectangle.contains_point?(@data, {30, 52}) == true
+
+    assert RoundedRectangle.contains_point?(@data, {30,12}) == true
+    assert RoundedRectangle.contains_point?(@data, {30,92}) == true
+    assert RoundedRectangle.contains_point?(@data, {10,52}) == true
+    assert RoundedRectangle.contains_point?(@data, {50,52}) == true
+  end
+
+  test "contains_point? returns false if the point is outside the primary rectangle" do
+    assert RoundedRectangle.contains_point?(@data, {9, 52}) == false
+    assert RoundedRectangle.contains_point?(@data, {51, 52}) == false
+
+    assert RoundedRectangle.contains_point?(@data, {30, 11}) == false
+    assert RoundedRectangle.contains_point?(@data, {30, 93}) == false
+  end
+
+  test "contains_point? returns false if the point is outside the rounded corners but in the primary rect" do
+    assert RoundedRectangle.contains_point?(@data, {11, 13}) == false
+    assert RoundedRectangle.contains_point?(@data, {49, 13}) == false
+
+    assert RoundedRectangle.contains_point?(@data, {49, 91}) == false
+    assert RoundedRectangle.contains_point?(@data, {11, 91}) == false
+  end
+
+  #============================================================================
+  # serialization
+
+  test "serialize native works" do
+    native = <<
+      10  :: integer-size(16)-native,
+      12  :: integer-size(16)-native,
+      40  :: integer-size(16)-native,
+      80  :: integer-size(16)-native,
+      10  :: integer-size(16)-native,
+    >>
+    assert RoundedRectangle.serialize(@data)           == {:ok, native}
+    assert RoundedRectangle.serialize(@data, :native)  == {:ok, native}
+  end
+
+  test "serialize big works" do
+    assert RoundedRectangle.serialize(@data, :big) == {:ok, <<
+      10  :: integer-size(16)-big,
+      12  :: integer-size(16)-big,
+      40  :: integer-size(16)-big,
+      80  :: integer-size(16)-big,
+      10  :: integer-size(16)-big,
+    >>}
+  end
+
+  test "deserialize native works" do
+    bin = <<
+      10  :: integer-size(16)-native,
+      12  :: integer-size(16)-native,
+      40  :: integer-size(16)-native,
+      80  :: integer-size(16)-native,
+      10  :: integer-size(16)-native,
+    >>
+    assert assert RoundedRectangle.deserialize(bin)          == {:ok, @data, ""}
+    assert assert RoundedRectangle.deserialize(bin, :native) == {:ok, @data, ""}
+  end
+
+  test "deserialize big works" do
+    bin = <<
+      10  :: integer-size(16)-big,
+      12  :: integer-size(16)-big,
+      40  :: integer-size(16)-big,
+      80  :: integer-size(16)-big,
+      10  :: integer-size(16)-big,
+    >>
+    assert assert RoundedRectangle.deserialize(bin, :big) == {:ok, @data, ""}
+  end
 
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

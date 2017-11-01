@@ -1,5 +1,5 @@
 #
-#  Created by Boyd Multerer on 5/8/17.
+#  Created by Boyd Multerer on 5/8/17. Re-written on 11/01/17
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
@@ -9,78 +9,118 @@ defmodule Scenic.Primitive.RectangleTest do
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Rectangle
-  alias Scenic.Primitive.Style
 
 
-  #============================================================================
-  test "type_code" do
-    assert Rectangle.type_code() == <<6 :: unsigned-integer-size(16)-native>>
-  end
+  @data     {{10,12}, 40, 80}
+
 
   #============================================================================
   # build / add
 
   test "build works" do
-    p = Rectangle.build( {{10,11}, 40, 80} )
+    p = Rectangle.build( @data )
     assert Primitive.get_parent_uid(p) == -1
     assert Primitive.get_module(p) == Rectangle
-    assert Primitive.get_data(p) == <<
-      10 :: unsigned-integer-size(16)-native,
-      11 :: unsigned-integer-size(16)-native,
-      40 :: unsigned-integer-size(16)-native,
-      80 :: unsigned-integer-size(16)-native
-    >>
+    assert Primitive.get(p) == @data
   end
 
 
   #============================================================================
-  # get / put
+  # verify
 
-  test "get works" do
-    rect = Rectangle.build( {{10,11}, 40, 80} )
-    assert Rectangle.get(rect) == { {10,11}, 40, 80 }
+  test "verify passes valid data" do
+    assert Rectangle.verify( @data ) == true
   end
 
-  test "put works" do
-    rect = Rectangle.build( {{10,11}, 40, 80} )
-      |> Rectangle.put( {110,111}, 100, 30 )
-    assert Rectangle.get(rect) == { {110,111}, 100, 30 }
+  test "verify fails invalid data" do
+    assert Rectangle.verify( {{10,11}, 40, 80, 666} )   == false
+    assert Rectangle.verify( {10, 40, 80} )             == false
+    assert Rectangle.verify( {{10,11,12}, 40, 80} )     == false
+    assert Rectangle.verify( {{10,11}, 40, :banana} )   == false
+    assert Rectangle.verify( {{10,:banana}, 40, 80} )   == false
+    assert Rectangle.verify( :banana )                  == false
   end
 
   #============================================================================
   # styles
 
-  test "put_style accepts Hidden" do
-    rect = Rectangle.build( {{10,11}, 40, 80} )
-      |> Rectangle.put_style( Style.Hidden.build(true) )
-    assert Primitive.get_style(rect, Style.Hidden)  ==  Style.Hidden.build(true)
+  test "valid_styles works" do
+    assert Rectangle.valid_styles() == [:hidden, :color, :border_color, :border_width]
   end
 
-  test "put_style accepts Color" do
-    rect = Rectangle.build( {{10,11}, 40, 80} )
-      |> Rectangle.put_style( Style.Color.build(:red) )
-    assert Primitive.get_style(rect, Style.Color)  ==  Style.Color.build(:red)
+  #============================================================================
+  # transform helpers
+
+  test "default_pin returns the center of the rect" do
+    assert Rectangle.default_pin(@data) == {30, 52}
   end
 
-  test "put_style accepts Color4" do
-    rect = Rectangle.build( {{10,11}, 40, 80} )
-      |> Rectangle.put_style( Style.Color4.build(:red, :green, :burly_wood, :cornsilk) )
-    assert Primitive.get_style(rect, Style.Color4) ==  Style.Color4.build(:red, :green, :burly_wood, :cornsilk)
+  test "centroid returns the center of the rect" do
+    assert Rectangle.centroid(@data) == {30, 52}
   end
 
-  test "put_style is exclusive between Color and Color4" do
-    rect = Rectangle.build( {{10,11}, 40, 80} )
-      |> Rectangle.put_style( Style.Color.build(:green) )
-    assert Primitive.get_style(rect, Style.Color)  ==  Style.Color.build(:green)
-    assert Primitive.get_style(rect, Style.Color4)  ==  nil
+  test "expand expands the data" do
+    assert Rectangle.expand(@data, 10) == {{0,2}, 60, 100}
+  end
 
-    rect = Rectangle.put_style( rect, Style.Color4.build(:red, :green, :burly_wood, :cornsilk) )
-    assert Primitive.get_style(rect, Style.Color)  ==  nil
-    assert Primitive.get_style(rect, Style.Color4) ==  Style.Color4.build(:red, :green, :burly_wood, :cornsilk)
-    
-    rect = Rectangle.put_style( rect, Style.Color.build(:cornsilk) )
-    assert Primitive.get_style(rect, Style.Color)  ==  Style.Color.build(:cornsilk)
-    assert Primitive.get_style(rect, Style.Color4) ==  nil
+  #============================================================================
+  # point containment
+  test "contains_point? returns true if it contains the point" do
+    assert Rectangle.contains_point?(@data, {30, 52}) == true
+    assert Rectangle.contains_point?(@data, {10,12}) == true
+    assert Rectangle.contains_point?(@data, {50,92}) == true
+  end
+
+  test "contains_point? returns false if the point is outside" do
+    assert Rectangle.contains_point?(@data, {9, 52}) == false
+    assert Rectangle.contains_point?(@data, {51, 52}) == false
+
+    assert Rectangle.contains_point?(@data, {30, 11}) == false
+    assert Rectangle.contains_point?(@data, {30, 93}) == false
+  end
+
+  #============================================================================
+  # serialization
+
+  test "serialize native works" do
+    native = <<
+      10  :: integer-size(16)-native,
+      12  :: integer-size(16)-native,
+      40  :: integer-size(16)-native,
+      80  :: integer-size(16)-native,
+    >>
+    assert Rectangle.serialize(@data)           == {:ok, native}
+    assert Rectangle.serialize(@data, :native)  == {:ok, native}
+  end
+
+  test "serialize big works" do
+    assert Rectangle.serialize(@data, :big) == {:ok, <<
+      10  :: integer-size(16)-big,
+      12  :: integer-size(16)-big,
+      40  :: integer-size(16)-big,
+      80  :: integer-size(16)-big,
+    >>}
+  end
+
+  test "deserialize native works" do
+    bin = <<
+      10  :: integer-size(16)-native,
+      12  :: integer-size(16)-native,
+      40  :: integer-size(16)-native,
+      80  :: integer-size(16)-native,
+    >>
+    assert assert Rectangle.deserialize(bin)          == {:ok, @data, ""}
+    assert assert Rectangle.deserialize(bin, :native) == {:ok, @data, ""}
+  end
+
+  test "deserialize big works" do
+    bin = <<
+      10  :: integer-size(16)-big,
+      12  :: integer-size(16)-big,
+      40  :: integer-size(16)-big,
+      80  :: integer-size(16)-big,
+    >>
+    assert assert Rectangle.deserialize(bin, :big) == {:ok, @data, ""}
   end
 
 end

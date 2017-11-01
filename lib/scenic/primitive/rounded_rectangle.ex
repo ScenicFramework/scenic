@@ -36,7 +36,7 @@ defmodule Scenic.Primitive.RoundedRectangle do
         y0      :: integer-size(16)-native,
         width   :: integer-size(16)-native,
         height  :: integer-size(16)-native,
-        radius  :: size(8)
+        radius  :: integer-size(16)-native,
       >>
     }
   end
@@ -47,7 +47,7 @@ defmodule Scenic.Primitive.RoundedRectangle do
         y0      :: integer-size(16)-big,
         width   :: integer-size(16)-big,
         height  :: integer-size(16)-big,
-        radius  :: size(8)
+        radius  :: integer-size(16)-big,
       >>
     }
   end
@@ -59,7 +59,7 @@ defmodule Scenic.Primitive.RoundedRectangle do
       y0      :: integer-size(16)-native,
       width   :: integer-size(16)-native,
       height  :: integer-size(16)-native,
-      radius  :: size(8),
+      radius  :: integer-size(16)-native,
       bin     :: binary
     >>, :native ) do
     {:ok, {{x0, y0}, width, height, radius}, bin}
@@ -69,40 +69,13 @@ defmodule Scenic.Primitive.RoundedRectangle do
       y0      :: integer-size(16)-big,
       width   :: integer-size(16)-big,
       height  :: integer-size(16)-big,
-      radius  :: size(8),
+      radius  :: integer-size(16)-big,
       bin     :: binary
     >>, :big ) do
     {:ok, {{x0, y0}, width, height, radius}, bin}
   end
   def deserialize( binary_data, order ), do: {:err_invalid, binary_data, order }
 
-
-#  #--------------------------------------------------------
-#  def serialize( {{x0, y0}, width, height, radius} ) do
-#    { :ok,
-#      <<
-#        x0      :: integer-size(16)-big,
-#        y0      :: integer-size(16)-big,
-#        width   :: integer-size(16)-big,
-#        height  :: integer-size(16)-big,
-#        radius  :: size(8)
-#      >>
-#    }
-#  end
-#
-#  #--------------------------------------------------------
-#  def deserialize( binary_data )
-#  def deserialize( <<
-#      x0      :: integer-size(16)-big,
-#      y0      :: integer-size(16)-big,
-#      width   :: integer-size(16)-big,
-#      height  :: integer-size(16)-big,
-#      radius  :: size(8),
-#      bin     :: binary
-#    >> ) do
-#    {:ok, {{x0, y0}, width, height, radius}, bin}
-#  end
-#  def deserialize( binary_data ), do: {:err_invalid, binary_data }
 
 
   #============================================================================
@@ -135,4 +108,66 @@ defmodule Scenic.Primitive.RoundedRectangle do
     }
   end
 
+  #--------------------------------------------------------
+  def contains_point?( { {x,y}, w, h, r }, {xp,yp} ) do
+    left          = x
+    top           = y
+    right         = x + w
+    bottom        = y + h
+    inner_left    = left + r
+    inner_top     = top + r
+    inner_right   = right - r
+    inner_bottom  = bottom - r
+
+    cond do
+      # check the clear outer boundary
+      xp < left    -> false
+      yp < top     -> false
+      xp > right   -> false
+      yp > bottom  -> false
+
+      # check the clear inner boundary
+      (xp >= inner_left) && (xp <= inner_right)  -> true
+      (yp >= inner_top) && (yp <= inner_bottom)  -> true
+
+      # check the rounding quadrants
+      # top left
+      (xp < inner_left) && (yp < inner_top) ->
+        inside_radius?({inner_left, inner_left}, r, {xp,yp})
+
+      # top right
+      (xp > inner_right) && (yp < inner_top) ->
+        inside_radius?({inner_right, inner_left}, r, {xp,yp})
+
+      # bottom right
+      (xp > inner_right) && (yp > inner_bottom) ->
+        inside_radius?({inner_right, inner_bottom}, r, {xp,yp})
+
+      # bottom left
+      (xp < inner_left) && (yp > inner_bottom) ->
+        inside_radius?({inner_left, inner_bottom}, r, {xp,yp})
+
+      # that should cover all the cases
+    end
+  end
+
+  defp inside_radius?({x,y}, r, {xp,yp}) do
+    # calc the squared distance from the point to the center of the arc
+    dx = xp - x
+    dy = yp - y
+    d_sqr = (dx * dx) + (dy * dy)
+    # if r squared is bigger, then it is inside the radius
+    (r * r) >= d_sqr
+  end
+
 end
+
+
+
+
+
+
+
+
+
+

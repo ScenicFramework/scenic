@@ -27,6 +27,8 @@ defmodule Scenic.Primitive do
   @callback default_pin( any ) :: {integer, integer}
   @callback expand( any ) :: any
 
+  @callback contains_point?( any, {integer, integer} ) :: true | false
+
 
 
   @not_styles       [:module, :uid, :parent_uid, :id, :tags, :event_filter,
@@ -92,12 +94,18 @@ defmodule Scenic.Primitive do
       # this is the case for groups, lines, and polygons
       def expand( data ), do: data
 
+      # the default is false for contains_point?. Primitive types
+      # are effectively un-clickable unless this is overridden.
+      # point must already be transformed into local coordinates
+      def contains_point?( _, _), do: false
+
       #--------------------------------------------------------
       defoverridable [
-        build:          2,
-        add_to_graph:   3,
-        filter_styles:  1,
-        expand:         1
+        build:            2,
+        add_to_graph:     3,
+        filter_styles:    1,
+        expand:           1,
+        contains_point?:  2
       ]
     end # quote
   end # defmacro

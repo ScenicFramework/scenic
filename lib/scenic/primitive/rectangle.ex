@@ -96,4 +96,26 @@ defmodule Scenic.Primitive.Rectangle do
     }
   end
 
+  #--------------------------------------------------------
+  def contains_point?( { {x,y}, w, h }, {xp,yp} ) do
+    cond do
+      xp < x       -> false
+      yp < y       -> false
+      xp > x + w   -> false
+      yp > y + h   -> false
+      true         -> true
+    end
+  end
+
 end
+
+
+
+
+
+
+
+
+
+
+
