@@ -1118,7 +1118,7 @@ defmodule Scenic.Graph do
 
   #============================================================================
   def calculate_transforms( graph, uid, parent_tx \\ nil )
-  def calculate_transforms( graph, uid, nil ) do
+  def calculate_transforms( %Graph{} = graph, uid, nil ) do
     case get(graph, uid) do
       nil ->
         graph
@@ -1135,7 +1135,7 @@ defmodule Scenic.Graph do
       nil -> graph
       %Primitive{module: mod, data: data} = p ->
         p = do_calculate_transforms( p, parent_tx )
-        graph = Map.put(graph, uid, p)
+        graph = put(graph, uid, p)
 
         # if this is a group, recurse it's children
         case mod do
@@ -1183,6 +1183,38 @@ defmodule Scenic.Graph do
           nil ->  merged
           tx  ->  Matrix.mul( merged, tx )
         end
+    end
+  end
+
+
+  #--------------------------------------------------------
+  # possible optimization here by rolling into a custom traversal that keeps track
+  # of the current inverse_tx without having to walk backwards to find it for each
+  # primitive.
+  def find_by_screen_point(%Graph{} = graph, {x,y}) when is_number(x) and is_number(y) do
+    reduce(graph, nil, fn(%Primitive{module: mod, data: data} = p,acc) ->
+      # get the local (or inherited) inverse tx for this primitive
+      # then project the point by that matrix to get the local point
+      local_point = get_inverse_tx(graph, p)
+      |> Matrix.project_vector( {x, y} )
+
+      # test if the point is in the primitive
+      case mod.contains_point?( data, local_point ) do
+        true  -> p
+        false -> acc
+      end
+    end)
+  end
+
+
+  #--------------------------------------------------------
+  # not good enough to get the inverse tx directly off of p.
+  # the inverse tx can be inherited from groups above this
+  defp get_inverse_tx(graph, nil), do: @identity
+  defp get_inverse_tx(graph, %Primitive{parent_uid: puid} = p) do
+    case Map.get(p, :inverse_tx) do
+      nil -> get_inverse_tx(graph, Graph.get(graph, puid))
+      tx -> tx
     end
   end
 
