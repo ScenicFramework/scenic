@@ -24,11 +24,14 @@ defmodule Scenic.Graph do
   alias Scenic.Primitive
   alias Scenic.Primitive.Group
 #  alias Scenic.Primitive.StyleSet
+  alias Scenic.Math.MatrixBin, as: Matrix
 
   import IEx
 
   # make reserved uids, 3 or shorter to avoid potential conflicts
   @root_uid               0
+
+  @identity               Matrix.identity()
 
 
   defstruct primitive_map: %{}, id_map: %{}, next_uid: 1, deltas: %{},
@@ -189,6 +192,7 @@ defmodule Scenic.Graph do
     |> Map.put(:uid, @root_uid)
 
     graph = %Graph{ primitive_map:  %{ @root_uid => root } }
+    |> calculate_transforms( 0 )
 
     case opts[:id] do
       nil ->  graph
@@ -305,7 +309,7 @@ defmodule Scenic.Graph do
     end)
   end
 
-  # build an add a new primitive to an existing group in a graph
+  # build and add a new primitive to an existing group in a graph
   def add_to( graph, id, primitive_module, primitive_data, opts \\ [])
   def add_to( %Graph{add_to: puid} = graph, id, primitive_module, primitive_data, opts) when not is_integer(id) do
     get(graph, id)
@@ -631,6 +635,7 @@ defmodule Scenic.Graph do
       nil -> graph
       id ->   map_id_to_uid(graph, id, uid)
     end
+    |> calculate_transforms( uid )
 
     # increment the next uid and gen the completed graph
     {put_next_uid(graph, next_uid + 1), uid}
@@ -709,6 +714,7 @@ defmodule Scenic.Graph do
     |> Map.put(:primitive_map, p_map)
     |> Map.put(:id_map, id_map)
     |> Map.put(:next_uid, next_uid)
+    |> calculate_transforms( uid )
     {graph, uid}
   end
 
@@ -1104,6 +1110,79 @@ defmodule Scenic.Graph do
 
   def minimal( %Graph{primitive_map: p_map} ) do
     Enum.map(p_map, fn({k,p})-> { k, Primitive.minimal(p) } end)
+  end
+
+
+
+
+  #============================================================================
+  def calculate_transforms( graph, uid, parent_tx \\ nil )
+  def calculate_transforms( graph, uid, nil ) do
+    case get(graph, uid) do
+      nil ->
+        graph
+      %Primitive{parent_uid: puid} ->
+        calculate_transforms(
+          graph,
+          uid,
+          get_merged_tx(graph, puid)
+        )
+    end
+  end
+  def calculate_transforms( graph, uid, parent_tx ) do
+    case get(graph, uid) do
+      nil -> graph
+      %Primitive{module: mod, data: data} = p ->
+        p = do_calculate_transforms( p, parent_tx )
+        graph = Map.put(graph, uid, p)
+
+        # if this is a group, recurse it's children
+        case mod do
+          Group ->
+            p_tx = Map.get(p, :local_tx, parent_tx)
+            Enum.reduce(data, graph, fn(id, g) ->
+              calculate_transforms( g, id, p_tx )
+            end)
+          _ ->
+            graph
+        end
+      end
+  end
+
+
+  #--------------------------------------------------------
+  defp do_calculate_transforms( %Primitive{} = p, parent_tx ) do
+    Map.get( p, :transforms )
+    |> Primitive.Transform.calculate_local()
+    |> case do
+      nil ->
+        p
+        |> Map.delete(:local_tx)
+        |> Map.delete(:inverse_tx)
+
+      local_tx ->
+        inverse = Matrix.mul( parent_tx, local_tx )
+        |> Matrix.invert()
+        p
+        |> Map.put(:local_tx, local_tx)
+        |> Map.put(:inverse_tx, inverse)
+    end
+  end
+
+
+  #--------------------------------------------------------
+  def get_merged_tx(graph, id)
+  def get_merged_tx(_, -1), do: @identity
+  def get_merged_tx(graph, id) do
+    case Map.get(graph, id) do
+      nil -> @identity
+      %{parent_uid: puid} = p ->
+        merged = get_merged_tx(graph, puid)
+        case Map.get(p, :local_tx) do
+          nil ->  merged
+          tx  ->  Matrix.mul( merged, tx )
+        end
+    end
   end
 
 end

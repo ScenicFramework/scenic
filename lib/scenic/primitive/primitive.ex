@@ -43,7 +43,8 @@ defmodule Scenic.Primitive do
   # note: the following fields are all optional on a primitive.
   # :id, :tags, :event_filter, :state, :styles, :transforms
   defstruct module: nil, uid: -1, parent_uid: -1, data: nil,
-    id: nil, tags: [], event_filter: nil, state: nil, styles: %{}, transforms: %{}
+    id: nil, tags: [], event_filter: nil, state: nil, styles: %{}, transforms: %{},
+    local_tx: nil, inverse_tx: nil
 
 
 
