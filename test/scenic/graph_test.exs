@@ -27,20 +27,26 @@ defmodule Scenic.GraphTest do
 
   @tx_pin                 {10,11}
   @tx_rot                 0.1
-  @transform              Transform.build(pin: @tx_pin, rot: @tx_rot)
+  @transform              %{pin: @tx_pin, rotate: @tx_rot}
 
   @empty_group            Group.build()
 
-  @empty_root             Group.build() |> Primitive.do_put_uid(@root_uid)
+  @empty_root             Group.build() |> Primitive.put_uid(@root_uid)
   @primitive_map          %{ @root_uid => @empty_root }
   @id_map                 %{}
   @graph_empty            Graph.build()
 
 
   @filter_graph Graph.build()
-    |> Graph.put_new( 0, Primitive.Group.build(id: "group"), fn(graph, parent) ->
-      Graph.put_new( graph, parent, Rectangle.build({{0, 0}, 100, 200}, id: :rect) )
-    end)
+    |>Primitive.Group.add_to_graph( fn(g) ->
+      Rectangle.add_to_graph( g, {{0, 0}, 100, 200}, id: :rect )
+    end, id: "group")
+
+#      Rectangle.add_to_graph( g, {{0, 0}, 100, 200}, id: :rect )
+
+
+
+
 
 
   @find_outer_text  Text.build({{10,10}, "Some sample text"}, id: :outer_text, tags: ["outer", "text", :text_atom, :on_root] )
