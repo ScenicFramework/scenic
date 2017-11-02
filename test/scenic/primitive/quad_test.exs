@@ -32,11 +32,17 @@ defmodule Scenic.Primitive.QuadTest do
 
   test "verify passes valid convex" do
     assert Quad.verify( @convex )     == true
-    assert Quad.verify( @concave )    == true
-    assert Quad.verify( @degenerate ) == true
   end
 
-  test "verify fails invalid convex" do
+  test "verify fails concave quads" do
+    refute Quad.verify( @concave )
+  end
+
+  test "verify fails degenerate quads" do
+    refute Quad.verify( @degenerate )
+  end
+
+  test "verify fails obviously invalid" do
     assert Quad.verify( {{10,11}, 40, 80, 666} )   == false
     assert Quad.verify( {10, 40, 80} )             == false
     assert Quad.verify( {{10,11,12}, 40, 80} )     == false
