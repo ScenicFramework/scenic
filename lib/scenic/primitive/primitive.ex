@@ -374,6 +374,12 @@ defmodule Scenic.Primitive do
     |> ( &put_transforms(p, &1) ).()
   end
 
+  def put_transform(%Primitive{} = p, tx_list) when is_list(tx_list) do
+    Enum.reduce(tx_list, p, fn({k,v},acc) ->
+      put_transform(acc, k, v)
+    end)
+  end
+
   def drop_transform(primitive, tx_type)
   def drop_transform(%Primitive{} = p, tx_type) when is_atom(tx_type) do
     Map.get(p, :transforms, %{})

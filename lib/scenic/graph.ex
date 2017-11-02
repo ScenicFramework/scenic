@@ -274,7 +274,7 @@ defmodule Scenic.Graph do
   # build and add new primitives
   def add( graph, primitive_module, primitive_data, opts \\ [])
 
-  def add( %Graph{add_to: puid} = g, Group, builder, opts) when is_function(builder, 2) do
+  def add( %Graph{add_to: puid} = g, Group, builder, opts) when is_function(builder, 1) do
     p = Group.build([], opts)
     {graph, uid} = insert_at({g, puid}, -1, p, opts)
 
@@ -742,9 +742,11 @@ defmodule Scenic.Graph do
           ^p_original -> graph
 
           # change. record it
-          %Primitive{module: mod, styles: styles} = p_modified ->
+          %Primitive{module: mod} = p_modified ->
             # filter the styles
-            styles = mod.filter_styles( styles )
+            styles = Map.get(p_modified, :styles, %{})
+            |> mod.filter_styles( )
+
             p_modified = Map.put(p_modified, :styles, styles)
 
             graph

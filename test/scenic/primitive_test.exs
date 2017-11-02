@@ -243,12 +243,21 @@ defmodule Scenic.PrimitiveTest do
     assert Primitive.get_transform(p, :pin) == {987,654}
   end
 
+  test "put_transform puts a list of transforms" do
+    p = Primitive.put_transform(@primitive, [pin: {1,2}, scale: 1.2] )
+    assert Primitive.get_transforms(p) == %{
+      pin:    {1,2},
+      scale:  1.2,
+      rotate: @tx_rotate
+    }
+  end
+
   test "put_transform deletes the transform type if setting to nil" do
     p = Primitive.put_transform(@primitive, :pin, nil)
     assert Primitive.get_transforms(p) == %{ rotate: @tx_rotate }
   end
 
-  test "put_transform sets the transform to nil" do
+  test "put_transforms sets the transform to nil" do
     p = Primitive.put_transforms(@primitive, nil)
     assert Map.get(p, :transforms) == nil
   end

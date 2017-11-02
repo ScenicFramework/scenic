@@ -14,14 +14,12 @@ defmodule Scenic.GraphTest do
   alias Scenic.Primitive.Rectangle
   alias Scenic.Primitive.Line
   alias Scenic.Primitive.Style
-  alias Scenic.Template.Button
+#  alias Scenic.Template.Button
 
-  alias Scenic.Primitive.Transform
+#  alias Scenic.Primitive.Transform
 
 
-#  import IEx
-
-  @end_id_ref_marker      <<0xff, 0xff, 0xff, 0xff>>
+  import IEx
   
   @root_uid               0
 
@@ -38,39 +36,32 @@ defmodule Scenic.GraphTest do
 
 
   @filter_graph Graph.build()
-    |>Primitive.Group.add_to_graph( fn(g) ->
+    |> Primitive.Group.add_to_graph( fn(g) ->
       Rectangle.add_to_graph( g, {{0, 0}, 100, 200}, id: :rect )
     end, id: "group")
 
-#      Rectangle.add_to_graph( g, {{0, 0}, 100, 200}, id: :rect )
 
-
-
-
-
-
-  @find_outer_text  Text.build({{10,10}, "Some sample text"}, id: :outer_text, tags: ["outer", "text", :text_atom, :on_root] )
-  @find_outer_line  Line.build({{10,10}, {100, 100}}, id: :outer_line, tags: ["outer", "line"] )
-  @find_outer_btn   Button.build("Continue", id: :outer_btn, tags: ["outer"] )
-
-  @find_inner_text  Text.build({{10,10}, "inner text"}, id: :inner_text, tags: ["inner", "text", :text_atom] )
-  @find_inner_line  Line.build({{10,10}, {100, 100}}, id: :inner_line, tags: ["inner", "line"], state: {:abc, 123} )
+#  @find_outer_text  Text.build({{10,10}, "Some sample text"}, id: :outer_text, tags: ["outer", "text", :text_atom, :on_root] )
+#  @find_outer_line  Line.build({{10,10}, {100, 100}}, id: :outer_line, tags: ["outer", "line"] )
+#  @find_outer_btn   Button.build("Continue", id: :outer_btn, tags: ["outer"] )
+#
+#  @find_inner_text  Text.build({{10,10}, "inner text"}, id: :inner_text, tags: ["inner", "text", :text_atom] )
+#  @find_inner_line  Line.build({{10,10}, {100, 100}}, id: :inner_line, tags: ["inner", "line"], state: {:abc, 123} )
 
   @graph_find       Graph.build()
-    |> Graph.put_new( 0, @find_outer_text )
-    |> Graph.put_new( 0, @find_outer_line )
-    |> Graph.put_new( 0, @find_outer_btn )
-    |> Graph.put_new( 0, Group.build(id: :group), fn(graph, parent_uid) ->
-        graph
-        |> Graph.put_new( parent_uid, @find_inner_text )
-        |> Graph.put_new( parent_uid, @find_inner_line )
-      end)
+    |> Text.add_to_graph( {{10,10}, "Some sample text"}, id: :outer_text, tags: ["outer", "text", :text_atom, :on_root] )
+    |> Line.add_to_graph( {{10,10}, {100, 100}}, id: :outer_line, tags: ["outer", "line"] )
+#    |> Button.add_to_graph( {{10,10,"Continue"}, id: :outer_btn, tags: ["outer"] )
+    |> Group.add_to_graph( fn(g) ->
+      g
+      |> Text.add_to_graph({{10,10}, "inner text"}, id: :inner_text, tags: ["inner", "text", :text_atom])
+      |> Line.add_to_graph({{10,10}, {100, 100}}, id: :inner_line, tags: ["inner", "line"], state: {:abc, 123})
+    end, id: :group)
 
   @graph_ordered Graph.build()
-      |> Graph.put_new( 0, Line.build({{10,10}, {100, 100}}, id: :line, tags: ["first"] ) )
-      |> Graph.put_new( 0, Text.build({{20,20}, "text"}, id: :text ) )
-      |> Graph.put_new( 0, Line.build({{30,30}, {300, 300}}, id: :line, tags: ["second"] ) )
-
+    |> Line.add_to_graph( {{10,10}, {100, 100}}, id: :line, tags: ["first"] )
+    |> Text.add_to_graph( {{20,20}, "text"}, id: :text )
+    |> Line.add_to_graph( {{30,30}, {300, 300}}, id: :line, tags: ["second"] )
 
 
   #============================================================================
@@ -93,10 +84,10 @@ defmodule Scenic.GraphTest do
     assert Graph.get_next_uid( @graph_empty ) == 1
   end
 
-  test "get_update_list returns the list of uids to update" do
-    graph = Graph.put_update_list(@graph_empty, [1,2,3])
-    assert Graph.get_update_list( graph ) == [1,2,3]
-  end
+#  test "get_update_list returns the list of uids to update" do
+#    graph = Graph.put_update_list(@graph_empty, [1,2,3])
+#    assert Graph.get_update_list( graph ) == [1,2,3]
+#  end
 
 
   #============================================================================
@@ -133,30 +124,30 @@ defmodule Scenic.GraphTest do
   #============================================================================
   # queue_uid_update(graph, uid)
 
-  test "queue_uid_update adds a uid to the update list" do
-    graph = Graph.build()
-    assert Graph.get_update_list( graph ) == []
-
-    graph = Graph.queue_uid_update(graph, 123)
-    assert Graph.get_update_list( graph ) == [123]
-  end
-
-  test "queue_uid_update rejects atoms as uids" do
-    assert_raise FunctionClauseError, fn ->
-      Graph.queue_uid_update(@graph_empty, :an_atom)
-    end
-  end
+#  test "queue_uid_update adds a uid to the update list" do
+#    graph = Graph.build()
+#    assert Graph.get_update_list( graph ) == []
+#
+#    graph = Graph.queue_uid_update(graph, 123)
+#    assert Graph.get_update_list( graph ) == [123]
+#  end
+#
+#  test "queue_uid_update rejects atoms as uids" do
+#    assert_raise FunctionClauseError, fn ->
+#      Graph.queue_uid_update(@graph_empty, :an_atom)
+#    end
+#  end
 
   #============================================================================
   # reset_update_list(graph)
-  test "reset_update_list resets the update list" do
-    graph = Graph.build()
-    |> Graph.put_update_list([1,2,3,4,5])
-    assert Graph.get_update_list( graph ) == [1,2,3,4,5]
-
-    graph = Graph.reset_update_list( graph )
-    assert Graph.get_update_list( graph ) == []
-  end
+#  test "reset_update_list resets the update list" do
+#    graph = Graph.build()
+#    |> Graph.put_update_list([1,2,3,4,5])
+#    assert Graph.get_update_list( graph ) == [1,2,3,4,5]
+#
+#    graph = Graph.reset_update_list( graph )
+#    assert Graph.get_update_list( graph ) == []
+#  end
 
 
   #============================================================================
@@ -255,20 +246,8 @@ defmodule Scenic.GraphTest do
   end
 
   test "count counts the items in the graph" do
-    assert Enum.count( Graph.get_primitive_map(@graph_find) ) == 9
-    assert Graph.count(@graph_find) == 9
-  end
-
-  test "count ignores primitives that are not in the hierarchy (parent == -1)" do
-    graph = Graph.put_new(@graph_find, -1, Text.build({{10,10}, "Outside Tree"}) )
-    assert Enum.count( Graph.get_primitive_map(graph) ) == 10
-    assert Graph.count(graph) == 9
-  end
-
-  test "count includes everything if -1 is requested" do
-    graph = Graph.put_new(@graph_find, -1, Text.build({{10,10}, "Outside Tree"}) )
-    assert Enum.count( Graph.get_primitive_map(graph) ) == 10
-    assert Graph.count(graph, -1) == 10
+    assert Enum.count( Graph.get_primitive_map(@graph_find) ) == 6
+    assert Graph.count(@graph_find) == 6
   end
 
   test "count counts the primitives with a given id" do
@@ -315,82 +294,17 @@ defmodule Scenic.GraphTest do
 
 
   #============================================================================
-  # put_new( graph, parent, primitive_or_fn )
-  test "put_new adds a new primitive to a graph under the designated parent uid" do
-    # first add an inner group under the root
-    graph = Graph.put_new(@graph_empty, @root_uid, Group.build(id: :inner_group))
-    [inner_uid] = Graph.resolve_id(graph, :inner_group)
-    assert inner_uid == 1
-
-    # next add a line to the inner group
-    line = Line.build({{0,0},{10,10}}, id: :line)
-    graph = Graph.put_new(graph, inner_uid, line)
-    [line_uid] = Graph.resolve_id(graph, :line)
-    assert line_uid == 2
-
-    # finally, make sure the line is a child of the inner group
-    inner_group = Graph.get(graph, inner_uid)
-    assert Enum.member?(Group.get(inner_group), line_uid)
-  end
-
-
-  test "put_new adds a new primitive outside the graph if parent_uid is -1" do
-    # add a line outside the graph
-    line = Line.build({{0,0},{10,10}}, id: :line)
-    graph = Graph.put_new(@graph_empty, -1, line)
-    [line_uid] = Graph.resolve_id(graph, :line)
-    assert line_uid == 1
-
-    # finally, make sure the line is a child of the inner group
-    root = Graph.get_root(graph)
-    assert Group.get(root) == []
-  end
-
-  test "put_new uses the post_build callback with the added primitive's uid" do
-    text = "This is some text."
-    graph = Graph.put_new(@graph_empty, @root_uid, Text.build({{10, 16}, text}, id: :text), fn(g, uid) ->
-      p = Graph.get(g, uid)
-      assert Text.get(p) == {{10, 16}, text}
-      g
-    end)
-    [uid] = Graph.resolve_id(graph, :text)
-    p = Graph.get(graph, uid)
-    assert Text.get(p) == {{10, 16}, text}
-  end
-
-  #============================================================================
-  # put(graph, uid, primitive)
-
-  test "put overwrites a primitive by uid" do
-    line = Line.build({{0,0},{10,10}}, id: :line)
-    graph = Graph.put_new(@graph_empty, -1, line)
-    [uid] = Graph.resolve_id(graph, :line)
-    assert Graph.get(graph, uid) |> Line.get() == {{0,0},{10,10}}
-
-    graph = Graph.put(graph, uid, Line.build({{21,22},{123,124}}) )
-    assert Graph.get(graph, uid) |> Line.get() == {{21,22},{123,124}}
-  end
-
-  test "put raises if the uid is not already a primitive" do
-    assert_raise Graph.Error, fn ->
-      Graph.put(@graph_empty, 123, Line.build({{21,22},{123,124}}))
-    end
-  end
-
-
-  #============================================================================
   # get
   test "get gets the root by uid" do
     assert Graph.get(@graph_empty, @root_uid) == @empty_root
   end
 
   test "get gets a primnitve by uid" do
-    empty_group = Primitive.do_put_id(@empty_group, :one)
+    empty_group = Primitive.put_id(@empty_group, :one)
     {graph, uid} = Graph.insert_at(@graph_empty, -1, empty_group)
     p = Graph.get(graph, uid)
     assert Primitive.get_parent_uid(p) == 0
     assert Primitive.get_module(p) == Group
-    assert Primitive.get_data(p) == @end_id_ref_marker
   end
 
   test "get returns nil for missing if no default specified" do
@@ -401,20 +315,34 @@ defmodule Scenic.GraphTest do
     assert Graph.get(@graph_empty, 123, :missing) == :missing
   end
 
+  #============================================================================
+  # put(graph, uid, primitive)
+
+  test "put overwrites a primitive by uid" do
+    graph = @graph_ordered
+    assert Graph.get(graph, 1) |> Primitive.get() == {{10, 10}, {100, 100}}
+    graph = Graph.put(graph, 1, Line.build({{21,22},{123,124}}) )
+    assert Graph.get(graph, 1) |> Primitive.get() == {{21,22},{123,124}}
+  end
+
+  test "put raises if the uid is not already a primitive" do
+    assert_raise Graph.Error, fn ->
+      Graph.put(@graph_empty, 123, Line.build({{21,22},{123,124}}))
+    end
+  end
 
   #============================================================================
   # get by developer id
   test "get gets an element by id" do
-    empty_group = Primitive.do_put_id(@empty_group, :one)
+    empty_group = Primitive.put_id(@empty_group, :one)
     {graph, _uid} = Graph.insert_at(@graph_empty, -1, empty_group)
     [p] = Graph.get(graph, :one)
     assert Primitive.get_parent_uid(p) == 0
     assert Primitive.get_module(p) == Group
-    assert Primitive.get_data(p) == @end_id_ref_marker
   end
 
   test "get gets multiple elements by id" do
-    empty_group = Primitive.do_put_id(@empty_group, :one)
+    empty_group = Primitive.put_id(@empty_group, :one)
 
     {graph, uid_1} = Graph.insert_at(@graph_empty, -1, empty_group)
     {graph, uid_2} = Graph.insert_at({graph, uid_1}, -1, empty_group)
@@ -424,12 +352,10 @@ defmodule Scenic.GraphTest do
     assert Primitive.get_uid(a) == uid_1
     assert Primitive.get_parent_uid(a) == 0
     assert Primitive.get_module(a) == Group
-    assert Primitive.get_data(a) == <<2, 0, 0, 0, @end_id_ref_marker>>
 
     assert Primitive.get_uid(b) == uid_2
     assert Primitive.get_parent_uid(b) == uid_1
     assert Primitive.get_module(b) == Group
-    assert Primitive.get_data(b) == @end_id_ref_marker
   end
 
 
@@ -441,12 +367,11 @@ defmodule Scenic.GraphTest do
   end
 
   test "get! gets an element by uid" do
-    empty_group = Primitive.do_put_id(@empty_group, :one)
+    empty_group = Primitive.put_id(@empty_group, :one)
     {graph, uid} = Graph.insert_at(@graph_empty, -1, empty_group)
     p = Graph.get!(graph, uid)
     assert Primitive.get_parent_uid(p) == 0
     assert Primitive.get_module(p) == Group
-    assert Primitive.get_data(p) == @end_id_ref_marker
   end
 
   test "get! raises if the uid is not present" do
@@ -595,7 +520,6 @@ defmodule Scenic.GraphTest do
     p = Map.get(p_map, uid)
     assert Primitive.get_parent_uid(p) == 0
     assert Primitive.get_module(p) == Group
-    assert Primitive.get_data(p) == @end_id_ref_marker
 
     # check that the item's uid was updated
     assert Primitive.get_uid(p) == uid
@@ -604,7 +528,7 @@ defmodule Scenic.GraphTest do
     assert next_uid == 2
 
     # check that the root now includes it as a child
-    assert Group.get( Graph.get_root(graph) ) == [uid]
+    assert Primitive.get( Graph.get_root(graph) ) == [uid]
 
     # check that no id_map was set
     assert Graph.get_id_map(graph) == %{}
@@ -612,14 +536,13 @@ defmodule Scenic.GraphTest do
 
   test "insert_at inserts an element at the root with just a graph passed in and assigns a new uid and sets id" do
     # insert - returns transformed graph and assigned uid
-    empty_group = Primitive.do_put_id( @empty_group, :test_id )
+    empty_group = Primitive.put_id( @empty_group, :test_id )
     {graph, uid} = Graph.insert_at(@graph_empty, -1, empty_group)
 
     #check that it was added
     p = Graph.get(graph, uid)
     assert Primitive.get_parent_uid(p) == 0
     assert Primitive.get_module(p) == Group
-    assert Primitive.get_data(p) == @end_id_ref_marker
 
     # check that the item's uid was updated
     assert Primitive.get_uid(p) == uid
@@ -630,14 +553,13 @@ defmodule Scenic.GraphTest do
 
   test "insert_at inserts an element with parent_uid of -1, which means it is in the map but not the tree" do
     # insert - returns transformed graph and assigned uid
-    empty_group = Primitive.do_put_id(@empty_group, :test_id)
+    empty_group = Primitive.put_id(@empty_group, :test_id)
     {graph, uid} = Graph.insert_at({@graph_empty, -1}, -1, empty_group)
 
     #check that it was added
     p = Graph.get(graph, uid)
     assert Primitive.get_parent_uid(p) == -1
     assert Primitive.get_module(p) == Group
-    assert Primitive.get_data(p) == @end_id_ref_marker
 
     # check that the item's uid was updated
     assert Primitive.get_uid(p) == uid
@@ -662,13 +584,12 @@ defmodule Scenic.GraphTest do
     p = Graph.get(graph, uid)
     assert Primitive.get_parent_uid(p) == 0
     assert Primitive.get_module(p) == Group
-    assert Primitive.get_data(p) == @end_id_ref_marker
 
     # check that the item's uid was updated
     assert Primitive.get_uid(p) == uid
 
     # check that the root now includes it as a child
-    assert Group.get( Graph.get_root(graph) ) == [uid]
+    assert Primitive.get( Graph.get_root(graph) ) == [uid]
 
     # check that no id_map was set
     assert Graph.get_id_map(graph) == %{}
@@ -683,7 +604,6 @@ defmodule Scenic.GraphTest do
     p = Graph.get(graph, parent_uid)
     assert Primitive.get_parent_uid(p) == 0
     assert Primitive.get_module(p) == Group
-    assert Primitive.get_data(p) == @end_id_ref_marker
 
     # insert the div - returns transformed graph and assigned uid
     {graph, uid} = Graph.insert_at({graph, parent_uid}, -1, @empty_group)
@@ -692,14 +612,13 @@ defmodule Scenic.GraphTest do
     p = Graph.get(graph, uid)
     assert Primitive.get_parent_uid(p) == parent_uid
     assert Primitive.get_module(p) == Group
-    assert Primitive.get_data(p) == @end_id_ref_marker
 
     # check that the item's uid was updated
     assert Primitive.get_uid(p) == uid
 
     # check that the parent references the new element
     p = Graph.get(graph, parent_uid)
-    assert Primitive.get_data(p) == <<uid :: integer-size(32)-native, @end_id_ref_marker>>
+    assert Primitive.get(p) == [uid]
 
     # check that no id map was set
     assert Graph.get_id_map(graph) == %{}
@@ -713,25 +632,23 @@ defmodule Scenic.GraphTest do
     p = Graph.get(graph, parent_uid)
     assert Primitive.get_parent_uid(p) == 0
     assert Primitive.get_module(p) == Group
-    assert Primitive.get_data(p) == @end_id_ref_marker
 
 
     # insert the div - returns transformed graph and assigned uid
-    empty_group = Primitive.do_put_id(@empty_group, :test_id)
+    empty_group = Primitive.put_id(@empty_group, :test_id)
     {graph, uid} = Graph.insert_at({graph, parent_uid}, -1, empty_group)
 
     #check that it was added
     p = Graph.get(graph, uid)
     assert Primitive.get_parent_uid(p) == parent_uid
     assert Primitive.get_module(p) == Group
-    assert Primitive.get_data(p) == @end_id_ref_marker
 
     # check that the item's uid was updated
     assert Primitive.get_uid(p) == uid
 
     # check that the parent references the new element    
     p = Graph.get(graph, parent_uid)
-    assert Primitive.get_data(p) == <<uid :: integer-size(32)-native, @end_id_ref_marker>>
+    assert Primitive.get(p) == [uid]
 
     # check that the id map was added
     assert Graph.get_id_map(graph) == %{test_id: [uid]}
@@ -750,7 +667,7 @@ defmodule Scenic.GraphTest do
     assert Graph.get_next_uid(graph) == 2
 
     # create the "template" graph to insert
-    empty_group_with_id = Primitive.do_put_id(@empty_group, :t_tree)
+    empty_group_with_id = Primitive.put_id(@empty_group, :t_tree)
 
     graph_t =           Graph.build(id: :template)
     {graph_t, _} =      Graph.insert_at(graph_t, -1, @empty_group)
@@ -784,7 +701,7 @@ defmodule Scenic.GraphTest do
     assert Graph.get_next_uid(merged) == 7
 
     # make sure the added tree is referenced by its new parent
-    assert Group.get( Graph.get(merged, parent_uid) ) == [t_uid]
+    assert Primitive.get( Graph.get(merged, parent_uid) ) == [t_uid]
     assert Primitive.get_parent_uid( Graph.get(merged, t_uid) ) == parent_uid
   end
 
@@ -795,20 +712,22 @@ defmodule Scenic.GraphTest do
     {graph, uid} = Graph.insert_at(@graph_empty, -1, @empty_group)
 
     # confirm setup
-    assert Primitive.get_transform( Graph.get(graph, uid) ) == nil
+    assert Primitive.get_transforms( Graph.get(graph, uid) ) == %{}
 
     # modify the element by assigning a transform to it
     graph = Graph.modify(graph, uid, fn(p)->
-      Primitive.put_transform( p, @transform )
+      Primitive.put_transform( p, [pin: {1,2}, rotate: 0.2] )
     end)
 
     # confirm result
-    assert Primitive.get_transform( Graph.get(graph, uid) ) == @transform
-    assert Graph.get_update_list(graph) == [uid]
+    p = Graph.get(graph, uid)
+    assert Primitive.get_transforms( p ) == %{pin: {1, 2}, rotate: 0.2}
+    assert Graph.get_delta_scripts(graph) ==
+      [{1, [{:put, {:transforms, :rotate}, 0.2}, {:put, {:transforms, :pin}, {1, 2}}]}]
   end
 
   test "modify transforms a single primitive by developer id" do
-    empty_group_with_id = Primitive.do_put_id(@empty_group, :test_id)
+    empty_group_with_id = Primitive.put_id(@empty_group, :test_id)
 
     graph =           Graph.build()
     {graph, _} =      Graph.insert_at(graph, -1, @empty_group)
@@ -980,8 +899,8 @@ defmodule Scenic.GraphTest do
   #============================================================================
   # reduce(graph, id, acc, action) - just mapped to id
   test "reduce reduces just nodes mapped to a mapped id" do
-    empty_group_id_one= Primitive.do_put_id(@empty_group, :one)
-    empty_group_id_two= Primitive.do_put_id(@empty_group, :two)
+    empty_group_id_one= Primitive.put_id(@empty_group, :one)
+    empty_group_id_two= Primitive.put_id(@empty_group, :two)
 
     {graph, _} =      Graph.insert_at(@graph_empty, -1, empty_group_id_two)
     {graph, uid_1} =  Graph.insert_at(graph, -1, empty_group_id_one)
@@ -1056,7 +975,7 @@ defmodule Scenic.GraphTest do
   #============================================================================
   # map_id(graph, id, action) - just mapped to id
   test "map_id only maps nodes with a mapped id" do
-    empty_group_with_id = Primitive.do_put_id( @empty_group, :test_id )
+    empty_group_with_id = Primitive.put_id( @empty_group, :test_id )
 
     {graph, uid_0} = Graph.insert_at(@graph_empty, -1, empty_group_with_id)
     {graph, uid_1} = Graph.insert_at(graph, -1, @empty_group)
