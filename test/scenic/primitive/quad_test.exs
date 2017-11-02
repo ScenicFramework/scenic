@@ -15,6 +15,7 @@ defmodule Scenic.Primitive.QuadTest do
   @concave      {{100,300},{300,180},{400,310},{300,200}}
   @complex      {{100,300},{400,100},{400,300},{100,100}}
 
+  @reverse      {{300,520},{400,310},{300,180},{100,300}}
 
   #============================================================================
   # build / add
@@ -69,7 +70,7 @@ defmodule Scenic.Primitive.QuadTest do
 #    assert Quad.centroid(@convex) == {30, 52}
 #  end
 
-  test "expand expands the convex" do
+  test "expand expands the convex quad" do
     {{x0,y0},{x1,y1},{x2,y2},{x3,y3}} = Quad.expand(@convex, 10)
     # rounding to avoid floating-point errors from messing up the tests
     assert {
@@ -78,6 +79,17 @@ defmodule Scenic.Primitive.QuadTest do
       {round(x2), round(y2)},
       {round(x3), round(y3)}
     } ==   {{84, 298}, {302, 167}, {412, 309}, {303, 538}}
+  end
+
+  test "expand expands when the quad is counter wound" do
+    {{x0,y0},{x1,y1},{x2,y2},{x3,y3}} = Quad.expand(@reverse, 10)
+    # rounding to avoid floating-point errors from messing up the tests
+    assert {
+      {round(x0), round(y0)},
+      {round(x1), round(y1)},
+      {round(x2), round(y2)},
+      {round(x3), round(y3)}
+    } ==   {{303, 538}, {412, 309}, {302, 167}, {84, 298}}
   end
 
   #============================================================================
@@ -89,11 +101,18 @@ defmodule Scenic.Primitive.QuadTest do
     assert Quad.contains_point?(@convex, {300,519})   == true
   end
 
+  test "contains_point? returns true if it contains the point when counter wound" do
+    assert Quad.contains_point?(@reverse, {101, 300}) == true
+    assert Quad.contains_point?(@reverse, {300,181})  == true
+    assert Quad.contains_point?(@reverse, {399,310})  == true
+    assert Quad.contains_point?(@reverse, {300,519})  == true
+  end
+
   test "contains_point? returns false if the point is outside" do
-    assert Quad.contains_point?(@convex, {100, 180}) == false
-    assert Quad.contains_point?(@convex, {400, 180}) == false
-    assert Quad.contains_point?(@convex, {400, 520}) == false
-    assert Quad.contains_point?(@convex, {100, 520}) == false
+    assert Quad.contains_point?(@convex, {100, 180})  == false
+    assert Quad.contains_point?(@convex, {400, 180})  == false
+    assert Quad.contains_point?(@convex, {400, 520})  == false
+    assert Quad.contains_point?(@convex, {100, 520})  == false
   end
 
   #============================================================================

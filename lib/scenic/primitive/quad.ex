@@ -106,6 +106,16 @@ defmodule Scenic.Primitive.Quad do
 
   #------------------------------------
   def expand({p0, p1, p2, p3}, width) do
+    # account for the winding of quad - assumes convex, which is checked above
+    cross = Math.Vector2.cross(
+      Math.Vector2.sub(p1, p0),
+      Math.Vector2.sub(p3, p0)
+    )
+    width = cond do
+      cross < 0 -> -width
+      true      -> width
+    end
+
     # find the new parallel lines
     l01 = Math.Line.parallel( {p0, p1}, width )
     l12 = Math.Line.parallel( {p1, p2}, width )
