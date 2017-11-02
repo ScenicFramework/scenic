@@ -8,6 +8,7 @@
 defmodule Scenic.Primitive.Transform do
   alias Scenic.Math.MatrixBin, as: Matrix
   alias Scenic.Math.Vector
+  alias Scenic.Primitive.Transform
 
   @callback info() :: bitstring
   @callback verify( any ) :: boolean
@@ -16,7 +17,19 @@ defmodule Scenic.Primitive.Transform do
 
   @identity   Matrix.identity()
 
-#  defstruct pin: nil, matrix: nil, rotate: nil, scale: nil, translate: nil
+  #===========================================================================
+  defmodule FormatError do
+    defexception [ message: nil, module: nil, data: nil ]
+  end
+
+
+  @style_name_map     %{
+    :pin        => Transform.Pin,
+    :scale      => Transform.Scale,
+    :rotate     => Transform.Rotate,
+    :translate  => Transform.Translate,
+    :matrix     => Transform.Matrix,
+  }
 
   #===========================================================================
 #  defmacro __using__([type_code: type_code]) when is_integer(type_code) do
@@ -27,13 +40,23 @@ defmodule Scenic.Primitive.Transform do
       def verify!( data ) do
         case verify(data) do
           true -> data
-          false -> raise info()
+          false ->
+            raise FormatError, message: info(), module: __MODULE__, data: data
         end
       end
+
 
     end # quote
   end # defmacro
 
+
+  #===========================================================================
+  def verify!( tx_key, tx_data ) do
+    case Map.get(@style_name_map, tx_key) do
+      nil -> raise FormatError, message: "Unknown transform", module: tx_key, data: tx_data
+      module -> module.verify!( tx_data )
+    end
+  end
 
   #============================================================================
   # transform helper functions
@@ -44,7 +67,7 @@ defmodule Scenic.Primitive.Transform do
   def calculate_local( nil ), do: nil
   def calculate_local( txs ) when (txs == %{}), do: nil
   
-  def calculate_local( %{pin: pin} = txs ) do
+  def calculate_local( %{pin: _} = txs ) do
   # look for case where only the pin is set
     case Enum.count(txs) do
       1 -> nil

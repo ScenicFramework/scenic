@@ -8,8 +8,9 @@ defmodule Scenic.Primitive do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.Primitive.Style
+  alias Scenic.Primitive.Transform
 
-#  import IEx
+  import IEx
 
   @callback add_to_graph(map, any, list) :: map
 
@@ -33,10 +34,6 @@ defmodule Scenic.Primitive do
     :scale, :translate]
 
   @transform_types [:pin, :rotate, :matrix, :scale, :translate]
-
-#  defstruct module: nil, uid: -1, parent_uid: -1, id: nil, tags: [],
-#    event_filter: nil, transform: nil, styles: [], state: nil, compiled: nil,
-#    new_styles: %{}
 
 
   # note: the following fields are all optional on a primitive.
@@ -132,7 +129,7 @@ defmodule Scenic.Primitive do
     |> put_if_set( :transforms,    prep_transforms( opts ) )
   end
 
-  defp put_if_set(p, _, nil),                  do: p
+  defp put_if_set(p, k, nil),                  do: Map.delete(p, k)
   defp put_if_set(p, k, map) when map == %{},  do: Map.delete(p, k)
   defp put_if_set(p, k, list) when list == [], do: Map.delete(p, k)
   defp put_if_set(p, k, v),                    do: Map.put(p, k, v)
@@ -174,18 +171,17 @@ defmodule Scenic.Primitive do
   end
 
   defp prep_transforms( opts ) do
-    Enum.reduce(@transform_types, %{}, fn(type, acc) ->
-      Map.put(acc, type, Keyword.get(opts, type))
+    # extract the transforms from the opts
+    txs = Enum.reduce(@transform_types, %{}, fn(type, acc) ->
+      put_if_set(acc, type, Keyword.get(opts, type))
     end)
+
+    # verify the transforms
+    Enum.each(txs, fn{k,v} -> Transform.verify!( k, v ) end)
+
+    # return the verified transforms
+    txs
   end
-
-
-  #--------------------------------------------------------
-  # build a new primitive and add it to a graph in one step
-#  def add({graph, parent_uid}, primitive, opts) do
-#    {graph, _} = Graph.insert_at({graph, parent_uid}, -1, primitive, opts)
-#    {graph, parent_uid}
-#  end
 
 
   #============================================================================
@@ -331,8 +327,14 @@ defmodule Scenic.Primitive do
   # do_put_style does the actual work
   def put_style(%Primitive{} = p, type, data) when is_atom(type) do
     Map.get(p, :styles, %{})
-    |> Map.put(type, data)
+    |> put_if_set(type, data)
     |> ( &put_styles(p, &1) ).()
+  end
+
+  def put_style(%Primitive{} = p, list) when is_list(list) do
+    Enum.reduce(list, p, fn({type,data},acc)->
+      put_style(acc, type, data)
+    end)
   end
 
   def drop_style(primitive, type)
@@ -368,7 +370,7 @@ defmodule Scenic.Primitive do
   # do_put_style does the actual work
   def put_transform(%Primitive{} = p, tx_type, data) when is_atom(tx_type) do
     Map.get(p, :transforms, %{})
-    |> Map.put(tx_type, data)
+    |> put_if_set(tx_type, data)
     |> ( &put_transforms(p, &1) ).()
   end
 
@@ -442,7 +444,6 @@ defmodule Scenic.Primitive do
   # it records the deltas of change for primitives. the idea is to send the minimal
   # amount of information to the view_port (whose rendere may be remote).
   def delta_script( p_original, p_modified )
-#  def delta_script( p_o, p_m ) when (p_o == p_m), do: []
   def delta_script( p_o, p_m ) do
     p_o = minimal(p_o)
     p_m = minimal(p_m)

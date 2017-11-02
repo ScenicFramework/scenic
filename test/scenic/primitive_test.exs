@@ -9,9 +9,6 @@ defmodule Scenic.PrimitiveTest do
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Group
-  alias Scenic.Primitive.Style
-  alias Scenic.Primitive.Transform
-  alias Scenic.Math.MatrixBin
 
 #  import IEx
 
@@ -21,138 +18,102 @@ defmodule Scenic.PrimitiveTest do
 
 
   @tx_pin             {10,11}
-  @tx_rot             0.1
-  @transform          Transform.build(pin: @tx_pin, rot: @tx_rot)
+  @tx_rotate          0.1
+  @transforms         %{pin: @tx_pin, rotate: @tx_rotate}
 
-  @style_1            Style.LineWidth.build(3)
-  @style_2            Style.Color2.build(:red, :yellow)
-  @styles             [@style_1, @style_2]
+  @styles             %{color: {:red, :yellow}, line_width: 10}
 
   @parent_uid         123
   @type_module        Group
   @event_filter       {:module, :action}
   @tag_list           ["tag0", :tag1]
   @state              {:app,:state}
-  @compiled_data      "test compiled data"
+  @data               [1,2,3,4,5]
 
 
-  @primitive %{
-    __struct__:   Primitive,
+  @primitive %Primitive{
     module:       @type_module,
     uid:          nil,
     parent_uid:   @parent_uid,
+    data:         @data,
     id:           :test_id,
     tags:         @tag_list,
     event_filter: @event_filter,
-    transform:    @transform,
+    state:        @state,
+    transforms:   @transforms,
     styles:       @styles,
-    compiled:     @compiled_data,
-    state:        @state
   }
 
-
-  #============================================================================
-  # shared stuff
-  test "type_code gets the correct type code for the primitive" do
-    assert Primitive.type_code(@primitive) == Group.type_code()
-  end
 
   #============================================================================
   # build( data, module, opts \\ [] )
 
   test "basic primitive build works" do
-    %Primitive{
-      module: Group, uid: nil, parent_uid: -1, id: nil, tags: [],
-      event_filter: nil, transform: nil, styles: [],
-      compiled: "test data", state: nil
-    } = Primitive.build("test data", Group)
+    assert Primitive.build(Group, @data) == %{
+      __struct__: Primitive, module: Group, uid: nil, parent_uid: -1, data: @data
+    }
   end
 
   test "build sets the optional event handler" do
-    %Primitive{
-      module: Group, uid: nil, parent_uid: -1, id: nil, tags: [],
-      event_filter: @event_filter, transform: nil, styles: [],
-      compiled: "td", state: nil
-    } = Primitive.build("td", Group, event_filter: @event_filter)
+    assert Primitive.build(Group, @data, event_filter: @event_filter) == %{
+      __struct__: Primitive, module: Group, uid: nil, parent_uid: -1, data: @data,
+      event_filter: @event_filter
+    }
   end
 
   test "build sets the optional tag list" do
-    %Primitive{
-      module: Group, uid: nil, parent_uid: -1, id: nil, tags: [:one, "two"],
-      event_filter: nil, transform: nil, styles: [],
-      compiled: "td", state: nil
-    } = Primitive.build("td", Group, tags: [:one, "two"])
+    assert Primitive.build(Group, @data, tags: [:one, "two"]) == %{
+      __struct__: Primitive, module: Group, uid: nil, parent_uid: -1, data: @data,
+      tags: [:one, "two"]
+    }
   end
 
-  test "build passes transform options through" do
-    %Primitive{
-      module: Group, uid: nil, parent_uid: -1, id: nil, tags: [],
-      event_filter: nil, transform: @transform, styles: [],
-      compiled: "td", state: nil
-    } = Primitive.build("td", Group, pin: @tx_pin, rot: @tx_rot)
-  end
-
-  test "build treats empty transform list as nil" do
-    %Primitive{
-      module: Group, uid: nil, parent_uid: -1, id: nil, tags: [],
-      event_filter: nil, transform: nil, styles: [],
-      compiled: "td", state: nil
-    } = Primitive.build("td", Group, transforms: [])
+  test "build adds transform options" do
+    assert Primitive.build(Group, @data, pin: {10,11}, rotate: 0.1) == %{
+      __struct__: Primitive, module: Group, uid: nil, parent_uid: -1, data: @data,
+      transforms: @transforms
+    }
   end
 
 
-  test "build accepts the position option and treats it as a translation" do
-    mx = Transform.build(translation: {123,456})
-
-    %Primitive{
-      module: Group, uid: nil, parent_uid: -1, id: nil, tags: [],
-      event_filter: nil, transform: ^mx, styles: [],
-      compiled: "td", state: nil
-    } = Primitive.build("td", Group, position: {123,456})
+  test "build adds the style opts" do
+    assert Primitive.build(Group, @data, color: {:red, :yellow}, line_width: 10) == %{
+      __struct__: Primitive, module: Group, uid: nil, parent_uid: -1, data: @data,
+      styles: @styles
+    }
   end
 
-
-  test "build sets the optional style list" do
-    %Primitive{
-      module: Group, uid: nil, parent_uid: -1, id: nil, tags: [],
-      event_filter: nil, transform: nil, styles: @styles,
-      compiled: "td", state: nil
-    } = Primitive.build("td", Group, styles: @styles)
-  end
-
-  test "build accepts a single style" do
-    %Primitive{
-      module: Group, uid: nil, parent_uid: -1, id: nil, tags: [],
-      event_filter: nil, transform: nil, styles: [@style_1],
-      compiled: "td", state: nil
-    } = Primitive.build("td", Group, style: @style_1)
-  end
-  
-  test "build sets the optional app state" do
-    %Primitive{
-      module: Group, uid: nil, parent_uid: -1, id: nil, tags: [],
-      event_filter: nil, transform: nil, styles: [],
-      compiled: "td", state: {:abc, 12}
-    } = Primitive.build("td", Group, state: {:abc, 12})
+  test "build sets the optional state" do
+    assert Primitive.build(Group, @data, state: @state) == %{
+      __struct__: Primitive, module: Group, uid: nil, parent_uid: -1, data: @data,
+      state: @state
+    }
   end
 
   test "build sets the optional id" do
-    %Primitive{
-      module: Group, uid: nil, parent_uid: -1, id: :set_test, tags: [],
-      event_filter: nil, transform: nil, styles: [],
-      compiled: "td", state: nil
-    } = Primitive.build("td", Group, id: :set_test)
+    assert Primitive.build(Group, @data, id: :test_id) == %{
+      __struct__: Primitive, module: Group, uid: nil, parent_uid: -1, data: @data,
+      id: :test_id
+    }
+  end
+
+  test "build raises on bad tx" do
+    assert_raise Primitive.Transform.FormatError, fn ->
+      Primitive.build(Group, @data, rotate: :invalid)
+    end
+  end
+
+  test "build raises on bad style" do
+    assert_raise Primitive.Style.FormatError, fn ->
+      Primitive.build(Group, @data, color: :invalid)
+    end
   end
 
   #============================================================================
   # structure
 
   #--------------------------------------------------------
-  # type / module
-
-  test "type_code gets the type code for the module" do
-    assert Primitive.type_code(@primitive) == @type_module.type_code()
-  end
+  # module
 
   test "get_module returns the type module" do
     assert Primitive.get_module(@primitive) == @type_module
@@ -162,7 +123,7 @@ defmodule Scenic.PrimitiveTest do
   # uid
 
   test "get_uid and do_put_uid manipulate the internal uid" do
-    assert Primitive.do_put_uid(@primitive, 987) |> Primitive.get_uid() == 987
+    assert Primitive.put_uid(@primitive, 987) |> Primitive.get_uid() == 987
   end
 
   #--------------------------------------------------------
@@ -184,7 +145,7 @@ defmodule Scenic.PrimitiveTest do
   end
 
   test "do_put_id sets the internal id" do
-    assert Primitive.do_put_id(@primitive, :other) |> Primitive.get_id() == :other
+    assert Primitive.put_id(@primitive, :other) |> Primitive.get_id() == :other
   end
 
   #--------------------------------------------------------
@@ -260,51 +221,53 @@ defmodule Scenic.PrimitiveTest do
   end
 
   #============================================================================
-  # style field
+  # transform field
 
-
-  #--------------------------------------------------------
-  # transform
+  test "get_transforms returns the transforms" do
+    assert Primitive.get_transforms(@primitive) == @transforms
+  end
 
   test "get_transform returns the transform" do
-    assert Primitive.get_transform(@primitive) == @transform
+    assert Primitive.get_transform(@primitive, :pin) == @tx_pin
   end
 
   test "put_transform sets the transform" do
-    tx = Transform.put_pin(@transform, {987,654})
-    p = Primitive.put_transform(@primitive, tx)
-    assert Primitive.get_transform(p) == tx
+    p = Primitive.put_transform(@primitive, :pin, {987,654})
+    assert Primitive.get_transform(p, :pin) == {987,654}
+  end
+
+  test "put_transform deletes the transform type if setting to nil" do
+    p = Primitive.put_transform(@primitive, :pin, nil)
+    assert Primitive.get_transforms(p) == %{ rotate: @tx_rotate }
   end
 
   test "put_transform sets the transform to nil" do
-    p = Primitive.put_transform(@primitive, nil)
-    assert Primitive.get_transform(p) == nil
-  end
-
-  test "put_transform sets individual transform types and cacls final" do
-    tx = Transform.put_pin(@transform, {135,579})
-    p = Primitive.put_transform(@primitive, :pin, {135,579})
-    assert Primitive.get_transform(p) == tx
+    p = Primitive.put_transforms(@primitive, nil)
+    assert Map.get(p, :transforms) == nil
   end
 
   #--------------------------------------------------------
   # local matrix
-  test "get_matrix returns the final matrix" do
-    local_matrix = @primitive
-      |> Primitive.get_transform()
-      |> Transform.get_local()
-    assert Primitive.get_local_matrix(@primitive) == local_matrix
-  end
+#  test "get_matrix returns the final matrix" do
+#    local_matrix = @primitive
+#      |> Primitive.get_transform()
+#      |> Transform.get_local()
+#    assert Primitive.get_local_matrix(@primitive) == local_matrix
+#  end
+#
+#  #--------------------------------------------------------
+#  # local matrix
+#  test "calculate_inverse_matrix calculates and returns the inverse final matrix" do
+#    inverse_matrix = @primitive
+#      |> Primitive.get_transform()
+#      |> Transform.get_local()
+#      |> MatrixBin.invert()
+#    assert Primitive.calculate_inverse_matrix(@primitive) == inverse_matrix
+#  end
 
-  #--------------------------------------------------------
-  # local matrix
-  test "calculate_inverse_matrix calculates and returns the inverse final matrix" do
-    inverse_matrix = @primitive
-      |> Primitive.get_transform()
-      |> Transform.get_local()
-      |> MatrixBin.invert()
-    assert Primitive.calculate_inverse_matrix(@primitive) == inverse_matrix
-  end
+
+  #============================================================================
+  # style field
 
   #--------------------------------------------------------
   # styles
@@ -313,15 +276,8 @@ defmodule Scenic.PrimitiveTest do
     assert Primitive.get_styles(@primitive) == @styles
   end
 
-  test "put_styles replaces the entire style list" do
-    new_styles = [Style.LineWidth.build(4), Style.Color.build(:magenta)]
-    p = Primitive.put_styles(@primitive, new_styles )
-    assert Primitive.get_styles(p) == new_styles
-  end
-
   test "get_style returns a style by key" do
-    assert Primitive.get_style(@primitive, Style.LineWidth) == @style_1
-    assert Primitive.get_style(@primitive, Style.Color2)    == @style_2
+    assert Primitive.get_style(@primitive, :color) == {:red, :yellow}
   end
 
   test "get_style returns nil if missing by default" do
@@ -333,21 +289,25 @@ defmodule Scenic.PrimitiveTest do
   end
 
   test "put_style adds to the head of the style list" do
-    style = Style.Color.build(:khaki)
-    p = Primitive.put_style(@primitive, style )
-    assert Primitive.get_styles(p) == [style | @styles]
+    p = Primitive.put_style(@primitive, :color, :khaki )
+    assert Primitive.get_styles(p) == %{color: :khaki, line_width: 10}
   end
 
   test "put_style replaces a style in the style list" do
     p = @primitive
-      |> Primitive.put_style( Style.Color.build(:khaki) )
-      |> Primitive.put_style( Style.Color.build(:cornsilk) )
-    assert Primitive.get_styles(p) == [Style.Color.build(:cornsilk) | @styles]
+      |> Primitive.put_style( :color, :khaki )
+      |> Primitive.put_style( :color, :cornsilk )
+    assert Primitive.get_styles(p) == %{color: :cornsilk, line_width: 10}
+  end
+
+  test "put_style a list of styles" do
+    new_styles = %{line_width: 4, color: :magenta}
+    p = Primitive.put_style(@primitive, [line_width: 4, color: :magenta] )
+    assert Primitive.get_styles(p) == new_styles
   end
 
   test "drop_style removes a style in the style list" do
-    assert Primitive.drop_style(@primitive, Style.LineWidth ) |> Primitive.get_styles() == [@style_2]
-    assert Primitive.drop_style(@primitive, Style.Color2 ) |> Primitive.get_styles()    == [@style_1]
+    assert Primitive.drop_style(@primitive, :color ) |> Primitive.get_styles() == %{line_width: 10}
   end
 
 
@@ -358,13 +318,13 @@ defmodule Scenic.PrimitiveTest do
   # compiled primitive-specific data
 
   test "get_data returns the primitive-specific compiled data" do
-    assert Primitive.get_data(@primitive) == @compiled_data
+    assert Primitive.get(@primitive) == @data
   end
 
   test "put_data replaces the primitive-specific compiled data" do
     new_data = <<1,2,3,4,5,6,7,8,9,10>>
-    p = Primitive.put_data(@primitive, new_data )
-    assert Primitive.get_data(p) == new_data
+    p = Primitive.put(@primitive, new_data )
+    assert Primitive.get(p) == new_data
   end
 
   #--------------------------------------------------------
@@ -380,43 +340,6 @@ defmodule Scenic.PrimitiveTest do
   end
 
   #============================================================================
-  # generate io lists
-  # to_io_list( uid, primitive ) 
-
-  test "simple io_list generation works" do
-    p = Group.build()
-    io_list = Primitive.to_io_list(1234, p)
-    assert io_list == [[<<210, 4, 0, 0>>, <<0, 0>>, <<255, 255, 255, 255>>], <<0>>]
-  end
-
-  test "to_io_list adds the final" do
-    p = Group.build(pin: @tx_pin, rot: @tx_rot)
-    io_list = Primitive.to_io_list(1234, p)
-
-    tx_data = p
-      |> Primitive.get_transform()
-      |> Transform.get_data()
-
-    assert io_list == [
-      [
-        [<<210, 4, 0, 0>>, <<0, 0>>, <<255, 255, 255, 255>>],
-        tx_data
-      ], <<0>>
-    ]
-  end
-
-  test "to_io_list adds the style list" do
-    style_color = Style.Color.build(:crimson)
-    p = Group.build(styles: [style_color])
-
-    io_list = Primitive.to_io_list(1234, p)
-    assert io_list == [
-      [
-        [<<210, 4, 0, 0>>, <<0, 0>>, <<255, 255, 255, 255>>],
-        [Style.get_data(style_color)]
-      ], <<0>>
-    ]
-  end
 
 
 
