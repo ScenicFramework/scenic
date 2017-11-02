@@ -44,6 +44,13 @@ defmodule Scenic.PrimitiveTest do
     styles:       @styles,
   }
 
+  @minimal_primitive   %{
+    module:     Group,
+    puid:       @parent_uid,
+    data:       @data,
+    styles:     %{color: {{255, 0, 0, 255}, {255, 255, 0, 255}}, line_width: 10},
+    transforms: %{pin: {10, 11}, rotate: 0.1}
+  }
 
   #============================================================================
   # build( data, module, opts \\ [] )
@@ -246,25 +253,6 @@ defmodule Scenic.PrimitiveTest do
     assert Map.get(p, :transforms) == nil
   end
 
-  #--------------------------------------------------------
-  # local matrix
-#  test "get_matrix returns the final matrix" do
-#    local_matrix = @primitive
-#      |> Primitive.get_transform()
-#      |> Transform.get_local()
-#    assert Primitive.get_local_matrix(@primitive) == local_matrix
-#  end
-#
-#  #--------------------------------------------------------
-#  # local matrix
-#  test "calculate_inverse_matrix calculates and returns the inverse final matrix" do
-#    inverse_matrix = @primitive
-#      |> Primitive.get_transform()
-#      |> Transform.get_local()
-#      |> MatrixBin.invert()
-#    assert Primitive.calculate_inverse_matrix(@primitive) == inverse_matrix
-#  end
-
 
   #============================================================================
   # style field
@@ -340,9 +328,45 @@ defmodule Scenic.PrimitiveTest do
   end
 
   #============================================================================
+  # data for the viewport
+
+  #--------------------------------------------------------
+  # minimal
+  test "minimal returns the minimal version of the prmitive" do
+    assert Primitive.minimal(@primitive) == @minimal_primitive
+  end
 
 
-
+  #--------------------------------------------------------
+  # delta_script
+  test "delta_script works" do
+    assert false
+  end
 
 end
+
+
+#  @minimal_primitive   %{
+#    module:     Group,
+#    puid:       @parent_uid,
+#    data:       @data,
+#    styles:     %{color: {{255, 0, 0, 255}, {255, 255, 0, 255}}, line_width: 10},
+#    transforms: %{pin: {10, 11}, rotate: 0.1}
+#  }
+#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

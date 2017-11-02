@@ -187,7 +187,7 @@ defmodule Scenic.Primitive do
   #============================================================================
   # type / module
 
-  def type_code(primitive),           do: get_module(primitive).type_code()
+#  def type_code(primitive),           do: get_module(primitive).type_code()
 
   def get_module( primitive )
   def get_module( %Primitive{module: mod} ) when is_atom(mod), do: mod
@@ -442,7 +442,7 @@ defmodule Scenic.Primitive do
   #============================================================================
   # the change script is for internal use between the graph and the view_port system
   # it records the deltas of change for primitives. the idea is to send the minimal
-  # amount of information to the view_port (whose rendere may be remote).
+  # amount of information to the view_port (whose renderer may be remote).
   def delta_script( p_original, p_modified )
   def delta_script( p_o, p_m ) do
     p_o = minimal(p_o)
