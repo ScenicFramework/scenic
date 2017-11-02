@@ -124,6 +124,7 @@ defmodule Scenic.Primitive.Quad do
 
   #--------------------------------------------------------
   def contains_point?( {p0, p1, p2, p3}, px ) do
+    # assumes convex, which is verified above
     Triangle.contains_point?({p0, p1, p2}, px) || Triangle.contains_point?({p1, p2, p3}, px)
   end
 
