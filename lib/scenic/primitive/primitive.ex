@@ -8,9 +8,6 @@ defmodule Scenic.Primitive do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.Primitive.Style
-  alias Scenic.Primitive.Transform
-#  alias Scenic.Primitive.Transform
-#  alias Scenic.Math.MatrixBin
 
 #  import IEx
 
@@ -334,7 +331,7 @@ defmodule Scenic.Primitive do
   # do_put_style does the actual work
   def put_style(%Primitive{} = p, type, data) when is_atom(type) do
     Map.get(p, :styles, %{})
-    |> Style.put(type, data)
+    |> Map.put(type, data)
     |> ( &put_styles(p, &1) ).()
   end
 
