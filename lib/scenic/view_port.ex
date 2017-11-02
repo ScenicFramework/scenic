@@ -62,7 +62,7 @@ defmodule Scenic.ViewPort do
 
   def init( supervisor ) do
     init_context_tracking()
-    {:ok, _} = Registry.register(:viewport_registry, :client_message, :driver_message )
+    {:ok, _} = Registry.register(:viewport_registry, :client_message, {__MODULE__,:driver_message} )
     {:ok, %{supervisor: supervisor}}
   end
 

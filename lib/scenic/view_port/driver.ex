@@ -15,7 +15,7 @@ defmodule Scenic.ViewPort.Driver do
   require Logger
   alias Scenic.ViewPort
 
-  import IEx
+#  import IEx
 
   @callback handle_set_graph( list, map ) :: {:noreply, map}
   @callback handle_update_graph( list, map ) :: {:noreply, map}
@@ -27,7 +27,9 @@ defmodule Scenic.ViewPort.Driver do
   # generic apis for sending a message to the drivers
 
   #----------------------------------------------
-  def set_graph( list ),    do: dispatch( :set_graph, list )
+  def set_graph( list )    do
+    dispatch( :set_graph, list )
+  end
   def update_graph( list ), do: dispatch( :update_graph, list )
 
 
@@ -198,7 +200,7 @@ defmodule Scenic.ViewPort.Driver do
   defp dispatch( action, data ) do
     # dispatch the call to any listening drivers
     Registry.dispatch(:viewport_registry, action, fn(entries) ->
-      for {pid, msg} <- entries do
+      for {pid, {module,msg}} <- entries do
         try do
           GenServer.cast(pid, {msg, data})
         catch
