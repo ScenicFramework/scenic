@@ -60,8 +60,14 @@ defmodule Scenic.Primitive.QuadTest do
 #  end
 
   test "expand expands the data" do
-    # yes. This is a total cheat, but at least it checks that the result is valid data!
-    assert Quad.verify( Quad.expand(@data, 10) )
+    {{x0,y0},{x1,y1},{x2,y2},{x3,y3}} = Quad.expand(@data, 10)
+    # rounding to avoid floating-point errors from messing up the tests
+    assert {
+      {round(x0), round(y0)},
+      {round(x1), round(y1)},
+      {round(x2), round(y2)},
+      {round(x3), round(y3)}
+    } ==   {{84, 298}, {302, 167}, {412, 309}, {303, 538}}
   end
 
   #============================================================================

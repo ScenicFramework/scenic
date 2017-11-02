@@ -41,70 +41,70 @@ defmodule Scenic.Primitive.Transform do
   def verify(_), do: false
 
 
+#  #===========================================================================
+#  def get(transform_map, transform_type)
+#
+#  def get(txs, :pin) do
+#    Map.get(txs, :pin)
+#  end
+#
+#  def get(txs, :matrix) do
+#    Map.get(txs, :matrix)
+#  end
+#
+#  def get(txs, :rotate) do
+#    Map.get(txs, :rotate)
+#  end
+#
+#  def get(txs, :scale) do
+#    Map.get(txs, :scale)
+#  end
+#
+#  def get(txs, :translate) do
+#    Map.get(txs, :translate)
+#  end
+#
+#  def get(_, type) do
+#    raise "Attempted to get a transform of type #{inspect(type)}.\n" <>
+#      "The only allowed transform types are :pin, :matrix, :rotate, :scale, and :translate"
+#  end
+
   #===========================================================================
-  def get(transform_map, transform_type)
-
-  def get(txs, :pin) do
-    Map.get(txs, :pin)
-  end
-
-  def get(txs, :matrix) do
-    Map.get(txs, :matrix)
-  end
-
-  def get(txs, :rotate) do
-    Map.get(txs, :rotate)
-  end
-
-  def get(txs, :scale) do
-    Map.get(txs, :scale)
-  end
-
-  def get(txs, :translate) do
-    Map.get(txs, :translate)
-  end
-
-  def get(_, type) do
-    raise "Attempted to get a transform of type #{inspect(type)}.\n" <>
-      "The only allowed transform types are :pin, :matrix, :rotate, :scale, and :translate"
-  end
-
-  #===========================================================================
-  def put(transform_map, transform_type, data)
-
-  def put(txs, type, nil) do
-    Map.delete(txs, type)
-  end
-
-  def put(txs, :pin, data) do
-    Scenic.Primitive.Style.Transform.Pin.verify!(data)
-    Map.put(txs, :pin, data)
-  end
-
-  def put(txs, :matrix, data) do
-    Scenic.Primitive.Style.Transform.Matrix.verify!(data)
-    Map.put(txs, :matrix, data)
-  end
-
-  def put(txs, :rotate, data) do
-    Scenic.Primitive.Style.Transform.Rotate.verify!(data)
-    Map.put(txs, :rotate, data)
-  end
-
-  def put(txs, :scale, data) do
-    Scenic.Primitive.Style.Transform.Scale.verify!(data)
-    Map.put(txs, :scale, data)
-  end
-
-  def put(txs, :translate, data) do
-    Scenic.Primitive.Style.Transform.Translate.verify!(data)
-    Map.put(txs, :translate, data)
-  end
-
-  def put(_, type, _) do
-    raise "Attempted to put a transform of type #{inspect(type)}.\n" <>
-      "The only allowed transform types are :pin, :matrix, :rotate, :scale, and :translate"
-  end
+#  def put(transform_map, transform_type, data)
+#
+#  def put(txs, type, nil) do
+#    Map.delete(txs, type)
+#  end
+#
+#  def put(txs, :pin, data) do
+#    Scenic.Primitive.Style.Transform.Pin.verify!(data)
+#    Map.put(txs, :pin, data)
+#  end
+#
+#  def put(txs, :matrix, data) do
+#    Scenic.Primitive.Style.Transform.Matrix.verify!(data)
+#    Map.put(txs, :matrix, data)
+#  end
+#
+#  def put(txs, :rotate, data) do
+#    Scenic.Primitive.Style.Transform.Rotate.verify!(data)
+#    Map.put(txs, :rotate, data)
+#  end
+#
+#  def put(txs, :scale, data) do
+#    Scenic.Primitive.Style.Transform.Scale.verify!(data)
+#    Map.put(txs, :scale, data)
+#  end
+#
+#  def put(txs, :translate, data) do
+#    Scenic.Primitive.Style.Transform.Translate.verify!(data)
+#    Map.put(txs, :translate, data)
+#  end
+#
+#  def put(_, type, _) do
+#    raise "Attempted to put a transform of type #{inspect(type)}.\n" <>
+#      "The only allowed transform types are :pin, :matrix, :rotate, :scale, and :translate"
+#  end
 
 
 

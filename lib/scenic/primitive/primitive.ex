@@ -178,7 +178,7 @@ defmodule Scenic.Primitive do
 
   defp prep_transforms( opts ) do
     Enum.reduce(@transform_types, %{}, fn(type, acc) ->
-      Transform.put(acc, type, Keyword.get(opts, type))
+      Map.put(acc, type, Keyword.get(opts, type))
     end)
   end
 
@@ -371,7 +371,7 @@ defmodule Scenic.Primitive do
   # do_put_style does the actual work
   def put_transform(%Primitive{} = p, tx_type, data) when is_atom(tx_type) do
     Map.get(p, :transforms, %{})
-    |> Transform.put(tx_type, data)
+    |> Map.put(tx_type, data)
     |> ( &put_transforms(p, &1) ).()
   end
 
