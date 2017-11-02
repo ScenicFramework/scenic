@@ -8,7 +8,6 @@ defmodule Scenic.Primitive.GroupTest do
   doctest Scenic
 
   alias Scenic.Primitive
-  alias Scenic.Primitive.Style
   alias Scenic.Primitive.Group
 
   @data    [1,2,3,4]
@@ -17,12 +16,14 @@ defmodule Scenic.Primitive.GroupTest do
   #============================================================================
   # build / add
   test "build works" do
+    p = Group.build()
+    assert Primitive.get(p) == []
+
     p = Group.build( @data )
     assert Primitive.get_parent_uid(p) == -1
     assert Primitive.get_module(p) == Group
     assert Primitive.get(p) == @data
   end
-
 
   #============================================================================
   # child management
@@ -46,21 +47,62 @@ defmodule Scenic.Primitive.GroupTest do
     g = Group.build()
       |> Group.insert_at( -1, 1234)
       |> Group.insert_at(-1, 12345)
-    assert Group.get(g) == [1234, 12345]
+    assert Primitive.get(g) == [1234, 12345]
 
     g = Group.delete(g, 1234)
-    assert Group.get(g) == [12345]
+    assert Primitive.get(g) == [12345]
   end
 
   test "increment_data adds a constant to the child ids" do
     g = Group.build()
       |> Group.insert_at( -1, 1234)
       |> Group.insert_at(-1, 12345)
-    assert Group.get(g) == [1234, 12345]
+    assert Primitive.get(g) == [1234, 12345]
 
     g = Group.increment(g, 10)
-    assert Group.get(g) == [1244, 12355]
+    assert Primitive.get(g) == [1244, 12355]
   end
+
+
+  #============================================================================
+  # verify
+
+  test "verify passes valid data" do
+    assert Group.verify( @data ) == true
+  end
+
+  test "verify fails invalid data" do
+    assert Group.verify( 12 )                       == false
+    assert Group.verify( [1, 2, 3, :banana] )       == false
+    assert Group.verify( :banana )                  == false
+  end
+
+  #============================================================================
+  # styles
+
+  test "valid_styles works" do
+    assert Group.valid_styles() == [:all]
+  end
+
+  test "filter_styles passes all the style, whether or not they are standard ones" do
+    styles = %{
+      color: :red,
+      banana: :yellow
+    }
+    assert Group.filter_styles( styles ) == styles
+  end
+
+  #============================================================================
+  # transforms
+
+  test "default pin simply returns {0,0}" do
+    assert Group.default_pin(@data) == {0,0}
+  end
+
+
+
+
+
 
 
 

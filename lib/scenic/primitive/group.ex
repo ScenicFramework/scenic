@@ -8,14 +8,26 @@ defmodule Scenic.Primitive.Group do
   alias Scenic.Primitive
 #  alias Scenic.Graph
 
+#  import IEx
 
   #============================================================================
   # data verification and serialization
 
   #--------------------------------------------------------
+  def build(nil, opts), do: build([], opts)
+  def build(ids, opts) do
+    verify!( ids )
+    Primitive.build(__MODULE__, ids, opts)
+  end
+
+
+  #--------------------------------------------------------
   def info(), do: "Group data is managed internally."
 
-  def verify( ids ) when is_list(ids), do: true
+  #--------------------------------------------------------
+  def verify( ids ) when is_list(ids) do
+    Enum.all?(ids, fn(id)-> is_integer(id) end)
+  end
   def verify( _ ), do: false
 
   #--------------------------------------------------------
