@@ -13,7 +13,7 @@ defmodule Scenic.Primitive.QuadTest do
 
   @convex       {{100,300},{300,180},{400,310},{300,520}}
   @concave      {{100,300},{300,180},{400,310},{300,200}}
-  @degenerate   {{100,300},{400,100},{400,300},{100,100}}
+  @complex      {{100,300},{400,100},{400,300},{100,100}}
 
 
   #============================================================================
@@ -38,8 +38,8 @@ defmodule Scenic.Primitive.QuadTest do
     refute Quad.verify( @concave )
   end
 
-  test "verify fails degenerate quads" do
-    refute Quad.verify( @degenerate )
+  test "verify fails complex quads" do
+    refute Quad.verify( @complex )
   end
 
   test "verify fails obviously invalid" do
