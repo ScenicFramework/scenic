@@ -3,7 +3,7 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Primitive.Style.Transform.Scale do
+defmodule Scenic.Primitive.Transform.Scale do
   use Scenic.Primitive.Transform
 
 

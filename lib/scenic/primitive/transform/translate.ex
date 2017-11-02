@@ -3,7 +3,7 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Primitive.Style.Transform.Translate do
+defmodule Scenic.Primitive.Transform.Translate do
   use Scenic.Primitive.Transform
 
   # serialized pin is always a 3-tuple of integers.  {x, y, z}

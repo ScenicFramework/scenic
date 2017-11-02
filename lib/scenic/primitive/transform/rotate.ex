@@ -3,7 +3,7 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Primitive.Style.Transform.Rotate do
+defmodule Scenic.Primitive.Transform.Rotate do
   use Scenic.Primitive.Transform
 
 

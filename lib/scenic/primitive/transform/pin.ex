@@ -3,7 +3,7 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Primitive.Style.Transform.Pin do
+defmodule Scenic.Primitive.Transform.Pin do
   use Scenic.Primitive.Transform
 
   # serialized pin is always a 3-tuple of integers.  {x, y, z}
@@ -23,20 +23,20 @@ defmodule Scenic.Primitive.Style.Transform.Pin do
 
   #--------------------------------------------------------
   def serialize( data, order \\ :native )
-  def serialize( {x,y}, :native ) do
-    <<
+  def serialize( {x,y}, order ), do: serialize( {x,y,0}, order )
+  def serialize( {x,y,z}, :native ) do
+    {:ok, <<
       x :: integer-size(16)-native,
       y :: integer-size(16)-native,
-      0 :: integer-size(16)-native
-    >>
+      z :: integer-size(16)-native
+    >>}
   end
-
   def serialize( {x,y,z}, :big ) do
-    <<
+    {:ok, <<
       x :: integer-size(16)-big,
       y :: integer-size(16)-big,
       z :: integer-size(16)-big
-    >>
+    >>}
   end
 
   #--------------------------------------------------------
@@ -44,18 +44,32 @@ defmodule Scenic.Primitive.Style.Transform.Pin do
   def deserialize( <<
       x   :: integer-size(16)-native,
       y   :: integer-size(16)-native,
+      0   :: integer-size(16)-native,
+      bin :: binary
+    >>, :native
+ ), do: {:ok, {x, y}, bin}
+  def deserialize( <<
+      x   :: integer-size(16)-native,
+      y   :: integer-size(16)-native,
       z   :: integer-size(16)-native,
       bin :: binary
     >>, :native
- ), do: {{x, y, z}, bin}
+ ), do: {:ok, {x, y, z}, bin}
 
+  def deserialize( <<
+      x   :: integer-size(16)-big,
+      y   :: integer-size(16)-big,
+      0   :: integer-size(16)-big,
+      bin :: binary
+    >>, :big
+ ), do: {:ok, {x, y}, bin}
   def deserialize( <<
       x   :: integer-size(16)-big,
       y   :: integer-size(16)-big,
       z   :: integer-size(16)-big,
       bin :: binary
     >>, :big
- ), do: {{x, y, z}, bin}
+ ), do: {:ok, {x, y, z}, bin}
 
   def deserialize( binary_data, order ), do: {:err_invalid, binary_data, order }
 
