@@ -130,4 +130,34 @@ defmodule Scenic.Primitive.Triangle do
     {p0, p1, p2}
   end
 
+
+
+  # http://blackpawn.com/texts/pointinpoly/
+  #--------------------------------------------------------
+  def contains_point?( {p0, p1, p2}, px ) do
+    # compute vectors
+    v0 = Math.Vector2.sub( p2, p0 )
+    v1 = Math.Vector2.sub( p1, p0 )
+    v2 = Math.Vector2.sub( px, p0 )
+
+    # compute dot products
+    dot00 = Math.Vector2.dot(v0, v0)
+    dot01 = Math.Vector2.dot(v0, v1)
+    dot02 = Math.Vector2.dot(v0, v2)
+    dot11 = Math.Vector2.dot(v1, v1)
+    dot12 = Math.Vector2.dot(v1, v2)
+
+    # Compute barycentric coordinates
+    invDenom = 1.0 / (dot00 * dot11 - dot01 * dot01)
+    u = (dot11 * dot02 - dot01 * dot12) * invDenom
+    v = (dot00 * dot12 - dot01 * dot02) * invDenom
+
+    # Check if point is in triangle
+    (u >= 0) && (v >= 0) && (u + v < 1)
+  end
+
+
+
+
+
 end

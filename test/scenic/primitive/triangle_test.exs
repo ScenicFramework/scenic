@@ -1,5 +1,5 @@
 #
-#  Created by Boyd Multerer on 5/8/17.
+#  Created by Boyd Multerer on 5/8/17. Re-written on 11/02/17
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
@@ -9,81 +9,132 @@ defmodule Scenic.Primitive.TriangleTest do
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Triangle
-  alias Scenic.Primitive.Style
 
 
-  #============================================================================
-  test "type_code" do
-    assert Triangle.type_code() == <<2 :: unsigned-integer-size(16)-native>>
-  end
+  @data     {{20, 300}, {400, 300}, {400, 0}}
+
 
   #============================================================================
   # build / add
 
   test "build works" do
-    p = Triangle.build( {{10,11}, {20,21}, {30,31}} )
+    p = Triangle.build( @data )
     assert Primitive.get_parent_uid(p) == -1
     assert Primitive.get_module(p) == Triangle
-    assert Primitive.get_data(p) == <<
-      10 :: unsigned-integer-size(16)-native,
-      11 :: unsigned-integer-size(16)-native,
-      20 :: unsigned-integer-size(16)-native,
-      21 :: unsigned-integer-size(16)-native,
-      30 :: unsigned-integer-size(16)-native,
-      31 :: unsigned-integer-size(16)-native
-    >>
+    assert Primitive.get(p) == @data
   end
 
 
   #============================================================================
-  # get / put
+  # verify
 
-  test "get works" do
-    line = Triangle.build( {{10,11}, {20,21}, {30,31}} )
-    assert Triangle.get(line) == { {10,11}, {20,21}, {30,31} }
+  test "verify passes valid data" do
+    assert Triangle.verify( @data ) == true
   end
 
-  test "put works" do
-    line = Triangle.build( {{10,11}, {20,21}, {30,31}} )
-      |> Triangle.put( {110,111}, {120,121}, {230,231} )
-    assert Triangle.get(line) == { {110,111}, {120,121}, {230,231} }
+  test "verify fails invalid data" do
+    assert Triangle.verify( {{20, 300}, {400, 300}, 400, 0} )         == false
+    assert Triangle.verify( {{20, 300}, {400, 300}, {400, :banana}} ) == false
+    assert Triangle.verify( :banana )                                 == false
   end
-
 
   #============================================================================
   # styles
-  
-  test "put_style accepts Hidden" do
-    p = Triangle.build( {{10,11}, {20,21}, {30,31}} )
-      |> Primitive.put_style( Style.Hidden.build(true) )
-    assert Primitive.get_style(p, Style.Hidden)  ==  Style.Hidden.build(true)
+
+  test "valid_styles works" do
+    assert Triangle.valid_styles() == [:hidden, :color, :border_color, :border_width]
   end
 
-  test "put_style accepts Color" do
-    triangle = Triangle.build( {{10,11}, {20,21}, {30,31}} )
-      |> Triangle.put_style( Style.Color.build(:red) )
-    assert Primitive.get_style(triangle, Style.Color)  ==  Style.Color.build(:red)
+  #============================================================================
+  # transform helpers
+
+  test "default_pin returns the center of the rect" do
+    assert Triangle.default_pin(@data) == {273, 200}
   end
 
-  test "put_style accepts Color3" do
-    triangle = Triangle.build( {{10,11}, {20,21}, {30,31}} )
-      |> Triangle.put_style( Style.Color3.build(:red, :green, :burly_wood) )
-    assert Primitive.get_style(triangle, Style.Color3) ==  Style.Color3.build(:red, :green, :burly_wood)
+  test "centroid returns the centroid of the rect" do
+    assert Triangle.centroid(@data) == {273, 200}
   end
 
-  test "put_style is exclusive between Color and Color3" do
-    triangle = Triangle.build( {{10,11}, {20,21}, {30,31}} )
-      |> Triangle.put_style( Style.Color.build(:green) )
-    assert Primitive.get_style(triangle, Style.Color)  ==  Style.Color.build(:green)
-    assert Primitive.get_style(triangle, Style.Color3)  ==  nil
+  test "expand expands the data" do
+    {{x0,y0},{x1,y1},{x2,y2}} = Triangle.expand(@data, 10)
+    # rounding to avoid floating-point errors from messing up the tests
+    assert {
+      {round(x0), round(y0)},
+      {round(x1), round(y1)},
+      {round(x2), round(y2)}
+    } ==   {{410, 310}, {410, -21}, {-9, 310}}
+  end
 
-    triangle = Triangle.put_style( triangle, Style.Color3.build(:red, :green, :burly_wood) )
-    assert Primitive.get_style(triangle, Style.Color)  ==  nil
-    assert Primitive.get_style(triangle, Style.Color3) ==  Style.Color3.build(:red, :green, :burly_wood)
-    
-    triangle = Triangle.put_style( triangle, Style.Color.build(:cornsilk) )
-    assert Primitive.get_style(triangle, Style.Color)  ==  Style.Color.build(:cornsilk)
-    assert Primitive.get_style(triangle, Style.Color3) ==  nil
+  #============================================================================
+  # point containment
+  test "contains_point? returns true if it contains the point" do
+    assert Triangle.contains_point?(@data, {273, 200})  == true
+    assert Triangle.contains_point?(@data, {30, 299})   == true
+    assert Triangle.contains_point?(@data, {399, 299})  == true
+    assert Triangle.contains_point?(@data, {399, 10})   == true
+  end
+
+  test "contains_point? returns false if the point is outside" do
+    # first, outside the triangle, but inside the bounding rect
+    assert Triangle.contains_point?(@data, {30, 100})   == false
+    # clearly outside
+    assert Triangle.contains_point?(@data, {19, 200})   == false
+    assert Triangle.contains_point?(@data, {401, 200})  == false
+    assert Triangle.contains_point?(@data, {273, -1})   == false
+    assert Triangle.contains_point?(@data, {273, 301})  == false
+  end
+
+  #============================================================================
+  # serialization
+
+  test "serialize native works" do
+    native = <<
+      20  :: integer-size(16)-native,
+      300 :: integer-size(16)-native,
+      400 :: integer-size(16)-native,
+      300 :: integer-size(16)-native,
+      400 :: integer-size(16)-native,
+      0   :: integer-size(16)-native,
+    >>
+    assert Triangle.serialize(@data)           == {:ok, native}
+    assert Triangle.serialize(@data, :native)  == {:ok, native}
+  end
+
+  test "serialize big works" do
+    assert Triangle.serialize(@data, :big) == {:ok, <<
+      20  :: integer-size(16)-big,
+      300 :: integer-size(16)-big,
+      400 :: integer-size(16)-big,
+      300 :: integer-size(16)-big,
+      400 :: integer-size(16)-big,
+      0   :: integer-size(16)-big,
+    >>}
+  end
+
+  test "deserialize native works" do
+    bin = <<
+      20  :: integer-size(16)-native,
+      300 :: integer-size(16)-native,
+      400 :: integer-size(16)-native,
+      300 :: integer-size(16)-native,
+      400 :: integer-size(16)-native,
+      0   :: integer-size(16)-native,
+    >>
+    assert assert Triangle.deserialize(bin)          == {:ok, @data, ""}
+    assert assert Triangle.deserialize(bin, :native) == {:ok, @data, ""}
+  end
+
+  test "deserialize big works" do
+    bin = <<
+      20  :: integer-size(16)-big,
+      300 :: integer-size(16)-big,
+      400 :: integer-size(16)-big,
+      300 :: integer-size(16)-big,
+      400 :: integer-size(16)-big,
+      0   :: integer-size(16)-big,
+    >>
+    assert assert Triangle.deserialize(bin, :big) == {:ok, @data, ""}
   end
 
 end
