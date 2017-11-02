@@ -339,34 +339,43 @@ defmodule Scenic.PrimitiveTest do
 
   #--------------------------------------------------------
   # delta_script
-  test "delta_script works" do
-    assert false
+  test "delta_script returns an empty list if there is no change" do
+    assert Primitive.delta_script(@primitive, @primitive) == []
+  end
+
+  test "delta_script picks up change to data" do
+    p = Primitive.put(@primitive, [1,2,3])
+    assert Primitive.delta_script(@primitive, p) == [{:put, :data, [1, 2, 3]}]
+  end
+
+  test "delta_script picks up change to module" do
+    p = Map.put(@primitive, :module, Primitive.Line)
+    assert Primitive.delta_script(@primitive, p) == [{:put, :module, Primitive.Line}]
+  end
+
+  test "delta_script picks up change to parent uid" do
+    p = Map.put(@primitive, :parent_uid, 12)
+    assert Primitive.delta_script(@primitive, p) == [{:put, :puid, 12}]
+  end
+
+  test "delta_script picks up addition to style" do
+    p = Primitive.put_style(@primitive, :hidden, true)
+    assert Primitive.delta_script(@primitive, p) == [{:put, {:styles, :hidden}, true}]
+  end
+
+  test "delta_script picks up style deletion" do
+    p = Primitive.put_style(@primitive, :color, nil)
+    assert Primitive.delta_script(@primitive, p) == [{:del, {:styles, :color}}]
+  end
+
+  test "delta_script picks up addition to transforms" do
+    p = Primitive.put_transform(@primitive, :translate, {12,23})
+    assert Primitive.delta_script(@primitive, p) == [{:put, {:transforms, :translate}, {12, 23}}]
+  end
+
+  test "delta_script picks up transform deletion" do
+    p = Primitive.put_transform(@primitive, :pin, nil)
+    assert Primitive.delta_script(@primitive, p) == [del: {:transforms, :pin}]
   end
 
 end
-
-
-#  @minimal_primitive   %{
-#    module:     Group,
-#    puid:       @parent_uid,
-#    data:       @data,
-#    styles:     %{color: {{255, 0, 0, 255}, {255, 255, 0, 255}}, line_width: 10},
-#    transforms: %{pin: {10, 11}, rotate: 0.1}
-#  }
-#
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
