@@ -11,20 +11,16 @@ defmodule Scenic.Primitive.GroupTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Group
 
-  @end_id_ref_marker    <<0xff, 0xff, 0xff, 0xff>>
-
-  #============================================================================
-  test "type_code 1" do
-    assert Group.type_code() == <<0 :: unsigned-integer-size(16)-native>>
-  end
+  @data    [1,2,3,4]
 
 
   #============================================================================
   # build / add
   test "build works" do
-    group =  Group.build()
-    assert Primitive.get_module(group) == Group
-    assert Primitive.get_data(group) == @end_id_ref_marker
+    p = Group.build( @data )
+    assert Primitive.get_parent_uid(p) == -1
+    assert Primitive.get_module(p) == Group
+    assert Primitive.get(p) == @data
   end
 
 
@@ -32,18 +28,18 @@ defmodule Scenic.Primitive.GroupTest do
   # child management
   test "insert_at works" do
     group = Group.build()
-    assert Group.get(group) == []
+    assert Primitive.get(group) == []
 
     g = Group.insert_at(group, -1, 1234)
-    assert Group.get(g) == [1234]
+    assert Primitive.get(g) == [1234]
 
     g = Group.insert_at(group, -1, 1234)
       |> Group.insert_at(-1, 12345)
-    assert Group.get(g) == [1234, 12345]
+    assert Primitive.get(g) == [1234, 12345]
 
     g = Group.insert_at(group, -1, 1234)
       |> Group.insert_at(0, 12345)
-    assert Group.get(g) == [12345, 1234]
+    assert Primitive.get(g) == [12345, 1234]
   end
 
   test "delete works" do
@@ -67,49 +63,6 @@ defmodule Scenic.Primitive.GroupTest do
   end
 
 
-  #============================================================================
-  # basic data management
-
-  test "get works" do
-    g = Group.build()
-      |> Group.insert_at( -1, 1234)
-      |> Group.insert_at(-1, 12345)
-    assert Group.get(g) == [1234, 12345]
-  end
-
-  test "put works" do
-    group = Group.build()
-      |> Group.put( [1234] )
-    assert Primitive.get_data(group) == <<
-      1234 :: unsigned-integer-size(32)-native,
-      @end_id_ref_marker
-    >>
-  end
-
-
-  #============================================================================
-  # styles
-  # group is special in that you can set any style to it
-
-  test "put_style accepts Hidden" do
-    p = Group.build()
-      |> Primitive.put_style( Style.Hidden.build(true) )
-    assert Primitive.get_style(p, Style.Hidden)  ==  Style.Hidden.build(true)
-  end
-
-
-  test "put_style adds all the styles" do
-    group = Group.build()
-      |> Group.put_style( Style.Color.build({1,2,3,4}) )
-      |> Group.put_style( Style.Color2.build({1,2,3,4},{11,12,13,14}) )
-      |> Group.put_style( Style.Color3.build({1,2,3,4},{11,12,13,14},{21,22,23,24}) )
-      |> Group.put_style( Style.Color4.build({1,2,3,4},{11,12,13,14},{21,22,23,24}, {31,32,33,34}) )
-
-    assert Primitive.get_style(group, Style.Color)  ==  Style.Color.build({1,2,3,4})
-    assert Primitive.get_style(group, Style.Color2) ==  Style.Color2.build({1,2,3,4},{11,12,13,14})
-    assert Primitive.get_style(group, Style.Color3) ==  Style.Color3.build({1,2,3,4},{11,12,13,14},{21,22,23,24})
-    assert Primitive.get_style(group, Style.Color4) ==  Style.Color4.build({1,2,3,4},{11,12,13,14},{21,22,23,24}, {31,32,33,34})
-  end
 
 end
 

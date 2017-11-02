@@ -1,5 +1,5 @@
 #
-#  Created by Boyd Multerer on 5/8/17.
+#  Created by Boyd Multerer on 5/8/17. Re-written on 11/01/17
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
@@ -9,117 +9,136 @@ defmodule Scenic.Primitive.QuadTest do
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Quad
-  alias Scenic.Primitive.Style
 
 
-  #============================================================================
-  test "type_code" do
-    assert Quad.type_code() == <<3 :: unsigned-integer-size(16)-native>>
-  end
+  @data     {{100,300},{300,180},{400,310},{300,520}}
+
 
   #============================================================================
   # build / add
 
   test "build works" do
-    p = Quad.build( {{10,11}, {20,21}, {30,31}, {40,41}} )
+    p = Quad.build( @data )
     assert Primitive.get_parent_uid(p) == -1
     assert Primitive.get_module(p) == Quad
-    assert Primitive.get_data(p) == <<
-      10 :: unsigned-integer-size(16)-native,
-      11 :: unsigned-integer-size(16)-native,
-      20 :: unsigned-integer-size(16)-native,
-      21 :: unsigned-integer-size(16)-native,
-      30 :: unsigned-integer-size(16)-native,
-      31 :: unsigned-integer-size(16)-native,
-      40 :: unsigned-integer-size(16)-native,
-      41 :: unsigned-integer-size(16)-native
-    >>
+    assert Primitive.get(p) == @data
   end
 
 
   #============================================================================
-  # get / put
+  # verify
 
-  test "get works" do
-    quad = Quad.build( {{10,11}, {20,21}, {30,31}, {40,41}} )
-    assert Quad.get(quad) == { {10,11}, {20,21}, {30,31}, {40,41} }
+  test "verify passes valid data" do
+    assert Quad.verify( @data ) == true
   end
 
-  test "put works" do
-    quad = Quad.build( {{10,11}, {20,21}, {30,31}, {40,41}} )
-      |> Quad.put( {110,111}, {120,121}, {130,131}, {140,141} )
-    assert Quad.get(quad) == { {110,111}, {120,121}, {130,131}, {140,141} }
+  test "verify fails invalid data" do
+    assert Quad.verify( {{10,11}, 40, 80, 666} )   == false
+    assert Quad.verify( {10, 40, 80} )             == false
+    assert Quad.verify( {{10,11,12}, 40, 80} )     == false
+    assert Quad.verify( {{10,11}, 40, :banana} )   == false
+    assert Quad.verify( {{10,:banana}, 40, 80} )   == false
+    assert Quad.verify( :banana )                  == false
   end
-
 
   #============================================================================
   # styles
 
-  test "put_style accepts Hidden" do
-    p = Quad.build( {{10,11}, {20,21}, {30,31}, {40,41}} )
-      |> Primitive.put_style( Style.Hidden.build(true) )
-    assert Primitive.get_style(p, Style.Hidden)  ==  Style.Hidden.build(true)
+  test "valid_styles works" do
+    assert Quad.valid_styles() == [:hidden, :color, :border_color, :border_width]
   end
 
-  test "put_style accepts Color" do
-    quad = Quad.build( {{10,11}, {20,21}, {30,31}, {40,41}} )
-      |> Quad.put_style( Style.Color.build(:red) )
-    assert Primitive.get_style(quad, Style.Color)  ==  Style.Color.build(:red)
+  #============================================================================
+  # transform helpers
+
+  test "default_pin returns the averaged center of the rect" do
+    assert Quad.default_pin(@data) == {275, 328}
   end
 
-  test "put_style accepts Color4" do
-    quad = Quad.build( {{10,11}, {20,21}, {30,31}, {40,41}} )
-      |> Quad.put_style( Style.Color4.build(:red, :green, :burly_wood, :cornsilk) )
-    assert Primitive.get_style(quad, Style.Color4) ==  Style.Color4.build(:red, :green, :burly_wood, :cornsilk)
+#  test "centroid returns the center of the rect" do
+#    assert Quad.centroid(@data) == {30, 52}
+#  end
+
+  test "expand expands the data" do
+    # yes. This is a total cheat, but at least it checks that the result is valid data!
+    assert Quad.verify( Quad.expand(@data, 10) )
   end
 
-  test "put_style is exclusive between Color and Color4" do
-    quad = Quad.build( {{10,11}, {20,21}, {30,31}, {40,41}} )
-      |> Quad.put_style( Style.Color.build(:green) )
-    assert Primitive.get_style(quad, Style.Color)  ==  Style.Color.build(:green)
-    assert Primitive.get_style(quad, Style.Color4)  ==  nil
+  #============================================================================
+  # point containment
+  test "contains_point? returns true if it contains the point" do
+    assert Quad.contains_point?(@data, {101, 300})  == true
+    assert Quad.contains_point?(@data, {300,181})   == true
+    assert Quad.contains_point?(@data, {399,310})   == true
+    assert Quad.contains_point?(@data, {300,519})   == true
+  end
 
-    quad = Quad.put_style( quad, Style.Color4.build(:red, :green, :burly_wood, :cornsilk) )
-    assert Primitive.get_style(quad, Style.Color)  ==  nil
-    assert Primitive.get_style(quad, Style.Color4) ==  Style.Color4.build(:red, :green, :burly_wood, :cornsilk)
-    
-    quad = Quad.put_style( quad, Style.Color.build(:cornsilk) )
-    assert Primitive.get_style(quad, Style.Color)  ==  Style.Color.build(:cornsilk)
-    assert Primitive.get_style(quad, Style.Color4) ==  nil
+  test "contains_point? returns false if the point is outside" do
+    assert Quad.contains_point?(@data, {100, 180}) == false
+    assert Quad.contains_point?(@data, {400, 180}) == false
+    assert Quad.contains_point?(@data, {400, 520}) == false
+    assert Quad.contains_point?(@data, {100, 520}) == false
+  end
+
+  #============================================================================
+  # serialization
+
+  test "serialize native works" do
+    native = <<
+      100  :: integer-size(16)-native,
+      300  :: integer-size(16)-native,
+      300  :: integer-size(16)-native,
+      180  :: integer-size(16)-native,
+      400  :: integer-size(16)-native,
+      310  :: integer-size(16)-native,
+      300  :: integer-size(16)-native,
+      520  :: integer-size(16)-native,
+    >>
+    assert Quad.serialize(@data)           == {:ok, native}
+    assert Quad.serialize(@data, :native)  == {:ok, native}
+  end
+
+  test "serialize big works" do
+    assert Quad.serialize(@data, :big) == {:ok, <<
+      100  :: integer-size(16)-big,
+      300  :: integer-size(16)-big,
+      300  :: integer-size(16)-big,
+      180  :: integer-size(16)-big,
+      400  :: integer-size(16)-big,
+      310  :: integer-size(16)-big,
+      300  :: integer-size(16)-big,
+      520  :: integer-size(16)-big,
+    >>}
+  end
+
+  test "deserialize native works" do
+    bin = <<
+      100  :: integer-size(16)-native,
+      300  :: integer-size(16)-native,
+      300  :: integer-size(16)-native,
+      180  :: integer-size(16)-native,
+      400  :: integer-size(16)-native,
+      310  :: integer-size(16)-native,
+      300  :: integer-size(16)-native,
+      520  :: integer-size(16)-native,
+    >>
+    assert assert Quad.deserialize(bin)          == {:ok, @data, ""}
+    assert assert Quad.deserialize(bin, :native) == {:ok, @data, ""}
+  end
+
+  test "deserialize big works" do
+    bin = <<
+      100  :: integer-size(16)-big,
+      300  :: integer-size(16)-big,
+      300  :: integer-size(16)-big,
+      180  :: integer-size(16)-big,
+      400  :: integer-size(16)-big,
+      310  :: integer-size(16)-big,
+      300  :: integer-size(16)-big,
+      520  :: integer-size(16)-big,
+    >>
+    assert assert Quad.deserialize(bin, :big) == {:ok, @data, ""}
   end
 
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

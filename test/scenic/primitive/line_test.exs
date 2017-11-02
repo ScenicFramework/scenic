@@ -1,5 +1,5 @@
 #
-#  Created by Boyd Multerer on 5/8/17.
+#  Created by Boyd Multerer on 5/8/17. Re-written on 11/01/17
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
@@ -9,119 +9,112 @@ defmodule Scenic.Primitive.LineTest do
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Line
-  alias Scenic.Primitive.Style
 
 
-  #============================================================================
-  test "type_code" do
-    assert Line.type_code() == <<1 :: unsigned-integer-size(16)-native>>
-  end
+  @data     {{10,12}, {40, 80}}
+
 
   #============================================================================
   # build / add
+
   test "build works" do
-    p = Line.build( {{10,11}, {20,21}} )
+    p = Line.build( @data )
     assert Primitive.get_parent_uid(p) == -1
     assert Primitive.get_module(p) == Line
-    assert Primitive.get_data(p) == <<
-      10 :: unsigned-integer-size(16)-native,
-      11 :: unsigned-integer-size(16)-native,
-      20 :: unsigned-integer-size(16)-native,
-      21 :: unsigned-integer-size(16)-native
-    >>
+    assert Primitive.get(p) == @data
   end
 
 
   #============================================================================
-  # get / put
+  # verify
 
-  test "get works" do
-    line = Line.build( {{10,11}, {20,21}} )
-    assert Line.get(line) == { {10,11}, {20,21} }
+  test "verify passes valid data" do
+    assert Line.verify( @data ) == true
   end
 
-  test "put works" do
-    line = Line.build( {{10,11}, {20,21}} )
-      |> Line.put( {30,31}, {40,41} )
-    assert Line.get(line) == { {30,31}, {40,41} }
+  test "verify fails invalid data" do
+    assert Line.verify( {{10,12}, 40, 80} )         == false
+    assert Line.verify( {10,12, 40, 80} )           == false
+    assert Line.verify( {10, 40, 80} )              == false
+    assert Line.verify( {{10,12}, {40, :banana}} )  == false
+    assert Line.verify( {{10,:banana}, {40, 80}} )  == false
+    assert Line.verify( :banana )                   == false
   end
-
 
   #============================================================================
   # styles
 
-  test "put_style accepts Hidden" do
-    p = Line.build( {{10,11}, {20,21}} )
-      |> Primitive.put_style( Style.Hidden.build(true) )
-    assert Primitive.get_style(p, Style.Hidden)  ==  Style.Hidden.build(true)
+  test "valid_styles works" do
+    assert Line.valid_styles() == [:hidden, :color, :line_width]
   end
 
-  test "put_style accepts LineWidth" do
-    line = Line.build( {{10,11}, {20,21}} )
-      |> Line.put_style( Style.LineWidth.build( 3 ) )
-    assert Primitive.get_style(line, Style.LineWidth) == Style.LineWidth.build( 3 )
+  #============================================================================
+  # transform helpers
+
+  test "default_pin returns the center of the line" do
+    assert Line.default_pin(@data) == {25, 46}
   end
 
-  test "put_style accepts Color" do
-    line = Line.build( {{10,11}, {20,21}} )
-      |> Line.put_style( Style.Color.build(:red) )
-    assert Primitive.get_style(line, Style.Color) == Style.Color.build(:red)
+  test "centroid returns the center of the line" do
+    assert Line.centroid(@data) == {25, 46}
   end
 
-  test "put_style accepts Color2" do
-    line = Line.build( {{10,11}, {20,21}} )
-      |> Line.put_style( Style.Color2.build(:red,:green) )
-    assert Primitive.get_style(line, Style.Color2) == Style.Color2.build(:red,:green)
+#  test "expand makes the line longer" do
+#    assert Line.expand({{100,100},{200,100}}, 10) == {{90,100},{220,100}}
+#    assert Line.expand({{100,100},{100,200}}, 10) == {{100,90},{100,210}}
+#  end
+
+  #============================================================================
+  # point containment
+  test "contains_point? always returns false" do
+    assert Line.contains_point?(@data, {30, 52})  == false
+    assert Line.contains_point?(@data, {10,12})   == false
+    assert Line.contains_point?(@data, {40, 80})  == false
   end
 
-  test "put_style is exclusive between Color and Color2" do
-    line = Line.build( {{10,11}, {20,21}} )
-      |> Line.put_style( Style.Color.build(:magenta) )
-    assert Primitive.get_style(line, Style.Color) == Style.Color.build(:magenta)
-    assert Primitive.get_style(line, Style.Color2) == nil
+  #============================================================================
+  # serialization
 
-    line = Line.put_style( line, Style.Color2.build(:cornflower_blue,:azure) )
-    assert Primitive.get_style(line, Style.Color) == nil
-    assert Primitive.get_style(line, Style.Color2) == Style.Color2.build(:cornflower_blue,:azure)
-    
-    line = Line.put_style( line, Style.Color.build(:honey_dew) )
-    assert Primitive.get_style(line, Style.Color) == Style.Color.build(:honey_dew)
-    assert Primitive.get_style(line, Style.Color2) == nil
+  test "serialize native works" do
+    native = <<
+      10  :: integer-size(16)-native,
+      12  :: integer-size(16)-native,
+      40  :: integer-size(16)-native,
+      80  :: integer-size(16)-native,
+    >>
+    assert Line.serialize(@data)           == {:ok, native}
+    assert Line.serialize(@data, :native)  == {:ok, native}
+  end
+
+  test "serialize big works" do
+    assert Line.serialize(@data, :big) == {:ok, <<
+      10  :: integer-size(16)-big,
+      12  :: integer-size(16)-big,
+      40  :: integer-size(16)-big,
+      80  :: integer-size(16)-big,
+    >>}
+  end
+
+  test "deserialize native works" do
+    bin = <<
+      10  :: integer-size(16)-native,
+      12  :: integer-size(16)-native,
+      40  :: integer-size(16)-native,
+      80  :: integer-size(16)-native,
+    >>
+    assert assert Line.deserialize(bin)          == {:ok, @data, ""}
+    assert assert Line.deserialize(bin, :native) == {:ok, @data, ""}
+  end
+
+  test "deserialize big works" do
+    bin = <<
+      10  :: integer-size(16)-big,
+      12  :: integer-size(16)-big,
+      40  :: integer-size(16)-big,
+      80  :: integer-size(16)-big,
+    >>
+    assert assert Line.deserialize(bin, :big) == {:ok, @data, ""}
   end
 
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
