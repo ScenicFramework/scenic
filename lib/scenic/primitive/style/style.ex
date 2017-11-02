@@ -64,37 +64,19 @@ defmodule Scenic.Primitive.Style do
   # map a atom name to a style module. See @style_name_map above
 #  def name_to_style( name ) when is_atom(name), do: @style_name_map[name]
 
-  #===========================================================================
-  def verify!( style_key, style_data ) do
+#  #===========================================================================
+  def verify( style_key, style_data ) do
     case Map.get(@style_name_map, style_key) do
-      nil -> :ok
-      module -> module.verify!( style_data )
+      nil    -> true # don't verify non-primitives
+      module -> module.verify( style_data )
     end
   end
 
   #===========================================================================
-  # get one of the primitive styles. verify data while doing so
-  def get(style_map, style_type)
-  def get(styles, type) when is_atom(type) do
-    Map.get(styles, type)
-  end
-
-  #===========================================================================
-  # put one of the primitive styles. verify data while doing so
-  def put(style_map, style_type, data)
-
-  def put(styles, type, nil) do
-    Map.delete(styles, type)
-  end
-
-  def put(styles, style_type, data) do
-    case Map.get(@style_name_map, style_type) do
-      nil ->
-        # non-standard styles are ok. They just aren't enforced, or sent over the wire...
-        Map.put(styles, style_type, data)
-      mod ->
-        mod.verify!(data)
-        Map.put(styles, style_type, data)
+  def verify!( style_key, style_data ) do
+    case Map.get(@style_name_map, style_key) do
+      nil -> style_data
+      module -> module.verify!( style_data )
     end
   end
 

@@ -17,77 +17,58 @@ defmodule Scenic.Primitive.StyleTest do
 
 
   #============================================================================
-  # name_to_style
-  test "name_to_style works" do
-    assert Style.name_to_style( :border_color ) == Style.BorderColor
-    assert Style.name_to_style( :color ) ==        Style.Color
-    assert Style.name_to_style( :hidden ) ==       Style.Hidden
-    assert Style.name_to_style( :line_width ) ==   Style.LineWidth
+  # verify
+  test "verify works" do
+    assert Style.verify( :border_color, :red ) == true
+    assert Style.verify( :border_width, 10 )   == true
+    assert Style.verify( :color, :green )      == true
+    assert Style.verify( :hidden, true )       == true
+    assert Style.verify( :line_width, 10 )     == true
+    assert Style.verify( :clear_color, :blue ) == true
+  end
+
+  test "verify passes non-primitive styles" do
+    assert Style.verify( :fruit, :bananas ) == true
+  end
+
+  test "verify uses the primitive style's verify" do
+    assert Style.verify( :border_color, :not_a_color ) == false
+    assert Style.verify( :border_width, -1 )           == false
+    assert Style.verify( :color, :not_a_color )        == false
+    assert Style.verify( :hidden, 12 )                 == false
+    assert Style.verify( :line_width, 300 )            == false
+    assert Style.verify( :clear_color, :not_a_color )  == false
   end
 
   #============================================================================
-  # get
-
-  test "get gets a style" do
-    assert Style.get(@styles, :color) == :red
-    assert Style.get(@styles, :fruit) == :bananas
+  # verify!
+  test "verify! works" do
+    assert Style.verify!( :border_color, :red ) == :red
   end
-
-  test "get rejects non-atoms" do
-    assert_raise FunctionClauseError, fn ->
-      Style.get(@styles, "non-atom")
-    end
+  test "verify! passes non-primitive styles" do
+    assert Style.verify!( :fruit, :bananas ) == :bananas
   end
-
-  test "get returns nil for missing" do
-    assert Style.get(@styles, :missing) == nil
-  end
-
-  #============================================================================
-  # put
-
-  test "put puts a style" do
-    assert Style.put(@styles, :color, :green) == %{
-      color:  :green,
-      fruit:  :bananas,
-      hidden: false
-    }
-  end
-
-  test "put verifies the data" do
+  test "verify! raises on error" do
     assert_raise Style.FormatError, fn ->
-      Style.put(@styles, :color, "not a color")
+      Style.verify!( :color, :bananas )
     end
   end
 
-  test "put rejects non atoms" do
-    assert_raise FunctionClauseError, fn ->
-      Style.put(@styles, "non-atom", :bananas)
-    end
-  end
 
-  test "put accepts non-primitive types" do
-    assert Style.put(@styles, :vegetables, :carrots) == %{
-      color:      :red,
-      fruit:      :bananas,
-      hidden:     false,
-      vegetables: :carrots
-    }
-  end
-
-  test "put deletes the style if setting to nil" do
-    assert Style.put(@styles, :color, nil) == %{
-      fruit:  :bananas,
-      hidden: false
-    }
+  #============================================================================
+  # normalize
+  test "normalize transforms data into the style's normlized version" do
+    assert Style.normalize( :border_color, :red ) == {{255, 0, 0, 255}}
+    assert Style.normalize( :color, :green )      == {{0, 128, 0, 255}}
+    assert Style.normalize( :clear_color, :blue ) == {{0, 0, 255, 255}}
   end
 
   #============================================================================
   # primitives
 
-  test "primitives filters a style map to only the primitive types" do
+  test "primitives filters a style map to only the normalized, primitive types" do
     assert Style.primitives(@styles) == %{
-      color: :red,
+      color:  {{255, 0, 0, 255}},
       hidden: false
     }
   end

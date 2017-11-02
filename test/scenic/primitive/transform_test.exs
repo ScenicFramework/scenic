@@ -11,7 +11,6 @@ defmodule Scenic.Primitive.TransformTest do
 
   alias Scenic.Primitive.Transform
   alias Scenic.Math.MatrixBin
-  alias Scenic.Math.Matrix.Utils
   alias Scenic.Math.Vector
 
   @identity     MatrixBin.identity()
