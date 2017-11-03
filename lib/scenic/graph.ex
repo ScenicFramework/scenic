@@ -654,6 +654,22 @@ defmodule Scenic.Graph do
     do_map( graph, uid, action )
   end
 
+  #============================================================================
+  # map a graph, but only those elements mapped to the id
+  def map(graph, id, action) when
+      (is_atom(id) or is_bitstring(id)) and is_function(action, 1) do
+    # resolve the id into a list of uids
+    uids = resolve_id(graph, id)
+
+    # map those elements via reduction
+    Enum.reduce(uids, graph, fn(uid, acc)->
+      # retreive and map this node
+      get!(acc, uid)
+      |> action.()
+      |> (&put(acc, uid, &1)).()
+    end)
+  end
+
   #--------------------------------------------------------
   # map a graph via traversal starting at the node named by uid
   defp do_map(graph, uid, action, depth_remaining \\ nil)
@@ -661,7 +677,7 @@ defmodule Scenic.Graph do
     max_depth = Map.get(graph, :max_depth, @default_max_depth)
     do_map(graph, uid, action, max_depth)
   end
-  defp do_map(graph, uid, action, 0), do:
+  defp do_map(_, _, _, 0), do:
     raise Error, message: @err_msg_depth
   defp do_map(graph, uid, action, depth_remaining) do
     # retreive this node
@@ -685,22 +701,6 @@ defmodule Scenic.Graph do
   end
 
 
-  #============================================================================
-  # map a graph, but only those elements mapped to the id
-  def map(graph, id, action) when
-      (is_atom(id) or is_bitstring(id)) and is_function(action, 1) do
-    # resolve the id into a list of uids
-    uids = resolve_id(graph, id)
-
-    # map those elements via reduction
-    Enum.reduce(uids, graph, fn(uid, acc)->
-      # retreive and map this node
-      get!(acc, uid)
-      |> action.()
-      |> (&put(acc, uid, &1)).()
-    end)
-  end
-
 
   #============================================================================
   # reduce a graph via traversal from the root node
@@ -714,6 +714,21 @@ defmodule Scenic.Graph do
     do_reduce(graph, uid, acc, action)
   end
 
+  #============================================================================
+  # reduce a graph, but only for nodes mapped to the given id
+  def reduce(graph, id, acc, action) when
+      (is_atom(id) or is_bitstring(id)) and is_function(action, 2) do
+    # resolve the id into a list of uids
+    uids = resolve_id(graph, id)
+
+    # reduce on that list of uids
+    Enum.reduce(uids, acc, fn(uid, acc) ->
+      graph
+      |> get!(uid)
+      |> action.(acc)
+    end)
+  end
+
   #--------------------------------------------------------
   # do_reduce is where max_depth is honored
   defp do_reduce(graph, uid, acc, action, depth_remaining \\ nil)
@@ -721,7 +736,7 @@ defmodule Scenic.Graph do
     max_depth = Map.get(graph, :max_depth, @default_max_depth)
     do_reduce(graph, uid, acc, action, max_depth)
   end
-  defp do_reduce(graph, uid, acc, action, 0), do:
+  defp do_reduce(_, _, _, _, 0), do:
     raise Error, message: @err_msg_depth
   defp do_reduce(graph, uid, acc, action, depth_remaining) when depth_remaining > 0 do
     # retreive this node
@@ -741,20 +756,6 @@ defmodule Scenic.Graph do
   end
 
 
-  #============================================================================
-  # reduce a graph, but only for nodes mapped to the given id
-  def reduce(graph, id, acc, action) when
-      (is_atom(id) or is_bitstring(id)) and is_function(action, 2) do
-    # resolve the id into a list of uids
-    uids = resolve_id(graph, id)
-
-    # reduce on that list of uids
-    Enum.reduce(uids, acc, fn(uid, acc) ->
-      graph
-      |> get!(uid)
-      |> action.(acc)
-    end)
-  end
 
   #============================================================================
   # send an event to the primitives for handling
@@ -1019,7 +1020,7 @@ defmodule Scenic.Graph do
   #--------------------------------------------------------
   # not good enough to get the inverse tx directly off of p.
   # the inverse tx can be inherited from groups above this
-  def get_inverse_tx(graph, nil), do: nil
+  def get_inverse_tx(_, nil), do: nil
   def get_inverse_tx(graph, %Primitive{parent_uid: puid} = p) do
     case Map.get(p, :inverse_tx) do
       nil -> get_inverse_tx(graph, Graph.get(graph, puid))
