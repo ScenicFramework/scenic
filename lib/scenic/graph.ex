@@ -26,12 +26,14 @@ defmodule Scenic.Graph do
 #  alias Scenic.Primitive.StyleSet
   alias Scenic.Math.MatrixBin, as: Matrix
 
-  import IEx
+#  import IEx
 
   # make reserved uids, 3 or shorter to avoid potential conflicts
   @root_uid               0
 
   @identity               Matrix.identity()
+
+  @default_max_depth      128
 
 
   defstruct primitive_map: %{}, id_map: %{}, next_uid: 1, deltas: %{},
@@ -49,6 +51,12 @@ defmodule Scenic.Graph do
       style:      nil
     ]
   end
+
+  @err_msg_depth          "Graph too deep. Possible circular reference!"
+  @err_msg_depth_option   "The :max_depth option must be a positive integer"
+  @err_msg_group          "Can only add primitives to Group nodes"
+  @err_msg_put            "Graph.put can only update existing items."
+  @err_msg_get_id_one     "Graph.get_id_one expected to find one and only one element"
 
 
   #============================================================================
@@ -92,11 +100,21 @@ defmodule Scenic.Graph do
     graph = %Graph{ primitive_map:  %{ @root_uid => root } }
     |> calculate_transforms( 0 )
 
-    case opts[:id] do
+    graph = case opts[:id] do
       nil ->  graph
       id ->   map_id_to_uid( graph, id, @root_uid)
     end
+
+    case opts[:max_depth] do
+      nil -> graph
+      max ->
+        cond do
+          is_integer(max) && max > 0 -> Map.put(graph, :max_depth, max)
+          true -> raise Error, message: @err_msg_depth_option
+        end
+    end
   end
+
 
 
   #============================================================================
@@ -140,10 +158,11 @@ defmodule Scenic.Graph do
           {graph, _uid} = insert_at({g, uid}, -1, p)
           graph
         _ ->
-          raise "Can only add primitives to Group nodes"
+          raise @err_msg_group
       end
     end)
   end
+
 
   # build and add a new primitive to an existing group in a graph
   def add_to( graph, id, primitive_module, primitive_data, opts \\ [])
@@ -158,7 +177,7 @@ defmodule Scenic.Graph do
           # add the new primitive
           |> add( primitive_module, primitive_data, opts )
         _ ->
-          raise "Can only add primitives to Group nodes"
+          raise @err_msg_group
       end
     end)
     # restore the add_to back to whatever it was before
@@ -171,7 +190,7 @@ defmodule Scenic.Graph do
   def put(graph, uid, primitive)
   def put(graph, uid, primitive) when is_integer(uid) do
     case get(graph, uid) do
-      nil -> raise Error, message: "Graph.put can only update existing items."
+      nil -> raise Error, message: @err_msg_put
       _ ->
         graph
         |> get_primitive_map()
@@ -179,6 +198,7 @@ defmodule Scenic.Graph do
         |> ( &put_primitive_map(graph, &1) ).()
     end
   end
+
 
 
   #============================================================================
@@ -326,9 +346,10 @@ defmodule Scenic.Graph do
   def get_id_one(graph, id) do
     case resolve_id(graph, id) do
       [uid] ->  get( graph, uid )
-      _ ->      raise Error, message: "Graph.get_id_one expected to find one and only one element with id: #{inspect(id)}"
+      _ ->      raise Error, message: @err_msg_get_id_one
     end
   end
+
 
 
   #============================================================================
@@ -624,12 +645,25 @@ defmodule Scenic.Graph do
   #============================================================================
   # map a graph via traversal from the root node
   def map(graph, action) when is_function(action, 1) do
-    map(graph, @root_uid, action)
+    do_map(graph, @root_uid, action)
   end
 
   #--------------------------------------------------------
   # map a graph via traversal starting at the node named by uid
   def map(graph, uid, action) when is_integer(uid) and is_function(action, 1) do
+    do_map( graph, uid, action )
+  end
+
+  #--------------------------------------------------------
+  # map a graph via traversal starting at the node named by uid
+  defp do_map(graph, uid, action, depth_remaining \\ nil)
+  defp do_map(graph, uid, action, nil) do
+    max_depth = Map.get(graph, :max_depth, @default_max_depth)
+    do_map(graph, uid, action, max_depth)
+  end
+  defp do_map(graph, uid, action, 0), do:
+    raise Error, message: @err_msg_depth
+  defp do_map(graph, uid, action, depth_remaining) do
     # retreive this node
     primitive = get!(graph, uid)
 
@@ -644,11 +678,12 @@ defmodule Scenic.Graph do
       Group ->
         # map it's children by reducing the graph
         Enum.reduce( Primitive.get(primitive), graph, fn(uid, acc) ->
-          map(acc, uid, action)
+          do_map(acc, uid, action, depth_remaining - 1)
         end)
       _ -> graph        # do nothing
     end
   end
+
 
   #============================================================================
   # map a graph, but only those elements mapped to the id
@@ -669,13 +704,26 @@ defmodule Scenic.Graph do
 
   #============================================================================
   # reduce a graph via traversal from the root node
-  def reduce(graph, acc, action) when is_function(action, 2) do
-    reduce(graph, @root_uid, acc, action)
+  def reduce(%Graph{} = graph, acc, action) when is_function(action, 2) do
+    do_reduce(graph, @root_uid, acc, action)
   end
 
   #--------------------------------------------------------
   # reduce a graph via traversal starting at the node named by uid
-  def reduce(graph, uid, acc, action) when is_integer(uid) and is_function(action, 2) do
+  def reduce(%Graph{} = graph, uid, acc, action) when is_integer(uid) and is_function(action, 2) do
+    do_reduce(graph, uid, acc, action)
+  end
+
+  #--------------------------------------------------------
+  # do_reduce is where max_depth is honored
+  defp do_reduce(graph, uid, acc, action, depth_remaining \\ nil)
+  defp do_reduce(graph, uid, acc, action, nil) do
+    max_depth = Map.get(graph, :max_depth, @default_max_depth)
+    do_reduce(graph, uid, acc, action, max_depth)
+  end
+  defp do_reduce(graph, uid, acc, action, 0), do:
+    raise Error, message: @err_msg_depth
+  defp do_reduce(graph, uid, acc, action, depth_remaining) when depth_remaining > 0 do
     # retreive this node
     primitive = get!(graph, uid)
 
@@ -683,7 +731,7 @@ defmodule Scenic.Graph do
     acc = case Primitive.get_module(primitive) do
       Group ->
         Enum.reduce( Primitive.get(primitive), acc, fn(uid, acc) ->
-          reduce(graph, uid, acc, action)
+          do_reduce(graph, uid, acc, action, depth_remaining - 1)
         end)
       _ -> acc        # do nothing
     end
@@ -691,6 +739,7 @@ defmodule Scenic.Graph do
     # reduce the node itself, returns the final accumulator
     action.( primitive, acc )
   end
+
 
   #============================================================================
   # reduce a graph, but only for nodes mapped to the given id
@@ -706,7 +755,6 @@ defmodule Scenic.Graph do
       |> action.(acc)
     end)
   end
-
 
   #============================================================================
   # send an event to the primitives for handling

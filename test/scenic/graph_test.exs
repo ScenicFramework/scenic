@@ -18,7 +18,7 @@ defmodule Scenic.GraphTest do
 #  alias Scenic.Primitive.Transform
 
 
-  import IEx
+#  import IEx
   
   @root_uid               0
 
@@ -140,6 +140,18 @@ defmodule Scenic.GraphTest do
     assert rect_inverse != root_inverse
   end
 
+  test "build barfs on attempted circular graphs" do
+    assert_raise Graph.Error, fn ->
+      Graph.build()
+      |> Group.add_to_graph( [0] )
+    end
+  end
+
+  test "build accepts the :max_depth option" do
+    graph = Graph.build(max_depth: 1)
+    assert Map.get(graph, :max_depth) == 1
+  end
+
   #============================================================================
   # map_id_to_uid(graph, id, uid)
 
@@ -167,6 +179,8 @@ defmodule Scenic.GraphTest do
     graph = Graph.map_id_to_uid(@graph_empty, [:id1, :id2, :id3], 1)
     assert Graph.get_id_map(graph) == %{ id1: [1], id2: [1], id3: [1] }
   end
+
+
 
   #============================================================================
   # unmap_id_to_uid(graph, id, uid)
@@ -771,9 +785,71 @@ defmodule Scenic.GraphTest do
   end
 
 
-  test "modify recalculates local and inverse transforms"
+  test "modify recalculates local and inverse transforms" do
+    graph = Graph.build( rotate: 1.1 )
+    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
+    [uid] = Graph.resolve_id( graph, :rect )
 
-  test "modify recalculates inverse transforms down the graph"
+    rect = Graph.get(graph, uid)
+    before_local   = Map.get(rect, :local_tx)
+    before_inverse = Map.get(rect, :inverse_tx)
+    assert before_local
+    assert before_inverse
+
+    graph = Graph.modify(graph, :rect, fn(p)->
+      Primitive.put_transform(p, :rotate, 2.3)
+    end)
+
+    rect = Graph.get(graph, uid)
+    after_local   = Map.get(rect, :local_tx)
+    after_inverse = Map.get(rect, :inverse_tx)
+
+    assert after_local
+    assert after_inverse
+
+    assert after_local != before_local
+    assert after_inverse != before_inverse
+  end
+
+  test "modify recalculates inverse transforms down the graph" do
+    graph = Graph.build( rotate: 1.1 )
+    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
+    [uid] = Graph.resolve_id( graph, :rect )
+
+    root = Graph.get(graph, @root_uid)
+    before_root_local   = Map.get(root, :local_tx)
+    before_root_inverse = Map.get(root, :inverse_tx)
+    assert before_root_local
+    assert before_root_inverse
+
+    rect = Graph.get(graph, uid)
+    before_rect_local   = Map.get(rect, :local_tx)
+    before_rect_inverse = Map.get(rect, :inverse_tx)
+    assert before_rect_local
+    assert before_rect_inverse
+
+    graph = Graph.modify(graph, @root_uid, fn(p)->
+      Primitive.put_transform(p, :rotate, 2.3)
+    end)
+
+    root = Graph.get(graph, @root_uid)
+    after_root_local   = Map.get(root, :local_tx)
+    after_root_inverse = Map.get(root, :inverse_tx)
+    assert before_root_local
+    assert before_root_inverse
+
+    assert before_root_local != after_root_local
+    assert before_root_inverse != after_root_inverse
+
+    rect = Graph.get(graph, uid)
+    after_rect_local   = Map.get(rect, :local_tx)
+    after_rect_inverse = Map.get(rect, :inverse_tx)
+    assert before_rect_local
+    assert before_rect_inverse
+
+    assert before_rect_local == after_rect_local
+    assert before_rect_inverse != after_rect_inverse
+  end
 
 
   #============================================================================
@@ -875,7 +951,6 @@ defmodule Scenic.GraphTest do
     end) == 5
   end
 
-  #============================================================================
   # reduce(graph, uid, acc, action) - sub tree
   test "reduce recurses over sub tree" do
     {graph, _} =      Graph.insert_at(@graph_empty, -1, @empty_group)
@@ -899,7 +974,6 @@ defmodule Scenic.GraphTest do
     end) == 1
   end
 
-  #============================================================================
   # reduce(graph, id, acc, action) - just mapped to id
   test "reduce reduces just nodes mapped to a mapped id" do
     empty_group_id_one= Primitive.put_id(@empty_group, :one)
@@ -919,6 +993,26 @@ defmodule Scenic.GraphTest do
     end) == 2
   end
 
+
+  test "reduce honors max_depth" do
+    graph = Map.put(@graph_find, :max_depth, 1)
+        
+    assert_raise Graph.Error, fn ->
+      Graph.reduce(graph, 0, fn(_, acc)-> acc + 1 end)
+    end
+  end
+
+  test "reduce honors max_depth default - with circular graph" do
+    # set up a very simple circular graph
+    graph = Graph.build()
+    root = Graph.get(graph, @root_uid)
+    |> Map.put(:data, [0])
+    graph = Graph.put(graph, @root_uid, root)
+
+    assert_raise Graph.Error, fn ->
+      Graph.reduce(graph, 0, fn(_, acc)-> acc + 1 end)
+    end
+  end
 
 
   #============================================================================
@@ -948,8 +1042,6 @@ defmodule Scenic.GraphTest do
     assert Map.get( Graph.get(graph, uid_3), :transforms )      == @transform
   end
 
-  #============================================================================
-  # map(graph, uid, action) - sub tree
   test "map recurses over sub tree" do
     {graph, uid_0} = Graph.insert_at(@graph_empty, -1, @empty_group)
     {graph, uid_1} = Graph.insert_at(graph, -1, @empty_group)
@@ -973,6 +1065,26 @@ defmodule Scenic.GraphTest do
     assert Map.get( Graph.get(graph, uid_1), :transforms )      == @transform
     assert Map.get( Graph.get(graph, uid_2), :transforms )      == @transform
     assert Map.get( Graph.get(graph, uid_3), :transforms )      == nil
+  end
+
+  test "map honors max_depth" do
+    graph = Map.put(@graph_find, :max_depth, 1)
+        
+    assert_raise Graph.Error, fn ->
+      Graph.map(graph, fn(p)-> p end)
+    end
+  end
+
+  test "map honors max_depth default - with circular graph" do
+    # set up a very simple circular graph
+    graph = Graph.build()
+    root = Graph.get(graph, @root_uid)
+    |> Map.put(:data, [0])
+    graph = Graph.put(graph, @root_uid, root)
+
+    assert_raise Graph.Error, fn ->
+      Graph.map(graph, fn(p)-> p end)
+    end
   end
 
   #============================================================================
@@ -1574,7 +1686,7 @@ defmodule Scenic.GraphTest do
     root = Graph.get(graph, @root_uid)
     after_root_inverse  = Map.get(root, :inverse_tx)
     assert after_root_inverse
-    assert before_rect_inverse != after_root_inverse
+    assert before_root_inverse != after_root_inverse
 
     [rect] = Graph.get(graph, :rect)
     after_rect_local    = Map.get(rect, :local_tx)
