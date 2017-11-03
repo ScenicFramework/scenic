@@ -9,8 +9,9 @@ defmodule Scenic.Primitive do
   alias Scenic.Primitive
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Transform
+  alias Scenic.Math.MatrixBin, as: Matrix
 
-  import IEx
+#  import IEx
 
   @callback add_to_graph(map, any, list) :: map
 
@@ -26,7 +27,6 @@ defmodule Scenic.Primitive do
   @callback expand( any ) :: any
 
   @callback contains_point?( any, {integer, integer} ) :: true | false
-
 
 
   @not_styles       [:module, :uid, :parent_uid, :id, :tags, :event_filter,
@@ -385,6 +385,41 @@ defmodule Scenic.Primitive do
     Map.get(p, :transforms, %{})
     |> Map.delete( tx_type )
     |> ( &put_transforms(p, &1) ).()
+  end
+
+
+  #--------------------------------------------------------
+  # calculates both the local and inverse transforms
+  def calculate_transforms( %Primitive{} = p, parent_tx ) do
+    Map.get( p, :transforms )
+    |> Primitive.Transform.calculate_local()
+    |> case do
+      nil ->
+        p
+        |> Map.delete(:local_tx)
+        |> Map.delete(:inverse_tx)
+
+      local_tx ->
+        inverse = Matrix.mul( parent_tx, local_tx )
+        |> Matrix.invert()
+        p
+        |> Map.put(:local_tx, local_tx)
+        |> Map.put(:inverse_tx, inverse)
+    end
+  end
+
+  #--------------------------------------------------------
+  # calculates only the inverse transform
+  def calculate_inverse_transform( %Primitive{} = p, parent_tx ) do
+    Map.get( p, :local_tx )
+    |> case do
+      # do nothing if no local_tx is present
+      nil -> Map.delete(p, :inverse_tx)
+      local_tx ->
+        inverse = Matrix.mul( parent_tx, local_tx )
+        |> Matrix.invert()
+        Map.put(p, :inverse_tx, inverse)
+    end
   end
 
 

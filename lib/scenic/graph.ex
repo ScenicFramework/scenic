@@ -171,7 +171,7 @@ defmodule Scenic.Graph do
   def put(graph, uid, primitive)
   def put(graph, uid, primitive) when is_integer(uid) do
     case get(graph, uid) do
-      nil -> raise Error, message: "Graph.put can only update existing items. Use put_new instead"
+      nil -> raise Error, message: "Graph.put can only update existing items."
       _ ->
         graph
         |> get_primitive_map()
@@ -571,7 +571,10 @@ defmodule Scenic.Graph do
             graph
             |> put_delta_base( uid, p_original )
             |> put( uid, p_modified )
-            |> calculate_transforms( uid )
+
+            # update the transforms. This means recalc the local_tx and recursivly update the inverse_tx
+            |> calculate_local_transform( uid )
+            |> calculate_inverse_transforms( uid )
 
           _ ->  raise Error, message: "Action must return a valid primitive"
         end
@@ -903,65 +906,58 @@ defmodule Scenic.Graph do
 
 
   #============================================================================
-  def calculate_transforms( graph, uid, parent_tx \\ nil )
-  def calculate_transforms( %Graph{} = graph, uid, nil ) do
-    case get(graph, uid) do
-      nil ->
-        graph
-      %Primitive{parent_uid: puid} ->
-        calculate_transforms(
-          graph,
-          uid,
-          get_merged_tx(graph, puid)
-        )
-    end
+  # transforms in action
+
+  def calculate_transforms( graph, uid )
+  def calculate_transforms( graph, uid ) do
+    map(graph, uid, fn(%Primitive{parent_uid: puid} = p) ->
+      # get this primitive's parent's local_tx
+      parent_tx = get_merged_tx(graph, puid)
+      # calculate the local transforms
+      Primitive.calculate_transforms( p, parent_tx )
+    end)
   end
-  def calculate_transforms( graph, uid, parent_tx ) do
+
+  #--------------------------------------------------------
+  def calculate_local_transform( graph, uid )
+  def calculate_local_transform( graph, uid ) do
+    #only calculate the lcoal transform for the given item
     case get(graph, uid) do
       nil -> graph
-      %Primitive{module: mod, data: data} = p ->
-        p = do_calculate_transforms( p, parent_tx )
-        graph = put(graph, uid, p)
-
-        # if this is a group, recurse it's children
-        case mod do
-          Group ->
-            p_tx = Map.get(p, :local_tx, parent_tx)
-            Enum.reduce(data, graph, fn(id, g) ->
-              calculate_transforms( g, id, p_tx )
-            end)
-          _ ->
-            graph
+      p ->
+        # calculate the local transform only
+        p = Map.get( p, :transforms )
+        |> Primitive.Transform.calculate_local()
+        |> case do
+          nil ->
+            p
+            |> Map.delete( :local_tx )
+            |> Map.delete( :inverse_tx )
+          tx  ->
+            Map.put(p, :local_tx, tx)
         end
-      end
-  end
 
-
-  #--------------------------------------------------------
-  defp do_calculate_transforms( %Primitive{} = p, parent_tx ) do
-    Map.get( p, :transforms )
-    |> Primitive.Transform.calculate_local()
-    |> case do
-      nil ->
-        p
-        |> Map.delete(:local_tx)
-        |> Map.delete(:inverse_tx)
-
-      local_tx ->
-        inverse = Matrix.mul( parent_tx, local_tx )
-        |> Matrix.invert()
-        p
-        |> Map.put(:local_tx, local_tx)
-        |> Map.put(:inverse_tx, inverse)
+        # put it back in place
+        put(graph, uid, p)
     end
   end
 
+  #--------------------------------------------------------
+  def calculate_inverse_transforms( graph, uid )
+  def calculate_inverse_transforms( graph, uid ) do
+    map(graph, uid, fn(%Primitive{parent_uid: puid} = p) ->
+      # get this primitive's parent's local_tx
+      parent_tx = get_merged_tx(graph, puid)
+      # calculate the inverse transform
+      Primitive.calculate_inverse_transform( p, parent_tx )
+    end)
+  end
 
   #--------------------------------------------------------
-  def get_merged_tx(graph, id)
-  def get_merged_tx(_, -1), do: @identity
-  def get_merged_tx(graph, id) do
-    case Map.get(graph, id) do
+  def get_merged_tx(graph, uid)
+#  def get_merged_tx(_, -1), do: @identity
+  def get_merged_tx(graph, uid) do
+    case get(graph, uid) do
       nil -> @identity
       %{parent_uid: puid} = p ->
         merged = get_merged_tx(graph, puid)
@@ -972,6 +968,16 @@ defmodule Scenic.Graph do
     end
   end
 
+  #--------------------------------------------------------
+  # not good enough to get the inverse tx directly off of p.
+  # the inverse tx can be inherited from groups above this
+  def get_inverse_tx(graph, nil), do: nil
+  def get_inverse_tx(graph, %Primitive{parent_uid: puid} = p) do
+    case Map.get(p, :inverse_tx) do
+      nil -> get_inverse_tx(graph, Graph.get(graph, puid))
+      tx -> tx
+    end
+  end
 
   #--------------------------------------------------------
   # possible optimization here by rolling into a custom traversal that keeps track
@@ -981,8 +987,10 @@ defmodule Scenic.Graph do
     reduce(graph, nil, fn(%Primitive{module: mod, data: data} = p,acc) ->
       # get the local (or inherited) inverse tx for this primitive
       # then project the point by that matrix to get the local point
-      local_point = get_inverse_tx(graph, p)
-      |> Matrix.project_vector( {x, y} )
+      local_point = case get_inverse_tx(graph, p) do
+        nil -> {x, y}
+        tx -> Matrix.project_vector( tx, {x, y} )
+      end
 
       # test if the point is in the primitive
       case mod.contains_point?( data, local_point ) do
@@ -993,16 +1001,6 @@ defmodule Scenic.Graph do
   end
 
 
-  #--------------------------------------------------------
-  # not good enough to get the inverse tx directly off of p.
-  # the inverse tx can be inherited from groups above this
-  defp get_inverse_tx(graph, nil), do: @identity
-  defp get_inverse_tx(graph, %Primitive{parent_uid: puid} = p) do
-    case Map.get(p, :inverse_tx) do
-      nil -> get_inverse_tx(graph, Graph.get(graph, puid))
-      tx -> tx
-    end
-  end
 
 end
 

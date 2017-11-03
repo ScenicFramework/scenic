@@ -9,12 +9,16 @@ defmodule Scenic.PrimitiveTest do
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Group
+  alias Scenic.Math.MatrixBin, as: Matrix
 
 #  import IEx
 
   defmodule TestStyle do
     def get(_), do: :test_style_getter
   end
+
+
+  @identity     Matrix.identity()
 
 
   @tx_pin             {10,11}
@@ -260,6 +264,66 @@ defmodule Scenic.PrimitiveTest do
   test "put_transforms sets the transform to nil" do
     p = Primitive.put_transforms(@primitive, nil)
     assert Map.get(p, :transforms) == nil
+  end
+
+
+  test "calculate_transforms calculates both the local and inverse transforms" do
+    refute Map.get(@primitive, :local_tx)
+    refute Map.get(@primitive, :inverse_tx)
+
+    p = Primitive.calculate_transforms( @primitive, @identity )
+
+    assert Map.get(p, :local_tx)
+    assert Map.get(p, :inverse_tx)
+  end
+
+
+  test "calculate_transforms re-calculates both the local and inverse transforms"
+
+
+  test "calculate_transforms deletes existing local_tx and inverse_tx if transforms is now empty or nil" do
+    p = Primitive.calculate_transforms( @primitive, @identity )
+    assert Map.get(p, :local_tx)
+    assert Map.get(p, :inverse_tx)
+
+    # delete the transforms map without actually deleting local_tx and inverse_tx
+    p = Map.delete( p, :transforms )
+    p = Primitive.calculate_transforms( p, @identity )
+
+    refute Map.get(p, :local_tx)
+    refute Map.get(p, :inverse_tx)
+  end
+
+
+  test "calculate_inverse_transform calculates only the inverse transform" do
+    p = Primitive.calculate_transforms( @primitive, @identity )
+    original_local   = Map.get(p, :local_tx)
+    original_inverse = Map.get(p, :inverse_tx)
+    assert original_local
+    assert original_inverse
+
+    # change the transform map, so that local would change if this was calculate_transforms
+    p = Map.put(p, :transforms, %{scale: 1.7})
+
+    # calculate the inverse transform with some parent_tx other than identity
+    other_tx = Matrix.build_rotation(0.387)
+    p = Primitive.calculate_inverse_transform(p, other_tx)
+    after_local   = Map.get(p, :local_tx)
+    after_inverse = Map.get(p, :inverse_tx)
+
+    # assert that the inverse changed, but that local did not
+    assert original_local == after_local
+    assert original_inverse != after_inverse
+  end
+
+  test "calculate_inverse_transform does nothing if the local_tx is nil" do
+    refute Map.get(@primitive, :local_tx)
+    refute Map.get(@primitive, :inverse_tx)
+
+    p = Primitive.calculate_inverse_transform( @primitive, @identity )
+
+    refute Map.get(p, :local_tx)
+    refute Map.get(p, :inverse_tx)
   end
 
 
