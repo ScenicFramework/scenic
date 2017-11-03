@@ -13,13 +13,11 @@ defmodule Scenic.GraphTest do
   alias Scenic.Primitive.Text
   alias Scenic.Primitive.Rectangle
   alias Scenic.Primitive.Line
-  alias Scenic.Primitive.Style
 #  alias Scenic.Template.Button
-
 #  alias Scenic.Primitive.Transform
 
 
-  import IEx
+#  import IEx
   
   @root_uid               0
 
@@ -40,13 +38,6 @@ defmodule Scenic.GraphTest do
       Rectangle.add_to_graph( g, {{0, 0}, 100, 200}, id: :rect )
     end, id: "group")
 
-
-#  @find_outer_text  Text.build({{10,10}, "Some sample text"}, id: :outer_text, tags: ["outer", "text", :text_atom, :on_root] )
-#  @find_outer_line  Line.build({{10,10}, {100, 100}}, id: :outer_line, tags: ["outer", "line"] )
-#  @find_outer_btn   Button.build("Continue", id: :outer_btn, tags: ["outer"] )
-#
-#  @find_inner_text  Text.build({{10,10}, "inner text"}, id: :inner_text, tags: ["inner", "text", :text_atom] )
-#  @find_inner_line  Line.build({{10,10}, {100, 100}}, id: :inner_line, tags: ["inner", "line"], state: {:abc, 123} )
 
   @graph_find       Graph.build()
     |> Text.add_to_graph( {{10,10}, "Some sample text"}, id: :outer_text, tags: ["outer", "text", :text_atom, :on_root] )
@@ -736,22 +727,23 @@ defmodule Scenic.GraphTest do
     {graph, uid_3} =  Graph.insert_at(graph, -1, empty_group_with_id)
 
     # confirm setup
-    assert Primitive.get_transform( Graph.get(graph, uid_1) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_2) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_3) ) == nil
+    assert Map.get( Graph.get(graph, uid_1), :transforms ) == nil
+    assert Map.get( Graph.get(graph, uid_2), :transforms ) == nil
+    assert Map.get( Graph.get(graph, uid_3), :transforms ) == nil
 
     # modify the element by assigning a transform to it
     graph = Graph.modify(graph, :test_id, fn(p)->
-      Primitive.put_transform( p, @transform )
+      Primitive.put_transforms( p, @transform )
     end)
 
     # confirm result
-    assert Primitive.get_transform( Graph.get(graph, uid_1) ) == @transform
-    assert Primitive.get_transform( Graph.get(graph, uid_2) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_3) ) == @transform
+    assert Map.get( Graph.get(graph, uid_1), :transforms ) == @transform
+    assert Map.get( Graph.get(graph, uid_2), :transforms ) == nil
+    assert Map.get( Graph.get(graph, uid_3), :transforms ) == @transform
 
-    assert Enum.member?(Graph.get_update_list(graph), uid_1)
-    assert Enum.member?(Graph.get_update_list(graph), uid_3)
+    deltas = Graph.get_delta_scripts(graph)
+    assert Enum.find(deltas, fn({k,_})-> k == uid_1 end)
+    assert Enum.find(deltas, fn({k,_})-> k == uid_3 end)
   end
 
   test "modify works on a list of uids" do
@@ -760,22 +752,23 @@ defmodule Scenic.GraphTest do
     {graph, uid_3} = Graph.insert_at(graph, -1, @empty_group)
 
     # confirm setup
-    assert Primitive.get_transform( Graph.get(graph, uid_1) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_2) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_3) ) == nil
+    assert Map.get( Graph.get(graph, uid_1), :transforms ) == nil
+    assert Map.get( Graph.get(graph, uid_2), :transforms ) == nil
+    assert Map.get( Graph.get(graph, uid_3), :transforms ) == nil
 
     # modify the element by assigning a transform to it
     graph = Graph.modify(graph, [uid_1, uid_3], fn(p)->
-      Primitive.put_transform( p, @transform )
+      Primitive.put_transforms( p, @transform )
     end)
 
     # confirm result
-    assert Primitive.get_transform( Graph.get(graph, uid_1) ) == @transform
-    assert Primitive.get_transform( Graph.get(graph, uid_2) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_3) ) == @transform
+    assert Map.get( Graph.get(graph, uid_1), :transforms ) == @transform
+    assert Map.get( Graph.get(graph, uid_2), :transforms ) == nil
+    assert Map.get( Graph.get(graph, uid_3), :transforms ) == @transform
 
-    assert Enum.member?(Graph.get_update_list(graph), uid_1)
-    assert Enum.member?(Graph.get_update_list(graph), uid_3)
+    deltas = Graph.get_delta_scripts(graph)
+    assert Enum.find(deltas, fn({k,_})-> k == uid_1 end)
+    assert Enum.find(deltas, fn({k,_})-> k == uid_3 end)
   end
 
 
@@ -786,50 +779,54 @@ defmodule Scenic.GraphTest do
     graph = @graph_find
 
     # confirm setup
-    assert Primitive.get_transform( Graph.get_id_one(graph, :outer_text) ) == nil
-    assert Primitive.get_transform( Graph.get_id_one(graph, :outer_line) ) == nil
-    assert Primitive.get_transform( Graph.get_id_one(graph, :inner_text) ) == nil
-    assert Primitive.get_transform( Graph.get_id_one(graph, :inner_line) ) == nil
+    assert Map.get( Graph.get_id_one(graph, :outer_text), :transforms ) == nil
+    assert Map.get( Graph.get_id_one(graph, :outer_line), :transforms ) == nil
+    assert Map.get( Graph.get_id_one(graph, :inner_text), :transforms ) == nil
+    assert Map.get( Graph.get_id_one(graph, :inner_line), :transforms ) == nil
 
     graph = Graph.find_modify(graph, 0, {:tag, "line"}, fn(p)->
-      Primitive.put_transform( p, @transform )
+      Primitive.put_transforms( p, @transform )
     end)
 
     # confirm result
-    assert Primitive.get_transform( Graph.get_id_one(graph, :outer_text) ) == nil
-    assert Primitive.get_transform( Graph.get_id_one(graph, :outer_line) ) == @transform
-    assert Primitive.get_transform( Graph.get_id_one(graph, :inner_text) ) == nil
-    assert Primitive.get_transform( Graph.get_id_one(graph, :inner_line) ) == @transform
+    assert Map.get( Graph.get_id_one(graph, :outer_text), :transforms ) == nil
+    assert Map.get( Graph.get_id_one(graph, :outer_line), :transforms ) == @transform
+    assert Map.get( Graph.get_id_one(graph, :inner_text), :transforms ) == nil
+    assert Map.get( Graph.get_id_one(graph, :inner_line), :transforms ) == @transform
 
     # confirm update list
-    up_list = Graph.get_update_list(graph)
-    assert Enum.count(up_list) == 2
-    assert Enum.member?(up_list, Primitive.get_uid(Graph.get_id_one(graph, :outer_line)))
-    assert Enum.member?(up_list, Primitive.get_uid(Graph.get_id_one(graph, :inner_line)))
+    deltas = Graph.get_delta_scripts(graph)
+    assert Enum.count(deltas) == 2
+    uid = Primitive.get_uid(Graph.get_id_one(graph, :outer_line))
+    assert Enum.find(deltas, fn({k,_})-> k == uid end)
+    uid = Primitive.get_uid(Graph.get_id_one(graph, :inner_line))
+    assert Enum.find(deltas, fn({k,_})-> k == uid end)
   end
 
   test "find_modify modifies only the found primitives with a criteria list" do
     graph = @graph_find
 
     # confirm setup
-    assert Primitive.get_transform( Graph.get_id_one(graph, :outer_text) ) == nil
-    assert Primitive.get_transform( Graph.get_id_one(graph, :outer_line) ) == nil
-    assert Primitive.get_transform( Graph.get_id_one(graph, :inner_text) ) == nil
-    assert Primitive.get_transform( Graph.get_id_one(graph, :inner_line) ) == nil
+    assert Map.get( Graph.get_id_one(graph, :outer_text), :transforms ) == nil
+    assert Map.get( Graph.get_id_one(graph, :outer_line), :transforms ) == nil
+    assert Map.get( Graph.get_id_one(graph, :inner_text), :transforms ) == nil
+    assert Map.get( Graph.get_id_one(graph, :inner_line), :transforms ) == nil
 
     graph = Graph.find_modify(graph, 0, [tag: "outer", type: Line], fn(p)->
-      Primitive.put_transform( p, @transform )
+      Primitive.put_transforms( p, @transform )
     end)
 
     # confirm result
-    assert Primitive.get_transform( Graph.get_id_one(graph, :outer_text) ) == nil
-    assert Primitive.get_transform( Graph.get_id_one(graph, :outer_line) ) == @transform
-    assert Primitive.get_transform( Graph.get_id_one(graph, :inner_text) ) == nil
-    assert Primitive.get_transform( Graph.get_id_one(graph, :inner_line) ) == nil
+    assert Map.get( Graph.get_id_one(graph, :outer_text), :transforms ) == nil
+    assert Map.get( Graph.get_id_one(graph, :outer_line), :transforms ) == @transform
+    assert Map.get( Graph.get_id_one(graph, :inner_text), :transforms ) == nil
+    assert Map.get( Graph.get_id_one(graph, :inner_line), :transforms ) == nil
 
-    # confirm update list
-    up_list = Graph.get_update_list(graph)
-    assert up_list == [Primitive.get_uid(Graph.get_id_one(graph, :outer_line))]
+    # confirm update deltas
+    deltas = Graph.get_delta_scripts(graph)
+    assert Enum.count(deltas) == 1
+    uid = Primitive.get_uid(Graph.get_id_one(graph, :outer_line))
+    assert Enum.find(deltas, fn({k,_})-> k == uid end)
   end
 
   test "find_modify modifies only the found primitives under start_uid" do
@@ -837,24 +834,26 @@ defmodule Scenic.GraphTest do
     [group_uid] = Graph.resolve_id(graph, :group)
 
     # confirm setup
-    assert Primitive.get_transform( Graph.get_id_one(graph, :outer_text) ) == nil
-    assert Primitive.get_transform( Graph.get_id_one(graph, :outer_line) ) == nil
-    assert Primitive.get_transform( Graph.get_id_one(graph, :inner_text) ) == nil
-    assert Primitive.get_transform( Graph.get_id_one(graph, :inner_line) ) == nil
+    assert Map.get( Graph.get_id_one(graph, :outer_text), :transforms ) == nil
+    assert Map.get( Graph.get_id_one(graph, :outer_line), :transforms ) == nil
+    assert Map.get( Graph.get_id_one(graph, :inner_text), :transforms ) == nil
+    assert Map.get( Graph.get_id_one(graph, :inner_line), :transforms ) == nil
 
     graph = Graph.find_modify(graph, group_uid, [tag: "line"], fn(p)->
-      Primitive.put_transform( p, @transform )
+      Primitive.put_transforms( p, @transform )
     end)
 
     # confirm result
-    assert Primitive.get_transform( Graph.get_id_one(graph, :outer_text) ) == nil
-    assert Primitive.get_transform( Graph.get_id_one(graph, :outer_line) ) == nil
-    assert Primitive.get_transform( Graph.get_id_one(graph, :inner_text) ) == nil
-    assert Primitive.get_transform( Graph.get_id_one(graph, :inner_line) ) == @transform
+    assert Map.get( Graph.get_id_one(graph, :outer_text), :transforms ) == nil
+    assert Map.get( Graph.get_id_one(graph, :outer_line), :transforms ) == nil
+    assert Map.get( Graph.get_id_one(graph, :inner_text), :transforms ) == nil
+    assert Map.get( Graph.get_id_one(graph, :inner_line), :transforms ) == @transform
 
-    # confirm update list
-    up_list = Graph.get_update_list(graph)
-    assert up_list == [Primitive.get_uid(Graph.get_id_one(graph, :inner_line))]
+    # confirm update deltas
+    deltas = Graph.get_delta_scripts(graph)
+    assert Enum.count(deltas) == 1
+    uid = Primitive.get_uid(Graph.get_id_one(graph, :inner_line))
+    assert Enum.find(deltas, fn({k,_})-> k == uid end)
   end
 
 
@@ -927,22 +926,22 @@ defmodule Scenic.GraphTest do
     {graph, uid_3} = Graph.insert_at(graph, -1, @empty_group)
 
     # confirm setup
-    assert Primitive.get_transform( Graph.get(graph, @root_uid) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_0) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_1) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_2) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_3) ) == nil
+    assert Map.get( Graph.get(graph, @root_uid), :transforms )  == nil
+    assert Map.get( Graph.get(graph, uid_0), :transforms )      == nil
+    assert Map.get( Graph.get(graph, uid_1), :transforms )      == nil
+    assert Map.get( Graph.get(graph, uid_2), :transforms )      == nil
+    assert Map.get( Graph.get(graph, uid_3), :transforms )      == nil
 
     graph = Graph.map(graph, fn(p) ->
-      Primitive.put_transform( p, @transform )
+      Primitive.put_transforms( p, @transform )
     end)
 
     # confirm result
-    assert Primitive.get_transform( Graph.get(graph, @root_uid) ) == @transform
-    assert Primitive.get_transform( Graph.get(graph, uid_0) ) == @transform
-    assert Primitive.get_transform( Graph.get(graph, uid_1) ) == @transform
-    assert Primitive.get_transform( Graph.get(graph, uid_2) ) == @transform
-    assert Primitive.get_transform( Graph.get(graph, uid_3) ) == @transform
+    assert Map.get( Graph.get(graph, @root_uid), :transforms )  == @transform
+    assert Map.get( Graph.get(graph, uid_0), :transforms )      == @transform
+    assert Map.get( Graph.get(graph, uid_1), :transforms )      == @transform
+    assert Map.get( Graph.get(graph, uid_2), :transforms )      == @transform
+    assert Map.get( Graph.get(graph, uid_3), :transforms )      == @transform
   end
 
   #============================================================================
@@ -954,22 +953,22 @@ defmodule Scenic.GraphTest do
     {graph, uid_3} = Graph.insert_at(graph, -1, @empty_group)
 
     # confirm setup
-    assert Primitive.get_transform( Graph.get(graph, @root_uid) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_0) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_1) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_2) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_3) ) == nil
+    assert Map.get( Graph.get(graph, @root_uid), :transforms )  == nil
+    assert Map.get( Graph.get(graph, uid_0), :transforms )      == nil
+    assert Map.get( Graph.get(graph, uid_1), :transforms )      == nil
+    assert Map.get( Graph.get(graph, uid_2), :transforms )      == nil
+    assert Map.get( Graph.get(graph, uid_3), :transforms )      == nil
 
     graph = Graph.map(graph, uid_1, fn(p) ->
-      Primitive.put_transform( p, @transform )
+      Primitive.put_transforms( p, @transform )
     end)
 
     # confirm result
-    assert Primitive.get_transform( Graph.get(graph, @root_uid) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_0) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_1) ) == @transform
-    assert Primitive.get_transform( Graph.get(graph, uid_2) ) == @transform
-    assert Primitive.get_transform( Graph.get(graph, uid_3) ) == nil
+    assert Map.get( Graph.get(graph, @root_uid), :transforms )  == nil
+    assert Map.get( Graph.get(graph, uid_0), :transforms )      == nil
+    assert Map.get( Graph.get(graph, uid_1), :transforms )      == @transform
+    assert Map.get( Graph.get(graph, uid_2), :transforms )      == @transform
+    assert Map.get( Graph.get(graph, uid_3), :transforms )      == nil
   end
 
   #============================================================================
@@ -983,22 +982,22 @@ defmodule Scenic.GraphTest do
     {graph, uid_3} = Graph.insert_at(graph, -1, @empty_group)
 
     # confirm setup
-    assert Primitive.get_transform( Graph.get(graph, @root_uid) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_0) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_1) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_2) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_3) ) == nil
+    assert Map.get( Graph.get(graph, @root_uid), :transforms )  == nil
+    assert Map.get( Graph.get(graph, uid_0), :transforms )      == nil
+    assert Map.get( Graph.get(graph, uid_1), :transforms )      == nil
+    assert Map.get( Graph.get(graph, uid_2), :transforms )      == nil
+    assert Map.get( Graph.get(graph, uid_3), :transforms )      == nil
 
     graph = Graph.map(graph, :test_id, fn(p) ->
-      Primitive.put_transform( p, @transform )
+      Primitive.put_transforms( p, @transform )
     end)
 
     # confirm result
-    assert Primitive.get_transform( Graph.get(graph, @root_uid) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_0) ) == @transform
-    assert Primitive.get_transform( Graph.get(graph, uid_1) ) == nil
-    assert Primitive.get_transform( Graph.get(graph, uid_2) ) == @transform
-    assert Primitive.get_transform( Graph.get(graph, uid_3) ) == nil
+    assert Map.get( Graph.get(graph, @root_uid), :transforms )  == nil
+    assert Map.get( Graph.get(graph, uid_0), :transforms )      == @transform
+    assert Map.get( Graph.get(graph, uid_1), :transforms )      == nil
+    assert Map.get( Graph.get(graph, uid_2), :transforms )      == @transform
+    assert Map.get( Graph.get(graph, uid_3), :transforms )      == nil
   end
 
   #============================================================================
@@ -1145,7 +1144,7 @@ defmodule Scenic.GraphTest do
 
         # modify the graph
         graph = Graph.modify(graph, id, fn(p) ->
-          Rectangle.put(p, {1000, 1001}, 300, 400)
+          Primitive.put(p, {{1000, 1001}, 300, 400})
         end)
 
         {:stop, graph}
@@ -1155,29 +1154,28 @@ defmodule Scenic.GraphTest do
     {:stop, graph} = Graph.filter_input( graph, :event_start, rect_uid )
 
     rect = Graph.get(graph, rect_uid)
-    assert Rectangle.get(rect) == {{1000, 1001}, 300, 400}
-
+    assert Primitive.get(rect) == {{1000, 1001}, 300, 400}
   end
 
 
   #============================================================================
   # put_hidden(graph, id, flag)
 
-  test "put_style modifies the graph by adding the given style" do
-    color_style = Style.Color.build(:bisque)
-
-    graph = Graph.put_style(@filter_graph, :rect, color_style )
-    rect = Graph.get_id_one(graph, :rect)
-    assert Primitive.get_style(rect, Style.Color) == color_style
-  end
-
-  test "put_style modifies the graph by building and adding the given style" do
-    color_style = Style.Color.build(:bisque)
-
-    graph = Graph.put_style(@filter_graph, :rect, Style.Color, [:bisque] )
-    rect = Graph.get_id_one(graph, :rect)
-    assert Primitive.get_style(rect, Style.Color) == color_style
-  end
+#  test "put_style modifies the graph by adding the given style" do
+#    color_style = Style.Color.build(:bisque)
+#
+#    graph = Graph.put_style(@filter_graph, :rect, color_style )
+#    rect = Graph.get_id_one(graph, :rect)
+#    assert Primitive.get_style(rect, Style.Color) == color_style
+#  end
+#
+#  test "put_style modifies the graph by building and adding the given style" do
+#    color_style = Style.Color.build(:bisque)
+#
+#    graph = Graph.put_style(@filter_graph, :rect, Style.Color, [:bisque] )
+#    rect = Graph.get_id_one(graph, :rect)
+#    assert Primitive.get_style(rect, Style.Color) == color_style
+#  end
 
 
 
