@@ -75,11 +75,6 @@ defmodule Scenic.GraphTest do
     assert Graph.get_next_uid( @graph_empty ) == 1
   end
 
-#  test "get_update_list returns the list of uids to update" do
-#    graph = Graph.put_update_list(@graph_empty, [1,2,3])
-#    assert Graph.get_update_list( graph ) == [1,2,3]
-#  end
-
 
   #============================================================================
   # build
@@ -110,35 +105,6 @@ defmodule Scenic.GraphTest do
       {graph, parent_id}
     end) == @graph_empty
   end
-
-
-  #============================================================================
-  # queue_uid_update(graph, uid)
-
-#  test "queue_uid_update adds a uid to the update list" do
-#    graph = Graph.build()
-#    assert Graph.get_update_list( graph ) == []
-#
-#    graph = Graph.queue_uid_update(graph, 123)
-#    assert Graph.get_update_list( graph ) == [123]
-#  end
-#
-#  test "queue_uid_update rejects atoms as uids" do
-#    assert_raise FunctionClauseError, fn ->
-#      Graph.queue_uid_update(@graph_empty, :an_atom)
-#    end
-#  end
-
-  #============================================================================
-  # reset_update_list(graph)
-#  test "reset_update_list resets the update list" do
-#    graph = Graph.build()
-#    |> Graph.put_update_list([1,2,3,4,5])
-#    assert Graph.get_update_list( graph ) == [1,2,3,4,5]
-#
-#    graph = Graph.reset_update_list( graph )
-#    assert Graph.get_update_list( graph ) == []
-#  end
 
 
   #============================================================================
@@ -1156,28 +1122,6 @@ defmodule Scenic.GraphTest do
     rect = Graph.get(graph, rect_uid)
     assert Primitive.get(rect) == {{1000, 1001}, 300, 400}
   end
-
-
-  #============================================================================
-  # put_hidden(graph, id, flag)
-
-#  test "put_style modifies the graph by adding the given style" do
-#    color_style = Style.Color.build(:bisque)
-#
-#    graph = Graph.put_style(@filter_graph, :rect, color_style )
-#    rect = Graph.get_id_one(graph, :rect)
-#    assert Primitive.get_style(rect, Style.Color) == color_style
-#  end
-#
-#  test "put_style modifies the graph by building and adding the given style" do
-#    color_style = Style.Color.build(:bisque)
-#
-#    graph = Graph.put_style(@filter_graph, :rect, Style.Color, [:bisque] )
-#    rect = Graph.get_id_one(graph, :rect)
-#    assert Primitive.get_style(rect, Style.Color) == color_style
-#  end
-
-
 
   #============================================================================
   # schedule_recurring_action recurring action support

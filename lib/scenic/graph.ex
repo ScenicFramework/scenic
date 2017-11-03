@@ -83,108 +83,6 @@ defmodule Scenic.Graph do
   end
 
 
-#  def get_style_map(graph)
-#  def get_style_set_map({_,_,_,style_map,_}),           do: style_map
-#  def get_style_map(%{@style_map => style_map}),        do: style_map
-
-#  defp put_style_map(graph, style_map)
-#  defp put_style_set_map({pm,ids,nx,_,ul}, style_map) when is_map(style_map) do
-#    {pm,ids,nx, style_map ,ul}
-#  end
-#  defp put_style_map(graph, %{}=style_map) do
-#    Map.put(graph, @style_map, style_map)
-#  end
-
-#  def get_update_list(graph)
-#  def get_update_list(%Graph{update_list: update_list}),  do: update_list
-#
-#  def put_update_list(graph, get_update_list)
-#  def put_update_list(%Graph{} = graph, update_list) when is_list(update_list) do
-#    Map.put(graph, :update_list, update_list)
-#  end
-
-
-
-  #============================================================================
-  # shortcuts to modify a primitive
-
-  # When building templates, (which are really just small graphs), it is convenient
-  # have functions that provide access to notes indicated by uid. This is just
-  # sugar, but tasty sugar at that...
-
-  #--------------------------------------------------------
-  # transform
-#  def get_uid_transform( graph, uid ) do
-#    graph
-#    |> get(uid)
-#    |> Primitive.get_transform()
-#  end
-#
-#  def put_uid_transform( graph, uid, transform) do
-#    modify(graph, uid, fn(p,_) ->
-#      Primitive.put_transform( p, transform )
-#    end)
-#  end
-#
-#  def put_uid_transform( graph, uid, type, value) do
-#    modify(graph, uid, fn(p,_) ->
-#      Primitive.put_transform( p, type, value )
-#    end)
-#  end
-#
-#  #--------------------------------------------------------
-#  # root blingy style list
-#  def get_uid_styles( graph, uid ) do
-#    graph
-#    |> get(uid)
-#    |> Primitive.get_styles()    
-#  end
-#
-#  def put_uid_styles( graph, uid, styles ) do
-#    modify(graph, uid, fn(p,_) ->
-#      Primitive.put_styles( p, styles )
-#    end)
-#  end
-#
-#  def get_uid_style(graph, uid, style_type, default \\ nil) do
-#    graph
-#    |> get(uid)
-#    |> Primitive.get_style( style_type, default )    
-#  end
-#
-#  # the public facing put_style gives the primitive module a chance to filter the styles
-#  # do_put_style does the actual work
-#  def put_uid_style(graph, uid, style) do
-#    modify(graph, uid, fn(p,_) ->
-#      Primitive.put_style( p, style )
-#    end)
-#  end
-#
-#  def drop_uid_style(graph, uid, style_type) do
-#    modify(graph, uid, fn(p,_) ->
-#      Primitive.drop_style( p, style_type )
-#    end)
-#  end
-#
-#  #--------------------------------------------------------
-#  # state - changes here do not affect the update list, thus
-#  # it does not use the modify function to make the change
-#  def get_uid_state(graph, uid)
-#  def get_uid_state(graph, uid) when is_integer(uid) do
-#    graph
-#    |> get(uid)
-#    |> Primitive.get_state()
-#  end
-#
-#  def put_uid_state(graph, uid, state)
-#  # note, changing the state doesn't affect what it drawn, don't use modify
-#  def put_uid_state(graph, uid, state) when is_integer(uid) do
-#    graph
-#    |> get( uid)
-#    |> Primitive.put_state( state )    
-#    |> ( &put(graph, uid, &1) ).()
-#  end
-
   #============================================================================
   # build a new graph, starting with the given element
   def build( opts \\ [] ) do
@@ -199,68 +97,6 @@ defmodule Scenic.Graph do
       id ->   map_id_to_uid( graph, id, @root_uid)
     end
   end
-
-
-
-  #============================================================================
-  # manage styles
-  # add structure to the graph - requires a reset to the viewport to take effect
-
-#  def put_style_set( graph, name, style_set_or_bling_list )
-#  def put_style_set( graph, name, bling_list ) when is_list(bling_list) do
-#    put_style_set(graph, name, StyleSet.build(bling_list) )
-#  end
-#  def put_style_set( graph, name, style_set ) when is_atom(name) or is_bitstring(name) do
-#    {graph, uid} = insert_at({graph,-1}, -1, style_set)
-#    map_style_set_to_uid(graph, name, uid)
-#  end
-
-#  def get_style_set(graph, style_name, default \\ nil)
-#  def get_style_set(graph, name, default) when is_atom(name) or is_bitstring(name) do
-#    case get_style_set_uid(graph, name) do
-#      nil ->  default
-#      uid ->  get(graph, uid)
-#    end
-#  end
-
-#  def get_style_set_uid(graph, style_name)
-#  def get_style_set_uid(graph, style_name) when is_atom(style_name) or is_bitstring(style_name) do
-#    graph
-#    |> get_style_map()
-#    |> Map.get(style_name)
-#  end
-
-#  def map_style_set_to_uid(graph, style_name, uid)
-#  def map_style_set_to_uid(graph, style_name, uid) when is_integer(uid) and (is_atom(style_name) or is_bitstring(style_name)) do
-#    graph
-#    |> get_style_map()
-#    |> Map.put(style_name, uid)
-#    |> ( &put_style_map(graph, &1) ).()
-#   {p_map, id_map, uid_track, Map.put(style_map, name, uid),ul}
-#  end
-
-
-  #============================================================================
-  # add new primitives directly or through a callback
-#  def put_new( graph, parent, primitive, builder \\ nil, opts \\ [] )
-#
-#  # check if the parent id is an atom
-#  def put_new(%Graph{} = graph, parent_id, primitive, builder, opts) when is_atom(parent_id) do
-#    graph
-#    |> resolve_id(parent_id)
-#    |> Enum.reduce(graph, fn(uid, g) -> put_new(g, uid, primitive, builder, opts) end)
-#  end
-#
-#  # main put_new functionality
-#  def put_new( %Graph{} = graph, parent, primitive, builder, opts ) when is_integer(parent) do
-#    {graph, uid} = insert_at({graph, parent}, -1, primitive, opts)
-#
-#    # run the optional builder
-#    cond do
-#      is_function(builder, 2) ->  builder.( graph, uid )
-#      true ->                     graph
-#    end
-#  end
 
 
   #============================================================================
@@ -329,23 +165,6 @@ defmodule Scenic.Graph do
     |> Map.put(:add_to, puid)
   end
 
-
-  #============================================================================
-  # put an existing element by uid
-  # do NOT let NEW primitives be added this way as it messes up the next_uid counter
-#  def put(graph, uid, primitive)
-#  def put({p_map, id_map, uid_track, sm}, 0, p) do
-#    case Primitive.get_module(p) do
-#      Primitive.Group -> { Map.put(p_map, 0, p), id_map, uid_track, sm }
-#      _ -> raise "can only put a Group into uid 0. Did you mean put_new?"
-#    end
-#  end
-#  def put({p_map, id_map, uid_track, sm}, uid, p) when is_integer(uid) do
-#    case Map.get(p_map, uid) do
-#      nil ->  raise "Can only put primitives by uid if they already exist in the map"
-#      _ ->    { Map.put(p_map, uid, p), id_map, uid_track, sm }
-#    end
-#  end
 
   #============================================================================
   # put an element by uid
@@ -948,25 +767,6 @@ defmodule Scenic.Graph do
 
 
   #============================================================================
-  # apply style shortcuts
-
-#  def put_style(graph, id, style)
-#  def put_style(graph, id, {mod, data}) when is_atom(mod) and is_binary(data) do
-#    modify(graph, id, fn(p) ->
-#      Primitive.put_style( p, {mod, data} )
-#    end)
-#  end
-#
-#  def put_style(graph, id, style_module, build_args)
-#  def put_style(graph, id, mod, args) when is_atom(mod) and is_list(args) do
-#    modify(graph, id, fn(p) ->
-#      Primitive.put_style( p, Kernel.apply(mod, :build, args) )
-#    end)
-#  end
-
-
-
-  #============================================================================
   # support for recurring actions
   # recurring_actions: [{ref, call, data}]
 
@@ -1051,22 +851,6 @@ defmodule Scenic.Graph do
   defp call_recurring_action(graph, elapsed_time, {module, action}, data) do
     Kernel.apply(module, action, [graph, elapsed_time, data])
   end
-
-
-  #============================================================================
-  # update list
-
-#  def reset_update_list(graph)
-#  def reset_update_list( graph ) do
-#    put_update_list( graph, [] )
-#  end
-
-#  def queue_uid_update(graph, uid)
-#  def queue_uid_update(graph, uid) when is_integer(uid) do
-#    graph
-#    |> get_update_list()
-#    |> ( &put_update_list( graph, [uid | &1] ) ).()
-#  end
 
 
   #============================================================================
