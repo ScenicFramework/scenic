@@ -850,6 +850,32 @@ defmodule Scenic.GraphTest do
     assert before_rect_inverse != after_rect_inverse
   end
 
+  test "modify modifies transforms" do
+    graph = Graph.build( rotate: 1.1 )
+    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, translate: {10,11})
+    [uid] = Graph.resolve_id( graph, :rect )
+
+    graph = Graph.modify(graph, uid, fn(p)->
+      Primitive.put_transform(p, :rotate, 2.0)
+    end)
+
+    rect = Graph.get(graph, uid)
+    assert Primitive.get_transforms(rect) == %{translate: {10,11}, rotate: 2.0}
+  end
+
+  test "modify modifies styles" do
+    graph = Graph.build( rotate: 1.1 )
+    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, color: :red)
+    [uid] = Graph.resolve_id( graph, :rect )
+
+    graph = Graph.modify(graph, uid, fn(p)->
+      Primitive.put_style(p, :border_width, 10)
+    end)
+
+    rect = Graph.get(graph, uid)
+    assert Primitive.get_styles(rect) == %{color: :red, border_width: 10}
+  end
+
 
   #============================================================================
   # find_modify(graph, start_uid, criteria, callback)
