@@ -50,7 +50,7 @@ defmodule Scenic.ViewPort do
 
   #--------------------------------------------------------
   def driver_message( message, view_port_id \\ :view_port ) do
-    GenServer.cast( view_port_id, {:driver_message, message} )
+    GenServer.cast( view_port_id, message )
   end
 
   #============================================================================
