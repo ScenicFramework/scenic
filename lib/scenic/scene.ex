@@ -181,8 +181,13 @@ defmodule Scenic.Scene do
 
 
   #--------------------------------------------------------
-  def handle_cast({:input, event, uid}, state) do
-    handle_info({:input, event, uid}, state)
+#  def handle_cast({:input, event, uid}, state) do
+#    handle_info({:input, event, uid}, state)
+#  end
+  #--------------------------------------------------------
+  def handle_cast({:input, msg}, state) do
+    IO.puts "Scene.handle_cast input: #{inspect(msg)}"
+    {:noreply, state}
   end
 
   #--------------------------------------------------------

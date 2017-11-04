@@ -98,6 +98,12 @@ defmodule Scenic.ViewPort do
   end
 
   #--------------------------------------------------------
+  def handle_cast( {:driver_message, {:input, msg}}, %{scene: scene} = state ) do
+    GenServer.cast( scene, {:input, msg} )
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
   def handle_cast( {:driver_message, msg}, state ) do
     IO.puts("Unknown driver message at ViewPort: #{inspect(msg)}")
     {:noreply, state}
