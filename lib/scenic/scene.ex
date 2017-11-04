@@ -14,7 +14,7 @@ defmodule Scenic.Scene do
   alias Scenic.Graph
   alias Scenic.ViewPort
 
-#  import IEx
+  import IEx
 
   @callback init( any ) :: {:ok, any}
   @callback init_graph(any) :: {:ok, map, any}
@@ -186,7 +186,9 @@ defmodule Scenic.Scene do
 #  end
   #--------------------------------------------------------
   def handle_cast({:input, msg}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+pry()
     {:noreply, graph, scene_state} = mod.handle_input(msg, graph, scene_state)
+pry()
     state
     |> Map.put(:graph, graph)
     |> Map.put(:scene_state, scene_state)
