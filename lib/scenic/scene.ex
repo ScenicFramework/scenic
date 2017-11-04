@@ -185,8 +185,11 @@ defmodule Scenic.Scene do
 #    handle_info({:input, event, uid}, state)
 #  end
   #--------------------------------------------------------
-  def handle_cast({:input, msg}, state) do
-    IO.puts "Scene.handle_cast input: #{inspect(msg)}"
+  def handle_cast({:input, msg}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+    {:noreply, graph, scene_state} = mod.handle_input(msg, graph, scene_state)
+    state
+    |> Map.put(:graph, graph)
+    |> Map.put(:scene_state, scene_state)
     {:noreply, state}
   end
 
