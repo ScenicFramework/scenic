@@ -108,8 +108,6 @@ defmodule Scenic.Scene do
       scene_state:        scene_state,
       graph:              graph,
       vp_context:         nil,
-      heart_timer:        nil,
-      last_sync:          nil
     }
 
     {:ok, state}
@@ -170,7 +168,6 @@ defmodule Scenic.Scene do
     |> Map.put(:graph, graph)
     |> Map.put(:vp_context, context)
     |> Map.put(:scene_state, scene_state)
-    |> Map.put(:last_sync, :os.system_time(:millisecond))
 
     # reset the viewport with this scene's graph
     ViewPort.set_graph(context, graph)
@@ -231,7 +228,6 @@ defmodule Scenic.Scene do
     # update and return the state
     state
     |> Map.put( :graph, graph )
-    |> Map.put( :last_sync, :os.system_time(:millisecond) )
 
     { :noreply, state }
   end
@@ -241,7 +237,6 @@ defmodule Scenic.Scene do
   def handle_cast(:graph_reset, %{ vp_context: context, graph: graph } = state) do
     # reset the viewport with this scene's graph
     ViewPort.set_graph(context, graph)
-    state = Map.put( state, :last_sync, :os.system_time(:millisecond) )
     { :noreply, state }
   end
 
