@@ -203,6 +203,24 @@ defmodule Scenic.ViewPort.Input do
   def codepoint_to_char( codepoint_to_atom )
   def codepoint_to_char( cp ),  do: << cp :: utf8 >>
 
+  #--------------------------------------------------------
+  def input_type_to_flags( type )
+  def input_type_to_flags( types ) when is_list(types) do
+    Enum.reduce(types, 0, &(input_type_to_flags(&1) ||| &2) )
+  end
+  def input_type_to_flags( :input_key ),            do: 0x0001
+  def input_type_to_flags( :input_codepoint ),      do: 0x0002
+  def input_type_to_flags( :input_mouse_move ),     do: 0x0004
+  def input_type_to_flags( :input_mouse_button ),   do: 0x0008
+  def input_type_to_flags( :input_mouse_scroll ),   do: 0x0010
+  def input_type_to_flags( :input_mouse_enter ),    do: 0x0020
+  def input_type_to_flags( :all ),                  do: 0xFFFF
+  def input_type_to_flags( :input_all ),            do: 0xFFFF
+  def input_type_to_flags( :none ),                 do: 0x0000
+  def input_type_to_flags( :input_none ),           do: 0x0000
+  def input_type_to_flags( type ), do: raise "Driver.Glfw Unknown input type: #{inspect(type)}"
+
+
 end
 
 
