@@ -7,11 +7,6 @@ defmodule Scenic.Animation.Basic.Blink do
   use Scenic.Animation
   alias Scenic.Graph
   alias Scenic.Primitive
-#  alias Scenic.Primitive.Style
-
-
-#  @hidden_style     Style.Hidden.build( true )
-#  @visible_style    Style.Hidden.build( false )
 
 
   def add_to_graph(graph, {id, period}, opts) when is_integer(period) do
@@ -26,8 +21,6 @@ defmodule Scenic.Animation.Basic.Blink do
     graph = if visible != on do
       Graph.modify(graph, id, fn(p) ->
         case visible do
-#          true ->   Primitive.put_style( p, @visible_style )
-#          false ->  Primitive.put_style( p, @hidden_style )
           true ->   Primitive.put_style( p, :hidden, false )
           false ->  Primitive.put_style( p, :hidden, true )
         end
