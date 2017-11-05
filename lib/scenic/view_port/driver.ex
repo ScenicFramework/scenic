@@ -17,10 +17,6 @@ defmodule Scenic.ViewPort.Driver do
 
   import IEx
 
-  @callback handle_set_graph( list, map ) :: {:noreply, map}
-  @callback handle_update_graph( list, map ) :: {:noreply, map}
-  @callback handle_sync( map ) :: {:noreply, map}
-
   @sync_message   :timer_sync
 
   #===========================================================================
@@ -65,7 +61,7 @@ defmodule Scenic.ViewPort.Driver do
   # the using macro for scenes adopting this behavioiur
   defmacro __using__(use_opts) do
     quote do
-      @behaviour Scenic.ViewPort.Driver
+#      @behaviour Scenic.ViewPort.Driver
 
       def init(_),                        do: {:ok, nil}
 
@@ -148,7 +144,7 @@ defmodule Scenic.ViewPort.Driver do
   #--------------------------------------------------------
   # set the graph
   def handle_cast({:set_graph, graph}, %{driver_module: mod, driver_state: d_state} = state) do
-    { :noreply, d_state } = mod.handle_set_graph( graph, d_state )
+    { :noreply, d_state } = mod.handle_cast( {:set_graph, graph}, d_state )
 
     state = state
     |> Map.put( :driver_state, d_state )
@@ -164,7 +160,7 @@ defmodule Scenic.ViewPort.Driver do
     d_state = case deltas do
       []      -> d_state
       deltas  ->
-        { :noreply, d_state } = mod.handle_update_graph( deltas, d_state )
+        { :noreply, d_state } = mod.handle_cast( {:update_graph, deltas}, d_state )
         d_state
     end
     
@@ -194,7 +190,7 @@ defmodule Scenic.ViewPort.Driver do
     case (cur_time - last_msg) > sync_interval do
       true  ->
         send_scene_message( :graph_update )
-        { :noreply, d_state } = mod.handle_sync( d_state )
+        { :noreply, d_state } = mod.handle_cast( :sync, d_state )
         { :noreply, Map.put(state, :driver_state, d_state) }
       false ->
         { :noreply, state }
