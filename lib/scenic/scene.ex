@@ -117,7 +117,8 @@ defmodule Scenic.Scene do
   #--------------------------------------------------------
   # if the viewport says the context has lost (probably because it is showing a different scene),
   # then it sends the scene that is being replaced, the context_lost message
-  def handle_call({:context_lost, context}, _from, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+  def handle_call({:context_lost, context}, _from,
+  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
     # do nothing if this isn't the scene's current context
     state
     |> is_current_context?( context ) 
@@ -155,7 +156,8 @@ defmodule Scenic.Scene do
   #--------------------------------------------------------
   # if the viewport says the context has lost (probably because it is showing a different scene),
   # then it sends the scene that is being replaced, the context_lost message
-  def handle_cast({:context_gained, context}, %{scene_module: mod, scene_state: scene_state, graph: graph} = state) do
+  def handle_cast({:context_gained, context},
+  %{scene_module: mod, scene_state: scene_state, graph: graph} = state) do
 
     # tick any recurring actions before rendering
     graph = Graph.tick_recurring_actions(graph)
@@ -183,10 +185,11 @@ defmodule Scenic.Scene do
 #  end
 
   #--------------------------------------------------------
-  def handle_cast({:input_key, key, action, mods}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+  def handle_cast({:input_key, key, action, mods},
+  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
     msg = {
       :input_key, {
-        ViewPort.Input.key_action_to_atom( action ),
+        ViewPort.Input.action_to_atom( action ),
         ViewPort.Input.key_to_atom( key ),
         ViewPort.Input.key_mods_to_atoms( mods ),
       }
@@ -199,7 +202,8 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  def handle_cast({:input_codepoint, codepoint, mods}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+  def handle_cast({:input_codepoint, codepoint, mods},
+  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
     msg = {
       :input_char, {
         ViewPort.Input.codepoint_to_char( codepoint ),
@@ -212,6 +216,22 @@ defmodule Scenic.Scene do
     |> Map.put(:scene_state, scene_state)
     {:noreply, state}
   end
+
+  #--------------------------------------------------------
+  def handle_cast({:input_mouse_button, btn, act, mods, pos},
+  %{scene_module: mod, graph: graph, scene_state: scene_state} = state ) do
+    msg = {
+      :input_mouse_button, {
+        ViewPort.Input.mouse_button_to_atom( btn ),
+        ViewPort.Input.action_to_atom( act ),
+        ViewPort.Input.key_mods_to_atoms( mods ),
+        pos
+      }
+    }
+    pry()
+    {:noreply, state}
+  end
+
 
   #--------------------------------------------------------
   # a graphic driver is requesting an update

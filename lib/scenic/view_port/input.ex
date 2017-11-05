@@ -193,15 +193,21 @@ defmodule Scenic.ViewPort.Input do
   end
 
   #--------------------------------------------------------
-  def key_action_to_atom( key_action )
-  def key_action_to_atom( 0 ),  do: :key_action_release
-  def key_action_to_atom( 1 ),  do: :key_action_press
-  def key_action_to_atom( 2 ),  do: :key_action_repeat
-  def key_action_to_atom( _ ),  do: :key_action_unknown
+  def action_to_atom( action )
+  def action_to_atom( 0 ),  do: :action_release
+  def action_to_atom( 1 ),  do: :action_press
+  def action_to_atom( 2 ),  do: :action_repeat
+  def action_to_atom( _ ),  do: :action_unknown
 
   #--------------------------------------------------------
   def codepoint_to_char( codepoint_to_atom )
   def codepoint_to_char( cp ),  do: << cp :: utf8 >>
+
+
+  #--------------------------------------------------------
+  def mouse_button_to_atom( 0 ), do: :button_left
+  def mouse_button_to_atom( 1 ), do: :button_right
+  def mouse_button_to_atom( _ ), do: :button_unknown
 
   #--------------------------------------------------------
   def input_type_to_flags( type )
