@@ -193,7 +193,6 @@ defmodule Scenic.ViewPort.Driver do
     { :noreply, Map.put(state, :driver_state, d_state) }
   end
 
-  #============================================================================
   # helpers
 
   #----------------------------------------------
@@ -212,6 +211,21 @@ defmodule Scenic.ViewPort.Driver do
     end)
     :ok
   end
+
+
+  #============================================================================
+  defp key_to_atom( 262 ),    do: :right
+  defp key_to_atom( 263 ),    do: :left
+  defp key_to_atom( 264 ),    do: :down
+  defp key_to_atom( 265 ),    do: :up
+  defp key_to_atom( 266 ),    do: :page_up
+  defp key_to_atom( 267 ),    do: :page_down
+
+  defp key_to_atom( key ) do
+    IO.puts "Unknown key: #{inspect(key)}"
+    :unknown
+  end
+
 
 
 end
