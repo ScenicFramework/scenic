@@ -183,7 +183,7 @@ defmodule Scenic.Scene do
 #  end
 
   #--------------------------------------------------------
-  def handle_cast({:input_key, {action, key, mods}}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+  def handle_cast({:input_key, key, action, mods}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
     msg = {
       :input_key, {
         ViewPort.Input.key_action_to_atom( action ),
@@ -199,7 +199,7 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  def handle_cast({:input_codepoint, {codepoint, mods}}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+  def handle_cast({:input_codepoint, codepoint, mods}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
     msg = {
       :input_char, {
         ViewPort.Input.codepoint_to_char( codepoint ),
