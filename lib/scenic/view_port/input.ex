@@ -199,6 +199,10 @@ defmodule Scenic.ViewPort.Input do
   def key_action_to_atom( 2 ),  do: :key_action_repeat
   def key_action_to_atom( _ ),  do: :key_action_unknown
 
+  #--------------------------------------------------------
+  def codepoint_to_char( codepoint_to_atom )
+  def codepoint_to_char( cp ),  do: << cp :: utf8 >>
+
 end
 
 

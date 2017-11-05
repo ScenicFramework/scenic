@@ -186,8 +186,14 @@ defmodule Scenic.Scene do
 #  end
 
   #--------------------------------------------------------
-  def handle_cast({:input_key, msg}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-pry()
+  def handle_cast({:input_key, {action, key, mods}}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+    msg = {
+      :input_key, {
+        ViewPort.Input.key_action_to_atom( action ),
+        ViewPort.Input.key_to_atom( key ),
+        ViewPort.Input.key_mods_to_atoms( mods ),
+      }
+    }
     {:noreply, graph, scene_state} = mod.handle_input(msg, graph, scene_state)
     state = state
     |> Map.put(:graph, graph)
@@ -196,8 +202,13 @@ pry()
   end
 
   #--------------------------------------------------------
-  def handle_cast({:input_char, msg}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-pry()
+  def handle_cast({:input_codepoint, {codepoint, mods}}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+    msg = {
+      :input_char, {
+        ViewPort.Input.codepoint_to_char( codepoint ),
+        ViewPort.Input.key_mods_to_atoms( mods )
+      }
+    }
     {:noreply, graph, scene_state} = mod.handle_input(msg, graph, scene_state)
     state = state
     |> Map.put(:graph, graph)
