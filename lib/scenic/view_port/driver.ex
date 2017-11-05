@@ -50,7 +50,6 @@ defmodule Scenic.ViewPort.Driver do
     Registry.dispatch(:viewport_registry, :scene_message, fn(entries) ->
       for {_, scene_pid} <- entries do
         try do
-pry()
           GenServer.cast(scene_pid, message)
         catch
           kind, reason ->
