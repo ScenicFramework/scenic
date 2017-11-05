@@ -13,9 +13,9 @@ defmodule Scenic.ViewPort.Driver do
   use GenServer
 
   require Logger
-  alias Scenic.ViewPort
+#  alias Scenic.ViewPort
 
-#  import IEx
+  import IEx
 
   @callback handle_set_graph( list, map ) :: {:noreply, map}
   @callback handle_update_graph( list, map ) :: {:noreply, map}
@@ -34,15 +34,32 @@ defmodule Scenic.ViewPort.Driver do
 
 
   #----------------------------------------------
-  def send_client_message( message ), do: dispatch( :client_message, message )
-
-  #----------------------------------------------
   # identify the current, loaded drivers
   def identify() do
     Registry.match(:viewport_registry, :set_graph, :_)
     |> Enum.reduce( [], fn({pid, {mod,_}},acc) -> [{mod, pid} | acc] end)
   end
 
+  #----------------------------------------------
+  def send_scene_message( message ) do
+    # needs a different dispatcher than sending a message to the driver. The pid to
+    # send the message to is the value stored in the registry, not the pid that
+    # set up the registry entry. That would be the viewport...
+
+    # dispatch the call to any listening drivers
+    Registry.dispatch(:viewport_registry, :scene_message, fn(entries) ->
+      for {_, scene_pid} <- entries do
+        try do
+pry()
+          GenServer.cast(scene_pid, message)
+        catch
+          kind, reason ->
+            formatted = Exception.format(kind, reason, System.stacktrace)
+            Logger.error "Registry.dispatch/3 failed with #{formatted}"
+        end
+      end
+    end)
+  end
 
 
   #===========================================================================
@@ -177,7 +194,7 @@ defmodule Scenic.ViewPort.Driver do
     cur_time = :os.system_time(:millisecond)
     case (cur_time - last_msg) > sync_interval do
       true  ->
-        send_client_message( :update )
+        send_scene_message( :graph_update )
         { :noreply, d_state } = mod.handle_sync( d_state )
         { :noreply, Map.put(state, :driver_state, d_state) }
       false ->
@@ -199,7 +216,7 @@ defmodule Scenic.ViewPort.Driver do
   defp dispatch( action, data ) do
     # dispatch the call to any listening drivers
     Registry.dispatch(:viewport_registry, action, fn(entries) ->
-      for {pid, {module,msg}} <- entries do
+      for {pid, {_,msg}} <- entries do
         try do
           GenServer.cast(pid, {msg, data})
         catch
@@ -209,23 +226,7 @@ defmodule Scenic.ViewPort.Driver do
         end
       end
     end)
-    :ok
   end
-
-
-  #============================================================================
-  defp key_to_atom( 262 ),    do: :right
-  defp key_to_atom( 263 ),    do: :left
-  defp key_to_atom( 264 ),    do: :down
-  defp key_to_atom( 265 ),    do: :up
-  defp key_to_atom( 266 ),    do: :page_up
-  defp key_to_atom( 267 ),    do: :page_down
-
-  defp key_to_atom( key ) do
-    IO.puts "Unknown key: #{inspect(key)}"
-    :unknown
-  end
-
 
 
 end

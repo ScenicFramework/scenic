@@ -186,7 +186,18 @@ defmodule Scenic.Scene do
 #  end
 
   #--------------------------------------------------------
-  def handle_cast({:input, msg}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+  def handle_cast({:input_key, msg}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+pry()
+    {:noreply, graph, scene_state} = mod.handle_input(msg, graph, scene_state)
+    state = state
+    |> Map.put(:graph, graph)
+    |> Map.put(:scene_state, scene_state)
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
+  def handle_cast({:input_char, msg}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+pry()
     {:noreply, graph, scene_state} = mod.handle_input(msg, graph, scene_state)
     state = state
     |> Map.put(:graph, graph)
@@ -196,7 +207,7 @@ defmodule Scenic.Scene do
 
   #--------------------------------------------------------
   # a graphic driver is requesting an update
-  def handle_cast(:vp_update, %{vp_context: context, graph: graph} = state) do
+  def handle_cast(:graph_update, %{vp_context: context, graph: graph} = state) do
     # tick any recurring actions
     graph = Graph.tick_recurring_actions( graph )
 
@@ -216,7 +227,7 @@ defmodule Scenic.Scene do
 
   #--------------------------------------------------------
   # a graphic driver is requesting a full graph reset
-  def handle_cast(:vp_reset, %{ vp_context: context, graph: graph } = state) do
+  def handle_cast(:graph_reset, %{ vp_context: context, graph: graph } = state) do
     # reset the viewport with this scene's graph
     ViewPort.set_graph(context, graph)
     state = Map.put( state, :last_sync, :os.system_time(:millisecond) )

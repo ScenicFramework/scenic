@@ -62,7 +62,6 @@ defmodule Scenic.ViewPort do
 
   def init( supervisor ) do
     init_context_tracking()
-    {:ok, _} = Registry.register(:viewport_registry, :client_message, {__MODULE__,:driver_message} )
     {:ok, %{supervisor: supervisor}}
   end
 
@@ -74,11 +73,17 @@ defmodule Scenic.ViewPort do
     # Generate a new context
     new_context = make_context()
 
+    # unregister any currently listening scene/scenes from input
+    Registry.unregister(:viewport_registry, :scene_message)
+
     # set the new context as the current one in the ets table
     track_current_context( new_context )
 
     # let the new scene know it has the context
     GenServer.cast( scene_id, {:context_gained, new_context})
+
+    # register the scene to receive input messages
+    Registry.register(:viewport_registry, :scene_message, scene_id )
 
     # save the scene and return
     {:noreply, Map.put(state, :scene, scene_id)}

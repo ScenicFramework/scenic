@@ -192,6 +192,13 @@ defmodule Scenic.ViewPort.Input do
     end)
   end
 
+  #--------------------------------------------------------
+  def key_action_to_atom( key_action )
+  def key_action_to_atom( 0 ),  do: :key_action_release
+  def key_action_to_atom( 1 ),  do: :key_action_press
+  def key_action_to_atom( 2 ),  do: :key_action_repeat
+  def key_action_to_atom( _ ),  do: :key_action_unknown
+
 end
 
 
