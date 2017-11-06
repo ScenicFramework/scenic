@@ -38,7 +38,7 @@ defmodule Scenic.ViewPort.Input do
   def register_input( type )
   def register_input( :all ) do 
     ref = make_ref()
-    Enum.each(@valid_input_types, &Registry.register(@input_registry, &1, ref ) )
+    Enum.each(@valid_input_types, &do_register(&1, ref) )
     update_input_request()
     {:input_ref, ref}
   end
@@ -54,9 +54,12 @@ defmodule Scenic.ViewPort.Input do
     update_input_request()
     {:input_ref, ref}
   end
+  # two jobs. 1, prevent duplication. 2 enforce valid types
   defp do_register( type, ref ) when is_atom(type) do
     case Enum.member?(@valid_input_types, type) do
       true ->
+        # unregistering eliminates dups and makes sure the ref is current
+        Registry.unregister(@input_registry, type )
         Registry.register(@input_registry, type, ref )
       false ->
         raise Error, message: "Invalid input type: #{inspect(type)}"
