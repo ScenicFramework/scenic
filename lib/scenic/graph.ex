@@ -763,11 +763,12 @@ defmodule Scenic.Graph do
   #============================================================================
   # send an event to the primitives for handling
   
-  def filter_input(graph, event, primitive )
+  def filter_input(graph, event, uid )
   def filter_input(graph, event, nil),  do: {:continue, event, graph}
+  def filter_input(graph, event, -1),   do: {:continue, event, graph}
 
-  def filter_input(graph, event, %Primitive{} = p) do
-    do_filter_input( event, p, graph )
+  def filter_input(graph, event, uid) do
+    do_filter_input( event, get(graph, uid), graph )
   end
 
   defp do_filter_input(event, nil, graph), do: {:continue, event, graph}
