@@ -44,11 +44,12 @@ defmodule Scenic.Template.Button do
 #          id, Primitive.get_uid( button ),
 #          Primitive.get( button )
 #        )
-#        {:stop, graph}
-        {:continue, {:click, id, button}, graph}
+        {:stop, graph}
+#        {:continue, {:click, id, button}, graph}
 
-      event ->
-        {:continue, event, graph}
+
+      {:mouse_button, :left, :release, _, _ } ->  {:stop, graph}
+      event ->                                    {:continue, event, graph}
     end
   end
 
