@@ -9,7 +9,7 @@ defmodule Scenic.Template.Button do
 #  alias Scenic.Primitive.Style.Color
   alias Scenic.Template.Input
   alias Scenic.Template.Button
-  alias Scenic.Viewport.Input.Tracker
+  alias Scenic.ViewPort.Input.Tracker
 
   import IEx
 
@@ -40,13 +40,9 @@ defmodule Scenic.Template.Button do
   def filter_input(event, id, button, graph) do
     case event do
       {:mouse_button, :left, :press, _, _ } ->
-#        {:ok,_} = Tracker.Click.start_link(
-#          id, Primitive.get_uid( button ),
-#          Primitive.get( button )
-#        )
+        Tracker.Click.start( :left, id, Primitive.get(button) )
         {:stop, graph}
 #        {:continue, {:click, id, button}, graph}
-
 
       {:mouse_button, :left, :release, _, _ } ->  {:stop, graph}
       event ->                                    {:continue, event, graph}

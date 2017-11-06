@@ -36,16 +36,15 @@ defmodule Scenic.Scene do
   end
 
   #===========================================================================
-  # main APIs. In general if the first parameter is an atom or a pid, then it is coming
+  # client APIs. In general if the first parameter is an atom or a pid, then it is coming
   # from another process. call or cast to the real one.
   # if the first parameter is state, then this is already on the right process
   # to be called by other processes
 
-
-  def send_input( name_or_pid, event, uid )
-  def send_input( name_or_pid, event, uid ) when is_integer(uid) do
-    GenServer.cast(name_or_pid, {:input, event, uid})
+  def find_by_screen_pos( pos, pid ) do
+    GenServer.call(pid, {:find_by_screen_pos, pos})
   end
+
 
 
   #===========================================================================
@@ -140,6 +139,16 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
+  # somebody has a screen position and wants an uid for it
+  def handle_call({:find_by_screen_pos, pos}, _from, %{graph: graph} = state) do
+    uid = case Graph.find_by_screen_point( graph, pos ) do
+      %Primitive{uid: uid} -> uid
+      _ -> nil
+    end
+    {:reply, uid, state}
+  end
+
+  #--------------------------------------------------------
   # generic call. give the scene a chance to handle it
   def handle_call(msg, from, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
     {:reply, reply, graph, scene_state} = mod.handle_call(msg, from, graph, scene_state)
@@ -181,33 +190,15 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  def handle_cast({:input, event}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-    state = try do
-      # prepare the message and find the default primitive, if any
-      {event, p} = prepare_input(event, graph)
+  def handle_cast({:input, event}, %{graph: graph} = state) do
+    # prepare the message and find the default primitive, if any
+    prepare_input(event, graph)
+    |> do_handle_input( state )
+  end
 
-      # filter the event through the graph
-      state = case Graph.filter_input(graph, event, p) do
-        {:stop, graph} ->
-          # the event is done. Stop handling it
-          Map.put(state, :graph, graph)
-
-        {:continue, event, graph} ->
-          # let the scene itself handle the event
-          {:noreply, graph, scene_state} = mod.handle_input(event, graph, scene_state)
-          state
-          |> Map.put(:graph, graph)
-          |> Map.put(:scene_state, scene_state)
-      end
-    catch
-      kind, reason ->
-        formatted = Exception.format(kind, reason, System.stacktrace)
-        Logger.error "Scene.handle_cast :input failed with #{formatted}"
-        state
-    end
-
-    # return the transformed state
-    {:noreply, state}
+  #--------------------------------------------------------
+  def handle_cast({:input_uid, event, uid}, state) do
+    do_handle_input( {event, uid}, state )
   end
 
 #  #--------------------------------------------------------
@@ -321,21 +312,21 @@ defmodule Scenic.Scene do
   #===========================================================================
   # default info handlers.
 
-  def handle_info({:input, event, uid}, %{scene_module: mod, scene_state: scene_state, graph: graph} = state) do
-    # filter the input through the graph
-    case Graph.filter_input(graph, event, uid) do
-      {:continue, event, graph} ->
-        # let the scene handle the remaining event
-        {:noreply, graph, scene_state} = mod.handle_input(event, graph, scene_state )
-        state = state
-        |> Map.put(:graph, graph)
-        |> Map.put(:scene_state, scene_state)
-        {:noreply, state}
-
-      {:stop, graph} ->
-        {:noreply, Map.put(state, :graph, graph)}
-    end
-  end
+#  def handle_info({:input, event, uid}, %{scene_module: mod, scene_state: scene_state, graph: graph} = state) do
+#    # filter the input through the graph
+#    case Graph.filter_input(graph, event, uid) do
+#      {:continue, event, graph} ->
+#        # let the scene handle the remaining event
+#        {:noreply, graph, scene_state} = mod.handle_input(event, graph, scene_state )
+#        state = state
+#        |> Map.put(:graph, graph)
+#        |> Map.put(:scene_state, scene_state)
+#        {:noreply, state}
+#
+#      {:stop, graph} ->
+#        {:noreply, Map.put(state, :graph, graph)}
+#    end
+#  end
 
 
   #--------------------------------------------------------
@@ -363,7 +354,7 @@ defmodule Scenic.Scene do
   # input preperation
 
   #--------------------------------------------------------
-  defp prepare_input( {:key, {key, action, mods}}, graph ) do
+  defp prepare_input( {:key, {key, action, mods}}, _ ) do
     event = {
       :key,
       ViewPort.Input.key_to_atom( key ),
@@ -374,7 +365,7 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  defp prepare_input( {:codepoint, {codepoint, mods}}, %Graph{focus: focus} = graph ) do
+  defp prepare_input( {:codepoint, {codepoint, mods}}, %Graph{focus: focus} ) do
     event = {
       :char,
       ViewPort.Input.codepoint_to_char( codepoint ),
@@ -393,7 +384,7 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  defp prepare_input( {:mouse_button, {btn, action, mods, pos}} = event, graph ) do
+  defp prepare_input( {:mouse_button, {btn, action, mods, pos}}, graph ) do
     event = {
       :mouse_button,
       ViewPort.Input.button_to_atom( btn ),
@@ -411,7 +402,7 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  defp prepare_input( {:mouse_scroll, {offsets, pos}} = event, graph ) do
+  defp prepare_input( {:mouse_scroll, {offsets, pos}}, graph ) do
     uid = case Graph.find_by_screen_point(graph, pos) do
       nil -> nil
       p   -> Primitive.get_uid(p)
@@ -420,10 +411,10 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  defp prepare_input( {:mouse_enter, {0, pos}} = event, graph ) do
+  defp prepare_input( {:mouse_enter, {0, pos}}, _ ) do
     {{:mouse_enter, false, pos}, nil}
   end
-  defp prepare_input( {:mouse_enter, {1, pos}} = event, graph ) do
+  defp prepare_input( {:mouse_enter, {1, pos}}, graph ) do
     uid = case Graph.find_by_screen_point(graph, pos) do
       nil -> nil
       p   -> Primitive.get_uid(p)
@@ -431,12 +422,35 @@ defmodule Scenic.Scene do
     {{:mouse_enter, true, pos}, uid}
   end
 
-  defp prepare_input( msg, graph ) do
-    IO.puts "unprepared input: #{inspect(msg)}"
-    {msg, nil}
+  defp prepare_input( event, _ ), do: {event, nil}
+
+
+  #--------------------------------------------------------
+  defp do_handle_input({event, uid}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+    state = try do
+      # filter the event through the graph
+      case Graph.filter_input(graph, event, uid) do
+        {:stop, graph} ->
+          # the event is done. Stop handling it
+          Map.put(state, :graph, graph)
+
+        {:continue, event, graph} ->
+          # let the scene itself handle the event
+          {:noreply, graph, scene_state} = mod.handle_input(event, graph, scene_state)
+          state
+          |> Map.put(:graph, graph)
+          |> Map.put(:scene_state, scene_state)
+      end
+    catch
+      kind, reason ->
+        formatted = Exception.format(kind, reason, System.stacktrace)
+        Logger.error "Scene.handle_cast :input failed with #{formatted}"
+        state
+    end
+
+    # return the transformed state
+    {:noreply, state}
   end
-
-
 
 
 end
