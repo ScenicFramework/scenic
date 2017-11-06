@@ -13,8 +13,113 @@ defmodule Scenic.ViewPort.Input do
   require Logger
   alias Scenic.ViewPort
 
+  @valid_input_types  [
+    :input_key,
+    :input_codepoint,
+    :input_mouse_move,
+    :input_mouse_button,
+    :input_mouse_scroll,
+    :input_mouse_enter
+  ]
+
+  @registry     :input_registry
+
+  #===========================================================================
+  defmodule Error do
+    defexception [ message: nil ]
+  end
+
+  #============================================================================
+  # client apis - meant to be called from the listener process
+
+  #--------------------------------------------------------
+  def register_input( type, cookie \\ nil )
+  def register_input( :input_all, cookie ) do 
+    ref = make_ref()
+    Enum.each(@valid_input_types, &Registry.register(@registry, &1, {cookie, ref} ) )
+    update_input_request()
+    {:input_ref, ref}
+  end
+  def register_input( type, cookie ) when is_atom(type) do
+    ref = make_ref()
+    do_register( type, ref, cookie )
+    update_input_request()
+    {:input_ref, ref}
+  end
+  def register_input( types, cookie ) when is_list(types) do
+    ref = make_ref()
+    Enum.each( types, &do_register(&1, ref, cookie) )
+    update_input_request()
+    {:input_ref, ref}
+  end
+  defp do_register( type, ref, cookie ) when is_atom(type) do
+    case Enum.member?(@valid_input_types, type) do
+      true ->
+        Registry.register(@registry, type, {cookie, ref} )
+      false ->
+        raise Error, message: "Invalid input type: #{inspect(type)}"
+    end
+  end
+
+  #--------------------------------------------------------
+  def unregister_input( type )
+  def unregister_input( {:input_ref, ref} ) when is_reference(ref) do
+    Enum.each(@valid_input_types, fn(type) ->
+      Registry.unregister_match(@registry, type, {:_, ref} )
+    end)
+    update_input_request()
+  end
+  def unregister_input( :input_all ) do
+    Enum.each(@valid_input_types, &Registry.unregister(@registry, &1 ) )
+    update_input_request()
+  end
+  def unregister_input( type ) when is_atom(type) do
+    do_unregister( type )
+    update_input_request()
+  end
+  def unregister_input( types ) when is_list(types) do
+    Enum.each( types, &do_unregister(&1) )
+    update_input_request()
+  end
+  defp do_unregister( type ) when is_atom(type) do
+    case Enum.member?(@valid_input_types, type) do
+      true ->
+        Registry.unregister(@registry, type )
+      false ->
+        raise Error, message: "Invalid input type: #{inspect(type)}"
+    end
+  end
 
 
+  #--------------------------------------------------------
+  # gather registrations from the registry. Turn that into a flag field,
+  # then send that to the driver
+  defp update_input_request() do
+  end
+
+
+  #============================================================================
+  # driver apis - meant to be called from a driver that is sending input
+
+  #----------------------------------------------
+  def send_input( {input_type, message} ) do
+    # needs a different dispatcher than sending a message to the driver. The pid to
+    # send the message to is the value stored in the registry, not the pid that
+    # set up the registry entry. That would be the viewport...
+
+    # dispatch the call to any listening drivers
+    Registry.dispatch(@registry, input_type, fn(entries) ->
+      for {pid, {cookie, ref}} <- entries do
+        try do
+          GenServer.cast(pid, {input_type, message, cookie})
+        catch
+          kind, reason ->
+            formatted = Exception.format(kind, reason, System.stacktrace)
+            Logger.error "Registry.dispatch/3 failed with #{formatted}"
+        end
+      end
+    end)
+  end
   #============================================================================
   # keyboard input helpers
   # these are for reading the keyboard directly. If you are trying to do text input
@@ -220,10 +325,9 @@ defmodule Scenic.ViewPort.Input do
   def input_type_to_flags( :input_mouse_button ),   do: 0x0008
   def input_type_to_flags( :input_mouse_scroll ),   do: 0x0010
   def input_type_to_flags( :input_mouse_enter ),    do: 0x0020
-  def input_type_to_flags( :all ),                  do: 0xFFFF
   def input_type_to_flags( :input_all ),            do: 0xFFFF
-  def input_type_to_flags( :none ),                 do: 0x0000
-  def input_type_to_flags( :input_none ),           do: 0x0000
+#  def input_type_to_flags( :none ),                 do: 0x0000
+#  def input_type_to_flags( :input_none ),           do: 0x0000
   def input_type_to_flags( type ), do: raise "Driver.Glfw Unknown input type: #{inspect(type)}"
 
 

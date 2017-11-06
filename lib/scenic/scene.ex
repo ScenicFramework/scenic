@@ -225,7 +225,8 @@ defmodule Scenic.Scene do
         ViewPort.Input.mouse_button_to_atom( btn ),
         ViewPort.Input.action_to_atom( act ),
         ViewPort.Input.key_mods_to_atoms( mods ),
-        pos
+        pos,
+        Graph.find_by_screen_point(graph, pos)
       }
     }
     pry()

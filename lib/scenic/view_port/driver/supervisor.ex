@@ -7,7 +7,7 @@ defmodule Scenic.ViewPort.Driver.Supervisor do
   use Supervisor
   alias Scenic.ViewPort.Driver
 
-  @name       :vp_drivers
+  @name       :drivers
 
 #  import IEx
 

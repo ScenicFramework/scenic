@@ -16,6 +16,10 @@ defmodule Scenic.ViewPort do
   @context              :context
   @error_bad_context    :error_bad_context
 
+
+#  @driver_registry    :driver_registry
+  @input_registry     :input_registry
+
   #============================================================================
   # client api
 
@@ -74,7 +78,7 @@ defmodule Scenic.ViewPort do
     new_context = make_context()
 
     # unregister any currently listening scene/scenes from input
-    Registry.unregister(:viewport_registry, :scene_message)
+    Registry.unregister(@input_registry, :scene_message)
 
     # set the new context as the current one in the ets table
     track_current_context( new_context )
@@ -83,7 +87,7 @@ defmodule Scenic.ViewPort do
     GenServer.cast( scene_id, {:context_gained, new_context})
 
     # register the scene to receive input messages
-    Registry.register(:viewport_registry, :scene_message, scene_id )
+    Registry.register(@input_registry, :scene_message, scene_id )
 
     # save the scene and return
     {:noreply, Map.put(state, :scene, scene_id)}

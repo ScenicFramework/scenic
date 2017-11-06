@@ -17,7 +17,10 @@ defmodule Scenic.ViewPort.Driver do
 
   import IEx
 
-  @sync_message   :timer_sync
+  @sync_message       :timer_sync
+
+  @driver_registry    :driver_registry
+  @input_registry     :input_registry
 
   #===========================================================================
   # generic apis for sending a message to the drivers
@@ -32,7 +35,7 @@ defmodule Scenic.ViewPort.Driver do
   #----------------------------------------------
   # identify the current, loaded drivers
   def identify() do
-    Registry.match(:viewport_registry, :set_graph, :_)
+    Registry.match(@driver_registry, :set_graph, :_)
     |> Enum.reduce( [], fn({pid, {mod,_}},acc) -> [{mod, pid} | acc] end)
   end
 
@@ -43,7 +46,7 @@ defmodule Scenic.ViewPort.Driver do
     # set up the registry entry. That would be the viewport...
 
     # dispatch the call to any listening drivers
-    Registry.dispatch(:viewport_registry, :scene_message, fn(entries) ->
+    Registry.dispatch(@input_registry, :scene_message, fn(entries) ->
       for {_, scene_pid} <- entries do
         try do
           GenServer.cast(scene_pid, message)
@@ -99,9 +102,9 @@ defmodule Scenic.ViewPort.Driver do
   def init( {module, opts} ) do
 
     # set up the driver with the viewport registry
-    {:ok, _} = Registry.register(:viewport_registry, :set_graph,    {module, :set_graph} )
-    {:ok, _} = Registry.register(:viewport_registry, :update_graph, {module, :update_graph} )
-    {:ok, _} = Registry.register(:viewport_registry, :driver_cast,  {module, :driver_cast} )
+    {:ok, _} = Registry.register(:driver_registry, :set_graph,    {module, :set_graph} )
+    {:ok, _} = Registry.register(:driver_registry, :update_graph, {module, :update_graph} )
+    {:ok, _} = Registry.register(:driver_registry, :driver_cast,  {module, :driver_cast} )
 
     # let the driver initialize itself
     {:ok, driver_state} = module.init( opts )
@@ -210,7 +213,7 @@ defmodule Scenic.ViewPort.Driver do
   #----------------------------------------------
   defp dispatch( action, data ) do
     # dispatch the call to any listening drivers
-    Registry.dispatch(:viewport_registry, action, fn(entries) ->
+    Registry.dispatch(@driver_registry, action, fn(entries) ->
       for {pid, {_,msg}} <- entries do
         try do
           GenServer.cast(pid, {msg, data})
