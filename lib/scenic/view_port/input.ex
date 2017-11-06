@@ -302,8 +302,8 @@ defmodule Scenic.ViewPort.Input do
     {@key_mod_super,   :super}
   ]
 
-  def key_mods_to_atoms( key_mods )
-  def key_mods_to_atoms( key_mods ) do
+  def mods_to_atoms( key_mods )
+  def mods_to_atoms( key_mods ) do
     Enum.reduce(@key_mods, [], fn({mask,mod_atom}, acc) ->
       case Bitwise.band(mask, key_mods) do
         0 -> acc
@@ -325,9 +325,9 @@ defmodule Scenic.ViewPort.Input do
 
 
   #--------------------------------------------------------
-  def mouse_button_to_atom( 0 ), do: :left
-  def mouse_button_to_atom( 1 ), do: :right
-  def mouse_button_to_atom( _ ), do: :unknown
+  def button_to_atom( 0 ), do: :left
+  def button_to_atom( 1 ), do: :right
+  def button_to_atom( _ ), do: :unknown
 
   #--------------------------------------------------------
   def input_type_to_flags( type )

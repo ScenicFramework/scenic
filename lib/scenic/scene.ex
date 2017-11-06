@@ -13,6 +13,7 @@
 defmodule Scenic.Scene do
   alias Scenic.Graph
   alias Scenic.ViewPort
+  alias Scenic.Primitive
   require Logger
 
   import IEx
@@ -365,11 +366,9 @@ defmodule Scenic.Scene do
   defp prepare_input( {:key, {key, action, mods}}, graph ) do
     event = {
       :key,
-      {
-        ViewPort.Input.key_to_atom( key ),
-        ViewPort.Input.action_to_atom( action ),
-        ViewPort.Input.key_mods_to_atoms( mods ),
-      }
+      ViewPort.Input.key_to_atom( key ),
+      ViewPort.Input.action_to_atom( action ),
+      mods
     }
     {event, nil}
   end
@@ -378,12 +377,58 @@ defmodule Scenic.Scene do
   defp prepare_input( {:codepoint, {codepoint, mods}}, %Graph{focus: focus} = graph ) do
     event = {
       :char,
-      {
-        ViewPort.Input.codepoint_to_char( codepoint ),
-        ViewPort.Input.key_mods_to_atoms( mods )
-      }
+      ViewPort.Input.codepoint_to_char( codepoint ),
+      mods 
     }
     {event, focus}
+  end
+
+  #--------------------------------------------------------
+  defp prepare_input( {:mouse_move, pos} = event, graph ) do
+    uid = case Graph.find_by_screen_point(graph, pos) do
+      nil -> nil
+      p   -> Primitive.get_uid(p)
+    end
+    {event, uid}
+  end
+
+  #--------------------------------------------------------
+  defp prepare_input( {:mouse_button, {btn, action, mods, pos}} = event, graph ) do
+    event = {
+      :mouse_button,
+      ViewPort.Input.button_to_atom( btn ),
+      ViewPort.Input.action_to_atom( action ),
+      mods,
+      pos
+    }
+
+    uid = case Graph.find_by_screen_point(graph, pos) do
+      nil -> nil
+      p   -> Primitive.get_uid(p)
+    end
+
+    {event, uid}
+  end
+
+  #--------------------------------------------------------
+  defp prepare_input( {:mouse_scroll, {offsets, pos}} = event, graph ) do
+    uid = case Graph.find_by_screen_point(graph, pos) do
+      nil -> nil
+      p   -> Primitive.get_uid(p)
+    end
+    {{:mouse_scroll, offsets, pos}, uid}
+  end
+
+  #--------------------------------------------------------
+  defp prepare_input( {:mouse_enter, {0, pos}} = event, graph ) do
+    {{:mouse_enter, false, pos}, nil}
+  end
+  defp prepare_input( {:mouse_enter, {1, pos}} = event, graph ) do
+    uid = case Graph.find_by_screen_point(graph, pos) do
+      nil -> nil
+      p   -> Primitive.get_uid(p)
+    end
+    {{:mouse_enter, true, pos}, uid}
   end
 
   defp prepare_input( msg, graph ) do

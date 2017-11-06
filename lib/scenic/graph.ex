@@ -795,6 +795,7 @@ defmodule Scenic.Graph do
     handler.(event, id, primitive, graph)
   end
 
+
   #============================================================================
   # graph level shortcut for setting a handler on a primitive
 
