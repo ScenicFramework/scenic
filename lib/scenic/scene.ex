@@ -195,7 +195,6 @@ defmodule Scenic.Scene do
         ViewPort.Input.key_mods_to_atoms( mods ),
       }
     }
-#pry()
     {:noreply, graph, scene_state} = mod.handle_input(msg, graph, scene_state)
     state = state
     |> Map.put(:graph, graph)
@@ -220,18 +219,28 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  def handle_cast({:input_mouse_button, btn, act, mods, pos},
+  def handle_cast({:input_mouse_button, {btn, act, mods, pos}},
   %{scene_module: mod, graph: graph, scene_state: scene_state} = state ) do
     msg = {
-      :input_mouse_button, {
+      :input_mouse_button,
+      {
         ViewPort.Input.mouse_button_to_atom( btn ),
         ViewPort.Input.action_to_atom( act ),
         ViewPort.Input.key_mods_to_atoms( mods ),
-        pos,
-        Graph.find_by_screen_point(graph, pos)
+        pos
       }
     }
-    pry()
+    p = Graph.find_by_screen_point( graph, pos )
+
+    state = case Graph.filter_input(graph, msg, p) do
+      {:stop, graph} ->
+        Map.put(state, :graph, graph)
+      {:continue, event, graph} ->
+        {:noreply, graph, scene_state} = mod.handle_input(msg, graph, scene_state)
+        state = state
+        |> Map.put(:graph, graph)
+        |> Map.put(:scene_state, scene_state)
+    end
     {:noreply, state}
   end
 
