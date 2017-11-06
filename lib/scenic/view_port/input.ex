@@ -13,6 +13,8 @@ defmodule Scenic.ViewPort.Input do
   require Logger
   alias Scenic.ViewPort
 
+  import IEx
+
   @valid_input_types  [
     :input_key,
     :input_codepoint,
@@ -95,6 +97,15 @@ defmodule Scenic.ViewPort.Input do
   # gather registrations from the registry. Turn that into a flag field,
   # then send that to the driver
   defp update_input_request() do
+    input_flags = Enum.reduce(@valid_input_types, 0, fn(type,flags) ->
+      case Registry.lookup(@registry, type) do
+        [] -> flags
+        _ ->
+          # there is at least one entry, so set this flag
+          flags ||| input_type_to_flags(type)
+      end
+    end)
+    ViewPort.Driver.cast({:request_input, input_flags})
   end
 
 

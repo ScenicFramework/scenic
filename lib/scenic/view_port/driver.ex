@@ -39,6 +39,10 @@ defmodule Scenic.ViewPort.Driver do
     |> Enum.reduce( [], fn({pid, {mod,_}},acc) -> [{mod, pid} | acc] end)
   end
 
+  def cast( message ) do
+    dispatch( :driver_cast, message )
+  end
+
   #----------------------------------------------
   def send_scene_message( message ) do
     # needs a different dispatcher than sending a message to the driver. The pid to
@@ -172,6 +176,13 @@ defmodule Scenic.ViewPort.Driver do
     |> Map.put( :last_msg, :os.system_time(:millisecond) )
 
     { :noreply, state }
+  end
+
+  #--------------------------------------------------------
+  # unrecognized message. Let the driver handle it
+  def handle_cast({:driver_cast, msg}, %{driver_module: mod, driver_state: d_state} = state) do
+    { :noreply, d_state } = mod.handle_cast( msg, d_state )
+    { :noreply, Map.put(state, :driver_state, d_state) }
   end
 
   #--------------------------------------------------------
