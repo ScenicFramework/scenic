@@ -55,6 +55,7 @@ defmodule Scenic.ViewPort.Input do
     {:input_ref, ref}
   end
   # two jobs. 1, prevent duplication. 2 enforce valid types
+  defp do_register( :char, ref ), do: do_register( :codepoint, ref )
   defp do_register( type, ref ) when is_atom(type) do
     case Enum.member?(@valid_input_types, type) do
       true ->
@@ -86,6 +87,7 @@ defmodule Scenic.ViewPort.Input do
     Enum.each( types, &do_unregister(&1) )
     update_input_request()
   end
+  defp do_unregister( :char ), do: do_unregister( :codepoint )
   defp do_unregister( type ) when is_atom(type) do
     case Enum.member?(@valid_input_types, type) do
       true ->

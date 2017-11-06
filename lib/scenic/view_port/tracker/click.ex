@@ -68,8 +68,12 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
       GenServer.cast(pid, {:input_uid, {:click, id, pos}, uid})
     end
 
+    # not enough to let the registry just catch that this process is going away.
+    # need to tell the dirver too so that it doesn't spam the app with messages
+    # so do this cleanly...
+    Input.unregister_input( :mouse_button )
+
     # tear down this process - no longer needed
-    # input is automatically unregistered
     Process.exit(self(), :normal)
 
     {:noreply, state}

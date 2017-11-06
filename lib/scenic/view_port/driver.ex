@@ -40,7 +40,7 @@ defmodule Scenic.ViewPort.Driver do
   end
 
   def cast( message ) do
-IO.puts "casting to driver: #{inspect(message)}"
+#IO.puts "casting to driver: #{inspect(message)}"
     dispatch( :driver_cast, message )
   end
 
