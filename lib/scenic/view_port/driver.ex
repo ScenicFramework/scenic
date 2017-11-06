@@ -40,6 +40,7 @@ defmodule Scenic.ViewPort.Driver do
   end
 
   def cast( message ) do
+IO.puts "casting to driver: #{inspect(message)}"
     dispatch( :driver_cast, message )
   end
 
@@ -206,6 +207,7 @@ defmodule Scenic.ViewPort.Driver do
         send_scene_message( :graph_update )
         { :noreply, d_state } = mod.handle_cast( :sync, d_state )
         { :noreply, Map.put(state, :driver_state, d_state) }
+#        { :noreply, state }
       false ->
         { :noreply, state }
     end

@@ -185,15 +185,17 @@ defmodule Scenic.Scene do
 #  end
 
   #--------------------------------------------------------
-  def handle_cast({:input_key, key, action, mods},
+  def handle_cast({:input_key, {key, action, mods}},
   %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
     msg = {
-      :input_key, {
+      :input_key,
+      {
         ViewPort.Input.action_to_atom( action ),
         ViewPort.Input.key_to_atom( key ),
         ViewPort.Input.key_mods_to_atoms( mods ),
       }
     }
+#pry()
     {:noreply, graph, scene_state} = mod.handle_input(msg, graph, scene_state)
     state = state
     |> Map.put(:graph, graph)

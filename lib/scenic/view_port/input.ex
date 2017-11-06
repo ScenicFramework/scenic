@@ -24,7 +24,7 @@ defmodule Scenic.ViewPort.Input do
     :input_mouse_enter
   ]
 
-  @registry     :input_registry
+  @input_registry     :input_registry
 
   #===========================================================================
   defmodule Error do
@@ -35,29 +35,29 @@ defmodule Scenic.ViewPort.Input do
   # client apis - meant to be called from the listener process
 
   #--------------------------------------------------------
-  def register_input( type, cookie \\ nil )
-  def register_input( :input_all, cookie ) do 
+  def register_input( type )
+  def register_input( :input_all ) do 
     ref = make_ref()
-    Enum.each(@valid_input_types, &Registry.register(@registry, &1, {cookie, ref} ) )
+    Enum.each(@valid_input_types, &Registry.register(@input_registry, &1, ref ) )
     update_input_request()
     {:input_ref, ref}
   end
-  def register_input( type, cookie ) when is_atom(type) do
+  def register_input( type ) when is_atom(type) do
     ref = make_ref()
-    do_register( type, ref, cookie )
+    do_register( type, ref )
     update_input_request()
     {:input_ref, ref}
   end
-  def register_input( types, cookie ) when is_list(types) do
+  def register_input( types ) when is_list(types) do
     ref = make_ref()
-    Enum.each( types, &do_register(&1, ref, cookie) )
+    Enum.each( types, &do_register(&1, ref) )
     update_input_request()
     {:input_ref, ref}
   end
-  defp do_register( type, ref, cookie ) when is_atom(type) do
+  defp do_register( type, ref ) when is_atom(type) do
     case Enum.member?(@valid_input_types, type) do
       true ->
-        Registry.register(@registry, type, {cookie, ref} )
+        Registry.register(@input_registry, type, ref )
       false ->
         raise Error, message: "Invalid input type: #{inspect(type)}"
     end
@@ -67,12 +67,12 @@ defmodule Scenic.ViewPort.Input do
   def unregister_input( type )
   def unregister_input( {:input_ref, ref} ) when is_reference(ref) do
     Enum.each(@valid_input_types, fn(type) ->
-      Registry.unregister_match(@registry, type, {:_, ref} )
+      Registry.unregister_match(@input_registry, type, ref )
     end)
     update_input_request()
   end
   def unregister_input( :input_all ) do
-    Enum.each(@valid_input_types, &Registry.unregister(@registry, &1 ) )
+    Enum.each(@valid_input_types, &Registry.unregister(@input_registry, &1 ) )
     update_input_request()
   end
   def unregister_input( type ) when is_atom(type) do
@@ -86,7 +86,7 @@ defmodule Scenic.ViewPort.Input do
   defp do_unregister( type ) when is_atom(type) do
     case Enum.member?(@valid_input_types, type) do
       true ->
-        Registry.unregister(@registry, type )
+        Registry.unregister(@input_registry, type )
       false ->
         raise Error, message: "Invalid input type: #{inspect(type)}"
     end
@@ -98,7 +98,7 @@ defmodule Scenic.ViewPort.Input do
   # then send that to the driver
   defp update_input_request() do
     input_flags = Enum.reduce(@valid_input_types, 0, fn(type,flags) ->
-      case Registry.lookup(@registry, type) do
+      case Registry.lookup(@input_registry, type) do
         [] -> flags
         _ ->
           # there is at least one entry, so set this flag
@@ -113,16 +113,16 @@ defmodule Scenic.ViewPort.Input do
   # driver apis - meant to be called from a driver that is sending input
 
   #----------------------------------------------
-  def send_input( {input_type, message} ) do
+  def send_input( {input_type, data} ) do
     # needs a different dispatcher than sending a message to the driver. The pid to
     # send the message to is the value stored in the registry, not the pid that
     # set up the registry entry. That would be the viewport...
 
     # dispatch the call to any listening drivers
-    Registry.dispatch(@registry, input_type, fn(entries) ->
-      for {pid, {cookie, ref}} <- entries do
+    Registry.dispatch(@input_registry, input_type, fn(entries) ->
+      for {pid, _} <- entries do
         try do
-          GenServer.cast(pid, {input_type, message, cookie})
+          GenServer.cast(pid, {input_type, data})
         catch
           kind, reason ->
             formatted = Exception.format(kind, reason, System.stacktrace)
@@ -131,6 +131,10 @@ defmodule Scenic.ViewPort.Input do
       end
     end)
   end
+  def send_input( msg ) do
+    IO.puts "Input: invalid message: #{inspect(msg)}"
+  end
+
   #============================================================================
   # keyboard input helpers
   # these are for reading the keyboard directly. If you are trying to do text input
