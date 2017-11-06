@@ -45,8 +45,6 @@ defmodule Scenic.Scene do
     GenServer.call(pid, {:find_by_screen_pos, pos})
   end
 
-
-
   #===========================================================================
   # the using macro for scenes adopting this behavioiur
   defmacro __using__(_opts) do
