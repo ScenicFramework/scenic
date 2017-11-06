@@ -16,12 +16,12 @@ defmodule Scenic.ViewPort.Input do
   import IEx
 
   @valid_input_types  [
-    :input_key,
-    :input_codepoint,
-    :input_mouse_move,
-    :input_mouse_button,
-    :input_mouse_scroll,
-    :input_mouse_enter
+    :key,
+    :codepoint,
+    :mouse_move,
+    :mouse_button,
+    :mouse_scroll,
+    :mouse_enter
   ]
 
   @input_registry     :input_registry
@@ -36,7 +36,7 @@ defmodule Scenic.ViewPort.Input do
 
   #--------------------------------------------------------
   def register_input( type )
-  def register_input( :input_all ) do 
+  def register_input( :all ) do 
     ref = make_ref()
     Enum.each(@valid_input_types, &Registry.register(@input_registry, &1, ref ) )
     update_input_request()
@@ -71,7 +71,7 @@ defmodule Scenic.ViewPort.Input do
     end)
     update_input_request()
   end
-  def unregister_input( :input_all ) do
+  def unregister_input( :all ) do
     Enum.each(@valid_input_types, &Registry.unregister(@input_registry, &1 ) )
     update_input_request()
   end
@@ -113,7 +113,7 @@ defmodule Scenic.ViewPort.Input do
   # driver apis - meant to be called from a driver that is sending input
 
   #----------------------------------------------
-  def send_input( {input_type, data} ) do
+  def send_input( {input_type, data} = event ) do
     # needs a different dispatcher than sending a message to the driver. The pid to
     # send the message to is the value stored in the registry, not the pid that
     # set up the registry entry. That would be the viewport...
@@ -122,7 +122,7 @@ defmodule Scenic.ViewPort.Input do
     Registry.dispatch(@input_registry, input_type, fn(entries) ->
       for {pid, _} <- entries do
         try do
-          GenServer.cast(pid, {input_type, data})
+          GenServer.cast(pid, {:input, event})
         catch
           kind, reason ->
             formatted = Exception.format(kind, reason, System.stacktrace)
@@ -145,145 +145,145 @@ defmodule Scenic.ViewPort.Input do
 
   #--------------------------------------------------------
   def key_to_atom( key_code )
-  def key_to_atom( 32 ),    do: :key_space
-  def key_to_atom( 39 ),    do: :key_apostrophe
-  def key_to_atom( 44 ),    do: :key_comma
-  def key_to_atom( 45 ),    do: :key_minus
-  def key_to_atom( 46 ),    do: :key_period
-  def key_to_atom( 47 ),    do: :key_slash
+  def key_to_atom( 32 ),    do: :space
+  def key_to_atom( 39 ),    do: :apostrophe
+  def key_to_atom( 44 ),    do: :comma
+  def key_to_atom( 45 ),    do: :minus
+  def key_to_atom( 46 ),    do: :period
+  def key_to_atom( 47 ),    do: :slash
 
-  def key_to_atom( 48 ),    do: :key_0
-  def key_to_atom( 49 ),    do: :key_1
-  def key_to_atom( 50 ),    do: :key_2
-  def key_to_atom( 51 ),    do: :key_3
-  def key_to_atom( 52 ),    do: :key_4
-  def key_to_atom( 53 ),    do: :key_5
-  def key_to_atom( 54 ),    do: :key_6
-  def key_to_atom( 55 ),    do: :key_7
-  def key_to_atom( 56 ),    do: :key_8
-  def key_to_atom( 57 ),    do: :key_9
+  def key_to_atom( 48 ),    do: :zero
+  def key_to_atom( 49 ),    do: :one
+  def key_to_atom( 50 ),    do: :two
+  def key_to_atom( 51 ),    do: :three
+  def key_to_atom( 52 ),    do: :four
+  def key_to_atom( 53 ),    do: :five
+  def key_to_atom( 54 ),    do: :six
+  def key_to_atom( 55 ),    do: :seven
+  def key_to_atom( 56 ),    do: :eight
+  def key_to_atom( 57 ),    do: :nine
 
-  def key_to_atom( 59 ),    do: :key_semicolon
-  def key_to_atom( 61 ),    do: :key_equal
+  def key_to_atom( 59 ),    do: :semicolon
+  def key_to_atom( 61 ),    do: :equal
 
-  def key_to_atom( 65 ),    do: :key_a
-  def key_to_atom( 66 ),    do: :key_b
-  def key_to_atom( 67 ),    do: :key_c
-  def key_to_atom( 68 ),    do: :key_d
-  def key_to_atom( 69 ),    do: :key_e
-  def key_to_atom( 70 ),    do: :key_f
-  def key_to_atom( 71 ),    do: :key_g
-  def key_to_atom( 72 ),    do: :key_h
-  def key_to_atom( 73 ),    do: :key_i
-  def key_to_atom( 74 ),    do: :key_j
-  def key_to_atom( 75 ),    do: :key_k
-  def key_to_atom( 76 ),    do: :key_l
-  def key_to_atom( 77 ),    do: :key_m
-  def key_to_atom( 78 ),    do: :key_n
-  def key_to_atom( 79 ),    do: :key_o
-  def key_to_atom( 80 ),    do: :key_p
-  def key_to_atom( 81 ),    do: :key_q
-  def key_to_atom( 82 ),    do: :key_r
-  def key_to_atom( 83 ),    do: :key_s
-  def key_to_atom( 84 ),    do: :key_t
-  def key_to_atom( 85 ),    do: :key_u
-  def key_to_atom( 86 ),    do: :key_v
-  def key_to_atom( 87 ),    do: :key_w
-  def key_to_atom( 88 ),    do: :key_x
-  def key_to_atom( 89 ),    do: :key_y
-  def key_to_atom( 90 ),    do: :key_z
+  def key_to_atom( 65 ),    do: :a
+  def key_to_atom( 66 ),    do: :b
+  def key_to_atom( 67 ),    do: :c
+  def key_to_atom( 68 ),    do: :d
+  def key_to_atom( 69 ),    do: :e
+  def key_to_atom( 70 ),    do: :f
+  def key_to_atom( 71 ),    do: :g
+  def key_to_atom( 72 ),    do: :h
+  def key_to_atom( 73 ),    do: :i
+  def key_to_atom( 74 ),    do: :j
+  def key_to_atom( 75 ),    do: :k
+  def key_to_atom( 76 ),    do: :l
+  def key_to_atom( 77 ),    do: :m
+  def key_to_atom( 78 ),    do: :n
+  def key_to_atom( 79 ),    do: :o
+  def key_to_atom( 80 ),    do: :p
+  def key_to_atom( 81 ),    do: :q
+  def key_to_atom( 82 ),    do: :r
+  def key_to_atom( 83 ),    do: :s
+  def key_to_atom( 84 ),    do: :t
+  def key_to_atom( 85 ),    do: :u
+  def key_to_atom( 86 ),    do: :v
+  def key_to_atom( 87 ),    do: :w
+  def key_to_atom( 88 ),    do: :x
+  def key_to_atom( 89 ),    do: :y
+  def key_to_atom( 90 ),    do: :z
 
-  def key_to_atom( 91 ),    do: :key_left_bracket         # [
-  def key_to_atom( 92 ),    do: :key_backslash            # \
-  def key_to_atom( 93 ),    do: :key_right_bracket        # ]
-  def key_to_atom( 96 ),    do: :key_grave_accent         # `
+  def key_to_atom( 91 ),    do: :left_bracket         # [
+  def key_to_atom( 92 ),    do: :backslash            # \
+  def key_to_atom( 93 ),    do: :right_bracket        # ]
+  def key_to_atom( 96 ),    do: :grave_accent         # `
 
-  def key_to_atom( 161 ),   do: :key_world_1              # non-US #1
-  def key_to_atom( 162 ),   do: :key_world_2              # non-US #2
+  def key_to_atom( 161 ),   do: :world_1              # non-US #1
+  def key_to_atom( 162 ),   do: :world_2              # non-US #2
 
-  def key_to_atom( 256 ),   do: :key_escape
-  def key_to_atom( 257 ),   do: :key_enter
-  def key_to_atom( 258 ),   do: :key_tab
-  def key_to_atom( 259 ),   do: :key_backspace
-  def key_to_atom( 260 ),   do: :key_insert
-  def key_to_atom( 261 ),   do: :key_delete
+  def key_to_atom( 256 ),   do: :escape
+  def key_to_atom( 257 ),   do: :enter
+  def key_to_atom( 258 ),   do: :tab
+  def key_to_atom( 259 ),   do: :backspace
+  def key_to_atom( 260 ),   do: :insert
+  def key_to_atom( 261 ),   do: :delete
 
-  def key_to_atom( 262 ),   do: :key_right
-  def key_to_atom( 263 ),   do: :key_left
-  def key_to_atom( 264 ),   do: :key_down
-  def key_to_atom( 265 ),   do: :key_up
-  def key_to_atom( 266 ),   do: :key_page_up
-  def key_to_atom( 267 ),   do: :key_page_down
-  def key_to_atom( 268 ),   do: :key_home
-  def key_to_atom( 269 ),   do: :key_end
+  def key_to_atom( 262 ),   do: :right
+  def key_to_atom( 263 ),   do: :left
+  def key_to_atom( 264 ),   do: :down
+  def key_to_atom( 265 ),   do: :up
+  def key_to_atom( 266 ),   do: :page_up
+  def key_to_atom( 267 ),   do: :page_down
+  def key_to_atom( 268 ),   do: :home
+  def key_to_atom( 269 ),   do: :end
 
-  def key_to_atom( 280 ),   do: :key_caps_lock
-  def key_to_atom( 281 ),   do: :key_scroll_lock
-  def key_to_atom( 282 ),   do: :key_num_lock
+  def key_to_atom( 280 ),   do: :caps_lock
+  def key_to_atom( 281 ),   do: :scroll_lock
+  def key_to_atom( 282 ),   do: :num_lock
 
-  def key_to_atom( 283 ),   do: :key_print_screen
-  def key_to_atom( 284 ),   do: :key_pause
+  def key_to_atom( 283 ),   do: :print_screen
+  def key_to_atom( 284 ),   do: :pause
 
-  def key_to_atom( 290 ),   do: :key_f1
-  def key_to_atom( 291 ),   do: :key_f2
-  def key_to_atom( 292 ),   do: :key_f3
-  def key_to_atom( 293 ),   do: :key_f4
-  def key_to_atom( 294 ),   do: :key_f5
-  def key_to_atom( 295 ),   do: :key_f6
-  def key_to_atom( 296 ),   do: :key_f7
-  def key_to_atom( 297 ),   do: :key_f8
-  def key_to_atom( 298 ),   do: :key_f9
-  def key_to_atom( 299 ),   do: :key_f10
-  def key_to_atom( 300 ),   do: :key_f11
-  def key_to_atom( 301 ),   do: :key_f12
-  def key_to_atom( 302 ),   do: :key_f13
-  def key_to_atom( 303 ),   do: :key_f14
-  def key_to_atom( 304 ),   do: :key_f15
-  def key_to_atom( 305 ),   do: :key_f16
-  def key_to_atom( 306 ),   do: :key_f17
-  def key_to_atom( 307 ),   do: :key_f18
-  def key_to_atom( 308 ),   do: :key_f19
-  def key_to_atom( 309 ),   do: :key_f20
-  def key_to_atom( 310 ),   do: :key_f21
-  def key_to_atom( 311 ),   do: :key_f22
-  def key_to_atom( 312 ),   do: :key_f23
-  def key_to_atom( 313 ),   do: :key_f24
-  def key_to_atom( 314 ),   do: :key_f25
+  def key_to_atom( 290 ),   do: :f1
+  def key_to_atom( 291 ),   do: :f2
+  def key_to_atom( 292 ),   do: :f3
+  def key_to_atom( 293 ),   do: :f4
+  def key_to_atom( 294 ),   do: :f5
+  def key_to_atom( 295 ),   do: :f6
+  def key_to_atom( 296 ),   do: :f7
+  def key_to_atom( 297 ),   do: :f8
+  def key_to_atom( 298 ),   do: :f9
+  def key_to_atom( 299 ),   do: :f10
+  def key_to_atom( 300 ),   do: :f11
+  def key_to_atom( 301 ),   do: :f12
+  def key_to_atom( 302 ),   do: :f13
+  def key_to_atom( 303 ),   do: :f14
+  def key_to_atom( 304 ),   do: :f15
+  def key_to_atom( 305 ),   do: :f16
+  def key_to_atom( 306 ),   do: :f17
+  def key_to_atom( 307 ),   do: :f18
+  def key_to_atom( 308 ),   do: :f19
+  def key_to_atom( 309 ),   do: :f20
+  def key_to_atom( 310 ),   do: :f21
+  def key_to_atom( 311 ),   do: :f22
+  def key_to_atom( 312 ),   do: :f23
+  def key_to_atom( 313 ),   do: :f24
+  def key_to_atom( 314 ),   do: :f25
 
-  def key_to_atom( 320 ),   do: :key_kp_0
-  def key_to_atom( 321 ),   do: :key_kp_1
-  def key_to_atom( 322 ),   do: :key_kp_2
-  def key_to_atom( 323 ),   do: :key_kp_3
-  def key_to_atom( 324 ),   do: :key_kp_4
-  def key_to_atom( 325 ),   do: :key_kp_5
-  def key_to_atom( 326 ),   do: :key_kp_6
-  def key_to_atom( 327 ),   do: :key_kp_7
-  def key_to_atom( 328 ),   do: :key_kp_8
-  def key_to_atom( 329 ),   do: :key_kp_9
+  def key_to_atom( 320 ),   do: :kp_0
+  def key_to_atom( 321 ),   do: :kp_1
+  def key_to_atom( 322 ),   do: :kp_2
+  def key_to_atom( 323 ),   do: :kp_3
+  def key_to_atom( 324 ),   do: :kp_4
+  def key_to_atom( 325 ),   do: :kp_5
+  def key_to_atom( 326 ),   do: :kp_6
+  def key_to_atom( 327 ),   do: :kp_7
+  def key_to_atom( 328 ),   do: :kp_8
+  def key_to_atom( 329 ),   do: :kp_9
 
-  def key_to_atom( 330 ),   do: :key_kp_decimal
-  def key_to_atom( 331 ),   do: :key_kp_divide
-  def key_to_atom( 332 ),   do: :key_kp_multiply
-  def key_to_atom( 333 ),   do: :key_kp_subtract
-  def key_to_atom( 334 ),   do: :key_kp_add
-  def key_to_atom( 335 ),   do: :key_kp_enter
-  def key_to_atom( 336 ),   do: :key_kp_equal
+  def key_to_atom( 330 ),   do: :kp_decimal
+  def key_to_atom( 331 ),   do: :kp_divide
+  def key_to_atom( 332 ),   do: :kp_multiply
+  def key_to_atom( 333 ),   do: :kp_subtract
+  def key_to_atom( 334 ),   do: :kp_add
+  def key_to_atom( 335 ),   do: :kp_enter
+  def key_to_atom( 336 ),   do: :kp_equal
 
-  def key_to_atom( 340 ),   do: :key_left_shift
-  def key_to_atom( 341 ),   do: :key_left_control
-  def key_to_atom( 342 ),   do: :key_left_alt
-  def key_to_atom( 343 ),   do: :key_left_super
+  def key_to_atom( 340 ),   do: :left_shift
+  def key_to_atom( 341 ),   do: :left_control
+  def key_to_atom( 342 ),   do: :left_alt
+  def key_to_atom( 343 ),   do: :left_super
 
-  def key_to_atom( 344 ),   do: :key_right_shift
-  def key_to_atom( 345 ),   do: :key_right_control
-  def key_to_atom( 346 ),   do: :key_right_alt
-  def key_to_atom( 347 ),   do: :key_right_super
+  def key_to_atom( 344 ),   do: :right_shift
+  def key_to_atom( 345 ),   do: :right_control
+  def key_to_atom( 346 ),   do: :right_alt
+  def key_to_atom( 347 ),   do: :right_super
 
-  def key_to_atom( 348 ),   do: :key_menu
+  def key_to_atom( 348 ),   do: :menu
 
   def key_to_atom( key ) do
     IO.puts "Unknown key: #{inspect(key)}"
-    :key_unknown
+    :unknown
   end
 
 
@@ -296,10 +296,10 @@ defmodule Scenic.ViewPort.Input do
   @key_mod_alt      0x0004
   @key_mod_super    0x0008
   @key_mods         [
-    {@key_mod_shift,   :key_mod_shift},
-    {@key_mod_control, :key_mod_control},
-    {@key_mod_alt,     :key_mod_alt},
-    {@key_mod_super,   :key_mod_super}
+    {@key_mod_shift,   :shift},
+    {@key_mod_control, :control},
+    {@key_mod_alt,     :alt},
+    {@key_mod_super,   :super}
   ]
 
   def key_mods_to_atoms( key_mods )
@@ -314,10 +314,10 @@ defmodule Scenic.ViewPort.Input do
 
   #--------------------------------------------------------
   def action_to_atom( action )
-  def action_to_atom( 0 ),  do: :action_release
-  def action_to_atom( 1 ),  do: :action_press
-  def action_to_atom( 2 ),  do: :action_repeat
-  def action_to_atom( _ ),  do: :action_unknown
+  def action_to_atom( 0 ),  do: :release
+  def action_to_atom( 1 ),  do: :press
+  def action_to_atom( 2 ),  do: :repeat
+  def action_to_atom( _ ),  do: :unknown
 
   #--------------------------------------------------------
   def codepoint_to_char( codepoint_to_atom )
@@ -325,22 +325,22 @@ defmodule Scenic.ViewPort.Input do
 
 
   #--------------------------------------------------------
-  def mouse_button_to_atom( 0 ), do: :button_left
-  def mouse_button_to_atom( 1 ), do: :button_right
-  def mouse_button_to_atom( _ ), do: :button_unknown
+  def mouse_button_to_atom( 0 ), do: :left
+  def mouse_button_to_atom( 1 ), do: :right
+  def mouse_button_to_atom( _ ), do: :unknown
 
   #--------------------------------------------------------
   def input_type_to_flags( type )
   def input_type_to_flags( types ) when is_list(types) do
     Enum.reduce(types, 0, &(input_type_to_flags(&1) ||| &2) )
   end
-  def input_type_to_flags( :input_key ),            do: 0x0001
-  def input_type_to_flags( :input_codepoint ),      do: 0x0002
-  def input_type_to_flags( :input_mouse_move ),     do: 0x0004
-  def input_type_to_flags( :input_mouse_button ),   do: 0x0008
-  def input_type_to_flags( :input_mouse_scroll ),   do: 0x0010
-  def input_type_to_flags( :input_mouse_enter ),    do: 0x0020
-  def input_type_to_flags( :input_all ),            do: 0xFFFF
+  def input_type_to_flags( :key ),            do: 0x0001
+  def input_type_to_flags( :codepoint ),      do: 0x0002
+  def input_type_to_flags( :mouse_move ),     do: 0x0004
+  def input_type_to_flags( :mouse_button ),   do: 0x0008
+  def input_type_to_flags( :mouse_scroll ),   do: 0x0010
+  def input_type_to_flags( :mouse_enter ),    do: 0x0020
+  def input_type_to_flags( :all ),            do: 0xFFFF
 #  def input_type_to_flags( :none ),                 do: 0x0000
 #  def input_type_to_flags( :input_none ),           do: 0x0000
   def input_type_to_flags( type ), do: raise "Driver.Glfw Unknown input type: #{inspect(type)}"

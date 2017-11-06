@@ -37,7 +37,7 @@ defmodule Scenic.Graph do
 
 
   defstruct primitive_map: %{}, id_map: %{}, next_uid: 1, deltas: %{},
-    recurring_actions: [], last_recurring_action: nil, add_to: 0
+    recurring_actions: [], last_recurring_action: nil, add_to: 0, focus: nil
 
 
 
@@ -97,7 +97,10 @@ defmodule Scenic.Graph do
     root = Group.build( [], opts )
     |> Map.put(:uid, @root_uid)
 
-    graph = %Graph{ primitive_map:  %{ @root_uid => root } }
+    graph = %Graph{
+      primitive_map:  %{ @root_uid => root },
+      focus:          nil
+    }
     |> calculate_transforms( 0 )
 
     graph = case opts[:id] do

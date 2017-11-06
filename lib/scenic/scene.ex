@@ -13,6 +13,7 @@
 defmodule Scenic.Scene do
   alias Scenic.Graph
   alias Scenic.ViewPort
+  require Logger
 
   import IEx
 
@@ -178,71 +179,104 @@ defmodule Scenic.Scene do
     {:noreply, state}
   end
 
-
   #--------------------------------------------------------
-#  def handle_cast({:input, event, uid}, state) do
-#    handle_info({:input, event, uid}, state)
-#  end
+  def handle_cast({:input, event}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+    state = try do
+      # prepare the message and find the default primitive, if any
+      {event, p} = prepare_input(event, graph)
 
-  #--------------------------------------------------------
-  def handle_cast({:input_key, {key, action, mods}},
-  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-    msg = {
-      :input_key,
-      {
-        ViewPort.Input.action_to_atom( action ),
-        ViewPort.Input.key_to_atom( key ),
-        ViewPort.Input.key_mods_to_atoms( mods ),
-      }
-    }
-    {:noreply, graph, scene_state} = mod.handle_input(msg, graph, scene_state)
-    state = state
-    |> Map.put(:graph, graph)
-    |> Map.put(:scene_state, scene_state)
-    {:noreply, state}
-  end
+      # filter the event through the graph
+      state = case Graph.filter_input(graph, event, p) do
+        {:stop, graph} ->
+          # the event is done. Stop handling it
+          Map.put(state, :graph, graph)
 
-  #--------------------------------------------------------
-  def handle_cast({:input_codepoint, codepoint, mods},
-  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-    msg = {
-      :input_char, {
-        ViewPort.Input.codepoint_to_char( codepoint ),
-        ViewPort.Input.key_mods_to_atoms( mods )
-      }
-    }
-    {:noreply, graph, scene_state} = mod.handle_input(msg, graph, scene_state)
-    state = state
-    |> Map.put(:graph, graph)
-    |> Map.put(:scene_state, scene_state)
-    {:noreply, state}
-  end
-
-  #--------------------------------------------------------
-  def handle_cast({:input_mouse_button, {btn, act, mods, pos}},
-  %{scene_module: mod, graph: graph, scene_state: scene_state} = state ) do
-    msg = {
-      :input_mouse_button,
-      {
-        ViewPort.Input.mouse_button_to_atom( btn ),
-        ViewPort.Input.action_to_atom( act ),
-        ViewPort.Input.key_mods_to_atoms( mods ),
-        pos
-      }
-    }
-    p = Graph.find_by_screen_point( graph, pos )
-
-    state = case Graph.filter_input(graph, msg, p) do
-      {:stop, graph} ->
-        Map.put(state, :graph, graph)
-      {:continue, event, graph} ->
-        {:noreply, graph, scene_state} = mod.handle_input(msg, graph, scene_state)
-        state = state
-        |> Map.put(:graph, graph)
-        |> Map.put(:scene_state, scene_state)
+        {:continue, event, graph} ->
+          # let the scene itself handle the event
+          {:noreply, graph, scene_state} = mod.handle_input(event, graph, scene_state)
+          state
+          |> Map.put(:graph, graph)
+          |> Map.put(:scene_state, scene_state)
+      end
+    catch
+      kind, reason ->
+        formatted = Exception.format(kind, reason, System.stacktrace)
+        Logger.error "Scene.handle_cast :input failed with #{formatted}"
+        state
     end
+
+    # return the transformed state
     {:noreply, state}
   end
+
+#  #--------------------------------------------------------
+#  def handle_cast({:key, {key, action, mods}},
+#  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+#    msg = {
+#      :key,
+#      {
+#        ViewPort.Input.key_to_atom( key ),
+#        ViewPort.Input.action_to_atom( action ),
+#        ViewPort.Input.key_mods_to_atoms( mods ),
+#      }
+#    }
+#
+#    {:noreply, graph, scene_state} = mod.handle_input(msg, graph, scene_state)
+#    state = state
+#    |> Map.put(:graph, graph)
+#    |> Map.put(:scene_state, scene_state)
+#    {:noreply, state}
+#  end
+#
+#  #--------------------------------------------------------
+#  def handle_cast({:codepoint, {codepoint, mods}},
+#  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+#IO.puts "input_codepoint: #{inspect(codepoint)}"
+#    msg = {
+#      :codepoint, {
+#        ViewPort.Input.codepoint_to_char( codepoint ),
+#        ViewPort.Input.key_mods_to_atoms( mods )
+#      }
+#    }
+#    {:noreply, graph, scene_state} = mod.handle_input(msg, graph, scene_state)
+#    state = state
+#    |> Map.put(:graph, graph)
+#    |> Map.put(:scene_state, scene_state)
+#    {:noreply, state}
+#  end
+#
+#  #--------------------------------------------------------
+#  def handle_cast({:mouse_button, {btn, act, mods, pos}},
+#  %{scene_module: mod, graph: graph, scene_state: scene_state} = state ) do
+#    action = ViewPort.Input.action_to_atom( act )
+#    p = Graph.find_by_screen_point( graph, pos )
+#
+#    msg = {
+#      :mouse_button,
+#      {
+#        ViewPort.Input.mouse_button_to_atom( btn ),
+#        ViewPort.Input.action_to_atom( act ),
+#        ViewPort.Input.key_mods_to_atoms( mods ),
+#        pos
+#      }
+#    }
+#
+#    case action do
+#      :action_press -> IO.puts "MDown on: #{inspect(p)}"
+#      _ -> :ok
+#    end
+#
+##    state = case Graph.filter_input(graph, msg, p) do
+##      {:stop, graph} ->
+##        Map.put(state, :graph, graph)
+##      {:continue, event, graph} ->
+##        {:noreply, graph, scene_state} = mod.handle_input(event, graph, scene_state)
+##        state = state
+##        |> Map.put(:graph, graph)
+##        |> Map.put(:scene_state, scene_state)
+##    end
+#    {:noreply, state}
+#  end
 
 
   #--------------------------------------------------------
@@ -321,6 +355,43 @@ defmodule Scenic.Scene do
       _ -> false
     end
   end
+
+
+
+  #===========================================================================
+  # input preperation
+
+  #--------------------------------------------------------
+  defp prepare_input( {:key, {key, action, mods}}, graph ) do
+    event = {
+      :key,
+      {
+        ViewPort.Input.key_to_atom( key ),
+        ViewPort.Input.action_to_atom( action ),
+        ViewPort.Input.key_mods_to_atoms( mods ),
+      }
+    }
+    {event, nil}
+  end
+
+  #--------------------------------------------------------
+  defp prepare_input( {:codepoint, {codepoint, mods}}, %Graph{focus: focus} = graph ) do
+    event = {
+      :char,
+      {
+        ViewPort.Input.codepoint_to_char( codepoint ),
+        ViewPort.Input.key_mods_to_atoms( mods )
+      }
+    }
+    {event, focus}
+  end
+
+  defp prepare_input( msg, graph ) do
+    IO.puts "unprepared input: #{inspect(msg)}"
+    {msg, nil}
+  end
+
+
 
 
 end
