@@ -59,6 +59,8 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
     # find the uid the button is over
     uid = Scene.find_by_screen_pos(pos, pid)
 
+    # if the found uid is in the valid uid list, then send the click message note
+    # that it is OK to have nil in the list if you want to click on the background
     if Enum.member?(uids, uid) do
       GenServer.cast(pid, {:input_uid, {:click, id, pos}, uid})
     end
