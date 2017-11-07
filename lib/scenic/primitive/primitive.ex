@@ -93,13 +93,19 @@ defmodule Scenic.Primitive do
       # point must already be transformed into local coordinates
       def contains_point?( _, _), do: false
 
+      # simple defaults that can be overridden
+      def get( %Primitive{data: data} ), do: data
+      def put( p, data ), do: Primitive.do_put( p, data )
+
       #--------------------------------------------------------
       defoverridable [
         build:            2,
         add_to_graph:     3,
         filter_styles:    1,
         expand:           1,
-        contains_point?:  2
+        contains_point?:  2,
+        get:              1,
+        put:              2
       ]
     end # quote
   end # defmacro
@@ -427,10 +433,20 @@ defmodule Scenic.Primitive do
   # primitive-specific data
 
   def get( primitive )
-  def get( %Primitive{data: data} ), do: data
+  def get( %Primitive{module: mod} = p ) do
+    # give the primitive a chance to own the get
+    mod.get(p)
+  end
 
   def put( primitive, data )
   def put( %Primitive{module: mod} = p, data ) do
+    # give the primitive a chance to own the put
+    mod.put( p, data )
+  end
+
+  # the default behavior for put - just verify the data and put it in place
+  # not a defp because the primitives themselves call it
+  def do_put( %Primitive{module: mod} = p, data ) do
     mod.verify!( data )
     Map.put(p, :data, data)
   end

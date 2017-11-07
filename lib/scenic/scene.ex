@@ -21,6 +21,8 @@ defmodule Scenic.Scene do
   @callback init( any ) :: {:ok, any}
   @callback init_graph(any) :: {:ok, map, any}
 
+  @viewport_registry    :viewport_registry
+
   #===========================================================================
   # calls for setting up a scene inside of a supervisor
 
@@ -57,15 +59,14 @@ defmodule Scenic.Scene do
 
       #--------------------------------------------------------
       # Here so that the scene can override if desired
-      def handle_context_lost(context, graph, state),     do: {:noreply, graph, state}
-      def handle_context_gained(context, graph, state),   do: {:noreply, graph, state}
+#      def handle_context_lost(graph, state),          do: {:noreply, graph, state}
+      def handle_context_gained(graph, state),        do: {:noreply, graph, state}
+ 
+      def handle_call(_msg, _from, graph, state),     do: {:reply, :err_not_handled, graph, state}
+      def handle_cast(_msg, graph, state),            do: {:noreply, graph, state}
+      def handle_info(_msg, graph, state),            do: {:noreply, graph, state}
 
-
-      def handle_call(_msg, _from, graph, state),         do: {:reply, :err_not_handled, graph, state}
-      def handle_cast(_msg, graph, state),                do: {:noreply, graph, state}
-      def handle_info(_msg, graph, state),                do: {:noreply, graph, state}
-
-      def handle_input( event, graph, scene_state ),      do: {:noreply, graph, scene_state}
+      def handle_input( event, graph, scene_state ),  do: {:noreply, graph, scene_state}
 
       #--------------------------------------------------------
 #      add local shortcuts to things like get/put graph and modify element
@@ -76,8 +77,7 @@ defmodule Scenic.Scene do
         handle_call:            4,
         handle_cast:            3,
         handle_info:            3,
-        handle_context_lost:    3,
-        handle_context_gained:  3,
+        handle_context_gained:  2,
         handle_input:           3
       ]
 
@@ -116,25 +116,25 @@ defmodule Scenic.Scene do
   #--------------------------------------------------------
   # if the viewport says the context has lost (probably because it is showing a different scene),
   # then it sends the scene that is being replaced, the context_lost message
-  def handle_call({:context_lost, context}, _from,
-  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-    # do nothing if this isn't the scene's current context
-    state
-    |> is_current_context?( context ) 
-    |> case do
-      false -> {:reply, :error_bad_context, state}
-      true ->
-        # let the scene know, then clear the context from the state
-        {:noreply, graph, scene_state} = mod.handle_context_lost( context, graph, scene_state )
-
-        state = state
-        |> Map.put(:vp_context, nil)
-        |> Map.put(:graph, graph)
-        |> Map.put(:scene_state, scene_state)
-
-        {:reply, :ok, state}
-    end
-  end
+#  def handle_call({:context_lost, context}, _from,
+#  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+#    # do nothing if this isn't the scene's current context
+#    state
+#    |> is_current_context?( context ) 
+#    |> case do
+#      false -> {:reply, :error_bad_context, state}
+#      true ->
+#        # let the scene know, then clear the context from the state
+#        {:noreply, graph, scene_state} = mod.handle_context_lost( context, graph, scene_state )
+#
+#        state = state
+#        |> Map.put(:vp_context, nil)
+#        |> Map.put(:graph, graph)
+#        |> Map.put(:scene_state, scene_state)
+#
+#        {:reply, :ok, state}
+#    end
+#  end
 
   #--------------------------------------------------------
   # somebody has a screen position and wants an uid for it
@@ -165,27 +165,25 @@ defmodule Scenic.Scene do
   #--------------------------------------------------------
   # if the viewport says the context has lost (probably because it is showing a different scene),
   # then it sends the scene that is being replaced, the context_lost message
-  def handle_cast({:context_gained, context},
-  %{scene_module: mod, scene_state: scene_state, graph: graph} = state) do
-
-    # tick any recurring actions before rendering
-    graph = Graph.tick_recurring_actions(graph)
-
-    # tell the scene this is happening
-    {:noreply, graph, scene_state} = mod.handle_context_gained( context, graph, scene_state )
-
-    # save the context, graph, and the scene state
-    state = state
-    |> Map.put(:graph, graph)
-    |> Map.put(:vp_context, context)
-    |> Map.put(:scene_state, scene_state)
-
-    # reset the viewport with this scene's graph
-    ViewPort.set_graph(context, graph)
-
-    # return the transformed state
-    {:noreply, state}
-  end
+#  def handle_cast(:context_gained, %{scene_module: mod, scene_state: scene_state, graph: graph} = state) do
+#
+#    # tick any recurring actions before rendering
+#    graph = Graph.tick_recurring_actions(graph)
+#
+#    # tell the scene this is happening
+#    {:noreply, graph, scene_state} = mod.handle_context_gained( graph, scene_state )
+#
+#    # save graph, and the scene state
+#    state = state
+#    |> Map.put(:graph, graph)
+#    |> Map.put(:scene_state, scene_state)
+#
+#    # reset the viewport with this scene's graph
+#    ViewPort.set_graph( graph )
+#
+#    # return the transformed state
+#    {:noreply, state}
+#  end
 
   #--------------------------------------------------------
   def handle_cast({:input, event}, %{graph: graph} = state) do
@@ -201,29 +199,30 @@ defmodule Scenic.Scene do
 
   #--------------------------------------------------------
   # a graphic driver is requesting an update
-  def handle_cast(:graph_update, %{vp_context: context, graph: graph} = state) do
+  def handle_cast(:graph_update, %{graph: graph} = state) do
     # tick any recurring actions
     graph = Graph.tick_recurring_actions( graph )
 
     # send the graph to the view_port
-    ViewPort.update_graph( context, graph )
+    ViewPort.update_graph( graph )
 
     # reset the deltas
     graph = Graph.reset_deltas( graph )
 
     # update and return the state
-    state
-    |> Map.put( :graph, graph )
+    state = Map.put( state, :graph, graph )
 
     { :noreply, state }
   end
 
   #--------------------------------------------------------
   # a graphic driver is requesting a full graph reset
-  def handle_cast(:graph_reset, %{ vp_context: context, graph: graph } = state) do
+  def handle_cast(:graph_reset, %{ graph: graph } = state) do
+    # tick any recurring actions
+    graph = Graph.tick_recurring_actions( graph )
     # reset the viewport with this scene's graph
-    ViewPort.set_graph(context, graph)
-    { :noreply, state }
+    ViewPort.set_graph(graph)
+    { :noreply, Map.put(state, :graph, graph) }
   end
 
   #--------------------------------------------------------
@@ -249,16 +248,6 @@ defmodule Scenic.Scene do
     |> Map.put(:scene_state, scene_state)
     {:noreply, state}
   end
-
-
-  #--------------------------------------------------------
-  defp is_current_context?(%{vp_context: current_context}, {:context, context_id, _}) do
-    case current_context do
-      {:context, current_id, _} -> current_id == context_id
-      _ -> false
-    end
-  end
-
 
 
   #===========================================================================

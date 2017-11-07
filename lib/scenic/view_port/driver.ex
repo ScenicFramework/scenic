@@ -21,6 +21,7 @@ defmodule Scenic.ViewPort.Driver do
 
   @driver_registry    :driver_registry
   @input_registry     :input_registry
+  @viewport_registry  :viewport_registry
 
   #===========================================================================
   # generic apis for sending a message to the drivers
@@ -45,16 +46,15 @@ defmodule Scenic.ViewPort.Driver do
   end
 
   #----------------------------------------------
-  def send_scene_message( message ) do
-    # needs a different dispatcher than sending a message to the driver. The pid to
-    # send the message to is the value stored in the registry, not the pid that
-    # set up the registry entry. That would be the viewport...
+  def signal_scene( signal ) do
+    # needs a different dispatcher than sending a message to the driver.
+    # there is only one current scene, and that is in the viewport_registry
 
     # dispatch the call to any listening drivers
-    Registry.dispatch(@input_registry, :scene_message, fn(entries) ->
-      for {_, scene_pid} <- entries do
+    Registry.dispatch(@viewport_registry, signal, fn(entries) ->
+      for {_vp_pid, scene_pid} <- entries do
         try do
-          GenServer.cast(scene_pid, message)
+          GenServer.cast(scene_pid, signal)
         catch
           kind, reason ->
             formatted = Exception.format(kind, reason, System.stacktrace)
@@ -204,10 +204,9 @@ defmodule Scenic.ViewPort.Driver do
     cur_time = :os.system_time(:millisecond)
     case (cur_time - last_msg) > sync_interval do
       true  ->
-        send_scene_message( :graph_update )
+        signal_scene( :graph_update )
         { :noreply, d_state } = mod.handle_cast( :sync, d_state )
         { :noreply, Map.put(state, :driver_state, d_state) }
-#        { :noreply, state }
       false ->
         { :noreply, state }
     end
@@ -237,6 +236,7 @@ defmodule Scenic.ViewPort.Driver do
         end
       end
     end)
+    :ok
   end
 
 

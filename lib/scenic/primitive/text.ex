@@ -5,8 +5,7 @@
 
 defmodule Scenic.Primitive.Text do
   use Scenic.Primitive
-
-#  alias Scenic.Primitive
+  alias Scenic.Primitive
 #  alias Scenic.Primitive.Style
 
 
@@ -81,5 +80,14 @@ defmodule Scenic.Primitive.Text do
   def default_pin( {{x, y}, _} ) do
     {x, y}
   end
+
+  #============================================================================
+  # override put
+
+  # allow just a new string to be put, preserving the position
+  def put( %Primitive{data: {pos,_}} = p, text ) when is_bitstring(text) do
+    super(p,{pos,text})
+  end
+  def put(p,text), do: super(p,text)
 
 end
