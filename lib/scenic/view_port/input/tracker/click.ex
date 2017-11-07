@@ -18,9 +18,6 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
 
 #  import IEx
 
-#  @input_registry     :input_registry
-
-
   #===========================================================================
   # The genserver part - tracks individual mouse clicks / gestures
 

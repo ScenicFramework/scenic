@@ -57,6 +57,10 @@ defmodule Scenic.ViewPort.Input.Tracker do
   #===========================================================================
   # Driver initialization
 
+  # using a simple_one_for_one strategy for in the supervisor as trackers are
+  # dynamic in their nature. Thus providing start/stop functions here to make
+  # it easy to set up.
+
   #--------------------------------------------------------
   def start( mod_opts, tracker_opts ) do
     {:ok, agent1} = Supervisor.start_child(@tracker_supervisor, [mod_opts, tracker_opts])
@@ -130,29 +134,3 @@ defmodule Scenic.ViewPort.Input.Tracker do
   end
 
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
