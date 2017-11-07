@@ -12,13 +12,13 @@
 
 
 defmodule Scenic.ViewPort.Input.Tracker.Click do
-  use GenServer
+  use Scenic.ViewPort.Input.Tracker
   alias Scenic.ViewPort.Input
   alias Scenic.Scene
 
-#  import IEx
+  import IEx
 
-  @input_registry     :input_registry
+#  @input_registry     :input_registry
 
 
   #===========================================================================
@@ -33,12 +33,7 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
       valid_uids,
       target_button
     }
-    {:ok,_} = start_link( state )
-  end
-
-  #--------------------------------------------------------
-  def start_link( state ) do
-    GenServer.start_link(__MODULE__, state )
+    Input.Tracker.start({__MODULE__,[]}, state)
   end
 
   #--------------------------------------------------------
@@ -50,17 +45,17 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
 
   #--------------------------------------------------------
   # bit of a cheat going straight for the release code of 0, but hey...
-  def handle_cast({:input, {:mouse_button, {btn, 0, _, pos}} }, state) do
-    btn = Input.button_to_atom( btn )
-    do_handle_release(btn, pos, state)
-    {:noreply, state}
+  def handle_input({:mouse_button, btn, :release, _, pos}, state) do
+    do_handle_input(btn, pos, state)
   end
 
-  #--------------------------------------------------------
-  def handle_cast(msg, state), do: {:noreply, state}
+  def handle_input(msg, state) do
+    super(msg, state)
+  end
+
 
   #--------------------------------------------------------
-  defp do_handle_release(btn, pos, { pid, id, uids, t_btn } = state) when btn == t_btn do
+  defp do_handle_input(btn, pos, { pid, id, uids, t_btn } = state) when btn == t_btn do
     # find the uid the button is over
     uid = Scene.find_by_screen_pos(pos, pid)
 
@@ -74,12 +69,13 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
     Input.unregister_input( :mouse_button )
 
     # tear down this process - no longer needed
-    Process.exit(self(), :normal)
+    #Process.exit(self(), :normal)
+    Input.Tracker.stop()
 
     {:noreply, state}
   end
 
-  defp do_handle_release(_, _, state), do: {:noreply, state}
+  defp do_handle_input(_, _, state), do: {:noreply, state}
 
 
 end

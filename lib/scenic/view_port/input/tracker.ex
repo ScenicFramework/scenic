@@ -6,13 +6,15 @@
 
 defmodule Scenic.ViewPort.Input.Tracker do
   use GenServer
+  alias Scenic.ViewPort.Input
 
   require Logger
 #  alias Scenic.ViewPort
 
   import IEx
 
-  @input_registry     :input_registry
+#  @input_registry     :input_registry
+  @tracker_supervisor   :trackers
 
 
   #===========================================================================
@@ -30,8 +32,6 @@ defmodule Scenic.ViewPort.Input.Tracker do
   # the using macro for specific trackers to use
   defmacro __using__(_use_opts) do
     quote do
-#      @behaviour Scenic.ViewPort.Driver
-
       def init(_),                        do: {:ok, nil}
 
       # simple, do-nothing default handlers
@@ -58,15 +58,27 @@ defmodule Scenic.ViewPort.Input.Tracker do
   # Driver initialization
 
   #--------------------------------------------------------
-  def start_link({module, opts}) do
-    GenServer.start_link(__MODULE__, {module, opts}, name: opts[:name])
+  def start( mod_opts, tracker_opts ) do
+    {:ok, agent1} = Supervisor.start_child(@tracker_supervisor, [mod_opts, tracker_opts])
+    :ok
   end
 
   #--------------------------------------------------------
-  def init( {module, opts} ) do
+  def stop( tracker_pid \\ nil )
+  def stop( nil ), do: stop( self() )
+  def stop( tracker_pid ) do
+    Supervisor.terminate_child( @tracker_supervisor, tracker_pid )
+  end
 
+  #--------------------------------------------------------
+  def start_link({module, opts}, tracker_opts) do
+    GenServer.start_link(__MODULE__, {module, tracker_opts}, name: opts[:name])
+  end
+
+  #--------------------------------------------------------
+  def init( {module, tracker_opts} ) do
     # let the tracker initialize itself
-    {:ok, tracker_state} = module.init( opts )
+    {:ok, tracker_state} = module.init( tracker_opts )
 
     state = %{
       tracker_module:  module,
@@ -90,6 +102,15 @@ defmodule Scenic.ViewPort.Input.Tracker do
 
   #============================================================================
   # handle_cast
+
+  #--------------------------------------------------------
+  # input
+  def handle_cast({:input, {type, data} = input},
+  %{tracker_module: mod, tracker_state: d_state} = state) do
+    input = Input.normalize( input )
+    { :noreply, d_state } = mod.handle_input( input, d_state )
+    { :noreply, Map.put(state, :tracker_state, d_state) }
+  end
 
   #--------------------------------------------------------
   # unrecognized message. Let the tracker handle it

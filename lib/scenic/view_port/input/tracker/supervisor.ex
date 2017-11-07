@@ -5,6 +5,7 @@
 
 defmodule Scenic.ViewPort.Input.Tracker.Supervisor do
   use Supervisor
+  alias Scenic.ViewPort.Input.Tracker
 
   @name       :trackers
 
@@ -18,7 +19,10 @@ defmodule Scenic.ViewPort.Input.Tracker.Supervisor do
   end
 
   def init( :ok ) do
-    Supervisor.init( [], strategy: :simple_one_for_one )
+
+    spec = Supervisor.child_spec(Tracker, start: {Tracker, :start_link, []})
+
+    Supervisor.init( [spec], strategy: :simple_one_for_one )
   end
 
 end

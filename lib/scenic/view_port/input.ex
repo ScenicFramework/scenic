@@ -118,7 +118,7 @@ defmodule Scenic.ViewPort.Input do
   # driver apis - meant to be called from a driver that is sending input
 
   #----------------------------------------------
-  def send_input( {input_type, data} = event ) do
+  def send_input( {input_type, _} = event ) do
     # needs a different dispatcher than sending a message to the driver. The pid to
     # send the message to is the value stored in the registry, not the pid that
     # set up the registry entry. That would be the viewport...
@@ -349,6 +349,51 @@ defmodule Scenic.ViewPort.Input do
 #  def input_type_to_flags( :none ),                 do: 0x0000
 #  def input_type_to_flags( :input_none ),           do: 0x0000
   def input_type_to_flags( type ), do: raise "Driver.Glfw Unknown input type: #{inspect(type)}"
+
+
+
+
+
+  #===========================================================================
+  # input normalization
+
+  #--------------------------------------------------------
+  def normalize( {:key, {key, action, mods}} ) do
+    {
+      :key,
+      key_to_atom( key ),
+      action_to_atom( action ),
+      mods
+    }
+  end
+
+  #--------------------------------------------------------
+  def normalize( {:codepoint, {codepoint, mods}} ) do
+    {
+      :char,
+      codepoint_to_char( codepoint ),
+      mods 
+    }
+  end
+
+  #--------------------------------------------------------
+  def normalize( {:mouse_button, {btn, action, mods, pos}} ) do
+    {
+      :mouse_button,
+      button_to_atom( btn ),
+      action_to_atom( action ),
+      mods,
+      pos
+    }
+  end
+
+  #--------------------------------------------------------
+  def normalize( {:mouse_enter, {0, pos}} ), do: {:mouse_enter, false, pos}
+  def normalize( {:mouse_enter, {1, pos}} ), do: {:mouse_enter, true, pos}
+
+  #--------------------------------------------------------
+  # all other events pass through unchanged
+  def normalize( event ), do: event
 
 
 end
