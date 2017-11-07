@@ -199,76 +199,6 @@ defmodule Scenic.Scene do
     do_handle_input( {event, uid}, state )
   end
 
-#  #--------------------------------------------------------
-#  def handle_cast({:key, {key, action, mods}},
-#  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-#    msg = {
-#      :key,
-#      {
-#        ViewPort.Input.key_to_atom( key ),
-#        ViewPort.Input.action_to_atom( action ),
-#        ViewPort.Input.key_mods_to_atoms( mods ),
-#      }
-#    }
-#
-#    {:noreply, graph, scene_state} = mod.handle_input(msg, graph, scene_state)
-#    state = state
-#    |> Map.put(:graph, graph)
-#    |> Map.put(:scene_state, scene_state)
-#    {:noreply, state}
-#  end
-#
-#  #--------------------------------------------------------
-#  def handle_cast({:codepoint, {codepoint, mods}},
-#  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-#IO.puts "input_codepoint: #{inspect(codepoint)}"
-#    msg = {
-#      :codepoint, {
-#        ViewPort.Input.codepoint_to_char( codepoint ),
-#        ViewPort.Input.key_mods_to_atoms( mods )
-#      }
-#    }
-#    {:noreply, graph, scene_state} = mod.handle_input(msg, graph, scene_state)
-#    state = state
-#    |> Map.put(:graph, graph)
-#    |> Map.put(:scene_state, scene_state)
-#    {:noreply, state}
-#  end
-#
-#  #--------------------------------------------------------
-#  def handle_cast({:mouse_button, {btn, act, mods, pos}},
-#  %{scene_module: mod, graph: graph, scene_state: scene_state} = state ) do
-#    action = ViewPort.Input.action_to_atom( act )
-#    p = Graph.find_by_screen_point( graph, pos )
-#
-#    msg = {
-#      :mouse_button,
-#      {
-#        ViewPort.Input.mouse_button_to_atom( btn ),
-#        ViewPort.Input.action_to_atom( act ),
-#        ViewPort.Input.key_mods_to_atoms( mods ),
-#        pos
-#      }
-#    }
-#
-#    case action do
-#      :action_press -> IO.puts "MDown on: #{inspect(p)}"
-#      _ -> :ok
-#    end
-#
-##    state = case Graph.filter_input(graph, msg, p) do
-##      {:stop, graph} ->
-##        Map.put(state, :graph, graph)
-##      {:continue, event, graph} ->
-##        {:noreply, graph, scene_state} = mod.handle_input(event, graph, scene_state)
-##        state = state
-##        |> Map.put(:graph, graph)
-##        |> Map.put(:scene_state, scene_state)
-##    end
-#    {:noreply, state}
-#  end
-
-
   #--------------------------------------------------------
   # a graphic driver is requesting an update
   def handle_cast(:graph_update, %{vp_context: context, graph: graph} = state) do
@@ -308,24 +238,7 @@ defmodule Scenic.Scene do
 
 
   #===========================================================================
-  # default info handlers.
-
-#  def handle_info({:input, event, uid}, %{scene_module: mod, scene_state: scene_state, graph: graph} = state) do
-#    # filter the input through the graph
-#    case Graph.filter_input(graph, event, uid) do
-#      {:continue, event, graph} ->
-#        # let the scene handle the remaining event
-#        {:noreply, graph, scene_state} = mod.handle_input(event, graph, scene_state )
-#        state = state
-#        |> Map.put(:graph, graph)
-#        |> Map.put(:scene_state, scene_state)
-#        {:noreply, state}
-#
-#      {:stop, graph} ->
-#        {:noreply, Map.put(state, :graph, graph)}
-#    end
-#  end
-
+  # info handlers
 
   #--------------------------------------------------------
   # generic info. give the scene a chance to handle it
