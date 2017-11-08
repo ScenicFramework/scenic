@@ -106,7 +106,7 @@ defmodule Scenic.ViewPort.Driver do
     # set up the driver with the viewport registry
     {:ok, _} = Registry.register(:driver_registry, :set_graph,    {module, :set_graph} )
     {:ok, _} = Registry.register(:driver_registry, :update_graph, {module, :update_graph} )
-    {:ok, _} = Registry.register(:driver_registry, :driver_cast,  {module, :driver_cast} )
+    {:ok, _} = Registry.register(:driver_registry, :driver_cast,  :driver_cast )
 
     # let the driver initialize itself
     {:ok, driver_state} = module.init( opts )
@@ -223,7 +223,7 @@ defmodule Scenic.ViewPort.Driver do
   defp dispatch( action, data ) do
     # dispatch the call to any listening drivers
     Registry.dispatch(@driver_registry, action, fn(entries) ->
-      for {pid, {_,msg}} <- entries do
+      for {pid, msg} <- entries do
         try do
           GenServer.cast(pid, {msg, data})
         catch

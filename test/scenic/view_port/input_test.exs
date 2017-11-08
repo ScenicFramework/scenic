@@ -10,26 +10,22 @@ defmodule Scenic.ViewPort.InputTest do
   doctest Scenic
   alias Scenic.ViewPort.Input
 
-#  import IEx
+  import IEx
 
   @input_registry     :input_registry
-
+  @driver_registry    :driver_registry
 
   # test helper functions
 
   defp prepare_registry() do
-    cleanup_registry()
-  end
-
-  defp cleanup_registry() do
+    Registry.start_link(:duplicate, @input_registry)
+    Registry.start_link(:duplicate, @driver_registry)
+    Process.sleep(10)
   end
 
   defp confirm_registration( type ) do
-    case Registry.lookup(@input_registry, type) do
-      [] -> false
-      [{_,input_pid}] -> input_pid == self()
-      _  -> false
-    end
+    keys = Registry.keys(@input_registry, self())
+    Enum.member?(keys, type)
   end
 
   #============================================================================
@@ -49,21 +45,21 @@ defmodule Scenic.ViewPort.InputTest do
 
   test "register input sets up to receive multiple input types" do
     prepare_registry()
-    Input.register_input( [:key, :mouse_down, :codepoint] )
+    Input.register_input( [:key, :mouse_button, :codepoint] )
     assert confirm_registration( :key )
-    assert confirm_registration( :mouse_down )
+    assert confirm_registration( :mouse_button )
     assert confirm_registration( :codepoint )
   end
 
   test "register input sets up to receive all input types" do
     prepare_registry()
-    Input.register_input( [:key, :mouse_down, :codepoint] )
+    Input.register_input( [:key, :mouse_button, :codepoint] )
     assert confirm_registration( :key )
     assert confirm_registration( :codepoint )
-    assert confirm_registration( :mouse_move )
+    refute confirm_registration( :mouse_move )
     assert confirm_registration( :mouse_button )
-    assert confirm_registration( :mouse_scroll )
-    assert confirm_registration( :mouse_enter )
+    refute confirm_registration( :mouse_scroll )
+    refute confirm_registration( :mouse_enter )
   end
 
   test "register input raises on invalid input type" do
@@ -73,9 +69,26 @@ defmodule Scenic.ViewPort.InputTest do
     end
   end
 
-  test "register sends updated flags to the driver"
+  test "register the multiple times does not create multiple entries" do
+    prepare_registry()
+    Input.register_input( :key )
+    Input.register_input( :key )
+    assert Registry.keys(@input_registry, self()) == [:key]
+  end
 
-  test "register the multiple times does not create multiple entries"
+  test "register sends updated flags to the driver on set multiple" do
+    prepare_registry()
+    # register to receive driver messages
+    {:ok, _} = Registry.register(@driver_registry, :driver_cast,  :driver_cast )
+
+    # register for the input
+    Input.register_input( [:key, :mouse_move] )
+
+    # confirm a driver update message was sent
+    assert false
+  end
+
+
 
   #============================================================================
   # unregister input
@@ -97,9 +110,9 @@ defmodule Scenic.ViewPort.InputTest do
   test "unregister stops receiving multiple input types" do
     prepare_registry()
     Input.register_input( :all )
-    Input.unregister_input( [:key, :mouse_down, :codepoint] )
+    Input.unregister_input( [:key, :mouse_button, :codepoint] )
     refute confirm_registration( :key )
-    refute confirm_registration( :mouse_down )
+    refute confirm_registration( :mouse_button )
     refute confirm_registration( :codepoint )
   end
 
