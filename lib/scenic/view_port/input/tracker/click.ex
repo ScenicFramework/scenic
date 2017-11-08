@@ -24,11 +24,20 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
   def start( target_button, target_id, valid_uids, scene_pid \\ nil )
   def start( tb, tid, udis, nil ), do: start( tb, tid, udis, self() )
   def start( target_button, target_id, valid_uids, scene_pid ) do
-    state = {
-      scene_pid,
-      target_id,
-      valid_uids,
-      target_button
+
+    # doing this so that tests can "mock" out the uid_fn and stop_fn
+    # may also be nice in the future...
+    # YES! this feels hacky. but I'm open to suggestions...
+    uid_fn  = fn(pos) -> Scene.find_by_screen_pos(pos, scene_pid) end
+    stop_fn = fn() -> Input.Tracker.stop() end 
+
+    state = %{
+      scene_pid:      scene_pid,
+      target_id:      target_id,
+      valid_uids:     valid_uids,
+      target_button:  target_button,
+      uid_fn:         uid_fn,
+      stop_fn:        stop_fn
     }
     Input.Tracker.start({__MODULE__,[]}, state)
   end
@@ -42,8 +51,8 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
 
   #--------------------------------------------------------
   # bit of a cheat going straight for the release code of 0, but hey...
-  def handle_input({:mouse_button, btn, :release, _, pos}, state) do
-    do_handle_input(btn, pos, state)
+  def handle_input({:mouse_button, btn, action, _, pos}, state) do
+    do_handle_input(btn, pos, action, state)
   end
 
   def handle_input(msg, state) do
@@ -52,14 +61,22 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
 
 
   #--------------------------------------------------------
-  defp do_handle_input(btn, pos, { pid, id, uids, t_btn } = state) when btn == t_btn do
+  defp do_handle_input(btn, pos, :release, %{
+      scene_pid:      scene_pid,
+      target_id:      target_id,
+      valid_uids:     valid_uids,
+      target_button:  target_button,
+      uid_fn:         uid_fn,
+      stop_fn:        stop_fn
+    } = state) when btn == target_button do
+
     # find the uid the button is over
-    uid = Scene.find_by_screen_pos(pos, pid)
+    uid = uid_fn.(pos)
 
     # if the found uid is in the valid uid list, then send the click message note
     # that it is OK to have nil in the list if you want to click on the background
-    if Enum.member?(uids, uid) do
-      GenServer.cast(pid, {:input_uid, {:click, id, pos}, uid})
+    if Enum.member?(valid_uids, uid) do
+      GenServer.cast(scene_pid, {:input_uid, {:click, target_id, pos}, uid})
     end
 
     # not enough to let the registry just catch that this process is going away.
@@ -68,13 +85,21 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
     Input.unregister_input( :mouse_button )
 
     # tear down this process - no longer needed
-    #Process.exit(self(), :normal)
-    Input.Tracker.stop()
+    stop_fn.()
 
     {:noreply, state}
   end
 
-  defp do_handle_input(_, _, state), do: {:noreply, state}
+  defp do_handle_input(btn, _, _, %{stop_fn: stop_fn, target_button: t_btn} = state)
+  when btn == t_btn do
+    # tear down this process - no longer needed
+    stop_fn.()
+    {:noreply, state}
+  end
+
+  defp do_handle_input(_, _, _, state) do
+    {:noreply, state}
+  end
 
 
 end

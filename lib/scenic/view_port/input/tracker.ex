@@ -9,7 +9,7 @@ defmodule Scenic.ViewPort.Input.Tracker do
   alias Scenic.ViewPort.Input
   require Logger
 
-#  import IEx
+  import IEx
 
   @tracker_supervisor   :trackers
 
