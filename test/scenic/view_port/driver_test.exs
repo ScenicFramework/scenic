@@ -78,8 +78,4 @@ defmodule Scenic.ViewPort.DriverTest do
     assert_receive( {:"$gen_cast", {:driver_cast, :test_message}}  )
   end
 
-
-
-
-
 end
