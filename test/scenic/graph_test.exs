@@ -14,8 +14,6 @@ defmodule Scenic.GraphTest do
   alias Scenic.Primitive.Text
   alias Scenic.Primitive.Rectangle
   alias Scenic.Primitive.Line
-#  alias Scenic.Template.Button
-#  alias Scenic.Primitive.Transform
 
 #  import IEx
   
@@ -42,7 +40,6 @@ defmodule Scenic.GraphTest do
   @graph_find       Graph.build()
     |> Text.add_to_graph( {{10,10}, "Some sample text"}, id: :outer_text, tags: ["outer", "text", :text_atom, :on_root] )
     |> Line.add_to_graph( {{10,10}, {100, 100}}, id: :outer_line, tags: ["outer", "line"] )
-#    |> Button.add_to_graph( {{10,10},"Continue"}, id: :outer_btn, tags: ["outer"] )
     |> Group.add_to_graph( fn(g) ->
       g
       |> Text.add_to_graph({{10,10}, "inner text"}, id: :inner_text, tags: ["inner", "text", :text_atom])
