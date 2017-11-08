@@ -18,7 +18,7 @@ defmodule Scenic.ViewPort.Input.TrackerTest do
   }
 
   #============================================================================
-  # faux tracker mod callbacks
+  # faux mod callbacks
   def init( opts ) do
     assert opts == [1,2,3]
     {:ok, :init_state}
@@ -43,8 +43,8 @@ defmodule Scenic.ViewPort.Input.TrackerTest do
   #============================================================================
 
   #--------------------------------------------------------
-  # input
-  test "input works and lets the module set up it's data" do
+  # init
+  test "init works and lets the module set up it's data" do
     {:ok, state} = Tracker.init( {__MODULE__, [1,2,3]} )
     assert state == %{
       tracker_module:  __MODULE__,

@@ -21,6 +21,11 @@ defmodule Scenic.ViewPort.Driver do
   @driver_registry    :driver_registry
 
   #===========================================================================
+  defmodule Error do
+    defexception [ message: nil ]
+  end
+
+  #===========================================================================
   # generic apis for sending a message to the drivers
 
   #----------------------------------------------
@@ -119,15 +124,16 @@ defmodule Scenic.ViewPort.Driver do
       sync_interval:  nil
     }
 
-    # get the sync_interval to use
-
-    state = case (opts[:sync_interval] || module.default_sync_interval()) do
+    # set up the sync timing
+    state = case opts[:sync_interval] do
       nil -> state
-      interval -> 
+      interval when is_integer(interval) and (interval > 0) -> 
+        {:ok, timer} = :timer.send_interval(interval, @sync_message)
         state
         |> Map.put( :sync_interval, interval )
         |> Map.put( :last_msg, :os.system_time(:millisecond) )
-        |> Map.put( :timer, :timer.send_interval(interval, @sync_message) )
+        |> Map.put( :timer, timer )
+      _ -> raise Error, message: "Invalid interval. Must be a positive integer."
     end
 
     {:ok, state}
