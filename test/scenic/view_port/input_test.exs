@@ -12,12 +12,117 @@ defmodule Scenic.ViewPort.InputTest do
 
 #  import IEx
 
+  @input_registry     :input_registry
+
+
+  # test helper functions
+
+  defp prepare_registry() do
+    cleanup_registry()
+  end
+
+  defp cleanup_registry() do
+  end
+
+  defp confirm_registration( type ) do
+    case Registry.lookup(@input_registry, type) do
+      [] -> false
+      [{_,input_pid}] -> input_pid == self()
+      _  -> false
+    end
+  end
+
   #============================================================================
-  # test helpers
+  # register input
 
-#  defp set_up_registry() do
-#  end
+  test "register input sets up to receive an input type" do
+    prepare_registry()
+    Input.register_input( :key )
+    assert confirm_registration( :key )
+  end
 
+  test "register input treats :char the same as :codepoint" do
+    prepare_registry()
+    Input.register_input( :char )
+    assert confirm_registration( :codepoint )
+  end
+
+  test "register input sets up to receive multiple input types" do
+    prepare_registry()
+    Input.register_input( [:key, :mouse_down, :codepoint] )
+    assert confirm_registration( :key )
+    assert confirm_registration( :mouse_down )
+    assert confirm_registration( :codepoint )
+  end
+
+  test "register input sets up to receive all input types" do
+    prepare_registry()
+    Input.register_input( [:key, :mouse_down, :codepoint] )
+    assert confirm_registration( :key )
+    assert confirm_registration( :codepoint )
+    assert confirm_registration( :mouse_move )
+    assert confirm_registration( :mouse_button )
+    assert confirm_registration( :mouse_scroll )
+    assert confirm_registration( :mouse_enter )
+  end
+
+  test "register input raises on invalid input type" do
+    prepare_registry()
+    assert_raise Input.Error, fn ->
+      Input.register_input( :banana )
+    end
+  end
+
+  test "register sends updated flags to the driver"
+
+  test "register the multiple times does not create multiple entries"
+
+  #============================================================================
+  # unregister input
+
+  test "unregister stops receiving an input type" do
+    prepare_registry()
+    Input.register_input( :key )
+    Input.unregister_input( :key )
+    refute confirm_registration( :key )
+  end
+
+  test "unregister input treats :char the same as :codepoint" do
+    prepare_registry()
+    Input.register_input( :codepoint )
+    Input.unregister_input( :char )
+    refute confirm_registration( :codepoint )
+  end
+
+  test "unregister stops receiving multiple input types" do
+    prepare_registry()
+    Input.register_input( :all )
+    Input.unregister_input( [:key, :mouse_down, :codepoint] )
+    refute confirm_registration( :key )
+    refute confirm_registration( :mouse_down )
+    refute confirm_registration( :codepoint )
+  end
+
+  test "unregister stops receiving all input types" do
+    prepare_registry()
+    Input.register_input( :all )
+    Input.unregister_input( :all )
+    refute confirm_registration( :key )
+    refute confirm_registration( :codepoint )
+    refute confirm_registration( :mouse_move )
+    refute confirm_registration( :mouse_button )
+    refute confirm_registration( :mouse_scroll )
+    refute confirm_registration( :mouse_enter )
+  end
+
+  test "unregister raises on invalid input type" do
+    prepare_registry()
+    assert_raise Input.Error, fn ->
+      Input.unregister_input( :banana )
+    end
+  end
+
+  test "unregister sends updated flags to the driver"
 
 
   #============================================================================
