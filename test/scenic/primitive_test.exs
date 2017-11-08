@@ -278,9 +278,6 @@ defmodule Scenic.PrimitiveTest do
   end
 
 
-  test "calculate_transforms re-calculates both the local and inverse transforms"
-
-
   test "calculate_transforms deletes existing local_tx and inverse_tx if transforms is now empty or nil" do
     p = Primitive.calculate_transforms( @primitive, @identity )
     assert Map.get(p, :local_tx)

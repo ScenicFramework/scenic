@@ -287,8 +287,7 @@ defmodule Scenic.ViewPort.Input do
   def key_to_atom( 348 ),   do: :menu
 
   def key_to_atom( key ) do
-    IO.puts "Unknown key: #{inspect(key)}"
-    :unknown
+    raise Error, message: "Unknown key: #{inspect(key)}"
   end
 
 
@@ -308,13 +307,16 @@ defmodule Scenic.ViewPort.Input do
   ]
 
   def mods_to_atoms( key_mods )
-  def mods_to_atoms( key_mods ) do
-    Enum.reduce(@key_mods, [], fn({mask,mod_atom}, acc) ->
-      case Bitwise.band(mask, key_mods) do
-        0 -> acc
-        _ -> [mod_atom | acc]
-      end
+  def mods_to_atoms( key_mods ) when is_integer(key_mods) do
+    Enum.reduce(@key_mods, [], fn({mask,mod_atom}, acc) -> 
+        case Bitwise.band(mask, key_mods) do
+          0 -> acc
+          _ -> [mod_atom | acc]
+        end
     end)
+  end
+  def mods_to_atoms( mods ) do
+    raise Error, message: "Unknown mods: #{inspect(mods)}"
   end
 
   #--------------------------------------------------------
@@ -346,7 +348,7 @@ defmodule Scenic.ViewPort.Input do
   def input_type_to_flags( :mouse_scroll ),   do: 0x0010
   def input_type_to_flags( :mouse_enter ),    do: 0x0020
   def input_type_to_flags( :all ),            do: 0xFFFF
-  def input_type_to_flags( type ), do: raise "Driver.Glfw Unknown input type: #{inspect(type)}"
+  def input_type_to_flags( type ), do: raise Error, message: "Unknown input type: #{inspect(type)}"
 
 
 
