@@ -7,14 +7,9 @@ defmodule Scenic.ViewPort do
   use GenServer
   alias Scenic.Graph
 
-
-  import IEx
+#  import IEx
 
   @name                 :view_port
-
-  @context_table        :vp_context_tracking_table
-  @context              :context
-  @error_bad_context    :error_bad_context
 
   @viewport_registry    :viewport_registry
 
@@ -59,7 +54,7 @@ defmodule Scenic.ViewPort do
   def current_scene() do
     case Registry.lookup(@viewport_registry, :graph_reset) do
       [] -> nil
-      [{pid,current_scene_pid}] -> current_scene_pid
+      [{_,current_scene_pid}] -> current_scene_pid
       _  -> nil
     end
   end
@@ -79,8 +74,6 @@ defmodule Scenic.ViewPort do
     end
   end
 
-
-
   #============================================================================
   # setup the viewport
 
@@ -88,7 +81,7 @@ defmodule Scenic.ViewPort do
     GenServer.start_link(__MODULE__, sup, name: @name)
   end
 
-  def init( supervisor ) do
+  def init( _ ) do
     {:ok, nil}
   end
 

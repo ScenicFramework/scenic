@@ -7,13 +7,10 @@
 defmodule Scenic.ViewPort.Input.Tracker do
   use GenServer
   alias Scenic.ViewPort.Input
-
   require Logger
-#  alias Scenic.ViewPort
 
-  import IEx
+#  import IEx
 
-#  @input_registry     :input_registry
   @tracker_supervisor   :trackers
 
 
@@ -63,7 +60,7 @@ defmodule Scenic.ViewPort.Input.Tracker do
 
   #--------------------------------------------------------
   def start( mod_opts, tracker_opts ) do
-    {:ok, agent1} = Supervisor.start_child(@tracker_supervisor, [mod_opts, tracker_opts])
+    {:ok, _} = Supervisor.start_child(@tracker_supervisor, [mod_opts, tracker_opts])
     :ok
   end
 
@@ -109,7 +106,7 @@ defmodule Scenic.ViewPort.Input.Tracker do
 
   #--------------------------------------------------------
   # input
-  def handle_cast({:input, {type, data} = input},
+  def handle_cast({:input, input},
   %{tracker_module: mod, tracker_state: d_state} = state) do
     input = Input.normalize( input )
     { :noreply, d_state } = mod.handle_input( input, d_state )

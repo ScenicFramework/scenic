@@ -16,12 +16,10 @@ defmodule Scenic.Scene do
   alias Scenic.Primitive
   require Logger
 
-  import IEx
+#  import IEx
 
   @callback init( any ) :: {:ok, any}
   @callback init_graph(any) :: {:ok, map, any}
-
-  @viewport_registry    :viewport_registry
 
   #===========================================================================
   # calls for setting up a scene inside of a supervisor

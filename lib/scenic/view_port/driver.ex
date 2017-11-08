@@ -11,16 +11,13 @@
 
 defmodule Scenic.ViewPort.Driver do
   use GenServer
-
   require Logger
-#  alias Scenic.ViewPort
 
-  import IEx
+#  import IEx
 
   @sync_message       :timer_sync
 
   @driver_registry    :driver_registry
-  @input_registry     :input_registry
   @viewport_registry  :viewport_registry
 
   #===========================================================================

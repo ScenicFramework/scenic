@@ -13,7 +13,7 @@ defmodule Scenic.ViewPort.Input do
   require Logger
   alias Scenic.ViewPort
 
-  import IEx
+ # import IEx
 
   @valid_input_types  [
     :key,
@@ -346,11 +346,7 @@ defmodule Scenic.ViewPort.Input do
   def input_type_to_flags( :mouse_scroll ),   do: 0x0010
   def input_type_to_flags( :mouse_enter ),    do: 0x0020
   def input_type_to_flags( :all ),            do: 0xFFFF
-#  def input_type_to_flags( :none ),                 do: 0x0000
-#  def input_type_to_flags( :input_none ),           do: 0x0000
   def input_type_to_flags( type ), do: raise "Driver.Glfw Unknown input type: #{inspect(type)}"
-
-
 
 
 
