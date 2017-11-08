@@ -10,17 +10,16 @@ defmodule Scenic.ViewPort.InputTest do
   doctest Scenic
   alias Scenic.ViewPort.Input
 
-  import IEx
+#  import IEx
 
   @input_registry     :input_registry
   @driver_registry    :driver_registry
 
   # test helper functions
 
-  defp prepare_registry() do
-    Registry.start_link(:duplicate, @input_registry)
-    Registry.start_link(:duplicate, @driver_registry)
-    Process.sleep(10)
+  defp verify_registries() do
+    assert Registry.keys(@input_registry, self()) == []
+    assert Registry.keys(@driver_registry, self()) == []
   end
 
   defp confirm_registration( type ) do
@@ -32,19 +31,19 @@ defmodule Scenic.ViewPort.InputTest do
   # register input
 
   test "register input sets up to receive an input type" do
-    prepare_registry()
+    verify_registries()
     Input.register_input( :key )
     assert confirm_registration( :key )
   end
 
   test "register input treats :char the same as :codepoint" do
-    prepare_registry()
+    verify_registries()
     Input.register_input( :char )
     assert confirm_registration( :codepoint )
   end
 
   test "register input sets up to receive multiple input types" do
-    prepare_registry()
+    verify_registries()
     Input.register_input( [:key, :mouse_button, :codepoint] )
     assert confirm_registration( :key )
     assert confirm_registration( :mouse_button )
@@ -52,7 +51,7 @@ defmodule Scenic.ViewPort.InputTest do
   end
 
   test "register input sets up to receive all input types" do
-    prepare_registry()
+    verify_registries()
     Input.register_input( [:key, :mouse_button, :codepoint] )
     assert confirm_registration( :key )
     assert confirm_registration( :codepoint )
@@ -63,21 +62,33 @@ defmodule Scenic.ViewPort.InputTest do
   end
 
   test "register input raises on invalid input type" do
-    prepare_registry()
+    verify_registries()
     assert_raise Input.Error, fn ->
       Input.register_input( :banana )
     end
   end
 
   test "register the multiple times does not create multiple entries" do
-    prepare_registry()
+    verify_registries()
     Input.register_input( :key )
     Input.register_input( :key )
     assert Registry.keys(@input_registry, self()) == [:key]
   end
 
+  test "register sends updated flags to the driver on set one" do
+    verify_registries()
+    # register to receive driver messages
+    {:ok, _} = Registry.register(@driver_registry, :driver_cast,  :driver_cast )
+
+    # register for the input
+    Input.register_input( :key )
+
+    # confirm a driver update message was sent
+    assert_received( {:"$gen_cast", {:driver_cast, {:request_input, 0x0001}}}  )
+  end
+
   test "register sends updated flags to the driver on set multiple" do
-    prepare_registry()
+    verify_registries()
     # register to receive driver messages
     {:ok, _} = Registry.register(@driver_registry, :driver_cast,  :driver_cast )
 
@@ -85,7 +96,19 @@ defmodule Scenic.ViewPort.InputTest do
     Input.register_input( [:key, :mouse_move] )
 
     # confirm a driver update message was sent
-    assert false
+    assert_received( {:"$gen_cast", {:driver_cast, {:request_input, 5}}}  )
+  end
+
+  test "register sends updated flags to the driver on set all" do
+    verify_registries()
+    # register to receive driver messages
+    {:ok, _} = Registry.register(@driver_registry, :driver_cast,  :driver_cast )
+
+    # register for the input
+    Input.register_input( :all )
+
+    # confirm a driver update message was sent
+    assert_received( {:"$gen_cast", {:driver_cast, {:request_input, 63}}}  )
   end
 
 
@@ -94,21 +117,21 @@ defmodule Scenic.ViewPort.InputTest do
   # unregister input
 
   test "unregister stops receiving an input type" do
-    prepare_registry()
+    verify_registries()
     Input.register_input( :key )
     Input.unregister_input( :key )
     refute confirm_registration( :key )
   end
 
   test "unregister input treats :char the same as :codepoint" do
-    prepare_registry()
+    verify_registries()
     Input.register_input( :codepoint )
     Input.unregister_input( :char )
     refute confirm_registration( :codepoint )
   end
 
   test "unregister stops receiving multiple input types" do
-    prepare_registry()
+    verify_registries()
     Input.register_input( :all )
     Input.unregister_input( [:key, :mouse_button, :codepoint] )
     refute confirm_registration( :key )
@@ -117,7 +140,7 @@ defmodule Scenic.ViewPort.InputTest do
   end
 
   test "unregister stops receiving all input types" do
-    prepare_registry()
+    verify_registries()
     Input.register_input( :all )
     Input.unregister_input( :all )
     refute confirm_registration( :key )
@@ -129,13 +152,50 @@ defmodule Scenic.ViewPort.InputTest do
   end
 
   test "unregister raises on invalid input type" do
-    prepare_registry()
+    verify_registries()
     assert_raise Input.Error, fn ->
       Input.unregister_input( :banana )
     end
   end
 
-  test "unregister sends updated flags to the driver"
+  test "unregister sends updated flags to the driver on set one" do
+    verify_registries()
+    # register to receive driver messages
+    {:ok, _} = Registry.register(@driver_registry, :driver_cast,  :driver_cast )
+
+    # register for the input
+    Input.register_input( :key )
+    Input.unregister_input( :key )
+
+    # confirm a driver update message was sent
+    assert_received( {:"$gen_cast", {:driver_cast, {:request_input, 0x0000}}}  )
+  end
+
+  test "unregister sends updated flags to the driver on set multiple" do
+    verify_registries()
+    # register to receive driver messages
+    {:ok, _} = Registry.register(@driver_registry, :driver_cast,  :driver_cast )
+
+    # register for the input
+    Input.register_input( [:key, :mouse_move] )
+    Input.unregister_input( [:key, :mouse_move] )
+
+    # confirm a driver update message was sent
+    assert_received( {:"$gen_cast", {:driver_cast, {:request_input, 0x0000}}}  )
+  end
+
+  test "unregister sends updated flags to the driver on set all" do
+    verify_registries()
+    # register to receive driver messages
+    {:ok, _} = Registry.register(@driver_registry, :driver_cast,  :driver_cast )
+
+    # register for the input
+    Input.register_input( :all )
+    Input.unregister_input( :all )
+
+    # confirm a driver update message was sent
+    assert_received( {:"$gen_cast", {:driver_cast, {:request_input, 0x0000}}}  )
+  end
 
 
   #============================================================================

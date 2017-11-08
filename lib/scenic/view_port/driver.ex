@@ -33,8 +33,8 @@ defmodule Scenic.ViewPort.Driver do
   #----------------------------------------------
   # identify the current, loaded drivers
   def identify() do
-    Registry.match(@driver_registry, :set_graph, :_)
-    |> Enum.reduce( [], fn({pid, {mod,_}},acc) -> [{mod, pid} | acc] end)
+    Registry.match(@driver_registry, :identify, :_)
+    |> Enum.reduce( [], fn({pid, mod_opts},acc) -> [{mod_opts, pid} | acc] end)
   end
 
   def cast( message ) do
@@ -107,6 +107,7 @@ defmodule Scenic.ViewPort.Driver do
     {:ok, _} = Registry.register(:driver_registry, :set_graph,    {module, :set_graph} )
     {:ok, _} = Registry.register(:driver_registry, :update_graph, {module, :update_graph} )
     {:ok, _} = Registry.register(:driver_registry, :driver_cast,  :driver_cast )
+    {:ok, _} = Registry.register(:driver_registry, :identify,     {module, opts} )
 
     # let the driver initialize itself
     {:ok, driver_state} = module.init( opts )
