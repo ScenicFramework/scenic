@@ -12,13 +12,13 @@
 defmodule Scenic.ViewPort.Driver do
   use GenServer
   require Logger
+  alias Scenic.ViewPort
 
 #  import IEx
 
   @sync_message       :timer_sync
-
+  
   @driver_registry    :driver_registry
-  @viewport_registry  :viewport_registry
 
   #===========================================================================
   # generic apis for sending a message to the drivers
@@ -27,8 +27,11 @@ defmodule Scenic.ViewPort.Driver do
   def set_graph( list )    do
     dispatch( :set_graph, list )
   end
-  def update_graph( list ), do: dispatch( :update_graph, list )
 
+  #----------------------------------------------
+  def update_graph( list ) do
+    dispatch( :update_graph, list )
+  end
 
   #----------------------------------------------
   # identify the current, loaded drivers
@@ -38,20 +41,17 @@ defmodule Scenic.ViewPort.Driver do
   end
 
   def cast( message ) do
-#IO.puts "casting to driver: #{inspect(message)}"
     dispatch( :driver_cast, message )
   end
 
+  # client api helpers
   #----------------------------------------------
-  def signal_scene( signal ) do
-    # needs a different dispatcher than sending a message to the driver.
-    # there is only one current scene, and that is in the viewport_registry
-
+  defp dispatch( action, data ) do
     # dispatch the call to any listening drivers
-    Registry.dispatch(@viewport_registry, signal, fn(entries) ->
-      for {_vp_pid, scene_pid} <- entries do
+    Registry.dispatch(@driver_registry, action, fn(entries) ->
+      for {pid, msg} <- entries do
         try do
-          GenServer.cast(scene_pid, signal)
+          GenServer.cast(pid, {msg, data})
         catch
           kind, reason ->
             formatted = Exception.format(kind, reason, System.stacktrace)
@@ -59,6 +59,7 @@ defmodule Scenic.ViewPort.Driver do
         end
       end
     end)
+    :ok
   end
 
 
@@ -202,7 +203,7 @@ defmodule Scenic.ViewPort.Driver do
     cur_time = :os.system_time(:millisecond)
     case (cur_time - last_msg) > sync_interval do
       true  ->
-        signal_scene( :graph_update )
+        ViewPort.signal_scene( :graph_update )
         { :noreply, d_state } = mod.handle_cast( :sync, d_state )
         { :noreply, Map.put(state, :driver_state, d_state) }
       false ->
@@ -218,24 +219,6 @@ defmodule Scenic.ViewPort.Driver do
     { :noreply, Map.put(state, :driver_state, d_state) }
   end
 
-  # helpers
-
-  #----------------------------------------------
-  defp dispatch( action, data ) do
-    # dispatch the call to any listening drivers
-    Registry.dispatch(@driver_registry, action, fn(entries) ->
-      for {pid, msg} <- entries do
-        try do
-          GenServer.cast(pid, {msg, data})
-        catch
-          kind, reason ->
-            formatted = Exception.format(kind, reason, System.stacktrace)
-            Logger.error "Registry.dispatch/3 failed with #{formatted}"
-        end
-      end
-    end)
-    :ok
-  end
 
 
 end

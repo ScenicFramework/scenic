@@ -13,13 +13,9 @@ defmodule Scenic.ViewPort.DriverTest do
 
 #  import IEx
 
-#  @input_registry     :input_registry
   @driver_registry    :driver_registry
-  @viewport_registry  :viewport_registry
-
 
   defp verify_registries() do
-    assert Registry.keys(@viewport_registry, self()) == []
     assert Registry.keys(@driver_registry, self()) == []
   end
 

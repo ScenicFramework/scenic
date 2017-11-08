@@ -6,7 +6,7 @@
 defmodule Scenic.ViewPort do
   use GenServer
   alias Scenic.Graph
-
+require Logger
 #  import IEx
 
   @name                 :view_port
@@ -72,6 +72,26 @@ defmodule Scenic.ViewPort do
       [{_,current_scene_pid}] -> current_scene_pid == scene_pid
       _  -> false
     end
+  end
+
+
+  #----------------------------------------------
+  def signal_scene( signal ) do
+    # needs a different dispatcher than sending a message to the driver.
+    # there is only one current scene, and that is in the viewport_registry
+
+    # dispatch the call to any listening drivers
+    Registry.dispatch(@viewport_registry, signal, fn(entries) ->
+      for {_vp_pid, scene_pid} <- entries do
+        try do
+          GenServer.cast(scene_pid, signal)
+        catch
+          kind, reason ->
+            formatted = Exception.format(kind, reason, System.stacktrace)
+            Logger.error "Registry.dispatch/3 failed with #{formatted}"
+        end
+      end
+    end)
   end
 
   #============================================================================
