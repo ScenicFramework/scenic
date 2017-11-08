@@ -9,7 +9,6 @@ defmodule Scenic.ViewPort.DriverTest do
   use Bitwise
   doctest Scenic
   alias Scenic.ViewPort.Driver
-  alias Scenic.ViewPort.DriverTest
 
 #  import IEx
 
@@ -26,13 +25,13 @@ defmodule Scenic.ViewPort.DriverTest do
   test "set_graph sends a list to the driver" do
     verify_registries()
     # register to receive :set_graph calls
-    {:ok, _} = Registry.register(:driver_registry, :set_graph, {__MODULE__, :set_graph} )
+    {:ok, _} = Registry.register(:driver_registry, :set_graph, :set_graph )
 
     # set a graph (list)
     Driver.set_graph( [1,2,3] )
 
     # make sure it was sent
-    assert_received( {:"$gen_cast", {{DriverTest, :set_graph}, [1, 2, 3]}}  )
+    assert_receive( {:"$gen_cast", {:set_graph, [1, 2, 3]}}  )
   end
 
 
@@ -42,13 +41,13 @@ defmodule Scenic.ViewPort.DriverTest do
   test "update_graph sends a list to the driver" do
     verify_registries()
     # register to receive :set_graph calls
-    {:ok, _} = Registry.register(:driver_registry, :update_graph, {__MODULE__, :update_graph} )
+    {:ok, _} = Registry.register(:driver_registry, :update_graph, :update_graph )
 
     # set a graph (list)
     Driver.update_graph( [1,2,3] )
 
     # make sure it was sent
-    assert_received( {:"$gen_cast", {{DriverTest, :update_graph}, [1, 2, 3]}}  )
+    assert_receive( {:"$gen_cast", {:update_graph, [1, 2, 3]}}  )
   end
 
 
@@ -76,7 +75,7 @@ defmodule Scenic.ViewPort.DriverTest do
     Driver.cast( :test_message )
 
     # make sure it was sent
-    assert_received( {:"$gen_cast", {:driver_cast, :test_message}}  )
+    assert_receive( {:"$gen_cast", {:driver_cast, :test_message}}  )
   end
 
 

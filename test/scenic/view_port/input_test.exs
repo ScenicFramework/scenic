@@ -84,7 +84,7 @@ defmodule Scenic.ViewPort.InputTest do
     Input.register_input( :key )
 
     # confirm a driver update message was sent
-    assert_received( {:"$gen_cast", {:driver_cast, {:request_input, 0x0001}}}  )
+    assert_receive( {:"$gen_cast", {:driver_cast, {:request_input, 0x0001}}}  )
   end
 
   test "register sends updated flags to the driver on set multiple" do
@@ -96,7 +96,7 @@ defmodule Scenic.ViewPort.InputTest do
     Input.register_input( [:key, :mouse_move] )
 
     # confirm a driver update message was sent
-    assert_received( {:"$gen_cast", {:driver_cast, {:request_input, 5}}}  )
+    assert_receive( {:"$gen_cast", {:driver_cast, {:request_input, 5}}}  )
   end
 
   test "register sends updated flags to the driver on set all" do
@@ -108,7 +108,7 @@ defmodule Scenic.ViewPort.InputTest do
     Input.register_input( :all )
 
     # confirm a driver update message was sent
-    assert_received( {:"$gen_cast", {:driver_cast, {:request_input, 63}}}  )
+    assert_receive( {:"$gen_cast", {:driver_cast, {:request_input, 63}}}  )
   end
 
 
@@ -165,10 +165,11 @@ defmodule Scenic.ViewPort.InputTest do
 
     # register for the input
     Input.register_input( :key )
+    Process.sleep(10)
     Input.unregister_input( :key )
 
     # confirm a driver update message was sent
-    assert_received( {:"$gen_cast", {:driver_cast, {:request_input, 0x0000}}}  )
+    assert_receive( {:"$gen_cast", {:driver_cast, {:request_input, 0x0000}}}  )
   end
 
   test "unregister sends updated flags to the driver on set multiple" do
@@ -178,10 +179,11 @@ defmodule Scenic.ViewPort.InputTest do
 
     # register for the input
     Input.register_input( [:key, :mouse_move] )
+    Process.sleep(10)
     Input.unregister_input( [:key, :mouse_move] )
 
     # confirm a driver update message was sent
-    assert_received( {:"$gen_cast", {:driver_cast, {:request_input, 0x0000}}}  )
+    assert_receive( {:"$gen_cast", {:driver_cast, {:request_input, 0x0000}}}  )
   end
 
   test "unregister sends updated flags to the driver on set all" do
@@ -191,10 +193,11 @@ defmodule Scenic.ViewPort.InputTest do
 
     # register for the input
     Input.register_input( :all )
+    Process.sleep(10)
     Input.unregister_input( :all )
 
     # confirm a driver update message was sent
-    assert_received( {:"$gen_cast", {:driver_cast, {:request_input, 0x0000}}}  )
+    assert_receive( {:"$gen_cast", {:driver_cast, {:request_input, 0x0000}}}  )
   end
 
 

@@ -105,8 +105,8 @@ defmodule Scenic.ViewPort.Driver do
   def init( {module, opts} ) do
 
     # set up the driver with the viewport registry
-    {:ok, _} = Registry.register(:driver_registry, :set_graph,    {module, :set_graph} )
-    {:ok, _} = Registry.register(:driver_registry, :update_graph, {module, :update_graph} )
+    {:ok, _} = Registry.register(:driver_registry, :set_graph,    :set_graph )
+    {:ok, _} = Registry.register(:driver_registry, :update_graph, :update_graph )
     {:ok, _} = Registry.register(:driver_registry, :driver_cast,  :driver_cast )
     {:ok, _} = Registry.register(:driver_registry, :identify,     {module, opts} )
 
