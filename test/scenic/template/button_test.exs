@@ -15,7 +15,7 @@ defmodule Scenic.Template.ButtonTest do
   #============================================================================
   # build / add
   test "build works" do
-    button = Button.build( "Test",  id: :test_button )
+    button = Button.build( {{10,10},"Test"},  id: :test_button )
     assert Graph.count(button) == 3
 
     # check that the input filter is set
