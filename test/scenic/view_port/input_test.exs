@@ -23,8 +23,8 @@ defmodule Scenic.ViewPort.InputTest do
   end
 
   defp confirm_registration( type ) do
-    keys = Registry.keys(@input_registry, self())
-    Enum.member?(keys, type)
+    Registry.keys( @input_registry, self() )
+    |> Enum.member?( type )
   end
 
   #============================================================================
