@@ -202,7 +202,8 @@ defmodule Scenic.Scene do
     graph = Graph.tick_recurring_actions( graph )
 
     # send the graph to the view_port
-    ViewPort.update_graph( graph )
+    Graph.get_delta_scripts( graph )
+    |> ViewPort.update_graph()
 
     # reset the deltas
     graph = Graph.reset_deltas( graph )
@@ -218,8 +219,11 @@ defmodule Scenic.Scene do
   def handle_cast(:graph_reset, %{ graph: graph } = state) do
     # tick any recurring actions
     graph = Graph.tick_recurring_actions( graph )
+
     # reset the viewport with this scene's graph
-    ViewPort.set_graph(graph)
+    Graph.minimal( graph )
+    |> ViewPort.set_graph()
+
     { :noreply, Map.put(state, :graph, graph) }
   end
 

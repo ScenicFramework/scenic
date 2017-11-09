@@ -216,7 +216,8 @@ defmodule Scenic.ViewPort.Driver do
     cur_time = :os.system_time(:millisecond)
     case (cur_time - last_msg) > sync_interval do
       true  ->
-        ViewPort.signal_scene( :graph_update )
+        ViewPort.send_to_scene( :graph_update )
+#        ViewPort.signal_scene( :graph_update )
         { :noreply, d_state } = mod.handle_cast( :sync, d_state )
         { :noreply, Map.put(state, :driver_state, d_state) }
       false ->

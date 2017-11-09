@@ -42,7 +42,7 @@ defmodule Scenic.ViewPort.DriverTest do
 
   test "update_graph sends a list to the driver" do
     verify_registries()
-    # register to receive :set_graph calls
+    # register to receive :update_graph calls
     {:ok, _} = Registry.register(@driver_registry, :update_graph, :update_graph )
 
     # set a graph (list)
@@ -214,7 +214,7 @@ defmodule Scenic.ViewPort.DriverTest do
   
   test "handle_info sync signals the scene" do
     # set up to receive the signal
-    {:ok, _} = Registry.register(@viewport_registry, :graph_update, self() )
+    {:ok, _} = Registry.register(@viewport_registry, :messages, self() )
 
     state = @state
     |> Map.put( :last_msg, 0 )
@@ -228,7 +228,7 @@ defmodule Scenic.ViewPort.DriverTest do
 
   test "handle_info sync does not signal the scene if last_msg is recent" do
     # set up to receive the signal
-    {:ok, _} = Registry.register(@viewport_registry, :graph_update, self() )
+    {:ok, _} = Registry.register(@viewport_registry, :messages, self() )
 
     state = @state
     |> Map.put( :last_msg, :os.system_time(:millisecond) )
