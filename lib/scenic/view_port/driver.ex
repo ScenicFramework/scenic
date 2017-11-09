@@ -14,7 +14,7 @@ defmodule Scenic.ViewPort.Driver do
   require Logger
   alias Scenic.ViewPort
 
-#  import IEx
+  import IEx
 
   @sync_message       :timer_sync
   
@@ -124,8 +124,15 @@ defmodule Scenic.ViewPort.Driver do
       sync_interval:  nil
     }
 
+    # get the correct sync interval
+    interval = case Keyword.get(opts, :sync_interval, :none) do
+      nil      -> nil
+      :none    -> module.default_sync_interval()
+      interval -> interval
+    end
+
     # set up the sync timing
-    state = case opts[:sync_interval] do
+    state = case interval do
       nil -> state
       interval when is_integer(interval) and (interval > 0) -> 
         {:ok, timer} = :timer.send_interval(interval, @sync_message)
@@ -133,7 +140,7 @@ defmodule Scenic.ViewPort.Driver do
         |> Map.put( :sync_interval, interval )
         |> Map.put( :last_msg, :os.system_time(:millisecond) )
         |> Map.put( :timer, timer )
-      _ -> raise Error, message: "Invalid interval. Must be a positive integer."
+      _ -> raise Error, message: "Invalid interval. Must be a positive integer or nil."
     end
 
     {:ok, state}

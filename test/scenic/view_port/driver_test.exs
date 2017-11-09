@@ -115,6 +115,8 @@ defmodule Scenic.ViewPort.DriverTest do
     {:noreply, :handle_info_state}
   end
 
+  def default_sync_interval(), do: 63
+
   @state %{
     driver_module:  __MODULE__,
     driver_state:   :faux_state,
@@ -123,8 +125,17 @@ defmodule Scenic.ViewPort.DriverTest do
 
   #--------------------------------------------------------
   # input
-  test "init accepts a nil sync interval" do
+  test "no sync interval in opts uses the driver's default" do
     {:ok, state} = Driver.init( {__MODULE__, []} )
+    %{
+      driver_module:  __MODULE__,
+      driver_state:   :init_state,
+      sync_interval:  63
+    } = state
+  end
+
+  test "init accepts a nil sync interval" do
+    {:ok, state} = Driver.init( {__MODULE__, [sync_interval: nil]} )
     %{
       driver_module:  __MODULE__,
       driver_state:   :init_state,
