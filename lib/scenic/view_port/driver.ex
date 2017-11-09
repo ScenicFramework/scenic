@@ -72,8 +72,6 @@ defmodule Scenic.ViewPort.Driver do
   # the using macro for scenes adopting this behavioiur
   defmacro __using__(use_opts) do
     quote do
-#      @behaviour Scenic.ViewPort.Driver
-
       def init(_),                        do: {:ok, nil}
 
       def default_sync_interval(),        do: unquote(use_opts[:sync_interval])
@@ -217,14 +215,12 @@ defmodule Scenic.ViewPort.Driver do
     case (cur_time - last_msg) > sync_interval do
       true  ->
         ViewPort.send_to_scene( :graph_update )
-#        ViewPort.signal_scene( :graph_update )
         { :noreply, d_state } = mod.handle_cast( :sync, d_state )
         { :noreply, Map.put(state, :driver_state, d_state) }
       false ->
         { :noreply, state }
     end
   end
-
 
   #--------------------------------------------------------
   # unrecognized message. Let the driver handle it

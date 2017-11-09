@@ -19,11 +19,8 @@ defmodule Scenic.ViewPort.Input.Tracker do
     defexception [ message: nil ]
   end
 
-
   #===========================================================================
   # client apis
-
-
 
   #===========================================================================
   # the using macro for specific trackers to use

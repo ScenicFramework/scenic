@@ -67,14 +67,6 @@ defmodule Scenic.Utilities.Map do
   defp add_difference(diff_list, k1, _, v2, _) do
     [{:put, k1, v2} | diff_list]
   end
-#    # add any puts for keys that have changed between map_2 to map_1
-#    Enum.reduce(map_2, difference, fn({k,v}, d)->
-#      case Map.has_key?(map_1, k) && (Map.get(map_1, k) == v) do
-#        false ->[{:put, k, v} | d]
-#        true ->   d
-#      end
-#    end)
-
 
   #--------------------------------------------------------
   def apply_difference(map, difference, delete_empty \\ false) when is_map(map) and is_list(difference) do

@@ -254,7 +254,6 @@ defmodule Scenic.Graph do
     graph
     |> get_id_map()
     |> Map.get(id, [])
-#    |> Enum.reverse()
   end
 
 
@@ -442,7 +441,6 @@ defmodule Scenic.Graph do
 
   #--------------------------------------------------------
   # main version - force it to be a new item via -1 parent id
-#  def insert_at({{p_map, id_map, next_uid, sm, ul}, parent_uid}, index, {m,str,sty,d}, opts) when is_integer(index) do
   def insert_at({graph, parent_uid}, index, %Primitive{} = p, _opts) when is_integer(index) do
 
     # uid for the new item
@@ -453,8 +451,6 @@ defmodule Scenic.Graph do
     primitive = p
       |> Map.put(:uid, uid)
       |> Map.put(:parent_uid, parent_uid)
-#      |> Primitive.put_parent_uid( parent_uid )
-#      |> Primitive.do_put_uid( uid )
 
     # add the element to the primitives map, setting parent_uid into place
     graph = graph
@@ -910,7 +906,6 @@ defmodule Scenic.Graph do
   # it records the deltas of change for primitives. the idea is to send the minimal
   # amount of information to the view_port (whose rendere may be remote).
 
-
   defp put_delta_base(graph, uid, primitive)
   defp put_delta_base(%Graph{deltas: deltas} = graph, uid, primitive) do
     Map.get(deltas, uid)
@@ -929,7 +924,6 @@ defmodule Scenic.Graph do
 
   def reset_deltas(graph)
   def reset_deltas( %Graph{} = g ),       do: Map.put(g, :deltas, %{})
-
 
   def get_delta_scripts( graph )
   def get_delta_scripts( %Graph{primitive_map: p_map, deltas: deltas} ) do
@@ -950,8 +944,6 @@ defmodule Scenic.Graph do
   def minimal( %Graph{primitive_map: p_map} ) do
     Enum.map(p_map, fn({k,p})-> { k, Primitive.minimal(p) } end)
   end
-
-
 
 
   #============================================================================
@@ -1004,7 +996,6 @@ defmodule Scenic.Graph do
 
   #--------------------------------------------------------
   def get_merged_tx(graph, uid)
-#  def get_merged_tx(_, -1), do: @identity
   def get_merged_tx(graph, uid) do
     case get(graph, uid) do
       nil -> @identity

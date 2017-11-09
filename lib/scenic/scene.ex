@@ -58,8 +58,6 @@ defmodule Scenic.Scene do
 
       #--------------------------------------------------------
       # Here so that the scene can override if desired
-#      def handle_context_lost(graph, state),          do: {:noreply, graph, state}
-      def handle_context_gained(graph, state),        do: {:noreply, graph, state}
  
       def handle_call(_msg, _from, graph, state),     do: {:reply, :err_not_handled, graph, state}
       def handle_cast(_msg, graph, state),            do: {:noreply, graph, state}
@@ -76,7 +74,6 @@ defmodule Scenic.Scene do
         handle_call:            4,
         handle_cast:            3,
         handle_info:            3,
-        handle_context_gained:  2,
         handle_input:           3
       ]
 
