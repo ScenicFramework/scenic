@@ -5,7 +5,7 @@
 
 
 defmodule Scenic.ViewPort.Input.TrackerTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   use Bitwise
   doctest Scenic
   alias Scenic.ViewPort.Input.Tracker
