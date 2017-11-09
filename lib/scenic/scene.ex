@@ -53,7 +53,8 @@ defmodule Scenic.Scene do
 
       #--------------------------------------------------------
       # initialization
-      def init(_),                                        do: {:ok, nil}
+      def init(_),                                    do: {:ok, nil}
+      def init_graph(state),                          do: {:ok, Graph.build(), state}
 
       #--------------------------------------------------------
       # Here so that the scene can override if desired
@@ -104,35 +105,10 @@ defmodule Scenic.Scene do
       scene_module:       module,
       scene_state:        scene_state,
       graph:              graph,
-      vp_context:         nil,
     }
 
     {:ok, state}
   end
-
-
-  #--------------------------------------------------------
-  # if the viewport says the context has lost (probably because it is showing a different scene),
-  # then it sends the scene that is being replaced, the context_lost message
-#  def handle_call({:context_lost, context}, _from,
-#  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-#    # do nothing if this isn't the scene's current context
-#    state
-#    |> is_current_context?( context ) 
-#    |> case do
-#      false -> {:reply, :error_bad_context, state}
-#      true ->
-#        # let the scene know, then clear the context from the state
-#        {:noreply, graph, scene_state} = mod.handle_context_lost( context, graph, scene_state )
-#
-#        state = state
-#        |> Map.put(:vp_context, nil)
-#        |> Map.put(:graph, graph)
-#        |> Map.put(:scene_state, scene_state)
-#
-#        {:reply, :ok, state}
-#    end
-#  end
 
   #--------------------------------------------------------
   # somebody has a screen position and wants an uid for it
@@ -157,31 +133,6 @@ defmodule Scenic.Scene do
 
   #===========================================================================
   # default cast handlers.
-
-
-
-  #--------------------------------------------------------
-  # if the viewport says the context has lost (probably because it is showing a different scene),
-  # then it sends the scene that is being replaced, the context_lost message
-#  def handle_cast(:context_gained, %{scene_module: mod, scene_state: scene_state, graph: graph} = state) do
-#
-#    # tick any recurring actions before rendering
-#    graph = Graph.tick_recurring_actions(graph)
-#
-#    # tell the scene this is happening
-#    {:noreply, graph, scene_state} = mod.handle_context_gained( graph, scene_state )
-#
-#    # save graph, and the scene state
-#    state = state
-#    |> Map.put(:graph, graph)
-#    |> Map.put(:scene_state, scene_state)
-#
-#    # reset the viewport with this scene's graph
-#    ViewPort.set_graph( graph )
-#
-#    # return the transformed state
-#    {:noreply, state}
-#  end
 
   #--------------------------------------------------------
   def handle_cast({:input, event}, %{graph: graph} = state) do
