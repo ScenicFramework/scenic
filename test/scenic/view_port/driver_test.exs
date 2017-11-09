@@ -5,7 +5,7 @@
 
 
 defmodule Scenic.ViewPort.DriverTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   use Bitwise
   doctest Scenic
   alias Scenic.ViewPort.Driver
