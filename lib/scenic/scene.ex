@@ -71,6 +71,7 @@ defmodule Scenic.Scene do
       #--------------------------------------------------------
       defoverridable [
         init:                   1,
+        init_graph:             1,
         handle_call:            4,
         handle_cast:            3,
         handle_info:            3,
