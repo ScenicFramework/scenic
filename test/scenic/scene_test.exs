@@ -130,4 +130,50 @@ defmodule Scenic.SceneTest do
   #============================================================================
   # custom handlers
 
+  #--------------------------------------------------------
+  # handle_call({:find_by_screen_pos, pos}...
+
+  test "call :find_by_screen_pos returns the uid of the object under the point"
+  test "call :find_by_screen_pos returns nil if no object is under the point"
+
+
+  #--------------------------------------------------------
+  # handle_cast(:input...
+
+  test "cast :input prepares and handles the event"
+
+
+  #--------------------------------------------------------
+  # handle_cast(:input_uid...
+
+  test "cast :input_uid handles the event"
+
+
+  #--------------------------------------------------------
+  # handle_cast(:graph_reset...
+
+  test "cast :graph_reset ticks the recurring actions"
+  test "cast :graph_reset sets the graph into the viewport"
+
+  #--------------------------------------------------------
+  # handle_cast(:graph_update...
+
+  test "cast :graph_update ticks the recurring actions"
+  test "cast :graph_update sends deltas to the viewport"
+  test "cast :graph_update resets the delta tracking on the graph"
+
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
