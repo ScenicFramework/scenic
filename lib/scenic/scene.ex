@@ -53,17 +53,18 @@ defmodule Scenic.Scene do
 
       #--------------------------------------------------------
       # initialization
-      def init(_),                                    do: {:ok, nil}
-      def init_graph(state),                          do: {:ok, Graph.build(), state}
+      def init(_),                                      do: {:ok, nil}
+      def init_graph(state),                            do: {:ok, Graph.build(), state}
 
       #--------------------------------------------------------
       # Here so that the scene can override if desired
  
-      def handle_call(_msg, _from, graph, state),     do: {:reply, :err_not_handled, graph, state}
-      def handle_cast(_msg, graph, state),            do: {:noreply, graph, state}
-      def handle_info(_msg, graph, state),            do: {:noreply, graph, state}
+      def handle_call(_msg, _from, graph, state),       do: {:reply, :err_not_handled, graph, state}
+      def handle_cast(_msg, graph, state),              do: {:noreply, graph, state}
+      def handle_info(_msg, graph, state),              do: {:noreply, graph, state}
 
-      def handle_input( event, graph, scene_state ),  do: {:noreply, graph, scene_state}
+      def handle_input( event, graph, scene_state ),    do: {:noreply, graph, scene_state}
+      def handle_focus( _action, graph, scene_state ),  do: {:ok, graph, scene_state}
 
       #--------------------------------------------------------
 #      add local shortcuts to things like get/put graph and modify element
@@ -75,7 +76,8 @@ defmodule Scenic.Scene do
         handle_call:            4,
         handle_cast:            3,
         handle_info:            3,
-        handle_input:           3
+        handle_input:           3,
+        handle_focus:           3
       ]
 
     end # quote
@@ -116,6 +118,48 @@ defmodule Scenic.Scene do
       _ -> nil
     end
     {:reply, uid, state}
+  end
+
+  #--------------------------------------------------------
+  # register this scene for callbacks
+  def handle_call({:register, registry}, _from,
+  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+    {reply, state} = case mod.handle_focus(:gained, graph, scene_state) do
+      {:ok, graph, scene_state} ->
+        Registry.register(registry, :messages, self() )
+        state = state
+        |> Map.put(:graph, graph)
+        |> Map.put(:scene_state, scene_state)
+        {:ok, state}
+      {:cancel, graph, scene_state} ->
+        state = state
+        |> Map.put(:graph, graph)
+        |> Map.put(:scene_state, scene_state)
+        {:cancel, state}
+      _ -> {:err, state}
+    end
+    {:reply, reply, state}
+  end
+
+  #--------------------------------------------------------
+  # unregister this scene for callbacks
+  def handle_call({:unregister, registry}, _from,
+  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+    {reply, state} = case mod.handle_focus(:lost, graph, scene_state) do
+      {:ok, graph, scene_state} ->
+        Registry.unregister(registry, :messages )
+        state = state
+        |> Map.put(:graph, graph)
+        |> Map.put(:scene_state, scene_state)
+        {:ok, state}
+      {:cancel, graph, scene_state} ->
+        state = state
+        |> Map.put(:graph, graph)
+        |> Map.put(:scene_state, scene_state)
+        {:cancel, state}
+      _ -> {:err, state}
+    end
+    {:reply, reply, state}
   end
 
   #--------------------------------------------------------
