@@ -355,7 +355,7 @@ defmodule Scenic.Scene do
 
   #--------------------------------------------------------
   defp do_gain_focus(%{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-    {reply, state} = case mod.focus_gained( graph, scene_state) do
+    case mod.focus_gained( graph, scene_state) do
       {:ok, graph, scene_state} ->
         # register for messages
         Registry.register(@viewport_registry, :messages, self() )
