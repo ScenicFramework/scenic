@@ -566,7 +566,7 @@ defmodule Scenic.Graph do
 
     # add the input in only if there is some to add in
     graph = case input do
-      [] -> graph
+      []    -> Map.delete(graph, :input)
       input -> Map.put(graph, :input, input)
     end
 
