@@ -67,11 +67,9 @@ defmodule Scenic.Scene do
 
       def handle_input( event, graph, scene_state ),    do: {:noreply, graph, scene_state}
       
-      def focus_gained( input, graph, scene_state ) when is_atom(input) do
-        focus_gained( [input], graph, scene_state )
-      end
-      def focus_gained( input_list, graph, scene_state ) when is_list(input_list) do
-        ViewPort.Input.register( input_list )
+      def focus_gained( graph, scene_state ) do
+        Map.get(graph, :input, [])
+        |> ViewPort.Input.register()
         {:ok, graph, scene_state}
       end
 
@@ -91,7 +89,7 @@ defmodule Scenic.Scene do
         handle_cast:            3,
         handle_info:            3,
         handle_input:           3,
-        focus_gained:           3,
+        focus_gained:           2,
         focus_lost:             2
       ]
 
@@ -364,8 +362,7 @@ defmodule Scenic.Scene do
 
   #--------------------------------------------------------
   defp do_gain_focus(%{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-    graph_input = Map.get(graph, :input, [])
-    {reply, state} = case mod.focus_gained( graph_input, graph, scene_state) do
+    {reply, state} = case mod.focus_gained( graph, scene_state) do
       {:ok, graph, scene_state} ->
         # register for messages
         Registry.register(@viewport_registry, :messages, self() )
