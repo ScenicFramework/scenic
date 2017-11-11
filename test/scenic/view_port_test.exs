@@ -16,6 +16,14 @@ defmodule Scenic.ViewPortTest do
 
 
   #============================================================================
+  # set_scene
+  test "set_scene casts a :set_scene to a scene" do
+    ViewPort.set_scene( self() )
+    assert_receive( {:"$gen_cast", :set_scene} )
+  end
+
+
+  #============================================================================
   # set_graph
 
   test "set_graph sends a minimal graph to the drivers" do
@@ -131,44 +139,44 @@ defmodule Scenic.ViewPortTest do
   #============================================================================
   # genserver side
 
-  #--------------------------------------------------------
-  # input
-
-  test "init works, even if it doesn't do anything" do
-    {:ok, nil} = ViewPort.init( :whatever )
-  end
-
-  #--------------------------------------------------------
-  # handle_cast
-  
-  test "handle_cast :set_scene sets the new scene" do
-    ViewPort.handle_cast({:set_scene, self()}, :whatever)
-    assert ViewPort.current_scene?( self() )
-  end
-
-  test "handle_cast :set_scene unregisters the previous scene" do
-    # spin up a simple agent, just to have a not-self process to use
-    {:ok, pid} = Agent.start_link(fn -> 1 + 1 end, name: __MODULE__)
-
-    # set the agent process as the current scene
-    {:ok, _} = Registry.register(@viewport_registry, :messages, pid )
-    assert ViewPort.current_scene?( pid )
-    refute ViewPort.current_scene?( self() )
-
-    ViewPort.handle_cast({:set_scene, self()}, :whatever)
-    refute ViewPort.current_scene?( pid )
-    assert ViewPort.current_scene?( self() )
-    assert_received( {:"$gen_cast", :graph_reset}  )
-
-    # clean up
-    Agent.stop(pid)
-  end
-
-  test "handle_cast :set_scene sends the new scene the :graph_reset message" do
-    ViewPort.handle_cast({:set_scene, self()}, :whatever)
-    assert_received( {:"$gen_cast", :graph_reset}  )
-  end
-
+#  #--------------------------------------------------------
+#  # input
+#
+#  test "init works, even if it doesn't do anything" do
+#    {:ok, nil} = ViewPort.init( :whatever )
+#  end
+#
+#  #--------------------------------------------------------
+#  # handle_cast
+#  
+#  test "handle_cast :set_scene sets the new scene" do
+#    ViewPort.handle_cast({:set_scene, self()}, :whatever)
+#    assert ViewPort.current_scene?( self() )
+#  end
+#
+#  test "handle_cast :set_scene unregisters the previous scene" do
+#    # spin up a simple agent, just to have a not-self process to use
+#    {:ok, pid} = Agent.start_link(fn -> 1 + 1 end, name: __MODULE__)
+#
+#    # set the agent process as the current scene
+#    {:ok, _} = Registry.register(@viewport_registry, :messages, pid )
+#    assert ViewPort.current_scene?( pid )
+#    refute ViewPort.current_scene?( self() )
+#
+#    ViewPort.handle_cast({:set_scene, self()}, :whatever)
+#    refute ViewPort.current_scene?( pid )
+#    assert ViewPort.current_scene?( self() )
+#    assert_received( {:"$gen_cast", :graph_reset}  )
+#
+#    # clean up
+#    Agent.stop(pid)
+#  end
+#
+#  test "handle_cast :set_scene sends the new scene the :graph_reset message" do
+#    ViewPort.handle_cast({:set_scene, self()}, :whatever)
+#    assert_received( {:"$gen_cast", :graph_reset}  )
+#  end
+#
 end
 
 

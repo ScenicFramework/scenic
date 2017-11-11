@@ -7,12 +7,13 @@
 defmodule Scenic.SceneTest do
   use ExUnit.Case, async: false
   doctest Scenic
+  alias Scenic.ViewPort
   alias Scenic.Scene
   alias Scenic.Animation
   alias Scenic.Graph
   alias Scenic.Primitive
 
-#  import IEx
+  import IEx
 
   @driver_registry      :driver_registry
   @viewport_registry    :viewport_registry
@@ -64,6 +65,14 @@ defmodule Scenic.SceneTest do
 
   def handle_call( :call_msg, :from, @graph, :faux_state ) do
     {:reply, :handle_call_reply, @graph_2, :handle_call_state}
+  end
+
+  def handle_call( :lose_focus, :from_ok, @graph, :faux_state ) do
+    {:reply, :ok, @graph_2, :handle_call_lose_focus_ok_state}
+  end
+
+  def handle_call( :lose_focus, :from_cancel, @graph, :faux_state ) do
+    {:reply, :cancel, @graph_2, :handle_call_lose_focus_cancel_state}
   end
 
   def handle_cast( :cast_msg, @graph, :faux_state ) do
@@ -141,12 +150,12 @@ defmodule Scenic.SceneTest do
   #--------------------------------------------------------
   # handle_call({:find_by_screen_pos, pos}...
 
-  test "call :find_by_screen_pos returns the uid of the object under the point" do
+  test "handle_call :find_by_screen_pos returns the uid of the object under the point" do
     assert Scene.handle_call({:find_by_screen_pos, {20,20}}, :from, @state) ==
       {:reply, 1, @state}
   end
 
-  test "call :find_by_screen_pos returns nil if no object is under the point" do
+  test "handle_call :find_by_screen_pos returns nil if no object is under the point" do
     assert Scene.handle_call({:find_by_screen_pos, {0,0}}, :from, @state) ==
       {:reply, nil, @state}
   end
@@ -154,7 +163,7 @@ defmodule Scenic.SceneTest do
   #--------------------------------------------------------
   # handle_cast(:input...
 
-  test "cast :input prepares and handles the event" do
+  test "handle_cast :input prepares and handles the event" do
     event = {:input, {:key, {262, 1, 0}}}
     {:noreply, state} = Scene.handle_cast(event, @state)
     assert state == %{
@@ -167,7 +176,7 @@ defmodule Scenic.SceneTest do
   #--------------------------------------------------------
   # handle_cast(:input_uid...
 
-  test "cast :input_uid handles the event" do
+  test "handle_cast :input_uid handles the event" do
     event = {:input_uid, {:key, :right, :press, 0}, nil}
     {:noreply, state} = Scene.handle_cast(event, @state)
     assert state == %{
@@ -177,11 +186,81 @@ defmodule Scenic.SceneTest do
     }
   end
 
+  #--------------------------------------------------------
+  # handle_cast(:set_scene...
+  def focus_gained( @graph, :ok_state) do
+    {:ok, @graph_2, :focus_gained_ok_state}
+  end
+
+  def focus_gained( @graph, :cancel_state) do
+    {:cancel, @graph_2, :focus_gained_cancel_state}
+  end
+
+  test "handle_cast :set_scene sets the new scene" do
+    state = Map.put(@state, :scene_state, :ok_state)
+    {:noreply, state} = Scene.handle_cast(:set_scene, state)
+    %{
+      scene_module:       __MODULE__,
+      scene_state:        :focus_gained_ok_state,
+      graph:              updated_graph
+    } = state
+    updated_graph = Map.put(updated_graph, :last_recurring_action, nil)
+    assert updated_graph == @graph_2
+    assert ViewPort.current_scene?( self() )
+  end
+
+#  test "handle_cast :set_scene unregisters the previous scene" do
+#    # spin up a simple agent, just to have a not-self process to use
+#    {:ok, pid} = Agent.start_link(fn -> 1 + 1 end, name: __MODULE__)
+#
+#    # set the agent process as the current scene
+#    {:ok, _} = Registry.register(@viewport_registry, :messages, pid )
+#    assert ViewPort.current_scene?( pid )
+#    refute ViewPort.current_scene?( self() )
+#
+#    state = Map.put(@state, :scene_state, :ok_state)
+#    {:noreply, state} = Scene.handle_cast(:set_scene, state)
+#    refute ViewPort.current_scene?( pid )
+#    assert ViewPort.current_scene?( self() )
+#
+#    # clean up
+#    Agent.stop(pid)
+#  end
+
+  test "handle_cast :set_scene sends set_graph to the driver" do
+    # register for the driver message
+    {:ok, _} = Registry.register(@driver_registry, :set_graph, :set_graph )
+    state = Map.put(@state, :scene_state, :ok_state)
+
+    Scene.handle_cast(:set_scene, state)
+    
+    assert_receive( {:"$gen_cast", {:set_graph, graph_list}} )
+    assert is_list( graph_list )
+  end
+
+
+  test "handle_cast :set_scene fails peacefully if the new scene cancels" do
+    state = Map.put(@state, :scene_state, :cancel_state)
+    {:noreply, state} = Scene.handle_cast(:set_scene, state)
+    %{
+      scene_module:       __MODULE__,
+      scene_state:        :focus_gained_cancel_state,
+      graph:              updated_graph
+    } = state
+    updated_graph = Map.put(updated_graph, :last_recurring_action, nil)
+    assert updated_graph == @graph_2
+    assert ViewPort.current_scene() == nil
+  end
+
+
+  #--------------------------------------------------------
+  # handle_cast(:input_uid...
+
 
   #--------------------------------------------------------
   # handle_cast(:graph_reset...
 
-  test "cast :graph_reset ticks the recurring actions" do
+  test "handle_cast :graph_reset ticks the recurring actions" do
     {:noreply, state} = Scene.handle_cast(:graph_reset, @state)
     %{
       scene_module:       __MODULE__,
@@ -192,7 +271,7 @@ defmodule Scenic.SceneTest do
     assert Graph.get(@graph,1) != Graph.get(graph,1)
   end
 
-  test "cast :graph_reset sets the graph into the viewport" do
+  test "handle_cast :graph_reset sets the graph into the viewport" do
     # set this process as the current scene
     {:ok, _} = Registry.register(@viewport_registry, :messages, self() )
 
@@ -213,7 +292,7 @@ defmodule Scenic.SceneTest do
   #--------------------------------------------------------
   # handle_cast(:graph_update...
 
-  test "cast :graph_update ticks the recurring actions" do
+  test "handle_cast :graph_update ticks the recurring actions" do
     {:noreply, state} = Scene.handle_cast(:graph_update, @state)
     %{
       scene_module:       __MODULE__,
@@ -224,7 +303,7 @@ defmodule Scenic.SceneTest do
     assert Graph.get(@graph,1) != Graph.get(graph,1)
   end
 
-  test "cast :graph_update sends deltas to the viewport" do
+  test "handle_cast :graph_update sends deltas to the viewport" do
     # set this process as the current scene
     {:ok, _} = Registry.register(@viewport_registry, :messages, self() )
 
@@ -246,7 +325,7 @@ defmodule Scenic.SceneTest do
   end
 
 
-  test "cast :graph_update resets the delta tracking on the graph" do
+  test "handle_cast :graph_update resets the delta tracking on the graph" do
     # transform the graph so that is a delta to send
     graph = Graph.modify(@graph, :rect, fn(p)->
       Primitive.put_style(p, :color, :red)

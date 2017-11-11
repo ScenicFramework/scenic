@@ -32,19 +32,19 @@ defmodule Scenic.ViewPort.InputTest do
 
   test "register input sets up to receive an input type" do
     verify_registries()
-    Input.register_input( :key )
+    Input.register( :key )
     assert confirm_registration( :key )
   end
 
   test "register input treats :char the same as :codepoint" do
     verify_registries()
-    Input.register_input( :char )
+    Input.register( :char )
     assert confirm_registration( :codepoint )
   end
 
   test "register input sets up to receive multiple input types" do
     verify_registries()
-    Input.register_input( [:key, :mouse_button, :codepoint] )
+    Input.register( [:key, :mouse_button, :codepoint] )
     assert confirm_registration( :key )
     assert confirm_registration( :mouse_button )
     assert confirm_registration( :codepoint )
@@ -52,7 +52,7 @@ defmodule Scenic.ViewPort.InputTest do
 
   test "register input sets up to receive all input types" do
     verify_registries()
-    Input.register_input( [:key, :mouse_button, :codepoint] )
+    Input.register( [:key, :mouse_button, :codepoint] )
     assert confirm_registration( :key )
     assert confirm_registration( :codepoint )
     refute confirm_registration( :mouse_move )
@@ -64,14 +64,14 @@ defmodule Scenic.ViewPort.InputTest do
   test "register input raises on invalid input type" do
     verify_registries()
     assert_raise Input.Error, fn ->
-      Input.register_input( :banana )
+      Input.register( :banana )
     end
   end
 
   test "register the multiple times does not create multiple entries" do
     verify_registries()
-    Input.register_input( :key )
-    Input.register_input( :key )
+    Input.register( :key )
+    Input.register( :key )
     assert Registry.keys(@input_registry, self()) == [:key]
   end
 
@@ -81,7 +81,7 @@ defmodule Scenic.ViewPort.InputTest do
     {:ok, _} = Registry.register(@driver_registry, :driver_cast,  :driver_cast )
 
     # register for the input
-    Input.register_input( :key )
+    Input.register( :key )
 
     # confirm a driver update message was sent
     assert_receive( {:"$gen_cast", {:driver_cast, {:request_input, 0x0001}}}  )
@@ -93,7 +93,7 @@ defmodule Scenic.ViewPort.InputTest do
     {:ok, _} = Registry.register(@driver_registry, :driver_cast,  :driver_cast )
 
     # register for the input
-    Input.register_input( [:key, :mouse_move] )
+    Input.register( [:key, :mouse_move] )
 
     # confirm a driver update message was sent
     assert_receive( {:"$gen_cast", {:driver_cast, {:request_input, 5}}}  )
@@ -105,7 +105,7 @@ defmodule Scenic.ViewPort.InputTest do
     {:ok, _} = Registry.register(@driver_registry, :driver_cast,  :driver_cast )
 
     # register for the input
-    Input.register_input( :all )
+    Input.register( :all )
 
     # confirm a driver update message was sent
     assert_receive( {:"$gen_cast", {:driver_cast, {:request_input, 63}}}  )
@@ -118,22 +118,22 @@ defmodule Scenic.ViewPort.InputTest do
 
   test "unregister stops receiving an input type" do
     verify_registries()
-    Input.register_input( :key )
-    Input.unregister_input( :key )
+    Input.register( :key )
+    Input.unregister( :key )
     refute confirm_registration( :key )
   end
 
   test "unregister input treats :char the same as :codepoint" do
     verify_registries()
-    Input.register_input( :codepoint )
-    Input.unregister_input( :char )
+    Input.register( :codepoint )
+    Input.unregister( :char )
     refute confirm_registration( :codepoint )
   end
 
   test "unregister stops receiving multiple input types" do
     verify_registries()
-    Input.register_input( :all )
-    Input.unregister_input( [:key, :mouse_button, :codepoint] )
+    Input.register( :all )
+    Input.unregister( [:key, :mouse_button, :codepoint] )
     refute confirm_registration( :key )
     refute confirm_registration( :mouse_button )
     refute confirm_registration( :codepoint )
@@ -141,8 +141,8 @@ defmodule Scenic.ViewPort.InputTest do
 
   test "unregister stops receiving all input types" do
     verify_registries()
-    Input.register_input( :all )
-    Input.unregister_input( :all )
+    Input.register( :all )
+    Input.unregister( :all )
     refute confirm_registration( :key )
     refute confirm_registration( :codepoint )
     refute confirm_registration( :mouse_move )
@@ -154,7 +154,7 @@ defmodule Scenic.ViewPort.InputTest do
   test "unregister raises on invalid input type" do
     verify_registries()
     assert_raise Input.Error, fn ->
-      Input.unregister_input( :banana )
+      Input.unregister( :banana )
     end
   end
 
@@ -164,9 +164,9 @@ defmodule Scenic.ViewPort.InputTest do
     {:ok, _} = Registry.register(@driver_registry, :driver_cast,  :driver_cast )
 
     # register for the input
-    Input.register_input( :key )
+    Input.register( :key )
     Process.sleep(10)
-    Input.unregister_input( :key )
+    Input.unregister( :key )
 
     # confirm a driver update message was sent
     assert_receive( {:"$gen_cast", {:driver_cast, {:request_input, 0x0000}}}  )
@@ -178,9 +178,9 @@ defmodule Scenic.ViewPort.InputTest do
     {:ok, _} = Registry.register(@driver_registry, :driver_cast,  :driver_cast )
 
     # register for the input
-    Input.register_input( [:key, :mouse_move] )
+    Input.register( [:key, :mouse_move] )
     Process.sleep(10)
-    Input.unregister_input( [:key, :mouse_move] )
+    Input.unregister( [:key, :mouse_move] )
 
     # confirm a driver update message was sent
     assert_receive( {:"$gen_cast", {:driver_cast, {:request_input, 0x0000}}}  )
@@ -192,13 +192,20 @@ defmodule Scenic.ViewPort.InputTest do
     {:ok, _} = Registry.register(@driver_registry, :driver_cast,  :driver_cast )
 
     # register for the input
-    Input.register_input( :all )
+    Input.register( :all )
     Process.sleep(10)
-    Input.unregister_input( :all )
+    Input.unregister( :all )
 
     # confirm a driver update message was sent
     assert_receive( {:"$gen_cast", {:driver_cast, {:request_input, 0x0000}}}  )
   end
+
+
+  #============================================================================
+  # send
+  
+  test "send input works"
+
 
 
   #============================================================================
