@@ -13,7 +13,7 @@ defmodule Scenic.SceneTest do
   alias Scenic.Graph
   alias Scenic.Primitive
 
-  import IEx
+#  import IEx
 
   @driver_registry      :driver_registry
   @viewport_registry    :viewport_registry
@@ -158,6 +158,55 @@ defmodule Scenic.SceneTest do
   test "handle_call :find_by_screen_pos returns nil if no object is under the point" do
     assert Scene.handle_call({:find_by_screen_pos, {0,0}}, :from, @state) ==
       {:reply, nil, @state}
+  end
+
+
+  #--------------------------------------------------------
+  # handle_call(:lose_focus...
+  def focus_lost( @graph, :ok_state) do
+    {:ok, @graph_2, :focus_lost_ok_state}
+  end
+
+  def focus_lost( @graph, :cancel_state) do
+    {:cancel, @graph_2, :focus_lost_cancel_state}
+  end
+
+  test "handle_call :lose_focus unregisters the scene and returns :ok" do
+    # set up as the current scene
+    # set this process as the current scene
+    {:ok, _} = Registry.register(@viewport_registry, :messages, self() )
+    assert ViewPort.current_scene?()
+
+    state = Map.put(@state, :scene_state, :ok_state)
+    {:reply, :ok, state} = Scene.handle_call(:lose_focus, :from, state)
+
+    %{
+      scene_module:       __MODULE__,
+      scene_state:        :focus_lost_ok_state,
+      graph:              updated_graph
+    } = state
+    updated_graph = Map.put(updated_graph, :last_recurring_action, nil)
+    assert updated_graph == @graph_2
+    refute ViewPort.current_scene?()
+  end
+
+  test "handle_call :lose_focus cancels and keeps registration" do
+    # set up as the current scene
+    # set this process as the current scene
+    {:ok, _} = Registry.register(@viewport_registry, :messages, self() )
+    assert ViewPort.current_scene?()
+
+    state = Map.put(@state, :scene_state, :cancel_state)
+    {:reply, :cancel, state} = Scene.handle_call(:lose_focus, :from, state)
+
+    %{
+      scene_module:       __MODULE__,
+      scene_state:        :focus_lost_cancel_state,
+      graph:              updated_graph
+    } = state
+    updated_graph = Map.put(updated_graph, :last_recurring_action, nil)
+    assert updated_graph == @graph_2
+    assert ViewPort.current_scene?()
   end
 
   #--------------------------------------------------------

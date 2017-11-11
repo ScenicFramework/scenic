@@ -16,7 +16,7 @@ defmodule Scenic.Scene do
   alias Scenic.Primitive
   require Logger
 
-  import IEx
+#  import IEx
 
   @callback init( any ) :: {:ok, any}
   @callback init_graph(any) :: {:ok, map, any}

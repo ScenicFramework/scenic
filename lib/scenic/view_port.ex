@@ -8,7 +8,7 @@ defmodule Scenic.ViewPort do
   alias Scenic.ViewPort.Driver
   require Logger
 
-  import IEx
+#  import IEx
 
   @viewport_registry    :viewport_registry
 
