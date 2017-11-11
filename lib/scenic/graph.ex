@@ -37,7 +37,8 @@ defmodule Scenic.Graph do
 
 
   defstruct primitive_map: %{}, id_map: %{}, next_uid: 1, deltas: %{},
-    recurring_actions: [], last_recurring_action: nil, add_to: 0, focus: nil
+    recurring_actions: [], last_recurring_action: nil, add_to: 0,
+    focus: nil, input: []
 
 
 
@@ -1040,7 +1041,16 @@ defmodule Scenic.Graph do
     end)
   end
 
-
+  #--------------------------------------------------------
+  def request_input(graph, input)
+  def request_input(graph, []), do: graph
+  def request_input(graph, input) when is_atom(input), do: request_input(graph, [input])
+  def request_input(%Graph{input: old_input} = graph, new_input) when is_list(new_input) do
+    input = [new_input | old_input]
+    |> List.flatten()
+    |> Enum.uniq()
+    Map.put(graph, :input, input)
+  end
 
 end
 

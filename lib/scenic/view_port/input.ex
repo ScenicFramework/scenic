@@ -35,20 +35,20 @@ defmodule Scenic.ViewPort.Input do
   # client apis - meant to be called from the listener process
 
   #--------------------------------------------------------
-  def register_input( type )
-  def register_input( :all ) do 
+  def register( type )
+  def register( :all ) do 
     ref = make_ref()
     Enum.each(@valid_input_types, &do_register(&1, ref) )
     update_input_request()
     {:input_ref, ref}
   end
-  def register_input( type ) when is_atom(type) do
+  def register( type ) when is_atom(type) do
     ref = make_ref()
     do_register( type, ref )
     update_input_request()
     {:input_ref, ref}
   end
-  def register_input( types ) when is_list(types) do
+  def register( types ) when is_list(types) do
     ref = make_ref()
     Enum.each( types, &do_register(&1, ref) )
     update_input_request()
@@ -68,22 +68,22 @@ defmodule Scenic.ViewPort.Input do
   end
 
   #--------------------------------------------------------
-  def unregister_input( type )
-  def unregister_input( {:input_ref, ref} ) when is_reference(ref) do
+  def unregister( type )
+  def unregister( {:input_ref, ref} ) when is_reference(ref) do
     Enum.each(@valid_input_types, fn(type) ->
       Registry.unregister_match(@input_registry, type, ref )
     end)
     update_input_request()
   end
-  def unregister_input( :all ) do
+  def unregister( :all ) do
     Enum.each(@valid_input_types, &Registry.unregister(@input_registry, &1 ) )
     update_input_request()
   end
-  def unregister_input( type ) when is_atom(type) do
+  def unregister( type ) when is_atom(type) do
     do_unregister( type )
     update_input_request()
   end
-  def unregister_input( types ) when is_list(types) do
+  def unregister( types ) when is_list(types) do
     Enum.each( types, &do_unregister(&1) )
     update_input_request()
   end
@@ -118,7 +118,7 @@ defmodule Scenic.ViewPort.Input do
   # driver apis - meant to be called from a driver that is sending input
 
   #----------------------------------------------
-  def send_input( {input_type, _} = event ) do
+  def send( {input_type, _} = event ) do
     # needs a different dispatcher than sending a message to the driver. The pid to
     # send the message to is the value stored in the registry, not the pid that
     # set up the registry entry. That would be the viewport...
@@ -136,7 +136,7 @@ defmodule Scenic.ViewPort.Input do
       end
     end)
   end
-  def send_input( msg ) do
+  def send( msg ) do
     IO.puts "Input: invalid message: #{inspect(msg)}"
   end
 

@@ -8,36 +8,24 @@ defmodule Scenic.ViewPort do
   alias Scenic.ViewPort.Driver
   require Logger
 
-#  import IEx
-
-#  @name                 :view_port
+  import IEx
 
   @viewport_registry    :viewport_registry
 
   #============================================================================
   # client api
 
-  def set_scene( scene_id, viewport_id \\ @name )
-  def set_scene( scene_name, viewport_id ) when is_atom(scene_name) do
+  # can't just make the scene calls directly as set_scene can be called
+  # before the Scene's themselves have actually been initialized. For example,
+  # an app may call set_scene during it's start function to set things up.
+
+  def set_scene( scene_id )
+  def set_scene( scene_name ) when is_atom(scene_name) do
     Process.whereis( scene_name )
-    |> set_scene( viewport_id )
+    |> set_scene()
   end
-  def set_scene( scene_pid, viewport_id ) when is_pid(scene_pid) do
-    case current_scene() do
-      nil -> 
-        # tell the new scene to register itself
-        GenServer.call( scene_pid, {:register, @viewport_registry})
-        :ok
-      old_scene ->
-        # tell the old scene to unregister itself
-        case GenServer.call( old_scene, {:unregister, @viewport_registry}) do
-          :ok -> 
-            # tell the new scene to register itself
-            GenServer.call( scene_pid, {:register, @viewport_registry})
-            :ok
-          other -> other
-        end
-    end
+  def set_scene( scene_pid ) when is_pid(scene_pid) do
+    GenServer.cast( scene_pid, :set_scene )
   end
 
   #--------------------------------------------------------
@@ -94,35 +82,5 @@ defmodule Scenic.ViewPort do
       pid -> GenServer.cast(pid, message)
     end
   end
-
-
-  #============================================================================
-  # setup the viewport
-
-#  def start_link( sup ) do
-#    GenServer.start_link(__MODULE__, sup, name: @name)
-#  end
-#
-#  def init( _ ) do
-#    {:ok, nil}
-#  end
-
-  #============================================================================
-  # internal support
-
-  #--------------------------------------------------------
-#  def handle_cast( {:set_scene, scene_id}, state ) when is_pid(scene_id) or is_atom(scene_id) do
-#    # unregister the current scene
-#    Registry.unregister(@viewport_registry, :messages)
-#
-#    # register the new scene for resets
-#    Registry.register(@viewport_registry, :messages, scene_id )
-#
-#    # reset the graph
-#    GenServer.cast( scene_id, :graph_reset )
-#
-#    # save the scene and return
-#    {:noreply, state}
-#  end
 
 end

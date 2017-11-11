@@ -45,7 +45,7 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
   #--------------------------------------------------------
   def init( state ) do
     # register to receive mouse button events
-    Input.register_input( :mouse_button )
+    Input.register( :mouse_button )
     {:ok, state }
   end
 
@@ -82,7 +82,7 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
     # not enough to let the registry just catch that this process is going away.
     # need to tell the dirver too so that it doesn't spam the app with messages
     # so do this cleanly...
-    Input.unregister_input( :mouse_button )
+    Input.unregister( :mouse_button )
 
     # tear down this process - no longer needed
     stop_fn.()
@@ -100,6 +100,5 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
   defp do_handle_input(_, _, _, state) do
     {:noreply, state}
   end
-
-
+  
 end

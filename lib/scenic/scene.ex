@@ -21,6 +21,8 @@ defmodule Scenic.Scene do
   @callback init( any ) :: {:ok, any}
   @callback init_graph(any) :: {:ok, map, any}
 
+  @viewport_registry    :viewport_registry
+
   #===========================================================================
   # calls for setting up a scene inside of a supervisor
 
@@ -64,7 +66,19 @@ defmodule Scenic.Scene do
       def handle_info(_msg, graph, state),              do: {:noreply, graph, state}
 
       def handle_input( event, graph, scene_state ),    do: {:noreply, graph, scene_state}
-      def handle_focus( _action, graph, scene_state ),  do: {:ok, graph, scene_state}
+      
+      def focus_gained( input, graph, scene_state ) when is_atom(input) do
+        focus_gained( [input], graph, scene_state )
+      end
+      def focus_gained( input_list, graph, scene_state ) when is_list(input_list) do
+        ViewPort.Input.register( input_list )
+        {:ok, graph, scene_state}
+      end
+
+      def focus_lost( graph, scene_state ) do
+        ViewPort.Input.unregister( :all )
+        {:ok, graph, scene_state}
+      end
 
       #--------------------------------------------------------
 #      add local shortcuts to things like get/put graph and modify element
@@ -77,7 +91,8 @@ defmodule Scenic.Scene do
         handle_cast:            3,
         handle_info:            3,
         handle_input:           3,
-        handle_focus:           3
+        focus_gained:           3,
+        focus_lost:             2
       ]
 
     end # quote
@@ -122,32 +137,18 @@ defmodule Scenic.Scene do
 
   #--------------------------------------------------------
   # register this scene for callbacks
-  def handle_call({:register, registry}, _from,
-  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-    {reply, state} = case mod.handle_focus(:gained, graph, scene_state) do
-      {:ok, graph, scene_state} ->
-        Registry.register(registry, :messages, self() )
-        state = state
-        |> Map.put(:graph, graph)
-        |> Map.put(:scene_state, scene_state)
-        {:ok, state}
-      {:cancel, graph, scene_state} ->
-        state = state
-        |> Map.put(:graph, graph)
-        |> Map.put(:scene_state, scene_state)
-        {:cancel, state}
-      _ -> {:err, state}
-    end
+  def handle_call(:gain_focus, _from,  state) do
+    {reply, state} = do_gain_focus( state )
     {:reply, reply, state}
   end
 
   #--------------------------------------------------------
   # unregister this scene for callbacks
-  def handle_call({:unregister, registry}, _from,
+  def handle_call(:lose_focus, _from,
   %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-    {reply, state} = case mod.handle_focus(:lost, graph, scene_state) do
+    {reply, state} = case mod.focus_lost(graph, scene_state) do
       {:ok, graph, scene_state} ->
-        Registry.unregister(registry, :messages )
+        Registry.unregister(@viewport_registry, :messages )
         state = state
         |> Map.put(:graph, graph)
         |> Map.put(:scene_state, scene_state)
@@ -175,6 +176,26 @@ defmodule Scenic.Scene do
 
   #===========================================================================
   # default cast handlers.
+
+  #--------------------------------------------------------
+  def handle_cast(:set_scene, state) do
+    # someting has requested this scene make set itself into
+    # the viewport. This can be canceled by the current scene.
+    case ViewPort.current_scene() do
+      nil -> 
+        # gain the focus
+        {_, state} = do_gain_focus( state )
+        {:noreply, state}
+      old_scene ->
+        # tell the old scene to unregister itself
+        case GenServer.call( old_scene, :lose_focus) do
+          :ok -> 
+            # gain the focus
+            {_, state} = do_gain_focus( state )
+            {:noreply, state}
+        end
+    end
+  end
 
   #--------------------------------------------------------
   def handle_cast({:input, event}, %{graph: graph} = state) do
@@ -210,13 +231,7 @@ defmodule Scenic.Scene do
   #--------------------------------------------------------
   # a graphic driver is requesting a full graph reset
   def handle_cast(:graph_reset, %{ graph: graph } = state) do
-    # tick any recurring actions
-    graph = Graph.tick_recurring_actions( graph )
-
-    # reset the viewport with this scene's graph
-    Graph.minimal( graph )
-    |> ViewPort.set_graph()
-
+    graph = do_reset_graph(graph)
     { :noreply, Map.put(state, :graph, graph) }
   end
 
@@ -347,5 +362,40 @@ defmodule Scenic.Scene do
     {:noreply, state}
   end
 
+  #--------------------------------------------------------
+  defp do_gain_focus(%{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+    graph_input = Map.get(graph, :input, [])
+    {reply, state} = case mod.focus_gained( graph_input, graph, scene_state) do
+      {:ok, graph, scene_state} ->
+        # register for messages
+        Registry.register(@viewport_registry, :messages, self() )
+        # tick and send the graph to the drivers
+        graph = do_reset_graph(graph)
+        # store the state
+        state = state
+        |> Map.put(:graph, graph)
+        |> Map.put(:scene_state, scene_state)
+        {:ok, state}
+      {:cancel, graph, scene_state} ->
+        state = state
+        |> Map.put(:graph, graph)
+        |> Map.put(:scene_state, scene_state)
+        {:cancel, state}
+      _ -> {:err, state}
+    end
+  end
+
+  #--------------------------------------------------------
+  defp do_reset_graph(graph) do
+    # tick any recurring actions
+    graph = Graph.tick_recurring_actions( graph )
+
+    # reset the viewport with this scene's graph
+    Graph.minimal( graph )
+    |> ViewPort.set_graph()
+
+    # return the transformed graph
+    graph
+  end
 
 end
