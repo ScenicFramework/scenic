@@ -15,8 +15,8 @@ defmodule Scenic.ViewPort.InputTest do
   @input_registry     :input_registry
   @driver_registry    :driver_registry
 
-  # test helper functions
 
+  # test helper functions
   defp verify_registries() do
     assert Registry.keys(@input_registry, self()) == []
     assert Registry.keys(@driver_registry, self()) == []
@@ -204,8 +204,11 @@ defmodule Scenic.ViewPort.InputTest do
   #============================================================================
   # send
   
-  test "send input works"
-
+  test "send input sends a message to the current scene" do
+    Input.register( :key )
+    Input.send( {:key, {:test_input}} )
+    assert_receive( {:"$gen_cast", {:input, {:key, {:test_input}}}}  )
+  end
 
 
   #============================================================================

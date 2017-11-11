@@ -173,7 +173,6 @@ defmodule Scenic.SceneTest do
 
   test "handle_call :lose_focus unregisters the scene and returns :ok" do
     # set up as the current scene
-    # set this process as the current scene
     {:ok, _} = Registry.register(@viewport_registry, :messages, self() )
     assert ViewPort.current_scene?()
 
