@@ -487,7 +487,7 @@ defmodule Scenic.Graph do
   # starts with next_uid, then bump up next_uid to account for everything in the updated graph 
   def insert_at({%Graph{primitive_map: p_map, id_map: id_map, next_uid: next_uid} = graph, parent_uid},
       index,
-      %Graph{primitive_map: t_p_map, id_map: t_id_map, next_uid: t_next_uid},
+      %Graph{primitive_map: t_p_map, id_map: t_id_map, next_uid: t_next_uid} = t_graph,
       opts) when is_integer(index) do
 
     # uid for the new item
@@ -546,6 +546,14 @@ defmodule Scenic.Graph do
       id ->   do_map_id_to_uid(id_map, id, uid)
     end
 
+    # merge any requested inputs - is optional, so must work if not actually there
+    input = [
+      Map.get(graph, :input, []),
+      Map.get(t_graph, :input, []),
+    ]
+    |> List.flatten()
+    |> Enum.uniq()
+
     # offset the next_uid
     next_uid = next_uid + t_next_uid
 
@@ -555,6 +563,13 @@ defmodule Scenic.Graph do
     |> Map.put(:id_map, id_map)
     |> Map.put(:next_uid, next_uid)
     |> calculate_transforms( uid )
+
+    # add the input in only if there is some to add in
+    graph = case input do
+      [] -> graph
+      input -> Map.put(graph, :input, input)
+    end
+
     {graph, uid}
   end
 

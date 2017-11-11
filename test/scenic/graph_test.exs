@@ -662,6 +662,9 @@ defmodule Scenic.GraphTest do
     graph = Graph.build()
     {graph, parent_uid} = Graph.insert_at(graph, -1, @empty_group)
 
+    # give the parent graph a single input request
+    graph = Graph.request_input(graph, [:key, :char])
+
     #check that the setup is ok
     assert Graph.count(graph) == 2
     assert Graph.get_next_uid(graph) == 2
@@ -674,6 +677,9 @@ defmodule Scenic.GraphTest do
     {graph_t, uid_1} =  Graph.insert_at(graph_t, -1, empty_group_with_id)
     {graph_t, _} =      Graph.insert_at({graph_t, uid_1}, -1, @empty_group)
     {graph_t, _} =      Graph.insert_at(graph_t, -1, @empty_group)
+
+    # add a request for input
+    graph_t = Graph.request_input(graph_t, [:key, :mouse_down])
 
     #check that the setup is ok
     assert Graph.count(graph_t, -1) == 5
@@ -703,6 +709,9 @@ defmodule Scenic.GraphTest do
     # make sure the added tree is referenced by its new parent
     assert Primitive.get( Graph.get(merged, parent_uid) ) == [t_uid]
     assert Primitive.get_parent_uid( Graph.get(merged, t_uid) ) == parent_uid
+
+    # make sure the template's input request was merged in without duplicates
+    assert Map.get(merged, :input) == [:key, :char, :mouse_down]
   end
 
 
