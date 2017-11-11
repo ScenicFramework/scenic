@@ -252,11 +252,6 @@ defmodule Scenic.SceneTest do
     assert ViewPort.current_scene() == nil
   end
 
-
-  #--------------------------------------------------------
-  # handle_cast(:input_uid...
-
-
   #--------------------------------------------------------
   # handle_cast(:graph_reset...
 

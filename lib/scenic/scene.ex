@@ -134,13 +134,6 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  # register this scene for callbacks
-  def handle_call(:gain_focus, _from,  state) do
-    {reply, state} = do_gain_focus( state )
-    {:reply, reply, state}
-  end
-
-  #--------------------------------------------------------
   # unregister this scene for callbacks
   def handle_call(:lose_focus, _from,
   %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
