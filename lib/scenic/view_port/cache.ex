@@ -62,6 +62,13 @@ defmodule Scenic.ViewPort.Cache do
     |> Base.url_encode64( padding: false )
   end
 
+  #--------------------------------------------------------
+  def hash_file( path ) do
+    data = File.read!( path )
+    :crypto.hash( @hash_type, data )
+    |> Base.url_encode64( padding: false )
+  end
+
   #============================================================================
 
   #--------------------------------------------------------
