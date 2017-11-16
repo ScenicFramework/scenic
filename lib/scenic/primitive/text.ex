@@ -19,9 +19,9 @@ defmodule Scenic.Primitive.Text do
   def info(), do: "Text data must be a point and a bitstring. Like this: {{x,y}, a_string}"
 
   #--------------------------------------------------------
-  def verify( {{x, y}, text} ) when
-    is_number(x) and is_number(y) and is_bitstring(text), do: true
-  def verify( _ ), do: false
+  def verify( {{x, y}, text} = data ) when
+    is_number(x) and is_number(y) and is_bitstring(text), do: {:ok, data}
+  def verify( _ ), do: :invalid_data
 
   #--------------------------------------------------------
   def serialize( data, order \\ :native )

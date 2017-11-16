@@ -22,10 +22,11 @@ defmodule Scenic.Primitive.Oval do
   #--------------------------------------------------------
   def verify( {center, radius} ), do:
     verify( {center, radius, 1.0, 1.0} )
-  def verify( {{x, y}, radius, x_factor, y_factor} ) when
+  def verify( {{x, y}, radius, x_factor, y_factor} = data ) when
     is_number(x) and is_number(y) and is_number(radius) and
-    is_number(x_factor) and is_number(y_factor), do: true
-  def verify( _ ), do: false
+    is_number(x_factor) and is_number(y_factor), do:
+    {:ok, data}
+  def verify( _ ), do: :invalid_data
 
   #--------------------------------------------------------
   def serialize( data, order \\ :native )

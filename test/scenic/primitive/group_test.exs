@@ -68,13 +68,13 @@ defmodule Scenic.Primitive.GroupTest do
   # verify
 
   test "verify passes valid data" do
-    assert Group.verify( @data ) == true
+    assert Group.verify( @data ) == {:ok, @data}
   end
 
   test "verify fails invalid data" do
-    assert Group.verify( 12 )                       == false
-    assert Group.verify( [1, 2, 3, :banana] )       == false
-    assert Group.verify( :banana )                  == false
+    assert Group.verify( 12 )                       == :invalid_data
+    assert Group.verify( [1, 2, 3, :banana] )       == :invalid_data
+    assert Group.verify( :banana )                  == :invalid_data
   end
 
   #============================================================================

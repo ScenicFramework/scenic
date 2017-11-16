@@ -20,10 +20,10 @@ defmodule Scenic.Primitive.Rectangle do
   def info(), do: "Rectangle data must be a point, width and height. Like this: {{x0,y0}, width, height}"
 
   #--------------------------------------------------------
-  def verify( {{x0, y0}, width, height} ) when
+  def verify( {{x0, y0}, width, height} = data ) when
     is_number(x0) and is_number(y0) and
-    is_number(width) and is_number(height), do: true
-  def verify( _ ), do: false
+    is_number(width) and is_number(height), do: {:ok, data}
+  def verify( _ ), do:  :invalid_data
 
   #--------------------------------------------------------
   def serialize( data, order \\ :native )

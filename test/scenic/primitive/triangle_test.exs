@@ -29,13 +29,13 @@ defmodule Scenic.Primitive.TriangleTest do
   # verify
 
   test "verify passes valid data" do
-    assert Triangle.verify( @data ) == true
+    assert Triangle.verify( @data ) == {:ok, @data}
   end
 
   test "verify fails invalid data" do
-    assert Triangle.verify( {{20, 300}, {400, 300}, 400, 0} )         == false
-    assert Triangle.verify( {{20, 300}, {400, 300}, {400, :banana}} ) == false
-    assert Triangle.verify( :banana )                                 == false
+    assert Triangle.verify( {{20, 300}, {400, 300}, 400, 0} )         == :invalid_data
+    assert Triangle.verify( {{20, 300}, {400, 300}, {400, :banana}} ) == :invalid_data
+    assert Triangle.verify( :banana )                                 == :invalid_data
   end
 
   #============================================================================

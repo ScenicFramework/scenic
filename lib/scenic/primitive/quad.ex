@@ -20,14 +20,17 @@ defmodule Scenic.Primitive.Quad do
   #--------------------------------------------------------
   def info(), do: "Quad data must be four points, like this: {{x0,y0}, {x1,y1}, {x2,y2}, {x3,y3}}"
 
-  def verify( {{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}} ) when
+  def verify( {{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}} = data ) when
   is_number(x0) and is_number(y0) and
   is_number(x1) and is_number(y1) and
   is_number(x2) and is_number(y2) and
   is_number(x3) and is_number(y3) do
-    Math.Quad.classification({{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}}) == :convex
+    case Math.Quad.classification(data) == :convex do
+      true -> {:ok, data}
+      false -> :invalid_data
+    end
   end
-  def verify( _ ), do: false
+  def verify( _ ), do: :invalid_data
 
 
   #--------------------------------------------------------

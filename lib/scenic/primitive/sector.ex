@@ -22,11 +22,11 @@ defmodule Scenic.Primitive.Sector do
   #--------------------------------------------------------
   def verify( {center, start, finish, radius} ), do:
     verify( {center, start, finish, radius, {1.0,1.0}} )
-  def verify( {{x, y}, start, finish, radius, {h,k}} ) when
+  def verify( {{x, y}, start, finish, radius, {h,k}} = data ) when
     is_number(x) and is_number(y) and is_number(start) and
     is_number(finish) and is_number(radius) and
-    is_number(h) and is_number(k), do: true
-  def verify( _ ), do: false
+    is_number(h) and is_number(k), do: {:ok, data}
+  def verify( _ ), do: :invalid_data
 
   #--------------------------------------------------------
   def serialize( data, order \\ :native )

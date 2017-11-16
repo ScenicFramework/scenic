@@ -22,13 +22,16 @@ defmodule Scenic.Primitive.Group do
 
 
   #--------------------------------------------------------
-  def info(), do: "Group data is managed internally."
+  def info(), do: "Group data must be a list of valid uids of other elements in the graph."
 
   #--------------------------------------------------------
   def verify( ids ) when is_list(ids) do
-    Enum.all?(ids, fn(id)-> is_integer(id) end)
+    case Enum.all?(ids, fn(id)-> is_integer(id) end) do
+      true -> {:ok, ids}
+      false -> :invalid_data
+    end
   end
-  def verify( _ ), do: false
+  def verify( _ ), do: :invalid_data
 
   #--------------------------------------------------------
   def serialize( ids, order \\ :native )

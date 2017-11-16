@@ -380,7 +380,7 @@ defmodule Scenic.PrimitiveTest do
   end
 
   test "put_data replaces the primitive-specific compiled data" do
-    new_data = <<1,2,3,4,5,6,7,8,9,10>>
+    new_data = [1,2,3,4,5,6,7,8,9,10]
     p = Primitive.put(@primitive, new_data )
     assert Primitive.get(p) == new_data
   end

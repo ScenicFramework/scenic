@@ -29,16 +29,16 @@ defmodule Scenic.Primitive.RectangleTest do
   # verify
 
   test "verify passes valid data" do
-    assert Rectangle.verify( @data ) == true
+    assert Rectangle.verify( @data ) == {:ok, @data}
   end
 
   test "verify fails invalid data" do
-    assert Rectangle.verify( {{10,11}, 40, 80, 666} )   == false
-    assert Rectangle.verify( {10, 40, 80} )             == false
-    assert Rectangle.verify( {{10,11,12}, 40, 80} )     == false
-    assert Rectangle.verify( {{10,11}, 40, :banana} )   == false
-    assert Rectangle.verify( {{10,:banana}, 40, 80} )   == false
-    assert Rectangle.verify( :banana )                  == false
+    assert Rectangle.verify( {{10,11}, 40, 80, 666} )   == :invalid_data
+    assert Rectangle.verify( {10, 40, 80} )             == :invalid_data
+    assert Rectangle.verify( {{10,11,12}, 40, 80} )     == :invalid_data
+    assert Rectangle.verify( {{10,11}, 40, :banana} )   == :invalid_data
+    assert Rectangle.verify( {{10,:banana}, 40, 80} )   == :invalid_data
+    assert Rectangle.verify( :banana )                  == :invalid_data
   end
 
   #============================================================================

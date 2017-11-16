@@ -32,24 +32,24 @@ defmodule Scenic.Primitive.QuadTest do
   # verify
 
   test "verify passes valid convex" do
-    assert Quad.verify( @convex )     == true
+    assert Quad.verify( @convex )     == {:ok, @convex}
   end
 
   test "verify fails concave quads" do
-    refute Quad.verify( @concave )
+    assert Quad.verify( @concave ) == :invalid_data
   end
 
   test "verify fails complex quads" do
-    refute Quad.verify( @complex )
+    assert Quad.verify( @complex ) == :invalid_data
   end
 
   test "verify fails obviously invalid" do
-    assert Quad.verify( {{10,11}, 40, 80, 666} )   == false
-    assert Quad.verify( {10, 40, 80} )             == false
-    assert Quad.verify( {{10,11,12}, 40, 80} )     == false
-    assert Quad.verify( {{10,11}, 40, :banana} )   == false
-    assert Quad.verify( {{10,:banana}, 40, 80} )   == false
-    assert Quad.verify( :banana )                  == false
+    assert Quad.verify( {{10,11}, 40, 80, 666} )   == :invalid_data
+    assert Quad.verify( {10, 40, 80} )             == :invalid_data
+    assert Quad.verify( {{10,11,12}, 40, 80} )     == :invalid_data
+    assert Quad.verify( {{10,11}, 40, :banana} )   == :invalid_data
+    assert Quad.verify( {{10,:banana}, 40, 80} )   == :invalid_data
+    assert Quad.verify( :banana )                  == :invalid_data
   end
 
   #============================================================================

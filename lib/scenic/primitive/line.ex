@@ -20,10 +20,10 @@ defmodule Scenic.Primitive.Line do
 
 
   #--------------------------------------------------------
-  def verify( {{x0, y0}, {x1, y1}} ) when
+  def verify( {{x0, y0}, {x1, y1}} = data ) when
     is_number(x0) and is_number(y0) and
-    is_number(x1) and is_number(y1), do: true
-  def verify( _ ), do: false
+    is_number(x1) and is_number(y1), do: {:ok, data}
+  def verify( _ ), do: :invalid_data
 
   #--------------------------------------------------------
   def serialize( data, order \\ :native )

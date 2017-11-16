@@ -21,11 +21,11 @@ defmodule Scenic.Primitive.RoundedRectangle do
   def info(), do: "Rounded Rectangle data must be a point, width, height, and radius. Like this: {{x0,y0}, width, height, radius}"
 
   #--------------------------------------------------------
-  def verify( {{x0, y0}, width, height, radius} ) when
+  def verify( {{x0, y0}, width, height, radius} = data ) when
     is_number(x0) and is_number(y0) and
     is_number(width) and is_number(height) and
-    is_integer(radius) and (radius >= 0) and (radius <= 255), do: true
-  def verify( _ ), do: false
+    is_integer(radius) and (radius >= 0) and (radius <= 255), do: {:ok, data}
+  def verify( _ ), do: :invalid_data
 
   #--------------------------------------------------------
   def serialize( data, order \\ :native )

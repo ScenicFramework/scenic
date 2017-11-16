@@ -29,16 +29,16 @@ defmodule Scenic.Primitive.RoundedRectangleTest do
   # verify
 
   test "verify passes valid data" do
-    assert RoundedRectangle.verify( @data ) == true
+    assert RoundedRectangle.verify( @data ) == {:ok, @data}
   end
 
   test "verify fails invalid data" do
-    assert RoundedRectangle.verify( {{10,11}, 40, 80, 666} )   == false
-    assert RoundedRectangle.verify( {10, 40, 80} )             == false
-    assert RoundedRectangle.verify( {{10,11,12}, 40, 80} )     == false
-    assert RoundedRectangle.verify( {{10,11}, 40, :banana} )   == false
-    assert RoundedRectangle.verify( {{10,:banana}, 40, 80} )   == false
-    assert RoundedRectangle.verify( :banana )                  == false
+    assert RoundedRectangle.verify( {{10,11}, 40, 80, 666} )   == :invalid_data
+    assert RoundedRectangle.verify( {10, 40, 80} )             == :invalid_data
+    assert RoundedRectangle.verify( {{10,11,12}, 40, 80} )     == :invalid_data
+    assert RoundedRectangle.verify( {{10,11}, 40, :banana} )   == :invalid_data
+    assert RoundedRectangle.verify( {{10,:banana}, 40, 80} )   == :invalid_data
+    assert RoundedRectangle.verify( :banana )                  == :invalid_data
   end
 
   #============================================================================

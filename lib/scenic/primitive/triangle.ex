@@ -18,11 +18,11 @@ defmodule Scenic.Primitive.Triangle do
   #--------------------------------------------------------
   def info(), do: "Triangle data must be three points, like this: {{x0,y0}, {x1,y1}, {x2,y2}}"
 
-  def verify( {{x0, y0}, {x1, y1}, {x2, y2}} ) when
+  def verify( {{x0, y0}, {x1, y1}, {x2, y2}} = data ) when
     is_number(x0) and is_number(y0) and
     is_number(x1) and is_number(y1) and
-    is_number(x2) and is_number(y2), do: true
-  def verify( _ ), do: false
+    is_number(x2) and is_number(y2), do: {:ok, data}
+  def verify( _ ), do: :invalid_data
 
 
   #--------------------------------------------------------

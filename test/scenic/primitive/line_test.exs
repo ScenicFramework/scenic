@@ -29,16 +29,16 @@ defmodule Scenic.Primitive.LineTest do
   # verify
 
   test "verify passes valid data" do
-    assert Line.verify( @data ) == true
+    assert Line.verify( @data ) == {:ok, @data}
   end
 
   test "verify fails invalid data" do
-    assert Line.verify( {{10,12}, 40, 80} )         == false
-    assert Line.verify( {10,12, 40, 80} )           == false
-    assert Line.verify( {10, 40, 80} )              == false
-    assert Line.verify( {{10,12}, {40, :banana}} )  == false
-    assert Line.verify( {{10,:banana}, {40, 80}} )  == false
-    assert Line.verify( :banana )                   == false
+    assert Line.verify( {{10,12}, 40, 80} )         == :invalid_data
+    assert Line.verify( {10,12, 40, 80} )           == :invalid_data
+    assert Line.verify( {10, 40, 80} )              == :invalid_data
+    assert Line.verify( {{10,12}, {40, :banana}} )  == :invalid_data
+    assert Line.verify( {{10,:banana}, {40, 80}} )  == :invalid_data
+    assert Line.verify( :banana )                   == :invalid_data
   end
 
   #============================================================================
