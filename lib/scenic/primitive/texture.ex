@@ -141,7 +141,7 @@ defmodule Scenic.Primitive.Texture do
   end
 
   #--------------------------------------------------------
-  def contains_point?( {p0, p1, p2, p3}, px ) do
+  def contains_point?( {p0, p1, p2, p3, _}, px ) do
     # assumes convex, which is verified above
     Triangle.contains_point?({p0, p1, p2}, px) || Triangle.contains_point?({p1, p2, p3}, px)
   end
