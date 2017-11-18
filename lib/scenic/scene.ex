@@ -255,7 +255,7 @@ defmodule Scenic.Scene do
   # input preperation
 
   #--------------------------------------------------------
-  defp prepare_input( {:key, {key, action, mods}}, _ ) do
+  defp prepare_input( {:key, {key, _scancode, action, mods}}, _ ) do
     event = {
       :key,
       ViewPort.Input.key_to_atom( key ),

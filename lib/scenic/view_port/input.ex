@@ -356,7 +356,7 @@ defmodule Scenic.ViewPort.Input do
   # input normalization
 
   #--------------------------------------------------------
-  def normalize( {:key, {key, action, mods}} ) do
+  def normalize( {:key, {key, _scancode, action, mods}} ) do
     {
       :key,
       key_to_atom( key ),
