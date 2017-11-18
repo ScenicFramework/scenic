@@ -104,7 +104,7 @@ defmodule Scenic.Primitive.Texture do
 
   #--------------------------------------------------------
   def default_pin( data )
-  def default_pin( {{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}} ) do
+  def default_pin( {{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}, _} ) do
     {
       round( (x0 + x1 + x2 + x3) / 4 ),
       round( (y0 + y1 + y2 + y3) / 4 ),
@@ -113,7 +113,7 @@ defmodule Scenic.Primitive.Texture do
 
 
   #------------------------------------
-  def expand({p0, p1, p2, p3}, width) do
+  def expand({p0, p1, p2, p3, key}, width) do
     # account for the winding of quad - assumes convex, which is checked above
     cross = Math.Vector2.cross(
       Math.Vector2.sub(p1, p0),
@@ -137,7 +137,7 @@ defmodule Scenic.Primitive.Texture do
     p3 = Math.Line.intersection( l23, l30 )
 
     # return the expanded quad
-    {p0, p1, p2, p3}
+    {p0, p1, p2, p3, key}
   end
 
   #--------------------------------------------------------
