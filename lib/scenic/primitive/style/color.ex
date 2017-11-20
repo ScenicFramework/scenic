@@ -177,6 +177,10 @@ defmodule Scenic.Primitive.Style.Color do
 
   #============================================================================
   #https://www.w3schools.com/colors/colors_names.asp
+
+  def to_rgba( {:transparent, _} ),         do: name_to_rgb(:transparent)
+  def to_rgba( :transparent ),              do: { 0x80, 0x80, 0x80, 0x00 }
+
   def to_rgba( {r,g,b} ),                   do: {r,g,b,0xFF}
   def to_rgba( {r,g,b,a} ) when
       is_integer(r) and (r >= 0) and (r <= 255) and
@@ -191,15 +195,11 @@ defmodule Scenic.Primitive.Style.Color do
     name_to_rgb(named_color)
     |> to_rgba()
   end
-  def to_rgba( {:transparent, _} ), do: name_to_rgb(:transparent)
   def to_rgba( {named_color, alpha} ) when is_atom(named_color) and
         is_integer(alpha) and (alpha >= 0) and (alpha <= 255) do
     {r,g,b} = name_to_rgb(named_color)
     {r, g, b, alpha}
   end
-
-
-  def name_to_rgb(:transparent),             do: { 0x80, 0x80, 0x80, 0x00 }
 
   def name_to_rgb(:alice_blue),              do: { 0xF0, 0xF8, 0xFF }
   def name_to_rgb(:antique_white),           do: { 0xFA, 0xEB, 0xD7 }
