@@ -188,11 +188,10 @@ defmodule Scenic.Primitive.Style.Color do
 
   def to_rgba( <<r::size(8), g::size(8), b::size(8), a::size(8)>> ), do: {r,g,b,a}
   def to_rgba( named_color ) when is_atom(named_color) do
-#    {r,g,b} = name_to_rgb(named_color)
-#    {r, g, b, 0xFF}
     name_to_rgb(named_color)
     |> to_rgba()
   end
+  def to_rgba( {:transparent, _} ), do: name_to_rgb(:transparent)
   def to_rgba( {named_color, alpha} ) when is_atom(named_color) and
         is_integer(alpha) and (alpha >= 0) and (alpha <= 255) do
     {r,g,b} = name_to_rgb(named_color)
