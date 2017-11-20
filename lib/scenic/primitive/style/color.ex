@@ -178,7 +178,7 @@ defmodule Scenic.Primitive.Style.Color do
   #============================================================================
   #https://www.w3schools.com/colors/colors_names.asp
 
-  def to_rgba( {:transparent, _} ),         do: name_to_rgb(:transparent)
+  def to_rgba( {:transparent, _} ),         do: to_rgba(:transparent)
   def to_rgba( :transparent ),              do: { 0x80, 0x80, 0x80, 0x00 }
 
   def to_rgba( {r,g,b} ),                   do: {r,g,b,0xFF}
