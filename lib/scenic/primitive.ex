@@ -474,8 +474,7 @@ defmodule Scenic.Primitive do
   #--------------------------------------------------------
   def minimal( %Primitive{module: mod, data: data, parent_uid: puid} = p ) do
       min_p = %{
-        module:     mod,
-        data:       data,
+        data:       {mod, data},
         puid:       puid
       }
 
