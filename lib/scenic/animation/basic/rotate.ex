@@ -13,6 +13,7 @@ defmodule Scenic.Animation.Basic.Rotate do
     angle = rads + (elapsed_time * rads_per_ms)
     graph = Graph.modify(graph, id, fn(p) ->
       Primitive.put_transform(p, :rotate, angle)
+      |> Primitive.put_transform( :translate, {20,30})
     end)
     {:continue, graph, {id, angle, rads_per_ms} }
   end
