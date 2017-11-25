@@ -13,8 +13,8 @@ defmodule Scenic.Animation.Basic.Blink do
     super(graph, {id, period, true, 0}, opts)
   end
 
-  def tick( :step, graph, elapsed_time, {id, period, on, total_time} ) do
-    total_time = total_time + elapsed_time
+  def tick( :step, graph, elapsed_ms, {id, period, on, total_time} ) do
+    total_time = total_time + elapsed_ms
 
     visible = (rem( total_time, period ) < (period / 2))
 

@@ -26,7 +26,7 @@ defmodule Scenic.Graph do
 #  alias Scenic.Primitive.StyleSet
   alias Scenic.Math.MatrixBin, as: Matrix
 
-#  import IEx
+  import IEx
 
   # make reserved uids, 3 or shorter to avoid potential conflicts
   @root_uid               0
@@ -857,7 +857,7 @@ defmodule Scenic.Graph do
     ref = make_action_ref(actions)
     {
       :ok,
-      Map.put(graph, :recurring_actions, [ {ref, action, args} | actions ]),
+      Map.put(graph, :recurring_actions, [ {ref, action, args, nil} | actions ]),
       {:recurring_action_reference, ref}
     }    
   end
@@ -871,7 +871,7 @@ defmodule Scenic.Graph do
       |> binary_part(0, ref_length)
 
     # if it isn't unique, try again
-    case Enum.find(actions, false, fn({r,_,_})-> r == ref end) do
+    case Enum.find(actions, false, fn({r,_,_,_})-> r == ref end) do
       false -> ref
       _ -> make_action_ref(actions, ref_length + 1 )
     end
@@ -879,7 +879,7 @@ defmodule Scenic.Graph do
 
   #--------------------------------------------------------
   def cancel_recurring_action(%Graph{recurring_actions: actions} = graph, {:recurring_action_reference, reference}) do
-    Enum.reject(actions, fn({ref,_,_})-> ref == reference end)
+    Enum.reject(actions, fn({ref,_,_,_})-> ref == reference end)
     |> ( &Map.put(graph, :recurring_actions, &1) ).()
   end
 
@@ -887,14 +887,19 @@ defmodule Scenic.Graph do
   def tick_recurring_actions(%Graph{recurring_actions: actions, last_recurring_action: last_time} = graph) do
     # calculate the time
     current_time = :os.system_time(:milli_seconds)
-    elapsed_time = case last_time do
-      nil -> 0
-      last_time -> current_time - last_time
-    end
+#    elapsed_time = case last_time do
+#      nil -> 0
+#      last_time -> current_time - last_time
+#    end
 
-    {actions, graph} = Scenic.Utilities.Enum.filter_map_reduce(actions, graph, fn({ref, action, args}, g_acc)->
+    {actions, graph} = Scenic.Utilities.Enum.filter_map_reduce(actions, graph, fn({ref, action, args, start_time}, g_acc)->
+      {elapsed_time, start_time} = case start_time do
+        nil -> {0, current_time}
+        start_time -> {current_time - start_time, start_time}
+      end
+
       case call_recurring_action(:step, g_acc, elapsed_time, action, args) do
-        {:continue, %Graph{} = graph_out, args_out} -> {true, {ref, action, args_out}, graph_out }
+        {:continue, %Graph{} = graph_out, args_out} -> {true, {ref, action, args_out, start_time}, graph_out }
         {:stop, %Graph{} = graph_out} ->               {false, graph_out}
       end
     end)
