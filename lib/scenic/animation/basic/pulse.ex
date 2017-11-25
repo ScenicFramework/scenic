@@ -12,13 +12,33 @@ defmodule Scenic.Animation.Basic.Pulse do
 
   @hz_to_rpms   2 * :math.pi / 1000
 
+  #--------------------------------------------------------
+  def tick( :step, graph, elapsed_ms, {:pulse_internal, id, factor, speed, orig_data} ) do
+    graph = Graph.modify(graph, id, fn(%Primitive{uid: uid} = p) ->
+
+      {mid_point, _} = Map.get(orig_data, uid)
+      scale = mid_point + :math.sin(elapsed_ms * speed) * factor * mid_point
+
+      Primitive.put_transform(p, :scale, scale)
+    end)
+    {:continue, graph, {:pulse_internal, id, factor, speed, orig_data} }
+  end
+
+  #--------------------------------------------------------
+  def tick( :stop, graph, elapsed_ms, {:pulse_internal, id, _, _, orig_data} ) do
+    # restore the original scale
+    graph = Graph.modify(graph, id, fn(p) ->
+      {_, scale} = Map.get(orig_data, id)
+      Primitive.put_transform(p, :scale, scale)
+    end)
+    {:stop, graph }
+  end
 
   #--------------------------------------------------------
   # easy default
   def tick( :step, graph, elapsed_ms, id ) when is_atom(id) do
     tick( :step, graph, elapsed_ms, { id, 0.02, 0.25 } )
   end
-
 
   #--------------------------------------------------------
   def tick( :step, graph, elapsed_ms, {id, factor, speed} ) do
@@ -35,29 +55,7 @@ defmodule Scenic.Animation.Basic.Pulse do
     # transform speed from hz to radians per millisecond
     speed = @hz_to_rpms * speed
 
-    tick( :step, graph, elapsed_ms, {id, factor, speed, orig_data} )
-  end
-
-  #--------------------------------------------------------
-  def tick( :step, graph, elapsed_ms, {id, factor, speed, orig_data} ) do
-    graph = Graph.modify(graph, id, fn(%Primitive{uid: uid} = p) ->
-
-      {mid_point, _} = Map.get(orig_data, uid)
-      scale = mid_point + :math.sin(elapsed_ms * speed) * factor * mid_point
-
-      Primitive.put_transform(p, :scale, scale)
-    end)
-    {:continue, graph, {id, factor, speed, orig_data} }
-  end
-
-  #--------------------------------------------------------
-  def tick( :stop, graph, elapsed_ms, {id, _, _, orig_data} ) do
-    # restore the original scale
-    graph = Graph.modify(graph, id, fn(p) ->
-      {_, scale} = Map.get(orig_data, id)
-      Primitive.put_transform(p, :scale, scale)
-    end)
-    {:stop, graph }
+    tick( :step, graph, elapsed_ms, {:pulse_internal, id, factor, speed, orig_data} )
   end
 
 end
