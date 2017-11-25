@@ -10,7 +10,7 @@ defmodule Scenic.Primitive.Line do
 
 #  import IEx
 
-  @styles   [:hidden, :color, :line_width]
+  @styles   [:hidden, :color, :line_width, :line_stipple]
 
   #============================================================================
   # data verification and serialization

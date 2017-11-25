@@ -9,6 +9,8 @@
 defmodule Scenic.Primitive.Style do
   alias Scenic.Primitive.Style
 
+  import IEx
+
 #  @dflag      2
 
 
@@ -18,10 +20,11 @@ defmodule Scenic.Primitive.Style do
     :color =>                             Style.Color,
     :hidden =>                            Style.Hidden,
     :line_width =>                        Style.LineWidth,
+    :line_stipple =>                      Style.LineStipple,
     :clear_color =>                       Style.ClearColor,
   }
 
-  @primitive_styles   [:hidden, :color, :border_color, :border_width, :line_width, :clear_color]
+  @primitive_styles   [:hidden, :color, :border_color, :border_width, :line_width, :line_stipple, :clear_color]
 
 
   @callback info() :: bitstring
@@ -100,7 +103,7 @@ defmodule Scenic.Primitive.Style do
     Enum.reduce(@primitive_styles, %{}, fn(k,acc) ->
       case Map.get(style_map, k) do
         nil ->  acc
-        v ->    Map.put(acc, k, normalize(k,v) )
+        v   ->  Map.put(acc, k, normalize(k,v) )
       end
     end)
   end
