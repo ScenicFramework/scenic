@@ -864,6 +864,7 @@ defmodule Scenic.Graph do
 
   # doesn't need to be a globally unique reference from make_ref. Just something that is unique
   # to this list of actions. If there is a collision, increase length by 1, which should sort it
+  # can't use make_ref as this is done at compile time
   defp make_action_ref(actions, ref_length \\ 4) do
     ref = :crypto.strong_rand_bytes(ref_length)
       |> Base.encode64(padding: false)
