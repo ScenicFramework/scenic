@@ -8,9 +8,11 @@ defmodule Scenic.Animation.Basic.Rotate do
   alias Scenic.Graph
   alias Scenic.Primitive
 
+  @hz_to_rpms   :math.pi / 1000
+
 
   def tick( :step, graph, elapsed_ms, {id, rads, rads_per_second} ) do
-    angle = elapsed_ms * (rads_per_second / 1000)
+    angle = elapsed_ms * rads_per_second * @hz_to_rpms
     graph = Graph.modify(graph, id, fn(p) ->
       Primitive.put_transform(p, :rotate, angle)
       |> Primitive.put_transform( :translate, {20,30})
