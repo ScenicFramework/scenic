@@ -887,10 +887,6 @@ defmodule Scenic.Graph do
   def tick_recurring_actions(%Graph{recurring_actions: actions, last_recurring_action: last_time} = graph) do
     # calculate the time
     current_time = :os.system_time(:milli_seconds)
-#    elapsed_time = case last_time do
-#      nil -> 0
-#      last_time -> current_time - last_time
-#    end
 
     {actions, graph} = Scenic.Utilities.Enum.filter_map_reduce(actions, graph, fn({ref, action, args, start_time}, g_acc)->
       {elapsed_time, start_time} = case start_time do

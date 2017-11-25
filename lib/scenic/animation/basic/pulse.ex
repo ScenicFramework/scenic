@@ -10,6 +10,16 @@ defmodule Scenic.Animation.Basic.Pulse do
 
   import IEx
 
+  @hz_to_rpms   2 * :math.pi / 1000
+
+
+  #--------------------------------------------------------
+  # easy default
+  def tick( :step, graph, elapsed_ms, id ) when is_atom(id) do
+    tick( :step, graph, elapsed_ms, { id, 0.02, 0.25 } )
+  end
+
+
   #--------------------------------------------------------
   def tick( :step, graph, elapsed_ms, {id, factor, speed} ) do
     # this is the first time step is called. Save the original scale
@@ -21,6 +31,9 @@ defmodule Scenic.Animation.Basic.Pulse do
       end
       Map.put(acc, uid, data)
     end)
+
+    # transform speed from hz to radians per millisecond
+    speed = @hz_to_rpms * speed
 
     tick( :step, graph, elapsed_ms, {id, factor, speed, orig_data} )
   end
