@@ -9,7 +9,7 @@ defmodule Scenic.Animation.Basic.Rotate do
   alias Scenic.Primitive
 
 
-  def step( graph, elapsed_time, {id, rads, rads_per_ms} ) do
+  def tick( :step, graph, elapsed_time, {id, rads, rads_per_ms} ) do
     angle = rads + (elapsed_time * rads_per_ms)
     graph = Graph.modify(graph, id, fn(p) ->
       Primitive.put_transform(p, :rotate, angle)

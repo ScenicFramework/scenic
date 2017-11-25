@@ -893,7 +893,7 @@ defmodule Scenic.Graph do
     end
 
     {actions, graph} = Scenic.Utilities.Enum.filter_map_reduce(actions, graph, fn({ref, action, args}, g_acc)->
-      case call_recurring_action(g_acc, elapsed_time, action, args) do
+      case call_recurring_action(:step, g_acc, elapsed_time, action, args) do
         {:continue, %Graph{} = graph_out, args_out} -> {true, {ref, action, args_out}, graph_out }
         {:stop, %Graph{} = graph_out} ->               {false, graph_out}
       end
@@ -906,15 +906,15 @@ defmodule Scenic.Graph do
   end
 
   #--------------------------------------------------------
-  defp call_recurring_action(graph, elapsed_time, callback, data)
-  defp call_recurring_action(graph, elapsed_time, callback, data) when is_function(callback, 3) do
-    callback.(graph, elapsed_time, data)
+  defp call_recurring_action(msg, graph, elapsed_time, callback, data)
+  defp call_recurring_action(msg, graph, elapsed_time, callback, data) when is_function(callback, 3) do
+    callback.(msg, graph, elapsed_time, data)
   end
-  defp call_recurring_action(graph, elapsed_time, module, data) when is_atom(module) do
-    module.step(graph, elapsed_time, data)
+  defp call_recurring_action(msg, graph, elapsed_time, module, data) when is_atom(module) do
+    module.tick(msg, graph, elapsed_time, data)
   end
-  defp call_recurring_action(graph, elapsed_time, {module, action}, data) do
-    Kernel.apply(module, action, [graph, elapsed_time, data])
+  defp call_recurring_action(msg, graph, elapsed_time, {module, action}, data) do
+    Kernel.apply(module, action, [msg, graph, elapsed_time, data])
   end
 
 
