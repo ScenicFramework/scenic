@@ -492,9 +492,21 @@ defmodule Scenic.Primitive do
       # add transforms, if any are set
       case Map.get(p, :transforms) do
         nil -> min_p
-        txs -> Map.put(min_p, :transforms, txs)
+        txs ->
+            # if either rotate or scale is set, and pin is not, set pin to the default
+            txs = case (Map.get(txs, :rotate) != nil || Map.get(txs, :scale) != nil) && (Map.get(txs, :pin) == nil) do
+              true ->
+                pin = Map.get(p, :module).default_pin(Map.get(p, :data))
+                Map.put(txs, :pin, pin )
+              false -> txs
+            end
+
+            Map.put(min_p, :transforms, txs)
       end
   end
+
+
+
 
 
   #============================================================================
