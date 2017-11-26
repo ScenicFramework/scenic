@@ -27,9 +27,6 @@ defmodule Scenic.Utilities.Map do
   def difference(map_1, map_2,_) when (map_1 == map_2), do: []
   def difference(nil, map_2,recurse_nested), do: difference(%{}, map_2,recurse_nested)
   def difference(map_1, map_2, recurse) when is_map(map_1) and is_map(map_2) do
-#    map_1 = Map.delete( map_1, :__struct__ )
- #   map_2 = Map.delete( map_2, :__struct__ )
-
     # remove any keys from map_1 that are simply not present (at all) in map_2
     diff_list = Enum.reduce(map_1, [], fn({k,_}, d)->
       case Map.has_key?(map_2, k) do
