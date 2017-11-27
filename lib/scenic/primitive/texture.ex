@@ -20,16 +20,19 @@ defmodule Scenic.Primitive.Texture do
   #--------------------------------------------------------
   def info(), do: "Texture data must be a (point or rect or quad) and a cache key: {{x0,y0}, {x1,y1}, {x2,y2}, {x3,y3}, key}"
 
-  def verify( {{x0, y0}, width, height, key} ) when is_bitstring(key) and
-  is_number(x0) and is_number(y0) and
-  is_number(width) and is_number(height) do
-    {:ok, {{x0, y0}, {x0 + width, y0}, {x0 + width, y0 + height}, {x0, y0 + height}, key}}
+  def verify( {quad, key} ) do
+    verify( {quad, {{0,0},{1,0},{1,1},{0,1}}, key} )
   end
-  def verify( {{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}, key} = data ) when is_bitstring(key) and
+  def verify( {{{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}}, {{s0, t0}, {s1, t1}, {s2, t2}, {s3, t3}}, key} = data )
+  when is_bitstring(key) and
   is_number(x0) and is_number(y0) and
   is_number(x1) and is_number(y1) and
   is_number(x2) and is_number(y2) and
-  is_number(x3) and is_number(y3) do
+  is_number(x3) and is_number(y3) and
+  is_number(s0) and is_number(t0) and s0 >= 0 and s0 <= 1 and t0 >= 0 and t0 <= 1 and
+  is_number(s1) and is_number(t1) and s1 >= 0 and s1 <= 1 and t1 >= 0 and t1 <= 1 and
+  is_number(s2) and is_number(t2) and s2 >= 0 and s2 <= 1 and t2 >= 0 and t2 <= 1 and
+  is_number(s3) and is_number(t3) and s3 >= 0 and s3 <= 1 and t3 >= 0 and t3 <= 1 do
     case Math.Quad.classification({{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}}) == :convex do
       true  -> {:ok, data}
       false -> :invalid_data
