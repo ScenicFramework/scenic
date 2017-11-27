@@ -93,7 +93,8 @@ defmodule Scenic.Primitive.Sector do
 
 
   #--------------------------------------------------------
-  def default_pin({{x, y},_,_,_}), do: {x,y}
+  def default_pin({{x, y},_,_,_}),    do: {x,y}
+  def default_pin({{x, y},_,_,_,_}),  do: {x,y}
 
   #--------------------------------------------------------
   def expand( { {x,y}, s, f, r }, width ) do
