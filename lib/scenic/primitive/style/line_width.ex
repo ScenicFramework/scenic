@@ -16,10 +16,10 @@ defmodule Scenic.Primitive.Style.LineWidth do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Style :line_width must be an integer between 0 and 255"
+  def info(), do: "Style :line_width must be an number between 0.0 and 255.0"
 
   #--------------------------------------------------------
-  def verify( width ) when is_integer(width) and
+  def verify( width ) when is_number(width) and
     (width >= 0) and (width <= 255), do: true
   def verify( _ ), do: false
 
