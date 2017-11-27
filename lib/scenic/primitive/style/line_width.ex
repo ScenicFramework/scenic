@@ -11,7 +11,6 @@ defmodule Scenic.Primitive.Style.LineWidth do
 #  @type_code        0x0020
 
 
-
   #============================================================================
   # data verification and serialization
 
@@ -38,7 +37,6 @@ defmodule Scenic.Primitive.Style.LineWidth do
     {:ok, width, bin}
   end
   def deserialize( binary_data, order ), do: {:err_invalid, binary_data, order }
-
 
 
 end
