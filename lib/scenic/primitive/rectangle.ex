@@ -25,51 +25,6 @@ defmodule Scenic.Primitive.Rectangle do
     is_number(width) and is_number(height), do: {:ok, data}
   def verify( _ ), do:  :invalid_data
 
-  #--------------------------------------------------------
-  def serialize( data, order \\ :native )
-  def serialize( {{x0, y0}, width, height}, :native ) do
-    { :ok,
-      <<
-        x0      :: float-size(32)-native,
-        y0      :: float-size(32)-native,
-        width   :: float-size(32)-native,
-        height  :: float-size(32)-native,
-      >>
-    }
-  end
-  def serialize( {{x0, y0}, width, height}, :big ) do
-    { :ok,
-      <<
-        x0      :: float-size(32)-big,
-        y0      :: float-size(32)-big,
-        width   :: float-size(32)-big,
-        height  :: float-size(32)-big,
-      >>
-    }
-  end
-
-  #--------------------------------------------------------
-  def deserialize( binary_data, order \\ :native )
-  def deserialize( <<
-      x0      :: float-size(32)-native,
-      y0      :: float-size(32)-native,
-      width   :: float-size(32)-native,
-      height  :: float-size(32)-native,
-      bin     :: binary
-    >>, :native ) do
-    {:ok, {{x0, y0}, width, height}, bin}
-  end
-  def deserialize( <<
-      x0      :: float-size(32)-big,
-      y0      :: float-size(32)-big,
-      width   :: float-size(32)-big,
-      height  :: float-size(32)-big,
-      bin     :: binary
-    >>, :big ) do
-    {:ok, {{x0, y0}, width, height}, bin}
-  end
-  def deserialize( binary_data, order ), do: {:err_invalid, binary_data, order }
-
 
   #============================================================================
   def valid_styles(), do: @styles

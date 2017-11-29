@@ -27,56 +27,6 @@ defmodule Scenic.Primitive.RoundedRectangle do
     is_integer(radius) and (radius >= 0) and (radius <= 255), do: {:ok, data}
   def verify( _ ), do: :invalid_data
 
-  #--------------------------------------------------------
-  def serialize( data, order \\ :native )
-  def serialize( {{x0, y0}, width, height, radius}, :native ) do
-    { :ok,
-      <<
-        x0      :: integer-size(16)-native,
-        y0      :: integer-size(16)-native,
-        width   :: integer-size(16)-native,
-        height  :: integer-size(16)-native,
-        radius  :: integer-size(16)-native,
-      >>
-    }
-  end
-  def serialize( {{x0, y0}, width, height, radius}, :big ) do
-    { :ok,
-      <<
-        x0      :: integer-size(16)-big,
-        y0      :: integer-size(16)-big,
-        width   :: integer-size(16)-big,
-        height  :: integer-size(16)-big,
-        radius  :: integer-size(16)-big,
-      >>
-    }
-  end
-
-  #--------------------------------------------------------
-  def deserialize( binary_data, order \\ :native )
-  def deserialize( <<
-      x0      :: integer-size(16)-native,
-      y0      :: integer-size(16)-native,
-      width   :: integer-size(16)-native,
-      height  :: integer-size(16)-native,
-      radius  :: integer-size(16)-native,
-      bin     :: binary
-    >>, :native ) do
-    {:ok, {{x0, y0}, width, height, radius}, bin}
-  end
-  def deserialize( <<
-      x0      :: integer-size(16)-big,
-      y0      :: integer-size(16)-big,
-      width   :: integer-size(16)-big,
-      height  :: integer-size(16)-big,
-      radius  :: integer-size(16)-big,
-      bin     :: binary
-    >>, :big ) do
-    {:ok, {{x0, y0}, width, height, radius}, bin}
-  end
-  def deserialize( binary_data, order ), do: {:err_invalid, binary_data, order }
-
-
 
   #============================================================================
   def valid_styles(), do: @styles

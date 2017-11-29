@@ -23,53 +23,6 @@ defmodule Scenic.Primitive.Text do
     is_number(x) and is_number(y) and is_bitstring(text), do: {:ok, data}
   def verify( _ ), do: :invalid_data
 
-  #--------------------------------------------------------
-  def serialize( data, order \\ :native )
-  def serialize( {{x0, y0}, text}, :native ) do
-    { :ok,
-      <<
-        x0              :: integer-size(16)-native,
-        y0              :: integer-size(16)-native,
-        byte_size(text) :: unsigned-integer-native-size( 16 ),
-        text            :: bitstring
-      >>
-    }
-  end
-  def serialize( {{x0, y0}, text}, :big ) do
-    { :ok,
-      <<
-        x0              :: integer-size(16)-big,
-        y0              :: integer-size(16)-big,
-        byte_size(text) :: unsigned-integer-big-size( 16 ),
-        text            :: bitstring
-      >>
-    }
-  end
-
-  #--------------------------------------------------------
-  def deserialize( binary_data, order \\ :native )
-  def deserialize( <<
-      x0          :: integer-size(16)-native,
-      y0          :: integer-size(16)-native,
-      num_bytes   :: unsigned-integer-native-size( 16 ),
-      bin         :: binary
-    >>, :native ) do
-    << text :: binary-size(num_bytes), bin :: binary >> = bin
-    {:ok, {{x0, y0}, text}, bin}
-  end
-  def deserialize( <<
-      x0          :: integer-size(16)-big,
-      y0          :: integer-size(16)-big,
-      num_bytes   :: unsigned-integer-big-size( 16 ),
-      bin         :: binary
-    >>, :big ) do
-    << text :: binary-size(num_bytes), bin :: binary >> = bin
-    {:ok, {{x0, y0}, text}, bin}
-  end
-  def deserialize( binary_data, order ), do: {:err_invalid, binary_data, order }
-
-
-
 
   #============================================================================
   def valid_styles(), do: @styles

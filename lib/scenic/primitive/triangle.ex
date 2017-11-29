@@ -25,59 +25,6 @@ defmodule Scenic.Primitive.Triangle do
   def verify( _ ), do: :invalid_data
 
 
-  #--------------------------------------------------------
-  def serialize( data, order \\ :native )
-  def serialize( {{x0, y0}, {x1, y1}, {x2, y2}}, :native ) do
-    { :ok,
-      <<
-        x0      :: integer-size(16)-native,
-        y0      :: integer-size(16)-native,
-        x1      :: integer-size(16)-native,
-        y1      :: integer-size(16)-native,
-        x2      :: integer-size(16)-native,
-        y2      :: integer-size(16)-native,
-      >>
-    }
-  end
-  def serialize( {{x0, y0}, {x1, y1}, {x2, y2}}, :big ) do
-    { :ok,
-      <<
-        x0      :: integer-size(16)-big,
-        y0      :: integer-size(16)-big,
-        x1      :: integer-size(16)-big,
-        y1      :: integer-size(16)-big,
-        x2      :: integer-size(16)-big,
-        y2      :: integer-size(16)-big,
-      >>
-    }
-  end
-
-  #--------------------------------------------------------
-  def deserialize( binary_data, order \\ :native )
-  def deserialize( <<
-      x0      :: integer-size(16)-native,
-      y0      :: integer-size(16)-native,
-      x1      :: integer-size(16)-native,
-      y1      :: integer-size(16)-native,
-      x2      :: integer-size(16)-native,
-      y2      :: integer-size(16)-native,
-      bin     :: binary
-    >>, :native ) do
-    {:ok, {{x0, y0}, {x1, y1}, {x2, y2}}, bin}
-  end
-  def deserialize( <<
-      x0      :: integer-size(16)-big,
-      y0      :: integer-size(16)-big,
-      x1      :: integer-size(16)-big,
-      y1      :: integer-size(16)-big,
-      x2      :: integer-size(16)-big,
-      y2      :: integer-size(16)-big,
-      bin     :: binary
-    >>, :big ) do
-    {:ok, {{x0, y0}, {x1, y1}, {x2, y2}}, bin}
-  end
-  def deserialize( binary_data, order ), do: {:err_invalid, binary_data, order }
-
   #============================================================================
   def valid_styles(), do: @styles
 

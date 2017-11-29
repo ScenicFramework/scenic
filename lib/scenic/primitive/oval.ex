@@ -29,7 +29,6 @@ defmodule Scenic.Primitive.Oval do
       _ -> :invalid_data
     end
   end
-  def verify( _ ), do: :invalid_data
 
 
   #--------------------------------------------------------

@@ -20,8 +20,6 @@ defmodule Scenic.Primitive do
 
   @callback info() :: bitstring
   @callback verify( any ) :: any
-  @callback serialize( any, atom ) :: binary
-  @callback deserialize( binary, atom ) :: any
 
   @callback default_pin( any ) :: {integer, integer}
   @callback expand( any ) :: any

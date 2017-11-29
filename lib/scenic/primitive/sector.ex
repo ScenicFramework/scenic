@@ -28,7 +28,6 @@ defmodule Scenic.Primitive.Sector do
       _ -> :invalid_data
     end
   end
-  def verify( _ ), do: :invalid_data
 
 
   #--------------------------------------------------------

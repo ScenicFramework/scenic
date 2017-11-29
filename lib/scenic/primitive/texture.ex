@@ -32,7 +32,6 @@ defmodule Scenic.Primitive.Texture do
       _ -> :invalid_data
     end
   end
-  def verify( _ ), do: :invalid_data
 
 
   #--------------------------------------------------------
