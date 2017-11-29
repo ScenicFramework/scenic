@@ -21,59 +21,5 @@ defmodule Scenic.Primitive.Transform.Translate do
   def verify( {x,y,z} ) when is_number(x) and is_number(y) and is_number(z), do: true
   def verify( _ ), do: false
 
-  #--------------------------------------------------------
-  def serialize( data, order \\ :native )
-  def serialize( {x,y}, order ), do: serialize( {x,y, 0.0}, order )
-  def serialize( {x,y,z}, :native ) do
-    {:ok, <<
-      x :: float-size(32)-native,
-      y :: float-size(32)-native,
-      z :: float-size(32)-native
-    >>}
-  end
-  def serialize( {x,y,z}, :big ) do
-    {:ok, <<
-      x :: float-size(32)-big,
-      y :: float-size(32)-big,
-      z :: float-size(32)-big
-    >>}
-  end
-
-  #--------------------------------------------------------
-  def deserialize( mx, order \\ :native )
-
-  def deserialize( <<
-      x   :: float-size(32)-native,
-      y   :: float-size(32)-native,
-      0.0 :: float-size(32)-native,
-      bin :: binary
-    >>, :native
- ), do: {:ok, {x, y}, bin}
-  def deserialize( <<
-      x   :: float-size(32)-native,
-      y   :: float-size(32)-native,
-      z   :: float-size(32)-native,
-      bin :: binary
-    >>, :native
- ), do: {:ok, {x, y, z}, bin}
-
-
-  def deserialize( <<
-      x   :: float-size(32)-big,
-      y   :: float-size(32)-big,
-      0.0 :: float-size(32)-big,
-      bin :: binary
-    >>, :big
- ), do: {:ok, {x, y}, bin}
-  def deserialize( <<
-      x   :: float-size(32)-big,
-      y   :: float-size(32)-big,
-      z   :: float-size(32)-big,
-      bin :: binary
-    >>, :big
- ), do: {:ok, {x, y, z}, bin}
-
-  def deserialize( binary_data, order ), do: {:err_invalid, binary_data, order }
-
 
 end
