@@ -107,12 +107,16 @@ defmodule Scenic.Primitive.Texture do
 
   #--------------------------------------------------------
   def default_pin( data )
-  def default_pin( {{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}, _} ) do
+  def default_pin( {{p0,p1,p2,p3}, _} ),    do: do_default_pin( p0, p1, p2, p3 )
+  def default_pin( {{p0,p1,p2,p3}, _, _} ), do: do_default_pin( p0, p1, p2, p3 )
+
+  defp do_default_pin( {x0, y0}, {x1, y1}, {x2, y2}, {x3, y3} ) do
     {
       round( (x0 + x1 + x2 + x3) / 4 ),
       round( (y0 + y1 + y2 + y3) / 4 ),
     }
   end
+
 
 
   #------------------------------------
