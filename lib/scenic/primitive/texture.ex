@@ -8,6 +8,7 @@ defmodule Scenic.Primitive.Texture do
   alias Scenic.Math
   alias Scenic.Cache
   alias Scenic.Primitive.Triangle
+  alias Scenic.Primitive.Quad
 
 #  import IEx
 
@@ -148,10 +149,8 @@ defmodule Scenic.Primitive.Texture do
   end
 
   #--------------------------------------------------------
-  def contains_point?( {p0, p1, p2, p3, _}, px ) do
-    # assumes convex, which is verified above
-    Triangle.contains_point?({p0, p1, p2}, px) || Triangle.contains_point?({p1, p2, p3}, px)
-  end
+  def contains_point?( {quad, _}, px ),     do: Quad.contains_point?(quad, px)
+  def contains_point?( {quad, _, _}, px ),  do: Quad.contains_point?(quad, px)
 
 
 end
