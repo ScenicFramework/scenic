@@ -44,7 +44,6 @@ defmodule Scenic.Primitive.Style.LineStipple do
     {factor, pattern}
   end
 
-
   #--------------------------------------------------------
   # resolve named stipples
 

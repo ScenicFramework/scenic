@@ -51,33 +51,4 @@ defmodule Scenic.Primitive.Style.BorderColor do
     normalize( {{r,g,b,a}} )
   def normalize( {{r,g,b,a}} ), do: {Color.to_rgba( {r,g,b,a} )}
 
-
-  #--------------------------------------------------------
-  def serialize( data, order \\ :native )
-  def serialize( color, _ ) do
-    {{r,g,b,a}} = normalize( color )
-    <<
-      1 :: size(8),
-      r ::  unsigned-integer-size(8),
-      g ::  unsigned-integer-size(8),
-      b ::  unsigned-integer-size(8),
-      a ::  unsigned-integer-size(8)
-    >>    
-  end
-
-  #--------------------------------------------------------
-  # note: deserialize only works on a single color at a time
-  # the caller needs to call repeatedly for a multi-color
-
-  def deserialize( binary_data, order \\ :native )
-  def deserialize( <<
-      1 :: size(8),
-      r0 :: size(8), g0 :: size(8), b0 :: size(8), a0 :: size(8),
-      bin :: binary
-    >>, _ ) do
-    {:ok, {{r0,g0,b0,a0}}, bin}
-  end
-  def deserialize( binary_data, order ), do: {:err_invalid, binary_data, order }
-
-
 end

@@ -29,9 +29,6 @@ defmodule Scenic.Primitive.Style do
 
   @callback info() :: bitstring
   @callback verify( any ) :: boolean
-  @callback serialize( any, atom ) :: binary
-  @callback deserialize( binary, atom ) :: any
-
 
   #===========================================================================
   defmodule FormatError do

@@ -22,21 +22,4 @@ defmodule Scenic.Primitive.Style.LineWidth do
     (width >= 0) and (width <= 255), do: true
   def verify( _ ), do: false
 
-  #--------------------------------------------------------
-  def serialize( data, order \\ :native )
-  def serialize( width, _ ) do
-    << width :: size(8) >>
-  end
-
-  #--------------------------------------------------------
-  def deserialize( binary_data, order \\ :native )
-  def deserialize( <<
-      width   :: size(8),
-      bin     :: binary
-    >>, _ ) do
-    {:ok, width, bin}
-  end
-  def deserialize( binary_data, order ), do: {:err_invalid, binary_data, order }
-
-
 end

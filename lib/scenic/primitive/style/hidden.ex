@@ -22,15 +22,5 @@ defmodule Scenic.Primitive.Style.Hidden do
   def verify( true ),     do: true
   def verify( false ),    do: true
   def verify( _ ),        do: false
-
-  #--------------------------------------------------------
-  def serialize( data, order \\ :native )
-  def serialize( true, _ ),  do: <<1>>
-  def serialize( false, _ ), do: <<0>>
-
-  #--------------------------------------------------------
-  def deserialize( binary_data, order \\ :native )
-  def deserialize( <<1, bin :: binary>>, _ ), do: {:ok, true, bin}
-  def deserialize( <<0, bin :: binary>>, _ ), do: {:ok, false, bin}
-
+  
 end
