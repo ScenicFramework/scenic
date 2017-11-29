@@ -29,10 +29,10 @@ defmodule Scenic.Primitive.Texture do
   is_number(x1) and is_number(y1) and
   is_number(x2) and is_number(y2) and
   is_number(x3) and is_number(y3) and
-  is_number(s0) and is_number(t0) and s0 >= 0 and s0 <= 1 and t0 >= 0 and t0 <= 1 and
-  is_number(s1) and is_number(t1) and s1 >= 0 and s1 <= 1 and t1 >= 0 and t1 <= 1 and
-  is_number(s2) and is_number(t2) and s2 >= 0 and s2 <= 1 and t2 >= 0 and t2 <= 1 and
-  is_number(s3) and is_number(t3) and s3 >= 0 and s3 <= 1 and t3 >= 0 and t3 <= 1 do
+  is_number(s0) and is_number(t0) and
+  is_number(s1) and is_number(t1) and
+  is_number(s2) and is_number(t2) and
+  is_number(s3) and is_number(t3) do
     case Math.Quad.classification({{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}}) == :convex do
       true  -> {:ok, data}
       false -> :invalid_data
