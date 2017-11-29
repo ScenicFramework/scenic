@@ -21,10 +21,28 @@ defmodule Scenic.Primitive.Texture do
   #--------------------------------------------------------
   def info(), do: "Texture data must be a (point or rect or quad) and a cache key: {{x0,y0}, {x1,y1}, {x2,y2}, {x3,y3}, key}"
 
-  def verify( {quad, key} ) do
-    verify( {quad, {{0,0},{1,0},{1,1},{0,1}}, key} )
+  def verify( data ) do
+    try do
+      {quad,_,_} = normalize(data)
+      case Math.Quad.classification(quad) == :convex do
+        true  -> {:ok, data}
+        false -> :invalid_data
+      end
+    rescue
+      _ -> :invalid_data
+    end
   end
-  def verify( {{{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}}, {{s0, t0}, {s1, t1}, {s2, t2}, {s3, t3}}, key} = data )
+  def verify( _ ), do: :invalid_data
+
+
+  #--------------------------------------------------------
+  def normalize({{x0, y0},w,h,key}) do
+    quad = { {x0, y0}, {x0+w, y0}, {x0+w, y0+h}, {x0, y0+h} }
+    normalize({quad,key})
+  end
+  def normalize({{{x0, y0},w,h},key}),    do: normalize({{x0, y0},w,h,key})
+  def normalize({quad,key}),              do: normalize({quad,{{0,0},{1,0},{1,1},{0,1}},key})
+  def normalize( {{{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}}, {{s0, t0}, {s1, t1}, {s2, t2}, {s3, t3}}, key} = data )
   when is_bitstring(key) and
   is_number(x0) and is_number(y0) and
   is_number(x1) and is_number(y1) and
@@ -33,124 +51,29 @@ defmodule Scenic.Primitive.Texture do
   is_number(s0) and is_number(t0) and
   is_number(s1) and is_number(t1) and
   is_number(s2) and is_number(t2) and
-  is_number(s3) and is_number(t3) do
-    case Math.Quad.classification({{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}}) == :convex do
-      true  -> {:ok, data}
-      false -> :invalid_data
-    end
-  end
-  def verify( _ ), do: :invalid_data
-
-
-  #--------------------------------------------------------
-  def serialize( data, order \\ :native )
-  def serialize( {{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3},_}, :native ) do
-    { :ok,
-      <<
-        x0      :: integer-size(16)-native,
-        y0      :: integer-size(16)-native,
-        x1      :: integer-size(16)-native,
-        y1      :: integer-size(16)-native,
-        x2      :: integer-size(16)-native,
-        y2      :: integer-size(16)-native,
-        x3      :: integer-size(16)-native,
-        y3      :: integer-size(16)-native
-      >>
-    }
-  end
-  def serialize( {{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3},_}, :big ) do
-    { :ok,
-      <<
-        x0      :: integer-size(16)-big,
-        y0      :: integer-size(16)-big,
-        x1      :: integer-size(16)-big,
-        y1      :: integer-size(16)-big,
-        x2      :: integer-size(16)-big,
-        y2      :: integer-size(16)-big,
-        x3      :: integer-size(16)-big,
-        y3      :: integer-size(16)-big
-      >>
-    }
-  end
-
-  #--------------------------------------------------------
-  def deserialize( binary_data, order \\ :native )
-  def deserialize( <<
-      x0      :: integer-size(16)-native,
-      y0      :: integer-size(16)-native,
-      x1      :: integer-size(16)-native,
-      y1      :: integer-size(16)-native,
-      x2      :: integer-size(16)-native,
-      y2      :: integer-size(16)-native,
-      x3      :: integer-size(16)-native,
-      y3      :: integer-size(16)-native,
-      bin     :: binary
-    >>, :native ) do
-    {:ok, {{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}}, bin}
-  end
-  def deserialize( <<
-      x0      :: integer-size(16)-big,
-      y0      :: integer-size(16)-big,
-      x1      :: integer-size(16)-big,
-      y1      :: integer-size(16)-big,
-      x2      :: integer-size(16)-big,
-      y2      :: integer-size(16)-big,
-      x3      :: integer-size(16)-big,
-      y3      :: integer-size(16)-big,
-      bin     :: binary
-    >>, :big ) do
-    {:ok, {{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}}, bin}
-  end
-  def deserialize( binary_data, order ), do: {:err_invalid, binary_data, order }
+  is_number(s3) and is_number(t3), do: data
 
   #============================================================================
   def valid_styles(), do: @styles
 
   #--------------------------------------------------------
-  def default_pin( data )
-  def default_pin( {{p0,p1,p2,p3}, _} ),    do: do_default_pin( p0, p1, p2, p3 )
-  def default_pin( {{p0,p1,p2,p3}, _, _} ), do: do_default_pin( p0, p1, p2, p3 )
-
-  defp do_default_pin( {x0, y0}, {x1, y1}, {x2, y2}, {x3, y3} ) do
-    {
-      round( (x0 + x1 + x2 + x3) / 4 ),
-      round( (y0 + y1 + y2 + y3) / 4 ),
-    }
+  def default_pin( data ) do
+    {quad,_,_} = normalize(data)
+    Quad.default_pin( quad )
   end
 
-
-
   #------------------------------------
-  def expand({p0, p1, p2, p3, key}, width) do
-    # account for the winding of quad - assumes convex, which is checked above
-    cross = Math.Vector2.cross(
-      Math.Vector2.sub(p1, p0),
-      Math.Vector2.sub(p3, p0)
-    )
-    width = cond do
-      cross < 0 -> -width
-      true      -> width
-    end
-
-    # find the new parallel lines
-    l01 = Math.Line.parallel( {p0, p1}, width )
-    l12 = Math.Line.parallel( {p1, p2}, width )
-    l23 = Math.Line.parallel( {p2, p3}, width )
-    l30 = Math.Line.parallel( {p3, p0}, width )
-
-    # calc the new poins from the intersections of the lines
-    p0 = Math.Line.intersection( l30, l01 )
-    p1 = Math.Line.intersection( l01, l12 )
-    p2 = Math.Line.intersection( l12, l23 )
-    p3 = Math.Line.intersection( l23, l30 )
-
-    # return the expanded quad
-    {p0, p1, p2, p3, key}
+  def expand(data, width) do
+    {quad,tx_quad,key} = normalize(data)
+    quad = Quad.expand( quad )
+    {quad,tx_quad,key}
   end
 
   #--------------------------------------------------------
-  def contains_point?( {quad, _}, px ),     do: Quad.contains_point?(quad, px)
-  def contains_point?( {quad, _, _}, px ),  do: Quad.contains_point?(quad, px)
+  def contains_point?( data, px ) do
+    {quad,_,_} = normalize(data)
+    Quad.contains_point?(quad, px)
+  end
 
 
 end
