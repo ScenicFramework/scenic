@@ -24,7 +24,7 @@ defmodule Scenic.Primitive.Style do
     :clear_color =>                       Style.ClearColor,
   }
 
-  @primitive_styles   [:hidden, :color, :border_color, :border_width, :line_width, :line_stipple, :clear_color]
+  @primitive_styles   [:hidden, :color, :border_color, :border_width, :line_width, :line_stipple, :clear_color, :font]
 
 
   @callback info() :: bitstring
