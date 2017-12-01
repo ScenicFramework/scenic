@@ -5,9 +5,10 @@
 
 defmodule Scenic.Primitive.Style.Font do
   use Scenic.Primitive.Style
+  alias Scenic.Cache
 #  alias Scenic.Primitive.Style
 
-# import IEx
+ import IEx
 
   @default_point_size     12
 
@@ -17,7 +18,7 @@ defmodule Scenic.Primitive.Style.Font do
 
   #--------------------------------------------------------
   def info() do
-    "Style :font can be in the form {key_or_name, point_size}\r\n" <>
+    "Style :font must be in the form {key_or_name, point_size}\r\n" <>
     "Example: {:roboto, 14}"
   end
 
@@ -32,11 +33,17 @@ defmodule Scenic.Primitive.Style.Font do
   end
 
   #--------------------------------------------------------
-  def normalize( name )   when is_atom(name),  do: normalize( {name, @default_point_size} )
-  def normalize( {name, point_size} ) when 
-  (is_atom(name) or is_bitstring(name)) and
-  is_number(point_size) and point_size >=2 and point_size <= 80 do
-    {name, point_size}
+  def normalize( {name, size} ) when is_atom(name) do
+    {:ok, key} = Cache.Font.system_font_key(name)
+    normalize( {key, size} )
+  end
+
+  def normalize( {key, point_size} ) when is_bitstring(key) and
+  is_integer(point_size) and point_size >=2 and point_size <= 80 do
+    if byte_size(key) > 255 do
+      raise ArgumentError
+    end
+    {key, point_size}
   end
 
 end

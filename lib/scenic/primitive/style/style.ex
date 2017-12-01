@@ -22,6 +22,7 @@ defmodule Scenic.Primitive.Style do
     :line_width =>                        Style.LineWidth,
     :line_stipple =>                      Style.LineStipple,
     :clear_color =>                       Style.ClearColor,
+    :font =>                              Style.Font,
   }
 
   @primitive_styles   [:hidden, :color, :border_color, :border_width, :line_width, :line_stipple, :clear_color, :font]
