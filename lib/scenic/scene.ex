@@ -170,12 +170,16 @@ defmodule Scenic.Scene do
 
   #--------------------------------------------------------
   def handle_cast(:set_scene, state) do
+    self = self()
     # someting has requested this scene make set itself into
     # the viewport. This can be canceled by the current scene.
     case ViewPort.current_scene() do
       nil -> 
         # gain the focus
         {_, state} = do_gain_focus( state )
+        {:noreply, state}
+      ^self ->
+        # already the current scene. do nothing
         {:noreply, state}
       old_scene ->
         # tell the old scene to unregister itself
