@@ -363,8 +363,10 @@ defmodule Scenic.Scene do
       {:ok, graph, scene_state} ->
         # register for messages
         Registry.register(@viewport_registry, :messages, self() )
+
         # tick and send the graph to the drivers
         graph = do_reset_graph(graph)
+
         # store the state
         state = state
         |> Map.put(:graph, graph)

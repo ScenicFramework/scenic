@@ -79,6 +79,8 @@ defmodule Scenic.Primitive.Style.Color do
 
   def to_rgba( {:transparent, _} ),         do: to_rgba(:transparent)
   def to_rgba( :transparent ),              do: { 0x80, 0x80, 0x80, 0x00 }
+  def to_rgba( {:clear, _} ),               do: to_rgba(:transparent)
+  def to_rgba( :clear ),                    do: to_rgba(:transparent)
 
   def to_rgba( {r,g,b} ),                   do: {r,g,b,0xFF}
   def to_rgba( {r,g,b,a} ) when
