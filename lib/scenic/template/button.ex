@@ -29,7 +29,7 @@ defmodule Scenic.Template.Button do
     # build the button graph
     Input.build( opts )
     |> RoundedRectangle.add_to_graph( {{x,y}, w, h, r}, color: @blue_color )
-    |> Text.add_to_graph( {{x+8,y+17}, text}, color: @text_color )
+    |> Text.add_to_graph( {{x+8,y+17}, text}, color: @text_color, font: {:roboto, 14} )
     |> Graph.request_input( :mouse_button )
     |> Graph.put_event_filter(0, {Button, :filter_input})
   end
