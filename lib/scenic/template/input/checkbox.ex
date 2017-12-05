@@ -46,11 +46,11 @@ defmodule Scenic.Template.Input.Checkbox do
 
     |> Group.add_to_graph(fn(graph) ->
       graph
-      |> Line.add_to_graph({{2,2}, {10,10}}, color: @check_color, line_width: 2)
-      |> Line.add_to_graph({{2,10}, {10,2}}, color: @check_color, line_width: 2)
+      |> Line.add_to_graph({{2,2}, {10,10}}, color: @check_color, line_width: 4)
+      |> Line.add_to_graph({{2,10}, {10,2}}, color: @check_color, line_width: 4)
     end, tags: [:checkmark], hidden: !chx)
 
-    |> Text.add_to_graph({{16,11}, text}, color: @text_color, font: @font )
+    |> Text.add_to_graph({{16,14}, text}, color: @text_color, font: @font )
     |> Graph.put_event_filter(0, {Checkbox, :filter_input})
   end
 
@@ -70,8 +70,8 @@ defmodule Scenic.Template.Input.Checkbox do
         checkmark_uid = Primitive.get_uid( checkmark )
 
         new_hidden = !Primitive.get_style(checkmark, :hidden)
+        new_value = !new_hidden
 
-        #Scene.send_input( self(), {:value_changed, id, uid, !new_hidden}, checkbox_uid )
         graph = Graph.modify(graph, checkmark_uid, fn(p) ->
           Primitive.put_style(p, :hidden, new_hidden)
         end)
