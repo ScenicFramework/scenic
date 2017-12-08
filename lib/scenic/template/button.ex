@@ -35,10 +35,10 @@ defmodule Scenic.Template.Button do
   end
 
   #----------------------------------------------------------------------------
-  def filter_input(event, id, button, graph) do
+  def filter_input(event, id, %Primitive{uid: uid} = button, graph) do
     case event do
       {:mouse_button, :left, :press, _, _ } ->
-        Tracker.Click.start( :left, id, Primitive.get(button) )
+        Tracker.Click.start( :left, id, uid, [uid] )
         {:stop, graph}
 
       {:mouse_button, :left, :release, _, _ } ->  {:stop, graph}

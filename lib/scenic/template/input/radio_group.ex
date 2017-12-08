@@ -3,17 +3,14 @@ defmodule Scenic.Template.Input.RadioGroup do
 
   alias Scenic.Graph
   alias Scenic.Primitive
-  alias Scenic.Primitive.Style.Hidden
   alias Scenic.Template.Input
   alias Scenic.Template.Input.RadioButton
   alias Scenic.Template.Input.RadioGroup
 
-#  import IEx
+  import IEx
 
   @v_spacing          16
 
-  @hidden             Hidden.build( true )
-  @showing            Hidden.build( false )
 
   #----------------------------------------------------------------------------
   def build(buttons, opts \\ [] )
@@ -37,7 +34,7 @@ defmodule Scenic.Template.Input.RadioGroup do
   defp add_radio_button( graph, {t,v}, c), do: add_radio_button( graph, {t,v,false}, c)
   defp add_radio_button( graph, {t,v,false}, {x,y}) do
     # no need to modify the parent group as this button is not selected
-    Graph.put_new(graph, 0, RadioButton.build({false, t}, value: v, pos: {x,y}) )
+    RadioButton.add_to_graph(graph, {false, t}, value: v, translate: {x,y})
   end
   defp add_radio_button( graph, {t,v,true}, {x,y}) do
     # this radio button is selected. Default the parent group to it's value...
@@ -48,12 +45,13 @@ defmodule Scenic.Template.Input.RadioGroup do
     |> Input.put_value( v )
     |> ( &Graph.put(graph, 0, &1) ).()
     # add the radio button itself
-    |> Graph.put_new( 0, RadioButton.build({true, t}, value: v, pos: {x,y}) )
+    |> RadioButton.add_to_graph( {true, t}, value: v, translate: {x,y} )
   end
   # calculate the x,y position from the button count
   defp add_radio_button( graph, btn_info, c) when is_integer(c) do
     add_radio_button( graph, btn_info, {0, trunc(c * @v_spacing)})
   end
+
 
 
   #----------------------------------------------------------------------------
@@ -71,7 +69,7 @@ defmodule Scenic.Template.Input.RadioGroup do
   def filter_input(event, _id, radio_group, graph) do
     case event do
 
-      {:click, _, button_uid } ->
+      {:click, _a, button_uid, _pos } ->
         # get the radio group's id and uid
         group_id = Primitive.get_id( radio_group )
         group_uid = Primitive.get_uid( radio_group )
@@ -98,11 +96,11 @@ defmodule Scenic.Template.Input.RadioGroup do
           graph = graph
           # uncheck all the radio buttons in the group
           |> Graph.find_modify( group_uid, [tag: :checkmark], fn(p) ->
-            Primitive.put_style(p, @hidden)
+            Primitive.put_style(p, :hidden, true)
           end)
           # check only the selected button
           |> Graph.find_modify( button_uid, [tag: :checkmark], fn(p) ->
-            Primitive.put_style(p, @showing)
+            Primitive.put_style(p, :hidden, false)
           end)
 
           # create a new value_changed to send up the chain instead of click
@@ -113,6 +111,7 @@ defmodule Scenic.Template.Input.RadioGroup do
         end
 
       event ->
+        IO.inspect(event)
         {:continue, event, graph}
     end
   end

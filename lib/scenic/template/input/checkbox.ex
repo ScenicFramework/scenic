@@ -30,7 +30,7 @@ defmodule Scenic.Template.Input.Checkbox do
 
   def build({chx, text}, opts ) when is_boolean(chx) and is_bitstring(text) do
     # build the checkbox graph
-    Input.build( Keyword.put(opts, :value, chx) )
+    Input.build( Keyword.put_new(opts, :value, chx) )
     |> Group.add_to_graph(fn(graph) ->
       graph
       |> Rectangle.add_to_graph({{-2,-2}, 140, 16}, color: @hit_target_color)
@@ -49,17 +49,16 @@ defmodule Scenic.Template.Input.Checkbox do
 
 
   #----------------------------------------------------------------------------
-  def filter_input(event, id, checkbox, graph) do
+  def filter_input(event, id, %Primitive{uid: uid} = checkbox, graph) do
     case event do
 
       {:mouse_button, :left, :press, _, _ } ->
         uids = Graph.gather_uids(graph, checkbox)
-        id = Primitive.get_id(checkbox)
-        Tracker.Click.start( :left, id, uids )
+        Tracker.Click.start( :left, id, uid, uids )
         {:stop, graph}
 
 
-      {:click, target_id, _pos} ->
+      {:click, target_id, _uid, _pos} ->
         # find the checkmark for this checkbox
         checkbox_uid = Primitive.get_uid( checkbox )
         [checkmark] = Graph.find(graph, checkbox_uid, tag: :checkmark)
