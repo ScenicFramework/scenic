@@ -66,10 +66,10 @@ defmodule Scenic.Template.Input.RadioGroup do
   end
 
   #----------------------------------------------------------------------------
-  def filter_input(event, _id, radio_group, graph) do
+  def filter_input(event, radio_group, graph) do
     case event do
 
-      {:click, _a, button_uid, _pos } ->
+      {:click, radio_button, _pos } ->
         # get the radio group's id and uid
         group_id = Primitive.get_id( radio_group )
         group_uid = Primitive.get_uid( radio_group )
@@ -78,8 +78,7 @@ defmodule Scenic.Template.Input.RadioGroup do
         old_value = Input.get_value(radio_group)
 
         # get the value of clicked radio button
-        new_value = Graph.get( graph, button_uid )
-          |> Input.get_value()
+        new_value = Input.get_value(radio_button)
 
         # if the value changed, update the group
         if old_value == new_value do
@@ -99,19 +98,18 @@ defmodule Scenic.Template.Input.RadioGroup do
             Primitive.put_style(p, :hidden, true)
           end)
           # check only the selected button
-          |> Graph.find_modify( button_uid, [tag: :checkmark], fn(p) ->
+          |> Graph.find_modify( Primitive.get_uid(radio_button), [tag: :checkmark], fn(p) ->
             Primitive.put_style(p, :hidden, false)
           end)
 
           # create a new value_changed to send up the chain instead of click
-          event = {:value_changed, group_id, group_uid, new_value}
+          event = {:value_changed, radio_group, new_value}
 
           # send it up the chain
           {:continue, event, graph}
         end
 
       event ->
-        IO.inspect(event)
         {:continue, event, graph}
     end
   end

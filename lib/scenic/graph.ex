@@ -783,10 +783,9 @@ defmodule Scenic.Graph do
 
   defp do_filter_input(event, nil, graph), do: {:continue, event, graph}
   defp do_filter_input(event, primitive, graph) do
-    id =      Primitive.get_id(primitive)
     filter =  Primitive.get_event_filter(primitive)
 
-    case send_event_to_filter(event, id, primitive, graph, filter) do
+    case send_event_to_filter(event, primitive, graph, filter) do
       {:stop, graph} ->   {:stop, graph}
       {:continue, event, graph} ->
         parent = primitive
@@ -796,13 +795,13 @@ defmodule Scenic.Graph do
     end
   end
 
-  defp send_event_to_filter( event, id, primitive, graph, handler )
-  defp send_event_to_filter( event, _, _, graph, nil ), do: {:continue, event, graph}
-  defp send_event_to_filter( event, id, primitive, graph, {module, action} ) do
-    Kernel.apply(module, action, [event, id, primitive, graph])
+  defp send_event_to_filter( event, primitive, graph, handler )
+  defp send_event_to_filter( event, _, graph, nil ), do: {:continue, event, graph}
+  defp send_event_to_filter( event, primitive, graph, {module, action} ) do
+    Kernel.apply(module, action, [event, primitive, graph])
   end
-  defp send_event_to_filter( event, id, primitive, graph, handler ) when is_function(handler, 4) do
-    handler.(event, id, primitive, graph)
+  defp send_event_to_filter( event, primitive, graph, handler ) when is_function(handler, 3) do
+    handler.(event, primitive, graph)
   end
 
 

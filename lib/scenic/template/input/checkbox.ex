@@ -49,19 +49,18 @@ defmodule Scenic.Template.Input.Checkbox do
 
 
   #----------------------------------------------------------------------------
-  def filter_input(event, id, %Primitive{uid: uid} = checkbox, graph) do
+  def filter_input(event, %Primitive{uid: uid} = checkbox, graph) do
     case event do
 
       {:mouse_button, :left, :press, _, _ } ->
         uids = Graph.gather_uids(graph, checkbox)
-        Tracker.Click.start( :left, id, uid, uids )
+        Tracker.Click.start( :left, checkbox, uids )
         {:stop, graph}
 
 
-      {:click, target_id, _uid, _pos} ->
+      {:click, _, _pos} ->
         # find the checkmark for this checkbox
-        checkbox_uid = Primitive.get_uid( checkbox )
-        [checkmark] = Graph.find(graph, checkbox_uid, tag: :checkmark)
+        [checkmark] = Graph.find(graph, uid, tag: :checkmark)
         checkmark_uid = Primitive.get_uid( checkmark )
 
         new_hidden = !Primitive.get_style(checkmark, :hidden)
@@ -73,11 +72,11 @@ defmodule Scenic.Template.Input.Checkbox do
 
         # set the value into the input. This is done outside of a Graph.modify block
         # as it doesn't affect the visuals of the graph and shouldn't cause a redraw
-        graph = Graph.get( graph, checkbox_uid )
+        graph = Graph.get( graph, uid )
         |> Input.put_value( new_value )
-        |> ( &Graph.put( graph, checkbox_uid, &1 ) ).()
+        |> ( &Graph.put( graph, uid, &1 ) ).()
 
-        {:continue, {:value_changed, target_id, checkbox_uid, !new_hidden}, graph}
+        {:continue, {:value_changed, checkbox, !new_hidden}, graph}
 
       event ->
         {:continue, event, graph}

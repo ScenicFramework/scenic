@@ -21,10 +21,10 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
   #===========================================================================
   # The genserver part - tracks individual mouse clicks / gestures
 
-  def start( target_button, target_id, target_uid, valid_uids, scene_pid \\ nil )
-  def start( tb, tid, tuid, uid, pid ) when is_integer( uid), do: start( tb, tid, tuid, [uid], pid )
-  def start( tb, tid, tuid, uids, nil ), do: start( tb, tid, tuid, uids, self() )
-  def start( target_button, target_id, target_uid, valid_uids, scene_pid ) do
+  def start( target_button, target, valid_uids, scene_pid \\ nil )
+  def start( tb, target, uid, pid ) when is_integer( uid), do: start( tb, target, [uid], pid )
+  def start( tb, target, uids, nil ), do: start( tb, target, uids, self() )
+  def start( target_button, target, valid_uids, scene_pid ) do
 
     # doing this so that tests can "mock" out the uid_fn and stop_fn
     # may also be nice in the future...
@@ -34,8 +34,7 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
 
     state = %{
       scene_pid:      scene_pid,
-      target_id:      target_id,
-      target_uid:     target_uid,
+      target:         target,
       valid_uids:     valid_uids,
       target_button:  target_button,
       uid_fn:         uid_fn,
@@ -65,8 +64,7 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
   #--------------------------------------------------------
   defp do_handle_input(btn, pos, :release, %{
       scene_pid:      scene_pid,
-      target_id:      target_id,
-      target_uid:     target_uid,
+      target:         target,
       valid_uids:     valid_uids,
       target_button:  target_button,
       uid_fn:         uid_fn,
@@ -79,7 +77,7 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
     # if the found uid is in the valid uid list, then send the click message note
     # that it is OK to have nil in the list if you want to click on the background
     if Enum.member?(valid_uids, uid) do
-      GenServer.cast(scene_pid, {:input_uid, {:click, target_id, target_uid, pos}, uid})
+      GenServer.cast(scene_pid, {:input_uid, {:click, target, pos}, uid})
     end
 
     # not enough to let the registry just catch that this process is going away.

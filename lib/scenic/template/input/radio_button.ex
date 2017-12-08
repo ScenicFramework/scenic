@@ -10,7 +10,7 @@ defmodule Scenic.Template.Input.RadioButton do
   alias Scenic.Template.Input.RadioButton
   alias Scenic.ViewPort.Input.Tracker
 
-#  import IEx
+  import IEx
 
   @radius             3
 
@@ -36,12 +36,11 @@ defmodule Scenic.Template.Input.RadioButton do
   end
 
   #----------------------------------------------------------------------------
-  def filter_input(event, id, %Primitive{uid: uid} = radio_button, graph) do
+  def filter_input(event, %Primitive{} = radio_button, graph) do
     case event do
-
       {:mouse_button, :left, :press, _, _ } ->
         uids = Graph.gather_uids(graph, radio_button)
-        Tracker.Click.start( :left, id, uid, uids )
+        Tracker.Click.start( :left, radio_button, uids )
         {:stop,  graph}
 
       event ->
