@@ -6,8 +6,6 @@
 defmodule Scenic.Primitive.Texture do
   use Scenic.Primitive
   alias Scenic.Math
-  alias Scenic.Cache
-  alias Scenic.Primitive.Triangle
   alias Scenic.Primitive.Quad
 
 #  import IEx
@@ -64,7 +62,7 @@ defmodule Scenic.Primitive.Texture do
   #------------------------------------
   def expand(data, width) do
     {quad,tx_quad,key} = normalize(data)
-    quad = Quad.expand( quad )
+    quad = Quad.expand( quad, width )
     {quad,tx_quad,key}
   end
 

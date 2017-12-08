@@ -23,10 +23,9 @@ defmodule Scenic.Graph do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.Primitive.Group
-#  alias Scenic.Primitive.StyleSet
   alias Scenic.Math.MatrixBin, as: Matrix
 
-  import IEx
+#  import IEx
 
   # make reserved uids, 3 or shorter to avoid potential conflicts
   @root_uid               0
@@ -37,8 +36,7 @@ defmodule Scenic.Graph do
 
 
   defstruct primitive_map: %{}, id_map: %{}, next_uid: 1, deltas: %{},
-    recurring_actions: [], last_recurring_action: nil, add_to: 0,
-    focus: nil, input: []
+    recurring_actions: [], add_to: 0, focus: nil, input: []
 
 
 
@@ -884,7 +882,7 @@ defmodule Scenic.Graph do
   end
 
   #--------------------------------------------------------
-  def tick_recurring_actions(%Graph{recurring_actions: actions, last_recurring_action: last_time} = graph) do
+  def tick_recurring_actions(%Graph{recurring_actions: actions} = graph) do
     # calculate the time
     current_time = :os.system_time(:milli_seconds)
 
@@ -903,7 +901,6 @@ defmodule Scenic.Graph do
     # still need to put the filter_mapped actions back into the graph and save the time
     graph
     |> Map.put( :recurring_actions, actions )
-    |> Map.put( :last_recurring_action, current_time )
   end
 
   #--------------------------------------------------------
@@ -1071,12 +1068,12 @@ defmodule Scenic.Graph do
 
 
   #--------------------------------------------------------
-  def gather_uids( graph, %Primitive{module: Group, uid: uid} = group ) do
-    Graph.reduce(graph, uid, [], fn(%Primitive{uid: uid} = p, acc) -> [ uid | acc] end)
+  def gather_uids( %Graph{} = graph, %Primitive{module: Group, uid: uid} ) do
+    Graph.reduce(graph, uid, [], fn(%Primitive{uid: uid}, acc) -> [ uid | acc] end)
     |> List.flatten()
     |> Enum.uniq()
   end
-  def gather_uids( graph, %Primitive{uid: uid} ), do: [uid]
+  def gather_uids( _, %Primitive{uid: uid} ), do: [uid]
 
 end
 

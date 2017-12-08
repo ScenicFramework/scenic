@@ -13,7 +13,7 @@ defmodule Scenic.Template.Input.Checkbox do
   alias Scenic.Template.Input.Checkbox
   alias Scenic.ViewPort.Input.Tracker
 
-  import IEx
+#  import IEx
 
   @default_radius     3
 
