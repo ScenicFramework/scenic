@@ -50,15 +50,17 @@ defmodule Scenic.Template.Input.Checkbox do
     |> Graph.put_event_filter(0, {Checkbox, :filter_input})
   end
 
+
   #----------------------------------------------------------------------------
   def filter_input(event, id, checkbox, graph) do
     case event do
 
       {:mouse_button, :left, :press, _, _ } ->
-        pry()
-        uids = Primitive.get(checkbox)
+        uids = Graph.gather_uids(graph, checkbox)
+        id = Primitive.get_id(checkbox)
         Tracker.Click.start( :left, id, uids )
         {:stop, graph}
+
 
       {:click, target_id, _pos} ->
         # find the checkmark for this checkbox

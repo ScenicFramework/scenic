@@ -1069,6 +1069,15 @@ defmodule Scenic.Graph do
     Map.put(graph, :input, input)
   end
 
+
+  #--------------------------------------------------------
+  def gather_uids( graph, %Primitive{module: Group, uid: uid} = group ) do
+    Graph.reduce(graph, uid, [], fn(%Primitive{uid: uid} = p, acc) -> [ uid | acc] end)
+    |> List.flatten()
+    |> Enum.uniq()
+  end
+  def gather_uids( graph, %Primitive{uid: uid} ), do: [uid]
+
 end
 
 
