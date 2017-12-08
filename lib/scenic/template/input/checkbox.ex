@@ -41,16 +41,20 @@ defmodule Scenic.Template.Input.Checkbox do
     # build the checkbox graph
 
     Input.build( Keyword.put(opts, :value, chx) )
-    |> Rectangle.add_to_graph({{-2,-2}, 140, 16}, color: @hit_target_color)
-    |> RoundedRectangle.add_to_graph({{-2,-2}, 16, 16, @default_radius}, color: @box_color)
-
     |> Group.add_to_graph(fn(graph) ->
       graph
-      |> Line.add_to_graph({{2,2}, {10,10}}, color: @check_color, line_width: 4)
-      |> Line.add_to_graph({{2,10}, {10,2}}, color: @check_color, line_width: 4)
-    end, tags: [:checkmark], hidden: !chx)
+      |> Rectangle.add_to_graph({{-2,-2}, 140, 16}, color: @hit_target_color)
+      |> RoundedRectangle.add_to_graph({{-2,-2}, 16, 16, @default_radius}, color: @box_color)
 
-    |> Text.add_to_graph({{16,0}, text}, color: @text_color, font: @font )
+      |> Group.add_to_graph(fn(graph) ->
+        graph
+        |> Line.add_to_graph({{2,2}, {10,10}}, color: @check_color, line_width: 2)
+        |> Line.add_to_graph({{2,10}, {10,2}}, color: @check_color, line_width: 2)
+      end, tags: [:checkmark], hidden: !chx)
+    end, translate: {0, -11})
+    
+
+    |> Text.add_to_graph({{18,0}, text}, color: @text_color, font: @font )
     |> Graph.put_event_filter(0, {Checkbox, :filter_input})
   end
 
