@@ -1,7 +1,7 @@
 defmodule Scenic.Template.Input.Checkbox do
-  use Scenic.Template
+  use Scenic.Template.Input
 
-  alias Scenic.Scene
+#  alias Scenic.Scene
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.Primitive.Group
@@ -9,7 +9,6 @@ defmodule Scenic.Template.Input.Checkbox do
   alias Scenic.Primitive.Rectangle
   alias Scenic.Primitive.RoundedRectangle
   alias Scenic.Primitive.Text
-  alias Scenic.Primitive.Style
   alias Scenic.Template.Input
   alias Scenic.Template.Input.Checkbox
   alias Scenic.ViewPort.Input.Tracker
@@ -33,10 +32,7 @@ defmodule Scenic.Template.Input.Checkbox do
   def build(data, opts \\ [] )
 
   def build({chx, text}, opts ) when is_boolean(chx) and is_bitstring(text) do
-    r = opts[:r] || opts[:radius] || @default_radius
-
     # build the checkbox graph
-
     Input.build( Keyword.put(opts, :value, chx) )
     |> Group.add_to_graph(fn(graph) ->
       graph
@@ -50,9 +46,8 @@ defmodule Scenic.Template.Input.Checkbox do
       end, tags: [:checkmark], hidden: !chx)
     end, translate: {0, -11})
     
-
     |> Text.add_to_graph({{18,0}, text}, color: @text_color, font: @font )
-    |> Graph.put_event_filter(1, {Checkbox, :filter_input})
+    |> Graph.put_event_filter(0, {Checkbox, :filter_input})
   end
 
   #----------------------------------------------------------------------------
@@ -60,11 +55,12 @@ defmodule Scenic.Template.Input.Checkbox do
     case event do
 
       {:mouse_button, :left, :press, _, _ } ->
+        pry()
         uids = Primitive.get(checkbox)
         Tracker.Click.start( :left, id, uids )
         {:stop, graph}
 
-      {:click, target_id, pos} ->
+      {:click, target_id, _pos} ->
         # find the checkmark for this checkbox
         checkbox_uid = Primitive.get_uid( checkbox )
         [checkmark] = Graph.find(graph, checkbox_uid, tag: :checkmark)
@@ -77,7 +73,13 @@ defmodule Scenic.Template.Input.Checkbox do
           Primitive.put_style(p, :hidden, new_hidden)
         end)
 
-        {:continue, {:value_changed, id, checkbox_uid, !new_hidden}, graph}
+        # set the value into the input. This is done outside of a Graph.modify block
+        # as it doesn't affect the visuals of the graph and shouldn't cause a redraw
+        graph = Graph.get( graph, checkbox_uid )
+        |> Input.put_value( new_value )
+        |> ( &Graph.put( graph, checkbox_uid, &1 ) ).()
+
+        {:continue, {:value_changed, target_id, checkbox_uid, !new_hidden}, graph}
 
       event ->
         IO.inspect(event)

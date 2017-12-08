@@ -27,70 +27,68 @@ defmodule Scenic.Template.Input do
   #===========================================================================
   def build( opts \\ [] )
   def build( opts) do
-    # build the state
-    state = {
-      :input,
-      prep_name_opt( opts[:name] ),
-      opts[:value],
-      opts[:state]      # input specific sub-state
-    }
 
-    # set the state in the options list
-    opts = opts
-      |> Keyword.put( :state, state )
+    # strip the input-only opts out
+    stripped_opts = opts
+    |> Keyword.delete(:name)
+    |> Keyword.delete(:value)
 
-    # build the basic graph, with the offset
-    Graph.build(opts)
+    # build the basic graph
+    Graph.build(stripped_opts)
+    # set the optional input name
+    |> build_name_opt( opts[:name] )
+    # set the optional input value
+    |> build_value_opt( opts[:value] )
   end
 
-  defp prep_name_opt( name )
-  defp prep_name_opt( nil ),  do: nil
-  defp prep_name_opt( name )  when is_bitstring(name), do: name
-  defp prep_name_opt( _ ) do
+  defp build_name_opt( input_graph, name )
+  defp build_name_opt( input_graph, nil ),  do: input_graph
+  defp build_name_opt( input_graph, name )  when is_bitstring(name) do
+    Graph.get(input_graph, 0)
+    |> put_name( name )
+    |> ( &Graph.put(input_graph, 0, &1) ).()
+  end
+  defp build_name_opt( _, _ ) do
     raise Error, "Input name option must be a bitstring"
+  end
+
+  defp build_value_opt( input_graph, value )
+  defp build_value_opt( input_graph, nil ),  do: input_graph
+  defp build_value_opt( input_graph, value ) do
+    Graph.get(input_graph, 0)
+    |> put_value( value )
+    |> ( &Graph.put(input_graph, 0, &1) ).()
   end
 
   #===========================================================================
   # access to the internal values
 
   #--------------------------------------------------------
-  def get_value( input )
-  def get_value( input ) do
-    {:input, _, value, _} = Primitive.get_state( input )
-    value
+  def get_value( input, default \\ nil )
+  def get_value( %Primitive{} = input, default ) do
+    Map.get( input, :input_value, default )
   end
 
   def put_value( input, value )
-  def put_value( input, value ) do
-    {:input, name, _, state} = Primitive.get_state( input )
-    Primitive.put_state(input, {:input, name, value, state} )
+  def put_value( %Primitive{} = input, value ) do
+    case value do
+      nil   -> Map.delete( input, :input_value )
+      value -> Map.put(input, :input_value, value)
+    end
   end
 
   #--------------------------------------------------------
-  def get_name( input )
-  def get_name( input ) do
-    {:input, name, _, _} = Primitive.get_state( input )
-    name
+  def get_name( input, default \\ nil )
+  def get_name( %Primitive{} = input, default ) do
+    Map.get( input, :input_name, default )
   end
 
   def put_name( input, name )
-  def put_name( input, name ) when is_bitstring(name) do
-    {:input, _, value, state} = Primitive.get_state( input )
-    Primitive.put_state(input, {:input, name, value, state} )
-  end
-
-  #--------------------------------------------------------
-  # access to the internal sub-state
-  def get_state( input )
-  def get_state( input ) do
-    {:input, _, _, state} = Primitive.get_state( input )
-    state
-  end
-
-  def put_state( input, state )
-  def put_state( input, state ) do
-    {:input, name, value, _} = Primitive.get_state( input )
-    Primitive.put_state(input, {:input, name, value, state} )
+  def put_name( %Primitive{} = input, name ) do
+    case name do
+      nil   -> Map.delete( input, :input_name )
+      name -> Map.put(input, :input_name, name)
+    end
   end
 
 end
