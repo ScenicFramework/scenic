@@ -50,7 +50,7 @@ defmodule Scenic.Template.Input.Checkbox do
       |> Line.add_to_graph({{2,10}, {10,2}}, color: @check_color, line_width: 4)
     end, tags: [:checkmark], hidden: !chx)
 
-    |> Text.add_to_graph({{16,14}, text}, color: @text_color, font: @font )
+    |> Text.add_to_graph({{16,0}, text}, color: @text_color, font: @font )
     |> Graph.put_event_filter(0, {Checkbox, :filter_input})
   end
 
