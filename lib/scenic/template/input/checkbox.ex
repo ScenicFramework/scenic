@@ -10,9 +10,6 @@ defmodule Scenic.Template.Input.Checkbox do
   alias Scenic.Primitive.RoundedRectangle
   alias Scenic.Primitive.Text
   alias Scenic.Primitive.Style
-  alias Scenic.Primitive.Style.Color
-  alias Scenic.Primitive.Style.Hidden
-  alias Scenic.Primitive.Style.LineWidth
   alias Scenic.Template.Input
   alias Scenic.Template.Input.Checkbox
   alias Scenic.ViewPort.Input.Tracker
@@ -55,7 +52,7 @@ defmodule Scenic.Template.Input.Checkbox do
     
 
     |> Text.add_to_graph({{18,0}, text}, color: @text_color, font: @font )
-    |> Graph.put_event_filter(0, {Checkbox, :filter_input})
+    |> Graph.put_event_filter(1, {Checkbox, :filter_input})
   end
 
   #----------------------------------------------------------------------------
