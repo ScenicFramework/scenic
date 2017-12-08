@@ -81,7 +81,6 @@ defmodule Scenic.Template.Input.Checkbox do
         {:continue, {:value_changed, target_id, checkbox_uid, !new_hidden}, graph}
 
       event ->
-        IO.inspect(event)
         {:continue, event, graph}
     end
   end

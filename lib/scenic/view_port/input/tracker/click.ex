@@ -77,11 +77,8 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
     # if the found uid is in the valid uid list, then send the click message note
     # that it is OK to have nil in the list if you want to click on the background
     if Enum.member?(valid_uids, uid) do
-      IO.puts ( "valid uid")
       GenServer.cast(scene_pid, {:input_uid, {:click, target_id, pos}, uid})
     end
-
-    IO.puts "input test: #{uid} in #{inspect(valid_uids)}"
 
     # not enough to let the registry just catch that this process is going away.
     # need to tell the dirver too so that it doesn't spam the app with messages
