@@ -23,9 +23,6 @@ defmodule Scenic.Template.Input.Checkbox do
 
   @font               {:roboto, 16}
 
-#  @hidden             Hidden.build( true )
-#  @showing            Hidden.build( false )
-
   @hit_target_color   {:dark_green, 0}
 
   #----------------------------------------------------------------------------
