@@ -10,7 +10,7 @@ defmodule Scenic.Template.Input.RadioButton do
   alias Scenic.Template.Input.RadioButton
   alias Scenic.ViewPort.Input.Tracker
 
-  import IEx
+#  import IEx
 
   @radius             3
 

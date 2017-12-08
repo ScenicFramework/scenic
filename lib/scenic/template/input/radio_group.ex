@@ -7,7 +7,7 @@ defmodule Scenic.Template.Input.RadioGroup do
   alias Scenic.Template.Input.RadioButton
   alias Scenic.Template.Input.RadioGroup
 
-  import IEx
+#  import IEx
 
   @v_spacing          16
 
@@ -66,18 +66,12 @@ defmodule Scenic.Template.Input.RadioGroup do
   end
 
   #----------------------------------------------------------------------------
-  def filter_input(event, radio_group, graph) do
+  def filter_input(event, %Primitive{uid: group_uid} = radio_group, graph) do
     case event do
 
       {:click, radio_button, _pos } ->
-        # get the radio group's id and uid
-        group_id = Primitive.get_id( radio_group )
-        group_uid = Primitive.get_uid( radio_group )
-
-        # cache the old value
+        # get the new and old values
         old_value = Input.get_value(radio_group)
-
-        # get the value of clicked radio button
         new_value = Input.get_value(radio_button)
 
         # if the value changed, update the group
