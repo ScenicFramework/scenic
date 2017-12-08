@@ -30,15 +30,16 @@ defmodule Scenic.Template.Input do
 
     # strip the input-only opts out
     stripped_opts = opts
-    |> Keyword.delete(:name)
-    |> Keyword.delete(:value)
+    |> Keyword.delete(:input_name)
+    |> Keyword.delete(:input_value)
+    |> Keyword.delete(:input_state)
 
     # build the basic graph
     Graph.build(stripped_opts)
-    # set the optional input name
-    |> build_name_opt( opts[:name] )
-    # set the optional input value
-    |> build_value_opt( opts[:value] )
+    # set the optional input values
+    |> build_name_opt( opts[:input_name] )
+    |> build_value_opt( opts[:input_value] )
+    |> build_state_opt( opts[:input_state] )
   end
 
   defp build_name_opt( input_graph, name )
@@ -57,6 +58,14 @@ defmodule Scenic.Template.Input do
   defp build_value_opt( input_graph, value ) do
     Graph.get(input_graph, 0)
     |> put_value( value )
+    |> ( &Graph.put(input_graph, 0, &1) ).()
+  end
+
+  defp build_state_opt( input_graph, value )
+  defp build_state_opt( input_graph, nil ),  do: input_graph
+  defp build_state_opt( input_graph, value ) do
+    Graph.get(input_graph, 0)
+    |> put_state( value )
     |> ( &Graph.put(input_graph, 0, &1) ).()
   end
 
@@ -88,6 +97,20 @@ defmodule Scenic.Template.Input do
     case name do
       nil   -> Map.delete( input, :input_name )
       name -> Map.put(input, :input_name, name)
+    end
+  end
+
+  #--------------------------------------------------------
+  def get_state( input, default \\ nil )
+  def get_state( %Primitive{} = input, default ) do
+    Map.get( input, :input_state, default )
+  end
+
+  def put_state( input, name )
+  def put_state( %Primitive{} = input, name ) do
+    case name do
+      nil   -> Map.delete( input, :input_state )
+      name -> Map.put(input, :input_state, name)
     end
   end
 

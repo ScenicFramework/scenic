@@ -34,7 +34,7 @@ defmodule Scenic.Template.Input.RadioGroup do
   defp add_radio_button( graph, {t,v}, c), do: add_radio_button( graph, {t,v,false}, c)
   defp add_radio_button( graph, {t,v,false}, {x,y}) do
     # no need to modify the parent group as this button is not selected
-    RadioButton.add_to_graph(graph, {false, t}, value: v, translate: {x,y})
+    RadioButton.add_to_graph(graph, {false, t}, input_value: v, translate: {x,y})
   end
   defp add_radio_button( graph, {t,v,true}, {x,y}) do
     # this radio button is selected. Default the parent group to it's value...
@@ -45,7 +45,7 @@ defmodule Scenic.Template.Input.RadioGroup do
     |> Input.put_value( v )
     |> ( &Graph.put(graph, 0, &1) ).()
     # add the radio button itself
-    |> RadioButton.add_to_graph( {true, t}, value: v, translate: {x,y} )
+    |> RadioButton.add_to_graph( {true, t}, input_value: v, translate: {x,y} )
   end
   # calculate the x,y position from the button count
   defp add_radio_button( graph, btn_info, c) when is_integer(c) do

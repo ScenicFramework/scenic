@@ -30,7 +30,7 @@ defmodule Scenic.Template.Input.Checkbox do
 
   def build({chx, text}, opts ) when is_boolean(chx) and is_bitstring(text) do
     # build the checkbox graph
-    Input.build( Keyword.put_new(opts, :value, chx) )
+    Input.build( Keyword.put_new(opts, :input_value, chx) )
     |> Group.add_to_graph(fn(graph) ->
       graph
       |> Rectangle.add_to_graph({{-2,-2}, 140, 16}, color: @hit_target_color)

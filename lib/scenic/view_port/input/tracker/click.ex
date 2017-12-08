@@ -51,7 +51,6 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
   end
 
   #--------------------------------------------------------
-  # bit of a cheat going straight for the release code of 0, but hey...
   def handle_input({:mouse_button, btn, action, _, pos}, state) do
     do_handle_input(btn, pos, action, state)
   end

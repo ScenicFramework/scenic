@@ -27,7 +27,7 @@ defmodule Scenic.Template.Input.RadioButton do
 
   def build({chx, text}, opts ) when is_boolean(chx) and is_bitstring(text) do
     # build the button graph
-    Input.build( Keyword.put_new(opts, :value, chx) )
+    Input.build( Keyword.put_new(opts, :input_value, chx) )
       |> Rectangle.add_to_graph({{-2,-2}, 140, 16}, color: @hit_target_color)
       |> RoundedRectangle.add_to_graph({{0,0}, 12, 12, @radius}, color: @box_color)
       |> RoundedRectangle.add_to_graph({{2,2}, 8, 8, @radius}, color: @check_color, hidden: !chx, tags: [:checkmark])
