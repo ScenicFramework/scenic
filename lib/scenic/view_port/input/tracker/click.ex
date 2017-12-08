@@ -16,7 +16,7 @@ defmodule Scenic.ViewPort.Input.Tracker.Click do
   alias Scenic.ViewPort.Input
   alias Scenic.Scene
 
-  import IEx
+#  import IEx
 
   #===========================================================================
   # The genserver part - tracks individual mouse clicks / gestures

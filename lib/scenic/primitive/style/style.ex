@@ -9,7 +9,7 @@
 defmodule Scenic.Primitive.Style do
   alias Scenic.Primitive.Style
 
-  import IEx
+#  import IEx
 
 #  @dflag      2
 

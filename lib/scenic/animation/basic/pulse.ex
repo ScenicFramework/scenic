@@ -11,7 +11,7 @@ defmodule Scenic.Animation.Basic.Pulse do
   @hz_to_rpms   2 * :math.pi / 1000
 
   #--------------------------------------------------------
-  def tick( :step, graph, elapsed_ms, {:pulse_internal, id, factor, speed, orig_data} ) do
+  def tick( :step, graph, elapsed_ms, {:internal, id, factor, speed, orig_data} ) do
     graph = Graph.modify(graph, id, fn(%Primitive{uid: uid} = p) ->
 
       {mid_point, _} = Map.get(orig_data, uid)
@@ -23,7 +23,7 @@ defmodule Scenic.Animation.Basic.Pulse do
   end
 
   #--------------------------------------------------------
-  def tick( :stop, graph, elapsed_ms, {:pulse_internal, id, _, _, orig_data} ) do
+  def tick( :stop, graph, _, {:internal, id, _, _, orig_data} ) do
     # restore the original scale
     graph = Graph.modify(graph, id, fn(p) ->
       {_, scale} = Map.get(orig_data, id)
@@ -31,6 +31,7 @@ defmodule Scenic.Animation.Basic.Pulse do
     end)
     {:stop, graph }
   end
+
 
   #--------------------------------------------------------
   # easy default
@@ -53,7 +54,7 @@ defmodule Scenic.Animation.Basic.Pulse do
     # transform speed from hz to radians per millisecond
     speed = @hz_to_rpms * speed
 
-    tick( :step, graph, elapsed_ms, {:pulse_internal, id, factor, speed, orig_data} )
+    tick( :step, graph, elapsed_ms, {:internal, id, factor, speed, orig_data} )
   end
 
 end

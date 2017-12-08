@@ -12,8 +12,6 @@ defmodule Scenic.Primitive.Transform do
 
   @callback info() :: bitstring
   @callback verify( any ) :: boolean
-  @callback serialize( any ) :: binary
-  @callback deserialize( binary ) :: any
 
   @identity   Matrix.identity()
 

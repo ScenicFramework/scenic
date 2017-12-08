@@ -8,9 +8,9 @@ defmodule Scenic.Primitive.Style.Font do
   alias Scenic.Cache
 #  alias Scenic.Primitive.Style
 
- import IEx
+# import IEx
 
-  @default_point_size     12
+  @default_point_size     14
 
 
   #============================================================================
@@ -33,6 +33,9 @@ defmodule Scenic.Primitive.Style.Font do
   end
 
   #--------------------------------------------------------
+  def normalize( name ) when is_atom(name),     do: normalize( {name, @default_point_size} )
+  def normalize( key ) when is_bitstring(key),  do: normalize( {key, @default_point_size} )
+
   def normalize( {name, size} ) when is_atom(name) do
     {:ok, key} = Cache.Font.system_font_key(name)
     normalize( {key, size} )
