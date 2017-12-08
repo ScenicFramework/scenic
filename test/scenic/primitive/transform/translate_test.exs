@@ -12,29 +12,6 @@ defmodule Scenic.Primitive.Transform.TranslateTest do
   @data_2   {1.0, 2.0}
   @data_3   { 1.0, 2.0, 3.0 }
 
-  @bin_2_native     <<
-      1.0 :: float-size(32)-native,
-      2.0 :: float-size(32)-native,
-      0.0 :: float-size(32)-native,
-    >>
-
-  @bin_3_native     <<
-      1.0 :: float-size(32)-native,
-      2.0 :: float-size(32)-native,
-      3.0 :: float-size(32)-native,
-    >>
-
-  @bin_2_big   <<
-      1.0 :: float-size(32)-big,
-      2.0 :: float-size(32)-big,
-      0.0 :: float-size(32)-big,
-    >>
-
-  @bin_3_big   <<
-      1.0 :: float-size(32)-big,
-      2.0 :: float-size(32)-big,
-      3.0 :: float-size(32)-big,
-    >>
 
   #============================================================================
   # verify

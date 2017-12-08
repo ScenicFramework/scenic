@@ -31,27 +31,6 @@ defmodule Scenic.Primitive.Transform.MatrixTest do
       4.3 :: float-size(32)-native
     >>
 
-  @data_big   <<
-      1.0 :: float-size(32)-big,
-      1.1 :: float-size(32)-big,
-      1.2 :: float-size(32)-big,
-      1.3 :: float-size(32)-big,
-
-      2.0 :: float-size(32)-big,
-      2.1 :: float-size(32)-big,
-      2.2 :: float-size(32)-big,
-      2.3 :: float-size(32)-big,
-
-      3.0 :: float-size(32)-big,
-      3.1 :: float-size(32)-big,
-      3.2 :: float-size(32)-big,
-      3.3 :: float-size(32)-big,
-
-      4.0 :: float-size(32)-big,
-      4.1 :: float-size(32)-big,
-      4.2 :: float-size(32)-big,
-      4.3 :: float-size(32)-big
-    >>
 
   #============================================================================
   # verify

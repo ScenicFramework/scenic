@@ -12,29 +12,6 @@ defmodule Scenic.Primitive.Transform.PinTest do
   @data_2         { 1, 2 }
   @data_3         { 1, 2, 3 }
 
-  @bin_2_native     <<
-      1 :: integer-size(16)-native,
-      2 :: integer-size(16)-native,
-      0 :: integer-size(16)-native
-    >>
-
-  @bin_3_native     <<
-      1 :: integer-size(16)-native,
-      2 :: integer-size(16)-native,
-      3 :: integer-size(16)-native
-    >>
-
-  @bin_2_big   <<
-      1 :: integer-size(16)-big,
-      2 :: integer-size(16)-big,
-      0 :: integer-size(16)-big
-    >>
-
-  @bin_3_big   <<
-      1 :: integer-size(16)-big,
-      2 :: integer-size(16)-big,
-      3 :: integer-size(16)-big
-    >>
 
   #============================================================================
   # verify
