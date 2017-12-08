@@ -45,6 +45,4 @@ priv/$(MIX_ENV)/line.so: $(SRC_LINE)
 	$(CC) $(CFLAGS) -shared -o $@ $(SRC_LINE) $(LDFLAGS)
 
 clean:
-	$(RM) -r priv/dev
-	$(RM) -r priv/test
-	$(RM) -r priv/prod
+	$(RM) -r priv
