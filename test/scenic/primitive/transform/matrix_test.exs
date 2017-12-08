@@ -65,26 +65,5 @@ defmodule Scenic.Primitive.Transform.MatrixTest do
     assert Matrix.verify( :banana )           == false
   end
 
-  #============================================================================
-  # serialization
-
-  test "serialize native works" do
-    assert Matrix.serialize(@data)            == {:ok, @data}
-    assert Matrix.serialize(@data, :native)   == {:ok, @data}
-  end
-
-  test "serialize big works" do
-    assert Matrix.serialize(@data, :big)      == {:ok, @data_big}
-  end
-
-  test "deserialize native works" do
-    assert assert Matrix.deserialize(@data)          == {:ok, @data, ""}
-    assert assert Matrix.deserialize(@data, :native) == {:ok, @data, ""}
-  end
-
-  test "deserialize big works" do
-    assert assert Matrix.deserialize(@data_big, :big) == {:ok, @data, ""}
-  end
-
 end
 

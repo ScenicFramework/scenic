@@ -52,47 +52,5 @@ defmodule Scenic.Primitive.Transform.TranslateTest do
     assert Translate.verify( :banana )              == false
   end
 
-  #============================================================================
-  # serialization
-
-  #============================================================================
-  # serialization
-
-  test "serialize 1 native works" do
-    assert Translate.serialize(@data_2)            == {:ok, @bin_2_native}
-    assert Translate.serialize(@data_2, :native)   == {:ok, @bin_2_native}
-  end
-
-  test "serialize 3 native works" do
-    assert Translate.serialize(@data_3)            == {:ok, @bin_3_native}
-    assert Translate.serialize(@data_3, :native)   == {:ok, @bin_3_native}
-  end
-
-  test "serialize 1 big works" do
-    assert Translate.serialize(@data_2, :big)      == {:ok, @bin_2_big}
-  end
-
-  test "serialize 3 big works" do
-    assert Translate.serialize(@data_3, :big)      == {:ok, @bin_3_big}
-  end
-
-  test "deserialize 1 native works" do
-    assert assert Translate.deserialize(@bin_2_native)          == {:ok, @data_2, ""}
-    assert assert Translate.deserialize(@bin_2_native, :native) == {:ok, @data_2, ""}
-  end
-
-  test "deserialize 3 native works" do
-    assert assert Translate.deserialize(@bin_3_native)          == {:ok, @data_3, ""}
-    assert assert Translate.deserialize(@bin_3_native, :native) == {:ok, @data_3, ""}
-  end
-
-  test "deserialize 1 big works" do
-    assert assert Translate.deserialize(@bin_2_big, :big) == {:ok, @data_2, ""}
-  end
-
-  test "deserialize 3 big works" do
-    assert assert Translate.deserialize(@bin_3_big, :big) == {:ok, @data_3, ""}
-  end
-
 end
 

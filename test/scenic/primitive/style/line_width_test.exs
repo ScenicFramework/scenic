@@ -35,24 +35,6 @@ defmodule Scenic.Primitive.Style.LineWidthTest do
     end
   end
 
-  #============================================================================
-  # serialize
-  
-  test "serialize works" do
-    assert LineWidth.serialize( 8 )       == <<8>>
-    assert LineWidth.serialize( 255 )     == <<255>>
-  end
-
-  #============================================================================
-  # deserialize
-  
-  test "derserialize works" do
-    assert LineWidth.deserialize( <<7, 2, 3>> )    == {:ok, 7, <<2, 3>>}
-  end
-
-
-
-
 end
 
 

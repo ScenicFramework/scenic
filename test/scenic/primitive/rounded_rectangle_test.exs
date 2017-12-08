@@ -90,53 +90,6 @@ defmodule Scenic.Primitive.RoundedRectangleTest do
     assert RoundedRectangle.contains_point?(@data, {11, 91}) == false
   end
 
-  #============================================================================
-  # serialization
-
-  test "serialize native works" do
-    native = <<
-      10  :: integer-size(16)-native,
-      12  :: integer-size(16)-native,
-      40  :: integer-size(16)-native,
-      80  :: integer-size(16)-native,
-      10  :: integer-size(16)-native,
-    >>
-    assert RoundedRectangle.serialize(@data)           == {:ok, native}
-    assert RoundedRectangle.serialize(@data, :native)  == {:ok, native}
-  end
-
-  test "serialize big works" do
-    assert RoundedRectangle.serialize(@data, :big) == {:ok, <<
-      10  :: integer-size(16)-big,
-      12  :: integer-size(16)-big,
-      40  :: integer-size(16)-big,
-      80  :: integer-size(16)-big,
-      10  :: integer-size(16)-big,
-    >>}
-  end
-
-  test "deserialize native works" do
-    bin = <<
-      10  :: integer-size(16)-native,
-      12  :: integer-size(16)-native,
-      40  :: integer-size(16)-native,
-      80  :: integer-size(16)-native,
-      10  :: integer-size(16)-native,
-    >>
-    assert assert RoundedRectangle.deserialize(bin)          == {:ok, @data, ""}
-    assert assert RoundedRectangle.deserialize(bin, :native) == {:ok, @data, ""}
-  end
-
-  test "deserialize big works" do
-    bin = <<
-      10  :: integer-size(16)-big,
-      12  :: integer-size(16)-big,
-      40  :: integer-size(16)-big,
-      80  :: integer-size(16)-big,
-      10  :: integer-size(16)-big,
-    >>
-    assert assert RoundedRectangle.deserialize(bin, :big) == {:ok, @data, ""}
-  end
 
 end
 

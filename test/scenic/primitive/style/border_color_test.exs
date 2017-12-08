@@ -72,44 +72,6 @@ defmodule Scenic.Primitive.Style.BorderColorTest do
     assert BorderColor.normalize( {{1,2,3,4}} )     == {{1, 2, 3, 4}}
   end
 
-  #============================================================================
-  # serialize - various forms
-  
-  test "serialize works for a single color" do
-    assert BorderColor.serialize( :red )            == <<1, 255, 0, 0, 255>>
-    assert BorderColor.serialize( {:red} )          == <<1, 255, 0, 0, 255>>
-    assert BorderColor.serialize( {:red, 128} )     == <<1, 255, 0, 0, 128>>
-    assert BorderColor.serialize( {{:red, 128}} )   == <<1, 255, 0, 0, 128>>
-    assert BorderColor.serialize( {1,2,3} )         == <<1, 1, 2, 3, 255>>
-    assert BorderColor.serialize( {{1,2,3}} )       == <<1, 1, 2, 3, 255>>
-    assert BorderColor.serialize( {1,2,3,4} )       == <<1, 1, 2, 3, 4>>
-    assert BorderColor.serialize( {{1,2,3,4}} )     == <<1, 1, 2, 3, 4>>
-  end
-
-  #============================================================================
-  # serialize - various forms
-  
-  test "serialize works" do
-    assert BorderColor.serialize( :red )            == <<1, 255, 0, 0, 255>>
-    assert BorderColor.serialize( {:red} )          == <<1, 255, 0, 0, 255>>
-    assert BorderColor.serialize( {:red, 128} )     == <<1, 255, 0, 0, 128>>
-    assert BorderColor.serialize( {{:red, 128}} )   == <<1, 255, 0, 0, 128>>
-    assert BorderColor.serialize( {1,2,3} )         == <<1, 1, 2, 3, 255>>
-    assert BorderColor.serialize( {{1,2,3}} )       == <<1, 1, 2, 3, 255>>
-    assert BorderColor.serialize( {1,2,3,4} )       == <<1, 1, 2, 3, 4>>
-    assert BorderColor.serialize( {{1,2,3,4}} )     == <<1, 1, 2, 3, 4>>
-  end
-
-  #============================================================================
-  # deserialize - various forms
-  
-  test "deserialize works" do
-    assert BorderColor.deserialize( <<1,1,2,3,4>> <> <<123,21>>) ==
-      {:ok, {{1,2,3,4}}, <<123,21>>}
-  end
-
-
-
 
 end
 

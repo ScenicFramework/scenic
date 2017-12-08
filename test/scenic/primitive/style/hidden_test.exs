@@ -35,21 +35,6 @@ defmodule Scenic.Primitive.Style.HiddenTest do
     end
   end
 
-  #============================================================================
-  # serialize
-  
-  test "serialize works" do
-    assert Hidden.serialize( true )       == <<1>>
-    assert Hidden.serialize( false )      == <<0>>
-  end
-
-  #============================================================================
-  # deserialize
-  
-  test "deserialize works" do
-    assert Hidden.deserialize( <<1, 2, 3>> )    == {:ok, true, <<2, 3>>}
-    assert Hidden.deserialize( <<0, 2, 3>> )    == {:ok, false, <<2, 3>>}
-  end
 
 
 end

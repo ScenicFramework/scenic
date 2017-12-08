@@ -79,49 +79,5 @@ defmodule Scenic.Primitive.RectangleTest do
     assert Rectangle.contains_point?(@data, {30, 93}) == false
   end
 
-  #============================================================================
-  # serialization
-
-  test "serialize native works" do
-    native = <<
-      10  :: integer-size(16)-native,
-      12  :: integer-size(16)-native,
-      40  :: integer-size(16)-native,
-      80  :: integer-size(16)-native,
-    >>
-    assert Rectangle.serialize(@data)           == {:ok, native}
-    assert Rectangle.serialize(@data, :native)  == {:ok, native}
-  end
-
-  test "serialize big works" do
-    assert Rectangle.serialize(@data, :big) == {:ok, <<
-      10  :: integer-size(16)-big,
-      12  :: integer-size(16)-big,
-      40  :: integer-size(16)-big,
-      80  :: integer-size(16)-big,
-    >>}
-  end
-
-  test "deserialize native works" do
-    bin = <<
-      10  :: integer-size(16)-native,
-      12  :: integer-size(16)-native,
-      40  :: integer-size(16)-native,
-      80  :: integer-size(16)-native,
-    >>
-    assert assert Rectangle.deserialize(bin)          == {:ok, @data, ""}
-    assert assert Rectangle.deserialize(bin, :native) == {:ok, @data, ""}
-  end
-
-  test "deserialize big works" do
-    bin = <<
-      10  :: integer-size(16)-big,
-      12  :: integer-size(16)-big,
-      40  :: integer-size(16)-big,
-      80  :: integer-size(16)-big,
-    >>
-    assert assert Rectangle.deserialize(bin, :big) == {:ok, @data, ""}
-  end
-
 end
 

@@ -72,42 +72,6 @@ defmodule Scenic.Primitive.Style.ClearColorTest do
     assert ClearColor.normalize( {{1,2,3,4}} )     == {{1, 2, 3, 4}}
   end
 
-  #============================================================================
-  # serialize - various forms
-  
-  test "serialize works for a single color" do
-    assert ClearColor.serialize( :red )            == <<1, 255, 0, 0, 255>>
-    assert ClearColor.serialize( {:red} )          == <<1, 255, 0, 0, 255>>
-    assert ClearColor.serialize( {:red, 128} )     == <<1, 255, 0, 0, 128>>
-    assert ClearColor.serialize( {{:red, 128}} )   == <<1, 255, 0, 0, 128>>
-    assert ClearColor.serialize( {1,2,3} )         == <<1, 1, 2, 3, 255>>
-    assert ClearColor.serialize( {{1,2,3}} )       == <<1, 1, 2, 3, 255>>
-    assert ClearColor.serialize( {1,2,3,4} )       == <<1, 1, 2, 3, 4>>
-    assert ClearColor.serialize( {{1,2,3,4}} )     == <<1, 1, 2, 3, 4>>
-  end
-
-  #============================================================================
-  # serialize - various forms
-  
-  test "serialize works" do
-    assert ClearColor.serialize( :red )            == <<1, 255, 0, 0, 255>>
-    assert ClearColor.serialize( {:red} )          == <<1, 255, 0, 0, 255>>
-    assert ClearColor.serialize( {:red, 128} )     == <<1, 255, 0, 0, 128>>
-    assert ClearColor.serialize( {{:red, 128}} )   == <<1, 255, 0, 0, 128>>
-    assert ClearColor.serialize( {1,2,3} )         == <<1, 1, 2, 3, 255>>
-    assert ClearColor.serialize( {{1,2,3}} )       == <<1, 1, 2, 3, 255>>
-    assert ClearColor.serialize( {1,2,3,4} )       == <<1, 1, 2, 3, 4>>
-    assert ClearColor.serialize( {{1,2,3,4}} )     == <<1, 1, 2, 3, 4>>
-  end
-
-  #============================================================================
-  # deserialize - various forms
-  
-  test "deserialize works" do
-    assert ClearColor.deserialize( <<1,1,2,3,4>> <> <<123,21>>) ==
-      {:ok, {{1,2,3,4}}, <<123,21>>}
-  end
-
 
 
 

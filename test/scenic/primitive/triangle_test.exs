@@ -85,57 +85,6 @@ defmodule Scenic.Primitive.TriangleTest do
     assert Triangle.contains_point?(@data, {273, 301})  == false
   end
 
-  #============================================================================
-  # serialization
-
-  test "serialize native works" do
-    native = <<
-      20  :: integer-size(16)-native,
-      300 :: integer-size(16)-native,
-      400 :: integer-size(16)-native,
-      300 :: integer-size(16)-native,
-      400 :: integer-size(16)-native,
-      0   :: integer-size(16)-native,
-    >>
-    assert Triangle.serialize(@data)           == {:ok, native}
-    assert Triangle.serialize(@data, :native)  == {:ok, native}
-  end
-
-  test "serialize big works" do
-    assert Triangle.serialize(@data, :big) == {:ok, <<
-      20  :: integer-size(16)-big,
-      300 :: integer-size(16)-big,
-      400 :: integer-size(16)-big,
-      300 :: integer-size(16)-big,
-      400 :: integer-size(16)-big,
-      0   :: integer-size(16)-big,
-    >>}
-  end
-
-  test "deserialize native works" do
-    bin = <<
-      20  :: integer-size(16)-native,
-      300 :: integer-size(16)-native,
-      400 :: integer-size(16)-native,
-      300 :: integer-size(16)-native,
-      400 :: integer-size(16)-native,
-      0   :: integer-size(16)-native,
-    >>
-    assert assert Triangle.deserialize(bin)          == {:ok, @data, ""}
-    assert assert Triangle.deserialize(bin, :native) == {:ok, @data, ""}
-  end
-
-  test "deserialize big works" do
-    bin = <<
-      20  :: integer-size(16)-big,
-      300 :: integer-size(16)-big,
-      400 :: integer-size(16)-big,
-      300 :: integer-size(16)-big,
-      400 :: integer-size(16)-big,
-      0   :: integer-size(16)-big,
-    >>
-    assert assert Triangle.deserialize(bin, :big) == {:ok, @data, ""}
-  end
 
 end
 

@@ -52,44 +52,5 @@ defmodule Scenic.Primitive.Transform.PinTest do
   end
 
 
-  #============================================================================
-  # serialization
-
-  test "serialize 2 native works" do
-    assert Pin.serialize(@data_2)            == {:ok, @bin_2_native}
-    assert Pin.serialize(@data_2, :native)   == {:ok, @bin_2_native}
-  end
-
-  test "serialize 3 native works" do
-    assert Pin.serialize(@data_3)            == {:ok, @bin_3_native}
-    assert Pin.serialize(@data_3, :native)   == {:ok, @bin_3_native}
-  end
-
-  test "serialize 2 big works" do
-    assert Pin.serialize(@data_2, :big)      == {:ok, @bin_2_big}
-  end
-
-  test "serialize 3 big works" do
-    assert Pin.serialize(@data_3, :big)      == {:ok, @bin_3_big}
-  end
-
-  test "deserialize 2 native works" do
-    assert assert Pin.deserialize(@bin_2_native)          == {:ok, @data_2, ""}
-    assert assert Pin.deserialize(@bin_2_native, :native) == {:ok, @data_2, ""}
-  end
-
-  test "deserialize 3 native works" do
-    assert assert Pin.deserialize(@bin_3_native)          == {:ok, @data_3, ""}
-    assert assert Pin.deserialize(@bin_3_native, :native) == {:ok, @data_3, ""}
-  end
-
-  test "deserialize 2 big works" do
-    assert assert Pin.deserialize(@bin_2_big, :big) == {:ok, @data_2, ""}
-  end
-
-  test "deserialize 3 big works" do
-    assert assert Pin.deserialize(@bin_3_big, :big) == {:ok, @data_3, ""}
-  end
-
 end
 

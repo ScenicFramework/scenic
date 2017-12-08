@@ -35,24 +35,6 @@ defmodule Scenic.Primitive.Style.BorderWidthTest do
     end
   end
 
-  #============================================================================
-  # serialize
-  
-  test "serialize works" do
-    assert BorderWidth.serialize( 8 )       == <<8>>
-    assert BorderWidth.serialize( 255 )     == <<255>>
-  end
-
-  #============================================================================
-  # deserialize
-  
-  test "derserialize works" do
-    assert BorderWidth.deserialize( <<7, 2, 3>> )    == {:ok, 7, <<2, 3>>}
-  end
-
-
-
-
 end
 
 
