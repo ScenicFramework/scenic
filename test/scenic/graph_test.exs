@@ -735,6 +735,27 @@ defmodule Scenic.GraphTest do
       [{1, [{:put, {:transforms, :rotate}, 0.2}, {:put, {:transforms, :pin}, {1, 2}}]}]
   end
 
+  test "modify transforms a single passed-in primitive" do
+    {graph, uid} = Graph.insert_at(@graph_empty, -1, @empty_group)
+
+    # get the primitive to pass in
+    primitive = Graph.get(graph, uid)
+
+    # confirm setup
+    assert Primitive.get_transforms( primitive ) == %{}
+
+    # modify the element by assigning a transform to it
+    graph = Graph.modify(graph, primitive, fn(p)->
+      Primitive.put_transform( p, [pin: {1,2}, rotate: 0.2] )
+    end)
+
+    # confirm result
+    p = Graph.get(graph, uid)
+    assert Primitive.get_transforms( p ) == %{pin: {1, 2}, rotate: 0.2}
+    assert Graph.get_delta_scripts(graph) ==
+      [{1, [{:put, {:transforms, :rotate}, 0.2}, {:put, {:transforms, :pin}, {1, 2}}]}]
+  end
+
   test "modify transforms a single primitive by developer id" do
     empty_group_with_id = Primitive.put_id(@empty_group, :test_id)
 
@@ -1208,18 +1229,18 @@ defmodule Scenic.GraphTest do
     [rect_uid] = Graph.resolve_id(@filter_graph, :rect)
     [group_uid] = Graph.resolve_id(@filter_graph, "group")
     graph = @filter_graph
-      |> Graph.put_event_filter(:rect, fn(event, id, primitive, graph) ->
+      |> Graph.put_event_filter(:rect, fn(event, primitive, graph) ->
         # make sure the rect was passed in
-        assert id == :rect
+        assert Primitive.get_id(primitive) == :rect
         assert event == :event_start
         assert Primitive.get_uid(primitive) == rect_uid
         # post a message to self that we can check for at the end of the test
         Process.send( self(), :test_rect_callback, [])
         {:continue, :event_transformed, graph}
       end)
-      |> Graph.put_event_filter("group", fn(event, id, primitive, graph) ->
+      |> Graph.put_event_filter("group", fn(event, primitive, graph) ->
         # make sure the rect was passed in
-        assert id == "group"
+        assert Primitive.get_id(primitive) == "group"
         assert event == :event_transformed
         assert Primitive.get_uid(primitive) == group_uid
         # post a message to self that we can check for at the end of the test
@@ -1239,18 +1260,19 @@ defmodule Scenic.GraphTest do
     [rect_uid] = Graph.resolve_id(@filter_graph, :rect)
     [group_uid] = Graph.resolve_id(@filter_graph, "group")
     graph = @filter_graph
-      |> Graph.put_event_filter(:rect, fn(event, id, primitive, graph) ->
+      |> Graph.put_event_filter(:rect, fn(event, primitive, graph) ->
         # make sure the rect was passed in
-        assert id == :rect
+        assert Primitive.get_id(primitive) == :rect
         assert event == :event_start
         assert Primitive.get_uid(primitive) == rect_uid
         # post a message to self that we can check for at the end of the test
         Process.send( self(), :test_rect_callback, [])
         {:stop, graph}
       end)
-      |> Graph.put_event_filter("group", fn(event, id, primitive, graph) ->
+      |> Graph.put_event_filter("group", fn(event, primitive, graph) ->
         # make sure the rect was passed in
-        assert id == "group"
+        assert Primitive.get_id(primitive) == "group"
+
         assert event == :event_transformed
         assert Primitive.get_uid(primitive) == group_uid
         # post a message to self that we can check for at the end of the test
@@ -1267,7 +1289,7 @@ defmodule Scenic.GraphTest do
   end
 
 
-  def mod_action(_, _, _, g) do
+  def mod_action(_, _, g) do
     Process.send( self(), :test_mod_action, [])
     {:stop, g}
   end
@@ -1287,10 +1309,9 @@ defmodule Scenic.GraphTest do
   test "filter_input lets the filter modify the graph" do
     [rect_uid] = Graph.resolve_id(@filter_graph, :rect)
     graph = @filter_graph
-      |> Graph.put_event_filter(:rect, fn(_, id, _, graph) ->
-
+      |> Graph.put_event_filter(:rect, fn(_, p, graph) ->
         # modify the graph
-        graph = Graph.modify(graph, id, fn(p) ->
+        graph = Graph.modify(graph, p, fn(p) ->
           Primitive.put(p, {{1000, 1001}, 300, 400})
         end)
 
@@ -1422,9 +1443,6 @@ defmodule Scenic.GraphTest do
     [{_, func, 123}] = actions
     assert is_function(func, 3)
 
-    # fake in a last action time
-    graph = Map.put(graph, :last_recurring_action, :os.system_time(:milli_seconds) - 10)
-
     %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
     [{_, func2, inc}] = actions
     assert inc >= 143
@@ -1436,9 +1454,6 @@ defmodule Scenic.GraphTest do
     %Graph{recurring_actions: actions} = graph
     [{_, __MODULE__, 123}] = actions
 
-    # fake in a last action time
-    graph = Map.put(graph, :last_recurring_action, :os.system_time(:milli_seconds) - 10)
-
     %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
     [{_, __MODULE__, 124}] = actions
   end
@@ -1447,9 +1462,6 @@ defmodule Scenic.GraphTest do
     graph = Graph.schedule_recurring_action!(@graph_empty, 123, __MODULE__, :test_action_continue)
     %Graph{recurring_actions: actions} = graph
     [{_, {__MODULE__, :test_action_continue}, 123}] = actions
-
-    # fake in a last action time
-    graph = Map.put(graph, :last_recurring_action, :os.system_time(:milli_seconds) - 10)
 
     %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
     [{_, {__MODULE__, :test_action_continue}, inc}] = actions

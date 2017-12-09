@@ -585,6 +585,10 @@ defmodule Scenic.Graph do
   #--------------------------------------------------------
   def modify( graph, uid, action )
 
+  def modify( graph, %Primitive{uid: uid}, action ) do
+    modify( graph, uid, action )
+  end
+
   # transform a single primitive by uid
   def modify( graph, uid, action ) when is_integer(uid) and is_function(action, 1) do
     case get(graph, uid) do

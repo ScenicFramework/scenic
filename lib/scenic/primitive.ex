@@ -288,7 +288,7 @@ defmodule Scenic.Primitive do
   def put_event_filter(%Primitive{} = p, nil) do
     Map.delete(p, :event_filter)
   end
-  def put_event_filter(%Primitive{} = p, evtf) when is_function(evtf, 4) do
+  def put_event_filter(%Primitive{} = p, evtf) when is_function(evtf, 3) do
     Map.put(p, :event_filter, evtf)
   end
   def put_event_filter(%Primitive{} = p, {module, action})  when is_atom(module) and is_atom(action) do
