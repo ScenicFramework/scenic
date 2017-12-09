@@ -184,7 +184,6 @@ defmodule Scenic.SceneTest do
       scene_state:        :focus_lost_ok_state,
       graph:              updated_graph
     } = state
-    updated_graph = Map.put(updated_graph, :last_recurring_action, nil)
     assert updated_graph == @graph_2
     refute ViewPort.current_scene?()
   end
@@ -203,7 +202,6 @@ defmodule Scenic.SceneTest do
       scene_state:        :focus_lost_cancel_state,
       graph:              updated_graph
     } = state
-    updated_graph = Map.put(updated_graph, :last_recurring_action, nil)
     assert updated_graph == @graph_2
     assert ViewPort.current_scene?()
   end
@@ -212,7 +210,7 @@ defmodule Scenic.SceneTest do
   # handle_cast(:input...
 
   test "handle_cast :input prepares and handles the event" do
-    event = {:input, {:key, {262, 1, 0}}}
+    event = {:input, {:key, {262, 0, 1, 0}}}
     {:noreply, state} = Scene.handle_cast(event, @state)
     assert state == %{
       scene_module:       __MODULE__,
@@ -252,7 +250,6 @@ defmodule Scenic.SceneTest do
       scene_state:        :focus_gained_ok_state,
       graph:              updated_graph
     } = state
-    updated_graph = Map.put(updated_graph, :last_recurring_action, nil)
     assert updated_graph == @graph_2
     assert ViewPort.current_scene?( self() )
   end
@@ -295,7 +292,6 @@ defmodule Scenic.SceneTest do
       scene_state:        :focus_gained_cancel_state,
       graph:              updated_graph
     } = state
-    updated_graph = Map.put(updated_graph, :last_recurring_action, nil)
     assert updated_graph == @graph_2
     assert ViewPort.current_scene() == nil
   end
