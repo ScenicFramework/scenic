@@ -837,7 +837,7 @@ defmodule Scenic.Graph do
 
   #--------------------------------------------------------
   def schedule_recurring_action(graph, args, callback_or_module)
-  def schedule_recurring_action(%Graph{} = graph, args, callback) when is_function(callback, 3) do
+  def schedule_recurring_action(%Graph{} = graph, args, callback) when is_function(callback, 4) do
     do_schedule_recurring_action(graph, args, callback)
   end
   def schedule_recurring_action(%Graph{} = graph, args, module) when is_atom(module) do
@@ -908,7 +908,7 @@ defmodule Scenic.Graph do
 
   #--------------------------------------------------------
   defp call_recurring_action(msg, graph, elapsed_time, callback, data)
-  defp call_recurring_action(msg, graph, elapsed_time, callback, data) when is_function(callback, 3) do
+  defp call_recurring_action(msg, graph, elapsed_time, callback, data) when is_function(callback, 4) do
     callback.(msg, graph, elapsed_time, data)
   end
   defp call_recurring_action(msg, graph, elapsed_time, module, data) when is_atom(module) do

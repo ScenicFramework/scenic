@@ -1173,17 +1173,17 @@ defmodule Scenic.GraphTest do
 
   test "put_event_filter adds a function handler to the primitive indicated by id" do
     [uid] = Graph.resolve_id(@filter_graph, :rect)
-    graph = Graph.put_event_filter(@filter_graph, :rect, fn(_a,_b,_c,_d) -> nil end)
+    graph = Graph.put_event_filter(@filter_graph, :rect, fn(_a,_b,_c) -> nil end)
     p = Graph.get(graph, uid)
-    assert is_function(Primitive.get_event_filter(p), 4)
+    assert is_function(Primitive.get_event_filter(p), 3)
   end
 
   
   test "put_event_filter adds a function handler to the primitive indicated by uid" do
     [uid] = Graph.resolve_id(@filter_graph, :rect)
-    graph = Graph.put_event_filter(@filter_graph, uid, fn(_a,_b,_c,_d) -> nil end)
+    graph = Graph.put_event_filter(@filter_graph, uid, fn(_a,_b,_c) -> nil end)
     p = Graph.get(graph, uid)
-    assert is_function(Primitive.get_event_filter(p), 4)
+    assert is_function(Primitive.get_event_filter(p), 3)
   end
   
   test "put_event_filter adds a {mod,fun} handler to the primitive indicated by id" do
@@ -1340,21 +1340,26 @@ defmodule Scenic.GraphTest do
     {:continue, graph, :zero_time}
   end
 
-  def test_action_continue(graph, elapsed_time, args) do
+  def test_action_continue(_type, graph, elapsed_time, args) do
     {:continue, graph, args + elapsed_time}
   end
 
-  def test_action_stop(graph, _elapsed_time, _args) do
+  def test_action_stop(_type, graph, _elapsed_time, _args) do
     {:stop, graph}
   end
+
+
+  import IEx
 
   test "schedule_recurring_action adds a function callback recurring action" do
     %Graph{recurring_actions: actions} = graph = @graph_empty
     assert Enum.count(actions) == 0
 
-    {:ok, graph, {:recurring_action_reference, ref}} = Graph.schedule_recurring_action(graph, 123, fn(_,_,_)-> nil end)
+    {:ok, graph, {:recurring_action_reference, ref}} = Graph.schedule_recurring_action(graph, 123, fn(_,_,_,_)-> nil end)
     %Graph{recurring_actions: actions} = graph
-    [{_, _, 123}] = actions
+    # note: since this action is only scheduled, and not running, the
+    # elapsed time (4th part of the tuple) is nil.
+    [{_, _, 123, nil}] = actions
     assert Enum.count(actions) == 1
     assert is_bitstring(ref)
   end
@@ -1365,7 +1370,7 @@ defmodule Scenic.GraphTest do
 
     {:ok, graph, {:recurring_action_reference, ref}} = Graph.schedule_recurring_action(graph, 123, __MODULE__)
     %Graph{recurring_actions: actions} = graph
-    [{_, __MODULE__, 123}] = actions
+    [{_, __MODULE__, 123, nil}] = actions
     assert Enum.count(actions) == 1
     assert is_bitstring(ref)
   end
@@ -1376,7 +1381,7 @@ defmodule Scenic.GraphTest do
 
     {:ok, graph, {:recurring_action_reference, ref}} = Graph.schedule_recurring_action(graph, 123, __MODULE__, :test_action_continue)
     %Graph{recurring_actions: actions} = graph
-    [{_, {__MODULE__, :test_action_continue}, 123}] = actions
+    [{_, {__MODULE__, :test_action_continue}, 123, nil}] = actions
     assert Enum.count(actions) == 1
     assert is_bitstring(ref)
   end
@@ -1385,7 +1390,7 @@ defmodule Scenic.GraphTest do
     %Graph{recurring_actions: actions} = graph = @graph_empty
     assert Enum.count(actions) == 0
 
-    %Graph{recurring_actions: actions} = Graph.schedule_recurring_action!(graph, 123, fn(_,_,_)-> nil end)
+    %Graph{recurring_actions: actions} = Graph.schedule_recurring_action!(graph, 123, fn(_,_,_,_)-> nil end)
     assert Enum.count(actions) == 1
   end
 
@@ -1394,7 +1399,7 @@ defmodule Scenic.GraphTest do
     assert Enum.count(actions) == 0
 
     %Graph{recurring_actions: actions} = Graph.schedule_recurring_action!(graph, 123, __MODULE__)
-    [{_, __MODULE__, 123}] = actions
+    [{_, __MODULE__, 123, nil}] = actions
     assert Enum.count(actions) == 1
   end
 
@@ -1403,7 +1408,7 @@ defmodule Scenic.GraphTest do
     assert Enum.count(actions) == 0
 
     %Graph{recurring_actions: actions} = Graph.schedule_recurring_action!(graph, 123, __MODULE__, :test_action_continue)
-    [{_, {__MODULE__, :test_action_continue}, 123}] = actions
+    [{_, {__MODULE__, :test_action_continue}, 123, nil}] = actions
     assert Enum.count(actions) == 1
   end
 
@@ -1435,24 +1440,26 @@ defmodule Scenic.GraphTest do
 
 
   test "tick_recurring_action calls a function callback - continue" do
-    graph = Graph.schedule_recurring_action!(@graph_empty, 123, fn(g,elapsed_time,123)->
-      assert elapsed_time >= 10
-      {:continue, g, 123 + elapsed_time + 10}
+    graph = Graph.schedule_recurring_action!(@graph_empty, 123, fn(type,g,elapsed_time,123)->
+      assert type == :step
+      assert elapsed_time == 0
+      {:continue, g, 123 + 10}
     end)
     %Graph{recurring_actions: actions} = graph
-    [{_, func, 123}] = actions
-    assert is_function(func, 3)
+    [{_, func, 123, nil}] = actions
+    assert is_function(func, 4)
 
     %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
-    [{_, func2, inc}] = actions
-    assert inc >= 143
+    [{_, func2, inc, elapsed}] = actions
+    assert inc >= 133
     assert func == func2
+    assert elapsed != nil
   end
 
   test "tick_recurring_action calls the module callback - continue" do
     graph = Graph.schedule_recurring_action!(@graph_empty, 123, __MODULE__)
     %Graph{recurring_actions: actions} = graph
-    [{_, __MODULE__, 123}] = actions
+    [{_, __MODULE__, 123, nil}] = actions
 
     %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
     [{_, __MODULE__, 124}] = actions
@@ -1461,18 +1468,19 @@ defmodule Scenic.GraphTest do
   test "tick_recurring_action calls the mod/act callback - continue" do
     graph = Graph.schedule_recurring_action!(@graph_empty, 123, __MODULE__, :test_action_continue)
     %Graph{recurring_actions: actions} = graph
-    [{_, {__MODULE__, :test_action_continue}, 123}] = actions
+    [{_, {__MODULE__, :test_action_continue}, 123, nil}] = actions
 
     %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
-    [{_, {__MODULE__, :test_action_continue}, inc}] = actions
+    [{_, {__MODULE__, :test_action_continue}, inc, elapsed}] = actions
     assert inc >= 133
+    assert is_number(elapsed)
   end
 
   test "tick_recurring_action calls a function callback - stop" do
-    graph = Graph.schedule_recurring_action!(@graph_empty, 123, fn(g,_,_)-> {:stop, g} end)
+    graph = Graph.schedule_recurring_action!(@graph_empty, 123, fn(_,g,_,_)-> {:stop, g} end)
     %Graph{recurring_actions: actions} = graph
     [{_, func, 123}] = actions
-    assert is_function(func, 3)
+    assert is_function(func, 4)
 
     %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
     assert actions == []
