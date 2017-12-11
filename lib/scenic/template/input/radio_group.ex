@@ -9,13 +9,19 @@ defmodule Scenic.Template.Input.RadioGroup do
 
 #  import IEx
 
-  @v_spacing          16
+  @font_size          16
 
+  @v_spacing          @font_size + 2
+  @font               {:roboto, @font_size}
 
   #----------------------------------------------------------------------------
   def build(buttons, opts \\ [] )
 
   def build(btns, opts ) when is_list(btns) do
+
+    opts = opts
+    |> Keyword.put_new(:font, @font)
+
     # build the radio group. Start with a empty graph
     # then add each radio button in the list    
     Input.build( opts )
