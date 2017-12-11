@@ -27,9 +27,9 @@ defmodule Scenic.Template.Button do
     r = opts[:radius] || opts[:r] || @default_radius
 
     # build the button graph
-    Input.build( opts )
+    Input.build( [{:font, {:roboto, 14}} | opts] )
     |> RoundedRectangle.add_to_graph( {{x,y}, w, h, r}, color: @blue_color )
-    |> Text.add_to_graph( {{x+8,y+17}, text}, color: @text_color, font: {:roboto, 14} )
+    |> Text.add_to_graph( {{x+8,y+17}, text}, color: @text_color )
     |> Graph.request_input( :mouse_button )
     |> Graph.put_event_filter(0, {Button, :filter_input})
   end

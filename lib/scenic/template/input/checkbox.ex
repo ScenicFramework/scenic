@@ -30,7 +30,12 @@ defmodule Scenic.Template.Input.Checkbox do
 
   def build({chx, text}, opts ) when is_boolean(chx) and is_bitstring(text) do
     # build the checkbox graph
-    Input.build( Keyword.put_new(opts, :input_value, chx) )
+
+    opts = opts
+    |> Keyword.put_new(:input_value, chx)
+    |> Keyword.put_new(:font, @font)
+
+    Input.build( opts )
     |> Group.add_to_graph(fn(graph) ->
       graph
       |> Rectangle.add_to_graph({{-2,-2}, 140, 16}, color: @hit_target_color)
@@ -38,12 +43,12 @@ defmodule Scenic.Template.Input.Checkbox do
 
       |> Group.add_to_graph(fn(graph) ->
         graph
-        |> Line.add_to_graph({{2,2}, {10,10}}, color: @check_color, line_width: 2)
-        |> Line.add_to_graph({{2,10}, {10,2}}, color: @check_color, line_width: 2)
-      end, tags: [:checkmark], hidden: !chx)
+        |> Line.add_to_graph({{2,2}, {10,10}})
+        |> Line.add_to_graph({{2,10}, {10,2}})
+      end, tags: [:checkmark], hidden: !chx, color: @check_color, line_width: 4)
     end, translate: {0, -11})
     
-    |> Text.add_to_graph({{18,0}, text}, color: @text_color, font: @font )
+    |> Text.add_to_graph({{18,0}, text}, color: @text_color )
     |> Graph.put_event_filter(0, {Checkbox, :filter_input})
   end
 
