@@ -17,8 +17,8 @@ defmodule Scenic.Primitive.Transform.Pin do
 
   #--------------------------------------------------------
   def verify( pin )
-  def verify( {x,y} ) when is_integer(x) and is_integer(y), do: true
-  def verify( {x,y,z} ) when is_integer(x) and is_integer(y) and is_integer(z), do: true
+  def verify( {x,y} ) when is_number(x) and is_number(y), do: true
+  def verify( {x,y,z} ) when is_number(x) and is_number(y) and is_number(z), do: true
   def verify( _ ), do: false
 
 end

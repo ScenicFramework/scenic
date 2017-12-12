@@ -41,6 +41,7 @@ defmodule Scenic.Template.Input.Slider do
     opts = opts
       |> Keyword.put( :input_state, {:slider, width, prep_extents(ext)} )
       |> Keyword.put( :input_value, init )
+      |> Keyword.put( :pin, {0, @height / 2} )
 
     Input.build(opts)
       |> Primitive.Rectangle.add_to_graph( {{0,0}, width, @height}, color: @hit_target_color )
