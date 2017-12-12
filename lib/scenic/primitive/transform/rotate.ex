@@ -6,7 +6,6 @@
 defmodule Scenic.Primitive.Transform.Rotate do
   use Scenic.Primitive.Transform
 
-
   #============================================================================
   # data verification and serialization
 

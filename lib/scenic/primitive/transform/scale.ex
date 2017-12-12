@@ -6,7 +6,6 @@
 defmodule Scenic.Primitive.Transform.Scale do
   use Scenic.Primitive.Transform
 
-
   #============================================================================
   # data verification and serialization
 

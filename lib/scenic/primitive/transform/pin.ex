@@ -6,9 +6,6 @@
 defmodule Scenic.Primitive.Transform.Pin do
   use Scenic.Primitive.Transform
 
-  # serialized pin is always a 3-tuple of integers.  {x, y, z}
-
-
   #============================================================================
   # data verification and serialization
 

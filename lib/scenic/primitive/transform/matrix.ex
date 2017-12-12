@@ -5,13 +5,8 @@
 
 defmodule Scenic.Primitive.Transform.Matrix do
   use Scenic.Primitive.Transform
-#  alias Scenic.Primitive.Style
-
-#  @dflag            Style.dflag()
-#  @type_code        0x0020
 
   @matrix_byte_size   16 * 4
-
 
   #============================================================================
   # data verification and serialization
