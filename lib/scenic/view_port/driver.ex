@@ -83,8 +83,14 @@ defmodule Scenic.ViewPort.Driver do
       def handle_cast(msg, state),        do: { :noreply, state }
       def handle_info(msg, state),        do: { :noreply, state }
 
-      def start_params(args) do
-        Supervisor.child_spec({ViewPort.Driver, {__MODULE__, args}}, id: args[:name])
+      def child_spec(opts) do
+        %{
+          id: opts[:name],
+          start: {ViewPort.Driver, :start_link, [{__MODULE__, opts}]},
+          restart: :permanent,
+          shutdown: 5000,
+          type: :worker
+        }
       end
 
       #--------------------------------------------------------
@@ -94,7 +100,7 @@ defmodule Scenic.ViewPort.Driver do
         handle_call:            3,
         handle_cast:            2,
         handle_info:            2,
-        start_params:           1
+        child_spec:             1
       ]
 
     end # quote

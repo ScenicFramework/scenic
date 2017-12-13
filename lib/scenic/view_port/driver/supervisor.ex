@@ -19,16 +19,9 @@ defmodule Scenic.ViewPort.Driver.Supervisor do
   end
 
   def init( :ok ) do
-    drivers = Application.get_env(:scenic, Scenic)[:drivers]
-
-#    children = Enum.map( drivers, fn({driver, args}) ->
-#      Supervisor.child_spec({Driver, {driver, args}}, id: args[:name])
-#    end)
-#    |> IO.inspect()
-
-    children = Enum.map( drivers, fn({driver, args}) -> driver.start_params(args) end)
-    
-    Supervisor.init( children, strategy: :one_for_one )
+    Application.get_env(:scenic, Scenic)[:drivers]
+    |> Enum.map( fn({driver, args}) -> driver.child_spec(args) end)
+    |> Supervisor.init( strategy: :one_for_one )
   end
 
 end
