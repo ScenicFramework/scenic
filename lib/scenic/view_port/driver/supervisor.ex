@@ -6,11 +6,10 @@
 defmodule Scenic.ViewPort.Driver.Supervisor do
   use Supervisor
   require Logger
-#  alias Scenic.ViewPort.Driver
 
   @name       :drivers
 
-  import IEx
+#  import IEx
 
   #============================================================================
   # setup the viewport supervisor - get the list of drivers from the config
