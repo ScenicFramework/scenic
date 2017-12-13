@@ -83,10 +83,10 @@ defmodule Scenic.ViewPort.Driver do
       def handle_cast(msg, state),        do: { :noreply, state }
       def handle_info(msg, state),        do: { :noreply, state }
 
-      def child_spec(opts) do
+      def child_spec({name, config}) do
         %{
-          id: opts[:name],
-          start: {ViewPort.Driver, :start_link, [{__MODULE__, opts}]},
+          id: name,
+          start: {ViewPort.Driver, :start_link, [{__MODULE__, name, config}]},
           restart: :permanent,
           shutdown: 5000,
           type: :worker
@@ -111,8 +111,8 @@ defmodule Scenic.ViewPort.Driver do
   # Driver initialization
 
   #--------------------------------------------------------
-  def start_link({module, opts}) do
-    GenServer.start_link(__MODULE__, {module, opts}, name: opts[:name])
+  def start_link({module, name, config}) do
+    GenServer.start_link(__MODULE__, {module, config}, name: name)
   end
 
   #--------------------------------------------------------
