@@ -83,6 +83,10 @@ defmodule Scenic.ViewPort.Driver do
       def handle_cast(msg, state),        do: { :noreply, state }
       def handle_info(msg, state),        do: { :noreply, state }
 
+      def start_params(args) do
+        Supervisor.child_spec({ViewPort.Driver, {__MODULE__, args}}, id: args[:name])
+      end
+
       #--------------------------------------------------------
       defoverridable [
         init:                   1,
@@ -90,6 +94,7 @@ defmodule Scenic.ViewPort.Driver do
         handle_call:            3,
         handle_cast:            2,
         handle_info:            2,
+        start_params:           1
       ]
 
     end # quote
