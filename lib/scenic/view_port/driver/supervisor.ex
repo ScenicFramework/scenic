@@ -5,7 +5,8 @@
 
 defmodule Scenic.ViewPort.Driver.Supervisor do
   use Supervisor
-  alias Scenic.ViewPort.Driver
+  require Logger
+#  alias Scenic.ViewPort.Driver
 
   @name       :drivers
 
@@ -31,10 +32,11 @@ defmodule Scenic.ViewPort.Driver.Supervisor do
     config = Application.get_env(:scenic, name) || []
     {name, config}
   end
-  def get_driver_config(_) do
-    raise ArgumentError, """
+  def get_driver_config(opts) do
+    Logger.error( """
+      Invalid driver request: #{inspect(opts)}
       To specify a render driver in Scenic, include both the module and a unique
-      name for the driver. Like this:
+      name (an atom) for the driver. Like this:
 
       config :scenic, Scenic,
         drivers: [
@@ -52,7 +54,7 @@ defmodule Scenic.ViewPort.Driver.Supervisor do
 
       The reason the driver is configured in a seperate line instead of in a keyword list
       when first specifying which drivers to load is to make it easy to include secrets
-      in a seperate configuration line in a seperate file.
+      in a seperate configuration line in a seperate file. 
 
       For example, the remote drivers require a URL, user ID and password. These should NOT
       be checked into your source control. Instead, put them in a config.secrets.exs type
@@ -67,7 +69,7 @@ defmodule Scenic.ViewPort.Driver.Supervisor do
 
 
       The configuration keys will be merged together and presented to the driver.
-      """
+      """ )
     end
 
 end
