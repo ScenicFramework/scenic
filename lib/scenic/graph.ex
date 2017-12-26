@@ -25,7 +25,7 @@ defmodule Scenic.Graph do
   alias Scenic.Primitive.Group
   alias Scenic.Math.MatrixBin, as: Matrix
 
-#  import IEx
+  import IEx
 
   # make reserved uids, 3 or shorter to avoid potential conflicts
   @root_uid               0
@@ -1041,22 +1041,59 @@ defmodule Scenic.Graph do
   # possible optimization here by rolling into a custom traversal that keeps track
   # of the current inverse_tx without having to walk backwards to find it for each
   # primitive.
-  def find_by_screen_point(%Graph{} = graph, {x,y}) when is_number(x) and is_number(y) do
-    reduce(graph, nil, fn(%Primitive{module: mod, data: data} = p,acc) ->
-      # get the local (or inherited) inverse tx for this primitive
-      # then project the point by that matrix to get the local point
-      local_point = case get_inverse_tx(graph, p) do
-        nil -> {x, y}
-        tx -> Matrix.project_vector( tx, {x, y} )
-      end
+#  def find_by_screen_point(%Graph{} = graph, {x,y}) when is_number(x) and is_number(y) do
+#    reduce(graph, nil, fn(%Primitive{module: mod, data: data} = p,acc) ->
+#      # get the local (or inherited) inverse tx for this primitive
+#      # then project the point by that matrix to get the local point
+#      local_point = case get_inverse_tx(graph, p) do
+#        nil -> {x, y}
+#        tx -> Matrix.project_vector( tx, {x, y} )
+#      end
+#
+#      # test if the point is in the primitive
+#      case mod.contains_point?( data, local_point ) do
+#        true  -> p
+#        false -> acc
+#      end
+#    end)
+#  end
 
-      # test if the point is in the primitive
-      case mod.contains_point?( data, local_point ) do
-        true  -> p
-        false -> acc
-      end
-    end)
+
+  #--------------------------------------------------------
+  # find the indicated primitive in the graph given a point in screen coordinates.
+  # to do this, we need to project the point into primitive local coordinates by
+  # projecting it with the primitive's inverse final matrix.
+  # 
+  # Since the last primitive drawn is always on top, we should walk the tree
+  # backwards and return the first hit we find. We could just reduct the whole
+  # thing and return the last one found (that was my first try), but this is
+  # more efficient as we can stop as soon as we find the first one.
+  def find_by_screen_point(%Graph{} = graph, {x,y}) when is_number(x) and is_number(y) do
+    do_find_by_screen_point( graph, 0, x, y )
   end
+
+  defp do_find_by_screen_point( graph, uid, x, y ) do
+    # get the indicated primitive
+    case get(graph, uid) do
+      %Primitive{module: Group, data: ids} ->
+        ids
+        |> Enum.reverse()
+        |> Enum.find_value( &do_find_by_screen_point(graph, &1, x, y ) )
+      %Primitive{module: mod, data: data} = p ->
+        # get the local (or inherited) inverse tx for this primitive
+        # then project the point by that matrix to get the local point
+        local_point = case get_inverse_tx(graph, p) do
+          nil -> {x, y}
+          tx -> Matrix.project_vector( tx, {x, y} )
+        end
+        # test if the point is in the primitive
+        case mod.contains_point?( data, local_point ) do
+          true  -> p
+          false -> nil
+        end
+    end
+  end
+
 
   #--------------------------------------------------------
   def request_input(graph, input)
