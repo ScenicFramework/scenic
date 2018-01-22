@@ -4,50 +4,45 @@
 #
 
 defmodule Scenic.Template.InputTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   doctest Scenic
 
   alias Scenic.Graph
-  alias Scenic.Primitive
   alias Scenic.Template.Input
+
+#  import IEx
 
 
   @value    {123, "abc"}
   @name     "test value"
   @state    {:test,"state"}
-  @input    Input.build(name: @name, value: @value, state:  @state) |> Graph.get(0)
+  @input    Input.build(input_name: @name, input_value: @value, input_state:  @state) |> Graph.get(0)
 
   #============================================================================
   # build
   test "build works" do
-    assert Input.build(name: "test", value: 123)
+    assert Input.build(input_name: "test", input_value: 123)
   end
 
   test "build sets the requested name" do
-    input = Input.build(name: "test_name")
-    {:input, "test_name", _, _} = input
-      |> Graph.get(0)
-      |> Primitive.get_state()
+    input = Input.build(input_name: "test_name", input_value: 123)
+    assert input |> Graph.get(0) |> Input.get_name() == "test_name"
   end
 
   test "build rejects non-bitstring names" do
     assert_raise Scenic.Template.Input.Error, fn ->
-      Input.build(name: :test_name)
+      Input.build(input_name: :test_name)
     end
   end
 
   test "build sets requested value" do
-    input = Input.build(value: 123)
-    {:input, _, 123, _} = input
-      |> Graph.get(0)
-      |> Primitive.get_state()
+    input = Input.build(input_value: 123)
+    assert input |> Graph.get(0) |> Input.get_value() == 123
   end
 
   test "build sets requested state" do
-    input = Input.build(state: {:abc, 123})
-    {:input, _, _, {:abc, 123}} = input
-      |> Graph.get(0)
-      |> Primitive.get_state()
+    input = Input.build(input_state: {:abc, 123})
+    assert input |> Graph.get(0) |> Input.get_state() == {:abc, 123}
   end
 
   #============================================================================
