@@ -49,9 +49,8 @@ defmodule Scenic.PrimitiveTest do
   }
 
   @minimal_primitive   %{
-    module:     Group,
     puid:       @parent_uid,
-    data:       @data,
+    data:       {Group, @data},
     styles:     %{color: {{255, 0, 0, 255}, {255, 255, 0, 255}}, line_width: 10},
     transforms: %{pin: {10, 11}, rotate: 0.1}
   }
@@ -212,8 +211,8 @@ defmodule Scenic.PrimitiveTest do
   end
 
   test "put_event_filter sets the event handler to a function" do
-    p = Primitive.put_event_filter(@primitive, fn(_a,_b,_c,_d) -> nil end)
-    assert is_function(Primitive.get_event_filter(p), 4)
+    p = Primitive.put_event_filter(@primitive, fn(_a,_b,_c) -> nil end)
+    assert is_function(Primitive.get_event_filter(p), 3)
   end
 
   test "put_event_filter sets the event handler to nil" do
@@ -415,12 +414,12 @@ defmodule Scenic.PrimitiveTest do
 
   test "delta_script picks up change to data" do
     p = Primitive.put(@primitive, [1,2,3])
-    assert Primitive.delta_script(@primitive, p) == [{:put, :data, [1, 2, 3]}]
+    assert Primitive.delta_script(@primitive, p) == [{:put, :data, {Group, [1, 2, 3]}}]
   end
 
   test "delta_script picks up change to module" do
     p = Map.put(@primitive, :module, Primitive.Line)
-    assert Primitive.delta_script(@primitive, p) == [{:put, :module, Primitive.Line}]
+    assert Primitive.delta_script(@primitive, p) == [{:put, :data, {Scenic.Primitive.Line, [1, 2, 3, 4, 5]}}]
   end
 
   test "delta_script picks up change to parent uid" do
