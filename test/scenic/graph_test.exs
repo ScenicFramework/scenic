@@ -15,7 +15,7 @@ defmodule Scenic.GraphTest do
   alias Scenic.Primitive.Rectangle
   alias Scenic.Primitive.Line
 
-#  import IEx
+  import IEx
   
   @root_uid               0
 
@@ -1336,20 +1336,24 @@ defmodule Scenic.GraphTest do
     {:stop, graph}
   end
 
-  def test_action_zero_time(graph, 0, _args) do
+  def tick(:step, graph, _, num) do
+    case num  do
+      321 -> {:continue, graph, 322}
+      322 -> {:stop, graph}
+    end
+  end
+
+  def test_action_zero_time(_type, graph, 0, _args) do
     {:continue, graph, :zero_time}
   end
 
   def test_action_continue(_type, graph, elapsed_time, args) do
-    {:continue, graph, args + elapsed_time}
+    {:continue, graph, args + 20}
   end
 
   def test_action_stop(_type, graph, _elapsed_time, _args) do
     {:stop, graph}
   end
-
-
-  import IEx
 
   test "schedule_recurring_action adds a function callback recurring action" do
     %Graph{recurring_actions: actions} = graph = @graph_empty
@@ -1457,12 +1461,12 @@ defmodule Scenic.GraphTest do
   end
 
   test "tick_recurring_action calls the module callback - continue" do
-    graph = Graph.schedule_recurring_action!(@graph_empty, 123, __MODULE__)
+    graph = Graph.schedule_recurring_action!(@graph_empty, 321, __MODULE__)
     %Graph{recurring_actions: actions} = graph
-    [{_, __MODULE__, 123, nil}] = actions
+    [{_, __MODULE__, 321, nil}] = actions
 
     %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
-    [{_, __MODULE__, 124}] = actions
+    [{_, __MODULE__, 322, _}] = actions
   end
 
   test "tick_recurring_action calls the mod/act callback - continue" do
@@ -1479,7 +1483,7 @@ defmodule Scenic.GraphTest do
   test "tick_recurring_action calls a function callback - stop" do
     graph = Graph.schedule_recurring_action!(@graph_empty, 123, fn(_,g,_,_)-> {:stop, g} end)
     %Graph{recurring_actions: actions} = graph
-    [{_, func, 123}] = actions
+    [{_, func, 123, _}] = actions
     assert is_function(func, 4)
 
     %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
@@ -1489,11 +1493,13 @@ defmodule Scenic.GraphTest do
   test "tick_recurring_action calls the module callback - stop" do
     graph = Graph.schedule_recurring_action!(@graph_empty, 321, __MODULE__)
     %Graph{recurring_actions: actions} = graph
-    [{_, __MODULE__, 321}] = actions
+    [{_, __MODULE__, 321, _}] = actions
 
-    # fake in a last action time
-    graph = Map.put(graph, :last_recurring_action, :os.system_time(:milli_seconds) - 10)
+    # Tick it once.
+    %Graph{recurring_actions: actions} = graph = Graph.tick_recurring_actions( graph )
+    [{_, __MODULE__, 322, _}] = actions
 
+    # Tick it again. The test tick function should cause a stop
     %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
     assert actions == []
   end
@@ -1501,7 +1507,7 @@ defmodule Scenic.GraphTest do
   test "tick_recurring_action calls the mod/act callback - stop" do
     graph = Graph.schedule_recurring_action!(@graph_empty, 123, __MODULE__, :test_action_stop)
     %Graph{recurring_actions: actions} = graph
-    [{_, {__MODULE__, :test_action_stop}, 123}] = actions
+    [{_, {__MODULE__, :test_action_stop}, 123, _}] = actions
 
     %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
     assert actions == []
@@ -1510,10 +1516,10 @@ defmodule Scenic.GraphTest do
   test "tick_recurring_action calls the callback with 0 elapsed time if the last time is nil" do
     graph = Graph.schedule_recurring_action!(@graph_empty, 123, __MODULE__, :test_action_zero_time)
     %Graph{recurring_actions: actions} = graph
-    [{_, {__MODULE__, :test_action_zero_time}, 123}] = actions
+    [{_, {__MODULE__, :test_action_zero_time}, 123, _}] = actions
 
     %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
-    [{_, {__MODULE__, :test_action_zero_time}, :zero_time}] = actions
+    [{_, {__MODULE__, :test_action_zero_time}, :zero_time, _}] = actions
   end
 
 
