@@ -15,7 +15,7 @@ defmodule Scenic.GraphTest do
   alias Scenic.Primitive.Rectangle
   alias Scenic.Primitive.Line
 
-  import IEx
+#  import IEx
   
   @root_uid               0
 
@@ -1347,7 +1347,7 @@ defmodule Scenic.GraphTest do
     {:continue, graph, :zero_time}
   end
 
-  def test_action_continue(_type, graph, elapsed_time, args) do
+  def test_action_continue(_type, graph, _, args) do
     {:continue, graph, args + 20}
   end
 
