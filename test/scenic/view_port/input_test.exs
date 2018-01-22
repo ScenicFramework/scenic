@@ -5,7 +5,7 @@
 
 
 defmodule Scenic.ViewPort.InputTest do
-  use ExUnit.Case, async: false
+  use ExUnit.Case, async: true
   use Bitwise
   doctest Scenic
   alias Scenic.ViewPort.Input
@@ -291,7 +291,7 @@ defmodule Scenic.ViewPort.InputTest do
   # normalize input
 
   test "normalize key converts raw key input into atoms - but leaves mods alone" do
-    assert Input.normalize( {:key, {265, 1, 2}} ) == {:key, :up, :press, 2}
+    assert Input.normalize( {:key, {265, 265, 1, 2}} ) == {:key, :up, :press, 2}
   end
 
   test "normalize codepoint converts codepoint key input into a bitstring - but leaves mods alone" do

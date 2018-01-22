@@ -91,7 +91,7 @@ defmodule Scenic.ViewPort.Input.Tracker.ClickTest do
   test "handle_input sends click on release in uid" do
     state = %{
       scene_pid:      self(),
-      target_id:      :test_id,
+      target:         :test_target,
       valid_uids:     [1,2,3],
       target_button:  :left,
       uid_fn:         fn(_) -> 2 end,
@@ -101,7 +101,7 @@ defmodule Scenic.ViewPort.Input.Tracker.ClickTest do
     {:noreply, _} = Click.handle_input(input, state)
 
     # confirm a driver update message was sent
-    assert_received( {:"$gen_cast", {:input_uid, {:click, :test_id, {1, 2}}, 2}} )
+    assert_received( {:"$gen_cast", {:input_uid, {:click, :test_target, {1, 2}}, 2}} )
   end
 
   test "handle_input does NOT send on click release outside uid" do

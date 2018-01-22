@@ -76,7 +76,7 @@ defmodule Scenic.ViewPort.Input.TrackerTest do
   #--------------------------------------------------------
   # handle_cast -> handle_input
   test "handle_cast normalizes input before passing it up to handle_input" do
-    {:noreply, state} = Tracker.handle_cast( {:input, {:key, {65, 1, 3}}}, @state )
+    {:noreply, state} = Tracker.handle_cast( {:input, {:key, {65, 65, 1, 3}}}, @state )
     assert state == %{
       tracker_module: __MODULE__,
       tracker_state:  :handle_input_state
