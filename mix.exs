@@ -46,6 +46,8 @@ defmodule Scenic.Mixfile do
       { :scenic_cache, in_umbrella: true},
       { :scenic_cache_texture, in_umbrella: true},
       { :scenic_math, in_umbrella: true},
+      { :scenic_cache_font, in_umbrella: true},
+
       { :benchwarmer, "~> 0.0.2", only: :dev }
     ]
   end
