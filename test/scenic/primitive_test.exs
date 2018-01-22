@@ -443,8 +443,26 @@ defmodule Scenic.PrimitiveTest do
   end
 
   test "delta_script picks up transform deletion" do
-    p = Primitive.put_transform(@primitive, :pin, nil)
-    assert Primitive.delta_script(@primitive, p) == [del: {:transforms, :pin}]
+    p = Primitive.put_transform(@primitive, :translate, {12,23})
+    pd = Primitive.put_transform(@primitive, :translate, nil)
+    assert Primitive.delta_script(p, pd) == [del: {:transforms, :translate}]
   end
 
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
