@@ -73,7 +73,7 @@ defmodule Scenic.ViewPort.Driver do
   defmacro __using__(use_opts) do
     quote do
       def init(_),                        do: {:ok, nil}
-      def register(_),                    do: Scenic.ViewPort.Driver.register()
+#      def register(_),                    do: Scenic.ViewPort.Driver.register()
 
       def default_sync_interval(),        do: unquote(use_opts[:sync_interval])
 
@@ -99,7 +99,6 @@ defmodule Scenic.ViewPort.Driver do
       #--------------------------------------------------------
       defoverridable [
         init:                   1,
-        register:               1,
         handle_sync:            1,
         handle_call:            3,
         handle_cast:            2,
@@ -123,7 +122,10 @@ defmodule Scenic.ViewPort.Driver do
   def init( {module, opts} ) do
 
     # set up the driver with the viewport registry
-    module.register(opts)
+    {:ok, _} = Registry.register(:driver_registry, :set_graph,    :set_graph )
+    {:ok, _} = Registry.register(:driver_registry, :update_graph, :update_graph )
+    {:ok, _} = Registry.register(:driver_registry, :driver_cast,  :driver_cast )
+    {:ok, _} = Registry.register(:driver_registry, :identify,     {module, opts} )
 
     # let the driver initialize itself
     {:ok, driver_state} = module.init( opts )
@@ -156,13 +158,13 @@ defmodule Scenic.ViewPort.Driver do
     {:ok, state}
   end
 
-  def register() do
-    # set up the driver with the viewport registry
-    {:ok, _} = Registry.register(:driver_registry, :set_graph,    :set_graph )
-    {:ok, _} = Registry.register(:driver_registry, :update_graph, :update_graph )
-    {:ok, _} = Registry.register(:driver_registry, :driver_cast,  :driver_cast )
-    {:ok, _} = Registry.register(:driver_registry, :identify,     {module, opts} )
-  end
+#  def register() do
+#    # set up the driver with the viewport registry
+#    {:ok, _} = Registry.register(:driver_registry, :set_graph,    :set_graph )
+#    {:ok, _} = Registry.register(:driver_registry, :update_graph, :update_graph )
+#    {:ok, _} = Registry.register(:driver_registry, :driver_cast,  :driver_cast )
+#    {:ok, _} = Registry.register(:driver_registry, :identify,     {module, opts} )
+#  end
 
   #============================================================================
   # handle_call
@@ -235,7 +237,7 @@ defmodule Scenic.ViewPort.Driver do
     case (cur_time - last_msg) > sync_interval do
       true  ->
         ViewPort.send_to_scene( :graph_update )
-        { :noreply, d_state } = mod.handle_cast( :sync, d_state )
+        { :noreply, d_state } = mod.handle_sync( d_state )
         { :noreply, Map.put(state, :driver_state, d_state) }
       false ->
         { :noreply, state }
