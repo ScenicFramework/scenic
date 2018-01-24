@@ -7,7 +7,7 @@
 
 
 defmodule Scenic.ViewPort.Input do
-  use GenServer
+#  use GenServer
   use Bitwise
 
   require Logger

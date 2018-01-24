@@ -4,7 +4,7 @@
 #
 
 defmodule Scenic.ViewPort do
-  use GenServer
+#  use GenServer
   alias Scenic.ViewPort.Driver
   require Logger
 
