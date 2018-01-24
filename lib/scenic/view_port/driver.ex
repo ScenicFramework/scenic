@@ -73,6 +73,7 @@ defmodule Scenic.ViewPort.Driver do
   defmacro __using__(use_opts) do
     quote do
       def init(_),                        do: {:ok, nil}
+      def register(_),                    do: Scenic.ViewPort.Driver.register()
 
       def default_sync_interval(),        do: unquote(use_opts[:sync_interval])
 
@@ -82,6 +83,8 @@ defmodule Scenic.ViewPort.Driver do
       def handle_call(msg, from, state),  do: { :noreply, state }
       def handle_cast(msg, state),        do: { :noreply, state }
       def handle_info(msg, state),        do: { :noreply, state }
+
+      def register()
 
       def child_spec({name, config}) do
         %{
@@ -96,6 +99,7 @@ defmodule Scenic.ViewPort.Driver do
       #--------------------------------------------------------
       defoverridable [
         init:                   1,
+        register:               1,
         handle_sync:            1,
         handle_call:            3,
         handle_cast:            2,
@@ -119,10 +123,7 @@ defmodule Scenic.ViewPort.Driver do
   def init( {module, opts} ) do
 
     # set up the driver with the viewport registry
-    {:ok, _} = Registry.register(:driver_registry, :set_graph,    :set_graph )
-    {:ok, _} = Registry.register(:driver_registry, :update_graph, :update_graph )
-    {:ok, _} = Registry.register(:driver_registry, :driver_cast,  :driver_cast )
-    {:ok, _} = Registry.register(:driver_registry, :identify,     {module, opts} )
+    module.register(opts)
 
     # let the driver initialize itself
     {:ok, driver_state} = module.init( opts )
@@ -153,6 +154,14 @@ defmodule Scenic.ViewPort.Driver do
     end
 
     {:ok, state}
+  end
+
+  def register() do
+    # set up the driver with the viewport registry
+    {:ok, _} = Registry.register(:driver_registry, :set_graph,    :set_graph )
+    {:ok, _} = Registry.register(:driver_registry, :update_graph, :update_graph )
+    {:ok, _} = Registry.register(:driver_registry, :driver_cast,  :driver_cast )
+    {:ok, _} = Registry.register(:driver_registry, :identify,     {module, opts} )
   end
 
   #============================================================================
