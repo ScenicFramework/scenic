@@ -44,13 +44,13 @@ defmodule Scenic.ViewPort.Input.Tracker.Position do
   #--------------------------------------------------------
   def init( state ) do
     # register to receive mouse button events
-    Input.register( [:mouse_button, :mouse_move] )
+    Input.register( [:cursor_button, :cursor_pos] )
     {:ok, state }
   end
 
   #--------------------------------------------------------
   # any change in mouse button state stops this tracker
-  def handle_input({:mouse_button, _, _, _, _}, state) do
+  def handle_input({:cursor_button, _, _, _, _}, state) do
     Input.unregister( :all )
     Input.Tracker.stop()
     {:noreply, state}
@@ -58,7 +58,7 @@ defmodule Scenic.ViewPort.Input.Tracker.Position do
 
   #--------------------------------------------------------
   # any change in mouse button state stops this tracker
-  def handle_input({:mouse_move, pos}, %{scene_pid: scene_pid, cookie: cookie, target: %{uid: uid}} = state) do
+  def handle_input({:cursor_pos, pos}, %{scene_pid: scene_pid, cookie: cookie, target: %{uid: uid}} = state) do
     GenServer.cast(scene_pid, {:input_uid, {:position, pos, cookie}, uid})
     {:noreply, state}
   end

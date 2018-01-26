@@ -41,7 +41,7 @@ defmodule Scenic.Template.Input.RadioButton do
   #----------------------------------------------------------------------------
   def filter_input(event, %Primitive{} = radio_button, graph) do
     case event do
-      {:mouse_button, :left, :press, _, _ } ->
+      {:cursor_button, :left, :press, _, _ } ->
         uids = Graph.gather_uids(graph, radio_button)
         Tracker.Click.start( :left, radio_button, uids )
         {:stop,  graph}

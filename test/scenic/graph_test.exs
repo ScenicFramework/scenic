@@ -679,7 +679,7 @@ defmodule Scenic.GraphTest do
     {graph_t, _} =      Graph.insert_at(graph_t, -1, @empty_group)
 
     # add a request for input
-    graph_t = Graph.request_input(graph_t, [:key, :mouse_down])
+    graph_t = Graph.request_input(graph_t, [:key, :cursor_down])
 
     #check that the setup is ok
     assert Graph.count(graph_t, -1) == 5
@@ -711,7 +711,7 @@ defmodule Scenic.GraphTest do
     assert Primitive.get_parent_uid( Graph.get(merged, t_uid) ) == parent_uid
 
     # make sure the template's input request was merged in without duplicates
-    assert Map.get(merged, :input) == [:key, :char, :mouse_down]
+    assert Map.get(merged, :input) == [:key, :char, :cursor_down]
   end
 
 

@@ -30,18 +30,18 @@ defmodule Scenic.Template.Button do
     Input.build( [{:font, {:roboto, 14}} | opts] )
     |> RoundedRectangle.add_to_graph( {{x,y}, w, h, r}, color: @blue_color )
     |> Text.add_to_graph( {{x+8,y+17}, text}, color: @text_color )
-    |> Graph.request_input( :mouse_button )
+    |> Graph.request_input( :cursor_button )
     |> Graph.put_event_filter(0, {Button, :filter_input})
   end
 
   #----------------------------------------------------------------------------
   def filter_input(event, %Primitive{} = p, graph) do
     case event do
-      {:mouse_button, :left, :press, _, _ } ->
+      {:cursor_button, :left, :press, _, _ } ->
         Tracker.Click.start( :left, p, Primitive.get(p) )
         {:stop, graph}
 
-      {:mouse_button, :left, :release, _, _ } ->  {:stop, graph}
+      {:cursor_button, :left, :release, _, _ } ->  {:stop, graph}
       event ->                                    {:continue, event, graph}
     end
   end

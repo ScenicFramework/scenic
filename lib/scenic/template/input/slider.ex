@@ -147,7 +147,7 @@ defmodule Scenic.Template.Input.Slider do
   def filter_input(event, slider, graph) do
     case event do
 
-      {:mouse_button, :left, :press, _, _ } ->
+      {:cursor_button, :left, :press, _, _ } ->
         uid = Primitive.get_uid(slider)
         mx = Graph.get_inverse_tx(graph, slider)
 

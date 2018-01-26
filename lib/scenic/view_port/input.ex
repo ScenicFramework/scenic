@@ -18,10 +18,10 @@ defmodule Scenic.ViewPort.Input do
   @valid_input_types  [
     :key,
     :codepoint,
-    :mouse_move,
-    :mouse_button,
-    :mouse_scroll,
-    :mouse_enter
+    :cursor_pos,
+    :cursor_button,
+    :cursor_scroll,
+    :cursor_enter
   ]
 
   @input_registry     :input_registry
@@ -343,10 +343,10 @@ defmodule Scenic.ViewPort.Input do
   end
   def input_type_to_flags( :key ),            do: 0x0001
   def input_type_to_flags( :codepoint ),      do: 0x0002
-  def input_type_to_flags( :mouse_move ),     do: 0x0004
-  def input_type_to_flags( :mouse_button ),   do: 0x0008
-  def input_type_to_flags( :mouse_scroll ),   do: 0x0010
-  def input_type_to_flags( :mouse_enter ),    do: 0x0020
+  def input_type_to_flags( :cursor_pos ),     do: 0x0004
+  def input_type_to_flags( :cursor_button ),   do: 0x0008
+  def input_type_to_flags( :cursor_scroll ),   do: 0x0010
+  def input_type_to_flags( :cursor_enter ),    do: 0x0020
   def input_type_to_flags( :all ),            do: 0xFFFF
   def input_type_to_flags( type ), do: raise Error, message: "Unknown input type: #{inspect(type)}"
 
@@ -375,9 +375,9 @@ defmodule Scenic.ViewPort.Input do
   end
 
   #--------------------------------------------------------
-  def normalize( {:mouse_button, {btn, action, mods, pos}} ) do
+  def normalize( {:cursor_button, {btn, action, mods, pos}} ) do
     {
-      :mouse_button,
+      :cursor_button,
       button_to_atom( btn ),
       action_to_atom( action ),
       mods,
@@ -386,8 +386,8 @@ defmodule Scenic.ViewPort.Input do
   end
 
   #--------------------------------------------------------
-  def normalize( {:mouse_enter, {0, pos}} ), do: {:mouse_enter, false, pos}
-  def normalize( {:mouse_enter, {1, pos}} ), do: {:mouse_enter, true, pos}
+  def normalize( {:cursor_enter, {0, pos}} ), do: {:cursor_enter, false, pos}
+  def normalize( {:cursor_enter, {1, pos}} ), do: {:cursor_enter, true, pos}
 
   #--------------------------------------------------------
   # all other events pass through unchanged

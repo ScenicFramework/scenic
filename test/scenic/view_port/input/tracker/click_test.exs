@@ -36,13 +36,13 @@ defmodule Scenic.ViewPort.Input.Tracker.ClickTest do
   test "init registers the click tracker for mouse_button input" do
     {:ok, :state} = Click.init( :state )
     keys = Registry.keys( @input_registry, self() )
-    assert Enum.member?( keys, :mouse_button )
+    assert Enum.member?( keys, :cursor_button )
   end
 
   test "startup registers the click tracker for mouse_button input" do
     pid = start_click_tracker()
     keys = Registry.keys( @input_registry, pid )
-    assert Enum.member?( keys, :mouse_button )
+    assert Enum.member?( keys, :cursor_button )
     GenServer.stop(pid)
   end
 
@@ -63,9 +63,9 @@ defmodule Scenic.ViewPort.Input.Tracker.ClickTest do
       stop_fn:        fn() -> GenServer.cast(self(), :stopping) end
     }
 
-    input = {:mouse_button, :right, :press, 0, {1,2}}
+    input = {:cursor_button, :right, :press, 0, {1,2}}
     {:noreply, _} = Click.handle_input(input, state)
-    input = {:mouse_button, :right, :release, 0, {1,2}}
+    input = {:cursor_button, :right, :release, 0, {1,2}}
     {:noreply, _} = Click.handle_input(input, state)
 
     # confirm a driver update message was sent
@@ -81,7 +81,7 @@ defmodule Scenic.ViewPort.Input.Tracker.ClickTest do
       uid_fn:         fn(_) -> nil end,
       stop_fn:        fn() -> GenServer.cast(self(), :stopping) end
     }
-    input = {:mouse_button, :left, :release, 0, {1,2}}
+    input = {:cursor_button, :left, :release, 0, {1,2}}
     {:noreply, _} = Click.handle_input(input, state)
 
     # confirm a driver update message was sent
@@ -97,7 +97,7 @@ defmodule Scenic.ViewPort.Input.Tracker.ClickTest do
       uid_fn:         fn(_) -> 2 end,
       stop_fn:        fn() -> :ok end
     }
-    input = {:mouse_button, :left, :release, 0, {1,2}}
+    input = {:cursor_button, :left, :release, 0, {1,2}}
     {:noreply, _} = Click.handle_input(input, state)
 
     # confirm a driver update message was sent
@@ -113,7 +113,7 @@ defmodule Scenic.ViewPort.Input.Tracker.ClickTest do
       uid_fn:         fn(_) -> 4 end,
       stop_fn:        fn() -> :ok end
     }
-    input = {:mouse_button, :left, :release, 0, {1,2}}
+    input = {:cursor_button, :left, :release, 0, {1,2}}
     {:noreply, _} = Click.handle_input(input, state)
 
     # assert the process mailbox is empty
@@ -129,7 +129,7 @@ defmodule Scenic.ViewPort.Input.Tracker.ClickTest do
       uid_fn:         fn(_) -> 4 end,
       stop_fn:        fn() -> :ok end
     }
-    input = {:mouse_button, :left, :press, 0, {1,2}}
+    input = {:cursor_button, :left, :press, 0, {1,2}}
     {:noreply, _} = Click.handle_input(input, state)
 
     # assert the process mailbox is empty
@@ -145,7 +145,7 @@ defmodule Scenic.ViewPort.Input.Tracker.ClickTest do
       uid_fn:         fn(_) -> 2 end,
       stop_fn:        fn() -> GenServer.cast(self(), :stopping) end
     }
-    input = {:mouse_button, :left, :press, 0, {1,2}}
+    input = {:cursor_button, :left, :press, 0, {1,2}}
     {:noreply, _} = Click.handle_input(input, state)
 
     # confirm a driver update message was sent

@@ -280,7 +280,7 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  defp prepare_input( {:mouse_move, pos} = event, graph ) do
+  defp prepare_input( {:cursor_pos, pos} = event, graph ) do
     uid = case Graph.find_by_screen_point(graph, pos) do
       nil -> nil
       p   -> Primitive.get_uid(p)
@@ -289,9 +289,9 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  defp prepare_input( {:mouse_button, {btn, action, mods, pos}}, graph ) do
+  defp prepare_input( {:cursor_button, {btn, action, mods, pos}}, graph ) do
     event = {
-      :mouse_button,
+      :cursor_button,
       ViewPort.Input.button_to_atom( btn ),
       ViewPort.Input.action_to_atom( action ),
       mods,
@@ -307,24 +307,24 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  defp prepare_input( {:mouse_scroll, {offsets, pos}}, graph ) do
+  defp prepare_input( {:cursor_scroll, {offsets, pos}}, graph ) do
     uid = case Graph.find_by_screen_point(graph, pos) do
       nil -> nil
       p   -> Primitive.get_uid(p)
     end
-    {{:mouse_scroll, offsets, pos}, uid}
+    {{:cursor_scroll, offsets, pos}, uid}
   end
 
   #--------------------------------------------------------
-  defp prepare_input( {:mouse_enter, {0, pos}}, _ ) do
-    {{:mouse_enter, false, pos}, nil}
+  defp prepare_input( {:cursor_enter, {0, pos}}, _ ) do
+    {{:cursor_enter, false, pos}, nil}
   end
-  defp prepare_input( {:mouse_enter, {1, pos}}, graph ) do
+  defp prepare_input( {:cursor_enter, {1, pos}}, graph ) do
     uid = case Graph.find_by_screen_point(graph, pos) do
       nil -> nil
       p   -> Primitive.get_uid(p)
     end
-    {{:mouse_enter, true, pos}, uid}
+    {{:cursor_enter, true, pos}, uid}
   end
 
   defp prepare_input( event, _ ), do: {event, nil}
