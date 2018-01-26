@@ -95,4 +95,53 @@ defmodule Scenic.Utilities.Map do
     end)
   end
 
+  #--------------------------------------------------------
+  def merge_difference(diff_old, diff_new) when is_list(diff_old) and is_list(diff_new) do
+    # enumerate through the new items, applying them to the old one at a time
+    Enum.reduce(diff_new, diff_old, fn(diff, acc) ->
+      case diff do
+        {:del, key} ->
+          acc = delete_diff_by_key(acc, key)
+          [{:del, key} | acc]
+        {:put, key, value} ->
+          acc = delete_diff_by_key(acc, key)
+          [{:put, key, value} | acc]
+      end
+    end)
+  end
+
+  defp delete_diff_by_key(diff_list, key) do
+    Enum.reject(diff_list, fn(diff) ->
+      case diff do
+        {:del, diff_key} ->
+          diff_key == key
+        {:put, diff_key, _} ->
+          diff_key == key
+      end
+    end)
+  end
+
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
