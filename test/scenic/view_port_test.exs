@@ -17,9 +17,14 @@ defmodule Scenic.ViewPortTest do
 
   #============================================================================
   # set_scene
-  test "set_scene casts a :set_scene to a scene" do
+  test "set_scene casts a :set_scene to a scene with private data" do
     ViewPort.set_scene( self() )
-    assert_receive( {:"$gen_cast", :set_scene} )
+    assert_receive( {:"$gen_cast", {:set_scene, nil}} )
+  end
+
+  test "set_scene casts a :set_scene to a scene" do
+    ViewPort.set_scene( self(), :private_data )
+    assert_receive( {:"$gen_cast", {:set_scene, :private_data}} )
   end
 
 

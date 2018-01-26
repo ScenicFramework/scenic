@@ -19,13 +19,13 @@ defmodule Scenic.ViewPort do
   # before the Scene's themselves have actually been initialized. For example,
   # an app may call set_scene during it's start function to set things up.
 
-  def set_scene( scene_id )
-  def set_scene( scene_name ) when is_atom(scene_name) do
+  def set_scene( scene_id, scene_param \\ nil )
+  def set_scene( scene_name, scene_param ) when is_atom(scene_name) do
     Process.whereis( scene_name )
-    |> set_scene()
+    |> set_scene( scene_param )
   end
-  def set_scene( scene_pid ) when is_pid(scene_pid) do
-    GenServer.cast( scene_pid, :set_scene )
+  def set_scene( scene_pid, scene_param ) when is_pid(scene_pid) do
+    GenServer.cast( scene_pid, {:set_scene, scene_param} )
   end
 
   #--------------------------------------------------------

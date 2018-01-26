@@ -67,7 +67,7 @@ defmodule Scenic.Scene do
 
       def handle_input( event, graph, scene_state ),    do: {:noreply, graph, scene_state}
       
-      def focus_gained( graph, scene_state ) do
+      def focus_gained( _scene_param, graph, scene_state ) do
         Map.get(graph, :input, [])
         |> ViewPort.Input.register()
         {:ok, graph, scene_state}
@@ -89,7 +89,7 @@ defmodule Scenic.Scene do
         handle_cast:            3,
         handle_info:            3,
         handle_input:           3,
-        focus_gained:           2,
+        focus_gained:           3,
         focus_lost:             2
       ]
 
@@ -169,14 +169,14 @@ defmodule Scenic.Scene do
   # default cast handlers.
 
   #--------------------------------------------------------
-  def handle_cast(:set_scene, state) do
+  def handle_cast({:set_scene, scene_param}, state) do
     self = self()
     # someting has requested this scene make set itself into
     # the viewport. This can be canceled by the current scene.
     case ViewPort.current_scene() do
       nil -> 
         # gain the focus
-        {_, state} = do_gain_focus( state )
+        {_, state} = do_gain_focus( scene_param, state )
         {:noreply, state}
       ^self ->
         # already the current scene. do nothing
@@ -186,7 +186,7 @@ defmodule Scenic.Scene do
         case GenServer.call( old_scene, :lose_focus) do
           :ok -> 
             # gain the focus
-            {_, state} = do_gain_focus( state )
+            {_, state} = do_gain_focus( scene_param, state )
             {:noreply, state}
         end
     end
@@ -358,8 +358,8 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  defp do_gain_focus(%{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-    case mod.focus_gained( graph, scene_state) do
+  defp do_gain_focus(scene_param, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+    case mod.focus_gained( scene_param, graph, scene_state) do
       {:ok, graph, scene_state} ->
         # register for messages
         Registry.register(@viewport_registry, :messages, self() )

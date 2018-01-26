@@ -234,17 +234,17 @@ defmodule Scenic.SceneTest do
 
   #--------------------------------------------------------
   # handle_cast(:set_scene...
-  def focus_gained( @graph, :ok_state) do
+  def focus_gained( :priv_data, @graph, :ok_state) do
     {:ok, @graph_2, :focus_gained_ok_state}
   end
 
-  def focus_gained( @graph, :cancel_state) do
+  def focus_gained( :priv_data, @graph, :cancel_state) do
     {:cancel, @graph_2, :focus_gained_cancel_state}
   end
 
   test "handle_cast :set_scene sets the new scene" do
     state = Map.put(@state, :scene_state, :ok_state)
-    {:noreply, state} = Scene.handle_cast(:set_scene, state)
+    {:noreply, state} = Scene.handle_cast({:set_scene, :priv_data}, state)
     %{
       scene_module:       __MODULE__,
       scene_state:        :focus_gained_ok_state,
@@ -277,7 +277,7 @@ defmodule Scenic.SceneTest do
     {:ok, _} = Registry.register(@driver_registry, :set_graph, :set_graph )
     state = Map.put(@state, :scene_state, :ok_state)
 
-    Scene.handle_cast(:set_scene, state)
+    Scene.handle_cast({:set_scene, :priv_data}, state)
     
     assert_receive( {:"$gen_cast", {:set_graph, graph_list}} )
     assert is_list( graph_list )
@@ -286,7 +286,7 @@ defmodule Scenic.SceneTest do
 
   test "handle_cast :set_scene fails peacefully if the new scene cancels" do
     state = Map.put(@state, :scene_state, :cancel_state)
-    {:noreply, state} = Scene.handle_cast(:set_scene, state)
+    {:noreply, state} = Scene.handle_cast({:set_scene, :priv_data}, state)
     %{
       scene_module:       __MODULE__,
       scene_state:        :focus_gained_cancel_state,

@@ -206,6 +206,10 @@ defmodule Scenic.ViewPort.DriverTest do
   #--------------------------------------------------------
   # handle_info
 
+  def handle_sync(:faux_state) do
+    {:noreply, :sync_state}
+  end
+
 
   test "handle_info passes unknown messages up to the module" do
     {:noreply, state} = Driver.handle_info( :info_msg, @state )
@@ -221,7 +225,7 @@ defmodule Scenic.ViewPort.DriverTest do
     |> Map.put( :sync_interval, 64 )
 
     {:noreply, state} = Driver.handle_info( @sync_message, state )
-    %{ driver_state: :generic_state } = state
+    %{ driver_state: :sync_state } = state
 
     assert_receive( {:"$gen_cast", :graph_update}  )
   end
