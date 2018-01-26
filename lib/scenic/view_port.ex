@@ -74,7 +74,6 @@ defmodule Scenic.ViewPort do
     end
   end
 
-
   #----------------------------------------------
   def send_to_scene( message ) do
     case current_scene() do
