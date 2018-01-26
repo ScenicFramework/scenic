@@ -6,7 +6,7 @@
 defmodule Scenic.Cache.Font do
   alias Scenic.Cache
 
-  import IEx
+#  import IEx
 
   @default_range            {32,255}
 

@@ -5,7 +5,7 @@ defmodule Scenic.Template.Input do
   # format of state for all standard input controls
   # {:input, name, value, state}
 
-  import IEx
+#  import IEx
 
   #===========================================================================
   defmodule Error do

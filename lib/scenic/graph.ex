@@ -25,7 +25,7 @@ defmodule Scenic.Graph do
   alias Scenic.Primitive.Group
   alias Scenic.Math.MatrixBin, as: Matrix
 
-  import IEx
+#  import IEx
 
   # make reserved uids, 3 or shorter to avoid potential conflicts
   @root_uid               0
