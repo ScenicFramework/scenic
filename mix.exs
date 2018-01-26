@@ -43,10 +43,7 @@ defmodule Scenic.Mixfile do
     [
       #{ :uuid, "~> 1.1" },
       #{ :floki, "~> 0.12", only: :dev },
-#      { :scenic_cache, in_umbrella: true},
-#      { :scenic_cache_texture, in_umbrella: true},
       { :scenic_math, in_umbrella: true},
-#      { :scenic_cache_font, in_umbrella: true},
 
       { :benchwarmer, "~> 0.0.2", only: :dev }
     ]
