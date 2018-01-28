@@ -274,12 +274,12 @@ defmodule Scenic.SceneTest do
 
   test "handle_cast :set_scene sends set_graph to the driver" do
     # register for the driver message
-    {:ok, _} = Registry.register(@driver_registry, :set_graph, :set_graph )
+    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
     state = Map.put(@state, :scene_state, :ok_state)
 
     Scene.handle_cast({:set_scene, :priv_data}, state)
     
-    assert_receive( {:"$gen_cast", {:set_graph, graph_list}} )
+    assert_receive( {:"$gen_cast", {:set_graph, 0, graph_list}} )
     assert is_list( graph_list )
   end
 
@@ -315,7 +315,7 @@ defmodule Scenic.SceneTest do
     {:ok, _} = Registry.register(@viewport_registry, :messages, self() )
 
     # register for the driver message
-    {:ok, _} = Registry.register(@driver_registry, :set_graph, :set_graph )
+    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
 
     # using graph_2 as there is no animation going on. won't change as it ticks
     min_list =  Graph.minimal( @graph_2 )
@@ -324,7 +324,7 @@ defmodule Scenic.SceneTest do
     Scene.handle_cast(:graph_reset, state)
 
     # make sure it was sent
-    assert_receive( {:"$gen_cast", {:set_graph, graph_list}}  )
+    assert_receive( {:"$gen_cast", {:set_graph, 0, graph_list}}  )
     assert graph_list == min_list
   end
 
@@ -347,7 +347,7 @@ defmodule Scenic.SceneTest do
     {:ok, _} = Registry.register(@viewport_registry, :messages, self() )
 
     # register for the driver message
-    {:ok, _} = Registry.register(@driver_registry, :update_graph, :update_graph )
+    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
 
     # transform the graph so that is a delta to send
     graph = Graph.modify(@graph_2, :rect, fn(p)->
@@ -359,7 +359,7 @@ defmodule Scenic.SceneTest do
     Scene.handle_cast(:graph_update, state)
 
     # make sure it was sent
-    assert_receive( {:"$gen_cast", {:update_graph, delta_list}}  )
+    assert_receive( {:"$gen_cast", {:update_graph, 0, delta_list}}  )
     assert delta_list == deltas
   end
 

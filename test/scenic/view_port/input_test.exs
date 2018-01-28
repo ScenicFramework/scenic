@@ -78,37 +78,37 @@ defmodule Scenic.ViewPort.InputTest do
   test "register sends updated flags to the driver on set one" do
     verify_registries()
     # register to receive driver messages
-    {:ok, _} = Registry.register(@driver_registry, :driver_cast,  :driver_cast )
+    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
 
     # register for the input
     Input.register( :key )
 
     # confirm a driver update message was sent
-    assert_receive( {:"$gen_cast", {:driver_cast, {:request_input, 0x0001}}}  )
+    assert_receive( {:"$gen_cast", {:request_input, 0x0001}}  )
   end
 
   test "register sends updated flags to the driver on set multiple" do
     verify_registries()
     # register to receive driver messages
-    {:ok, _} = Registry.register(@driver_registry, :driver_cast,  :driver_cast )
+    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
 
     # register for the input
     Input.register( [:key, :cursor_pos] )
 
     # confirm a driver update message was sent
-    assert_receive( {:"$gen_cast", {:driver_cast, {:request_input, 5}}}  )
+    assert_receive( {:"$gen_cast", {:request_input, 5}}  )
   end
 
   test "register sends updated flags to the driver on set all" do
     verify_registries()
     # register to receive driver messages
-    {:ok, _} = Registry.register(@driver_registry, :driver_cast,  :driver_cast )
+    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
 
     # register for the input
     Input.register( :all )
 
     # confirm a driver update message was sent
-    assert_receive( {:"$gen_cast", {:driver_cast, {:request_input, 63}}}  )
+    assert_receive( {:"$gen_cast", {:request_input, 63}}  )
   end
 
 
@@ -161,7 +161,7 @@ defmodule Scenic.ViewPort.InputTest do
   test "unregister sends updated flags to the driver on set one" do
     verify_registries()
     # register to receive driver messages
-    {:ok, _} = Registry.register(@driver_registry, :driver_cast,  :driver_cast )
+    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
 
     # register for the input
     Input.register( :key )
@@ -169,13 +169,13 @@ defmodule Scenic.ViewPort.InputTest do
     Input.unregister( :key )
 
     # confirm a driver update message was sent
-    assert_receive( {:"$gen_cast", {:driver_cast, {:request_input, 0x0000}}}  )
+    assert_receive( {:"$gen_cast", {:request_input, 0x0000}}  )
   end
 
   test "unregister sends updated flags to the driver on set multiple" do
     verify_registries()
     # register to receive driver messages
-    {:ok, _} = Registry.register(@driver_registry, :driver_cast,  :driver_cast )
+    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
 
     # register for the input
     Input.register( [:key, :cursor_pos] )
@@ -183,13 +183,13 @@ defmodule Scenic.ViewPort.InputTest do
     Input.unregister( [:key, :cursor_pos] )
 
     # confirm a driver update message was sent
-    assert_receive( {:"$gen_cast", {:driver_cast, {:request_input, 0x0000}}}  )
+    assert_receive( {:"$gen_cast", {:request_input, 0x0000}}  )
   end
 
   test "unregister sends updated flags to the driver on set all" do
     verify_registries()
     # register to receive driver messages
-    {:ok, _} = Registry.register(@driver_registry, :driver_cast,  :driver_cast )
+    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
 
     # register for the input
     Input.register( :all )
@@ -197,7 +197,7 @@ defmodule Scenic.ViewPort.InputTest do
     Input.unregister( :all )
 
     # confirm a driver update message was sent
-    assert_receive( {:"$gen_cast", {:driver_cast, {:request_input, 0x0000}}}  )
+    assert_receive( {:"$gen_cast", {:request_input, 0x0000}}  )
   end
 
 

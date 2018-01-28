@@ -28,35 +28,30 @@ defmodule Scenic.ViewPort.Driver do
   #===========================================================================
   # generic apis for sending a message to the drivers
 
+
   #----------------------------------------------
-  def set_graph( list )    do
-    dispatch( :set_graph, list )
+  def set_graph( id, list )    do
+    dispatch_cast( {:set_graph, id, list} )
   end
 
   #----------------------------------------------
-  def update_graph( list ) do
-    dispatch( :update_graph, list )
+  def update_graph( id, list ) do
+    dispatch_cast( {:update_graph, id, list} )
   end
 
   #----------------------------------------------
-  # identify the current, loaded drivers
-  def identify() do
-    Registry.match(@driver_registry, :identify, :_)
-    |> Enum.reduce( [], fn({pid, mod_opts},acc) -> [{mod_opts, pid} | acc] end)
-  end
-
+  # cast a message to all registered drivers
   def cast( message ) do
-    dispatch( :driver_cast, message )
+    dispatch_cast( message )
   end
 
-  # client api helpers
   #----------------------------------------------
-  defp dispatch( action, data ) do
+  defp dispatch_cast( message ) do
     # dispatch the call to any listening drivers
-    Registry.dispatch(@driver_registry, action, fn(entries) ->
-      for {pid, msg} <- entries do
+    Registry.dispatch(@driver_registry, :driver, fn(entries) ->
+      for {pid, _} <- entries do
         try do
-          GenServer.cast(pid, {msg, data})
+          GenServer.cast(pid, message)
         catch
           kind, reason ->
             formatted = Exception.format(kind, reason, System.stacktrace)
@@ -65,6 +60,13 @@ defmodule Scenic.ViewPort.Driver do
       end
     end)
     :ok
+  end
+
+  #----------------------------------------------
+  # identify the current, loaded drivers
+  def identify() do
+    Registry.match(@driver_registry, :driver, :_)
+    |> Enum.reduce( [], fn({pid, mod_opts},acc) -> [{mod_opts, pid} | acc] end)
   end
 
 
@@ -122,10 +124,7 @@ defmodule Scenic.ViewPort.Driver do
   def init( {module, opts} ) do
 
     # set up the driver with the viewport registry
-    {:ok, _} = Registry.register(:driver_registry, :set_graph,    :set_graph )
-    {:ok, _} = Registry.register(:driver_registry, :update_graph, :update_graph )
-    {:ok, _} = Registry.register(:driver_registry, :driver_cast,  :driver_cast )
-    {:ok, _} = Registry.register(:driver_registry, :identify,     {module, opts} )
+    {:ok, _} = Registry.register(:driver_registry, :driver,        {module, opts} )
 
     # let the driver initialize itself
     {:ok, driver_state} = module.init( opts )
@@ -158,14 +157,6 @@ defmodule Scenic.ViewPort.Driver do
     {:ok, state}
   end
 
-#  def register() do
-#    # set up the driver with the viewport registry
-#    {:ok, _} = Registry.register(:driver_registry, :set_graph,    :set_graph )
-#    {:ok, _} = Registry.register(:driver_registry, :update_graph, :update_graph )
-#    {:ok, _} = Registry.register(:driver_registry, :driver_cast,  :driver_cast )
-#    {:ok, _} = Registry.register(:driver_registry, :identify,     {module, opts} )
-#  end
-
   #============================================================================
   # handle_call
 
@@ -183,8 +174,8 @@ defmodule Scenic.ViewPort.Driver do
 
   #--------------------------------------------------------
   # set the graph
-  def handle_cast({:set_graph, graph}, %{driver_module: mod, driver_state: d_state} = state) do
-    { :noreply, d_state } = mod.handle_cast( {:set_graph, graph}, d_state )
+  def handle_cast({:set_graph, _, _} = msg, %{driver_module: mod, driver_state: d_state} = state) do
+    { :noreply, d_state } = mod.handle_cast( msg, d_state )
 
     state = state
     |> Map.put( :driver_state, d_state )
@@ -195,12 +186,12 @@ defmodule Scenic.ViewPort.Driver do
 
   #--------------------------------------------------------
   # update the graph
-  def handle_cast({:update_graph, deltas}, %{driver_module: mod, driver_state: d_state} = state) do
+  def handle_cast({:update_graph, _, deltas} = msg, %{driver_module: mod, driver_state: d_state} = state) do
     # don't call handle_update_graph if the list is empty
     d_state = case deltas do
       []      -> d_state
-      deltas  ->
-        { :noreply, d_state } = mod.handle_cast( {:update_graph, deltas}, d_state )
+      _  ->
+        { :noreply, d_state } = mod.handle_cast( msg, d_state )
         d_state
     end
     
@@ -213,10 +204,10 @@ defmodule Scenic.ViewPort.Driver do
 
   #--------------------------------------------------------
   # unrecognized message. Let the driver handle it
-  def handle_cast({:driver_cast, msg}, %{driver_module: mod, driver_state: d_state} = state) do
-    { :noreply, d_state } = mod.handle_cast( msg, d_state )
-    { :noreply, Map.put(state, :driver_state, d_state) }
-  end
+#  def handle_cast({:driver_cast, msg}, %{driver_module: mod, driver_state: d_state} = state) do
+#    { :noreply, d_state } = mod.handle_cast( msg, d_state )
+#    { :noreply, Map.put(state, :driver_state, d_state) }
+#  end
 
   #--------------------------------------------------------
   # unrecognized message. Let the driver handle it

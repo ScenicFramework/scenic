@@ -27,13 +27,13 @@ defmodule Scenic.ViewPort.DriverTest do
   test "set_graph sends a list to the driver" do
     verify_registries()
     # register to receive :set_graph calls
-    {:ok, _} = Registry.register(@driver_registry, :set_graph, :set_graph )
+    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
 
     # set a graph (list)
-    Driver.set_graph( [1,2,3] )
+    Driver.set_graph( 0, [1,2,3] )
 
     # make sure it was sent
-    assert_receive( {:"$gen_cast", {:set_graph, [1, 2, 3]}}  )
+    assert_receive( {:"$gen_cast", {:set_graph, 0, [1, 2, 3]}}  )
   end
 
 
@@ -43,13 +43,13 @@ defmodule Scenic.ViewPort.DriverTest do
   test "update_graph sends a list to the driver" do
     verify_registries()
     # register to receive :update_graph calls
-    {:ok, _} = Registry.register(@driver_registry, :update_graph, :update_graph )
+    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
 
     # set a graph (list)
-    Driver.update_graph( [1,2,3] )
+    Driver.update_graph( 0, [1,2,3] )
 
     # make sure it was sent
-    assert_receive( {:"$gen_cast", {:update_graph, [1, 2, 3]}}  )
+    assert_receive( {:"$gen_cast", {:update_graph, 0, [1, 2, 3]}}  )
   end
 
 
@@ -59,7 +59,7 @@ defmodule Scenic.ViewPort.DriverTest do
   test "identify returns a list of active drivers and their options" do
     verify_registries()
     # register to receive :set_graph calls
-    {:ok, _} = Registry.register(@driver_registry, :identify, {__MODULE__, [a: 1, b: 2]} )
+    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, [a: 1, b: 2]} )
 
     # get the list of drivers
     assert Driver.identify() == [{{__MODULE__, [a: 1, b: 2]}, self()}]
@@ -71,13 +71,13 @@ defmodule Scenic.ViewPort.DriverTest do
   test "cast casts a message to the drivers" do
     verify_registries()
     # register to receive :set_graph calls
-    {:ok, _} = Registry.register(@driver_registry, :driver_cast, :driver_cast )
+    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
 
     # set a graph (list)
     Driver.cast( :test_message )
 
     # make sure it was sent
-    assert_receive( {:"$gen_cast", {:driver_cast, :test_message}}  )
+    assert_receive( {:"$gen_cast", :test_message}  )
   end
 
 
@@ -95,11 +95,11 @@ defmodule Scenic.ViewPort.DriverTest do
     {:noreply, :handle_cast_state}
   end
 
-  def handle_cast( {:set_graph, _}, :faux_state ) do
+  def handle_cast( {:set_graph, _, _}, :faux_state ) do
     {:noreply, :set_graph_state}
   end
 
-  def handle_cast( {:update_graph, _}, :faux_state ) do
+  def handle_cast( {:update_graph, _, _}, :faux_state ) do
     {:noreply, :update_graph_state}
   end
 
@@ -187,19 +187,19 @@ defmodule Scenic.ViewPort.DriverTest do
   #--------------------------------------------------------
   # handle_cast :set_graph and :update_graph
   test "handle_cast :set_graph calls the module and updates last_msg" do
-    {:noreply, state} = Driver.handle_cast( {:set_graph, [1,2,3]}, @state )
+    {:noreply, state} = Driver.handle_cast( {:set_graph, 0, [1,2,3]}, @state )
     %{ driver_state: :set_graph_state, last_msg: time } = state
     assert is_integer(time)
   end
 
   test "handle_cast :update_graph calls the module and updates last_msg" do
-    {:noreply, state} = Driver.handle_cast( {:update_graph, [1,2,3]}, @state )
+    {:noreply, state} = Driver.handle_cast( {:update_graph, 0, [1,2,3]}, @state )
     %{ driver_state: :update_graph_state, last_msg: time } = state
     assert is_integer(time)
   end
 
   test "handle_cast :update_graph shorts the module if delta is empty" do
-    {:noreply, state} = Driver.handle_cast( {:update_graph, []}, @state )
+    {:noreply, state} = Driver.handle_cast( {:update_graph, 0, []}, @state )
     %{ driver_state: :faux_state } = state
   end
 

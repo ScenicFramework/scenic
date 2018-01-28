@@ -29,21 +29,21 @@ defmodule Scenic.ViewPort do
   end
 
   #--------------------------------------------------------
-  def set_graph( min_graph )
-  def set_graph( min_graph ) do
+  def set_graph( graph_list )
+  def set_graph( graph_list ) do
     case current_scene?() do
-      true ->   Driver.set_graph( min_graph )
+      true ->   Driver.set_graph( 0, graph_list )
       false ->  :context_lost
     end
   end
 
   #--------------------------------------------------------
-  def update_graph( deltas )
-  def update_graph( deltas ) do
+  def update_graph( delta_list )
+  def update_graph( delta_list ) do
     case current_scene?() do
       true ->
         # calculate the deltas
-        Driver.update_graph( deltas )
+        Driver.update_graph( 0, delta_list )
       false ->
         :context_lost
     end

@@ -36,12 +36,12 @@ defmodule Scenic.ViewPortTest do
     {:ok, _} = Registry.register(@viewport_registry, :messages, self() )
 
     # register for the driver message
-    {:ok, _} = Registry.register(@driver_registry, :set_graph, :set_graph )
+    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
 
     ViewPort.set_graph( [1,2,3] )
 
     # make sure it was sent
-    assert_receive( {:"$gen_cast", {:set_graph, [1, 2, 3]}}  )
+    assert_receive( {:"$gen_cast", {:set_graph, 0, [1, 2, 3]}}  )
   end
 
 
@@ -53,12 +53,12 @@ defmodule Scenic.ViewPortTest do
     {:ok, _} = Registry.register(@viewport_registry, :messages, self() )
 
     # register for the driver message
-    {:ok, _} = Registry.register(@driver_registry, :update_graph, :update_graph )
+    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
 
     ViewPort.update_graph( [1,2,3] )
 
     # make sure it was sent
-    assert_receive( {:"$gen_cast", {:update_graph, [1, 2, 3]}}  )
+    assert_receive( {:"$gen_cast", {:update_graph, 0, [1, 2, 3]}}  )
   end
 
   #============================================================================
