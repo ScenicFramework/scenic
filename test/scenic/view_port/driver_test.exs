@@ -52,6 +52,18 @@ defmodule Scenic.ViewPort.DriverTest do
     assert_receive( {:"$gen_cast", {:update_graph, {0, [1, 2, 3]}}}  )
   end
 
+  test "update_graph does NOT send an empty list to the driver" do
+    verify_registries()
+    # register to receive :update_graph calls
+    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
+
+    # set a graph (list)
+    Driver.update_graph( 0, [] )
+
+    # make sure it was sent
+    refute_receive( {:"$gen_cast", {:update_graph, {0, []}}}  )
+  end
+
 
   #============================================================================
   # identify

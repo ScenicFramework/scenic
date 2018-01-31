@@ -24,7 +24,7 @@ defmodule Scenic.SceneTest do
   |> Animation.Basic.Rotate.add_to_graph( {:rect, 0, 0.0002} )
 
   @graph_2  Graph.build()
-  |> Primitive.Triangle.add_to_graph({{20, 300}, {400, 300}, {400, 0}})
+  |> Primitive.Triangle.add_to_graph({{20, 300}, {400, 300}, {400, 0}}, id: :triangle)
 
 
   #============================================================================
@@ -350,11 +350,12 @@ defmodule Scenic.SceneTest do
     {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
 
     # transform the graph so that is a delta to send
-    graph = Graph.modify(@graph_2, :rect, fn(p)->
+    graph = @graph_2 
+    |> Graph.modify(:triangle, fn(p)->
       Primitive.put_style(p, :color, :red)
     end)
     state = Map.put(@state, :graph, graph)
-    
+
     deltas =  Graph.get_delta_scripts( graph )
     Scene.handle_cast(:graph_update, state)
 
