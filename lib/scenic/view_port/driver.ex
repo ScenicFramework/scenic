@@ -31,12 +31,12 @@ defmodule Scenic.ViewPort.Driver do
 
   #----------------------------------------------
   def set_graph( id, list )    do
-    dispatch_cast( {:set_graph, id, list} )
+    dispatch_cast( {:set_graph, {id, list}} )
   end
 
   #----------------------------------------------
   def update_graph( id, list ) do
-    dispatch_cast( {:update_graph, id, list} )
+    dispatch_cast( {:update_graph, {id, list}} )
   end
 
   #----------------------------------------------
