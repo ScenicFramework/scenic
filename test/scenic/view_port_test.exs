@@ -41,7 +41,7 @@ defmodule Scenic.ViewPortTest do
     ViewPort.set_graph( [1,2,3] )
 
     # make sure it was sent
-    assert_receive( {:"$gen_cast", {:set_graph, 0, [1, 2, 3]}}  )
+    assert_receive( {:"$gen_cast", {:set_graph, {0, [1, 2, 3]}}}  )
   end
 
 
@@ -58,7 +58,7 @@ defmodule Scenic.ViewPortTest do
     ViewPort.update_graph( [1,2,3] )
 
     # make sure it was sent
-    assert_receive( {:"$gen_cast", {:update_graph, 0, [1, 2, 3]}}  )
+    assert_receive( {:"$gen_cast", {:update_graph, {0, [1, 2, 3]}}}  )
   end
 
   #============================================================================

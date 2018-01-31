@@ -33,7 +33,7 @@ defmodule Scenic.ViewPort.DriverTest do
     Driver.set_graph( 0, [1,2,3] )
 
     # make sure it was sent
-    assert_receive( {:"$gen_cast", {:set_graph, 0, [1, 2, 3]}}  )
+    assert_receive( {:"$gen_cast", {:set_graph, {0, [1, 2, 3]}}}  )
   end
 
 
@@ -49,7 +49,7 @@ defmodule Scenic.ViewPort.DriverTest do
     Driver.update_graph( 0, [1,2,3] )
 
     # make sure it was sent
-    assert_receive( {:"$gen_cast", {:update_graph, 0, [1, 2, 3]}}  )
+    assert_receive( {:"$gen_cast", {:update_graph, {0, [1, 2, 3]}}}  )
   end
 
 
