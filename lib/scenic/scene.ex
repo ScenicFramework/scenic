@@ -367,6 +367,9 @@ defmodule Scenic.Scene do
         # tick and send the graph to the drivers
         graph = do_reset_graph(graph)
 
+        # tell the Viewport that this is now the root graph to display
+        ViewPort.set_root_graph()
+
         # store the state
         state = state
         |> Map.put(:graph, graph)

@@ -28,26 +28,50 @@ defmodule Scenic.ViewPort do
     GenServer.cast( scene_pid, {:set_scene, scene_param} )
   end
 
+
+
+
+
+
+  ###############
+  # No longer sure these belong here. Maybe just on the driver?
+  #--------------------------------------------------------
+  def set_root_graph() do
+    Driver.set_root_graph( self() )
+  end
+
   #--------------------------------------------------------
   def set_graph( graph_list )
   def set_graph( graph_list ) do
-    case current_scene?() do
-      true ->   Driver.set_graph( 0, graph_list )
-      false ->  :context_lost
-    end
+    Driver.set_graph( self(), graph_list )
+#    case current_scene?() do
+#      true ->   Driver.set_graph( self(), graph_list )
+#      false ->  :context_lost
+#    end
   end
 
   #--------------------------------------------------------
   def update_graph( delta_list )
   def update_graph( delta_list ) do
-    case current_scene?() do
-      true ->
-        # calculate the deltas
-        Driver.update_graph( 0, delta_list )
-      false ->
-        :context_lost
-    end
+    Driver.update_graph( self(), delta_list )
+#    case current_scene?() do
+#      true ->
+#        # calculate the deltas
+#        Driver.update_graph( self(), delta_list )
+#      false ->
+#        :context_lost
+#    end
   end
+
+  #----------------------------------------------
+  def delete_graph()    do
+    Driver.delete_graph( self() )
+  end
+  ###############
+
+
+
+
 
   #--------------------------------------------------------
   def current_scene()

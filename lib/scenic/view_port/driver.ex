@@ -30,6 +30,11 @@ defmodule Scenic.ViewPort.Driver do
 
 
   #----------------------------------------------
+  def set_root_graph( id )    do
+    dispatch_cast( {:set_root_graph, id} )
+  end
+
+  #----------------------------------------------
   def set_graph( id, list )    do
     dispatch_cast( {:set_graph, {id, list}} )
   end
@@ -39,6 +44,12 @@ defmodule Scenic.ViewPort.Driver do
   def update_graph( id, list ) do
     dispatch_cast( {:update_graph, {id, list}} )
   end
+
+  #----------------------------------------------
+  def delete_graph( id )    do
+    dispatch_cast( {:delete_graph, id} )
+  end
+
 
   #----------------------------------------------
   # cast a message to all registered drivers
