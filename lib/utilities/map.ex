@@ -69,8 +69,8 @@ defmodule Scenic.Utilities.Map do
   end
 
   #--------------------------------------------------------
-  def apply_difference(map, difference, delete_empty \\ false) when is_map(map) and is_list(difference) do
-    Enum.reduce(difference, map, fn(diff, acc)->
+  def apply_difference(map, diff_list, delete_empty \\ false) when is_map(map) and is_list(diff_list) do
+    Enum.reduce(diff_list, map, fn(diff, acc)->
       case diff do
         {:put, {k0,k1}, v} ->
           map = Map.get(acc, k0, %{})

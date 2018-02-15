@@ -14,7 +14,7 @@ defmodule Scenic.ViewPort.Driver do
   require Logger
   alias Scenic.ViewPort
 
-#  import IEx
+  import IEx
 
   @sync_message       :timer_sync
   
@@ -186,7 +186,7 @@ defmodule Scenic.ViewPort.Driver do
 
   #--------------------------------------------------------
   # set the graph
-  def handle_cast({:set_graph, _, _} = msg, %{driver_module: mod, driver_state: d_state} = state) do
+  def handle_cast({:set_graph, _} = msg, %{driver_module: mod, driver_state: d_state} = state) do
     { :noreply, d_state } = mod.handle_cast( msg, d_state )
 
     state = state
@@ -198,7 +198,7 @@ defmodule Scenic.ViewPort.Driver do
 
   #--------------------------------------------------------
   # update the graph
-  def handle_cast({:update_graph, _, deltas} = msg, %{driver_module: mod, driver_state: d_state} = state) do
+  def handle_cast({:update_graph, {_, deltas}} = msg, %{driver_module: mod, driver_state: d_state} = state) do
     # don't call handle_update_graph if the list is empty
     d_state = case deltas do
       []      -> d_state
