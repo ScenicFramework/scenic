@@ -41,9 +41,9 @@ defmodule Scenic.ViewPort do
   end
 
   #--------------------------------------------------------
-  def set_graph( graph_list )
-  def set_graph( graph_list ) do
-    Driver.set_graph( self(), graph_list )
+  def set_graph( graph_list, scene_id )
+  def set_graph( graph_list, scene_id ) do
+    Driver.set_graph( scene_id, graph_list )
 #    case current_scene?() do
 #      true ->   Driver.set_graph( self(), graph_list )
 #      false ->  :context_lost
@@ -51,9 +51,9 @@ defmodule Scenic.ViewPort do
   end
 
   #--------------------------------------------------------
-  def update_graph( delta_list )
-  def update_graph( delta_list ) do
-    Driver.update_graph( self(), delta_list )
+  def update_graph( delta_list, scene_id )
+  def update_graph( delta_list, scene_id ) do
+    Driver.update_graph( scene_id, delta_list )
 #    case current_scene?() do
 #      true ->
 #        # calculate the deltas
@@ -64,8 +64,8 @@ defmodule Scenic.ViewPort do
   end
 
   #----------------------------------------------
-  def delete_graph()    do
-    Driver.delete_graph( self() )
+  def delete_graph( scene_id ) do
+    Driver.delete_graph( scene_id )
   end
   ###############
 
@@ -106,4 +106,39 @@ defmodule Scenic.ViewPort do
     end
   end
 
+  #----------------------------------------------
+  # a graphic driver is requesting this scene identify itself
+  # as the current scene. Used when a new driver is coming online.
+  # could just use the scene pid, but this gives the scene a chance
+  # to add other identifying information to the graph_id
+  def request_current() do
+    case current_scene() do
+      nil -> {:err, :no_scene_set}
+      pid ->
+        GenServer.cast(pid, {:request_identify, :set_root_graph, self()})
+    end
+  end
+
+  #----------------------------------------------
+  # a graphic driver is requesting this scene send a full graph list
+  def request_set({graph_pid, graph_private}) do
+    GenServer.cast(graph_pid, {:request_set, graph_private, self()})
+  end
+
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
