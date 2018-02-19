@@ -10,7 +10,7 @@ defmodule Scenic.Primitive.Texture do
 
 #  import IEx
 
-  @styles   [:hidden, :color, :border_color, :border_width]
+  @styles   [:hidden, :color, :border_color, :border_width, :texture_wrap, :texture_filter]
 
 
   #============================================================================
@@ -39,6 +39,7 @@ defmodule Scenic.Primitive.Texture do
   end
   def normalize({{{x0, y0},w,h},key}),    do: normalize({{x0, y0},w,h,key})
   def normalize({quad,key}),              do: normalize({quad,{{0,0},{1,0},{1,1},{0,1}},key})
+  def normalize({{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3},key}), do: normalize({{{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}},key})
   def normalize( {{{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}}, {{s0, t0}, {s1, t1}, {s2, t2}, {s3, t3}}, key} = data )
   when is_bitstring(key) and
   is_number(x0) and is_number(y0) and

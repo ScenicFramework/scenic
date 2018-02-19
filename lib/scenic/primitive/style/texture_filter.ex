@@ -21,9 +21,9 @@ defmodule Scenic.Primitive.Style.TextureFilter do
     ":linear\r\n" <>
     "The default if :texture_filter is not specified is the same as :linear\r\n" <>
     "You can specify wrapping for either the horizontal or vertical axis like this\r\n" <>
-    "{:h, :nearest}, or {:v, :linear}\r\n" <>
+    "{:min, :nearest}, or {:mag, :linear}\r\n" <>
     "Or both axes at the same time like this\r\n" <>
-    "[{:h, :nearest}, {:v, :linear}]\r\n"
+    "[{:min, :nearest}, {:mag, :linear}]\r\n"
   end
 
   #--------------------------------------------------------
@@ -38,23 +38,23 @@ defmodule Scenic.Primitive.Style.TextureFilter do
 
   #--------------------------------------------------------
   def normalize( texture_filter )
-  def normalize( nil ), do: [h: :linear, v: :linear]
-  def normalize( filter ) when is_atom(filter), do: normalize([h: filter, v: filter])
-  def normalize( {:h, filter} ) when is_atom(filter), do: normalize([h: filter, v: :linear])
-  def normalize( {:v, filter} ) when is_atom(filter), do: normalize([h: :linear, v: filter])
+  def normalize( nil ), do: [min: :linear, mag: :linear]
+  def normalize( filter ) when is_atom(filter), do: normalize([min: filter, mag: filter])
+  def normalize( {:min, filter} ) when is_atom(filter), do: normalize([min: filter, mag: :linear])
+  def normalize( {:mag, filter} ) when is_atom(filter), do: normalize([min: :linear, mag: filter])
   
   def normalize( filter ) when is_list(filter) do
-    h = case filter[:h] do
+    min = case filter[:min] do
       :nearest -> :nearest
       :linear -> :linear
+      nil -> :linear
     end
-    v = case filter[:v] do
+    mag = case filter[:mag] do
       :nearest -> :nearest
       :linear -> :linear
+      nil -> :linear
     end
-    [h: h, v: v]
+    [min: min, mag: mag]
   end
-
-
-
+  
 end

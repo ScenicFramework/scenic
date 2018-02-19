@@ -23,9 +23,12 @@ defmodule Scenic.Primitive.Style do
     :line_stipple =>                      Style.LineStipple,
     :clear_color =>                       Style.ClearColor,
     :font =>                              Style.Font,
+    :texture_wrap =>                      Style.TextureWrap,
+    :texture_filter =>                    Style.TextureFilter,
   }
 
-  @primitive_styles   [:hidden, :color, :border_color, :border_width, :line_width, :line_stipple, :clear_color, :font]
+  @primitive_styles   [:hidden, :color, :border_color, :border_width, :line_width,
+    :line_stipple, :clear_color, :font, :texture_wrap, :texture_filter]
 
 
   @callback info() :: bitstring
