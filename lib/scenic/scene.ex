@@ -216,8 +216,10 @@ defmodule Scenic.Scene do
     graph = Graph.tick_recurring_actions( graph )
 
     # send the graph to the view_port
-    Graph.get_delta_scripts( graph )
-    |> ViewPort.update_graph( mod.identify(scene_state) )
+    ViewPort.update_graph(
+      mod.identify(scene_state),
+      Graph.get_delta_scripts( graph )
+    )
 
     # reset the deltas
     graph = Graph.reset_deltas( graph )
@@ -400,7 +402,7 @@ defmodule Scenic.Scene do
         graph = do_reset_graph(graph, state)
 
         # tell the Viewport that this is now the root graph to display
-        ViewPort.set_root_graph()
+        ViewPort.set_root_graph( mod.identify(scene_state) )
 
         # store the state
         state = state
@@ -422,8 +424,10 @@ defmodule Scenic.Scene do
     graph = Graph.tick_recurring_actions( graph )
 
     # reset the viewport with this scene's graph
-    Graph.minimal( graph )
-    |> ViewPort.set_graph( mod.identify( scene_state ) )
+    ViewPort.set_graph(
+      mod.identify( scene_state ),
+      Graph.minimal( graph )
+    )
 
     # return the transformed graph
     graph

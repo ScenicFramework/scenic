@@ -29,6 +29,23 @@ defmodule Scenic.ViewPortTest do
 
 
   #============================================================================
+  # set_root_graph
+
+  test "set_root_graph sends a graph_id to the drivers" do
+    # set this process as the current scene
+    {:ok, _} = Registry.register(@viewport_registry, :messages, self() )
+
+    # register for the driver message
+    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
+
+    ViewPort.set_root_graph( 0 )
+
+    # make sure it was sent
+    assert_receive( {:"$gen_cast", {:set_root_graph, 0}}  )
+  end
+
+
+  #============================================================================
   # set_graph
 
   test "set_graph sends a minimal graph to the drivers" do
@@ -38,7 +55,7 @@ defmodule Scenic.ViewPortTest do
     # register for the driver message
     {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
 
-    ViewPort.set_graph( [1,2,3] )
+    ViewPort.set_graph( 0, [1,2,3] )
 
     # make sure it was sent
     assert_receive( {:"$gen_cast", {:set_graph, {0, [1, 2, 3]}}}  )
@@ -55,10 +72,26 @@ defmodule Scenic.ViewPortTest do
     # register for the driver message
     {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
 
-    ViewPort.update_graph( [1,2,3] )
+    ViewPort.update_graph( 0, [1,2,3] )
 
     # make sure it was sent
     assert_receive( {:"$gen_cast", {:update_graph, {0, [1, 2, 3]}}}  )
+  end
+
+  #============================================================================
+  # delete_graph
+
+  test "delete_graph sends a minimal set of deltas to the drivers" do
+    # set this process as the current scene
+    {:ok, _} = Registry.register(@viewport_registry, :messages, self() )
+
+    # register for the driver message
+    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
+
+    ViewPort.delete_graph( 0 )
+
+    # make sure it was sent
+    assert_receive( {:"$gen_cast", {:delete_graph, 0}}  )
   end
 
   #============================================================================

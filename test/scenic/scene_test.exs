@@ -88,6 +88,8 @@ defmodule Scenic.SceneTest do
     {:noreply, @graph_2, :key_input_state }
   end
 
+  def identify( _ ), do: {self(), nil}
+
 
   @state %{
     scene_module:  __MODULE__,
@@ -279,7 +281,8 @@ defmodule Scenic.SceneTest do
 
     Scene.handle_cast({:set_scene, :priv_data}, state)
     
-    assert_receive( {:"$gen_cast", {:set_graph, {0, graph_list}}} )
+    id = {self(), nil}
+    assert_receive( {:"$gen_cast", {:set_graph, {^id, graph_list}}} )
     assert is_list( graph_list )
   end
 
@@ -324,7 +327,8 @@ defmodule Scenic.SceneTest do
     Scene.handle_cast(:graph_reset, state)
 
     # make sure it was sent
-    assert_receive( {:"$gen_cast", {:set_graph, {0, graph_list}}}  )
+    id = {self(), nil}
+    assert_receive( {:"$gen_cast", {:set_graph, {^id, graph_list}}}  )
     assert graph_list == min_list
   end
 
@@ -360,7 +364,8 @@ defmodule Scenic.SceneTest do
     Scene.handle_cast(:graph_update, state)
 
     # make sure it was sent
-    assert_receive( {:"$gen_cast", {:update_graph, {0, delta_list}}}  )
+    id = {self(), nil}
+    assert_receive( {:"$gen_cast", {:update_graph, {^id, delta_list}}}  )
     assert delta_list == deltas
   end
 

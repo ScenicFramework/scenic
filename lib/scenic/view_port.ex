@@ -29,21 +29,17 @@ defmodule Scenic.ViewPort do
   end
 
 
-
-
-
-
   ###############
   # No longer sure these belong here. Maybe just on the driver?
   #--------------------------------------------------------
-  def set_root_graph() do
-    Driver.set_root_graph( self() )
+  def set_root_graph( scene_id ) do
+    Driver.set_root_graph( scene_id )
   end
 
   #--------------------------------------------------------
-  def set_graph( graph_list, scene_id )
-  def set_graph( graph_list, scene_id ) do
-    Driver.set_graph( scene_id, graph_list )
+  def set_graph( scene_id, delta_list )
+  def set_graph( scene_id, delta_list ) do
+    Driver.set_graph( scene_id, delta_list )
 #    case current_scene?() do
 #      true ->   Driver.set_graph( self(), graph_list )
 #      false ->  :context_lost
@@ -51,8 +47,8 @@ defmodule Scenic.ViewPort do
   end
 
   #--------------------------------------------------------
-  def update_graph( delta_list, scene_id )
-  def update_graph( delta_list, scene_id ) do
+  def update_graph( scene_id, delta_list )
+  def update_graph( scene_id, delta_list ) do
     Driver.update_graph( scene_id, delta_list )
 #    case current_scene?() do
 #      true ->
