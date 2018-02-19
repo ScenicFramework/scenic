@@ -14,7 +14,7 @@ defmodule Scenic.ViewPort.Driver do
   require Logger
   alias Scenic.ViewPort
 
-  import IEx
+#  import IEx
 
   @sync_message       :timer_sync
   
@@ -40,7 +40,7 @@ defmodule Scenic.ViewPort.Driver do
   end
 
   #----------------------------------------------
-  def update_graph( id, [] ), do: :ok
+  def update_graph( _, [] ), do: :ok
   def update_graph( id, list ) do
     dispatch_cast( {:update_graph, {id, list}} )
   end
