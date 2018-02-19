@@ -55,6 +55,17 @@ defmodule Scenic.Cache do
   end
 
   #--------------------------------------------------------
+  def fetch( key )
+  def fetch( key ) when is_bitstring(key) do
+    try do
+      {:ok, :ets.lookup_element(@cache_table, key, 3)}
+    rescue
+      ArgumentError ->  {:error, :not_found}
+      other ->          raise other
+    end
+  end
+
+  #--------------------------------------------------------
   def get!( key )
   def get!( key ) when is_bitstring(key) do
     try do

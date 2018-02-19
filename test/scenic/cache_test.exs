@@ -46,6 +46,17 @@ defmodule Scenic.CacheTest do
     assert Cache.get("test_key", :default) == :default
   end
 
+  #============================================================================
+  # fetch
+
+  test "fetch gets a cached item from the key table" do
+    :ets.insert(@cache_table, {"test_key", 1, :test_data})
+    assert Cache.fetch("test_key") == {:ok, :test_data}
+  end
+
+  test "fetch returns nil by default if the key isn't in the table" do
+    assert Cache.fetch("test_key") == {:error, :not_found}
+  end
 
   #============================================================================
   # get!
