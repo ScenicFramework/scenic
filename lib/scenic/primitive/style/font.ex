@@ -35,18 +35,8 @@ defmodule Scenic.Primitive.Style.Font do
   #--------------------------------------------------------
   def normalize( name ) when is_atom(name),     do: normalize( {name, @default_point_size} )
   def normalize( key ) when is_bitstring(key),  do: normalize( {key, @default_point_size} )
-
-  def normalize( {name, size} ) when is_atom(name) do
-    {:ok, key} = Cache.Font.system_font_key(name)
-    normalize( {key, size} )
+  def normalize( {name, point_size} ) when is_integer(point_size) and
+  point_size >=2 and point_size <= 80 do
+    {name, point_size}
   end
-
-  def normalize( {key, point_size} ) when is_bitstring(key) and
-  is_integer(point_size) and point_size >=2 and point_size <= 80 do
-    if byte_size(key) > 255 do
-      raise ArgumentError
-    end
-    {key, point_size}
-  end
-
 end

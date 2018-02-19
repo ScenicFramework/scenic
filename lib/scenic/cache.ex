@@ -45,7 +45,7 @@ defmodule Scenic.Cache do
 
   #--------------------------------------------------------
   def get( key, default \\ nil )
-  def get( key, default ) when is_bitstring(key) do
+  def get( key, default ) do
     try do
       :ets.lookup_element(@cache_table, key, 3)
     rescue
@@ -56,7 +56,7 @@ defmodule Scenic.Cache do
 
   #--------------------------------------------------------
   def fetch( key )
-  def fetch( key ) when is_bitstring(key) do
+  def fetch( key ) do
     try do
       {:ok, :ets.lookup_element(@cache_table, key, 3)}
     rescue
@@ -67,7 +67,7 @@ defmodule Scenic.Cache do
 
   #--------------------------------------------------------
   def get!( key )
-  def get!( key ) when is_bitstring(key) do
+  def get!( key ) do
     try do
       :ets.lookup_element(@cache_table, key, 3)
     rescue
@@ -152,7 +152,7 @@ defmodule Scenic.Cache do
   # private helpers
 
   #--------------------------------------------------------
-  defp do_put(scope, key, data) when is_bitstring(key) do
+  defp do_put(scope, key, data) do
     # Check if the key already exists. If so, overrwrite the data, if not insert it.
     case :ets.member(@cache_table, key) do
       true ->
@@ -219,7 +219,7 @@ defmodule Scenic.Cache do
   end
 
   #--------------------------------------------------------
-  defp do_status( :global, key ) when is_bitstring(key) do
+  defp do_status( :global, key ) do
     case :ets.member(@cache_table, key) do
       false -> {:err, :not_found}
       true -> case key_in_scope?(:global, key) do
@@ -229,7 +229,7 @@ defmodule Scenic.Cache do
     end
   end
 
-  defp do_status( scope, key ) when is_bitstring(key) do
+  defp do_status( scope, key ) do
     case :ets.member(@cache_table, key) do
       false -> {:err, :not_found}
       true -> case key_in_scope?(scope, key) do
