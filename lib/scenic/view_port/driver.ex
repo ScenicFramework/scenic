@@ -14,7 +14,7 @@ defmodule Scenic.ViewPort.Driver do
   require Logger
   alias Scenic.ViewPort
 
-#  import IEx
+  import IEx
 
   @sync_message       :timer_sync
   
@@ -224,6 +224,9 @@ defmodule Scenic.ViewPort.Driver do
   #--------------------------------------------------------
   # unrecognized message. Let the driver handle it
   def handle_cast(msg, %{driver_module: mod, driver_state: d_state} = state) do
+
+
+
     { :noreply, d_state } = mod.handle_cast( msg, d_state )
     { :noreply, Map.put(state, :driver_state, d_state) }
   end
