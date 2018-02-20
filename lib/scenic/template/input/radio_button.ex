@@ -39,9 +39,6 @@ defmodule Scenic.Template.Input.RadioButton do
   end
 
 
-
-
-
   #----------------------------------------------------------------------------
   def filter_input(event, %Primitive{} = radio_button, graph) do
     case event do
