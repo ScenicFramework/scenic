@@ -5,8 +5,6 @@
 
 defmodule Scenic.Primitive.Style.Font do
   use Scenic.Primitive.Style
-  alias Scenic.Cache
-#  alias Scenic.Primitive.Style
 
 # import IEx
 
