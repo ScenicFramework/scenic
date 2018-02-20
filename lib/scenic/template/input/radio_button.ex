@@ -32,11 +32,15 @@ defmodule Scenic.Template.Input.RadioButton do
     # build the button graph
     Input.build( opts )
       |> Rectangle.add_to_graph({{-2,-2}, 140, 16}, color: @hit_target_color)
-      |> RoundedRectangle.add_to_graph({{0,0}, 12, 12, @radius}, color: @box_color)
-      |> RoundedRectangle.add_to_graph({{2,2}, 8, 8, @radius}, color: @check_color, hidden: !chx, tags: [:checkmark])
-      |> Text.add_to_graph({{16,11}, text}, color: @text_color)
+      |> RoundedRectangle.add_to_graph({{-2,-2}, 16, 16, @radius}, color: @box_color)
+      |> RoundedRectangle.add_to_graph({{1,1}, 10, 10, @radius}, color: @check_color, hidden: !chx, tags: [:checkmark])
+      |> Text.add_to_graph({{18,11}, text}, color: @text_color)
       |> Graph.put_event_filter(0, {RadioButton, :filter_input})
   end
+
+
+
+
 
   #----------------------------------------------------------------------------
   def filter_input(event, %Primitive{} = radio_button, graph) do
