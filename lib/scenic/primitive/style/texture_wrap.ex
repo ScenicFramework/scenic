@@ -40,26 +40,23 @@ defmodule Scenic.Primitive.Style.TextureWrap do
 
   #--------------------------------------------------------
   def normalize( texture_wrap )
-  def normalize( wrap ) when is_atom(wrap), do: normalize([h: wrap, v: wrap])
-  def normalize( {:h, wrap} ) when is_atom(wrap), do: normalize([h: wrap, v: :repeat])
-  def normalize( {:v, wrap} ) when is_atom(wrap), do: normalize([h: :repeat, v: wrap])
+  def normalize( nil ), do: {:repeat, :repeat}
+  def normalize( filter ) when is_atom(filter), do: normalize({filter, filter})
   
-  def normalize( wraps ) when is_list(wraps) do
-    h = case wraps[:h] do
+  def normalize( {h, v} ) do
+    h = case h do
       :repeat -> :repeat
       :mirrored_repeat -> :mirrored_repeat
       :clamp_to_edge -> :clamp_to_edge
       :clamp_to_border -> :clamp_to_border
-      nil -> :repeat
     end
-    v = case wraps[:v] do
+    v = case v do
       :repeat -> :repeat
       :mirrored_repeat -> :mirrored_repeat
       :clamp_to_edge -> :clamp_to_edge
       :clamp_to_border -> :clamp_to_border
-      nil -> :repeat
     end
-    [h: h, v: v]
+    {h, v}
   end
 
 end

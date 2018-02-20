@@ -38,23 +38,19 @@ defmodule Scenic.Primitive.Style.TextureFilter do
 
   #--------------------------------------------------------
   def normalize( texture_filter )
-  def normalize( nil ), do: [min: :linear, mag: :linear]
-  def normalize( filter ) when is_atom(filter), do: normalize([min: filter, mag: filter])
-  def normalize( {:min, filter} ) when is_atom(filter), do: normalize([min: filter, mag: :linear])
-  def normalize( {:mag, filter} ) when is_atom(filter), do: normalize([min: :linear, mag: filter])
+  def normalize( nil ), do: {:linear, :linear}
+  def normalize( filter ) when is_atom(filter), do: normalize({filter, filter})
   
-  def normalize( filter ) when is_list(filter) do
-    min = case filter[:min] do
+  def normalize( {min, mag} ) do
+    min = case min do
       :nearest -> :nearest
       :linear -> :linear
-      nil -> :linear
     end
-    mag = case filter[:mag] do
+    mag = case mag do
       :nearest -> :nearest
       :linear -> :linear
-      nil -> :linear
     end
-    [min: min, mag: mag]
+    {min, mag}
   end
   
 end

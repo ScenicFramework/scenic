@@ -16,14 +16,16 @@ defmodule Scenic.Primitive.Style.TextureWrapTest do
 
   test "verfy works" do
     assert TextureWrap.verify( nil )
+    assert TextureWrap.verify( :repeat )
+    assert TextureWrap.verify( :mirrored_repeat )
+    assert TextureWrap.verify( :clamp_to_edge )
     assert TextureWrap.verify( :clamp_to_border )
-    assert TextureWrap.verify( [v: :mirrored_repeat, h: :clamp_to_border] )
-    assert TextureWrap.verify( {:h, :mirrored_repeat} )
-    assert TextureWrap.verify( {:v, :mirrored_repeat} )
+    assert TextureWrap.verify( {:repeat, :clamp_to_border} )
   end
 
   test "verify rejects invalid values" do
     refute TextureWrap.verify( :banana )
+    refute TextureWrap.verify( {:repeat, :banana} )
   end
 
   test "verify! works" do
@@ -34,35 +36,39 @@ defmodule Scenic.Primitive.Style.TextureWrapTest do
     assert_raise Style.FormatError, fn ->
       TextureWrap.verify!( :banana )
     end
+    assert_raise Style.FormatError, fn ->
+      TextureWrap.verify!( {:repeat, :banana} )
+    end
   end
 
   #============================================================================
   # normalize - various forms
 
-  test "normalize fills in default values" do
-    assert TextureWrap.normalize( nil ) == [h: :repeat, v: :repeat]
-    assert TextureWrap.normalize( {:h, :mirrored_repeat} ) == [h: :mirrored_repeat, v: :repeat]
-    assert TextureWrap.normalize( {:v, :mirrored_repeat} ) == [h: :repeat, v: :mirrored_repeat]
-    assert TextureWrap.normalize( [{:h, :mirrored_repeat}] ) == [h: :mirrored_repeat, v: :repeat]
-    assert TextureWrap.normalize( [{:v, :mirrored_repeat}] ) == [h: :repeat, v: :mirrored_repeat]
-  end
 
   test "normalize expands single value to a list" do
-    assert TextureWrap.normalize( :mirrored_repeat ) == [h: :mirrored_repeat, v: :mirrored_repeat]    
+    assert TextureWrap.normalize( :repeat ) == {:repeat, :repeat}
+    assert TextureWrap.normalize( :mirrored_repeat ) == {:mirrored_repeat, :mirrored_repeat}
+    assert TextureWrap.normalize( :clamp_to_edge ) == {:clamp_to_edge, :clamp_to_edge}
+    assert TextureWrap.normalize( :clamp_to_border ) == {:clamp_to_border, :clamp_to_border}
   end
 
-  test "normalize passes in valid values" do
-    assert TextureWrap.normalize( [v: :mirrored_repeat, h: :repeat] ) == 
-      [h: :repeat, v: :mirrored_repeat]
-    assert TextureWrap.normalize( [v: :clamp_to_edge, h: :clamp_to_border] ) == 
-      [h: :clamp_to_border, v: :clamp_to_edge]
+
+  test "normalize fills in default values" do
+    assert TextureWrap.normalize( nil ) == {:repeat, :repeat}
+  end
+
+  test "normalize passes dual values" do
+    assert TextureWrap.normalize( {:repeat, :clamp_to_edge} ) == {:repeat, :clamp_to_edge}
   end
 
   test "normalize rejects invalid values" do
     assert_raise CaseClauseError, fn ->
       TextureWrap.normalize( :banana )
     end
+    assert_raise CaseClauseError, fn ->
+      TextureWrap.normalize( {:clamp_to_edge, :banana} )
+    end
   end
-
+  
 end
 
