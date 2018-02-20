@@ -106,10 +106,9 @@ defmodule Scenic.CacheTest do
     assert :ets.lookup(@scope_table, :global) == []
   end
 
-  test "put rejects non-string keys" do
-    assert_raise FunctionClauseError, fn ->
-      Cache.put(:test_key, "data")
-    end
+  test "put accepts non-string keys" do
+    Cache.put({:test_key, 123}, "data")
+    assert Cache.get!({:test_key, 123}) == "data"
   end
 
   test "put is able to put multiple keys into the same scope" do
