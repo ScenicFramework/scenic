@@ -25,10 +25,11 @@ defmodule Scenic.Primitive.Style do
     :font =>                              Style.Font,
     :texture_wrap =>                      Style.TextureWrap,
     :texture_filter =>                    Style.TextureFilter,
+    :text_height =>                       Style.TextHeight,
   }
 
   @primitive_styles   [:hidden, :color, :border_color, :border_width, :line_width,
-    :line_stipple, :clear_color, :font, :texture_wrap, :texture_filter]
+    :line_stipple, :clear_color, :font, :texture_wrap, :texture_filter, :text_height]
 
 
   @callback info() :: bitstring
