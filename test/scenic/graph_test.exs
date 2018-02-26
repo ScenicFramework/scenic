@@ -1795,6 +1795,16 @@ defmodule Scenic.GraphTest do
     assert Graph.find_by_screen_point(graph, {20, 20}) == rect_2
   end
 
+  test "find_by_screen_point does NOT find hidden objects" do
+    graph = Graph.build()
+    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect_0)
+    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect_1)
+    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect_2, hidden: true)
+    [rect_1] = Graph.get(graph, :rect_1)
+
+    assert Graph.find_by_screen_point(graph, {20, 20}) == rect_1
+  end
+
 
 
 end

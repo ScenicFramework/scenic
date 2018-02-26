@@ -1073,24 +1073,32 @@ defmodule Scenic.Graph do
   end
 
   defp do_find_by_screen_point( graph, uid, x, y ) do
-    # get the indicated primitive
-    case get(graph, uid) do
-      %Primitive{module: Group, data: ids} ->
-        ids
-        |> Enum.reverse()
-        |> Enum.find_value( &do_find_by_screen_point(graph, &1, x, y ) )
-      %Primitive{module: mod, data: data} = p ->
-        # get the local (or inherited) inverse tx for this primitive
-        # then project the point by that matrix to get the local point
-        local_point = case get_inverse_tx(graph, p) do
-          nil -> {x, y}
-          tx -> Matrix.project_vector( tx, {x, y} )
-        end
-        # test if the point is in the primitive
-        case mod.contains_point?( data, local_point ) do
-          true  -> p
-          false -> nil
-        end
+
+    # get the primitive to test
+    p = get(graph, uid)
+
+    # test to see if it is hidden. If yes do nothing. If no, test for hit.
+    if Primitive.get_style(p, :hidden) do
+      nil
+    else
+      case p do
+        %Primitive{module: Group, data: ids} ->
+          ids
+          |> Enum.reverse()
+          |> Enum.find_value( &do_find_by_screen_point(graph, &1, x, y ) )
+        %Primitive{module: mod, data: data} = p ->
+          # get the local (or inherited) inverse tx for this primitive
+          # then project the point by that matrix to get the local point
+          local_point = case get_inverse_tx(graph, p) do
+            nil -> {x, y}
+            tx -> Matrix.project_vector( tx, {x, y} )
+          end
+          # test if the point is in the primitive
+          case mod.contains_point?( data, local_point ) do
+            true  -> p
+            false -> nil
+          end
+      end
     end
   end
 
