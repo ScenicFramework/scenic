@@ -8,7 +8,7 @@ defmodule Scenic.ViewPort do
   alias Scenic.ViewPort.Driver
   require Logger
 
-#  import IEx
+  import IEx
 
   @viewport_registry    :viewport_registry
 
@@ -32,36 +32,35 @@ defmodule Scenic.ViewPort do
   ###############
   # No longer sure these belong here. Maybe just on the driver?
   #--------------------------------------------------------
-  def set_root_graph( scene_id ) do
-    Driver.set_root_graph( scene_id )
+  def set_root_graph( _scene_id ) do
+#    Driver.set_root_graph( scene_id )
   end
 
   #--------------------------------------------------------
-  def set_graph( scene_id, delta_list )
-  def set_graph( scene_id, delta_list ) do
-    Driver.set_graph( scene_id, delta_list )
-#    case current_scene?() do
-#      true ->   Driver.set_graph( self(), graph_list )
-#      false ->  :context_lost
-#    end
+  def set_graph( scene_id, graph_list )
+  def set_graph( _scene_id, graph_list ) do
+#    Driver.set_graph( scene_id, graph_list )
+    case current_scene?() do
+      true ->   Driver.set_graph( graph_list )
+      false ->  :context_lost
+    end
   end
 
   #--------------------------------------------------------
   def update_graph( scene_id, delta_list )
-  def update_graph( scene_id, delta_list ) do
-    Driver.update_graph( scene_id, delta_list )
-#    case current_scene?() do
-#      true ->
-#        # calculate the deltas
-#        Driver.update_graph( self(), delta_list )
-#      false ->
-#        :context_lost
-#    end
+  def update_graph( _scene_id, delta_list ) do
+#    Driver.update_graph( scene_id, delta_list )
+    case current_scene?() do
+      true ->
+        Driver.update_graph( delta_list )
+      false ->
+        :context_lost
+    end
   end
 
   #----------------------------------------------
-  def delete_graph( scene_id ) do
-    Driver.delete_graph( scene_id )
+  def delete_graph( _scene_id ) do
+#    Driver.delete_graph( scene_id )
   end
   ###############
 
@@ -107,18 +106,23 @@ defmodule Scenic.ViewPort do
   # as the current scene. Used when a new driver is coming online.
   # could just use the scene pid, but this gives the scene a chance
   # to add other identifying information to the graph_id
-  def request_current() do
-    case current_scene() do
-      nil -> {:err, :no_scene_set}
-      pid ->
-        GenServer.cast(pid, {:request_identify, :set_root_graph, self()})
-    end
-  end
+#  def request_current() do
+#    case current_scene() do
+#      nil -> {:err, :no_scene_set}
+#      pid ->
+#        GenServer.cast(pid, {:request_identify, :set_root_graph, self()})
+#    end
+#  end
 
   #----------------------------------------------
   # a graphic driver is requesting this scene send a full graph list
-  def request_set({graph_pid, graph_private}) do
-    GenServer.cast(graph_pid, {:request_set, graph_private, self()})
+  def request_set() do
+    case current_scene() do
+      nil ->
+        {:err, :no_scene_set}
+      pid ->
+        GenServer.cast(pid, {:request_set, self()})
+    end
   end
 
 end

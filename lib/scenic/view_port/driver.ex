@@ -14,7 +14,7 @@ defmodule Scenic.ViewPort.Driver do
   require Logger
   alias Scenic.ViewPort
 
-#  import IEx
+  import IEx
 
   @sync_message       :timer_sync
   
@@ -30,26 +30,15 @@ defmodule Scenic.ViewPort.Driver do
 
 
   #----------------------------------------------
-  def set_root_graph( id )    do
-    dispatch_cast( {:set_root_graph, id} )
+  def set_graph( list ) when is_list(list) do
+    dispatch_cast( {:set_graph, list} )
   end
 
   #----------------------------------------------
-  def set_graph( id, list )    do
-    dispatch_cast( {:set_graph, {id, list}} )
+  def update_graph( [] ), do: :ok
+  def update_graph( list ) when is_list(list) do
+    dispatch_cast( {:update_graph, list} )
   end
-
-  #----------------------------------------------
-  def update_graph( _, [] ), do: :ok
-  def update_graph( id, list ) do
-    dispatch_cast( {:update_graph, {id, list}} )
-  end
-
-  #----------------------------------------------
-  def delete_graph( id )    do
-    dispatch_cast( {:delete_graph, id} )
-  end
-
 
   #----------------------------------------------
   # cast a message to all registered drivers
@@ -224,9 +213,6 @@ defmodule Scenic.ViewPort.Driver do
   #--------------------------------------------------------
   # unrecognized message. Let the driver handle it
   def handle_cast(msg, %{driver_module: mod, driver_state: d_state} = state) do
-
-
-
     { :noreply, d_state } = mod.handle_cast( msg, d_state )
     { :noreply, Map.put(state, :driver_state, d_state) }
   end

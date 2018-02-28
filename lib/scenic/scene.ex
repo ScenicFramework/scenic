@@ -66,7 +66,7 @@ defmodule Scenic.Scene do
       def handle_info(_msg, graph, state),              do: {:noreply, graph, state}
 
       def identify( state ),                            do: {self(), nil}
-      def get_graph_list( graph, _, _ ),                do: Graph.minimal( graph )
+      def get_graph_list( graph, _ ),                   do: Graph.minimal( graph )
 
       def handle_input( event, graph, scene_state ),    do: {:noreply, graph, scene_state}
       
@@ -254,12 +254,12 @@ defmodule Scenic.Scene do
   # as the current scene. Used when a new driver is coming online.
   # could just use the scene pid, but this gives the scene a chance
   # to add other identifying information to the graph_id
-  def handle_cast({:request_set, graph_ident, requester},
+  def handle_cast({:request_set, requester},
   %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
 
     # send the graph to the view_port
-    graph_list = mod.get_graph_list( graph, graph_ident, scene_state)
-    GenServer.cast(requester, {:set_graph, {mod.identify( scene_state ), graph_list}})
+    graph_list = mod.get_graph_list( graph, scene_state)
+    GenServer.cast(requester, {:set_graph, graph_list})
 
     { :noreply, state }
   end
