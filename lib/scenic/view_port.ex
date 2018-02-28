@@ -8,7 +8,7 @@ defmodule Scenic.ViewPort do
   alias Scenic.ViewPort.Driver
   require Logger
 
-  import IEx
+#  import IEx
 
   @viewport_registry    :viewport_registry
 
@@ -31,10 +31,6 @@ defmodule Scenic.ViewPort do
 
   ###############
   # No longer sure these belong here. Maybe just on the driver?
-  #--------------------------------------------------------
-  def set_root_graph( _scene_id ) do
-#    Driver.set_root_graph( scene_id )
-  end
 
   #--------------------------------------------------------
   def set_graph( scene_id, graph_list )

@@ -402,7 +402,7 @@ defmodule Scenic.Scene do
         graph = do_reset_graph(graph, state)
 
         # tell the Viewport that this is now the root graph to display
-        ViewPort.set_root_graph( mod.identify(scene_state) )
+#        ViewPort.set_root_graph( mod.identify(scene_state) )
 
         # store the state
         state = state

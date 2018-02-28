@@ -14,7 +14,7 @@ defmodule Scenic.ViewPort.Driver do
   require Logger
   alias Scenic.ViewPort
 
-  import IEx
+#  import IEx
 
   @sync_message       :timer_sync
   

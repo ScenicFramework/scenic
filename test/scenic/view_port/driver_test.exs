@@ -21,21 +21,6 @@ defmodule Scenic.ViewPort.DriverTest do
     assert Registry.keys(@driver_registry, self()) == []
   end
 
-  #============================================================================
-  # set_root_graph
-
-  test "set_root_graph sends a graph_id to the driver" do
-    verify_registries()
-    # register to receive :set_graph calls
-    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
-
-    # set a graph (list)
-    Driver.set_root_graph( 0 )
-
-    # make sure it was sent
-    assert_receive( {:"$gen_cast", {:set_root_graph, 0}}  )
-  end
-
 
   #============================================================================
   # set_graph
@@ -46,10 +31,10 @@ defmodule Scenic.ViewPort.DriverTest do
     {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
 
     # set a graph (list)
-    Driver.set_graph( 0, [1,2,3] )
+    Driver.set_graph( [1,2,3] )
 
     # make sure it was sent
-    assert_receive( {:"$gen_cast", {:set_graph, {0, [1, 2, 3]}}}  )
+    assert_receive( {:"$gen_cast", {:set_graph, [1, 2, 3]}}  )
   end
 
 
@@ -62,10 +47,10 @@ defmodule Scenic.ViewPort.DriverTest do
     {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
 
     # set a graph (list)
-    Driver.update_graph( 0, [1,2,3] )
+    Driver.update_graph( [1,2,3] )
 
     # make sure it was sent
-    assert_receive( {:"$gen_cast", {:update_graph, {0, [1, 2, 3]}}}  )
+    assert_receive( {:"$gen_cast", {:update_graph, [1, 2, 3]}}  )
   end
 
   test "update_graph does NOT send an empty list to the driver" do
@@ -74,25 +59,10 @@ defmodule Scenic.ViewPort.DriverTest do
     {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
 
     # set a graph (list)
-    Driver.update_graph( 0, [] )
+    Driver.update_graph( [] )
 
     # make sure it was sent
-    refute_receive( {:"$gen_cast", {:update_graph, {0, []}}}  )
-  end
-
-  #============================================================================
-  # delete_graph
-
-  test "delete_graph sends a graph_id to the driver" do
-    verify_registries()
-    # register to receive :set_graph calls
-    {:ok, _} = Registry.register(@driver_registry, :driver, {__MODULE__, 123} )
-
-    # set a graph (list)
-    Driver.delete_graph( 0 )
-
-    # make sure it was sent
-    assert_receive( {:"$gen_cast", {:delete_graph, 0}}  )
+    refute_receive( {:"$gen_cast", {:update_graph, []}}  )
   end
 
   #============================================================================
