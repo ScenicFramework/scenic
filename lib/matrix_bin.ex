@@ -257,7 +257,11 @@ end
   #--------------------------------------------------------
   # rotation matrix
 
-  def build_rotation( {radians, axis} )
+#  def build_rotation( {radians, axis} )
+#      when is_number(radians) and is_atom(axis) do
+#    build_rotation( radians, axis )
+#  end
+  def build_rotation( {axis, radians} )
       when is_number(radians) and is_atom(axis) do
     build_rotation( radians, axis )
   end
