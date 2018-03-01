@@ -16,7 +16,7 @@ defmodule Scenic.Primitive.TransformTest do
   @identity     MatrixBin.identity()
 
   @pin          {10,20}
-  @rotation     {1.1, :z}
+  @rotation     {:z, 1.1}
   @scale        {1.1,0.8}
   @translate    {4,5}
   @mx           MatrixBin.build_rotation(-0.2)
