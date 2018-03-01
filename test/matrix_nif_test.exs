@@ -320,14 +320,14 @@ defmodule Scenic.Math.MatrixBinTest do
 
   test "rotate rotates a matrix" do
     mx_trans  = Matrix.build_translation( 123, 456 )
-    mx_rot    = Matrix.build_rotation( {1.3, :z} )
-    assert Matrix.rotate(mx_trans, {1.3, :z}) == Matrix.mul(mx_trans, mx_rot)
+    mx_rot    = Matrix.build_rotation( {:z, 1.3} )
+    assert Matrix.rotate(mx_trans, {:z, 1.3}) == Matrix.mul(mx_trans, mx_rot)
   end
   
   test "rotate rotates a matrix around a default value" do
     mx_trans  = Matrix.build_translation( 123, 456 )
     mx_rot    = Matrix.build_rotation( 1.3 )
-    assert Matrix.rotate(mx_trans, {1.3, :z}) == Matrix.mul(mx_trans, mx_rot)
+    assert Matrix.rotate(mx_trans, {:z, 1.3}) == Matrix.mul(mx_trans, mx_rot)
   end
 
   test "rotate does nothing if the value is nil" do
@@ -337,21 +337,21 @@ defmodule Scenic.Math.MatrixBinTest do
 
   test "translate translates a matrix" do
     mx_trans  = Matrix.build_translation( 123, 456 )
-    mx_rot    = Matrix.build_rotation( {1.3, :y} )
+    mx_rot    = Matrix.build_rotation( {:y, 1.3} )
     assert Matrix.translate(mx_rot, {123, 456}) == Matrix.mul(mx_rot, mx_trans)
   end
   test "translate does nothing if the value is nil" do
-    mx_rot    = Matrix.build_rotation( {1.3, :y} )
+    mx_rot    = Matrix.build_rotation( {:y, 1.3} )
     assert Matrix.translate(mx_rot, nil) == mx_rot
   end
 
   test "scale scales a matrix" do
     mx_scale  = Matrix.build_scale( 1.2 )
-    mx_rot    = Matrix.build_rotation( {1.3, :x} )
+    mx_rot    = Matrix.build_rotation( {:x, 1.3} )
     assert Matrix.scale(mx_rot, 1.2) == Matrix.mul(mx_rot, mx_scale)
   end
   test "scale does nothing if the value is nil" do
-    mx_rot    = Matrix.build_rotation( {1.3, :y} )
+    mx_rot    = Matrix.build_rotation( {:y, 1.3} )
     assert Matrix.scale(mx_rot, nil) == mx_rot
   end
 
