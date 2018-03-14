@@ -76,8 +76,10 @@ defmodule Scenic.Scene do
       def handle_info(_msg, graph, state),              do: {:noreply, graph, state}
 
       def handle_input( event, graph, scene_state ),    do: {:noreply, graph, scene_state}
-      def handle_reset(graph, scene_state),             do: Scenic.Scene.handle_reset(graph, scene_state)
-      def handle_update(graph, scene_state),            do: Scenic.Scene.handle_update(graph, scene_state)
+#      def handle_reset(graph, scene_state),             do: Scenic.Scene.handle_reset(graph, scene_state)
+#      def handle_update(graph, scene_state),            do: Scenic.Scene.handle_update(graph, scene_state)
+      def graph_set_list(graph, _),                     do: Scenic.Scene.graph_set_list(graph)
+      def graph_delta_list(graph, _),                   do: Scenic.Scene.graph_delta_list(graph)
 
       def focus_gained( _scene_param, graph, scene_state ) do
         Map.get(graph, :input, [])
@@ -101,10 +103,11 @@ defmodule Scenic.Scene do
         handle_cast:            3,
         handle_info:            3,
         handle_input:           3,
-        handle_reset:           2,
-        handle_update:          2,
         focus_gained:           3,
-        focus_lost:             2
+        focus_lost:             2,
+
+        graph_set_list:         2,
+        graph_delta_list:       2
       ]
 
     end # quote
@@ -222,35 +225,39 @@ defmodule Scenic.Scene do
   # a graphic driver is requesting a full graph reset
   def handle_cast(:graph_reset,
   %{graph: graph, scene_module: mod, scene_state: scene_state} = state) do
-
     # tick any recurring actions
     graph = Graph.tick_recurring_actions( graph )
     |> Graph.reset_deltas()
 
     # send the graph to the view_port
     graph
-    |> Graph.minimal()
+#    |> Graph.minimal()
+    |> mod.graph_set_list(scene_state)
     |> ViewPort.set_graph()
 
     state = state
     |> Map.put(:graph, graph)
     { :noreply, state }
-
-#    {:noreply, graph, scene_state} = mod.handle_reset(graph, scene_state)
-#    state = state
-#    |> Map.put(:graph, graph)
-#    |> Map.put(:scene_state, scene_state)
-#    { :noreply, Map.put(state, :graph, graph) }
   end
 
   #--------------------------------------------------------
   # a graphic driver is requesting an update
   def handle_cast(:graph_update,
   %{graph: graph, scene_module: mod, scene_state: scene_state} = state) do
-    {:noreply, graph, scene_state} = mod.handle_update(graph, scene_state)
+    # tick any recurring actions
+    graph = Graph.tick_recurring_actions( graph )
+
+    # send the graph to the view_port
+    graph
+#    |> Graph.get_delta_scripts()
+    |> mod.graph_delta_list(scene_state)
+    |> ViewPort.update_graph()
+
+    # reset the deltas
+    graph = Graph.reset_deltas( graph )
+
     state = state
     |> Map.put(:graph, graph)
-    |> Map.put(:scene_state, scene_state)
     { :noreply, state }
   end
 
@@ -415,34 +422,18 @@ defmodule Scenic.Scene do
   #============================================================================
 
   #--------------------------------------------------------
-  def handle_reset(graph, scene_state) do
-    # tick any recurring actions
-    graph = Graph.tick_recurring_actions( graph )
-    |> Graph.reset_deltas()
-
-    # send the graph to the view_port
-    graph
-    |> Graph.minimal()
-    |> ViewPort.set_graph()
-
-    { :noreply, graph, scene_state }
+  def graph_set_list(graph) do
+    Graph.minimal(graph)
   end
-
-  #--------------------------------------------------------
-  def handle_update(graph, scene_state) do
-    # tick any recurring actions
-    graph = Graph.tick_recurring_actions( graph )
-
-    # send the graph to the view_port
-    graph
-    |> Graph.get_delta_scripts()
-    |> ViewPort.update_graph()
-
-    # reset the deltas
-    graph = Graph.reset_deltas( graph )
-
-    { :noreply, graph, scene_state }
+  def graph_delta_list(graph) do
+    Graph.get_delta_scripts(graph)
   end
-
-
 end
+
+
+
+
+
+
+
+
