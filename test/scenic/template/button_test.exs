@@ -26,5 +26,29 @@ defmodule Scenic.Template.ButtonTest do
     assert filter == {Button, :filter_input}
   end
 
+  test "build works with w and h" do
+    button = Button.build( {{{10,10}, 30, 30},"Test"},  id: :test_button )
+    assert Graph.count(button) == 3
+
+    # check that the input filter is set
+    filter = button
+      |> Graph.get(0)
+      |> Primitive.get_event_filter()
+
+    assert filter == {Button, :filter_input}
+  end
+
+  test "build works with w and h and r" do
+    button = Button.build( {{{10,10}, 30, 30, 6},"Test"},  id: :test_button )
+    assert Graph.count(button) == 3
+
+    # check that the input filter is set
+    filter = button
+      |> Graph.get(0)
+      |> Primitive.get_event_filter()
+
+    assert filter == {Button, :filter_input}
+  end
+
 
 end
