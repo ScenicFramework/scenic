@@ -30,12 +30,10 @@ defmodule Scenic.ViewPort do
 
 
   ###############
-  # No longer sure these belong here. Maybe just on the driver?
+  # No longer sure these belong here. Maybe just on the driver?  
 
   #--------------------------------------------------------
-  def set_graph( scene_id, graph_list )
-  def set_graph( _scene_id, graph_list ) do
-#    Driver.set_graph( scene_id, graph_list )
+  def set_graph( graph_list ) do
     case current_scene?() do
       true ->   Driver.set_graph( graph_list )
       false ->  :context_lost
@@ -43,9 +41,7 @@ defmodule Scenic.ViewPort do
   end
 
   #--------------------------------------------------------
-  def update_graph( scene_id, delta_list )
-  def update_graph( _scene_id, delta_list ) do
-#    Driver.update_graph( scene_id, delta_list )
+  def update_graph( delta_list ) do
     case current_scene?() do
       true ->
         Driver.update_graph( delta_list )
@@ -58,6 +54,7 @@ defmodule Scenic.ViewPort do
   def delete_graph( _scene_id ) do
 #    Driver.delete_graph( scene_id )
   end
+
   ###############
 
 
@@ -117,7 +114,7 @@ defmodule Scenic.ViewPort do
       nil ->
         {:err, :no_scene_set}
       pid ->
-        GenServer.cast(pid, {:request_set, self()})
+        GenServer.cast(pid, :graph_reset)
     end
   end
 

@@ -21,6 +21,16 @@ defmodule Scenic.Scene do
   @callback init( any ) :: {:ok, any}
   @callback init_graph(any) :: {:ok, map, any}
 
+  @callback handle_call(any, any, any, any) :: {:reply, any, any, any} | {:noreply, any, any, any}
+  @callback handle_cast(any, any, any) :: {:noreply, any, any}
+  @callback handle_info(any, any, any) :: {:noreply, any, any}
+
+  @callback handle_input(any, any, any) :: {:noreply, any, any}
+  @callback handle_reset(any, any) :: {:noreply, any, any}
+  @callback handle_update(any, any) :: {:noreply, any, any}
+  @callback focus_gained(any, any, any) :: {:ok, any, any}
+  @callback focus_lost(any, any) :: {:ok, any, any}
+
   @viewport_registry    :viewport_registry
 
   #===========================================================================
@@ -65,11 +75,10 @@ defmodule Scenic.Scene do
       def handle_cast(_msg, graph, state),              do: {:noreply, graph, state}
       def handle_info(_msg, graph, state),              do: {:noreply, graph, state}
 
-      def identify( state ),                            do: {self(), nil}
-      def get_graph_list( graph, _ ),                   do: Graph.minimal( graph )
-
       def handle_input( event, graph, scene_state ),    do: {:noreply, graph, scene_state}
-      
+      def handle_reset(graph, scene_state),             do: Scenic.Scene.handle_reset(graph, scene_state)
+      def handle_update(graph, scene_state),            do: Scenic.Scene.handle_update(graph, scene_state)
+
       def focus_gained( _scene_param, graph, scene_state ) do
         Map.get(graph, :input, [])
         |> ViewPort.Input.register()
@@ -92,9 +101,10 @@ defmodule Scenic.Scene do
         handle_cast:            3,
         handle_info:            3,
         handle_input:           3,
+        handle_reset:           2,
+        handle_update:          2,
         focus_gained:           3,
-        focus_lost:             2,
-        identify:               1
+        focus_lost:             2
       ]
 
     end # quote
@@ -209,60 +219,41 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
+  # a graphic driver is requesting a full graph reset
+  def handle_cast(:graph_reset,
+  %{graph: graph, scene_module: mod, scene_state: scene_state} = state) do
+
+    # tick any recurring actions
+    graph = Graph.tick_recurring_actions( graph )
+    |> Graph.reset_deltas()
+
+    # send the graph to the view_port
+    graph
+    |> Graph.minimal()
+    |> ViewPort.set_graph()
+
+    state = state
+    |> Map.put(:graph, graph)
+    { :noreply, state }
+
+#    {:noreply, graph, scene_state} = mod.handle_reset(graph, scene_state)
+#    state = state
+#    |> Map.put(:graph, graph)
+#    |> Map.put(:scene_state, scene_state)
+#    { :noreply, Map.put(state, :graph, graph) }
+  end
+
+  #--------------------------------------------------------
   # a graphic driver is requesting an update
   def handle_cast(:graph_update,
   %{graph: graph, scene_module: mod, scene_state: scene_state} = state) do
-    # tick any recurring actions
-    graph = Graph.tick_recurring_actions( graph )
-
-    # send the graph to the view_port
-    ViewPort.update_graph(
-      mod.identify(scene_state),
-      Graph.get_delta_scripts( graph )
-    )
-
-    # reset the deltas
-    graph = Graph.reset_deltas( graph )
-
-    # update and return the state
-    state = Map.put( state, :graph, graph )
-
+    {:noreply, graph, scene_state} = mod.handle_update(graph, scene_state)
+    state = state
+    |> Map.put(:graph, graph)
+    |> Map.put(:scene_state, scene_state)
     { :noreply, state }
   end
 
-  #--------------------------------------------------------
-  # a graphic driver is requesting a full graph reset
-  def handle_cast(:graph_reset, %{ graph: graph } = state) do
-    graph = do_reset_graph(graph, state)
-    { :noreply, Map.put(state, :graph, graph) }
-  end
-
-
-  #--------------------------------------------------------
-  # a graphic driver is requesting this scene identify itself
-  # as the current scene. Used when a new driver is coming online.
-  # could just use the scene pid, but this gives the scene a chance
-  # to add other identifying information to the graph_id
-  def handle_cast({:request_identify, as_msg, requester},
-  %{scene_module: mod, scene_state: scene_state} = state) do
-    GenServer.cast(requester, {as_msg, mod.identify( scene_state )})
-    { :noreply, state }
-  end
-
-  #--------------------------------------------------------
-  # a graphic driver is requesting this scene identify itself
-  # as the current scene. Used when a new driver is coming online.
-  # could just use the scene pid, but this gives the scene a chance
-  # to add other identifying information to the graph_id
-  def handle_cast({:request_set, requester},
-  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-
-    # send the graph to the view_port
-    graph_list = mod.get_graph_list( graph, scene_state)
-    GenServer.cast(requester, {:set_graph, graph_list})
-
-    { :noreply, state }
-  end
 
   #--------------------------------------------------------
   # generic cast. give the scene a chance to handle it
@@ -399,7 +390,10 @@ defmodule Scenic.Scene do
         Registry.register(@viewport_registry, :messages, self() )
 
         # tick and send the graph to the drivers
-        graph = do_reset_graph(graph, state)
+        GenServer.cast(self(), :graph_reset)
+#        graph = do_reset_graph(graph, state)
+#        {:noreply, graph, scene_state} = mod.handle_reset(graph, scene_state)
+
 
         # tell the Viewport that this is now the root graph to display
 #        ViewPort.set_root_graph( mod.identify(scene_state) )
@@ -418,19 +412,37 @@ defmodule Scenic.Scene do
     end
   end
 
+  #============================================================================
+
   #--------------------------------------------------------
-  defp do_reset_graph(graph, %{scene_module: mod, scene_state: scene_state}) do
+  def handle_reset(graph, scene_state) do
+    # tick any recurring actions
+    graph = Graph.tick_recurring_actions( graph )
+    |> Graph.reset_deltas()
+
+    # send the graph to the view_port
+    graph
+    |> Graph.minimal()
+    |> ViewPort.set_graph()
+
+    { :noreply, graph, scene_state }
+  end
+
+  #--------------------------------------------------------
+  def handle_update(graph, scene_state) do
     # tick any recurring actions
     graph = Graph.tick_recurring_actions( graph )
 
-    # reset the viewport with this scene's graph
-    ViewPort.set_graph(
-      mod.identify( scene_state ),
-      Graph.minimal( graph )
-    )
-
-    # return the transformed graph
+    # send the graph to the view_port
     graph
+    |> Graph.get_delta_scripts()
+    |> ViewPort.update_graph()
+
+    # reset the deltas
+    graph = Graph.reset_deltas( graph )
+
+    { :noreply, graph, scene_state }
   end
+
 
 end
