@@ -21,11 +21,13 @@ defmodule Scenic.Template.Button do
 
   #----------------------------------------------------------------------------
   def build( data, opts \\ [])
-  def build( {{x,y}, text}, opts ) when is_bitstring(text) do
-    w = opts[:width]  || opts[:w] || @default_width
-    h = opts[:height] || opts[:h] || @default_height
-    r = opts[:radius] || opts[:r] || @default_radius
-
+  def build( {{x,y}, text}, opts ) do
+    build( {{{x,y}, @default_width, @default_height}, text}, opts )
+  end
+  def build( {{{x,y}, w, h}, text}, opts ) do
+    build( {{{x,y}, w, h, @default_radius}, text}, opts )
+  end
+  def build( {{{x,y}, w, h, r}, text}, opts ) when is_bitstring(text) do
     # build the button graph
     Input.build( [{:font, {:roboto, 14}} | opts] )
     |> RoundedRectangle.add_to_graph( {{x,y}, w, h, r}, color: @blue_color )
@@ -33,6 +35,7 @@ defmodule Scenic.Template.Button do
     |> Graph.request_input( :cursor_button )
     |> Graph.put_event_filter(0, {Button, :filter_input})
   end
+
 
   #----------------------------------------------------------------------------
   def filter_input(event, %Primitive{} = p, graph) do
