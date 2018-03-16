@@ -25,6 +25,7 @@ defmodule Scenic.Scene do
   @callback handle_cast(any, any, any) :: {:noreply, any, any}
   @callback handle_info(any, any, any) :: {:noreply, any, any}
 
+  @callback handle_raw_input(any, any, any) :: {:noreply, any, any}
   @callback handle_input(any, any, any) :: {:noreply, any, any}
   @callback handle_reset(any, any) :: {:noreply, any, any}
   @callback handle_update(any, any) :: {:noreply, any, any}
@@ -75,7 +76,8 @@ defmodule Scenic.Scene do
       def handle_cast(_msg, graph, state),              do: {:noreply, graph, state}
       def handle_info(_msg, graph, state),              do: {:noreply, graph, state}
 
-      def handle_input( event, graph, scene_state ),    do: {:noreply, graph, scene_state}
+      def handle_raw_input( event, graph, scene_state ),  do: {:noreply, graph, scene_state}
+      def handle_input( event, graph, scene_state ),      do: {:noreply, graph, scene_state}
 #      def handle_reset(graph, scene_state),             do: Scenic.Scene.handle_reset(graph, scene_state)
 #      def handle_update(graph, scene_state),            do: Scenic.Scene.handle_update(graph, scene_state)
       def graph_set_list(graph, _),                     do: Scenic.Scene.graph_set_list(graph)
@@ -102,6 +104,7 @@ defmodule Scenic.Scene do
         handle_call:            4,
         handle_cast:            3,
         handle_info:            3,
+        handle_raw_input:       3,
         handle_input:           3,
         focus_gained:           3,
         focus_lost:             2,
@@ -210,7 +213,13 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  def handle_cast({:input, event}, %{graph: graph} = state) do
+  def handle_cast({:input, event},
+  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+    {:noreply, graph, scene_state} = mod.handle_raw_input(event, graph, scene_state)
+    state = state
+    |> Map.put(:graph, graph)
+    |> Map.put(:scene_state, scene_state)
+
     # prepare the message and find the default primitive, if any
     prepare_input(event, graph)
     |> do_handle_input( state )
