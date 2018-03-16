@@ -90,6 +90,8 @@ defmodule Scenic.SceneTest do
 
   def identify( _ ), do: {self(), nil}
 
+  def graph_set_list(graph, _),   do: Scenic.Scene.graph_set_list(graph)
+  def graph_delta_list(graph, _), do: Scenic.Scene.graph_delta_list(graph)
 
   @state %{
     scene_module:  __MODULE__,
