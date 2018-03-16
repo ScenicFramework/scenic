@@ -27,8 +27,8 @@ defmodule Scenic.Scene do
 
   @callback handle_raw_input(any, any, any) :: {:noreply, any, any}
   @callback handle_input(any, any, any) :: {:noreply, any, any}
-  @callback handle_reset(any, any) :: {:noreply, any, any}
-  @callback handle_update(any, any) :: {:noreply, any, any}
+#  @callback handle_reset(any, any) :: {:noreply, any, any}
+#  @callback handle_update(any, any) :: {:noreply, any, any}
   @callback focus_gained(any, any, any) :: {:ok, any, any}
   @callback focus_lost(any, any) :: {:ok, any, any}
 
@@ -78,8 +78,10 @@ defmodule Scenic.Scene do
 
       def handle_raw_input( event, graph, scene_state ),  do: {:noreply, graph, scene_state}
       def handle_input( event, graph, scene_state ),      do: {:noreply, graph, scene_state}
+
 #      def handle_reset(graph, scene_state),             do: Scenic.Scene.handle_reset(graph, scene_state)
 #      def handle_update(graph, scene_state),            do: Scenic.Scene.handle_update(graph, scene_state)
+
       def graph_set_list(graph, _),                     do: Scenic.Scene.graph_set_list(graph)
       def graph_delta_list(graph, _),                   do: Scenic.Scene.graph_delta_list(graph)
 
