@@ -16,7 +16,7 @@ defmodule Scenic.Scene do
   alias Scenic.Primitive
   require Logger
 
-#  import IEx
+  import IEx
 
   @callback init( any ) :: {:ok, map, any}
 
@@ -215,14 +215,14 @@ defmodule Scenic.Scene do
   #--------------------------------------------------------
   def handle_cast({:input, event},
   %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+
     {:noreply, graph, scene_state} = mod.handle_raw_input(event, graph, scene_state)
     state = state
     |> Map.put(:graph, graph)
     |> Map.put(:scene_state, scene_state)
 
-    # prepare the message and find the default primitive, if any
-    prepare_input(event, graph)
-    |> do_handle_input( state )
+    # handle the event
+    do_handle_input( event, state )
   end
 
   #--------------------------------------------------------
@@ -299,101 +299,101 @@ defmodule Scenic.Scene do
   #===========================================================================
   # input preperation
 
-  #--------------------------------------------------------
-  defp prepare_input( {:key, {key, _scancode, action, mods}}, _ ) do
-    event = {
-      :key,
-      ViewPort.Input.key_to_atom( key ),
-      ViewPort.Input.action_to_atom( action ),
-      mods
-    }
-    {event, nil}
-  end
-
-  #--------------------------------------------------------
-  defp prepare_input( {:codepoint, {codepoint, mods}}, %Graph{focus: focus} ) do
-    event = {
-      :char,
-      ViewPort.Input.codepoint_to_char( codepoint ),
-      mods 
-    }
-    {event, focus}
-  end
-
-  #--------------------------------------------------------
-  defp prepare_input( {:cursor_pos, pos} = event, graph ) do
-    uid = case Graph.find_by_screen_point(graph, pos) do
-      nil -> nil
-      p   -> Primitive.get_uid(p)
-    end
-    {event, uid}
-  end
-
-  #--------------------------------------------------------
-  defp prepare_input( {:cursor_button, {btn, action, mods, pos}}, graph ) do
-    event = {
-      :cursor_button,
-      ViewPort.Input.button_to_atom( btn ),
-      ViewPort.Input.action_to_atom( action ),
-      mods,
-      pos
-    }
-
-    uid = case Graph.find_by_screen_point(graph, pos) do
-      nil -> nil
-      p   -> Primitive.get_uid(p)
-    end
-
-    {event, uid}
-  end
-
-  #--------------------------------------------------------
-  defp prepare_input( {:cursor_scroll, {offsets, pos}}, graph ) do
-    uid = case Graph.find_by_screen_point(graph, pos) do
-      nil -> nil
-      p   -> Primitive.get_uid(p)
-    end
-    {{:cursor_scroll, offsets, pos}, uid}
-  end
-
-  #--------------------------------------------------------
-  defp prepare_input( {:cursor_enter, {0, pos}}, _ ) do
-    {{:cursor_enter, false, pos}, nil}
-  end
-  defp prepare_input( {:cursor_enter, {1, pos}}, graph ) do
-    uid = case Graph.find_by_screen_point(graph, pos) do
-      nil -> nil
-      p   -> Primitive.get_uid(p)
-    end
-    {{:cursor_enter, true, pos}, uid}
-  end
-
-  defp prepare_input( event, _ ), do: {event, nil}
-
+#  #--------------------------------------------------------
+#  defp prepare_input( {:key, {key, _scancode, action, mods}}, _ ) do
+#    event = {
+#      :key,
+#      ViewPort.Input.key_to_atom( key ),
+#      ViewPort.Input.action_to_atom( action ),
+#      mods
+#    }
+#    {event, nil}
+#  end
+#
+#  #--------------------------------------------------------
+#  defp prepare_input( {:codepoint, {codepoint, mods}}, %Graph{focus: focus} ) do
+#    event = {
+#      :char,
+#      ViewPort.Input.codepoint_to_char( codepoint ),
+#      mods 
+#    }
+#    {event, focus}
+#  end
+#
+#  #--------------------------------------------------------
+#  defp prepare_input( {:cursor_pos, pos} = event, graph ) do
+#    uid = case Graph.find_by_screen_point(graph, pos) do
+#      nil -> nil
+#      p   -> Primitive.get_uid(p)
+#    end
+#    {event, uid}
+#  end
+#
+#  #--------------------------------------------------------
+#  defp prepare_input( {:cursor_button, {btn, action, mods, pos}}, graph ) do
+#    event = {
+#      :cursor_button,
+#      ViewPort.Input.button_to_atom( btn ),
+#      ViewPort.Input.action_to_atom( action ),
+#      mods,
+#      pos
+#    }
+#
+#    uid = case Graph.find_by_screen_point(graph, pos) do
+#      nil -> nil
+#      p   -> Primitive.get_uid(p)
+#    end
+#
+#    {event, uid}
+#  end
+#
+#  #--------------------------------------------------------
+#  defp prepare_input( {:cursor_scroll, {offsets, pos}}, graph ) do
+#    uid = case Graph.find_by_screen_point(graph, pos) do
+#      nil -> nil
+#      p   -> Primitive.get_uid(p)
+#    end
+#    {{:cursor_scroll, offsets, pos}, uid}
+#  end
+#
+#  #--------------------------------------------------------
+#  defp prepare_input( {:cursor_enter, {0, pos}}, _ ) do
+#    {{:cursor_enter, false, pos}, nil}
+#  end
+#  defp prepare_input( {:cursor_enter, {1, pos}}, graph ) do
+#    uid = case Graph.find_by_screen_point(graph, pos) do
+#      nil -> nil
+#      p   -> Primitive.get_uid(p)
+#    end
+#    {{:cursor_enter, true, pos}, uid}
+#  end
+#
+#  defp prepare_input( event, _ ), do: {event, nil}
+#
 
   #--------------------------------------------------------
   defp do_handle_input({event, uid}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-    state = try do
-      # filter the event through the graph
-      case Graph.filter_input(graph, event, uid) do
-        {:stop, graph} ->
-          # the event is done. Stop handling it
-          Map.put(state, :graph, graph)
-
-        {:continue, event, graph} ->
-          # let the scene itself handle the event
-          {:noreply, graph, scene_state} = mod.handle_input(event, graph, scene_state)
-          state
-          |> Map.put(:graph, graph)
-          |> Map.put(:scene_state, scene_state)
-      end
-    catch
-      kind, reason ->
-        formatted = Exception.format(kind, reason, System.stacktrace)
-        Logger.error "Scene.handle_cast :input failed with #{formatted}"
-        state
-    end
-
+#    state = try do
+#      # filter the event through the graph
+#      case Graph.filter_input(graph, event, uid) do
+#        {:stop, graph} ->
+#          # the event is done. Stop handling it
+#          Map.put(state, :graph, graph)
+#
+#        {:continue, event, graph} ->
+#          # let the scene itself handle the event
+#          {:noreply, graph, scene_state} = mod.handle_input(event, graph, scene_state)
+#          state
+#          |> Map.put(:graph, graph)
+#          |> Map.put(:scene_state, scene_state)
+#      end
+#    catch
+#      kind, reason ->
+#        formatted = Exception.format(kind, reason, System.stacktrace)
+#        Logger.error "Scene.handle_cast :input failed with #{formatted}"
+#        state
+#    end
+#
     # return the transformed state
     {:noreply, state}
   end
