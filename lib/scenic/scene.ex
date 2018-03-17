@@ -18,8 +18,7 @@ defmodule Scenic.Scene do
 
 #  import IEx
 
-  @callback init( any ) :: {:ok, any}
-  @callback init_graph(any) :: {:ok, map, any}
+  @callback init( any ) :: {:ok, map, any}
 
   @callback handle_call(any, any, any, any) :: {:reply, any, any, any} | {:noreply, any, any, any}
   @callback handle_cast(any, any, any) :: {:noreply, any, any}
@@ -133,8 +132,7 @@ defmodule Scenic.Scene do
 
   #--------------------------------------------------------
   def init( {module, opts} ) do
-    {:ok, scene_state} = module.init(opts)
-    {:ok, graph, scene_state} = module.init_graph(scene_state)
+    {:ok, graph, scene_state} = module.init(opts)
 
     state = %{
       scene_module:       module,
