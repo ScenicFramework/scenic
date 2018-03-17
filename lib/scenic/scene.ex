@@ -26,6 +26,10 @@ defmodule Scenic.Scene do
 
   @callback handle_raw_input(any, any, any) :: {:noreply, any, any}
   @callback handle_input(any, any, any) :: {:noreply, any, any}
+
+  @callback filter_input(any, any, any) :: { :continue, any, map, any } | { :stop, map, any } 
+
+
 #  @callback handle_reset(any, any) :: {:noreply, any, any}
 #  @callback handle_update(any, any) :: {:noreply, any, any}
   @callback focus_gained(any, any, any) :: {:ok, any, any}
@@ -77,6 +81,8 @@ defmodule Scenic.Scene do
 
       def handle_raw_input( event, graph, scene_state ),  do: {:noreply, graph, scene_state}
       def handle_input( event, graph, scene_state ),      do: {:noreply, graph, scene_state}
+
+      def filter_input( event, graph, scene_state ),    do: {:continue, event, graph, scene_state}
 
 #      def handle_reset(graph, scene_state),             do: Scenic.Scene.handle_reset(graph, scene_state)
 #      def handle_update(graph, scene_state),            do: Scenic.Scene.handle_update(graph, scene_state)
@@ -212,23 +218,30 @@ defmodule Scenic.Scene do
     end
   end
 
-  #--------------------------------------------------------
-  def handle_cast({:input, event},
-  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
 
-    {:noreply, graph, scene_state} = mod.handle_raw_input(event, graph, scene_state)
+  #--------------------------------------------------------
+  # filter the event
+  def handle_cast({:filter_input, input, filter_list},
+  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+    # let the scene filter the input
+    { graph, scene_state } = input
+    |> transform_input_local( nil )
+    |> mod.filter_input( graph, scene_state )
+    |> case do
+      {:stop, graph, scene_state} ->
+        { graph, scene_state }
+
+      {:continue, input, graph, scene_state} ->
+        # continuing. pass it to the next scene
+        continue_input_filter( input, filter_list )
+        { graph, scene_state }
+    end
     state = state
     |> Map.put(:graph, graph)
     |> Map.put(:scene_state, scene_state)
-
-    # handle the event
-    do_handle_input( event, state )
+    {:noreply, state}
   end
 
-  #--------------------------------------------------------
-  def handle_cast({:input_uid, event, uid}, state) do
-    do_handle_input( {event, uid}, state )
-  end
 
   #--------------------------------------------------------
   # a graphic driver is requesting a full graph reset
@@ -295,108 +308,8 @@ defmodule Scenic.Scene do
     {:noreply, state}
   end
 
-
-  #===========================================================================
-  # input preperation
-
-#  #--------------------------------------------------------
-#  defp prepare_input( {:key, {key, _scancode, action, mods}}, _ ) do
-#    event = {
-#      :key,
-#      ViewPort.Input.key_to_atom( key ),
-#      ViewPort.Input.action_to_atom( action ),
-#      mods
-#    }
-#    {event, nil}
-#  end
-#
-#  #--------------------------------------------------------
-#  defp prepare_input( {:codepoint, {codepoint, mods}}, %Graph{focus: focus} ) do
-#    event = {
-#      :char,
-#      ViewPort.Input.codepoint_to_char( codepoint ),
-#      mods 
-#    }
-#    {event, focus}
-#  end
-#
-#  #--------------------------------------------------------
-#  defp prepare_input( {:cursor_pos, pos} = event, graph ) do
-#    uid = case Graph.find_by_screen_point(graph, pos) do
-#      nil -> nil
-#      p   -> Primitive.get_uid(p)
-#    end
-#    {event, uid}
-#  end
-#
-#  #--------------------------------------------------------
-#  defp prepare_input( {:cursor_button, {btn, action, mods, pos}}, graph ) do
-#    event = {
-#      :cursor_button,
-#      ViewPort.Input.button_to_atom( btn ),
-#      ViewPort.Input.action_to_atom( action ),
-#      mods,
-#      pos
-#    }
-#
-#    uid = case Graph.find_by_screen_point(graph, pos) do
-#      nil -> nil
-#      p   -> Primitive.get_uid(p)
-#    end
-#
-#    {event, uid}
-#  end
-#
-#  #--------------------------------------------------------
-#  defp prepare_input( {:cursor_scroll, {offsets, pos}}, graph ) do
-#    uid = case Graph.find_by_screen_point(graph, pos) do
-#      nil -> nil
-#      p   -> Primitive.get_uid(p)
-#    end
-#    {{:cursor_scroll, offsets, pos}, uid}
-#  end
-#
-#  #--------------------------------------------------------
-#  defp prepare_input( {:cursor_enter, {0, pos}}, _ ) do
-#    {{:cursor_enter, false, pos}, nil}
-#  end
-#  defp prepare_input( {:cursor_enter, {1, pos}}, graph ) do
-#    uid = case Graph.find_by_screen_point(graph, pos) do
-#      nil -> nil
-#      p   -> Primitive.get_uid(p)
-#    end
-#    {{:cursor_enter, true, pos}, uid}
-#  end
-#
-#  defp prepare_input( event, _ ), do: {event, nil}
-#
-
-  #--------------------------------------------------------
-  defp do_handle_input({event, uid}, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-#    state = try do
-#      # filter the event through the graph
-#      case Graph.filter_input(graph, event, uid) do
-#        {:stop, graph} ->
-#          # the event is done. Stop handling it
-#          Map.put(state, :graph, graph)
-#
-#        {:continue, event, graph} ->
-#          # let the scene itself handle the event
-#          {:noreply, graph, scene_state} = mod.handle_input(event, graph, scene_state)
-#          state
-#          |> Map.put(:graph, graph)
-#          |> Map.put(:scene_state, scene_state)
-#      end
-#    catch
-#      kind, reason ->
-#        formatted = Exception.format(kind, reason, System.stacktrace)
-#        Logger.error "Scene.handle_cast :input failed with #{formatted}"
-#        state
-#    end
-#
-    # return the transformed state
-    {:noreply, state}
-  end
+  #============================================================================
+  # utilities
 
   #--------------------------------------------------------
   defp do_gain_focus(scene_param, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
@@ -428,7 +341,29 @@ defmodule Scenic.Scene do
     end
   end
 
-  #============================================================================
+  #--------------------------------------------------------
+  # input has been received. If it has x,y coords, then need to be transformed
+  # into the local coordinate space
+  defp transform_input_local( input, inverse_transform )
+  defp transform_input_local( input, _ ) do
+    input
+  end
+
+  #--------------------------------------------------------
+  # input is continuing on. If it is a standard event with x,y coords it is
+  # in local space. Transform back into global space for the next filter.
+  # can't just pass it along because the previous filter may have transformed
+  # it in some way....
+  defp transform_input_global( input, inverse_transform )
+  defp transform_input_global( input, _ ) do
+    input
+  end
+
+  defp continue_input_filter( _, [] ), do: :ok
+  defp continue_input_filter( input, [pid | tail] ) do
+    GenServer.cast(pid, {:filter_input, input, tail})
+  end
+
 
   #--------------------------------------------------------
   def graph_set_list(graph) do
