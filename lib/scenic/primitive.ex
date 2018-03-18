@@ -470,10 +470,10 @@ defmodule Scenic.Primitive do
   #============================================================================
   # reduce a primitive to its minimal form
   #--------------------------------------------------------
-  def minimal( %Primitive{module: mod, data: data, parent_uid: puid} = p ) do
+  def minimal( %Primitive{module: mod, data: data} = p ) do     #parent_uid: puid
       min_p = %{
         data:       {mod, data},
-        puid:       puid
+#        puid:       puid
       }
 
       # add styles, if any are set

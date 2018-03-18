@@ -6,10 +6,9 @@
 defmodule Scenic.ViewPort2 do
   use GenServer
 #  alias Scenic.ViewPort.Driver
+  alias Scenic.Scene
   alias Scenic.Graph
   alias Scenic.Primitive
-  alias Scenic.Primitive.SceneRef
-  alias Scenic.Primitive.Group
 #  require Logger
 
   import IEx
@@ -60,7 +59,14 @@ defmodule Scenic.ViewPort2 do
   * `scene_param` Data to be passed to the scene's focus_gained function. Note that
   this is different from the initialization data.
   """
-  def set_scene( scene, scene_param \\ nil ) do
+  def set_scene( scene, scene_param \\ nil )
+
+  def set_scene( scene, scene_param ) when is_atom(scene) do
+    Process.whereis(scene)
+    |> set_scene( scene_param )
+  end
+
+  def set_scene( scene, scene_param ) when is_pid(scene) do
     GenServer.cast( @viewport, {:set_scene, scene, scene_param} )
   end
 
@@ -72,24 +78,37 @@ defmodule Scenic.ViewPort2 do
   If this is the root graph setting itself into place, the scene_pid must be the
   pid of the scene that was set via set_scene and the optional id must be nil
   """
-  def set_graph( %Graph{primitive_map: p_map}, scene_pid, id \\ nil ) when
-  (is_atom(scene_pid) or is_pid(scene_pid)) do
+  def set_graph( graph, scene, id \\ nil )
 
+  def set_graph( graph, scene, id ) when is_atom(scene) do
+    set_graph( graph, Process.whereis(scene), id )
+  end
+
+  def set_graph( %Graph{primitive_map: p_map}, scene, id ) when is_pid(scene) do
     # prepare the minimal graph that the viewport will use
     min_graph = Enum.reduce(p_map, %{}, fn({uid, p}, acc) ->
       Map.put(acc, uid, Primitive.minimal(p))
     end)
 
     # pass it to the viewport server
-    GenServer.cast( @viewport, {:set_graph, min_graph, scene_pid, id} )
+    GenServer.cast( @viewport, {:set_graph, min_graph, scene, id} )
   end
+
+
+
 
   #--------------------------------------------------------
   @doc """
   Update a graph that has already been set into the viewport. 
   """
-  def update_graph( %Graph{deltas: deltas}, scene_pid, id \\ nil ) when is_list(deltas) and
-  (is_atom(scene_pid) or is_pid(scene_pid)) do
+  def update_graph( graph, scene, id \\ nil ) 
+
+  def update_graph( graph, scene, id ) when is_atom(scene) do
+    update_graph( graph, Process.whereis(scene), id )
+  end
+
+  def update_graph( %Graph{deltas: deltas}, scene_pid, id )
+  when is_list(deltas) and is_pid(scene_pid) do
     GenServer.cast( @viewport, {:update_graph, deltas, scene_pid, id} )
   end
 
@@ -148,8 +167,8 @@ defmodule Scenic.ViewPort2 do
 
     # get or start the pid for the new scene being set as the root
     scene_pid = case scene do
-      {scene_module, opts}->
-        {:ok, pid} = DynamicSupervisor.start_child(@dynamic_scenes, {scene_module, opts})
+      {mod, opts}->
+        {:ok, pid} = DynamicSupervisor.start_child(@dynamic_scenes, {Scene, {mod, opts}})
         pid
 
       name when is_atom(name) ->
@@ -160,7 +179,7 @@ defmodule Scenic.ViewPort2 do
     end
 
     # tell the scene it is now the root
-    GenServer.cast( scene_pid, {:set_root_scene, scene_param} )
+    GenServer.cast( scene_pid, {:set_graph, nil} )
     graph_id = {scene_pid, nil}
 
     # record that this is the new current scene
@@ -193,7 +212,7 @@ defmodule Scenic.ViewPort2 do
 
       # if the primitive is a SceneRef, collect it in the srl list
       srl = case p do
-        %{data: {SceneRef, {pid, id}}} ->
+        %{data: {Primitive.SceneRef, {pid, id}}} ->
           [{pid, id} | srl]
         _ ->
           srl
@@ -216,7 +235,7 @@ defmodule Scenic.ViewPort2 do
     state = state
     |> Map.put( :graphs, graphs )
     |> update_filter_list()
-pry()
+
     {:noreply, state}
   end
 
@@ -265,6 +284,7 @@ pry()
 #    {:noreply, state}
 #  end
 
+
   #--------------------------------------------------------
   # filter the input through the list of scenes in order.
   # each scene will choose whether or not to transform the event and pass it along
@@ -282,33 +302,32 @@ pry()
   #--------------------------------------------------------
   # ingest a SceneRef - to be called from set_graph
 
-  defp ingest_primitive( %{data: {SceneRef, {{mod, opts}, id}}} = p, uid_offset, graphs )
+  defp ingest_primitive( %{data: {Primitive.SceneRef, {{mod, opts}, id}}} = p, uid_offset, graphs )
   when is_atom(mod) and not is_nil(mod) do
-    {:ok, pid} = DynamicSupervisor.start_child(@dynamic_scenes, {mod, opts})
-    p = Map.put(p, :data, {SceneRef, {pid, id}})
-    ingest_primitive( p, uid_offset, graphs )
+    {:ok, pid} = DynamicSupervisor.start_child(@dynamic_scenes, {Scene, {mod, opts}})
+    Map.put(p, :data, {Primitive.SceneRef, {pid, id}})
   end
 
-  defp ingest_primitive( %{data: {SceneRef, {name, id}}} = p, uid_offset, graphs )
+  defp ingest_primitive( %{data: {Primitive.SceneRef, {name, id}}} = p, uid_offset, graphs )
   when is_atom(name) and not is_nil(name) do
     pid = Process.whereis(name)
-    p = Map.put(p, :data, {SceneRef, {pid, id}})
-    ingest_primitive( p, uid_offset, graphs )
+    Map.put(p, :data, {Primitive.SceneRef, {pid, id}})
   end
 
   # ingest a Group
-  defp ingest_primitive( %{data: {Group, ids}, puid: puid} = p, uid_offset, _ ) do
+  defp ingest_primitive( %{data: {Primitive.Group, ids}} = p, uid_offset, _ ) do
     # offset all the ids
     ids = Enum.map(ids, &(&1 + uid_offset))
-    p
-    |> Map.put(:data, {Group, ids})
-    |> Map.put(:puid, puid + uid_offset)
+    Map.put(p, :data, {Primitive.Group, ids})
   end
 
   # mainline ingestion. Offset the puid
-  defp ingest_primitive( %{puid: puid} = p, uid_offset, _ ) do
-    Map.put(p, :puid, puid + uid_offset)
+  defp ingest_primitive( p, _a, _b ) do
+    p
   end
+#  defp ingest_primitive( %{puid: puid} = p, uid_offset, _ ) do
+#    Map.put(p, :puid, puid + uid_offset)
+#  end
 
 
   #--------------------------------------------------------
@@ -352,6 +371,7 @@ pry()
 
 
   #--------------------------------------------------------
+  # get (or generate) an offset for a graph
   defp get_offset( graph_id,
   %{offsets: offsets, graph_count: graph_count} = state ) do
     # if the graph_id not in the map, then gen an offset and add it
