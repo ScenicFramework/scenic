@@ -19,11 +19,12 @@ defmodule Scenic.ViewPort2 do
 
   @max_depth        64
 
+  @root_graph       0
 
   # graph_uid_offset is the maximum number of items in a tree that any given
   # graph can have. If this is too high, then the number of merged graphs is too
   # low and vice versa.
-  @graph_uid_offset 96000
+#  @graph_uid_offset 96000
 
   #============================================================================
   # client api
@@ -147,11 +148,11 @@ defmodule Scenic.ViewPort2 do
 
     # set up the initial state
     state = %{
-      root_scene: nil,
       graphs: %{},
-      offsets: %{},
       filter_list: [],
       graph_count: 0,
+      graph_ids: %{},
+      graph_keys: %{},
       max_depth: opts[:max_depth] || @max_depth
     }
 
@@ -187,59 +188,73 @@ defmodule Scenic.ViewPort2 do
 
     # tell the scene it is now the root
     GenServer.cast( scene_pid, {:set_scene, scene_param} )
-    graph_id = {scene_pid, nil}
+    graph_key = {scene_pid, nil}
 
     # record that this is the new current scene
     state = state
-    |> Map.put( :root_scene, graph_id )
     # clear the graphs
     |> Map.put( :graphs, %{} )
-    |> Map.put( :offsets, %{graph_id => 0} )
+
+    |> Map.put( :graph_ids, %{graph_key => @root_graph} )
+    |> Map.put( :graph_keys, %{@root_graph => graph_key} )
+
     |> Map.put( :graph_count, 1 )
     # disable input as the new scene sets up
     |> Map.put( :filter_list, [] )
+
+    # send a reset message to the drivers
 
     {:noreply, state}
   end
 
   #--------------------------------------------------------
   # set a graph into the master graph
-  def handle_cast( {:set_graph, min_graph, scene, id}, %{ graphs: graphs } = state ) do
+  def handle_cast( {:set_graph, graph, scene, id}, state ) do
 
-    # calc the graph_id
-    graph_id = {scene, id}
+    # calc the graph_ikey
+    graph_key = {scene, id}
 
-    # get the graph_id offset
-    {uid_offset, state} = get_offset( graph_id, state )
+    # set up the graph id
+    state = set_graph_id( state, graph_key )
 
-    # offset the uids in the min_graph and collect any scene refs
-    {min_graph, scene_ref_list} = Enum.reduce(min_graph, {%{},[]}, fn({uid, p},{g,srl})->
-      p = ingest_primitive( p, uid_offset )
+    # get the graph_id
+    graph_id = get_graph_id( state, graph_key )
 
-      # if the primitive is a SceneRef, collect it in the srl list
-      srl = case p do
-        %{data: {Primitive.SceneRef, {pid, id}}} ->
-          [{pid, id} | srl]
-        _ ->
-          srl
+    # scan the graph, looking for SceneRef primitives. Convert those into graph_ids
+    # also collect the scene keys in a list so to activate them next
+    {graph, state, skl} = Enum.reduce(graph, {%{}, state, []}, fn({uid, p},{g, s,skl})->
+      {p, {s,skl}} = case p do
+        %{data: {Primitive.SceneRef, {scene, scene_id}}} ->
+          # reolve (possibly starting) the referenced scene into a pid
+          {:ok, pid} = ensure_screen_ref_started( scene )
+
+          # this primitive is a scene_ref. Convert it into a graph_id
+          s = set_graph_id( s, {pid, scene_id} )
+          graph_id = get_graph_id( s, {pid, scene_id} )
+
+          # transform the primitive so it references the local graph_id
+          p = Map.put(p, :data, {Primitive.SceneRef, graph_id})
+          
+          # collect the scene key in a list
+          skl = [{pid, scene_id} | skl]
+          {p, {s,skl}}
+        p ->
+          # not a scene_ref
+          {p, {s,skl}}
       end
-
-      # insert the primitive into the offset graph
-      {Map.put( g, uid + uid_offset, p ), srl}
+      g = Map.put(g, uid, p)
+      {g, s, skl}
     end)
 
     # tell any referenced scenes to set their graphs
-    scene_ref_list
+    skl
     |> Enum.uniq()
     |> Enum.each(fn({pid, id})->
       GenServer.cast(pid, {:set_graph, id})
     end)
 
-    # add the min_graph to the graphs map
-    graphs = Map.put(graphs, graph_id, min_graph)
-
     state = state
-    |> Map.put( :graphs, graphs )
+    |> put_in([:graphs, graph_id], graph)
     |> update_filter_list()
 
     {:noreply, state}
@@ -248,19 +263,15 @@ defmodule Scenic.ViewPort2 do
   #--------------------------------------------------------
   # set a graph into the master graph
 
-#    GenServer.cast( vp, {:update_graph, deltas, scene, id} )
-
-  def handle_cast( {:update_graph, delta_list, scene_pid, id},
-  %{graphs: graphs} = state ) do
-
-    # calc the graph_id
-    graph_id = {scene_pid, id}
-
-    # get the graph we are about to update - ok if it is nil...
-    graph = graphs[graph_id]
-
-    # pass it off to the utility function
-    do_handle_update_graph( graph, delta_list, graph_id, state )
+  def handle_cast( {:update_graph, delta_list, scene_pid, id}, state ) do
+    # pass it off to the utility function. This gets the graph_id
+    # now allowing the utility function to match on the graph_id
+    # and do nothing if it is nil
+    do_update_graph(
+      delta_list,
+      get_graph_id( state, {scene_pid, id} ),
+      state
+    )
   end
 
 
@@ -283,117 +294,135 @@ defmodule Scenic.ViewPort2 do
 
 
   #============================================================================
+  # graph key <-> id utilities
+
+  defp set_graph_id( %{graph_ids: ids, graph_count: count} = state, graph_key ) do
+    # see if this key is already mapped
+    case ids[graph_key] do
+      nil ->
+        # This is a new id. Set up the mappings
+        state
+        |> put_in( [:graph_ids, graph_key], count)
+        |> put_in( [:graph_keys, count], graph_key)
+        |> Map.put( :graph_count, count + 1 )
+
+      _ ->
+        # already set up
+        state
+    end
+  end
+
+  defp get_graph_id( %{graph_ids: ids}, graph_key ), do: ids[graph_key]
+  defp get_graph_key( %{graph_keys: keys}, graph_id ), do: keys[graph_id]
+
+
+  #============================================================================
   # utilities
 
   #--------------------------------------------------------
-  # ingest a SceneRef - to be called from set_graph
+  # given a scene, make sure it is started and return the pid
+  defp ensure_screen_ref_started( scene )
 
-  defp ingest_primitive( %{data: {Primitive.SceneRef, {{mod, opts}, id}}} = p, _ )
-  when is_atom(mod) and not is_nil(mod) do
-    {:ok, pid} = DynamicSupervisor.start_child(@dynamic_scenes, {Scene, {mod, opts}})
-    Map.put(p, :data, {Primitive.SceneRef, {pid, id}})
+  defp ensure_screen_ref_started( scene ) when is_atom(scene) do
+    case Process.whereis(scene) do
+      nil ->
+        {:error, :scene_not_found}
+      pid ->
+        {:ok, pid}
+    end
   end
 
-  defp ingest_primitive( %{data: {Primitive.SceneRef, {name, id}}} = p, _ )
-  when is_atom(name) and not is_nil(name) do
-    pid = Process.whereis(name)
-    Map.put(p, :data, {Primitive.SceneRef, {pid, id}})
+  defp ensure_screen_ref_started( scene ) when is_pid(scene) do
+    {:ok, scene}
   end
 
-  # mainline ingestion. Offset the puid
-  defp ingest_primitive( %{data: data} = p, uid_offset ) do
-    data = offset_primitive_data( data, uid_offset )
-    Map.put(p, :data, data)
+  defp ensure_screen_ref_started( {mod, opts} ) when is_atom(mod) and not is_nil(mod) do
+    DynamicSupervisor.start_child(@dynamic_scenes, {Scene, {mod, opts}})
   end
-
 
   #--------------------------------------------------------
   # failed to find the graph in question.
-  defp do_handle_update_graph( nil, _, graph_id, _ ) do
-    raise "attempted to update a graph that is not set into the viewport #{inspect(graph_id)}"
+  defp do_update_graph( _, nil, _state ) do
+    raise "attempted to update a graph that is not set into the viewport"
+#    {:noreply, state}
   end
 
-  defp do_handle_update_graph( graph, deltas_list, graph_id, state ) do
-    # get the offset for this graph
-    {uid_offset, state} = get_offset( graph_id, state )
+  defp do_update_graph( deltas, graph_id, %{graphs: graphs} = state ) do
 
-    # offset the deltas_list
-    deltas_list = offset_delta_list(deltas_list, uid_offset)
+    # scan the deltas_list, looking for any put scenerefs and transform
+    # them so they use local ids. also build a list of the new scene refs
+    # so they can be activated
+    {deltas, {state,skl}} = Enum.map_reduce(deltas, {state, []}, fn({uid, d},{s,skl})->
+      # a set of deltas for one primitive. map reduce those too
+      {dl, {s,skl}} = Enum.map_reduce(d, {s, skl}, fn
+        {:put, :data, {Primitive.SceneRef, {scene, scene_id}}}, {s, skl} ->
+          # this is putting a new SceneRef in. Need to make sure it is running,
+          # activated and such. just like during set_graph
 
-    # apply the deltas to the appropriate graph
-    graph = Enum.reduce(deltas_list, graph, fn({uid, deltas},g)->
-      g
-      |> Map.get(uid, %{})
+          # reolve (possibly starting) the referenced scene into a pid
+          {:ok, pid} = ensure_screen_ref_started( scene )
+
+          # this primitive is a scene_ref. Convert it into a graph_id
+          s = set_graph_id( s, {pid, scene_id} )
+          graph_id = get_graph_id( s, {pid, scene_id} )
+
+          # transform the deltas
+          d = {:put, :data, {Primitive.SceneRef, graph_id}}
+
+          # collect the scene key in a list and return
+          skl = [graph_id | skl]
+          {d,{s,skl}}
+
+        d, acc ->
+          # ok to leave it alone
+          {d, acc}
+      end)
+
+      {{uid, dl},{s,skl}}
+    end)
+
+    # merge the deltas in to the stored graph
+    graph = Enum.reduce(deltas, graphs[graph_id], fn({uid, dl},g) ->
+      p = Map.get(g, uid, %{})
+      |> Scenic.Utilities.Map.apply_difference(dl, true)
+      Map.put(g, uid, p)
+    end)
+    state = put_in( state, [:graphs, graph_id], graph )
+
+    # don't do duplicate work
+    skl = Enum.uniq(skl)
+
+    # tell any unset referenced scenes to set their graphs
+    Enum.each(skl, fn(graph_id)->
+      get_in(state, [:graphs, graph_id])
       |> case do
-        nil -> g
-        p ->
-          p = Scenic.Utilities.Map.apply_difference(p, deltas, true)
-          Map.put(g, uid, p)
+        nil ->
+          #This graph is not already set. Tell the scene to set it
+          # get the graph key
+          {pid, scene_id } = get_graph_key(state, graph_id)
+          GenServer.cast(pid, {:set_graph, scene_id})
+        _ ->
+          :ok
       end
     end)
 
-    # send the offset deltas to the drivers
-
-    # update the state
-    state = put_in(state, [:graphs, graph_id], graph)
-    {:noreply, state}
-  end
-
-  defp offset_delta_list(deltas_list, uid_offset) do
-    Enum.map(deltas_list, fn({uid, deltas})->
-      uid = uid + uid_offset
-      deltas = Enum.map(deltas, fn
-        {:put, where, what} ->
-          case where do
-            :data ->
-              { :put, :data, offset_primitive_data(what, uid_offset) }
-            _ ->
-              {:put, where, what}
-          end
-        delta ->
-          delta
-      end)
-      { uid, deltas }
-    end)
-  end
-
-  #--------------------------------------------------------
-  defp offset_primitive_data( {Primitive.Group, ids}, uid_offset ) do
-    # offset all the ids
-    {Primitive.Group, Enum.map(ids, &(&1 + uid_offset))}
-  end
-  # not a group. don't do anything
-  defp offset_primitive_data( data, _ ), do: data
-
-
-  #--------------------------------------------------------
-  # get (or generate) an offset for a graph
-  defp get_offset( graph_id,
-  %{offsets: offsets, graph_count: graph_count} = state ) do
-    # if the graph_id not in the map, then gen an offset and add it
-    case offsets[graph_id] do
-      nil ->
-        uid_offset = @graph_uid_offset * graph_count
-        state = state
-        |> put_in([:offsets, graph_id], uid_offset)
-        |> Map.put( :graph_count, graph_count + 1 )
-        {uid_offset, state}
-
-      uid_offset ->
-        # already set. do nothing
-        {uid_offset, state}
+    # rebuild the input list if necessary
+    state = case skl do
+      [] ->
+        state
+      _ ->
+        update_filter_list(state)
     end
+
+    # send the transformed delta list on to the drivers
+
+    {:noreply, state}
   end
 
   #--------------------------------------------------------
   # reset input filter list
-  defp update_filter_list( %{root_scene: nil} = state ), do: state
-  defp update_filter_list( %{root_scene: root_scene} = state ) do
-    # start with the current scene.
-    filter_list = [root_scene]
-
-    # put the filter_list into place
-    {:noreply, %{state | filter_list: filter_list} }
+  defp update_filter_list( state ) do
+    state
   end
 
 end
