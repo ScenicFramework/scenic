@@ -313,11 +313,6 @@ defmodule Scenic.ViewPort2 do
     raise "attempted to update a graph that is not set into the viewport #{inspect(graph_id)}"
   end
 
-
-
-
-
-
   defp do_handle_update_graph( graph, deltas_list, graph_id, state ) do
     # get the offset for this graph
     {uid_offset, state} = get_offset( graph_id, state )
@@ -326,13 +321,23 @@ defmodule Scenic.ViewPort2 do
     deltas_list = offset_delta_list(deltas_list, uid_offset)
 
     # apply the deltas to the appropriate graph
+    graph = Enum.reduce(deltas_list, graph, fn({uid, deltas},g)->
+      g
+      |> Map.get(uid, %{})
+      |> case do
+        nil -> g
+        p ->
+          p = Scenic.Utilities.Map.apply_difference(p, deltas, true)
+          Map.put(g, uid, p)
+      end
+    end)
 
     # send the offset deltas to the drivers
+
+    # update the state
+    state = put_in(state, [:graphs, graph_id], graph)
+    {:noreply, state}
   end
-
-
-
-
 
   defp offset_delta_list(deltas_list, uid_offset) do
     Enum.map(deltas_list, fn({uid, deltas})->
@@ -352,6 +357,7 @@ defmodule Scenic.ViewPort2 do
     end)
   end
 
+  #--------------------------------------------------------
   defp offset_primitive_data( {Primitive.Group, ids}, uid_offset ) do
     # offset all the ids
     {Primitive.Group, Enum.map(ids, &(&1 + uid_offset))}

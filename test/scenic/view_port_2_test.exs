@@ -39,6 +39,14 @@ defmodule Scenic.ViewPort2Test do
     }
   }
 
+  @delta_list [
+    {0, [{:put, :data, {Scenic.Primitive.Group, [1,2] }}] },
+    {1,[
+      {:put, :data, {Scenic.Primitive.Line, {{0,0},{100,0}} }}
+    ]},
+    {2,[{:put, :data, {Scenic.Primitive.Line, {{0,0},{200,0}} }}] }
+  ]
+
   @offset_min_graph %{
     96000 => %{
       data: {Scenic.Primitive.Group, [96001]},
@@ -47,6 +55,20 @@ defmodule Scenic.ViewPort2Test do
     96001 => %{
       data: {Scenic.Primitive.Line, {{0, 0}, {500, 0}}},
       styles:  %{color: {{0, 0, 255, 255}}}
+    }
+  }
+
+  @offset_updated_graph %{
+    96000 => %{
+      data: {Scenic.Primitive.Group, [96001, 96002]},
+      styles: %{font: {:roboto, 16}}
+    },
+    96001 => %{
+      data: {Scenic.Primitive.Line, {{0, 0}, {100, 0}}},
+      styles: %{color: {{0, 0, 255, 255}}}
+    },
+    96002 => %{
+      data: {Scenic.Primitive.Line, {{0, 0}, {200, 0}}},
     }
   }
 
@@ -389,6 +411,40 @@ defmodule Scenic.ViewPort2Test do
   end
 
 
+  #============================================================================
+  # handle_cast( {:update_graph, delta_list, scene_pid, id}
+
+
+  test ":update_graph raises if the scene is not set" do
+    graph_id = {self(), :test_graph}
+
+    state = @state
+    |> put_in([:offsets, graph_id], 0)
+    |> put_in([:graphs, graph_id], @min_graph)
+    |> Map.put(:graph_count, 1)
+
+    assert_raise RuntimeError, fn ->
+      ViewPort.handle_cast({:update_graph, @delta_list, self(), :not_set}, state)
+    end
+
+#    {:noreply, new_state} = ViewPort.handle_cast({:update_graph, @delta_list, self(), :not_set}, state)
+    # confirm that the graph has been updated
+#    assert new_state == state
+  end
+
+  test ":update_graph applies the (offset) deltas to the set graph" do
+    graph_id = {self(), :test_graph}
+
+    state = @state
+    |> put_in([:offsets, graph_id], @graph_uid_offset)
+    |> put_in([:graphs, graph_id], @offset_min_graph)
+    |> Map.put(:graph_count, 1)
+
+    {:noreply, state} = ViewPort.handle_cast({:update_graph, @delta_list, self(), :test_graph}, state)
+
+    # confirm that the graph has been updated
+    assert get_in(state, [:graphs, graph_id]) == @offset_updated_graph
+  end
 
 
 end
