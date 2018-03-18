@@ -62,7 +62,12 @@ defmodule Scenic.ViewPort2Test do
 
 
   #============================================================================
+  # set_graph
 
+  test "test graph sends a minimized graph to the viewport" do
+    self_pid = self()
+    assert_receive( {:"$gen_cast", {:set_graph, @min_graph, ^self_pid, :test_id}} )
+  end
 
   #============================================================================
   # init

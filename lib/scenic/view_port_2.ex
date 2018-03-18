@@ -59,15 +59,15 @@ defmodule Scenic.ViewPort2 do
   * `scene_param` Data to be passed to the scene's focus_gained function. Note that
   this is different from the initialization data.
   """
-  def set_scene( scene, scene_param \\ nil )
+  def set_scene( scene, scene_param \\ nil, viewport \\ @viewport )
 
-  def set_scene( scene, scene_param ) when is_atom(scene) do
+  def set_scene( scene, scene_param, vp ) when is_atom(scene) do
     Process.whereis(scene)
-    |> set_scene( scene_param )
+    |> set_scene( scene_param, vp )
   end
 
-  def set_scene( scene, scene_param ) when is_pid(scene) do
-    GenServer.cast( @viewport, {:set_scene, scene, scene_param} )
+  def set_scene( scene, scene_param, vp ) when is_pid(scene) do
+    GenServer.cast( vp, {:set_scene, scene, scene_param} )
   end
 
   #--------------------------------------------------------
@@ -78,22 +78,22 @@ defmodule Scenic.ViewPort2 do
   If this is the root graph setting itself into place, the scene_pid must be the
   pid of the scene that was set via set_scene and the optional id must be nil
   """
-  def set_graph( graph, scene, id \\ nil )
+  def set_graph( graph, scene, id \\ nil, viewport \\ @viewport )
 
-  def set_graph( graph, scene, id ) when is_atom(scene) do
-    set_graph( graph, Process.whereis(scene), id )
+  def set_graph( graph, scene, id, vp ) when is_atom(scene) do
+    set_graph( graph, Process.whereis(scene), id, vp )
   end
 
-  def set_graph( %Graph{primitive_map: p_map}, scene, id ) do
+  def set_graph( %Graph{primitive_map: p_map}, scene, id, vp ) do
     # prepare the minimal graph that the viewport will use
     Enum.reduce(p_map, %{}, fn({uid, p}, acc) ->
       Map.put(acc, uid, Primitive.minimal(p))
     end)
-    |> set_graph( scene, id )  
+    |> set_graph( scene, id, vp )  
   end
 
-  def set_graph( %{} = min_graph, scene, id ) when is_pid(scene) do
-    GenServer.cast( @viewport, {:set_graph, min_graph, scene, id} )
+  def set_graph( %{} = min_graph, scene, id, vp ) when is_pid(scene) do
+    GenServer.cast( vp, {:set_graph, min_graph, scene, id} )
   end
 
 
@@ -103,18 +103,18 @@ defmodule Scenic.ViewPort2 do
   @doc """
   Update a graph that has already been set into the viewport. 
   """
-  def update_graph( graph, scene, id \\ nil ) 
+  def update_graph( graph, scene, id \\ nil, viewport \\ @viewport ) 
 
-  def update_graph( graph, scene, id ) when is_atom(scene) do
-    update_graph( graph, Process.whereis(scene), id )
+  def update_graph( graph, scene, id, vp ) when is_atom(scene) do
+    update_graph( graph, Process.whereis(scene), id, vp )
   end
 
-  def update_graph( %Graph{deltas: deltas}, scene_pid, id ) do
-    update_graph( deltas, scene_pid, id )
+  def update_graph( %Graph{deltas: deltas}, scene_pid, id, vp ) do
+    update_graph( deltas, scene_pid, id, vp )
   end
 
-  def update_graph( deltas, scene, id ) when is_list(deltas) and is_pid(scene) do
-    GenServer.cast( @viewport, {:update_graph, deltas, scene, id} )
+  def update_graph( deltas, scene, id, vp ) when is_list(deltas) and is_pid(scene) do
+    GenServer.cast( vp, {:update_graph, deltas, scene, id} )
   end
 
 #  #----------------------------------------------
