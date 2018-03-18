@@ -193,7 +193,7 @@ defmodule Scenic.ViewPort2Test do
     assert state.filter_list == []
     assert state.graphs == %{}
 
-    assert_receive( {:"$gen_cast", {:set_graph, nil}} )
+    assert_receive( {:"$gen_cast", {:set_scene, :test_graph}} )
 
     # clean up
     Supervisor.stop(dynamic_supervisor)

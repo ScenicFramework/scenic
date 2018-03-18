@@ -186,7 +186,7 @@ defmodule Scenic.ViewPort2 do
     end
 
     # tell the scene it is now the root
-    GenServer.cast( scene_pid, {:set_graph, nil} )
+    GenServer.cast( scene_pid, {:set_scene, scene_param} )
     graph_id = {scene_pid, nil}
 
     # record that this is the new current scene
@@ -204,18 +204,17 @@ defmodule Scenic.ViewPort2 do
 
   #--------------------------------------------------------
   # set a graph into the master graph
-  def handle_cast( {:set_graph, min_graph, scene_pid, id},
-  %{ graphs: graphs, graph_count: graph_count } = state ) do
+  def handle_cast( {:set_graph, min_graph, scene, id}, %{ graphs: graphs } = state ) do
 
     # calc the graph_id
-    graph_id = {scene_pid, id}
+    graph_id = {scene, id}
 
     # get the graph_id offset
     {uid_offset, state} = get_offset( graph_id, state )
 
     # offset the uids in the min_graph and collect any scene refs
     {min_graph, scene_ref_list} = Enum.reduce(min_graph, {%{},[]}, fn({uid, p},{g,srl})->
-      p = ingest_primitive( p, uid_offset, graphs )
+      p = ingest_primitive( p, uid_offset )
 
       # if the primitive is a SceneRef, collect it in the srl list
       srl = case p do
@@ -248,42 +247,22 @@ defmodule Scenic.ViewPort2 do
 
   #--------------------------------------------------------
   # set a graph into the master graph
-#  def handle_cast( {:update_graph, delta_list, scene_pid, id}, state ) do
-#    # calc the graph_id
-#    graph_id = {scene_pid, id}
-#
-#    # get the offset for this graph
-#    {uid_offset, state} = get_offset( graph_id, state )
-#
-#    # offset the delta_list space
-#
-#
 
-    # make sure the graph is in the map. if it isn't, do nothing.
-#    case graphs[graph_id] do
-#      nil ->
-#        # do nothing
-#        {:noreply, state}
-#
-#      {uid_offset, graph} ->
-#        # the graph is set.
-#        # merge the deltas into the master list.
-#        {graph, update_input} = Enum.reduce(delta_list, {graph, false},
-#        fn({uid, deltas}, {g, inpt})->
-#          # offset the uid from the delta
-#          uid = uid + uid_offset
-#
-#          # get the primitive we are updating
-#          p = Map.get(g, uid, %{})
-#
-#          # merge in the deltas
-#
-#          # put the updated primitive back
-#
-#        end)
-#
-#    end
-#  end
+#    GenServer.cast( vp, {:update_graph, deltas, scene, id} )
+
+  def handle_cast( {:update_graph, delta_list, scene_pid, id},
+  %{graphs: graphs} = state ) do
+
+    # calc the graph_id
+    graph_id = {scene_pid, id}
+
+    # get the graph we are about to update - ok if it is nil...
+    graph = graphs[graph_id]
+
+    # pass it off to the utility function
+    do_handle_update_graph( graph, delta_list, graph_id, state )
+  end
+
 
   #--------------------------------------------------------
   # set a graph into the master graph
@@ -309,72 +288,76 @@ defmodule Scenic.ViewPort2 do
   #--------------------------------------------------------
   # ingest a SceneRef - to be called from set_graph
 
-  defp ingest_primitive( %{data: {Primitive.SceneRef, {{mod, opts}, id}}} = p, uid_offset, graphs )
+  defp ingest_primitive( %{data: {Primitive.SceneRef, {{mod, opts}, id}}} = p, _ )
   when is_atom(mod) and not is_nil(mod) do
     {:ok, pid} = DynamicSupervisor.start_child(@dynamic_scenes, {Scene, {mod, opts}})
     Map.put(p, :data, {Primitive.SceneRef, {pid, id}})
   end
 
-  defp ingest_primitive( %{data: {Primitive.SceneRef, {name, id}}} = p, uid_offset, graphs )
+  defp ingest_primitive( %{data: {Primitive.SceneRef, {name, id}}} = p, _ )
   when is_atom(name) and not is_nil(name) do
     pid = Process.whereis(name)
     Map.put(p, :data, {Primitive.SceneRef, {pid, id}})
   end
 
-  # ingest a Group
-  defp ingest_primitive( %{data: {Primitive.Group, ids}} = p, uid_offset, _ ) do
-    # offset all the ids
-    ids = Enum.map(ids, &(&1 + uid_offset))
-    Map.put(p, :data, {Primitive.Group, ids})
-  end
-
   # mainline ingestion. Offset the puid
-  defp ingest_primitive( p, _a, _b ) do
-    p
+  defp ingest_primitive( %{data: data} = p, uid_offset ) do
+    data = offset_primitive_data( data, uid_offset )
+    Map.put(p, :data, data)
   end
-#  defp ingest_primitive( %{puid: puid} = p, uid_offset, _ ) do
-#    Map.put(p, :puid, puid + uid_offset)
-#  end
 
 
   #--------------------------------------------------------
-#May need to just diff the whole primitive map. might be simpler...
+  # failed to find the graph in question.
+  defp do_handle_update_graph( nil, _, graph_id, _ ) do
+    raise "attempted to update a graph that is not set into the viewport #{inspect(graph_id)}"
+  end
 
 
 
-#  defp offset_delta_list(delta_list, uid_offset) do
-#    Enum.map(delta_list, fn({uid, deltas})->
-#      uid = uid + uid_offset
-#
-#      deltas = Enum.map(deltas, fn
-#        {:put, where, what} ->
-#          case where do
-#            :puid ->
-#              { :put, :puid, offset_puid(what, remote_group_uid) }
-#            :data ->
-#              { :put, :data, offset_data(what, uid_offset) }
-#            _ ->
-#              {:put, where, what}
-#          end
-#        delta ->
-#          delta
-#      end)
-#      { uid, deltas }
-#    end)
-#  end
-#
-#  defp offset_delta_puid( -1, remote_group_uid ), do: remote_group_uid
-#  defp offset_delta_puid( puid, _ ), do: puid + @graph_uid_offset
-#
-#  defp offset_delta_data( {Scenic.Primitive.Group, ids}, uid_offset ) do
-#    {
-#      Scenic.Primitive.Group,
-#      Enum.map(ids, fn(id) -> id + uid_offset end)
-#    }
-#  end
-#  defp offset_delta_data( data, _ ), do: data
 
 
+
+  defp do_handle_update_graph( graph, deltas_list, graph_id, state ) do
+    # get the offset for this graph
+    {uid_offset, state} = get_offset( graph_id, state )
+
+    # offset the deltas_list
+    deltas_list = offset_delta_list(deltas_list, uid_offset)
+
+    # apply the deltas to the appropriate graph
+
+    # send the offset deltas to the drivers
+  end
+
+
+
+
+
+  defp offset_delta_list(deltas_list, uid_offset) do
+    Enum.map(deltas_list, fn({uid, deltas})->
+      uid = uid + uid_offset
+      deltas = Enum.map(deltas, fn
+        {:put, where, what} ->
+          case where do
+            :data ->
+              { :put, :data, offset_primitive_data(what, uid_offset) }
+            _ ->
+              {:put, where, what}
+          end
+        delta ->
+          delta
+      end)
+      { uid, deltas }
+    end)
+  end
+
+  defp offset_primitive_data( {Primitive.Group, ids}, uid_offset ) do
+    # offset all the ids
+    {Primitive.Group, Enum.map(ids, &(&1 + uid_offset))}
+  end
+  # not a group. don't do anything
+  defp offset_primitive_data( data, _ ), do: data
 
 
   #--------------------------------------------------------
