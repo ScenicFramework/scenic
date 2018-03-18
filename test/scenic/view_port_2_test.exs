@@ -48,6 +48,7 @@ defmodule Scenic.ViewPort2Test do
     {2,[{:put, :data, {Scenic.Primitive.Line, {{0,0},{200,0}} }}] }
   ]
 
+
   @updated_graph %{
     0 => %{
       data: {Scenic.Primitive.Group, [1, 2]},
@@ -75,6 +76,12 @@ defmodule Scenic.ViewPort2Test do
 
   end
 
+  @delta_list_ref [
+    {0, [{:put, :data, {Scenic.Primitive.Group, [1,2] }}] },
+    {1,[
+      {:put, :data, {Scenic.Primitive.SceneRef, {{TestScene, :opts}, :delta_ref} }}
+    ]}
+  ]
 
   #============================================================================
   # set_scene
@@ -406,15 +413,33 @@ defmodule Scenic.ViewPort2Test do
   end
 
 
+  test ":update_graph starts up references in the deltas" do
+    {:ok, dynamic_supervisor} = DynamicSupervisor.start_link(strategy: :one_for_one, name: @dynamic_scenes)
+
+    graph_key = {self(), :test_graph}
+
+    state = @state
+    |> put_in([:graph_ids, graph_key], 0)
+    |> put_in([:graph_keys, 0], graph_key)
+    |> put_in([:graphs, 0], @min_graph)
+    |> Map.put(:graph_count, 0)
+
+    {:noreply, state} = ViewPort.handle_cast({:update_graph, @delta_list_ref, self(), :test_graph}, state)
+
+    # get the pid from the DynamicSupervisor
+    [{_, dyn_ref_pid, _, _}] = DynamicSupervisor.which_children( @dynamic_scenes )
+
+    # confirm the child_pid is reference in the id/key maps
+    graph_key = {dyn_ref_pid, :delta_ref}
+    graph_id = get_in(state, [:graph_ids, graph_key])
+    assert get_in(state, [:graph_keys, graph_id]) == graph_key
+
+
+    # clean up
+    Supervisor.stop(dynamic_supervisor)
+  end
+
 end
-
-
-
-
-
-
-
-
 
 
 
