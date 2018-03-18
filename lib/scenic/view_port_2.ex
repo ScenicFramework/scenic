@@ -30,14 +30,6 @@ defmodule Scenic.ViewPort2 do
 
   #--------------------------------------------------------
   @doc """
-  Send an input event to the viewport for processing. This is typcally called
-  by drivers that are generating input events.
-  """
-  def input( input_event ), do: GenServer.cast( @viewport, {:input, input_event} )
-
-
-  #--------------------------------------------------------
-  @doc """
   Set a scene at the root of the viewport.
 
   If the scene is already running in a supervisor that you set up, then you can
@@ -97,8 +89,6 @@ defmodule Scenic.ViewPort2 do
   end
 
 
-
-
   #--------------------------------------------------------
   @doc """
   Update a graph that has already been set into the viewport. 
@@ -116,6 +106,18 @@ defmodule Scenic.ViewPort2 do
   def update_graph( deltas, scene, id, vp ) when is_list(deltas) and is_pid(scene) do
     GenServer.cast( vp, {:update_graph, deltas, scene, id} )
   end
+
+
+  #--------------------------------------------------------
+  @doc """
+  Send an input event to the viewport for processing. This is typcally called
+  by drivers that are generating input events.
+  """
+  def input( input_event, viewport \\ @viewport ) do
+    GenServer.cast( viewport, {:input, input_event} )
+  end
+
+
 
 #  #----------------------------------------------
 #  -doc """

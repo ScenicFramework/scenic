@@ -25,6 +25,9 @@ defmodule Scenic.ViewPort2Test do
     max_depth: 64
   }
 
+  @graph Scenic.Graph.build( font: {:roboto, 16} )
+  |> Scenic.Primitive.Line.add_to_graph({{0,0},{500,0}}, color: :blue)
+
   @min_graph %{
     0 => %{
       data: {Scenic.Primitive.Group, [1]},
@@ -32,7 +35,7 @@ defmodule Scenic.ViewPort2Test do
     },
     1 => %{
       data: {Scenic.Primitive.Line, {{0, 0}, {500, 0}}},
-      styles: %{color: {{0, 0, 0, 255}}}
+      styles: %{color: {{0, 0, 255, 255}}}
     }
   }
 
@@ -43,7 +46,7 @@ defmodule Scenic.ViewPort2Test do
     },
     96001 => %{
       data: {Scenic.Primitive.Line, {{0, 0}, {500, 0}}},
-      styles:  %{color: {{0, 0, 0, 255}}}
+      styles:  %{color: {{0, 0, 255, 255}}}
     }
   }
 
@@ -62,12 +65,91 @@ defmodule Scenic.ViewPort2Test do
 
 
   #============================================================================
+  # set_scene
+
+  test "test set_scene sends a set_scene message to the viewport" do
+    self_pid = self()
+    ViewPort.set_scene(self_pid, :test_id, self_pid)
+    assert_receive( {:"$gen_cast", {:set_scene, ^self_pid, :test_id}} )
+  end
+
+  test "test set_scene resolves a named scene to a pid before sending" do
+    self_pid = self()
+    {:ok, scene_pid} = Scenic.Scene.start_link(TestScene, :named_scene, [])
+
+    ViewPort.set_scene(:named_scene, :test_id, self_pid)
+    assert_receive( {:"$gen_cast", {:set_scene, ^scene_pid, :test_id}} )
+
+    # clean up
+    GenServer.stop(scene_pid)
+  end
+
+  #============================================================================
   # set_graph
 
-  test "test graph sends a minimized graph to the viewport" do
+  test "test set_graph sends a minimized graph to the viewport" do
     self_pid = self()
+    ViewPort.set_graph(@min_graph, self_pid, :test_id, self_pid)
     assert_receive( {:"$gen_cast", {:set_graph, @min_graph, ^self_pid, :test_id}} )
   end
+
+  test "test set_graph sends a minimizes a graph before sending to the viewport" do
+    self_pid = self()
+    ViewPort.set_graph(@graph, self_pid, :test_id, self_pid)
+    assert_receive( {:"$gen_cast", {:set_graph, @min_graph, ^self_pid, :test_id}} )
+  end
+
+  test "test set_graph resolves a named scene to a pid before sending" do
+    self_pid = self()
+    {:ok, scene_pid} = Scenic.Scene.start_link(TestScene, :named_scene, [])
+
+    ViewPort.set_graph(@graph, :named_scene, :test_id, self_pid)
+    assert_receive( {:"$gen_cast", {:set_graph, @min_graph, ^scene_pid, :test_id}} )
+
+    # clean up
+    GenServer.stop(scene_pid)
+  end
+
+
+  #============================================================================
+  # update_graph
+
+  test "test update_graph sends list of deltas to the viewport" do
+    self_pid = self()
+    deltas = [:a, :b, :c]
+    ViewPort.update_graph(deltas, self_pid, :test_id, self_pid)
+    assert_receive( {:"$gen_cast", {:update_graph, ^deltas, ^self_pid, :test_id}} )
+  end
+
+  test "test update_graph extracts deltas from a graph before sending to the viewport" do
+    self_pid = self()
+    deltas = [:a, :b, :c]
+    graph = Map.put(@graph, :deltas, deltas)
+    ViewPort.update_graph(graph, self_pid, :test_id, self_pid)
+    assert_receive( {:"$gen_cast", {:update_graph, ^deltas, ^self_pid, :test_id}} )
+  end
+
+  test "test update_graph resolves a named scene to a pid before sending" do
+    self_pid = self()
+    deltas = [:a, :b, :c]
+    {:ok, scene_pid} = Scenic.Scene.start_link(TestScene, :named_scene, [])
+
+    ViewPort.update_graph(deltas, :named_scene, :test_id, self_pid)
+    assert_receive( {:"$gen_cast", {:update_graph, ^deltas, ^scene_pid, :test_id}} )
+
+    # clean up
+    GenServer.stop(scene_pid)
+  end
+
+
+  #============================================================================
+  # input
+
+  test "input casts an input event to the viewport" do
+    ViewPort.input(:some_input, self())
+    assert_receive( {:"$gen_cast", {:input, :some_input}} )
+  end
+
 
   #============================================================================
   # init
