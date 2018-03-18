@@ -430,10 +430,14 @@ defmodule Scenic.ViewPort2Test do
     [{_, dyn_ref_pid, _, _}] = DynamicSupervisor.which_children( @dynamic_scenes )
 
     # confirm the child_pid is reference in the id/key maps
-    graph_key = {dyn_ref_pid, :delta_ref}
-    graph_id = get_in(state, [:graph_ids, graph_key])
-    assert get_in(state, [:graph_keys, graph_id]) == graph_key
+    ref_key = {dyn_ref_pid, :delta_ref}
+    ref_id = get_in(state, [:graph_ids, ref_key])
+    assert get_in(state, [:graph_keys, ref_id]) == ref_key
 
+    # confirm the reference in the graph itself points to the graph_id
+    graph_id = get_in(state, [:graph_ids, graph_key])
+    graph = get_in(state, [:graphs, graph_id])
+    assert graph[1].data == {Scenic.Primitive.SceneRef, ref_id}
 
     # clean up
     Supervisor.stop(dynamic_supervisor)
