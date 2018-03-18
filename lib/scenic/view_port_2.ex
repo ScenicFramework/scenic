@@ -84,13 +84,15 @@ defmodule Scenic.ViewPort2 do
     set_graph( graph, Process.whereis(scene), id )
   end
 
-  def set_graph( %Graph{primitive_map: p_map}, scene, id ) when is_pid(scene) do
+  def set_graph( %Graph{primitive_map: p_map}, scene, id ) do
     # prepare the minimal graph that the viewport will use
-    min_graph = Enum.reduce(p_map, %{}, fn({uid, p}, acc) ->
+    Enum.reduce(p_map, %{}, fn({uid, p}, acc) ->
       Map.put(acc, uid, Primitive.minimal(p))
     end)
+    |> set_graph( scene, id )  
+  end
 
-    # pass it to the viewport server
+  def set_graph( %{} = min_graph, scene, id ) when is_pid(scene) do
     GenServer.cast( @viewport, {:set_graph, min_graph, scene, id} )
   end
 
@@ -107,9 +109,12 @@ defmodule Scenic.ViewPort2 do
     update_graph( graph, Process.whereis(scene), id )
   end
 
-  def update_graph( %Graph{deltas: deltas}, scene_pid, id )
-  when is_list(deltas) and is_pid(scene_pid) do
-    GenServer.cast( @viewport, {:update_graph, deltas, scene_pid, id} )
+  def update_graph( %Graph{deltas: deltas}, scene_pid, id ) do
+    update_graph( deltas, scene_pid, id )
+  end
+
+  def update_graph( deltas, scene, id ) when is_list(deltas) and is_pid(scene) do
+    GenServer.cast( @viewport, {:update_graph, deltas, scene, id} )
   end
 
 #  #----------------------------------------------
