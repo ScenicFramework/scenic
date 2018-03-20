@@ -20,18 +20,10 @@ defmodule Scenic.Primitive.SceneRef do
   end
 
   #--------------------------------------------------------
-  def verify( name ) when is_atom(name), do: {:ok, name}
-  def verify( pid ) when is_pid(pid), do: {:ok, pid}
+  def verify( {name, id} ) when is_atom(name), do: {:ok, {name, id}}
+  def verify( {pid, id} ) when is_pid(pid), do: {:ok, {pid, id}}
+  def verify( {{module, data}, id} ) when is_atom(module), do: {:ok, {{module, data}, id}}
   def verify( _ ), do: :invalid_data
-  def verify( module, data ) when is_atom(module) do
-    try do
-      module.verify(data)
-    rescue
-      _ ->
-        :invalid_data
-    end
-  end
-
 
   #============================================================================
   # filter and gather styles
