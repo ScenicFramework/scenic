@@ -18,24 +18,29 @@ defmodule Scenic.Scene do
 
   import IEx
 
-  @callback init( any ) :: {:ok, map, any}
+  @callback init( any ) :: {:ok, any}
 
-  @callback handle_call(any, any, any, any) :: {:reply, any, any, any} | {:noreply, any, any, any}
-  @callback handle_cast(any, any, any) :: {:noreply, any, any}
-  @callback handle_info(any, any, any) :: {:noreply, any, any}
 
-  @callback handle_raw_input(any, any, any) :: {:noreply, any, any}
-  @callback handle_input(any, any, any) :: {:noreply, any, any}
 
-  @callback filter_input(any, any, any) :: { :continue, any, map, any } | { :stop, map, any } 
+  # interacting with the scene's graph
+  
+  @callback get_graph(any, any) :: map      # must be implemented by the scene
+
+  @callback handle_call(any, any, any) :: {:reply, any, any} | {:noreply, any}
+  @callback handle_cast(any, any) :: {:noreply, any}
+  @callback handle_info(any, any) :: {:noreply, any}
+
+#  @callback handle_raw_input(any, any, any) :: {:noreply, any, any}
+#  @callback handle_input(any, any, any) :: {:noreply, any, any}
+
+#  @callback filter_input(any, any, any) :: { :continue, any, map, any } | { :stop, map, any } 
 
 
 #  @callback handle_reset(any, any) :: {:noreply, any, any}
 #  @callback handle_update(any, any) :: {:noreply, any, any}
-  @callback focus_gained(any, any, any) :: {:ok, any, any}
-  @callback focus_lost(any, any) :: {:ok, any, any}
+  @callback handle_focus_gained(any, any) :: {:noreply, any}
+  @callback handle_focus_lost(any) :: {:noreply, any}
 
-  @viewport_registry    :viewport_registry
 
   #===========================================================================
   # calls for setting up a scene inside of a supervisor
@@ -68,56 +73,40 @@ defmodule Scenic.Scene do
       @behaviour Scenic.Scene
 
       #--------------------------------------------------------
-      # initialization
-      def init(_),                                      do: {:ok, nil}
-      def init_graph(state),                            do: {:ok, Graph.build(), state}
-
-      #--------------------------------------------------------
       # Here so that the scene can override if desired
  
-      def handle_call(_msg, _from, graph, state),       do: {:reply, :err_not_handled, graph, state}
-      def handle_cast(_msg, graph, state),              do: {:noreply, graph, state}
-      def handle_info(_msg, graph, state),              do: {:noreply, graph, state}
+      def handle_call(_msg, _from, state),        do: {:reply, :err_not_handled, state}
+      def handle_cast(_msg, state),               do: {:noreply, state}
+      def handle_info(_msg, state),               do: {:noreply, state}
 
-      def handle_raw_input( event, graph, scene_state ),  do: {:noreply, graph, scene_state}
-      def handle_input( event, graph, scene_state ),      do: {:noreply, graph, scene_state}
+#      def handle_raw_input( event, graph, scene_state ),  do: {:noreply, graph, scene_state}
+#      def handle_input( event, graph, scene_state ),      do: {:noreply, graph, scene_state}
 
-      def filter_input( event, graph, scene_state ),    do: {:continue, event, graph, scene_state}
+#      def filter_input( event, graph, scene_state ),    do: {:continue, event, graph, scene_state}
 
 #      def handle_reset(graph, scene_state),             do: Scenic.Scene.handle_reset(graph, scene_state)
 #      def handle_update(graph, scene_state),            do: Scenic.Scene.handle_update(graph, scene_state)
 
-      def graph_set_list(graph, _),                     do: Scenic.Scene.graph_set_list(graph)
-      def graph_delta_list(graph, _),                   do: Scenic.Scene.graph_delta_list(graph)
+#      def graph_set_list(graph, _),                     do: Scenic.Scene.graph_set_list(graph)
+#      def graph_delta_list(graph, _),                   do: Scenic.Scene.graph_delta_list(graph)
 
-      def focus_gained( _scene_param, graph, scene_state ) do
-        Map.get(graph, :input, [])
-        |> ViewPort.Input.register()
-        {:ok, graph, scene_state}
-      end
-
-      def focus_lost( graph, scene_state ) do
-        ViewPort.Input.unregister( :all )
-        {:ok, graph, scene_state}
-      end
+      def handle_focus_gained( _param, state ),   do: {:ok, state}
+      def handle_focus_lost( state ),             do: {:ok, state}
 
       #--------------------------------------------------------
 #      add local shortcuts to things like get/put graph and modify element
 #      do not add a put element. keep it at modify to stay atomic
       #--------------------------------------------------------
       defoverridable [
-        init:                   1,
-        init_graph:             1,
-        handle_call:            4,
-        handle_cast:            3,
-        handle_info:            3,
-        handle_raw_input:       3,
-        handle_input:           3,
-        focus_gained:           3,
-        focus_lost:             2,
+        handle_call:            3,
+        handle_cast:            2,
+        handle_info:            2,
+        handle_focus_gained:    2,
+        handle_focus_lost:      1,
 
-        graph_set_list:         2,
-        graph_delta_list:       2
+
+#        handle_raw_input:       3,
+#        handle_input:           3,
       ]
 
     end # quote
@@ -138,12 +127,11 @@ defmodule Scenic.Scene do
 
   #--------------------------------------------------------
   def init( {module, opts} ) do
-    {:ok, graph, scene_state} = module.init(opts)
+    {:ok, scene_state} = module.init(opts)
 
     state = %{
       scene_module:       module,
-      scene_state:        scene_state,
-      graph:              graph,
+      scene_state:        scene_state
     }
 
     {:ok, state}
@@ -160,34 +148,18 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  # unregister this scene for callbacks
-  def handle_call(:lose_focus, _from,
-  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-    {reply, state} = case mod.focus_lost(graph, scene_state) do
-      {:ok, graph, scene_state} ->
-        Registry.unregister(@viewport_registry, :messages )
-        state = state
-        |> Map.put(:graph, graph)
-        |> Map.put(:scene_state, scene_state)
-        {:ok, state}
-      {:cancel, graph, scene_state} ->
-        state = state
-        |> Map.put(:graph, graph)
-        |> Map.put(:scene_state, scene_state)
-        {:cancel, state}
-      _ -> {:err, state}
-    end
-    {:reply, reply, state}
+  # support for losing focus
+  def handle_call(:focus_lost, _, %{scene_module: mod, scene_state: sc_state} = state) do
+    # tell the scene it is gaining focus
+    {:noreply, sc_state} = mod.handle_focus_lost( sc_state )
+    { :noreply, %{state | scene_state: sc_state} }
   end
 
   #--------------------------------------------------------
   # generic call. give the scene a chance to handle it
-  def handle_call(msg, from, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-    {:reply, reply, graph, scene_state} = mod.handle_call(msg, from, graph, scene_state)
-    state = state
-    |> Map.put(:graph, graph)
-    |> Map.put(:scene_state, scene_state)
-    {:reply, reply, state}
+  def handle_call(msg, from, %{scene_module: mod, scene_state: sc_state} = state) do
+    {:reply, reply, sc_state} = mod.handle_call(msg, from, sc_state)
+    {:reply, reply, %{state | scene_state: sc_state}}
   end
 
 
@@ -195,103 +167,79 @@ defmodule Scenic.Scene do
   # default cast handlers.
 
   #--------------------------------------------------------
-  def handle_cast({:set_scene, scene_param}, state) do
-    self = self()
-    # someting has requested this scene make set itself into
-    # the viewport. This can be canceled by the current scene.
-    case ViewPort.current_scene() do
-      nil -> 
-        # gain the focus
-        {_, state} = do_gain_focus( scene_param, state )
-        {:noreply, state}
-      ^self ->
-        # already the current scene. do nothing
-        {:noreply, state}
-      old_scene ->
-        # tell the old scene to unregister itself
-        case GenServer.call( old_scene, :lose_focus) do
-          :ok -> 
-            # gain the focus
-            {_, state} = do_gain_focus( scene_param, state )
-            {:noreply, state}
-        end
-    end
+  def handle_cast({:focus_gained, param}, %{scene_module: mod, scene_state: sc_state} = state) do
+    # tell the scene it is gaining focus
+    {:noreply, sc_state} = mod.handle_focus_gained( param, sc_state )
+
+    # send self a message to set the graph
+    GenServer.cast( self(), {:set_graph, nil} )
+
+    { :noreply, %{state | scene_state: sc_state} }
   end
 
-
   #--------------------------------------------------------
-  # filter the event
-  def handle_cast({:filter_input, input, filter_list},
-  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-    # let the scene filter the input
-    { graph, scene_state } = input
-    |> transform_input_local( nil )
-    |> mod.filter_input( graph, scene_state )
-    |> case do
-      {:stop, graph, scene_state} ->
-        { graph, scene_state }
-
-      {:continue, input, graph, scene_state} ->
-        # continuing. pass it to the next scene
-        continue_input_filter( input, filter_list )
-        { graph, scene_state }
-    end
-    state = state
-    |> Map.put(:graph, graph)
-    |> Map.put(:scene_state, scene_state)
-    {:noreply, state}
-  end
-
-
-  #--------------------------------------------------------
-  # a graphic driver is requesting a full graph reset
-  def handle_cast(:graph_reset,
-  %{graph: graph, scene_module: mod, scene_state: scene_state} = state) do
-    # tick any recurring actions
-    graph = Graph.tick_recurring_actions( graph )
-    |> Graph.reset_deltas()
+  # a graphic driver is requesting a graph reset
+  def handle_cast({:set_graph, id}, %{scene_module: mod, scene_state: sc_state} = state) do
+    # get the graph
+    graph = mod.get_graph( id, sc_state )
 
     # send the graph to the view_port
-    graph
-#    |> Graph.minimal()
-    |> mod.graph_set_list(scene_state)
-    |> ViewPort.set_graph()
+    ViewPort.set_graph( graph, id )
 
-    state = state
-    |> Map.put(:graph, graph)
     { :noreply, state }
   end
+
 
   #--------------------------------------------------------
   # a graphic driver is requesting an update
-  def handle_cast(:graph_update,
-  %{graph: graph, scene_module: mod, scene_state: scene_state} = state) do
-    # tick any recurring actions
-    graph = Graph.tick_recurring_actions( graph )
+#  def handle_cast(:graph_update,
+#  %{graph: graph, scene_module: mod, scene_state: scene_state} = state) do
+#
+#    # tick the graph
+#    scene_state = mod.tick_graph( scene_state, id )
+#
+#    # get the deltas
+#    deltas = mod.get_deltas( scene_state, id )
+#
+#    # send the deltas to the view_port
+#    ViewPort.update_graph( deltas, scene \\ nil, id \\ nil, viewport \\ @viewport )
+#
+#    # reset the deltas
+#    graph = Graph.reset_deltas( graph )
+#
+#    state = state
+#    |> Map.put(:graph, graph)
+#    { :noreply, state }
+#  end
 
-    # send the graph to the view_port
-    graph
-#    |> Graph.get_delta_scripts()
-    |> mod.graph_delta_list(scene_state)
-    |> ViewPort.update_graph()
-
-    # reset the deltas
-    graph = Graph.reset_deltas( graph )
-
-    state = state
-    |> Map.put(:graph, graph)
-    { :noreply, state }
-  end
-
+  #--------------------------------------------------------
+  # filter the event
+#  def handle_cast({:filter_input, input, filter_list},
+#  %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
+#    # let the scene filter the input
+#    { graph, scene_state } = input
+#    |> transform_input_local( nil )
+#    |> mod.filter_input( graph, scene_state )
+#    |> case do
+#      {:stop, graph, scene_state} ->
+#        { graph, scene_state }
+#
+#      {:continue, input, graph, scene_state} ->
+#        # continuing. pass it to the next scene
+#        continue_input_filter( input, filter_list )
+#        { graph, scene_state }
+#    end
+#    state = state
+#    |> Map.put(:graph, graph)
+#    |> Map.put(:scene_state, scene_state)
+#    {:noreply, state}
+#  end
 
   #--------------------------------------------------------
   # generic cast. give the scene a chance to handle it
-  def handle_cast(msg, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-    {:noreply, graph, scene_state} = mod.handle_cast(msg, graph, scene_state)
-    state = state
-    |> Map.put(:graph, graph)
-    |> Map.put(:scene_state, scene_state)
-    {:noreply, state}
+  def handle_cast(msg, %{scene_module: mod, scene_state: sc_state} = state) do
+    {:noreply, sc_state} = mod.handle_cast(msg, sc_state)
+    {:noreply, %{state | scene_state: sc_state}}
   end
 
 
@@ -300,78 +248,45 @@ defmodule Scenic.Scene do
 
   #--------------------------------------------------------
   # generic info. give the scene a chance to handle it
-  def handle_info(msg, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-    {:noreply, graph, scene_state} = mod.handle_info(msg, graph, scene_state)
-    state = state
-    |> Map.put(:graph, graph)
-    |> Map.put(:scene_state, scene_state)
-    {:noreply, state}
+  def handle_info(msg, %{scene_module: mod, scene_state: sc_state} = state) do
+    {:noreply, sc_state} = mod.handle_info(msg, sc_state)
+    {:noreply, %{state | scene_state: sc_state}}
   end
 
   #============================================================================
   # utilities
 
-  #--------------------------------------------------------
-  defp do_gain_focus(scene_param, %{scene_module: mod, graph: graph, scene_state: scene_state} = state) do
-    case mod.focus_gained( scene_param, graph, scene_state) do
-      {:ok, graph, scene_state} ->
-        # register for messages
-        Registry.register(@viewport_registry, :messages, self() )
-
-        # tick and send the graph to the drivers
-        GenServer.cast(self(), :graph_reset)
-#        graph = do_reset_graph(graph, state)
-#        {:noreply, graph, scene_state} = mod.handle_reset(graph, scene_state)
-
-
-        # tell the Viewport that this is now the root graph to display
-#        ViewPort.set_root_graph( mod.identify(scene_state) )
-
-        # store the state
-        state = state
-        |> Map.put(:graph, graph)
-        |> Map.put(:scene_state, scene_state)
-        {:ok, state}
-      {:cancel, graph, scene_state} ->
-        state = state
-        |> Map.put(:graph, graph)
-        |> Map.put(:scene_state, scene_state)
-        {:cancel, state}
-      _ -> {:err, state}
-    end
-  end
-
-  #--------------------------------------------------------
-  # input has been received. If it has x,y coords, then need to be transformed
-  # into the local coordinate space
-  defp transform_input_local( input, inverse_transform )
-  defp transform_input_local( input, _ ) do
-    input
-  end
-
-  #--------------------------------------------------------
-  # input is continuing on. If it is a standard event with x,y coords it is
-  # in local space. Transform back into global space for the next filter.
-  # can't just pass it along because the previous filter may have transformed
-  # it in some way....
-  defp transform_input_global( input, inverse_transform )
-  defp transform_input_global( input, _ ) do
-    input
-  end
-
-  defp continue_input_filter( _, [] ), do: :ok
-  defp continue_input_filter( input, [pid | tail] ) do
-    GenServer.cast(pid, {:filter_input, input, tail})
-  end
-
-
-  #--------------------------------------------------------
-  def graph_set_list(graph) do
-    Graph.minimal(graph)
-  end
-  def graph_delta_list(graph) do
-    Graph.get_delta_scripts(graph)
-  end
+#  #--------------------------------------------------------
+#  # input has been received. If it has x,y coords, then need to be transformed
+#  # into the local coordinate space
+#  defp transform_input_local( input, inverse_transform )
+#  defp transform_input_local( input, _ ) do
+#    input
+#  end
+#
+#  #--------------------------------------------------------
+#  # input is continuing on. If it is a standard event with x,y coords it is
+#  # in local space. Transform back into global space for the next filter.
+#  # can't just pass it along because the previous filter may have transformed
+#  # it in some way....
+#  defp transform_input_global( input, inverse_transform )
+#  defp transform_input_global( input, _ ) do
+#    input
+#  end
+#
+#  defp continue_input_filter( _, [] ), do: :ok
+#  defp continue_input_filter( input, [pid | tail] ) do
+#    GenServer.cast(pid, {:filter_input, input, tail})
+#  end
+#
+#
+#  #--------------------------------------------------------
+#  def graph_set_list(graph) do
+#    Graph.minimal(graph)
+#  end
+#  def graph_delta_list(graph) do
+#    Graph.get_delta_scripts(graph)
+#  end
 end
 
 

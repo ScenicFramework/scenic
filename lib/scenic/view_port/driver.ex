@@ -14,7 +14,7 @@ defmodule Scenic.ViewPort.Driver do
   require Logger
   alias Scenic.ViewPort
 
-#  import IEx
+  import IEx
 
   @sync_message       :timer_sync
   
@@ -28,17 +28,6 @@ defmodule Scenic.ViewPort.Driver do
   #===========================================================================
   # generic apis for sending a message to the drivers
 
-
-  #----------------------------------------------
-  def set_graph( list ) when is_list(list) do
-    dispatch_cast( {:set_graph, list} )
-  end
-
-  #----------------------------------------------
-  def update_graph( [] ), do: :ok
-  def update_graph( list ) when is_list(list) do
-    dispatch_cast( {:update_graph, list} )
-  end
 
   #----------------------------------------------
   # cast a message to all registered drivers
@@ -228,7 +217,7 @@ defmodule Scenic.ViewPort.Driver do
     cur_time = :os.system_time(:millisecond)
     case (cur_time - last_msg) > sync_interval do
       true  ->
-        ViewPort.send_to_scene( :graph_update )
+#        ViewPort.send_to_scene( :graph_update )
         { :noreply, d_state } = mod.handle_sync( d_state )
         { :noreply, Map.put(state, :driver_state, d_state) }
       false ->
