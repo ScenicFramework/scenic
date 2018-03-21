@@ -51,7 +51,7 @@ defmodule Scenic.Scene do
       id: id,
       start: {__MODULE__, :start_link, [scene_module, id, args]},
       type: :worker,
-      restart: args[:restart] || :permanent,
+      restart: :permanent,
       shutdown: 500
     }
   end
@@ -121,6 +121,10 @@ defmodule Scenic.Scene do
 
 
   #--------------------------------------------------------
+  def start_link(module, nil, args) do
+    GenServer.start_link(__MODULE__, {module, args})
+  end
+
   def start_link(module, name, args) do
     GenServer.start_link(__MODULE__, {module, args}, name: name)
   end

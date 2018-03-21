@@ -2,12 +2,14 @@ defmodule Scenic.Component.Button do
   use Scenic.Scene
 
   alias Scenic.Graph
-  alias Scenic.Primitive
+  alias Scenic.Primitive.SceneRef
   alias Scenic.Primitive.RoundedRectangle
   alias Scenic.Primitive.Text
   alias Scenic.Template.Input
   alias Scenic.Template.Button
   alias Scenic.ViewPort.Input.Tracker
+
+  import IEx
 
 
   @default_width      70
@@ -59,17 +61,30 @@ defmodule Scenic.Component.Button do
 
   #--------------------------------------------------------
   def init( {{x, y}, w, h, r, text, type} ) do
-
     # get the theme colors
-    colors = @valid_types[type]
+    colors = @types[type]
+
     {text_color, button_color, _, _, _} = colors
 
     graph = Graph.build( font: {:roboto, 14} )
     |> RoundedRectangle.add_to_graph( {{x,y}, w, h, r}, color: button_color )
     |> Text.add_to_graph( {{x+8,y+17}, text}, color: text_color )
 
-    {:ok, graph, colors}
+    {:ok, {graph, colors}}
   end
+  def init( opts ) do
+    pry()
+  end
+
+  #--------------------------------------------------------
+  def get_graph( nil, {graph, colors} ) do
+    graph
+  end
+
+  def add_to_graph( graph, data ) do
+    SceneRef.add_to_graph(graph, {{__MODULE__, data}, nil})
+  end
+
 
 end
 

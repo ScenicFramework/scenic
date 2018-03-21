@@ -387,7 +387,8 @@ defmodule Scenic.ViewPort do
   end
 
   defp ensure_screen_ref_started( {mod, opts} ) when is_atom(mod) and not is_nil(mod) do
-    DynamicSupervisor.start_child(@dynamic_scenes, {Scene, {mod, opts}})
+IO.inspect({mod, opts})
+    DynamicSupervisor.start_child(@dynamic_scenes, {Scene, {mod, nil, opts}})
   end
 
   #--------------------------------------------------------
