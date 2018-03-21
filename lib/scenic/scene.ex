@@ -171,6 +171,15 @@ defmodule Scenic.Scene do
   # default cast handlers.
 
   #--------------------------------------------------------
+  def handle_cast({:input, event, cookie}), 
+  %{scene_module: mod, scene_state: sc_state} = state) do
+
+
+    { :noreply, state }
+  end
+
+
+  #--------------------------------------------------------
   def handle_cast({:focus_gained, param}, %{scene_module: mod, scene_state: sc_state} = state) do
     # tell the scene it is gaining focus
     {:noreply, sc_state} = mod.handle_focus_gained( param, sc_state )
