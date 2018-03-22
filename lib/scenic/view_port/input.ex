@@ -7,139 +7,152 @@
 
 
 defmodule Scenic.ViewPort.Input do
-#  use GenServer
-  use Bitwise
 
-  require Logger
-  alias Scenic.ViewPort
-
-  import IEx
-
-  @valid_input_types  [
-    :key,
-    :codepoint,
-    :cursor_pos,
-    :cursor_button,
-    :cursor_scroll,
-    :cursor_enter
-  ]
-
-  @input_registry     :input_registry
-
-  #===========================================================================
-  defmodule Error do
-    defexception [ message: nil ]
+  defmodule Context do
+    alias Scenic.Math.MatrixBin, as: Matrix
+    @identity         Matrix.identity()
+    defstruct tx: @identity, inverse_tx: @identity, uid: nil, scene_pid: nil, scene_id: nil
   end
 
-  #============================================================================
-  # client apis - meant to be called from the listener process
-
-  #--------------------------------------------------------
-  def register( type )
-  def register( :all ) do 
-    ref = make_ref()
-    Enum.each(@valid_input_types, &do_register(&1, ref) )
-    update_input_request()
-    {:input_ref, ref}
-  end
-  def register( type ) when is_atom(type) do
-    ref = make_ref()
-    do_register( type, ref )
-    update_input_request()
-    {:input_ref, ref}
-  end
-  def register( types ) when is_list(types) do
-    ref = make_ref()
-    Enum.each( types, &do_register(&1, ref) )
-    update_input_request()
-    {:input_ref, ref}
-  end
-  # two jobs. 1, prevent duplication. 2 enforce valid types
-  defp do_register( :char, ref ), do: do_register( :codepoint, ref )
-  defp do_register( type, ref ) when is_atom(type) do
-    case Enum.member?(@valid_input_types, type) do
-      true ->
-        # unregistering eliminates dups and makes sure the ref is current
-        Registry.unregister(@input_registry, type )
-        Registry.register(@input_registry, type, ref )
-      false ->
-        raise Error, message: "Invalid input type: #{inspect(type)}"
-    end
-  end
-
-  #--------------------------------------------------------
-  def unregister( type )
-  def unregister( {:input_ref, ref} ) when is_reference(ref) do
-    Enum.each(@valid_input_types, fn(type) ->
-      Registry.unregister_match(@input_registry, type, ref )
-    end)
-    update_input_request()
-  end
-  def unregister( :all ) do
-    Enum.each(@valid_input_types, &Registry.unregister(@input_registry, &1 ) )
-    update_input_request()
-  end
-  def unregister( type ) when is_atom(type) do
-    do_unregister( type )
-    update_input_request()
-  end
-  def unregister( types ) when is_list(types) do
-    Enum.each( types, &do_unregister(&1) )
-    update_input_request()
-  end
-  defp do_unregister( :char ), do: do_unregister( :codepoint )
-  defp do_unregister( type ) when is_atom(type) do
-    case Enum.member?(@valid_input_types, type) do
-      true ->
-        Registry.unregister(@input_registry, type )
-      false ->
-        raise Error, message: "Invalid input type: #{inspect(type)}"
-    end
-  end
+end
 
 
-  #--------------------------------------------------------
-  # gather registrations from the registry. Turn that into a flag field,
-  # then send that to the driver
-  defp update_input_request() do
-    input_flags = Enum.reduce(@valid_input_types, 0, fn(type,flags) ->
-      case Registry.lookup(@input_registry, type) do
-        [] -> flags
-        _ ->
-          # there is at least one entry, so set this flag
-          flags ||| input_type_to_flags(type)
-      end
-    end)
-    ViewPort.Driver.cast({:request_input, input_flags})
-  end
 
 
-  #============================================================================
-  # driver apis - meant to be called from a driver that is sending input
 
-  #----------------------------------------------
-  def send( {input_type, _} = event ) do
-    # needs a different dispatcher than sending a message to the driver. The pid to
-    # send the message to is the value stored in the registry, not the pid that
-    # set up the registry entry. That would be the viewport...
-
-    # dispatch the call to any listening drivers
-    Registry.dispatch(@input_registry, input_type, fn(entries) ->
-      for {pid, _} <- entries do
-        try do
-          GenServer.cast(pid, {:input, event})
-        catch
-          kind, reason ->
-            formatted = Exception.format(kind, reason, System.stacktrace)
-            Logger.error "Registry.dispatch/3 failed with #{formatted}"
-        end
-      end
-    end)
-  end
-  def send( msg ) do
-    IO.puts "Input: invalid message: #{inspect(msg)}"
-  end
-
+##  use GenServer
+#  use Bitwise
+#
+#  require Logger
+#  alias Scenic.ViewPort
+#
+#  import IEx
+#
+#  @valid_input_types  [
+#    :key,
+#    :codepoint,
+#    :cursor_pos,
+#    :cursor_button,
+#    :cursor_scroll,
+#    :cursor_enter
+#  ]
+#
+#  @input_registry     :input_registry
+#
+#  #===========================================================================
+#  defmodule Error do
+#    defexception [ message: nil ]
+#  end
+#
+#  #============================================================================
+#  # client apis - meant to be called from the listener process
+#
+#  #--------------------------------------------------------
+#  def register( type )
+#  def register( :all ) do 
+#    ref = make_ref()
+#    Enum.each(@valid_input_types, &do_register(&1, ref) )
+#    update_input_request()
+#    {:input_ref, ref}
+#  end
+#  def register( type ) when is_atom(type) do
+#    ref = make_ref()
+#    do_register( type, ref )
+#    update_input_request()
+#    {:input_ref, ref}
+#  end
+#  def register( types ) when is_list(types) do
+#    ref = make_ref()
+#    Enum.each( types, &do_register(&1, ref) )
+#    update_input_request()
+#    {:input_ref, ref}
+#  end
+#  # two jobs. 1, prevent duplication. 2 enforce valid types
+#  defp do_register( :char, ref ), do: do_register( :codepoint, ref )
+#  defp do_register( type, ref ) when is_atom(type) do
+#    case Enum.member?(@valid_input_types, type) do
+#      true ->
+#        # unregistering eliminates dups and makes sure the ref is current
+#        Registry.unregister(@input_registry, type )
+#        Registry.register(@input_registry, type, ref )
+#      false ->
+#        raise Error, message: "Invalid input type: #{inspect(type)}"
+#    end
+#  end
+#
+#  #--------------------------------------------------------
+#  def unregister( type )
+#  def unregister( {:input_ref, ref} ) when is_reference(ref) do
+#    Enum.each(@valid_input_types, fn(type) ->
+#      Registry.unregister_match(@input_registry, type, ref )
+#    end)
+#    update_input_request()
+#  end
+#  def unregister( :all ) do
+#    Enum.each(@valid_input_types, &Registry.unregister(@input_registry, &1 ) )
+#    update_input_request()
+#  end
+#  def unregister( type ) when is_atom(type) do
+#    do_unregister( type )
+#    update_input_request()
+#  end
+#  def unregister( types ) when is_list(types) do
+#    Enum.each( types, &do_unregister(&1) )
+#    update_input_request()
+#  end
+#  defp do_unregister( :char ), do: do_unregister( :codepoint )
+#  defp do_unregister( type ) when is_atom(type) do
+#    case Enum.member?(@valid_input_types, type) do
+#      true ->
+#        Registry.unregister(@input_registry, type )
+#      false ->
+#        raise Error, message: "Invalid input type: #{inspect(type)}"
+#    end
+#  end
+#
+#
+#  #--------------------------------------------------------
+#  # gather registrations from the registry. Turn that into a flag field,
+#  # then send that to the driver
+#  defp update_input_request() do
+#    input_flags = Enum.reduce(@valid_input_types, 0, fn(type,flags) ->
+#      case Registry.lookup(@input_registry, type) do
+#        [] -> flags
+#        _ ->
+#          # there is at least one entry, so set this flag
+#          flags ||| input_type_to_flags(type)
+#      end
+#    end)
+#    ViewPort.Driver.cast({:request_input, input_flags})
+#  end
+#
+#
+#  #============================================================================
+#  # driver apis - meant to be called from a driver that is sending input
+#
+#  #----------------------------------------------
+#  def send( {input_type, _} = event ) do
+#    # needs a different dispatcher than sending a message to the driver. The pid to
+#    # send the message to is the value stored in the registry, not the pid that
+#    # set up the registry entry. That would be the viewport...
+#
+#    # dispatch the call to any listening drivers
+#    Registry.dispatch(@input_registry, input_type, fn(entries) ->
+#      for {pid, _} <- entries do
+#        try do
+#          GenServer.cast(pid, {:input, event})
+#        catch
+#          kind, reason ->
+#            formatted = Exception.format(kind, reason, System.stacktrace)
+#            Logger.error "Registry.dispatch/3 failed with #{formatted}"
+#        end
+#      end
+#    end)
+#  end
+#  def send( msg ) do
+#    IO.puts "Input: invalid message: #{inspect(msg)}"
+#  end
+#
 #  #============================================================================
 #  # keyboard input helpers
 #  # these are for reading the keyboard directly. If you are trying to do text input
@@ -337,18 +350,18 @@ defmodule Scenic.ViewPort.Input do
 #  def button_to_atom( _ ), do: :unknown
 #
   #--------------------------------------------------------
-  def input_type_to_flags( type )
-  def input_type_to_flags( types ) when is_list(types) do
-    Enum.reduce(types, 0, &(input_type_to_flags(&1) ||| &2) )
-  end
-  def input_type_to_flags( :key ),            do: 0x0001
-  def input_type_to_flags( :codepoint ),      do: 0x0002
-  def input_type_to_flags( :cursor_pos ),     do: 0x0004
-  def input_type_to_flags( :cursor_button ),   do: 0x0008
-  def input_type_to_flags( :cursor_scroll ),   do: 0x0010
-  def input_type_to_flags( :cursor_enter ),    do: 0x0020
-  def input_type_to_flags( :all ),            do: 0xFFFF
-  def input_type_to_flags( type ), do: raise Error, message: "Unknown input type: #{inspect(type)}"
+#  def input_type_to_flags( type )
+#  def input_type_to_flags( types ) when is_list(types) do
+#    Enum.reduce(types, 0, &(input_type_to_flags(&1) ||| &2) )
+#  end
+#  def input_type_to_flags( :key ),            do: 0x0001
+#  def input_type_to_flags( :codepoint ),      do: 0x0002
+#  def input_type_to_flags( :cursor_pos ),     do: 0x0004
+#  def input_type_to_flags( :cursor_button ),   do: 0x0008
+#  def input_type_to_flags( :cursor_scroll ),   do: 0x0010
+#  def input_type_to_flags( :cursor_enter ),    do: 0x0020
+#  def input_type_to_flags( :all ),            do: 0xFFFF
+#  def input_type_to_flags( type ), do: raise Error, message: "Unknown input type: #{inspect(type)}"
 #
 #
 #
@@ -394,7 +407,7 @@ defmodule Scenic.ViewPort.Input do
 #  def normalize( event ), do: event
 
 
-end
+#end
 
 
 

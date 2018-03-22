@@ -2,11 +2,7 @@ defmodule Scenic.Component.Button do
   use Scenic.Scene
 
   alias Scenic.Graph
-  alias Scenic.Primitive.SceneRef
-  alias Scenic.Primitive.RoundedRectangle
-  alias Scenic.Primitive.Text
-  alias Scenic.Template.Input
-  alias Scenic.Template.Button
+  alias Scenic.Primitive
   alias Scenic.ViewPort.Input.Tracker
 
   import IEx
@@ -67,8 +63,8 @@ defmodule Scenic.Component.Button do
     {text_color, button_color, _, _, _} = colors
 
     graph = Graph.build( font: {:roboto, 14} )
-    |> RoundedRectangle.add_to_graph( {{x,y}, w, h, r}, color: button_color )
-    |> Text.add_to_graph( {{x+8,y+17}, text}, color: text_color )
+    |> Primitive.RoundedRectangle.add_to_graph( {{x,y}, w, h, r}, color: button_color )
+    |> Primitive.Text.add_to_graph( {{x+8,y+17}, text}, color: text_color )
 
     {:ok, {graph, colors}}
   end
@@ -82,9 +78,41 @@ defmodule Scenic.Component.Button do
   end
 
   def add_to_graph( graph, data ) do
-    SceneRef.add_to_graph(graph, {{__MODULE__, data}, nil})
+    Primitive.SceneRef.add_to_graph(graph, {{__MODULE__, data}, nil})
   end
 
 
+  #--------------------------------------------------------
+  def handle_input( {:cursor_enter, uid}, context, {graph, {_,_,color,_,_} = colors} ) do
+    graph = Graph.modify(graph, uid, fn(p)->
+      Primitive.put_style(p, :color, color)
+    end)
+    Scenic.ViewPort.set_graph( graph )
+    {:noreply, {graph, colors}}
+  end
+
+  #--------------------------------------------------------
+  def handle_input( {:cursor_exit, uid}, context, {graph, {_,color,_,_,_}} = state ) do
+    graph = Graph.modify(graph, uid, fn(p)->
+      Primitive.put_style(p, :color, color)
+    end)
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
+  def handle_input( event, context, state ) do
+    IO.puts "BUTTON #{inspect(event)}"
+    {:noreply, state}
+  end
+
 end
+
+
+
+
+
+
+
+
+
 

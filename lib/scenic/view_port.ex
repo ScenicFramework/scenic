@@ -9,6 +9,8 @@ defmodule Scenic.ViewPort do
   alias Scenic.Scene
   alias Scenic.Graph
   alias Scenic.Primitive
+  alias Scenic.Math.MatrixBin, as: Matrix
+  alias Scenic.ViewPort.Input.Context
 #  require Logger
 
   import IEx
@@ -20,6 +22,10 @@ defmodule Scenic.ViewPort do
   @max_depth        64
 
   @root_graph       0
+
+  @identity         Matrix.identity()
+
+
 
   # graph_uid_offset is the maximum number of items in a tree that any given
   # graph can have. If this is too high, then the number of merged graphs is too
@@ -52,69 +58,70 @@ defmodule Scenic.ViewPort do
   * `scene_param` Data to be passed to the scene's focus_gained function. Note that
   this is different from the initialization data.
   """
-  def set_scene( scene, scene_param \\ nil, viewport \\ @viewport )
+  def set_scene( scene, focus_param \\ nil )
 
-  def set_scene( scene, scene_param, vp ) when is_atom(scene) do
-    Process.whereis(scene)
-    |> set_scene( scene_param, vp )
+  def set_scene( scene, focus_param ) when is_atom(scene) do
+    GenServer.cast( @viewport, {:set_scene, scene, focus_param} )
   end
 
-  def set_scene( scene, scene_param, vp ) when is_pid(scene) do
-    GenServer.cast( vp, {:set_scene, scene, scene_param} )
+  def set_scene( {mod, init_data}, focus_param ) when is_atom(mod) do
+    GenServer.cast( @viewport, {:set_scene, {mod, init_data}, focus_param} )
   end
 
   #--------------------------------------------------------
-  @doc """
-  Set (or reset) a graph into the viewport. This does NOT make it the root graph
-  It will be used if/when the root graph refers to it.
+  def put_graph( graph, reference \\ nil )
 
-  If this is the root graph setting itself into place, the scene_pid must be the
-  pid of the scene that was set via set_scene and the optional id must be nil
-  """
-  def set_graph( graph, id, scene \\ nil, viewport \\ @viewport )
+  # the graph reference is same as the scene itself
+  def put_graph( %Graph{primitive_map: p_map}, nil ) do
+    case Registry.lookup(:viewport_registry, { :scene, self()} ) do
+      [] ->
+        # not part of a registered scene
+        {:error, :invalid_reference}
 
-  def set_graph( graph, id, nil, vp ) do
-    set_graph( graph, id, self(), vp )
+      [{_, reference}] ->
+        graph = Enum.reduce(p_map, %{}, fn({uid, p}, acc) ->
+          Map.put(acc, uid, Primitive.minimal(p))
+        end)
+        |> prepare_graph_refs( reference )
+        {:ok, _} = Registry.register(:viewport_registry, {:graph, reference}, graph )
+        Driver.cast({:put_graph, reference})
+        :ok
+    end
   end
 
-  def set_graph( graph, id, scene, vp ) when is_atom(scene) do
-    set_graph( graph, id, Process.whereis(scene), vp )
-  end
-
-  def set_graph( %Graph{primitive_map: p_map}, id, scene, vp ) do
-    # prepare the minimal graph that the viewport will use
-    Enum.reduce(p_map, %{}, fn({uid, p}, acc) ->
+  def put_graph( %Graph{primitive_map: p_map}, reference )
+  when is_reference(reference) do
+    graph = Enum.reduce(p_map, %{}, fn({uid, p}, acc) ->
       Map.put(acc, uid, Primitive.minimal(p))
     end)
-    |> set_graph( id, scene, vp )  
+    |> prepare_graph_refs( reference )
+    {:ok, _} = Registry.register(:viewport_registry, {:graph, reference}, graph )
+    Driver.cast({:put_graph, reference})
+    :ok
   end
 
-  def set_graph( %{} = min_graph, id, scene, vp ) when is_pid(scene) do
-    GenServer.cast( vp, {:set_graph, min_graph, scene, id} )
+  #--------------------------------------------------------
+  def register_scene( scene_reference )
+  when is_reference(scene_reference) or is_atom(scene_reference) do
+    {:ok, _} = Registry.register(:viewport_registry, {:scene, self()}, scene_reference )
+    {:ok, _} = Registry.register(:viewport_registry, {:scene_ref, scene_reference}, nil )
   end
 
 
   #--------------------------------------------------------
-  @doc """
-  Update a graph that has already been set into the viewport. 
-  """
-  def update_graph( deltas, id, scene \\ nil, viewport \\ @viewport ) 
-
-  def update_graph( deltas, id, nil, vp ) do
-    update_graph( deltas, id, self(), vp )
+  def get_graph( reference ) when is_reference(reference) or is_atom(reference) do
+    case Registry.lookup(:viewport_registry, {:graph, reference}) do
+      [] -> nil
+      [{_, graph}] -> graph
+    end
   end
 
-  def update_graph( deltas, id, scene, vp ) when is_atom(scene) do
-    update_graph( deltas, id, Process.whereis(scene), vp )
-  end
 
-  def update_graph( %Graph{deltas: deltas}, id, scene_pid, vp ) do
-    update_graph( deltas, id, scene_pid, vp )
-  end
 
-  def update_graph( deltas, id, scene, vp ) when is_list(deltas) and is_pid(scene) do
-    GenServer.cast( vp, {:update_graph, deltas, scene, id} )
-  end
+
+
+
+
 
 
   #--------------------------------------------------------
@@ -123,7 +130,15 @@ defmodule Scenic.ViewPort do
   by drivers that are generating input events.
   """
   def input( input_event, viewport \\ @viewport ) do
-    GenServer.cast( viewport, {:input, input_event} )
+#    GenServer.cast( viewport, {:input, input_event} )
+  end
+
+  def capture_input( input_type, %Context{} = context ) do
+    GenServer.cast( @viewport, {:capture_input, input_type, context} )
+  end
+
+  def release_input( input_type ) do
+    GenServer.cast( @viewport, {:release_input, input_type} )
   end
 
 
@@ -139,14 +154,13 @@ defmodule Scenic.ViewPort do
 #  end
 
   # TEMPORARY
-  def request_set( graph_id, to_pid \\ nil, viewport \\ @viewport )
-  def request_set( graph_id, nil, vp ) do
-    request_set( graph_id, self(), vp )
+  def request_scene( to_pid \\ nil )
+  def request_scene( nil ) do
+    request_scene( self() )
   end
-  def request_set( graph_id, to_pid, vp ) when is_integer(graph_id) and is_pid(to_pid) do
-    GenServer.cast( vp, {:request_set, graph_id, to_pid} )
+  def request_scene( to_pid ) do
+    GenServer.cast( @viewport, {:request_scene, to_pid} )
   end
-
 
   #============================================================================
   # internal server api
@@ -162,11 +176,10 @@ defmodule Scenic.ViewPort do
 
     # set up the initial state
     state = %{
-      graphs: %{},
-      filter_list: [],
-      graph_count: 0,
-      graph_ids: %{},
-      graph_keys: %{},
+      root_scene_pid: nil,
+      root_scene_ref: nil,
+      hover_primitve: nil,
+      input_captures: %{},
       max_depth: opts[:max_depth] || @max_depth
     }
 
@@ -178,22 +191,28 @@ defmodule Scenic.ViewPort do
   # handle_cast
 
   #--------------------------------------------------------
+  def handle_cast( {:request_scene, to_pid}, %{root_scene_ref: scene_ref} = state ) do
+    GenServer.cast( to_pid, {:set_root, scene_ref} )
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
   # set a scene to be the new root
-  def handle_cast( {:set_scene, scene, scene_param}, state ) do
+  def handle_cast( {:set_scene, scene, scene_param},
+  %{root_scene_pid: root_scene_pid} = state ) do
 
     # start by telling the previous scene that it has lost focus
     # done as a call to make sure the previous scene gets the message
     # if it is a dynamic scene, it might otherwise go down too quickly
-    case get_graph_key( state, 0 ) do
+    case root_scene_pid do
       nil ->
         # no previous scene. do nothing
         :ok
 
-      {previous_pid, nil} ->
+      pid ->
         # don't actually care about the result.
-        GenServer.call( previous_pid, :focus_lost )
+        GenServer.call( pid, :focus_lost )
     end
-
 
     # always recycle the dynamic scene supervisor when there is a new root scene
     DynamicSupervisor.which_children(@dynamic_scenes)
@@ -202,40 +221,40 @@ defmodule Scenic.ViewPort do
     end)
 
     # get or start the pid for the new scene being set as the root
-    scene_pid = case scene do
-      {mod, opts}->
-        {:ok, pid} = DynamicSupervisor.start_child(@dynamic_scenes, {Scene, {mod, opts}})
-        pid
+    {scene_pid, scene_ref} = case scene do
+      {mod, opts} ->
+        ref = make_ref()
+        {:ok, pid} = DynamicSupervisor.start_child(@dynamic_scenes, {Scene, {mod, ref, opts}})
+        {pid, ref}
 
       name when is_atom(name) ->
-        Process.whereis( name )
-
-      pid when is_pid(pid) ->
-        pid
+        {Process.whereis( name ), name}
     end
 
     # tell the new scene that it has gained focus
     GenServer.cast( scene_pid, {:focus_gained, scene_param} )
-    graph_key = {scene_pid, nil}
-
 
     # record that this is the new current scene
     state = state
-    # clear the graphs
-    |> Map.put( :graphs, %{} )
-
-    |> Map.put( :graph_ids, %{graph_key => @root_graph} )
-    |> Map.put( :graph_keys, %{@root_graph => graph_key} )
-
-    |> Map.put( :graph_count, 1 )
-    # disable input as the new scene sets up
-    |> Map.put( :filter_list, [] )
+    |> Map.put( :root_scene_pid, scene_pid )
+    |> Map.put( :root_scene_ref, scene_ref )
+    |> Map.put( :hover_primitve, nil )
+    |> Map.put( :input_captures, %{} )
 
     # send a reset message to the drivers
-    Driver.cast( :reset_scene )
+    Driver.cast( {:set_root, scene_ref} )
 
+    # record the root scene pid and return
     {:noreply, state}
   end
+
+
+
+
+
+
+
+
 
   #--------------------------------------------------------
   # set a graph into the master graph
@@ -285,28 +304,12 @@ defmodule Scenic.ViewPort do
 
     state = state
     |> put_in([:graphs, graph_id], graph)
-    |> update_filter_list()
 
     # send this graph to the drivers
     Driver.cast( {:set_graph, {graph_id, graph}} )
 
     {:noreply, state}
   end
-
-  #--------------------------------------------------------
-  # set a graph into the master graph
-
-  def handle_cast( {:update_graph, delta_list, scene_pid, id}, state ) do
-    # pass it off to the utility function. This gets the graph_id
-    # now allowing the utility function to match on the graph_id
-    # and do nothing if it is nil
-    do_update_graph(
-      delta_list,
-      get_graph_id( state, {scene_pid, id} ),
-      state
-    )
-  end
-
 
   #--------------------------------------------------------
   # set a graph into the master graph
@@ -333,14 +336,39 @@ defmodule Scenic.ViewPort do
 
 
   #--------------------------------------------------------
-  # filter the input through the list of scenes in order.
-  # each scene will choose whether or not to transform the event and pass it along
-  # to the next in the filter list, or to end the process.
-  def handle_cast( {:input, _}, %{filter_list: []} = state ), do: {:noreply, state}
-  def handle_cast( {:input, input_event}, %{filter_list: [head | tail]} = state ) do
-#    GenServer.cast( head, {:filter_input, input_event, tail} )
+  # Input handling is enough of a beast to put move it into it's own section at the
+  # bottom of this file.
+  def handle_cast( {:input, {input_type, _} = input_event}, 
+  %{input_captures: input_captures} = state ) do
+    case Map.get(input_captures, input_type) do
+      nil ->
+        # regular input handling
+        do_handle_input(input_event, state)
+
+      context ->
+        graph_id = get_graph_key(state, {context.scene_pid, context.scene_id})
+        graph = get_in(state, [:graphs, graph_id])
+        # captive input handling
+        do_handle_captured_input(input_event, graph, context, state)
+    end
+  end
+
+
+  #--------------------------------------------------------
+  # capture a type of input
+  def handle_cast( {:capture_input, input_type, context}, state ) do
+    state = put_in(state, [:input_captures, input_type], context)
     {:noreply, state}
   end
+
+  #--------------------------------------------------------
+  # release a captured type of input
+  def handle_cast( {:release_input, input_type},
+  %{input_captures: input_captures} = state ) do
+    input_captures = Map.delete(input_captures, input_type)
+    {:noreply, %{state | input_captures: input_captures}}
+  end
+
 
 
   #============================================================================
@@ -387,113 +415,481 @@ defmodule Scenic.ViewPort do
   end
 
   defp ensure_screen_ref_started( {mod, opts} ) when is_atom(mod) and not is_nil(mod) do
-IO.inspect({mod, opts})
     DynamicSupervisor.start_child(@dynamic_scenes, {Scene, {mod, nil, opts}})
   end
 
+
+
+  #============================================================================
+  # captured input handling
+  # mostly events get sent straight to the capturing scene. Common events that
+  # have an x,y point, get transformed into the scene's requested coordinate space.
+
+  defp do_handle_captured_input( event, graph, context, state )
+
+#  defp do_handle_captured_input( _, nil, _, state ), do: {:noreply, state}
+#  defp do_handle_captured_input( _, _, nil, state ), do: {:noreply, state}
+
   #--------------------------------------------------------
-  # failed to find the graph in question.
-  defp do_update_graph( _, nil, _state ) do
-    raise "attempted to update a graph that is not set into the viewport"
-#    {:noreply, state}
+  defp do_handle_captured_input( {:cursor_button, {button, action, mods, point}},
+  graph, context, state ) do
+
+    {uid, point} = find_by_captured_point( point, graph, context )
+
+    GenServer.cast(context.scene_pid,
+      {
+        :input,
+        { :cursor_button, {button, action, mods, point}},
+        Map.put(context, :uid, uid)
+      })
+    {:noreply, state}
   end
 
-  defp do_update_graph( deltas, graph_id, %{graphs: graphs} = state ) do
 
-    # scan the deltas_list, looking for any put scenerefs and transform
-    # them so they use local ids. also build a list of the new scene refs
-    # so they can be activated
-    {deltas, {state,skl}} = Enum.map_reduce(deltas, {state, []}, fn({uid, d},{s,skl})->
-      # a set of deltas for one primitive. map reduce those too
-      {dl, {s,skl}} = Enum.map_reduce(d, {s, skl}, fn
-        {:put, :data, {Primitive.SceneRef, {scene, scene_id}}}, {s, skl} ->
-          # this is putting a new SceneRef in. Need to make sure it is running,
-          # activated and such. just like during set_graph
 
-          # reolve (possibly starting) the referenced scene into a pid
-          {:ok, pid} = ensure_screen_ref_started( scene )
+  #--------------------------------------------------------
+  defp do_handle_captured_input( {:cursor_scroll, {offset, point}},
+  graph, context, state ) do
 
-          # this primitive is a scene_ref. Convert it into a graph_id
-          s = set_graph_id( s, {pid, scene_id} )
-          graph_id = get_graph_id( s, {pid, scene_id} )
+    {uid, point} = find_by_captured_point( point, graph, context )
 
-          # transform the deltas
-          d = {:put, :data, {Primitive.SceneRef, graph_id}}
+    GenServer.cast(context.scene_pid,
+      {
+        :input,
+        {:cursor_scroll, {offset, point}},
+        Map.put(context, :uid, uid)
+      })
+    {:noreply, state}
+  end
 
-          # collect the scene key in a list and return
-          skl = [graph_id | skl]
-          {d,{s,skl}}
+  #--------------------------------------------------------
+  # cursor_enter is only sent to the root scene
+  defp do_handle_captured_input( {:cursor_enter, {entered?, point}},
+  graph, context, state ) do
 
-        d, acc ->
-          # ok to leave it alone
-          {d, acc}
-      end)
+    {uid, point} = find_by_captured_point( point, graph, context )
 
-      {{uid, dl},{s,skl}}
-    end)
+    GenServer.cast(context.scene_pid,
+      {
+        :input,
+        {:cursor_enter, {entered?, point}},
+        Map.put(context, :uid, uid)
+      })
+    {:noreply, state}
+  end
 
-    # merge the deltas in to the stored graph
-    graph = Enum.reduce(deltas, graphs[graph_id], fn({uid, dl},g) ->
-      p = Map.get(g, uid, %{})
-      |> Scenic.Utilities.Map.apply_difference(dl, true)
-      Map.put(g, uid, p)
-    end)
-    state = put_in( state, [:graphs, graph_id], graph )
+  #--------------------------------------------------------
+  # cursor_enter is only sent to the root scene
+  defp do_handle_captured_input( {:cursor_pos, point},
+  graph, context, state ) do
+    
+    {uid, point} = find_by_captured_point( point, graph, context )
 
-    # don't do duplicate work
-    skl = Enum.uniq(skl)
+    GenServer.cast(context.scene_pid,
+      {
+        :input,
+        {:cursor_pos, point},
+        Map.put(context, :uid, uid)
+      })
+    {:noreply, state}
+  end
 
-    # tell any unset referenced scenes to set their graphs
-    Enum.each(skl, fn(graph_id)->
-      get_in(state, [:graphs, graph_id])
-      |> case do
-        nil ->
-          #This graph is not already set. Tell the scene to set it
-          # get the graph key
-          {pid, scene_id } = get_graph_key(state, graph_id)
-          GenServer.cast(pid, {:set_graph, scene_id})
-        _ ->
-          :ok
-      end
-    end)
 
-    # rebuild the input list if necessary
-    state = case skl do
-      [] ->
-        state
-      _ ->
-        update_filter_list(state)
-    end
+  #--------------------------------------------------------
+  # all events that don't need a point transformed
+  defp do_handle_captured_input( event, _, context, state ) do
+    GenServer.cast(context.scene_pid,
+      { :input, event, Map.put(context, :uid, nil) })
+    {:noreply, state}
+  end
 
-    # send the transformed delta list on to the drivers
 
-  #----------------------------------------------
-#  def update_graph( [], id ), do: :ok
-#  def update_graph( deltas, id ) when is_list(deltas) and is_integer(id) do
-#    dispatch_cast( {:update_graph, {id, deltas}} )
+  #============================================================================
+  # regular input handling
+
+  # note. if at any time a scene wants to collect all the raw input and avoid
+  # this filtering mechanism, it can register directly for the input
+
+  defp do_handle_input( event, state )
+
+  #--------------------------------------------------------
+  # text codepoint input is only sent to the scene with the input focus.
+  # If no scene has focus, then send the codepoint to the root scene
+#  defp do_handle_input( {:codepoint, _} = msg, state ) do
+#    send_input_to_focused_scene( msg, state )
+#    {:noreply, state}
 #  end
+
+  #--------------------------------------------------------
+  # key press input is only sent to the scene with the input focus.
+  # If no scene has focus, then send the codepoint to the root scene
+#  defp do_handle_input( {:key, _} = msg, state ) do
+#    send_input_to_focused_scene( msg, state )
+#    {:noreply, state}
+#  end
+
+  #--------------------------------------------------------
+  # key press input is only sent to the scene with the input focus.
+  # If no scene has focus, then send the codepoint to the root scene
+  defp do_handle_input( {:cursor_button, {button, action, mods, point}} = msg,
+  %{graphs: graphs} = state ) do
+    case find_by_screen_point( point, graphs ) do
+      nil ->
+        # no uid found. let the root scene handle the click
+        # we already know the root scene has identity transforms
+        {scene_pid, scene_id} = get_graph_key(state, 0)
+        GenServer.cast(scene_pid,
+          {
+            :input,
+            msg,
+            %Context{ scene_pid: scene_pid, scene_id: scene_id }
+          })
+
+      {point, {uid, graph_id}, {tx, inv_tx}} ->
+        # get the graph key, so we know what scene to send the event to
+        {scene_pid, scene_id} = get_graph_key(state, graph_id)
+
+        GenServer.cast(scene_pid,
+          {
+            :input,
+            {:cursor_button, {button, action, mods, point}},
+            %Context{
+              scene_pid: scene_pid,
+              scene_id: scene_id,
+              uid: uid,
+              tx: tx, inverse_tx: inv_tx
+            }
+          })
+    end
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
+  # key press input is only sent to the scene with the input focus.
+  # If no scene has focus, then send the codepoint to the root scene
+  defp do_handle_input( {:cursor_scroll, {offset, point}} = msg,
+  %{graphs: graphs} = state ) do
+    case find_by_screen_point( point, graphs ) do
+      nil ->
+        # no uid found. let the root scene handle the click
+        # we already know the root scene has identity transforms
+        {scene_pid, scene_id} = get_graph_key(state, 0)
+        GenServer.cast(scene_pid, {:input, msg, %{id: scene_id}})
+
+      {point, {uid, graph_id}, {tx, inv_tx}} ->
+        # get the graph key, so we know what scene to send the event to
+        {scene_pid, scene_id} = get_graph_key(state, graph_id)
+
+        GenServer.cast(scene_pid,
+          {
+            :input,
+            {:cursor_scroll, {offset, point}},
+            %Context{
+              scene_pid: scene_pid,
+              scene_id: scene_id,
+              uid: uid,
+              tx: tx, inverse_tx: inv_tx
+            }
+          })
+    end
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
+  # cursor_enter is only sent to the root scene so no need to transform it
+  defp do_handle_input( {:viewport_enter, _} = msg, state ) do
+    {scene_pid, scene_id} = get_graph_key(state, 0)
+    GenServer.cast(scene_pid,
+      {
+        :input,
+        msg,
+         %Context{ scene_pid: scene_pid, scene_id: scene_id }
+      })
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
+  # cursor_enter is only sent to the root scene
+  defp do_handle_input( {:cursor_pos, point} = msg,
+  %{graphs: graphs} = state ) do
+    state = case find_by_screen_point( point, graphs ) do
+      nil ->
+        # no uid found. let the root scene handle the click
+        # we already know the root scene has identity transforms
+        state = send_primitive_exit_message(state)
+        {scene_pid, scene_id} = get_graph_key(state, 0)
+        GenServer.cast(scene_pid, {:input, msg, %{id: scene_id}})
+        state
+
+      {point, {uid, graph_id}, _} ->
+        # get the graph key, so we know what scene to send the event to
+        {scene_pid, scene_id} = get_graph_key(state, graph_id)
+        state = send_enter_message( uid, graph_id, state )
+        GenServer.cast(scene_pid,
+          {
+            :input,
+            {:cursor_pos, point},
+            %Context{scene_pid: scene_pid, scene_id: scene_id, uid: uid}
+          })
+        state
+    end
 
     {:noreply, state}
   end
 
   #--------------------------------------------------------
-  # reset input filter list
-  defp update_filter_list( state ) do
-    state
+  # Any other input (non-standard, generated, etc) get sent to the root scene
+  defp do_handle_input( msg, state ) do
+    {scene_pid, scene_id} = get_graph_key(state, 0)
+    GenServer.cast(scene_pid,
+      {
+        :input,
+        msg,
+        %Context{scene_pid: scene_pid, scene_id: scene_id}
+      })
+    {:noreply, state}
   end
 
+  
+  #============================================================================
+  # regular input helper utilties
+
+  defp send_primitive_exit_message( %{hover_primitve: nil} = state ), do: state
+  defp send_primitive_exit_message( %{hover_primitve: {uid, graph_id}} = state ) do
+    {scene_pid, scene_id} = get_graph_key(state, graph_id)
+    GenServer.cast(scene_pid,
+      {
+        :input,
+        {:cursor_exit, uid},
+        %Context{uid: uid, scene_pid: scene_pid, scene_id: scene_id}
+      })
+    %{state | hover_primitve: nil}
+  end
+
+  defp send_enter_message( uid, graph_id, %{hover_primitve: hover_primitve} = state ) do
+
+    # first, send the previous hover_primitve an exit message
+    state = case hover_primitve do
+      nil ->
+        # no previous hover_primitive set. do not send an exit message
+        state
+
+      {^uid, ^graph_id} -> 
+        # stil in the same hover_primitive. do not send an exit message
+        state
+
+      _ -> 
+        # do send the exit message
+        send_primitive_exit_message( state )
+    end
+
+    # send the new hover_primitve an enter message
+    case state.hover_primitve do
+      nil ->
+        # yes. setting a new one. send it.
+        {scene_pid, scene_id} = get_graph_key(state, graph_id)
+        GenServer.cast(scene_pid,
+          {
+            :input,
+            {:cursor_enter, uid},
+            %Context{uid: uid, scene_pid: scene_pid, scene_id: scene_id}
+          })
+        %{state | hover_primitve: {uid, graph_id}}
+
+      _ ->
+        # not setting a new one. do nothing.
+        state
+    end
+  end
+
+
+
+  #--------------------------------------------------------
+  # find the indicated primitive in a single graph. use the incoming parent
+  # transforms from the context
+  defp find_by_captured_point( {x,y}, graph, context ) do
+    do_find_by_captured_point( x, y, 0, graph, context.tx, context.inverse_tx, context.inverse_tx )
+  end
+
+  defp do_find_by_captured_point( x, y, uid, graph, parent_tx, parent_inv_tx, graph_inv_tx ) do
+    # get the primitive to test
+    case Map.get(graph, uid) do
+      # do nothing if the primitive is hidden
+      %{styles: %{hidden: true}} ->
+        nil
+
+      # if this is a group, then traverse the members backwards
+      # backwards is important as the goal is to find the LAST item drawn
+      # that is under the point in question
+      %{data: {Primitive.Group, ids}} = p ->
+        {tx, inv_tx} = calc_transforms(p, parent_tx, parent_inv_tx)
+        ids
+        |> Enum.reverse()
+        |> Enum.find_value( fn(uid) ->
+          do_find_by_captured_point( x, y, uid, graph, tx, inv_tx, graph_inv_tx )
+        end)
+
+      # This is a regular primitive, test to see if it is hit
+      %{data: {mod, data}} = p ->
+        {_, inv_tx} = calc_transforms(p, parent_tx, parent_inv_tx)
+
+        # project the point by that inverse matrix to get the local point
+        local_point = Matrix.project_vector( inv_tx, {x, y} )
+
+        # test if the point is in the primitive
+        case mod.contains_point?( data, local_point ) do
+          true  ->
+            # Return the point in graph coordinates. Local was good for the hit test
+            # but graph coords makes more sense for the scene logic
+            graph_point = Matrix.project_vector( graph_inv_tx, {x, y} )
+            {uid, graph_point}
+
+          false ->
+            nil
+        end
+    end
+  end
+
+
+  #--------------------------------------------------------
+  # find the indicated primitive in the graph given a point in screen coordinates.
+  # to do this, we need to project the point into primitive local coordinates by
+  # projecting it with the primitive's inverse final matrix.
+  # 
+  # Since the last primitive drawn is always on top, we should walk the tree
+  # backwards and return the first hit we find. We could just reduct the whole
+  # thing and return the last one found (that was my first try), but this is
+  # more efficient as we can stop as soon as we find the first one.
+  defp find_by_screen_point( {x,y}, %{} = graphs ) do
+    identity = {@identity, @identity}
+    do_find_by_screen_point( x, y, 0, 0, graphs, identity, identity )
+  end
+
+  defp do_find_by_screen_point( x, y, uid, graph_id, graphs,
+    {parent_tx, parent_inv_tx}, {graph_tx, graph_inv_tx} ) do
+    # get the primitive to test
+    case get_in(graphs, [graph_id, uid]) do
+      # do nothing if the primitive is hidden
+      %{styles: %{hidden: true}} ->
+        nil
+
+      # if this is a group, then traverse the members backwards
+      # backwards is important as the goal is to find the LAST item drawn
+      # that is under the point in question
+      %{data: {Primitive.Group, ids}} = p ->
+        {tx, inv_tx} = calc_transforms(p, parent_tx, parent_inv_tx)
+        ids
+        |> Enum.reverse()
+        |> Enum.find_value( fn(uid) ->
+          do_find_by_screen_point(
+            x, y, uid, graph_id, graphs,
+            {tx, inv_tx}, {graph_tx, graph_inv_tx}
+          )
+        end)
+
+      # if this is a SceneRef, then traverse into the next graph
+      %{data: {Primitive.SceneRef, ref_id}} = p ->
+        {tx, inv_tx} = calc_transforms(p, parent_tx, parent_inv_tx)
+        do_find_by_screen_point(x, y, 0, ref_id, graphs, {tx, inv_tx}, {tx, inv_tx} )
+
+      # This is a regular primitive, test to see if it is hit
+      %{data: {mod, data}} = p ->
+        {_, inv_tx} = calc_transforms(p, parent_tx, parent_inv_tx)
+
+        # project the point by that inverse matrix to get the local point
+        local_point = Matrix.project_vector( inv_tx, {x, y} )
+
+        # test if the point is in the primitive
+        case mod.contains_point?( data, local_point ) do
+          true  ->
+            # Return the point in graph coordinates. Local was good for the hit test
+            # but graph coords makes more sense for the scene logic
+            graph_point = Matrix.project_vector( graph_inv_tx, {x, y} )
+            {graph_point, {uid, graph_id}, {graph_tx, graph_inv_tx}}
+          false -> nil
+        end
+    end
+  end
+
+
+  defp calc_transforms(p, parent_tx, parent_inv_tx) do
+    p
+    |> Map.get(:transforms, nil)
+    |> Primitive.Transform.calculate_local()
+    |> case do
+      nil ->
+        # No local transform. This will often be the case.
+        {parent_tx, parent_inv_tx}
+
+      tx ->
+        # there was a local transform. multiply it into the parent
+        # then also calculate a new inverse transform
+        tx = Matrix.mul( parent_tx, tx )
+        inv_tx = Matrix.invert( tx )
+        {tx, inv_tx}
+    end
+  end
+
+
+
+  #--------------------------------------------------------
+  defp prepare_graph_refs( graph, reference ) do
+    # get the old graph, if any
+    case get_graph( reference ) do
+      nil ->
+        # first time this graph is being set. can
+        # just scan for SceneRefs and spin them up as needed
+        Enum.reduce(graph, %{}, fn({uid,p},g)->
+            p = ensure_scene_ref_started( p )
+            Map.put(g, uid, p)
+        end)
+
+      old_graph ->
+        # ugh. Need to examine changes becuase referenced graphs
+        # may need to be spun up or down
+        graph = Scenec.Utilities.Map.difference(old_graph, graph)
+        |> Enum.reduce( graph, fn
+          {:put, {uid, :data}, {SceneRef, ref} }, g ->
+            ensure_scene_ref_stopped( old_graph[uid] )
+            # a new reference is being put in place
+            p = ensure_scene_ref_started( graph[uid] )
+            Map.put(g, uid, p)
+
+          {:del, {uid, :data}}, g ->
+            # a primitive's data is being changed. See if it was a SceneRef
+            ensure_scene_ref_stopped(old_graph[uid] )
+            g
+
+          {:del, uid}, g when is_integer(uid) ->
+            # a primitive's being deleted. See if it was a SceneRef
+            ensure_scene_ref_stopped( old_graph[uid] )
+            g
+
+          _, g ->
+            # not a reference. do nothing
+            g
+        end)
+    end
+
+  end
+
+  #--------------------------------------------------------
+  defp ensure_scene_ref_started( %{data: {SceneRef, {mod, opts}}} = p ) do
+    reference = make_ref()
+    DynamicSupervisor.start_child(@dynamic_scenes, {Scene, {mod, reference, opts}})
+    %{p | data: {SceneRef, reference}}
+  end
+  defp ensure_scene_ref_started( p ), do: p
+
+  #--------------------------------------------------------
+  defp ensure_scene_ref_stopped( %{data: {SceneRef, ref}} ) when is_reference(ref) do
+    [{pid, _}] = Registry.lookup(:viewport_registry, {:scene_ref, ref} )
+    # Attempt to spin down the scene. Will do nothing if it isn't dynamic
+    DynamicSupervisor.terminate_child(@dynamic_scenes, pid)
+  end
+  defp ensure_scene_ref_deleted( _ ), do: :ok
+
 end
-
-
-
-
-
-
-
-
-
-
-
 
 
 
