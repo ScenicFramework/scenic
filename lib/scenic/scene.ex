@@ -132,8 +132,9 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  def init( {key, module, opts} ) do
-    ViewPort.register_scene( key )
+  def init( {scene_ref, module, opts} ) do
+    Process.put(:scene_ref, scene_ref)
+    ViewPort.register_scene( scene_ref )
 
     {:ok, scene_state} = module.init(opts)
 

@@ -61,7 +61,7 @@ defmodule Scenic.ViewPort.Input do
 
   #--------------------------------------------------------
   # cursor_enter is only sent to the root scene
-  defp do_handle_captured_input( {:cursor_enter, {entered?, point}},
+  defp do_handle_captured_input( {:cursor_enter, point},
   graph, context, state ) do
 
     {uid, point} = find_by_captured_point( point, graph, context )
@@ -69,7 +69,23 @@ defmodule Scenic.ViewPort.Input do
     GenServer.cast(context.scene_pid,
       {
         :input,
-        {:cursor_enter, {entered?, point}},
+        {:cursor_enter, point},
+        Map.put(context, :uid, uid)
+      })
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
+  # cursor_exit is only sent to the root scene
+  defp do_handle_captured_input( {:cursor_exit, point},
+  graph, context, state ) do
+
+    {uid, point} = find_by_captured_point( point, graph, context )
+
+    GenServer.cast(context.scene_pid,
+      {
+        :input,
+        {:cursor_enter, point},
         Map.put(context, :uid, uid)
       })
     {:noreply, state}
