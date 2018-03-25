@@ -238,6 +238,8 @@ IO.puts "GRAPH INIT"
     |> Map.put( :root_scene_ref, scene_ref )
     |> Map.put( :hover_primitve, nil )
     |> Map.put( :input_captures, %{} )
+    |> Map.put( :dynamic_scenes, %{} )
+
 
     # send a reset message to the drivers
     Driver.cast( {:set_root, scene_ref} )
