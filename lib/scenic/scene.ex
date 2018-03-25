@@ -119,12 +119,16 @@ defmodule Scenic.Scene do
 
 
   #--------------------------------------------------------
-  def start_link(module, ref, args) when is_reference(ref) do
-    GenServer.start_link(__MODULE__, {ref, module, args})
+  def start_link(module, ref) do
+    GenServer.start_link(__MODULE__, {module, ref, nil})
   end
 
   def start_link(module, name, args) when is_atom(name) do
     GenServer.start_link(__MODULE__, {name, module, args}, name: name)
+  end
+
+  def start_link(module, ref, args) when is_reference(ref) do
+    GenServer.start_link(__MODULE__, {ref, module, args})
   end
 
   #--------------------------------------------------------
@@ -182,7 +186,7 @@ defmodule Scenic.Scene do
     {:noreply, sc_state} = mod.handle_focus_gained( param, sc_state )
 
     # send self a message to set the graph
-    GenServer.cast( self(), {:set_graph, nil} )
+#    GenServer.cast( self(), {:set_graph, nil} )
 
     { :noreply, %{state | scene_state: sc_state} }
   end
@@ -194,6 +198,9 @@ defmodule Scenic.Scene do
     {:noreply, %{state | scene_state: sc_state}}
   end
 
+  def handle_cast(msg, state) do
+    pry()
+  end
 
   #===========================================================================
   # info handlers
