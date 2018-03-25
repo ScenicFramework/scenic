@@ -94,18 +94,27 @@ defmodule Scenic.ViewPort do
 
   #--------------------------------------------------------
   def get_graph( graph_ref ) when is_reference(graph_ref) or is_atom(graph_ref) do
-    case :ets.lookup(__MODULE__, {:graph, graph_ref}) do
+    case :ets.lookup(__MODULE__, graph_ref) do
       [] -> nil
-      [graph] -> graph
+      [{_, graph}] -> graph
     end
   end
 
   #--------------------------------------------------------
-  def list_graph_refs() do
-    case :ets.lookup(__MODULE__, :graphs) do
-      [] -> []
-      [graphs] -> graphs
-    end
+  def list_graphs() do
+    :ets.safe_fixtable(__MODULE__, true)
+    refs = :ets.first(__MODULE__)
+    |> accumulate_graphs( [] )
+    :ets.safe_fixtable(__MODULE__, false)
+    refs
+  end
+
+  defp accumulate_graphs(:"$end_of_table", refs), do: refs
+
+  defp accumulate_graphs(next, refs) do
+    refs = [next | refs]
+    next = :ets.next(__MODULE__, next)
+    accumulate_graphs(next, refs)
   end
 
   #--------------------------------------------------------
@@ -259,6 +268,9 @@ IO.puts "GRAPH INIT"
 
   def handle_cast( {:put_graph, graph, reference},
   %{dynamic_scenes: dynamic_scenes} = state ) do
+
+IO.puts("put_graph: #{inspect(reference)}")
+
     # build a list of the scene references in this graph
     graph_refs = Enum.reduce( graph, %{}, fn
       {uid,%{ data: {Primitive.SceneRef, {{mod, init_data}, scene_id}}}}, nr ->
@@ -310,7 +322,7 @@ IO.puts "GRAPH INIT"
           {nr, g}
       end
     end)
-pry()
+
     # store the refs and the graph
     state = put_in(state, [:dynamic_scenes, reference], new_refs)
     :ets.insert(__MODULE__, {reference, graph}) 
@@ -319,7 +331,7 @@ pry()
     Enum.each( dead_refs, &:ets.delete(__MODULE__, &1) )
 
     # store the dyanamic scenes references
-    {:noreply, %{state | dynamic_scenes: dynamic_scenes}}
+    {:noreply, state}
   end
 
   #--------------------------------------------------------
@@ -356,21 +368,6 @@ pry()
     {:noreply, %{state | input_captures: input_captures}}
   end
 
-  #--------------------------------------------------------
-  defp ensure_scene_ref_started( %{data: {Primitive.SceneRef, {{mod, init_data}, _}}} = p ) do
-    reference = make_ref()
-    {:ok, pid} = DynamicSupervisor.start_child(@dynamic_scenes, {Scene, {mod, reference, init_data}})
-    %{p | data: {Primitive.SceneRef, reference}}
-  end
-  defp ensure_scene_ref_started( p ), do: p
-
-  #--------------------------------------------------------
-  defp ensure_scene_ref_stopped( %{data: {Primitive.SceneRef, ref}} ) when is_reference(ref) do
-    [{pid, _}] = Registry.lookup(:viewport_registry, {:scene_ref, ref} )
-    # Attempt to spin down the scene. Will do nothing if it isn't dynamic
-    DynamicSupervisor.terminate_child(@dynamic_scenes, pid)
-  end
-  defp ensure_scene_ref_stopped( _ ), do: :ok
 
 
 
@@ -381,61 +378,10 @@ pry()
 
 
 
-
-
-
-
-  #============================================================================
-  # graph key <-> id utilities
-
-#  defp set_graph_id( %{graph_ids: ids, graph_count: count} = state, graph_key ) do
-#    # see if this key is already mapped
-#    case ids[graph_key] do
-#      nil ->
-#        # This is a new id. Set up the mappings
-#        state
-#        |> put_in( [:graph_ids, graph_key], count)
-#        |> put_in( [:graph_keys, count], graph_key)
-#        |> Map.put( :graph_count, count + 1 )
-#
-#      _ ->
-#        # already set up
-#        state
-#    end
-#  end
-#
-#  defp get_graph_id( %{graph_ids: ids}, graph_key ), do: ids[graph_key]
-#  defp get_graph_key( %{graph_keys: keys}, graph_id ), do: keys[graph_id]
 
 
   #============================================================================
   # utilities
-
-  #--------------------------------------------------------
-  # given a scene, make sure it is started and return the pid
-  defp ensure_screen_ref_started( scene )
-
-  defp ensure_screen_ref_started( scene ) when is_atom(scene) do
-    case Process.whereis(scene) do
-      nil ->
-        {:error, :scene_not_found}
-      pid ->
-        {:ok, pid}
-    end
-  end
-
-  defp ensure_screen_ref_started( scene ) when is_pid(scene) do
-    {:ok, scene}
-  end
-
-  defp ensure_screen_ref_started( {mod, opts} ) when is_atom(mod) and not is_nil(mod) do
-    DynamicSupervisor.start_child(@dynamic_scenes, {Scene, {mod, nil, opts}})
-  end
-
-
-
-
-
 
 end
 

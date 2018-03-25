@@ -3,6 +3,7 @@ defmodule Scenic.Component.Button do
 
   alias Scenic.Graph
   alias Scenic.Primitive
+  alias Scenic.ViewPort
   alias Scenic.ViewPort.Input.Tracker
 
   import IEx
@@ -56,7 +57,8 @@ defmodule Scenic.Component.Button do
 
 
   #--------------------------------------------------------
-  def init( {{x, y}, w, h, r, text, type} ) do
+  def init( {{x, y}, w, h, r, text, type} = data ) do
+IO.puts "BUTTON init --> #{inspect(data)}"
     # get the theme colors
     colors = @types[type]
 
@@ -66,25 +68,14 @@ defmodule Scenic.Component.Button do
     |> Primitive.RoundedRectangle.add_to_graph( {{x,y}, w, h, r}, color: button_color )
     |> Primitive.Text.add_to_graph( {{x+8,y+17}, text}, color: text_color )
 
-#pry()
-#    GenServer.cast( self(), :after_init )
-
-IO.puts "--------> init Button"
+    ViewPort.put_graph( graph )
 
     {:ok, {graph, colors}}
   end
-  def init( opts ) do
-    pry()
-  end
-
-  #--------------------------------------------------------
-  def handle_cast(:after_init, {graph, colors}) do
-pry()
-    ViewPort.put_graph( graph )
-pry()
-    {:noreply, {graph, colors}}
-  end
-
+#  def init( opts ) do
+#IO.puts "BUTTON init generic --> #{inspect(opts)}"
+#    {:ok, nil}
+#  end
 
   def add_to_graph( graph, data ) do
     Primitive.SceneRef.add_to_graph(graph, {{__MODULE__, data}, nil})
