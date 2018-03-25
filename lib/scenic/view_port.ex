@@ -269,8 +269,6 @@ IO.puts "GRAPH INIT"
   def handle_cast( {:put_graph, graph, reference},
   %{dynamic_scenes: dynamic_scenes} = state ) do
 
-IO.puts("put_graph: #{inspect(reference)}")
-
     # build a list of the scene references in this graph
     graph_refs = Enum.reduce( graph, %{}, fn
       {uid,%{ data: {Primitive.SceneRef, {{mod, init_data}, scene_id}}}}, nr ->
