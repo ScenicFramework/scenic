@@ -22,7 +22,7 @@ defmodule Scenic.Component.Button do
   # type is {text_color, button_color, hover_color, pressed_color, border_color}
   # nil for text_color means to use whatever is inherited
   @types %{
-    primary:    {:white, {72,122,252}, {60,104,214}, :light_blue, :clear},
+    primary:    {:white, {72,122,252}, {60,104,214}, {58,94,201}, {164,186,253}},
     secondary:  {:white, {111,117,125}, :dark_blue, :light_blue, :clear},
     success:    {:white, {99,163,74}, :dark_blue, :light_blue, :clear},
     danger:     {:white, {191,72,71}, :dark_blue, :light_blue, :clear},
@@ -62,15 +62,23 @@ IO.puts "BUTTON init --> #{inspect(self())}"
     # get the theme colors
     colors = @types[type]
 
-    {text_color, button_color, _, _, _} = colors
+    {text_color, button_color, _, _, border_color} = colors
 
     graph = Graph.build( font: {:roboto, 14} )
-    |> Primitive.RoundedRectangle.add_to_graph( {{x,y}, w, h, r}, color: button_color )
+    |> Primitive.RoundedRectangle.add_to_graph( {{x,y}, w, h, r}, color: button_color,
+      id: :btn )
     |> Primitive.Text.add_to_graph( {{x+8,y+17}, text}, color: text_color )
 
     ViewPort.put_graph( graph )
 
-    {:ok, {graph, colors}}
+    state = %{
+      graph: graph,
+      colors: colors,
+      pressed: false,
+      contained: false
+    }
+
+    {:ok, state}
   end
 #  def init( opts ) do
 #IO.puts "BUTTON init generic --> #{inspect(opts)}"
@@ -83,26 +91,76 @@ IO.puts "BUTTON init --> #{inspect(self())}"
 
 
   #--------------------------------------------------------
-  def handle_input( {:cursor_enter, uid}, context, {graph, {_,_,color,_,_} = colors} ) do
-    graph = Graph.modify(graph, uid, fn(p)->
-      Primitive.put_style(p, :color, color)
-    end)
-    ViewPort.put_graph( graph )
-    {:noreply, {graph, colors}}
+  def handle_input( {:cursor_enter, uid}, context, state ) do
+    state = Map.put(state, :contained, true)
+    update_color(state)
+    {:noreply, state}
   end
 
   #--------------------------------------------------------
-  def handle_input( {:cursor_exit, uid}, context, {graph, {_,color,_,_,_} = colors} ) do
-    graph = Graph.modify(graph, uid, fn(p)->
-      Primitive.put_style(p, :color, color)
-    end)
-    ViewPort.put_graph( graph )
-    {:noreply, {graph, colors}}
+  def handle_input( {:cursor_exit, uid}, context, state ) do
+    state = Map.put(state, :contained, false)
+    update_color(state)
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
+  def handle_input( {:cursor_button, {:left, :press, _, _}},
+  context, state ) do
+    state = Map.put(state, :pressed, true)
+    update_color(state)
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
+  def handle_input( {:cursor_button, {:left, :release, _, _}},
+  context, state ) do
+    state = Map.put(state, :pressed, false)
+    update_color(state)
+    {:noreply, state}
   end
 
   #--------------------------------------------------------
   def handle_input( event, context, state ) do
     {:noreply, state}
+  end
+
+
+
+  defp update_color( %{ graph: graph, colors: {_,color,_,_,_},
+  pressed: false, contained: false} ) do
+    Graph.modify(graph, :btn, fn(p)->
+      p
+      |> Primitive.put_style(:color, color)
+    end)
+    |> ViewPort.put_graph()
+  end
+
+  defp update_color( %{ graph: graph, colors: {_,_,color,_,_},
+  pressed: false, contained: true} ) do
+    Graph.modify(graph, :btn, fn(p)->
+      p
+      |> Primitive.put_style(:color, color)
+    end)
+    |> ViewPort.put_graph()
+  end
+
+  defp update_color( %{ graph: graph, colors: {_,color,_,_,_},
+  pressed: true, contained: false} ) do
+    Graph.modify(graph, :btn, fn(p)->
+      p
+      |> Primitive.put_style(:color, color)
+    end)
+    |> ViewPort.put_graph()
+  end
+
+  defp update_color( %{ graph: graph, colors: {_,_,_,color,_},
+  pressed: true, contained: true} ) do
+    Graph.modify(graph, :btn, fn(p)->
+      p
+      |> Primitive.put_style(:color, color)
+    end)
+    |> ViewPort.put_graph()
   end
 
 end
