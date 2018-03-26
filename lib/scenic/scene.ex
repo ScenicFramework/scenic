@@ -13,6 +13,7 @@
 defmodule Scenic.Scene do
   alias Scenic.Graph
   alias Scenic.ViewPort
+  alias Scenic.ViewPort.Input.Context
   alias Scenic.Primitive
   require Logger
 
@@ -64,6 +65,15 @@ defmodule Scenic.Scene do
     GenServer.call(pid, {:find_by_screen_pos, pos})
   end
 
+
+
+
+
+  def send_event( event, %Context{} = context ) do
+    IO.puts "#{inspect(event)}, #{inspect(context.event_chain)}"
+  end
+
+
   #===========================================================================
   # the using macro for scenes adopting this behavioiur
   defmacro __using__(_opts) do
@@ -90,6 +100,9 @@ defmodule Scenic.Scene do
 
       def handle_focus_gained( _param, state ),   do: {:ok, state}
       def handle_focus_lost( state ),             do: {:ok, state}
+
+      def send_event( event, %Scenic.ViewPort.Input.Context{} = context ),
+        do: Scenic.Scene.send_event( event, context )
 
       #--------------------------------------------------------
 #      add local shortcuts to things like get/put graph and modify element

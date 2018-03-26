@@ -28,7 +28,7 @@ defmodule Scenic.ViewPort do
   defmodule Input.Context do
     alias Scenic.Math.MatrixBin, as: Matrix
     @identity         Matrix.identity()
-    defstruct tx: @identity, inverse_tx: @identity, uid: nil, graph_ref: nil
+    defstruct tx: @identity, inverse_tx: @identity, uid: nil, graph_ref: nil, event_chain: []
   end
 
 
@@ -67,14 +67,14 @@ defmodule Scenic.ViewPort do
   def set_scene( scene, focus_param \\ nil )
 
   def set_scene( scene, focus_param ) when is_atom(scene) or is_reference(scene) do
-    GenServer.cast( @viewport, {:set_scene, scene, focus_param} )
+    GenServer.cast( @viewport, {:set_scene, scene, self(), focus_param} )
   end
 
   def set_scene( {mod, init_data}, focus_param ) when is_atom(mod) do
-    GenServer.cast( @viewport, {:set_scene, {mod, init_data}, focus_param} )
+    GenServer.cast( @viewport, {:set_scene, {mod, init_data}, self(), focus_param} )
   end
 
-
+  #--------------------------------------------------------
   def register_scene( scene_ref ) do
     Registry.register( :viewport_registry, scene_ref, nil )
   end
@@ -83,6 +83,7 @@ defmodule Scenic.ViewPort do
     Registry.unregister( :viewport_registry, scene_ref )
   end
 
+  #--------------------------------------------------------
   def lookup_scene( scene_ref ) do
     case Registry.lookup( :viewport_registry, scene_ref ) do
       [{pid,_}] -> pid
@@ -90,6 +91,15 @@ defmodule Scenic.ViewPort do
     end
   end
 
+  #--------------------------------------------------------
+  def scene?( scene_ref ) do
+    case lookup_scene( scene_ref ) do
+      nil -> false
+      _ -> true
+    end
+  end
+
+  # really lookup scene from graph
   defp lookup_graph_scene( graph_ref )
   defp lookup_graph_scene( {scene_ref, _} ) do
     lookup_scene( scene_ref )
@@ -114,7 +124,10 @@ defmodule Scenic.ViewPort do
 
   #--------------------------------------------------------
   def graph?( graph_ref ) do
-    :ets.lookup(__MODULE__, {:graph, graph_ref})
+    case :ets.lookup(__MODULE__, graph_ref) do
+      [] -> false
+      _ -> true
+    end
   end
 
   #--------------------------------------------------------
@@ -149,8 +162,12 @@ defmodule Scenic.ViewPort do
   Send an input event to the viewport for processing. This is typcally called
   by drivers that are generating input events.
   """
-  def input( input_event, viewport \\ @viewport ) do
-    GenServer.cast( viewport, {:input, input_event} )
+  def input( input_event ) do
+    GenServer.cast( @viewport, {:input, input_event} )
+  end
+
+  def input( input_event, context ) do
+    GenServer.cast( @viewport, {:input, input_event, context} )
   end
 
   def capture_input( input_types, %Context{} = context ) when is_list(input_types) do
@@ -226,7 +243,7 @@ IO.puts "GRAPH INIT"
 
   #--------------------------------------------------------
   # set a scene to be the new root
-  def handle_cast( {:set_scene, scene, focus_param},
+  def handle_cast( {:set_scene, scene, scene_pid, focus_param},
   %{root_scene_pid: root_scene_pid} = state ) do
 
     # start by telling the previous scene that it has lost focus
@@ -265,6 +282,7 @@ IO.puts "GRAPH INIT"
 
     # record that this is the new current scene
     state = state
+    |> Map.put( :root_scene_pid, scene_pid )
     |> Map.put( :root_graph_ref, graph_ref )
     |> Map.put( :hover_primitve, nil )
     |> Map.put( :input_captures, %{} )
@@ -355,7 +373,11 @@ IO.puts "GRAPH INIT"
   end
 
 
-
+  #--------------------------------------------------------
+  # ignore input until a scene has been set
+  def handle_cast( {:input, _}, %{root_scene_pid: nil} = state ) do
+    {:noreply, state}
+  end
 
 
   #--------------------------------------------------------

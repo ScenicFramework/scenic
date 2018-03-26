@@ -87,9 +87,8 @@ defmodule Scenic.ViewPortTest do
   # set_scene
 
   test "test set_scene sends a set_scene message to the viewport" do
-    self_pid = self()
-    ViewPort.set_scene(self_pid, :test_id, self_pid)
-    assert_receive( {:"$gen_cast", {:set_scene, ^self_pid, :test_id}} )
+    ViewPort.set_scene(:test_id, 123)
+    assert_receive( {:"$gen_cast", {:set_scene, :test_id, 123}} )
   end
 
   test "test set_scene resolves a named scene to a pid before sending" do
