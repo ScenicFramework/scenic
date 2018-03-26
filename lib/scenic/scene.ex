@@ -32,8 +32,7 @@ defmodule Scenic.Scene do
 #  @callback handle_raw_input(any, any, any) :: {:noreply, any, any}
   @callback handle_input(any, any, any) :: {:noreply, any, any}
 
-#  @callback filter_input(any, any, any) :: { :continue, any, map, any } | { :stop, map, any } 
-
+  @callback filter_event( any, any ) :: { :continue, any, any } | {:stop, any}
 
 #  @callback handle_reset(any, any) :: {:noreply, any, any}
 #  @callback handle_update(any, any) :: {:noreply, any, any}
@@ -68,9 +67,17 @@ defmodule Scenic.Scene do
 
 
 
+  def send_event( event, event_chain )
+  def send_event( event, [] ), do: :ok
+  def send_event( event, [{scene_ref, _graph_id} | tail] ) do
+    case ViewPort.lookup_scene( scene_ref ) do
+      nil -> :ok
+      pid -> GenServer.cast(pid, {:event, event, tail})
+    end
+  end
 
-  def send_event( event, %Context{} = context ) do
-    IO.puts "#{inspect(event)}, #{inspect(context.event_chain)}"
+  def send_event( event, other ) do
+    pry()
   end
 
 
@@ -89,6 +96,7 @@ defmodule Scenic.Scene do
 
 #      def handle_raw_input( event, graph, scene_state ),  do: {:noreply, graph, scene_state}
       def handle_input( event, _, scene_state ),  do: {:noreply, scene_state}
+      def filter_event( event, scene_state ),     do: {:continue, event, scene_state}
 
 #      def filter_input( event, graph, scene_state ),    do: {:continue, event, graph, scene_state}
 
@@ -102,7 +110,7 @@ defmodule Scenic.Scene do
       def handle_focus_lost( state ),             do: {:ok, state}
 
       def send_event( event, %Scenic.ViewPort.Input.Context{} = context ),
-        do: Scenic.Scene.send_event( event, context )
+        do: Scenic.Scene.send_event( event, context.event_chain )
 
       #--------------------------------------------------------
 #      add local shortcuts to things like get/put graph and modify element
@@ -115,9 +123,8 @@ defmodule Scenic.Scene do
         handle_focus_gained:    2,
         handle_focus_lost:      1,
 
-
-#        handle_raw_input:       3,
         handle_input:           3,
+        filter_event:           2,
       ]
 
     end # quote
@@ -191,6 +198,23 @@ defmodule Scenic.Scene do
   def handle_cast({:input, event, context}, 
   %{scene_module: mod, scene_state: sc_state} = state) do
     {:noreply, sc_state} = mod.handle_input(event, context, sc_state )
+    {:noreply, %{state | scene_state: sc_state}}
+  end
+
+
+  #--------------------------------------------------------
+  def handle_cast({:event, event, event_chain}, 
+  %{scene_module: mod, scene_state: sc_state} = state) do
+
+    sc_state = case mod.filter_event(event, sc_state ) do
+      { :continue, event, sc_state } ->
+        send_event( event, event_chain )
+        sc_state
+
+      {:stop, sc_state} ->
+        sc_state
+    end
+    
     {:noreply, %{state | scene_state: sc_state}}
   end
 

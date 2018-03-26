@@ -521,7 +521,7 @@ IO.puts "GRAPH INIT"
 
       {uid, point} ->
         # get the graph key, so we know what scene to send the event to
-        state = send_enter_message( uid, context.graph_ref, state )
+        state = send_enter_message( uid, context.graph_ref, state, context.event_chain )
         lookup_graph_scene( context.graph_ref )
         |> GenServer.cast(
           {
@@ -639,11 +639,11 @@ IO.puts "GRAPH INIT"
   %{root_graph_ref: root_ref} = state ) do
     state = case find_by_screen_point( point, root_ref ) do
       nil ->
-        # no uid found. let the root scene handle the click
+        # no uid found. let the root scene handle the event
         # we already know the root scene has identity transforms
-        state = send_primitive_exit_message(state, event_chain)
+        state = send_primitive_exit_message(state)
         lookup_graph_scene( root_ref )
-        |> GenServer.cast( {:input, msg, %{graph_ref: root_ref}} )
+        |> GenServer.cast( {:input, msg, %Context{graph_ref: root_ref}} )
         state
 
       {point, {uid, graph_ref}, _, event_chain} ->
@@ -693,8 +693,8 @@ IO.puts "GRAPH INIT"
   #============================================================================
   # regular input helper utilties
 
-  defp send_primitive_exit_message( %{hover_primitve: nil} = state, _ ), do: state
-  defp send_primitive_exit_message( %{hover_primitve: {uid, graph_ref}} = state, event_chain ) do
+  defp send_primitive_exit_message( %{hover_primitve: nil} = state ), do: state
+  defp send_primitive_exit_message( %{hover_primitve: {uid, graph_ref, event_chain}} = state ) do
     lookup_graph_scene( graph_ref )
     |> GenServer.cast(
       {
@@ -732,7 +732,7 @@ IO.puts "GRAPH INIT"
             {:cursor_enter, uid},
             %Context{uid: uid, graph_ref: graph_ref, event_chain: event_chain}
           })
-        %{state | hover_primitve: {uid, graph_ref}}
+        %{state | hover_primitve: {uid, graph_ref, event_chain}}
 
       _ ->
         # not setting a new one. do nothing.
