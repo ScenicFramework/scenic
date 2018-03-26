@@ -585,7 +585,7 @@ IO.puts "GRAPH INIT"
             %Context{ graph_ref: root_ref }
           })
 
-      {point, {uid, graph_ref}, {tx, inv_tx}} ->
+      {point, {uid, graph_ref}, {tx, inv_tx}, event_chain} ->
 
         pid = lookup_graph_scene( graph_ref )
         GenServer.cast( pid,
@@ -595,7 +595,8 @@ IO.puts "GRAPH INIT"
             %Context{
               graph_ref: graph_ref,
               uid: uid,
-              tx: tx, inverse_tx: inv_tx
+              tx: tx, inverse_tx: inv_tx,
+              event_chain: event_chain
             }
           })
     end
@@ -614,7 +615,7 @@ IO.puts "GRAPH INIT"
         lookup_graph_scene( root_ref )
         |> GenServer.cast( {:input, msg, %{graph_ref: root_ref}} )
 
-      {point, {uid, graph_ref}, {tx, inv_tx}} ->
+      {point, {uid, graph_ref}, {tx, inv_tx}, event_chain} ->
         # get the graph key, so we know what scene to send the event to
         lookup_graph_scene( graph_ref )
         |> GenServer.cast(
@@ -624,10 +625,40 @@ IO.puts "GRAPH INIT"
             %Context{
               graph_ref: graph_ref,
               uid: uid,
-              tx: tx, inverse_tx: inv_tx
+              tx: tx, inverse_tx: inv_tx,
+              event_chain: event_chain
             }
           })
     end
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
+  # cursor_enter is only sent to the root scene
+  defp do_handle_input( {:cursor_pos, point} = msg,
+  %{root_graph_ref: root_ref} = state ) do
+    state = case find_by_screen_point( point, root_ref ) do
+      nil ->
+        # no uid found. let the root scene handle the click
+        # we already know the root scene has identity transforms
+        state = send_primitive_exit_message(state, event_chain)
+        lookup_graph_scene( root_ref )
+        |> GenServer.cast( {:input, msg, %{graph_ref: root_ref}} )
+        state
+
+      {point, {uid, graph_ref}, _, event_chain} ->
+        # get the graph key, so we know what scene to send the event to
+        state = send_enter_message( uid, graph_ref, state, event_chain )
+        lookup_graph_scene( graph_ref )
+        |> GenServer.cast(
+          {
+            :input,
+            {:cursor_pos, point},
+            %Context{graph_ref: graph_ref, uid: uid, event_chain: event_chain}
+          })
+        state
+    end
+
     {:noreply, state}
   end
 
@@ -642,35 +673,6 @@ IO.puts "GRAPH INIT"
         msg,
          %Context{ graph_ref: root_ref }
       })
-    {:noreply, state}
-  end
-
-  #--------------------------------------------------------
-  # cursor_enter is only sent to the root scene
-  defp do_handle_input( {:cursor_pos, point} = msg,
-  %{root_graph_ref: root_ref} = state ) do
-    state = case find_by_screen_point( point, root_ref ) do
-      nil ->
-        # no uid found. let the root scene handle the click
-        # we already know the root scene has identity transforms
-        state = send_primitive_exit_message(state)
-        lookup_graph_scene( root_ref )
-        |> GenServer.cast( {:input, msg, %{graph_ref: root_ref}} )
-        state
-
-      {point, {uid, graph_ref}, _} ->
-        # get the graph key, so we know what scene to send the event to
-        state = send_enter_message( uid, graph_ref, state )
-        lookup_graph_scene( graph_ref )
-        |> GenServer.cast(
-          {
-            :input,
-            {:cursor_pos, point},
-            %Context{graph_ref: graph_ref, uid: uid}
-          })
-        state
-    end
-
     {:noreply, state}
   end
 
@@ -691,19 +693,19 @@ IO.puts "GRAPH INIT"
   #============================================================================
   # regular input helper utilties
 
-  defp send_primitive_exit_message( %{hover_primitve: nil} = state ), do: state
-  defp send_primitive_exit_message( %{hover_primitve: {uid, graph_ref}} = state ) do
+  defp send_primitive_exit_message( %{hover_primitve: nil} = state, _ ), do: state
+  defp send_primitive_exit_message( %{hover_primitve: {uid, graph_ref}} = state, event_chain ) do
     lookup_graph_scene( graph_ref )
     |> GenServer.cast(
       {
         :input,
         {:cursor_exit, uid},
-        %Context{uid: uid, graph_ref: graph_ref}
+        %Context{uid: uid, graph_ref: graph_ref, event_chain: event_chain}
       })
     %{state | hover_primitve: nil}
   end
 
-  defp send_enter_message( uid, graph_ref, %{hover_primitve: hover_primitve} = state ) do
+  defp send_enter_message( uid, graph_ref, %{hover_primitve: hover_primitve} = state, event_chain ) do
     # first, send the previous hover_primitve an exit message
     state = case hover_primitve do
       nil ->
@@ -728,7 +730,7 @@ IO.puts "GRAPH INIT"
           {
             :input,
             {:cursor_enter, uid},
-            %Context{uid: uid, graph_ref: graph_ref}
+            %Context{uid: uid, graph_ref: graph_ref, event_chain: event_chain}
           })
         %{state | hover_primitve: {uid, graph_ref}}
 
@@ -806,16 +808,16 @@ IO.puts "GRAPH INIT"
   # more efficient as we can stop as soon as we find the first one.
   defp find_by_screen_point( {x,y}, root_graph ) do
     identity = {@identity, @identity}
-    do_find_by_screen_point( x, y, 0, root_graph, nil, identity, identity )
+    do_find_by_screen_point( x, y, 0, root_graph, nil, identity, identity, [root_graph] )
   end
 
-  defp do_find_by_screen_point( x, y, uid, graph_ref, nil, p_tx, g_tx ) do
+  defp do_find_by_screen_point( x, y, uid, graph_ref, nil, p_tx, g_tx, event_chain ) do
     graph = get_graph( graph_ref )
-    do_find_by_screen_point( x, y, uid, graph_ref, graph, p_tx, g_tx )
+    do_find_by_screen_point( x, y, uid, graph_ref, graph, p_tx, g_tx, event_chain )
   end
 
   defp do_find_by_screen_point( x, y, uid, graph_ref, graph,
-    {parent_tx, parent_inv_tx}, {graph_tx, graph_inv_tx} ) do
+    {parent_tx, parent_inv_tx}, {graph_tx, graph_inv_tx}, event_chain ) do
 
     # get the primitive to test
     case graph[uid] do
@@ -833,14 +835,18 @@ IO.puts "GRAPH INIT"
         |> Enum.find_value( fn(uid) ->
           do_find_by_screen_point(
             x, y, uid, graph_ref, graph,
-            {tx, inv_tx}, {graph_tx, graph_inv_tx}
+            {tx, inv_tx}, {graph_tx, graph_inv_tx},
+            event_chain
           )
         end)
 
       # if this is a SceneRef, then traverse into the next graph
       %{data: {Primitive.SceneRef, ref_id}} = p ->
         {tx, inv_tx} = calc_transforms(p, parent_tx, parent_inv_tx)
-        do_find_by_screen_point(x, y, 0, ref_id, nil, {tx, inv_tx}, {tx, inv_tx} )
+        do_find_by_screen_point(x, y, 0, ref_id, nil,
+          {tx, inv_tx}, {tx, inv_tx},
+          [ref_id | event_chain]
+        )
 
       # This is a regular primitive, test to see if it is hit
       %{data: {mod, data}} = p ->
@@ -855,7 +861,7 @@ IO.puts "GRAPH INIT"
             # Return the point in graph coordinates. Local was good for the hit test
             # but graph coords makes more sense for the scene logic
             graph_point = Matrix.project_vector( graph_inv_tx, {x, y} )
-            {graph_point, {uid, graph_ref}, {graph_tx, graph_inv_tx}}
+            {graph_point, {uid, graph_ref}, {graph_tx, graph_inv_tx}, event_chain}
           false -> nil
         end
     end
