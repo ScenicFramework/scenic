@@ -338,6 +338,9 @@ IO.puts "GRAPH INIT"
     # can now safely delete the dead graphs from the table
     Enum.each( dead_refs, &:ets.delete(__MODULE__, &1) )
 
+    # tell the drivers about the updated graph
+    Driver.cast( {:put_graph, graph_key} )
+
     # store the dyanamic scenes references
     {:noreply, state}
   end
