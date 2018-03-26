@@ -58,7 +58,7 @@ defmodule Scenic.Component.Button do
 
   #--------------------------------------------------------
   def init( {{x, y}, w, h, r, text, type} = data ) do
-IO.puts "BUTTON init --> #{inspect(data)}"
+IO.puts "BUTTON init --> #{inspect(self())}"
     # get the theme colors
     colors = @types[type]
 
@@ -83,25 +83,25 @@ IO.puts "BUTTON init --> #{inspect(data)}"
 
 
   #--------------------------------------------------------
-  def handle_input( {:cursor_enter, uid}, context, {graph, {_,_,color,_,_} = colors} ) do
-    graph = Graph.modify(graph, uid, fn(p)->
-      Primitive.put_style(p, :color, color)
-    end)
-    Scenic.ViewPort.set_graph( graph )
-    {:noreply, {graph, colors}}
-  end
+#  def handle_input( {:cursor_enter, uid}, context, {graph, {_,_,color,_,_} = colors} ) do
+#    graph = Graph.modify(graph, uid, fn(p)->
+#      Primitive.put_style(p, :color, color)
+#    end)
+#    Scenic.ViewPort.set_graph( graph )
+#    {:noreply, {graph, colors}}
+#  end
 
   #--------------------------------------------------------
-  def handle_input( {:cursor_exit, uid}, context, {graph, {_,color,_,_,_}} = state ) do
-    graph = Graph.modify(graph, uid, fn(p)->
-      Primitive.put_style(p, :color, color)
-    end)
-    {:noreply, state}
-  end
+#  def handle_input( {:cursor_exit, uid}, context, {graph, {_,color,_,_,_}} = state ) do
+#    graph = Graph.modify(graph, uid, fn(p)->
+#      Primitive.put_style(p, :color, color)
+#    end)
+#    {:noreply, state}
+#  end
 
   #--------------------------------------------------------
   def handle_input( event, context, state ) do
-    IO.puts "BUTTON #{inspect(event)}"
+    IO.puts "BUTTON input #{inspect(event)}"
     {:noreply, state}
   end
 

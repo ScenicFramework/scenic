@@ -104,7 +104,7 @@ defmodule Scenic.Scene do
 
 
 #        handle_raw_input:       3,
-#        handle_input:           3,
+        handle_input:           3,
       ]
 
     end # quote
