@@ -362,8 +362,6 @@ IO.puts "GRAPH INIT"
 #        # captive input handling
 #        do_handle_captured_input(input_event, graph, context, state)
 #    end
-
-    {:noreply, state}
   end
 
   #--------------------------------------------------------
@@ -647,14 +645,13 @@ IO.puts "GRAPH INIT"
   end
 
   defp send_enter_message( uid, graph_ref, %{hover_primitve: hover_primitve} = state ) do
-
     # first, send the previous hover_primitve an exit message
     state = case hover_primitve do
       nil ->
         # no previous hover_primitive set. do not send an exit message
         state
 
-      {^uid, ^graph_ref} -> 
+      {^uid, ^graph_ref} ->
         # stil in the same hover_primitive. do not send an exit message
         state
 
@@ -664,7 +661,7 @@ IO.puts "GRAPH INIT"
     end
 
     # send the new hover_primitve an enter message
-    case state.hover_primitve do
+    state = case state.hover_primitve do
       nil ->
         # yes. setting a new one. send it.
         lookup_graph_scene( graph_ref )
@@ -680,6 +677,7 @@ IO.puts "GRAPH INIT"
         # not setting a new one. do nothing.
         state
     end
+    state
   end
 
 
