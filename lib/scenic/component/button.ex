@@ -9,8 +9,8 @@ defmodule Scenic.Component.Button do
   import IEx
 
 
-  @default_width      70
-  @default_height     24
+  @default_width      80
+  @default_height     32
   @default_radius     6
   @default_type       6
 
@@ -58,13 +58,12 @@ defmodule Scenic.Component.Button do
 
   #--------------------------------------------------------
   def init( {{x, y}, w, h, r, text, type} = data ) do
-IO.puts "BUTTON init --> #{inspect(self())}"
     # get the theme colors
     colors = @types[type]
 
     {text_color, button_color, _, _, border_color} = colors
 
-    graph = Graph.build( font: {:roboto, 14} )
+    graph = Graph.build( font: {:roboto, 18} )
     |> Primitive.RoundedRectangle.add_to_graph( {{x,y}, w, h, r}, color: button_color,
       id: :btn )
     |> Primitive.Text.add_to_graph( {{x+8,y+17}, text}, color: text_color )
