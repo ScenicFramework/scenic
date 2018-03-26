@@ -25,6 +25,12 @@ defmodule Scenic.ViewPort do
 
   @identity         Matrix.identity()
 
+  defmodule Input.Context do
+    alias Scenic.Math.MatrixBin, as: Matrix
+    @identity         Matrix.identity()
+    defstruct tx: @identity, inverse_tx: @identity, uid: nil, graph_ref: nil
+  end
+
 
 
   # graph_uid_offset is the maximum number of items in a tree that any given
