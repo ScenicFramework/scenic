@@ -147,13 +147,16 @@ defmodule Scenic.ViewPort do
     GenServer.cast( viewport, {:input, input_event} )
   end
 
-  def capture_input( input_type, %Context{} = context ) do
-    GenServer.cast( @viewport, {:capture_input, input_type, context} )
+  def capture_input( input_types, %Context{} = context ) when is_list(input_types) do
+    GenServer.cast( @viewport, {:capture_input, input_types, context} )
   end
+  def capture_input( input_type, context ), do: capture_input( [input_type], context )
 
-  def release_input( input_type ) do
-    GenServer.cast( @viewport, {:release_input, input_type} )
+
+  def release_input( input_types ) when is_list(input_types) do
+    GenServer.cast( @viewport, {:release_input, input_types} )
   end
+  def release_input( input_type ), do: release_input( [input_type] )
 
 
 
@@ -355,31 +358,35 @@ IO.puts "GRAPH INIT"
   def handle_cast( {:input, {input_type, _} = input_event}, 
   %{input_captures: input_captures} = state ) do
 #    IO.inspect input_event
-#    case Map.get(input_captures, input_type) do
-#      nil ->
+    case Map.get(input_captures, input_type) do
+      nil ->
         # regular input handling
         do_handle_input(input_event, state)
 
-#      context ->
-#        graph = get_graph(context.reference) 
-#        # captive input handling
-#        do_handle_captured_input(input_event, graph, context, state)
-#    end
+      context ->
+        # captive input handling
+        do_handle_captured_input(input_event, context, state)
+    end
   end
 
   #--------------------------------------------------------
   # capture a type of input
-  def handle_cast( {:capture_input, input_type, context}, state ) do
-    state = put_in(state, [:input_captures, input_type], context)
-    {:noreply, state}
+  def handle_cast( {:capture_input, input_types, context},
+  %{input_captures: captures} = state ) do
+    captures = Enum.reduce(input_types, captures, fn(input_type, ic)->
+      Map.put( ic, input_type, context )
+    end)
+    {:noreply, %{state | input_captures: captures}}
   end
 
   #--------------------------------------------------------
   # release a captured type of input
-  def handle_cast( {:release_input, input_type},
-  %{input_captures: input_captures} = state ) do
-    input_captures = Map.delete(input_captures, input_type)
-    {:noreply, %{state | input_captures: input_captures}}
+  def handle_cast( {:release_input, input_types},
+  %{input_captures: captures} = state ) do
+    captures = Enum.reduce(input_types, captures, fn(input_type, ic)->
+      Map.delete(ic, input_type)
+    end)
+    {:noreply, %{state | input_captures: captures}}
   end
 
 
@@ -393,18 +400,21 @@ IO.puts "GRAPH INIT"
   # mostly events get sent straight to the capturing scene. Common events that
   # have an x,y point, get transformed into the scene's requested coordinate space.
 
-  defp do_handle_captured_input( event, graph, context, state )
+  defp do_handle_captured_input( event, context, state )
 
 #  defp do_handle_captured_input( _, nil, _, state ), do: {:noreply, state}
 #  defp do_handle_captured_input( _, _, nil, state ), do: {:noreply, state}
 
   #--------------------------------------------------------
   defp do_handle_captured_input( {:cursor_button, {button, action, mods, point}},
-  graph, context, state ) do
+  context, state ) do
+    uid = case find_by_captured_point( point, context ) do
+      nil -> nil
+      {uid, point} -> uid
+    end
 
-    {uid, point} = find_by_captured_point( point, graph, context )
-
-    GenServer.cast(context.scene_pid,
+    lookup_graph_scene( context.graph_ref )
+    |> GenServer.cast(
       {
         :input,
         { :cursor_button, {button, action, mods, point}},
@@ -416,12 +426,15 @@ IO.puts "GRAPH INIT"
 
 
   #--------------------------------------------------------
-  defp do_handle_captured_input( {:cursor_scroll, {offset, point}},
-  graph, context, state ) do
+  defp do_handle_captured_input( {:cursor_scroll, {offset, point}}, context, state ) do
+    {uid, point} = case find_by_captured_point( point, context ) do
+      nil -> {nil, point}
+      r -> r
+    end
 
-    {uid, point} = find_by_captured_point( point, graph, context )
 
-    GenServer.cast(context.scene_pid,
+    lookup_graph_scene( context.graph_ref )
+    |> GenServer.cast(
       {
         :input,
         {:cursor_scroll, {offset, point}},
@@ -432,12 +445,14 @@ IO.puts "GRAPH INIT"
 
   #--------------------------------------------------------
   # cursor_enter is only sent to the root scene
-  defp do_handle_captured_input( {:cursor_enter, point},
-  graph, context, state ) do
+  defp do_handle_captured_input( {:cursor_enter, point}, context, state ) do
+    {uid, point} = case find_by_captured_point( point, context ) do
+      nil -> {nil, point}
+      r -> r
+    end
 
-    {uid, point} = find_by_captured_point( point, graph, context )
-
-    GenServer.cast(context.scene_pid,
+    lookup_graph_scene( context.graph_ref )
+    |> GenServer.cast(
       {
         :input,
         {:cursor_enter, point},
@@ -448,12 +463,14 @@ IO.puts "GRAPH INIT"
 
   #--------------------------------------------------------
   # cursor_exit is only sent to the root scene
-  defp do_handle_captured_input( {:cursor_exit, point},
-  graph, context, state ) do
+  defp do_handle_captured_input( {:cursor_exit, point}, context, state ) do
+    {uid, point} = case find_by_captured_point( point, context ) do
+      nil -> {nil, point}
+      r -> r
+    end
 
-    {uid, point} = find_by_captured_point( point, graph, context )
-
-    GenServer.cast(context.scene_pid,
+    lookup_graph_scene( context.graph_ref )
+    |> GenServer.cast(
       {
         :input,
         {:cursor_enter, point},
@@ -464,25 +481,36 @@ IO.puts "GRAPH INIT"
 
   #--------------------------------------------------------
   # cursor_enter is only sent to the root scene
-  defp do_handle_captured_input( {:cursor_pos, point},
-  graph, context, state ) do
-    
-    {uid, point} = find_by_captured_point( point, graph, context )
+  defp do_handle_captured_input( {:cursor_pos, point} = msg, context, state ) do
+    case find_by_captured_point( point, context ) do
+      nil ->
+        # no uid found. let the root scene handle the click
+        # we already know the root scene has identity transforms
+        state = send_primitive_exit_message(state)
+        lookup_graph_scene( context.graph_ref )
+        |> GenServer.cast( {:input, msg, Map.put(context, :uid, nil)} )
+        {:noreply, state}
 
-    GenServer.cast(context.scene_pid,
-      {
-        :input,
-        {:cursor_pos, point},
-        Map.put(context, :uid, uid)
-      })
-    {:noreply, state}
+      {uid, point} ->
+        # get the graph key, so we know what scene to send the event to
+        state = send_enter_message( uid, context.graph_ref, state )
+        lookup_graph_scene( context.graph_ref )
+        |> GenServer.cast(
+          {
+            :input,
+            {:cursor_pos, point},
+            Map.put(context, :uid, uid)
+          })
+        {:noreply, state}
+    end
   end
 
 
   #--------------------------------------------------------
   # all events that don't need a point transformed
-  defp do_handle_captured_input( event, _, context, state ) do
-    GenServer.cast(context.scene_pid,
+  defp do_handle_captured_input( event, context, state ) do
+    lookup_graph_scene( context.graph_ref )
+    |> GenServer.cast(
       { :input, event, Map.put(context, :uid, nil) })
     {:noreply, state}
   end
@@ -688,11 +716,18 @@ IO.puts "GRAPH INIT"
   #--------------------------------------------------------
   # find the indicated primitive in a single graph. use the incoming parent
   # transforms from the context
-  defp find_by_captured_point( {x,y}, graph, context ) do
-    do_find_by_captured_point( x, y, 0, graph, context.tx, context.inverse_tx, context.inverse_tx )
+  defp find_by_captured_point( {x,y}, context ) do
+    case get_graph( context.graph_ref ) do
+      nil ->
+        nil
+      graph ->
+        do_find_by_captured_point( x, y, 0, graph, context.tx,
+          context.inverse_tx, context.inverse_tx )
+    end
   end
 
-  defp do_find_by_captured_point( x, y, uid, graph, parent_tx, parent_inv_tx, graph_inv_tx ) do
+  defp do_find_by_captured_point( x, y, uid, graph,
+  parent_tx, parent_inv_tx, graph_inv_tx ) do
     # get the primitive to test
     case Map.get(graph, uid) do
       # do nothing if the primitive is hidden

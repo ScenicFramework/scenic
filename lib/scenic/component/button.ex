@@ -109,6 +109,8 @@ IO.puts "BUTTON init --> #{inspect(self())}"
   context, state ) do
     state = Map.put(state, :pressed, true)
     update_color(state)
+
+    ViewPort.capture_input( [:cursor_button, :cursor_pos], context)
     {:noreply, state}
   end
 
@@ -117,6 +119,8 @@ IO.puts "BUTTON init --> #{inspect(self())}"
   context, state ) do
     state = Map.put(state, :pressed, false)
     update_color(state)
+
+    ViewPort.release_input( [:cursor_button, :cursor_pos])
     {:noreply, state}
   end
 
