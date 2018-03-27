@@ -75,8 +75,8 @@ defmodule Scenic.ViewPort do
   end
 
   #--------------------------------------------------------
-  def register_scene( scene_ref, scene_pid, super_pid ) do
-    GenServer.cast( @viewport, {:register_scene, scene_ref, scene_pid, super_pid} )
+  def register_scene( scene_ref, scene_pid, dynamic_pid, supervisor_pid ) do
+    Registry.register( :viewport_registry, scene_ref, {scene_pid, dynamic_pid, supervisor_pid} )
   end
 
 #  def unregister_scene( scene_ref ) do
@@ -84,12 +84,19 @@ defmodule Scenic.ViewPort do
 #  end
 
   #--------------------------------------------------------
-#  def lookup_scene( scene_ref ) do
-#    case Registry.lookup( :viewport_registry, scene_ref ) do
-#      [{pid,_}] -> pid
-#      _ -> nil
-#    end
-#  end
+  def lookup_scene_pid( scene_ref ) do
+    case Registry.lookup( :viewport_registry, scene_ref ) do
+      [{_,{pid,_,_}}] -> pid
+      _ -> nil
+    end
+  end
+
+  def lookup_scene_pids( scene_ref ) do
+    case Registry.lookup( :viewport_registry, scene_ref ) do
+      [{_,pids}] -> pids
+      _ -> nil
+    end
+  end
 
   #--------------------------------------------------------
 #  def scene?( scene_ref ) do
@@ -305,17 +312,15 @@ defmodule Scenic.ViewPort do
     end
 
     # get or start the pid for the new scene being set as the root
-    {new_super_pid, new_scene_pid, scene_ref} = case scene do
+    {new_scene_pid, scene_ref} = case scene do
       {mod, opts} ->
         ref = make_ref()
-        {:ok, super_pid, scene_pid} = Scene.start_dynamic_scene(
-          @dynamic_scenes, ref, mod, opts
-        )
-        {super_pid, scene_pid, ref}
+        {:ok, scene_pid} = Scene.start_dynamic_scene( @dynamic_scenes, ref, mod, opts )
+        { scene_pid, ref}
 
       # the scene is managed externally
       name when is_atom(name) ->
-        {nil, Process.whereis( name ), name}
+        {Process.whereis( name ), name}
     end
     graph_ref = {scene_ref, nil}
 
@@ -391,11 +396,11 @@ defmodule Scenic.ViewPort do
         nil ->
           # need to start up a dynamic scene
           ref = make_ref()
-          {_, super_pid} = scene_pids[scene_ref]
-          {:ok, _, pid} = Scene.start_dynamic_scene(
-            super_pid, ref, mod, init_data
-          )
 
+          {_, dynamic_pid, _} = lookup_scene_pids( scene_ref )
+          {:ok, pid} = Scene.start_dynamic_scene(
+            dynamic_pid, ref, mod, init_data
+          )
           # save the new scene
           nr = Map.put(nr, uid, {pid, {ref, nil}, mod, init_data})
           g = put_in(g, [uid, :data], {Primitive.SceneRef, {ref, nil}})
