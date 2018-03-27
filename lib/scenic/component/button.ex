@@ -99,7 +99,7 @@ defmodule Scenic.Component.Button do
   #--------------------------------------------------------
   def handle_activate( _args, %{graph: graph} = state ) do
     ViewPort.put_graph( graph )
-    {:noreply, graph}
+    {:noreply, state}
   end
 
   #--------------------------------------------------------

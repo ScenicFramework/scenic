@@ -80,8 +80,9 @@ defmodule Scenic.ViewPort do
 
   #--------------------------------------------------------
   def register_scene( scene_ref, scene_pid, dynamic_pid, supervisor_pid ) do
-    Registry.register( :viewport_registry, scene_ref, {scene_pid, dynamic_pid, supervisor_pid} )
-    GenServer.cast(@viewport, {:monitor_scene, self()})
+#    Registry.register( :viewport_registry, scene_ref, {scene_pid, dynamic_pid, supervisor_pid} )
+#    GenServer.cast(@viewport, {:monitor_scene, self()})
+    GenServer.cast(@viewport, {:register_scene, scene_ref, scene_pid, dynamic_pid, supervisor_pid})
   end
 
 #  def unregister_scene( scene_ref ) do
@@ -90,17 +91,27 @@ defmodule Scenic.ViewPort do
 
   #--------------------------------------------------------
   def lookup_scene_pid( scene_ref ) do
-    case Registry.lookup( :viewport_registry, scene_ref ) do
-      [{_,{pid,_,_}}] -> pid
-      _ -> nil
+    case :ets.lookup(@ets_scenes_table, scene_ref ) do
+      [{_,{nil,_,_,_,_}}] -> nil
+      [{_,{pid,_,_,_,_}}] -> pid
+      [] -> nil
     end
+#    case Registry.lookup( :viewport_registry, scene_ref ) do
+#      [{_,{pid,_,_}}] -> pid
+#      _ -> nil
+#    end
   end
 
   def lookup_scene_pids( scene_ref ) do
-    case Registry.lookup( :viewport_registry, scene_ref ) do
-      [{_,pids}] -> pids
-      _ -> nil
+    case :ets.lookup(@ets_scenes_table, scene_ref ) do
+      [{_,{nil,_,_,_,_}}] -> nil
+      [{_,{p0,p1,p2,_,_}}] -> {p0,p1,p2}
+      [] -> nil
     end
+#    case Registry.lookup( :viewport_registry, scene_ref ) do
+#      [{_,pids}] -> pids
+#      _ -> nil
+#    end
   end
 
   defp lookup_graph_scene_pid( nil), do: nil
@@ -262,7 +273,7 @@ defmodule Scenic.ViewPort do
   (is_reference(scene_ref) or is_atom(scene_ref)) do
 
     case :ets.lookup(@ets_scenes_table, scene_ref ) do
-      [{p0,p1,p2,_,_}] ->
+      [{_,{p0,p1,p2,_,_}}] ->
         :ets.insert(@ets_scenes_table, {scene_ref, {p0,p1,p2, true, args}})
       [] ->
         :ets.insert(@ets_scenes_table, {scene_ref, {nil,nil,nil, true, args}})
@@ -275,7 +286,7 @@ defmodule Scenic.ViewPort do
   defp deactivate_scene( scene_ref ) when is_reference(scene_ref) or is_atom(scene_ref) do
 
     case :ets.lookup(@ets_scenes_table, scene_ref ) do
-      [{p0,p1,p2,_,_}] ->
+      [{_,{p0,p1,p2,_,_}}] ->
         :ets.insert(@ets_scenes_table, {scene_ref, {p0,p1,p2, false, nil}})
       [] ->
         :ets.insert(@ets_scenes_table, {scene_ref, {nil,nil,nil, false, nil}})
@@ -311,11 +322,16 @@ defmodule Scenic.ViewPort do
   # handle_cast
 
   #--------------------------------------------------------
-  def handle_cast( {:monitor_scene, scene_pid}, state ) do
+  def handle_cast( {:register_scene, scene_ref, scene_pid, dynamic_pid, supervisor_pid}, state ) do
+    case :ets.lookup(@ets_scenes_table, scene_ref ) do
+      [{_, {_,_,_,active,args}}] ->
+        :ets.insert(@ets_scenes_table, {scene_ref, {scene_pid, dynamic_pid, supervisor_pid, true, args}})
+      [] ->
+        :ets.insert(@ets_scenes_table, {scene_ref, {scene_pid, dynamic_pid, supervisor_pid, false, nil}})
+    end
     Process.monitor( scene_pid )
     {:noreply, state}
   end
-
 
 
   #--------------------------------------------------------
@@ -323,10 +339,6 @@ defmodule Scenic.ViewPort do
     GenServer.cast( to_pid, {:set_root, graph_ref} )
     {:noreply, state}
   end
-
-
-
-
 
   #--------------------------------------------------------
   # set a scene to be the new root
