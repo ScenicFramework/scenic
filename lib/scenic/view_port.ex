@@ -98,6 +98,7 @@ defmodule Scenic.ViewPort do
     end
   end
 
+  #--------------------------------------------------------
   def scene_pid_to_ref( pid ) do
     case :ets.match(:_scenic_viewport_scenes_table_, {:"$1", {pid,:"_",:"_",:"_",:"_"}}) do
       [[ref]] -> ref
@@ -105,7 +106,7 @@ defmodule Scenic.ViewPort do
     end
   end
 
-
+  #--------------------------------------------------------
   def scene_ref_to_pids( scene_ref ) do
     case :ets.lookup(@ets_scenes_table, scene_ref ) do
       [{_,{nil,_,_,_,_}}] -> nil
@@ -134,6 +135,14 @@ defmodule Scenic.ViewPort do
     :ets.match(:_scenic_viewport_graphs_table_, {:"$1", :"_"})
     |> List.flatten()
     |> Enum.uniq()
+  end
+
+  #--------------------------------------------------------
+  def list_scene_graph_refs( scene_ref ) do
+    :ets.match(:_scenic_viewport_graphs_table_, {{scene_ref, :"$1"}, :"_"})
+    |> List.flatten()
+    |> Enum.uniq()
+
   end
 
   defp graph_ref_to_pid( nil ), do: nil
