@@ -346,11 +346,14 @@ defmodule Scenic.ViewPort do
   %{root_graph_ref: old_root} = state ) do
 
     # tear down the old scene
-    with  {scene_ref, _} <- old_root,
-          {_, _, supervisor_pid} <- lookup_scene_pids( scene_ref ) do
-      deactivate_scene( scene_ref )
-      DynamicSupervisor.terminate_child( @dynamic_scenes, supervisor_pid )
-    end
+#    Task.start fn ->
+      with  {scene_ref, _} <- old_root,
+            {scene_pid, _, supervisor_pid} <- lookup_scene_pids( scene_ref ) do
+#        GenServer.call( scene_pid, :deactivate )
+        deactivate_scene( scene_ref )
+        DynamicSupervisor.terminate_child( @dynamic_scenes, supervisor_pid )
+      end
+#    end
 
 
 
