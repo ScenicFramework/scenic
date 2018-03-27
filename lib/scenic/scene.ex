@@ -106,8 +106,8 @@ defmodule Scenic.Scene do
 #      def graph_set_list(graph, _),                     do: Scenic.Scene.graph_set_list(graph)
 #      def graph_delta_list(graph, _),                   do: Scenic.Scene.graph_delta_list(graph)
 
-      def handle_focus_gained( _param, state ),   do: {:ok, state}
-      def handle_focus_lost( state ),             do: {:ok, state}
+      def handle_focus_gained( _param, state ),   do: {:noreply, state}
+      def handle_focus_lost( state ),             do: {:noreply, state}
 
       def send_event( event, %Scenic.ViewPort.Input.Context{} = context ),
         do: Scenic.Scene.send_event( event, context.event_chain )
@@ -180,7 +180,7 @@ defmodule Scenic.Scene do
   def handle_call(:focus_lost, _, %{scene_module: mod, scene_state: sc_state} = state) do
     # tell the scene it is gaining focus
     {:noreply, sc_state} = mod.handle_focus_lost( sc_state )
-    { :noreply, %{state | scene_state: sc_state} }
+    { :reply, :ok, %{state | scene_state: sc_state} }
   end
 
   #--------------------------------------------------------

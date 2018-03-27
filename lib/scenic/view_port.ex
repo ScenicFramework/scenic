@@ -67,11 +67,11 @@ defmodule Scenic.ViewPort do
   def set_scene( scene, focus_param \\ nil )
 
   def set_scene( scene, focus_param ) when is_atom(scene) or is_reference(scene) do
-    GenServer.cast( @viewport, {:set_scene, scene, self(), focus_param} )
+    GenServer.cast( @viewport, {:set_scene, scene, focus_param} )
   end
 
   def set_scene( {mod, init_data}, focus_param ) when is_atom(mod) do
-    GenServer.cast( @viewport, {:set_scene, {mod, init_data}, self(), focus_param} )
+    GenServer.cast( @viewport, {:set_scene, {mod, init_data}, focus_param} )
   end
 
   #--------------------------------------------------------
@@ -225,9 +225,6 @@ defmodule Scenic.ViewPort do
       max_depth: opts[:max_depth] || @max_depth,
       graph_table: :ets.new(__MODULE__, [:named_table, read_concurrency: true])
     }
-
-IO.puts "GRAPH INIT"
-#    GenServer.cast( self(), :after_init )
     {:ok, state}
   end
 
@@ -243,13 +240,12 @@ IO.puts "GRAPH INIT"
 
   #--------------------------------------------------------
   # set a scene to be the new root
-  def handle_cast( {:set_scene, scene, scene_pid, focus_param},
-  %{root_scene_pid: root_scene_pid} = state ) do
+  def handle_cast( {:set_scene, scene, focus}, %{root_scene_pid: root_pid} = state ) do
 
     # start by telling the previous scene that it has lost focus
     # done as a call to make sure the previous scene gets the message
     # if it is a dynamic scene, it might otherwise go down too quickly
-    case root_scene_pid do
+    case root_pid do
       nil ->
         # no previous scene. do nothing
         :ok
@@ -265,6 +261,9 @@ IO.puts "GRAPH INIT"
       :ok = DynamicSupervisor.terminate_child(@dynamic_scenes, pid)
     end)
 
+    # clear the ets table containing the graphs
+    :ets.delete_all_objects(__MODULE__)
+
     # get or start the pid for the new scene being set as the root
     {scene_pid, scene_ref} = case scene do
       {mod, opts} ->
@@ -278,7 +277,7 @@ IO.puts "GRAPH INIT"
     graph_ref = {scene_ref, nil}
 
     # tell the new scene that it has gained focus
-    GenServer.cast( scene_pid, {:focus_gained, focus_param} )
+    GenServer.cast( scene_pid, {:focus_gained, focus} )
 
     # record that this is the new current scene
     state = state
@@ -287,7 +286,6 @@ IO.puts "GRAPH INIT"
     |> Map.put( :hover_primitve, nil )
     |> Map.put( :input_captures, %{} )
     |> Map.put( :dynamic_scenes, %{} )
-
 
     # send a reset message to the drivers
     Driver.cast( {:set_root, graph_ref} )
@@ -712,7 +710,7 @@ IO.puts "GRAPH INIT"
         # no previous hover_primitive set. do not send an exit message
         state
 
-      {^uid, ^graph_ref} ->
+      {^uid, ^graph_ref, _} ->
         # stil in the same hover_primitive. do not send an exit message
         state
 

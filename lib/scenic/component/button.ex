@@ -125,6 +125,7 @@ defmodule Scenic.Component.Button do
 
   #--------------------------------------------------------
   def handle_input( {:cursor_enter, uid}, context, state ) do
+IO.puts( "handle_input :cursor_enter")
     state = Map.put(state, :contained, true)
     update_color(state)
     {:noreply, state}
@@ -132,6 +133,7 @@ defmodule Scenic.Component.Button do
 
   #--------------------------------------------------------
   def handle_input( {:cursor_exit, uid}, context, state ) do
+IO.puts( "handle_input :cursor_exit")
     state = Map.put(state, :contained, false)
     update_color(state)
     {:noreply, state}
@@ -140,6 +142,7 @@ defmodule Scenic.Component.Button do
   #--------------------------------------------------------
   def handle_input( {:cursor_button, {:left, :press, _, _}},
   context, state ) do
+IO.puts( "handle_input :cursor_button :press")
     state = Map.put(state, :pressed, true)
     update_color(state)
 
@@ -150,6 +153,7 @@ defmodule Scenic.Component.Button do
   #--------------------------------------------------------
   def handle_input( {:cursor_button, {:left, :release, _, _}},
   context, %{contained: contained, msg: msg} = state ) do
+IO.puts( "handle_input :cursor_button :release")
     state = Map.put(state, :pressed, false)
     update_color(state)
 
