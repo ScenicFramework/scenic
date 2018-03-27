@@ -36,8 +36,8 @@ defmodule Scenic.Scene do
 
 #  @callback handle_reset(any, any) :: {:noreply, any, any}
 #  @callback handle_update(any, any) :: {:noreply, any, any}
-  @callback handle_focus_gained(any, any) :: {:noreply, any}
-  @callback handle_focus_lost(any) :: {:noreply, any}
+  @callback handle_activate(any, any) :: {:noreply, any}
+  @callback handle_deactivate(any) :: {:noreply, any}
 
 
   #===========================================================================
@@ -94,16 +94,8 @@ defmodule Scenic.Scene do
       def handle_input( event, _, scene_state ),  do: {:noreply, scene_state}
       def filter_event( event, scene_state ),     do: {:continue, event, scene_state}
 
-#      def filter_input( event, graph, scene_state ),    do: {:continue, event, graph, scene_state}
-
-#      def handle_reset(graph, scene_state),             do: Scenic.Scene.handle_reset(graph, scene_state)
-#      def handle_update(graph, scene_state),            do: Scenic.Scene.handle_update(graph, scene_state)
-
-#      def graph_set_list(graph, _),                     do: Scenic.Scene.graph_set_list(graph)
-#      def graph_delta_list(graph, _),                   do: Scenic.Scene.graph_delta_list(graph)
-
-      def handle_focus_gained( _param, state ),   do: {:noreply, state}
-      def handle_focus_lost( state ),             do: {:noreply, state}
+#      def handle_activate( _args, state ),       do: {:noreply, state}
+      def handle_deactivate( state ),             do: {:noreply, state}
 
       def send_event( event, %Scenic.ViewPort.Input.Context{} = context ),
         do: Scenic.Scene.send_event( event, context.event_chain )
@@ -116,8 +108,8 @@ defmodule Scenic.Scene do
         handle_call:            3,
         handle_cast:            2,
         handle_info:            2,
-        handle_focus_gained:    2,
-        handle_focus_lost:      1,
+#        handle_activate:    2,
+        handle_deactivate:      1,
 
         handle_input:           3,
         filter_event:           2,
@@ -162,10 +154,6 @@ defmodule Scenic.Scene do
   end
 
 
-  defp find_supervisors() do
-    pry()
-  end
-
 
   #--------------------------------------------------------
   def start_dynamic_scene( dynamic_supervisor, ref, mod, opts ) do
@@ -175,13 +163,7 @@ defmodule Scenic.Scene do
     )
 
     # we want to return the pid of the scene itself. not the supervisor
-    scene_pid = Supervisor.which_children( scene_super_pid )
-    |> Enum.find_value( fn 
-      {^ref, pid, :worker, [Scenic.Scene]} ->
-        pid
-      _ ->
-        nil
-    end)
+    scene_pid = get_supervised_scene( scene_super_pid )
 
     {:ok, scene_pid}
   end
@@ -198,9 +180,23 @@ defmodule Scenic.Scene do
 
   #--------------------------------------------------------
   # support for losing focus
-  def handle_call(:focus_lost, _, %{scene_module: mod, scene_state: sc_state} = state) do
-    # tell the scene it is gaining focus
-    {:noreply, sc_state} = mod.handle_focus_lost( sc_state )
+  def handle_call(:deactivate, _, %{
+    scene_module: mod,
+    scene_state: sc_state,
+    dynamic_children_pid: dynamic_children_pid
+  } = state) do
+
+    # tell the scene it is being deactivated
+    {:noreply, sc_state} = mod.handle_deactivate( sc_state )
+
+    # deactivate the dynamic children too
+    DynamicSupervisor.which_children( dynamic_children_pid )
+    # the children are all supervisors, so get their scene's and activate them
+    |> Enum.each( fn({_, super_pid, :supervisor, [Scenic.Scene.Supervisor]}) ->
+      get_supervised_scene( super_pid )
+      |> GenServer.call(:deactivate)
+    end)
+
     { :reply, :ok, %{state | scene_state: sc_state} }
   end
 
@@ -246,12 +242,26 @@ defmodule Scenic.Scene do
 
 
   #--------------------------------------------------------
-  def handle_cast(:terminate, %{dyn_super_pid: nil} = state), do: {:noreply, state}
-  def handle_cast(:terminate, %{super_super_pid: nil} = state), do: {:noreply, state}
-  def handle_cast(:terminate,
-  %{dyn_super_pid: dyn_super_pid, super_super_pid: super_super_pid} = state) do
-    DynamicSupervisor.terminate_child(super_super_pid, dyn_super_pid)
-    {:noreply, state}
+  def handle_cast(:terminate, %{
+    scene_state: sc_state,
+    scene_module: mod,
+    dynamic_children_pid: dynamic_children_pid,
+    supervisor_pid: supervisor_pid
+  } = state) do
+
+    # tell the scene it is being deactivated
+    {:noreply, sc_state} = mod.handle_deactivate( sc_state )
+
+    # deactivate the dynamic children too
+    DynamicSupervisor.which_children( dynamic_children_pid )
+    # the children are all supervisors, so get their scene's and activate them
+    |> Enum.each( fn({_, super_pid, :supervisor, [Scenic.Scene.Supervisor]}) ->
+      get_supervised_scene( super_pid )
+      |> GenServer.call(:deactivate)
+    end)
+
+    Supervisor.stop(supervisor_pid)
+    {:noreply, %{state | scene_state: sc_state}}
   end
 
   #--------------------------------------------------------
@@ -279,12 +289,22 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  def handle_cast({:focus_gained, param}, %{scene_module: mod, scene_state: sc_state} = state) do
-    # tell the scene it is gaining focus
-    {:noreply, sc_state} = mod.handle_focus_gained( param, sc_state )
+  def handle_cast({:activate, args}, %{
+    scene_module: mod,
+    scene_state: sc_state,
+    dynamic_children_pid: dynamic_children_pid 
+  } = state) do
 
-    # send self a message to set the graph
-#    GenServer.cast( self(), {:set_graph, nil} )
+    # tell it's already-running dynamic children that they are being activated too
+    DynamicSupervisor.which_children( dynamic_children_pid )
+    # the children are all supervisors, so get their scene's and activate them
+    |> Enum.each( fn({_, super_pid, :supervisor, [Scenic.Scene.Supervisor]}) ->
+      get_supervised_scene( super_pid )
+      |> GenServer.cast({:activate, nil})
+    end)
+
+    # tell the scene it is gaining focus
+    {:noreply, sc_state} = mod.handle_activate( args, sc_state )
 
     { :noreply, %{state | scene_state: sc_state} }
   end
@@ -314,37 +334,19 @@ defmodule Scenic.Scene do
   #============================================================================
   # utilities
 
-#  #--------------------------------------------------------
-#  # input has been received. If it has x,y coords, then need to be transformed
-#  # into the local coordinate space
-#  defp transform_input_local( input, inverse_transform )
-#  defp transform_input_local( input, _ ) do
-#    input
-#  end
-#
-#  #--------------------------------------------------------
-#  # input is continuing on. If it is a standard event with x,y coords it is
-#  # in local space. Transform back into global space for the next filter.
-#  # can't just pass it along because the previous filter may have transformed
-#  # it in some way....
-#  defp transform_input_global( input, inverse_transform )
-#  defp transform_input_global( input, _ ) do
-#    input
-#  end
-#
-#  defp continue_input_filter( _, [] ), do: :ok
-#  defp continue_input_filter( input, [pid | tail] ) do
-#    GenServer.cast(pid, {:filter_input, input, tail})
-#  end
-#
-#
-#  #--------------------------------------------------------
-#  def graph_set_list(graph) do
-#    Graph.minimal(graph)
-#  end
-#  def graph_delta_list(graph) do
-#    Graph.get_delta_scripts(graph)
-#  end
+  #--------------------------------------------------------
+  # internal utility. Given a pid to a Scenic.Scene.Supervisor
+  # return the pid of the scene it supervises
+  defp get_supervised_scene( supervisor_pid ) do
+    Supervisor.which_children( supervisor_pid )
+    |> Enum.find_value( fn 
+      {_, pid, :worker, [Scenic.Scene]} ->
+        pid
+      _ ->
+        nil
+    end)
+  end
+
 end
 
 

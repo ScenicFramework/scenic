@@ -85,8 +85,6 @@ defmodule Scenic.Component.Button do
       color: button_color, id: :btn )
     |> Primitive.Text.add_to_graph( {{x+8,y+(hieght*0.7)}, text}, color: text_color )
 
-    ViewPort.put_graph( graph )
-
     state = %{
       graph: graph,
       colors: colors,
@@ -96,6 +94,12 @@ defmodule Scenic.Component.Button do
     }
 
     {:ok, state}
+  end
+
+  #--------------------------------------------------------
+  def handle_activate( _args, %{graph: graph} = state ) do
+    ViewPort.put_graph( graph )
+    {:noreply, graph}
   end
 
   #--------------------------------------------------------
