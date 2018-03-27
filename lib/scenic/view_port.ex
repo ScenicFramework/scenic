@@ -99,13 +99,13 @@ defmodule Scenic.ViewPort do
     end
   end
 
-  def lookup_graph_scene_pid( nil), do: nil
-  def lookup_graph_scene_pid( {scene_ref, _} ) do
+  defp lookup_graph_scene_pid( nil), do: nil
+  defp lookup_graph_scene_pid( {scene_ref, _} ) do
     lookup_scene_pid( scene_ref )
   end
 
-  def lookup_graph_scene_pids( nil), do: nil
-  def lookup_graph_scene_pids( {scene_ref, _} ) do
+  defp lookup_graph_scene_pids( nil), do: nil
+  defp lookup_graph_scene_pids( {scene_ref, _} ) do
     lookup_scene_pids( scene_ref )
   end
 
