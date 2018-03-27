@@ -43,13 +43,13 @@ defmodule Scenic.Scene do
   #===========================================================================
   # calls for setting up a scene inside of a supervisor
 
-  def child_spec({super_pid, scene_module, id}), do:
-    child_spec({super_pid, scene_module, id, nil})
+  def child_spec({super_super_pid, super_pid, scene_module, id}), do:
+    child_spec({super_super_pid, super_pid, scene_module, id, nil})
 
-  def child_spec({super_pid, scene_module, id, args}) do
+  def child_spec({super_super_pid, super_pid, scene_module, id, args}) do
     %{
       id: id,
-      start: {__MODULE__, :start_link, [{super_pid, scene_module, id, args}]},
+      start: {__MODULE__, :start_link, [{super_super_pid, super_pid, scene_module, id, args}]},
       type: :worker,
       restart: :permanent,
       shutdown: 500
@@ -73,10 +73,9 @@ defmodule Scenic.Scene do
     GenServer.cast(scene_pid, {:event, event, tail})
   end
 
-  def send_event( event, other ) do
-    pry()
+  def terminate( scene_pid ) do
+    GenServer.cast(scene_pid, :terminate)
   end
-
 
   #===========================================================================
   # the using macro for scenes adopting this behavioiur
@@ -142,15 +141,19 @@ defmodule Scenic.Scene do
 #  end
 
   def start_link({super_pid, name, module, args}) when is_atom(name) do
-    GenServer.start_link(__MODULE__, {super_pid, name, module, args}, name: name)
+    GenServer.start_link(__MODULE__, {nil, super_pid, name, module, args}, name: name)
   end
 
-  def start_link({super_pid, ref, module, args}) when is_reference(ref) do
-    GenServer.start_link(__MODULE__, {super_pid, ref, module, args})
+  def start_link({super_super_pid, super_pid, name, module, args}) when is_atom(name) do
+    GenServer.start_link(__MODULE__, {super_super_pid, super_pid, name, module, args}, name: name)
+  end
+
+  def start_link({super_super_pid, super_pid, ref, module, args}) when is_reference(ref) do
+    GenServer.start_link(__MODULE__, {super_super_pid, super_pid, ref, module, args})
   end
 
   #--------------------------------------------------------
-  def init( {super_pid, scene_ref, module, opts} ) do
+  def init( {super_super_pid, super_pid, scene_ref, module, opts} ) do
     Process.put(:scene_ref, scene_ref)
     ViewPort.register_scene( scene_ref, self(), super_pid )
 
@@ -159,8 +162,12 @@ defmodule Scenic.Scene do
     state = %{
       scene_module:       module,
       scene_state:        scene_state,
-      supervisor:         super_pid
+      super_pid:          super_pid,
+      super_super_pid:    super_super_pid
     }
+
+    IO.puts "SCENE PID: #{inspect(self())}"
+
     {:ok, state}
   end
 
@@ -174,7 +181,7 @@ defmodule Scenic.Scene do
     # start the scene itself
     {:ok, scene_pid} = DynamicSupervisor.start_child(
       super_pid,
-      {Scenic.Scene, {super_pid, ref, mod, opts}}
+      {Scenic.Scene, {dynamic_supervisor, super_pid, ref, mod, opts}}
     )
     {:ok, super_pid, scene_pid}
   end
@@ -204,9 +211,24 @@ defmodule Scenic.Scene do
     {:reply, reply, %{state | scene_state: sc_state}}
   end
 
+  #--------------------------------------------------------
+  def handle_call(msg, _from, state) do
+pry()
+    {:reply, :huh?, state}
+  end
+
 
   #===========================================================================
   # default cast handlers.
+
+  #--------------------------------------------------------
+  def handle_cast(:terminate, %{dyn_super_pid: nil} = state), do: {:noreply, state}
+  def handle_cast(:terminate, %{super_super_pid: nil} = state), do: {:noreply, state}
+  def handle_cast(:terminate,
+  %{dyn_super_pid: dyn_super_pid, super_super_pid: super_super_pid} = state) do
+    DynamicSupervisor.terminate_child(super_super_pid, dyn_super_pid)
+    {:noreply, state}
+  end
 
   #--------------------------------------------------------
   def handle_cast({:input, event, context}, 

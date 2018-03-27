@@ -234,8 +234,15 @@ defmodule Scenic.ViewPort do
 
   #============================================================================
 
-  defp lookup_scene_pid( graph_ref, %{scene_pids: scene_pids} ) do
-    case scene_pids[graph_ref] do
+  defp lookup_scene_pid( {scene_ref, _}, %{scene_pids: scene_pids} ) do
+    case scene_pids[scene_ref] do
+      {scene_pid, _} -> scene_pid
+      _ -> nil
+    end
+  end
+
+  defp lookup_scene_pid( scene_ref, %{scene_pids: scene_pids} ) do
+    case scene_pids[scene_ref] do
       {scene_pid, _} -> scene_pid
       _ -> nil
     end
@@ -249,7 +256,7 @@ defmodule Scenic.ViewPort do
   def handle_info({:DOWN, _monitor_ref, :process, pid, reason},
   %{scene_graphs: scene_graphs, graph_table: table} = state) do
     graph_keys = Map.get(scene_graphs, pid, [])
-pry()
+
     # clear the grpahs from the table
     Enum.each( graph_keys, &:ets.delete(table, &1))
 
@@ -345,8 +352,11 @@ pry()
   # reference. This is really the main point of the viewport. The drivers
   # shouldn't have any knowledge of the actual processes used and only
   # refer to graphs by unified keys
-  def handle_cast( {:put_graph, graph, graph_id, scene_ref, scene_pid},
-  %{dynamic_scenes: dynamic_scenes, scene_graphs: scene_graphs} = state ) do
+  def handle_cast( {:put_graph, graph, graph_id, scene_ref, scene_pid}, %{
+    dynamic_scenes: dynamic_scenes,
+    scene_graphs: scene_graphs,
+    scene_pids: scene_pids
+  } = state ) do
 
     graph_key = {scene_ref, graph_id}
 
@@ -369,12 +379,10 @@ pry()
           {o_refs, d_refs}
 
         nil ->
-         # this ref is either no longer being used or has changed.
-         # shut it down and remove it.
-         DynamicSupervisor.terminate_child(@dynamic_scenes, pid)
-         d_refs = [ ref | d_refs ]
-         o_refs = Map.delete(o_refs, uid)
-         {o_refs, d_refs}
+          Scene.terminate(pid)
+          d_refs = [ ref | d_refs ]
+          o_refs = Map.delete(o_refs, uid)
+          {o_refs, d_refs}
       end
     end)
 
@@ -392,10 +400,12 @@ pry()
         nil ->
           # need to start up a dynamic scene
           ref = make_ref()
-          {:ok, pid} = DynamicSupervisor.start_child(
-            @dynamic_scenes,
-            {Scene, {mod, ref, init_data}}
+          {_, super_pid} = scene_pids[scene_ref]
+          {:ok, _, pid} = Scene.start_dynamic_scene(
+            super_pid, ref, mod, init_data
           )
+
+          # save the new scene
           nr = Map.put(nr, uid, {pid, {ref, nil}, mod, init_data})
           g = put_in(g, [uid, :data], {Primitive.SceneRef, {ref, nil}})
           {nr, g}
@@ -623,6 +633,7 @@ pry()
   %{root_graph_ref: root_ref} = state ) do
     case find_by_screen_point( point, state ) do
       nil ->
+        pry()
         # no uid found. let the root scene handle the click
         # we already know the root scene has identity transforms
         lookup_scene_pid( root_ref, state )
