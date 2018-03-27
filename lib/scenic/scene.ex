@@ -43,11 +43,13 @@ defmodule Scenic.Scene do
   #===========================================================================
   # calls for setting up a scene inside of a supervisor
 
-  def child_spec({scene_module, id}), do: child_spec({scene_module, id, nil})
-  def child_spec({scene_module, id, args}) do
+  def child_spec({super_pid, scene_module, id}), do:
+    child_spec({super_pid, scene_module, id, nil})
+
+  def child_spec({super_pid, scene_module, id, args}) do
     %{
       id: id,
-      start: {__MODULE__, :start_link, [scene_module, id, args]},
+      start: {__MODULE__, :start_link, [{super_pid, scene_module, id, args}]},
       type: :worker,
       restart: :permanent,
       shutdown: 500
@@ -65,15 +67,10 @@ defmodule Scenic.Scene do
   end
 
 
-
-
   def send_event( event, event_chain )
   def send_event( event, [] ), do: :ok
-  def send_event( event, [{scene_ref, _graph_id} | tail] ) do
-    case ViewPort.lookup_scene( scene_ref ) do
-      nil -> :ok
-      pid -> GenServer.cast(pid, {:event, event, tail})
-    end
+  def send_event( event, [scene_pid | tail] ) do
+    GenServer.cast(scene_pid, {:event, event, tail})
   end
 
   def send_event( event, other ) do
@@ -139,30 +136,47 @@ defmodule Scenic.Scene do
 
 
   #--------------------------------------------------------
-  def start_link(module, ref) do
-    GenServer.start_link(__MODULE__, {module, ref, nil})
+#  def start_link(super_pid, ref, module) do
+#    name_ref = make_ref()
+#    GenServer.start_link(__MODULE__, {ref, module, nil})
+#  end
+
+  def start_link({super_pid, name, module, args}) when is_atom(name) do
+    GenServer.start_link(__MODULE__, {super_pid, name, module, args}, name: name)
   end
 
-  def start_link(module, name, args) when is_atom(name) do
-    GenServer.start_link(__MODULE__, {name, module, args}, name: name)
-  end
-
-  def start_link(module, ref, args) when is_reference(ref) do
-    GenServer.start_link(__MODULE__, {ref, module, args})
+  def start_link({super_pid, ref, module, args}) when is_reference(ref) do
+    GenServer.start_link(__MODULE__, {super_pid, ref, module, args})
   end
 
   #--------------------------------------------------------
-  def init( {scene_ref, module, opts} ) do
+  def init( {super_pid, scene_ref, module, opts} ) do
     Process.put(:scene_ref, scene_ref)
-    ViewPort.register_scene( scene_ref )
+    ViewPort.register_scene( scene_ref, self(), super_pid )
 
     {:ok, scene_state} = module.init(opts)
 
     state = %{
       scene_module:       module,
-      scene_state:        scene_state
+      scene_state:        scene_state,
+      supervisor:         super_pid
     }
     {:ok, state}
+  end
+
+  #--------------------------------------------------------
+  def start_dynamic_scene( dynamic_supervisor, ref, mod, opts ) do
+    # start the scene's dynamic supervisor
+    {:ok, super_pid} = DynamicSupervisor.start_child(
+      dynamic_supervisor,
+      {DynamicSupervisor, strategy: :one_for_one}
+    )
+    # start the scene itself
+    {:ok, scene_pid} = DynamicSupervisor.start_child(
+      super_pid,
+      {Scenic.Scene, {super_pid, ref, mod, opts}}
+    )
+    {:ok, super_pid, scene_pid}
   end
 
   #--------------------------------------------------------
