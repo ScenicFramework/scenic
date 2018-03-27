@@ -624,7 +624,6 @@ defmodule Scenic.ViewPort do
   %{root_graph_ref: root_ref} = state ) do
     case find_by_screen_point( point, state ) do
       nil ->
-        pry()
         # no uid found. let the root scene handle the click
         # we already know the root scene has identity transforms
         lookup_scene_pid( root_ref, state )
