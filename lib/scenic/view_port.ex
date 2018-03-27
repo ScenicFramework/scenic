@@ -296,9 +296,12 @@ defmodule Scenic.ViewPort do
   # set a scene to be the new root
   def handle_cast( {:set_scene, scene, focus},
   %{root_graph_ref: old_root_graph, scene_pids: scene_pids} = state ) do
-    {old_scene_pid, old_super_pid} = case scene_pids[old_root_graph] do
-      nil -> {nil, nil}
-      pids -> pids
+
+    # tear down the old scene
+    with  {scene_ref, nil} <- old_root_graph,
+          {scene_pid, super_pid} <- scene_pids[scene_ref] do
+      GenServer.call( scene_pid, :focus_lost )
+      DynamicSupervisor.terminate_child( @dynamic_scenes, super_pid )
     end
 
     # get or start the pid for the new scene being set as the root
@@ -316,20 +319,8 @@ defmodule Scenic.ViewPort do
     end
     graph_ref = {scene_ref, nil}
 
-    # tell the old scene it is losing focus
-    case old_scene_pid do
-      nil -> :ok
-      pid -> GenServer.call( pid, :focus_lost )
-    end
-
     # tell the new scene that it has gained focus
     GenServer.cast(new_scene_pid,  {:focus_gained, focus} )
-
-    # if the old scene is dynamic, shut it down
-    case old_super_pid do
-      nil -> :ok
-      pid -> DynamicSupervisor.terminate_child( @dynamic_scenes, old_super_pid )
-    end
 
     # record that this is the new current scene
     state = state
