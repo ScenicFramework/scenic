@@ -231,6 +231,11 @@ defmodule Scenic.Scene do
     # initialize the scene itself
     {:ok, sc_state} = module.init( args )
 
+    # test if this scene is supposed to be active. If yes, then take care of that
+    with {true, activate_args} <- ViewPort.scene_active?(scene_ref) do
+      GenServer.cast(self(), {:activate, activate_args})
+    end
+
     state = state
     |> Map.put( :scene_state, sc_state)
     |> Map.put( :supervisor_pid, supervisor_pid)
@@ -239,29 +244,10 @@ defmodule Scenic.Scene do
     {:noreply, state}
   end
 
-
-
   #--------------------------------------------------------
-  def handle_cast(:terminate, %{
-    scene_state: sc_state,
-    scene_module: mod,
-    dynamic_children_pid: dynamic_children_pid,
-    supervisor_pid: supervisor_pid
-  } = state) do
-
-    # tell the scene it is being deactivated
-    {:noreply, sc_state} = mod.handle_deactivate( sc_state )
-
-    # deactivate the dynamic children too
-    DynamicSupervisor.which_children( dynamic_children_pid )
-    # the children are all supervisors, so get their scene's and activate them
-    |> Enum.each( fn({_, super_pid, :supervisor, [Scenic.Scene.Supervisor]}) ->
-      get_supervised_scene( super_pid )
-      |> GenServer.call(:deactivate)
-    end)
-
+  def handle_cast(:terminate, %{ supervisor_pid: supervisor_pid } = state) do
     Supervisor.stop(supervisor_pid)
-    {:noreply, %{state | scene_state: sc_state}}
+    {:noreply, state}
   end
 
   #--------------------------------------------------------
