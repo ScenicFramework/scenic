@@ -397,6 +397,8 @@ defmodule Scenic.ViewPort do
     dynamic_scenes: dynamic_scenes
   } = state ) do
 
+IO.puts "~~~~~~~~~~~~~> #{inspect({:put_graph, graph, graph_id, scene_ref, scene_pid})}"
+
     graph_key = {scene_ref, graph_id}
 
     # build a list of the scene references in this graph
@@ -406,6 +408,8 @@ defmodule Scenic.ViewPort do
       # not a ref. ignore it
       _, nr -> nr
     end)
+
+IO.puts "----> Graph refs: #{inspect(graph_refs)}"
 
     # scan the existing refs for this graph and shutdown any that are no
     # longer being used.
@@ -440,6 +444,8 @@ defmodule Scenic.ViewPort do
         nil ->
           # need to start up a dynamic scene
           ref = make_ref()
+
+IO.puts "~~====> Start dynamic referenced scene #{inspect({ref, mod, init_data})}"
 
           {_, dynamic_pid, _} = scene_ref_to_pids( scene_ref )
           {:ok, pid} = Scene.start_dynamic_scene(
