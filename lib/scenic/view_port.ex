@@ -247,8 +247,6 @@ defmodule Scenic.ViewPort do
     state = %{
       dynamic_scenes: %{},      # only used to track which to shut down. probably can get rid of this
 
-      scene_graphs: %{},
-
       root_graph_ref: nil,
       input_captures: %{},
       hover_primitve: nil,
@@ -295,20 +293,27 @@ defmodule Scenic.ViewPort do
   # handle_info
 
   # when a scene goes down, clear it's graphs from the ets table
-  def handle_info({:DOWN, _monitor_ref, :process, pid, reason},
-  %{scene_graphs: scene_graphs} = state) do
-    graph_keys = Map.get(scene_graphs, pid, [])
+  def handle_info({:DOWN, _monitor_ref, :process, pid, reason}, state) do
 
-    # clear the grpahs from the table
-    Enum.each( graph_keys, &:ets.delete(@ets_graphs_table, &1))
+    # get the scene_ref for this pid
+    scene_ref = scene_pid_to_ref( pid )
 
-    # delete the scene table info too
-    :ets.delete(@ets_scenes_table, pid)
+    # clear the related scene entry and graphs, but only if another scene
+    # has not already registered them. Wand to avoid a possible race
+    # condition when a scene crashes and is being restarted
+    case :ets.lookup(@ets_scenes_table, scene_ref ) do
+      [{_,{^pid,_,_,_,_}}] -> nil
+        # delete the graphs associated with this scene
+        list_scene_graph_refs( scene_ref )
+        |> Enum.each( &:ets.delete(@ets_graphs_table, &1) )
 
-    # stop tracking that pid
-    scene_graphs = Map.delete(scene_graphs, pid)
+        # unregister the scene itself
+        :ets.delete(@ets_scenes_table, scene_ref)
 
-    {:noreply, %{state | scene_graphs: scene_graphs}}
+      _ -> :ok
+    end
+
+    {:noreply, state}
   end
 
 
@@ -389,8 +394,7 @@ defmodule Scenic.ViewPort do
   # shouldn't have any knowledge of the actual processes used and only
   # refer to graphs by unified keys
   def handle_cast( {:put_graph, graph, graph_id, scene_ref, scene_pid}, %{
-    dynamic_scenes: dynamic_scenes,
-    scene_graphs: scene_graphs
+    dynamic_scenes: dynamic_scenes
   } = state ) do
 
     graph_key = {scene_ref, graph_id}
@@ -454,11 +458,6 @@ defmodule Scenic.ViewPort do
     # store the refs and the graph
     state = put_in(state, [:dynamic_scenes, graph_key], new_refs)
     resp = :ets.insert(@ets_graphs_table, {graph_key, graph})
-
-    # associate this graph with the scene_pid
-    graphs = [graph_key | Map.get(scene_graphs, scene_pid, [])]
-    |> Enum.uniq()
-    state = put_in(state, [:scene_graphs, scene_pid], graphs)
 
     # can now safely delete the dead graphs from the table
     Enum.each( dead_refs, &:ets.delete(@ets_graphs_table, &1) )
