@@ -103,31 +103,6 @@ defmodule Scenic.Component.Button do
   end
 
   #--------------------------------------------------------
-#  def init( {{x, y}, w, h, r, text, type} = data ) do
-#    # get the theme colors
-#    colors = @types[type]
-#
-#    {text_color, button_color, _, _, border_color} = colors
-#
-#    graph = Graph.build( font: {:roboto, 18} )
-#    |> Primitive.RoundedRectangle.add_to_graph( {{x,y}, w, h, r}, color: button_color,
-#      id: :btn )
-#    |> Primitive.Text.add_to_graph( {{x+8,y+17}, text}, color: text_color )
-#
-#    ViewPort.put_graph( graph )
-#
-#    state = %{
-#      graph: graph,
-#      colors: colors,
-#      pressed: false,
-#      contained: false
-#    }
-#
-#    {:ok, state}
-#  end
-
-
-  #--------------------------------------------------------
   def handle_input( {:cursor_enter, uid}, context, state ) do
 #IO.puts( "handle_input :cursor_enter")
     state = Map.put(state, :contained, true)
