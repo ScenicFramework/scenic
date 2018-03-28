@@ -310,7 +310,9 @@ defmodule Scenic.ViewPort do
         # unregister the scene itself
         :ets.delete(@ets_scenes_table, scene_ref)
 
-      _ -> :ok
+      _ ->
+        # either not there, or claimed by another scene
+        :ok
     end
 
     {:noreply, state}
