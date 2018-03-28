@@ -11,7 +11,7 @@ defmodule Scenic.ViewPort do
   alias Scenic.Primitive
   alias Scenic.Math.MatrixBin, as: Matrix
   alias Scenic.ViewPort.Input.Context
-#  require Logger
+  require Logger
 
   import IEx
 
@@ -19,7 +19,7 @@ defmodule Scenic.ViewPort do
   
   @dynamic_scenes   :dynamic_scenes
 
-  @max_depth        64
+  @max_depth        256
 
   @root_graph       0
 
@@ -70,7 +70,7 @@ defmodule Scenic.ViewPort do
   """
   def set_scene( scene, focus_param \\ nil )
 
-  def set_scene( scene, focus_param ) when is_atom(scene) or is_reference(scene) do
+  def set_scene( scene, focus_param ) when is_atom(scene) do
     GenServer.cast( @viewport, {:set_scene, scene, focus_param} )
   end
 
@@ -294,7 +294,6 @@ defmodule Scenic.ViewPort do
 
   # when a scene goes down, clear it's graphs from the ets table
   def handle_info({:DOWN, _monitor_ref, :process, pid, reason}, state) do
-
     # get the scene_ref for this pid
     scene_ref = scene_pid_to_ref( pid )
 
@@ -324,6 +323,7 @@ defmodule Scenic.ViewPort do
 
   #--------------------------------------------------------
   def handle_cast( {:register_scene, scene_ref, scene_pid, dynamic_pid, supervisor_pid}, state ) do
+
     case :ets.lookup(@ets_scenes_table, scene_ref ) do
       [{_, {_,_,_,active,args}}] ->
         :ets.insert(@ets_scenes_table, {scene_ref, {scene_pid, dynamic_pid, supervisor_pid, true, args}})
@@ -331,6 +331,7 @@ defmodule Scenic.ViewPort do
         :ets.insert(@ets_scenes_table, {scene_ref, {scene_pid, dynamic_pid, supervisor_pid, false, nil}})
     end
     Process.monitor( scene_pid )
+
     {:noreply, state}
   end
 
@@ -397,8 +398,6 @@ defmodule Scenic.ViewPort do
     dynamic_scenes: dynamic_scenes
   } = state ) do
 
-IO.puts "~~~~~~~~~~~~~> #{inspect({:put_graph, graph, graph_id, scene_ref, scene_pid})}"
-
     graph_key = {scene_ref, graph_id}
 
     # build a list of the scene references in this graph
@@ -408,8 +407,6 @@ IO.puts "~~~~~~~~~~~~~> #{inspect({:put_graph, graph, graph_id, scene_ref, scene
       # not a ref. ignore it
       _, nr -> nr
     end)
-
-IO.puts "----> Graph refs: #{inspect(graph_refs)}"
 
     # scan the existing refs for this graph and shutdown any that are no
     # longer being used.
@@ -444,8 +441,6 @@ IO.puts "----> Graph refs: #{inspect(graph_refs)}"
         nil ->
           # need to start up a dynamic scene
           ref = make_ref()
-
-IO.puts "~~====> Start dynamic referenced scene #{inspect({ref, mod, init_data})}"
 
           {_, dynamic_pid, _} = scene_ref_to_pids( scene_ref )
           {:ok, pid} = Scene.start_dynamic_scene(
@@ -494,8 +489,11 @@ IO.puts "~~====> Start dynamic referenced scene #{inspect({ref, mod, init_data})
         do_handle_input(input_event, state)
 
       context ->
+IO.puts "------------- Begin captured input"
         # captive input handling
-        do_handle_captured_input(input_event, context, state)
+        r = do_handle_captured_input(input_event, context, state)
+IO.puts "------------- End captured input"
+        r
     end
   end
 
@@ -907,22 +905,32 @@ IO.puts "~~====> Start dynamic referenced scene #{inspect({ref, mod, init_data})
   # backwards and return the first hit we find. We could just reduct the whole
   # thing and return the last one found (that was my first try), but this is
   # more efficient as we can stop as soon as we find the first one.
-  defp find_by_screen_point( {x,y}, %{root_graph_ref: root_graph} = state ) do
+  defp find_by_screen_point( {x,y},
+  %{root_graph_ref: root_graph, max_depth: depth} = state ) do
     identity = {@identity, @identity}
     event_chain = case graph_ref_to_pid( root_graph ) do
       nil -> []
       pid -> [pid]
     end
-    do_find_by_screen_point( x, y, 0, root_graph, nil, identity, identity, event_chain )
+    do_find_by_screen_point( x, y, 0, root_graph, get_graph(root_graph),
+      identity, identity, event_chain, depth )
   end
 
-  defp do_find_by_screen_point( x, y, uid, graph_ref, nil, p_tx, g_tx, event_chain ) do
-    graph = get_graph( graph_ref )
-    do_find_by_screen_point( x, y, uid, graph_ref, graph, p_tx, g_tx, event_chain )
+
+  defp do_find_by_screen_point( _, _, _, _, _, _, _, _, 0 ) do
+    Logger.error "do_find_by_screen_point max depth"
+    nil
+  end
+
+
+  defp do_find_by_screen_point( _, _, _, graph_ref, nil, _, _, _, _ ) do
+    # for whatever reason, the graph hasn't been put yet. just return nil
+    Logger.warn "do_find_by_screen_point nil graph #{inspect(graph_ref)}"
+    nil
   end
 
   defp do_find_by_screen_point( x, y, uid, graph_ref, graph,
-    {parent_tx, parent_inv_tx}, {graph_tx, graph_inv_tx}, event_chain ) do
+    {parent_tx, parent_inv_tx}, {graph_tx, graph_inv_tx}, event_chain, depth ) do
 
     # get the primitive to test
     case graph[uid] do
@@ -941,7 +949,7 @@ IO.puts "~~====> Start dynamic referenced scene #{inspect({ref, mod, init_data})
           do_find_by_screen_point(
             x, y, uid, graph_ref, graph,
             {tx, inv_tx}, {graph_tx, graph_inv_tx},
-            event_chain
+            event_chain, depth - 1
           )
         end)
 
@@ -950,9 +958,9 @@ IO.puts "~~====> Start dynamic referenced scene #{inspect({ref, mod, init_data})
         scene_pid = scene_ref_to_pid( scene_ref )
 
         {tx, inv_tx} = calc_transforms(p, parent_tx, parent_inv_tx)
-        do_find_by_screen_point(x, y, 0, ref_id, nil,
+        do_find_by_screen_point(x, y, 0, ref_id, get_graph(ref_id),
           {tx, inv_tx}, {tx, inv_tx},
-          [scene_pid | event_chain]
+          [scene_pid | event_chain], depth - 1
         )
 
       # This is a regular primitive, test to see if it is hit

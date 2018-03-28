@@ -146,6 +146,12 @@ defmodule Scenic.Scene do
 
     GenServer.cast(self(), {:after_init, scene_ref, args})
 
+    # test if this scene is supposed to be active. If yes, then take care of that
+    with {true, activate_args} <- ViewPort.scene_active?(scene_ref) do
+      Logger.warn("Reactivating from the scene #{inspect(scene_ref)} #{inspect(self())}")
+      GenServer.cast(self(), {:activate, activate_args})
+    end
+
     state = %{
       scene_module: module
     }
@@ -230,11 +236,6 @@ defmodule Scenic.Scene do
 
     # initialize the scene itself
     {:ok, sc_state} = module.init( args )
-
-    # test if this scene is supposed to be active. If yes, then take care of that
-    with {true, activate_args} <- ViewPort.scene_active?(scene_ref) do
-      GenServer.cast(self(), {:activate, activate_args})
-    end
 
     state = state
     |> Map.put( :scene_state, sc_state)
