@@ -154,7 +154,7 @@ defmodule Scenic.ViewPort do
   #--------------------------------------------------------
   def put_graph( graph, graph_id \\ nil )
 
-  def put_graph( %Graph{primitive_map: p_map}, graph_id ) do
+  def put_graph( %Graph{primitive_map: p_map} = graph, graph_id ) do
     scene_ref = case Process.get(:scene_ref) do
       nil ->
         raise "Scenic.ViewPort.put_graph can only be called from with in a Scene"
@@ -162,10 +162,13 @@ defmodule Scenic.ViewPort do
         ref
     end
     # reduce the incoming graph to it's minimal form
-    graph = Enum.reduce(p_map, %{}, fn({uid, p}, g) ->
+    min_graph = Enum.reduce(p_map, %{}, fn({uid, p}, g) ->
       Map.put( g, uid, Primitive.minimal(p) )
     end)
-    GenServer.cast( @viewport, {:put_graph, graph, graph_id, scene_ref, self()} )
+    GenServer.cast( @viewport, {:put_graph, min_graph, graph_id, scene_ref} )
+
+    # return the original graph, allowing it to be used in a pipeline
+    graph
   end
 
   #--------------------------------------------------------
@@ -346,6 +349,7 @@ defmodule Scenic.ViewPort do
   # set a scene to be the new root
   def handle_cast( {:set_scene, scene, args},
   %{root_graph_ref: old_root} = state ) do
+Logger.warn "ViewPort set_scene #{inspect(scene)}, #{inspect(args)}"
 
     # tear down the old scene
     with  {scene_ref, _} <- old_root,
@@ -356,7 +360,6 @@ defmodule Scenic.ViewPort do
       end
     end
     
-
     # get or start the pid for the new scene being set as the root
     {new_scene_pid, scene_ref} = case scene do
       {mod, opts} ->
@@ -394,11 +397,13 @@ defmodule Scenic.ViewPort do
   # reference. This is really the main point of the viewport. The drivers
   # shouldn't have any knowledge of the actual processes used and only
   # refer to graphs by unified keys
-  def handle_cast( {:put_graph, graph, graph_id, scene_ref, scene_pid}, %{
+  def handle_cast( {:put_graph, graph, graph_id, scene_ref}, %{
     dynamic_scenes: dynamic_scenes
   } = state ) do
 
     graph_key = {scene_ref, graph_id}
+Logger.info "ViewPort put_graph #{inspect(graph_key)}"
+
 
     # build a list of the scene references in this graph
     graph_refs = Enum.reduce( graph, %{}, fn
@@ -471,12 +476,28 @@ defmodule Scenic.ViewPort do
   end
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   #--------------------------------------------------------
   # ignore input until a scene has been set
   def handle_cast( {:input, _}, %{root_scene_pid: nil} = state ) do
     {:noreply, state}
   end
-
 
   #--------------------------------------------------------
   # Input handling is enough of a beast to put move it into it's own section below
