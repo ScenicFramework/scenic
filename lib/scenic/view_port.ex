@@ -482,7 +482,6 @@ defmodule Scenic.ViewPort do
   # bottom of this file.
   def handle_cast( {:input, {input_type, _} = input_event}, 
   %{input_captures: input_captures} = state ) do
-#    IO.inspect input_event
     case Map.get(input_captures, input_type) do
       nil ->
         # regular input handling
