@@ -142,7 +142,7 @@ defmodule Scenic.ViewPort do
     :ets.match(:_scenic_viewport_graphs_table_, {{scene_ref, :"$1"}, :"_"})
     |> List.flatten()
     |> Enum.uniq()
-
+    |> Enum.map( fn(id) -> {scene_ref, id} end)
   end
 
   defp graph_ref_to_pid( nil ), do: nil
