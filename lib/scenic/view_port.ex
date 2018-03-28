@@ -7,6 +7,7 @@ defmodule Scenic.ViewPort do
   use GenServer
   alias Scenic.ViewPort.Driver
   alias Scenic.Scene
+  alias Scenic.Utilities
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.Math.MatrixBin, as: Matrix
@@ -248,7 +249,8 @@ defmodule Scenic.ViewPort do
 
     # set up the initial state
     state = %{
-      dynamic_scenes: %{},      # only used to track which to shut down. probably can get rid of this
+      raw_scene_refs: %{},
+      dyn_scene_refs: %{},
 
       root_graph_ref: nil,
       input_captures: %{},
@@ -312,6 +314,9 @@ defmodule Scenic.ViewPort do
         # unregister the scene itself
         :ets.delete(@ets_scenes_table, scene_ref)
 
+        # tell the drivers they can clean up this graph (if they need to...)
+
+
       _ ->
         # either not there, or claimed by another scene
         :ok
@@ -349,7 +354,6 @@ defmodule Scenic.ViewPort do
   # set a scene to be the new root
   def handle_cast( {:set_scene, scene, args},
   %{root_graph_ref: old_root} = state ) do
-Logger.warn "ViewPort set_scene #{inspect(scene)}, #{inspect(args)}"
 
     # tear down the old scene
     with  {scene_ref, _} <- old_root,
@@ -378,8 +382,6 @@ Logger.warn "ViewPort set_scene #{inspect(scene)}, #{inspect(args)}"
 
     # record that this is the new current scene
     state = state
-#    |> Map.put( :root_super_pid, new_super_pid )
-#    |> Map.put( :root_scene_pid, new_scene_pid )
     |> Map.put( :root_graph_ref, graph_ref )
     |> Map.put( :hover_primitve, nil )
     |> Map.put( :input_captures, %{} )
@@ -398,75 +400,82 @@ Logger.warn "ViewPort set_scene #{inspect(scene)}, #{inspect(args)}"
   # shouldn't have any knowledge of the actual processes used and only
   # refer to graphs by unified keys
   def handle_cast( {:put_graph, graph, graph_id, scene_ref}, %{
-    dynamic_scenes: dynamic_scenes
+    raw_scene_refs: raw_scene_refs, dyn_scene_refs: dyn_scene_refs
   } = state ) do
-
     graph_key = {scene_ref, graph_id}
-Logger.info "ViewPort put_graph #{inspect(graph_key)}"
 
+    # get the old refs
+    old_raw_refs =  Map.get( raw_scene_refs, graph_key, %{} )
 
-    # build a list of the scene references in this graph
-    graph_refs = Enum.reduce( graph, %{}, fn
+    # build a list of the dynamic scene references in this graph
+    new_raw_refs = Enum.reduce( graph, %{}, fn
       {uid,%{ data: {Primitive.SceneRef, {{mod, init_data}, nil}}}}, nr ->
         Map.put(nr, uid, {mod, init_data})
       # not a ref. ignore it
       _, nr -> nr
     end)
 
-    # scan the existing refs for this graph and shutdown any that are no
-    # longer being used.
-    old_refs =  Map.get( dynamic_scenes, graph_key, %{} )
-    {new_refs, dead_refs} = Enum.reduce(old_refs, {old_refs, []},
-    fn({uid, {pid,ref, old_mod, old_init_data}}, {o_refs, d_refs})->
-      case graph_refs[uid] do
-        {^old_mod, ^old_init_data} ->
-          # an exact match. all good. leave everything alone
-          {o_refs, d_refs}
+    # get the difference script between the raw refs
+    raw_diff = Utilities.Map.difference( old_raw_refs, new_raw_refs )
 
-        nil ->
-          deactivate_scene( ref )
-          Scene.terminate(pid)
-          d_refs = [ ref | d_refs ]
-          o_refs = Map.delete(o_refs, uid)
-          {o_refs, d_refs}
-      end
+    # get the old, resolved dynamic scene refs
+    old_dyn_refs = Map.get( dyn_scene_refs, graph_key, %{} )
+
+    # Enumerate the old refs, using the difference script to determine
+    # what to start or stop.
+    new_dyn_refs = Enum.reduce(raw_diff, old_dyn_refs, fn
+      {:put, uid, {mod, init_data}}, refs ->     # start this dynamic scene
+        # get the host scene's dynamic scene supervisor
+        {_, dynamic_pid, _} = scene_ref_to_pids( scene_ref )
+
+        # make a new, scene ref
+        new_scene_ref = make_ref()
+
+        # start up the new, dynamic, scene
+        {:ok, pid} = Scene.start_dynamic_scene(
+          dynamic_pid,
+          new_scene_ref,
+          mod,
+          init_data
+        )
+
+        # tell the new scene that it has been activated
+        activate_scene( new_scene_ref, pid, nil )
+
+        # build the new graph_ref for the new scene
+        new_graph_ref = {new_scene_ref, nil}
+
+        # add the this ref for next time
+        Map.put(refs, uid, new_graph_ref)
+
+      {:del, uid}, refs ->                      # stop this dynaic scene
+        # get the old dynamic graph reference
+        graph_ref = old_dyn_refs[uid]
+
+        # get the pid for this dynamic graph
+        scene_pid = graph_ref_to_pid( graph_ref )
+        # send the optional deactivate message and terminate. ok to be async
+        Task.start fn ->
+          GenServer.call( scene_pid, :deactivate )
+          Scene.terminate( scene_pid )
+        end
+
+        # remove the reference from the old refs
+        Map.delete(refs, uid)
     end)
 
-    # scan the new dyanimc refernces and start any that are not
-    # already running. Fix up all the refs in the process
-    {new_refs, graph} = Enum.reduce(graph_refs, {new_refs, graph},
-    fn({uid, {mod, init_data}} = key,{nr,g}) ->
-      # see if it is already running in the existing refs
-      case nr[key] do
-        {_, ref, _, _} ->
-          # don't start anything, but do put the ref into the graph
-          g = put_in(g, [uid, :data], {Primitive.SceneRef, ref})
-          {nr, g}
-
-        nil ->
-          # need to start up a dynamic scene
-          ref = make_ref()
-
-          {_, dynamic_pid, _} = scene_ref_to_pids( scene_ref )
-          {:ok, pid} = Scene.start_dynamic_scene(
-            dynamic_pid, ref, mod, init_data
-          )
-          # tell the new scene that it has been activated
-          activate_scene( ref, pid, nil )
-
-          # save the new scene
-          nr = Map.put(nr, uid, {pid, {ref, nil}, mod, init_data})
-          g = put_in(g, [uid, :data], {Primitive.SceneRef, {ref, nil}})
-          {nr, g}
-      end
+    # take all the new refs and insert them back into the graph, so that they are
+    # nice and normalized for the drivers
+    graph = Enum.reduce(new_dyn_refs, graph, fn({uid, graph_ref}, g)->
+      put_in(g, [uid, :data], {Primitive.SceneRef, graph_ref})
     end)
 
-    # store the refs and the graph
-    state = put_in(state, [:dynamic_scenes, graph_key], new_refs)
+    # store the refs for next time
+    state = put_in(state, [:raw_scene_refs, graph_key], new_raw_refs)
+    state = put_in(state, [:dyn_scene_refs, graph_key], new_dyn_refs)
+
+    # insert the graph into the etstable
     resp = :ets.insert(@ets_graphs_table, {graph_key, graph})
-
-    # can now safely delete the dead graphs from the table
-    Enum.each( dead_refs, &:ets.delete(@ets_graphs_table, &1) )
 
     # tell the drivers about the updated graph
     Driver.cast( {:put_graph, graph_key} )
@@ -474,17 +483,6 @@ Logger.info "ViewPort put_graph #{inspect(graph_key)}"
     # store the dyanamic scenes references
     {:noreply, state}
   end
-
-
-
-
-
-
-
-
-
-
-
 
 
 
