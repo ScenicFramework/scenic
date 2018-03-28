@@ -354,8 +354,7 @@ defmodule Scenic.ViewPort do
         DynamicSupervisor.terminate_child( @dynamic_scenes, supervisor_pid )
       end
     end
-
-
+    
 
     # get or start the pid for the new scene being set as the root
     {new_scene_pid, scene_ref} = case scene do
