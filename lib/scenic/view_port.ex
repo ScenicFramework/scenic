@@ -489,11 +489,8 @@ defmodule Scenic.ViewPort do
         do_handle_input(input_event, state)
 
       context ->
-IO.puts "------------- Begin captured input"
         # captive input handling
-        r = do_handle_captured_input(input_event, context, state)
-IO.puts "------------- End captured input"
-        r
+        do_handle_captured_input(input_event, context, state)
     end
   end
 
@@ -553,8 +550,9 @@ IO.puts "------------- End captured input"
 
 
   #--------------------------------------------------------
-  defp do_handle_captured_input( {:cursor_scroll, {offset, point}}, context, state ) do
-    {uid, point} = case find_by_captured_point( point, context ) do
+  defp do_handle_captured_input( {:cursor_scroll, {offset, point}}, context,
+  %{max_depth: max_depth} = state ) do
+    {uid, point} = case find_by_captured_point( point, context, max_depth ) do
       nil -> {nil, point}
       r -> r
     end
@@ -571,8 +569,9 @@ IO.puts "------------- End captured input"
 
   #--------------------------------------------------------
   # cursor_enter is only sent to the root scene
-  defp do_handle_captured_input( {:cursor_enter, point}, context, state ) do
-    {uid, point} = case find_by_captured_point( point, context ) do
+  defp do_handle_captured_input( {:cursor_enter, point}, context,
+  %{max_depth: max_depth} = state ) do
+    {uid, point} = case find_by_captured_point( point, context, max_depth ) do
       nil -> {nil, point}
       r -> r
     end
@@ -589,8 +588,9 @@ IO.puts "------------- End captured input"
 
   #--------------------------------------------------------
   # cursor_exit is only sent to the root scene
-  defp do_handle_captured_input( {:cursor_exit, point}, context, state ) do
-    {uid, point} = case find_by_captured_point( point, context ) do
+  defp do_handle_captured_input( {:cursor_exit, point}, context,
+  %{max_depth: max_depth} = state ) do
+    {uid, point} = case find_by_captured_point( point, context, max_depth ) do
       nil -> {nil, point}
       r -> r
     end
@@ -608,8 +608,8 @@ IO.puts "------------- End captured input"
   #--------------------------------------------------------
   # cursor_enter is only sent to the root scene
   defp do_handle_captured_input( {:cursor_pos, point} = msg, context,
-  %{root_graph_ref: root_ref} = state ) do
-    case find_by_captured_point( point, context ) do
+  %{root_graph_ref: root_ref, max_depth: max_depth} = state ) do
+    case find_by_captured_point( point, context, max_depth ) do
       nil ->
         # no uid found. let the root scene handle the click
         # we already know the root scene has identity transforms
@@ -845,18 +845,28 @@ IO.puts "------------- End captured input"
   #--------------------------------------------------------
   # find the indicated primitive in a single graph. use the incoming parent
   # transforms from the context
-  defp find_by_captured_point( {x,y}, context ) do
+  defp find_by_captured_point( {x,y}, context, max_depth ) do
     case get_graph( context.graph_ref ) do
       nil ->
         nil
       graph ->
         do_find_by_captured_point( x, y, 0, graph, context.tx,
-          context.inverse_tx, context.inverse_tx )
+          context.inverse_tx, context.inverse_tx, max_depth )
     end
   end
 
+  defp do_find_by_captured_point( _, _, _, graph, _, _, _, 0 ) do
+    Logger.error "do_find_by_captured_point max depth"
+    nil
+  end
+
+  defp do_find_by_captured_point( _, _, _, nil, _, _, _, _ ) do
+    Logger.warn "do_find_by_captured_point nil graph"
+    nil
+  end
+
   defp do_find_by_captured_point( x, y, uid, graph,
-  parent_tx, parent_inv_tx, graph_inv_tx ) do
+  parent_tx, parent_inv_tx, graph_inv_tx, depth ) do
     # get the primitive to test
     case Map.get(graph, uid) do
       # do nothing if the primitive is hidden
@@ -871,7 +881,7 @@ IO.puts "------------- End captured input"
         ids
         |> Enum.reverse()
         |> Enum.find_value( fn(uid) ->
-          do_find_by_captured_point( x, y, uid, graph, tx, inv_tx, graph_inv_tx )
+          do_find_by_captured_point( x, y, uid, graph, tx, inv_tx, graph_inv_tx, depth - 1 )
         end)
 
       # This is a regular primitive, test to see if it is hit
@@ -925,7 +935,6 @@ IO.puts "------------- End captured input"
 
   defp do_find_by_screen_point( _, _, _, graph_ref, nil, _, _, _, _ ) do
     # for whatever reason, the graph hasn't been put yet. just return nil
-    Logger.warn "do_find_by_screen_point nil graph #{inspect(graph_ref)}"
     nil
   end
 
