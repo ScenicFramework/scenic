@@ -85,6 +85,7 @@ defmodule Scenic.Scene do
 
       #--------------------------------------------------------
       # Here so that the scene can override if desired
+      def init(_),                                do: {:ok, nil}
  
       def handle_call(_msg, _from, state),        do: {:reply, :err_not_handled, state}
       def handle_cast(_msg, state),               do: {:noreply, state}
@@ -105,6 +106,7 @@ defmodule Scenic.Scene do
 #      do not add a put element. keep it at modify to stay atomic
       #--------------------------------------------------------
       defoverridable [
+        init:                   1,
         handle_call:            3,
         handle_cast:            2,
         handle_info:            2,
