@@ -305,21 +305,30 @@ defmodule Scenic.ViewPort do
     # clear the related scene entry and graphs, but only if another scene
     # has not already registered them. Wand to avoid a possible race
     # condition when a scene crashes and is being restarted
-    case :ets.lookup(@ets_scenes_table, scene_ref ) do
+    state = case :ets.lookup(@ets_scenes_table, scene_ref ) do
       [{_,{^pid,_,_,_,_}}] -> nil
-        # delete the graphs associated with this scene
-        list_scene_graph_refs( scene_ref )
-        |> Enum.each( &:ets.delete(@ets_graphs_table, &1) )
+
+        # get all the graphs associated with this scene
+        graphs = list_scene_graph_refs( scene_ref )
+
+        # delete the graphs associated with this scene from the ets table
+        Enum.each( graphs, &:ets.delete(@ets_graphs_table, &1) )
 
         # unregister the scene itself
         :ets.delete(@ets_scenes_table, scene_ref)
 
         # tell the drivers they can clean up this graph (if they need to...)
 
+        # clean up and return the state
+        Enum.reduce(graphs, state, fn(graph_ref, s)->
+          s
+          |> Utilities.Map.delete_in( [:raw_scene_refs, graph_ref] )
+          |> Utilities.Map.delete_in( [:dyn_scene_refs, graph_ref] )
+        end)
 
       _ ->
         # either not there, or claimed by another scene
-        :ok
+        state
     end
 
     {:noreply, state}
