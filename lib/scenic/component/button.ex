@@ -97,7 +97,7 @@ defmodule Scenic.Component.Button do
   end
 
   #--------------------------------------------------------
-  def handle_activate( _args, %{graph: graph} = state ) do
+  def handle_activate( _id, _args, %{graph: graph} = state ) do
     ViewPort.put_graph( graph )
     {:noreply, state}
   end

@@ -29,6 +29,7 @@ defmodule Scenic.ViewPort do
 
   @ets_scenes_table   :_scenic_viewport_scenes_table_
   @ets_graphs_table   :_scenic_viewport_graphs_table_
+  @ets_graph_activation_table   :_scenic_viewport_graph_activation_table_
 
   defmodule Input.Context do
     alias Scenic.Math.MatrixBin, as: Matrix
@@ -93,15 +94,15 @@ defmodule Scenic.ViewPort do
   #--------------------------------------------------------
   def scene_ref_to_pid( scene_ref ) do
     case :ets.lookup(@ets_scenes_table, scene_ref ) do
-      [{_,{nil,_,_,_,_}}] -> nil
-      [{_,{pid,_,_,_,_}}] -> pid
+      [{_,{nil,_,_}}] -> nil
+      [{_,{pid,_,_}}] -> pid
       [] -> nil
     end
   end
 
   #--------------------------------------------------------
   def scene_pid_to_ref( pid ) do
-    case :ets.match(:_scenic_viewport_scenes_table_, {:"$1", {pid,:"_",:"_",:"_",:"_"}}) do
+    case :ets.match(:_scenic_viewport_scenes_table_, {:"$1", {pid,:"_",:"_"}}) do
       [[ref]] -> ref
       _ -> nil
     end
@@ -110,17 +111,30 @@ defmodule Scenic.ViewPort do
   #--------------------------------------------------------
   def scene_ref_to_pids( scene_ref ) do
     case :ets.lookup(@ets_scenes_table, scene_ref ) do
-      [{_,{nil,_,_,_,_}}] -> nil
-      [{_,{p0,p1,p2,_,_}}] -> {p0,p1,p2}
+      [{_,{nil,_,_}}] -> nil
+      [{_,{p0,p1,p2}}] -> {p0,p1,p2}
       [] -> nil
     end
   end
 
+  defp graph_ref_to_pid( nil ), do: nil
+  defp graph_ref_to_pid( {scene_ref, _} ) do
+    scene_ref_to_pid( scene_ref )
+  end
+
   #--------------------------------------------------------
-  def scene_active?( scene_ref ) when is_atom(scene_ref) or is_reference(scene_ref) do
-    case :ets.lookup(@ets_scenes_table, scene_ref ) do
-      [{_,{_,_,_,active,args}}] -> {active,args}
-      _ -> {:error, :not_found}
+#  def scene_active?( scene_ref ) when is_atom(scene_ref) or is_reference(scene_ref) do
+#    case :ets.lookup(@ets_scenes_table, scene_ref ) do
+#      [{_,{_,_,_,active,args}}] -> {active,args}
+#      _ -> {:error, :not_found}
+#    end
+#  end
+
+  #--------------------------------------------------------
+  def graph_active?( {_,_} = graph_ref ) do
+    case :ets.lookup(@ets_graph_activation_table, graph_ref ) do
+      [{_,args}] -> {:active, args}
+      _ -> :inactive
     end
   end
 
@@ -146,16 +160,18 @@ defmodule Scenic.ViewPort do
     |> Enum.map( fn(id) -> {scene_ref, id} end)
   end
 
-  defp graph_ref_to_pid( nil ), do: nil
-  defp graph_ref_to_pid( {scene_ref, _} ) do
-    scene_ref_to_pid( scene_ref )
+  #--------------------------------------------------------
+  def list_scene_activations( scene_ref ) do
+    :ets.match(@ets_graph_activation_table, {{scene_ref, :"$1"}, :"$2"})
+    |> Enum.map( fn([id,args]) -> {id, args} end)
   end
 
 
-  #--------------------------------------------------------
-  def put_graph( graph, graph_id \\ nil )
 
-  def put_graph( %Graph{primitive_map: p_map} = graph, graph_id ) do
+  #--------------------------------------------------------
+  def put_graph( graph, graph_id \\ nil, opts \\ [] )
+
+  def put_graph( %Graph{primitive_map: p_map} = graph, graph_id, opts ) do
     scene_ref = case Process.get(:scene_ref) do
       nil ->
         raise "Scenic.ViewPort.put_graph can only be called from with in a Scene"
@@ -166,7 +182,7 @@ defmodule Scenic.ViewPort do
     min_graph = Enum.reduce(p_map, %{}, fn({uid, p}, g) ->
       Map.put( g, uid, Primitive.minimal(p) )
     end)
-    GenServer.cast( @viewport, {:put_graph, min_graph, graph_id, scene_ref} )
+    GenServer.cast( @viewport, {:put_graph, min_graph, graph_id, scene_ref, opts} )
 
     # return the original graph, allowing it to be used in a pipeline
     graph
@@ -258,7 +274,8 @@ defmodule Scenic.ViewPort do
 
       max_depth: opts[:max_depth] || @max_depth,
       graph_table: :ets.new(@ets_graphs_table, [:named_table, read_concurrency: true]),
-      scene_table: :ets.new(@ets_scenes_table, [:named_table, read_concurrency: true])
+      scene_table: :ets.new(@ets_scenes_table, [:named_table, read_concurrency: true]),
+      activation_table: :ets.new(@ets_graph_activation_table, [:named_table, read_concurrency: true])
     }
 
     {:ok, state}
@@ -266,33 +283,78 @@ defmodule Scenic.ViewPort do
 
 
   #--------------------------------------------------------
-  defp activate_scene( scene_ref, pid, args ) when is_pid(pid) and
-  (is_reference(scene_ref) or is_atom(scene_ref)) do
-
-    case :ets.lookup(@ets_scenes_table, scene_ref ) do
-      [{_,{p0,p1,p2,_,_}}] ->
-        :ets.insert(@ets_scenes_table, {scene_ref, {p0,p1,p2, true, args}})
-      [] ->
-        :ets.insert(@ets_scenes_table, {scene_ref, {nil,nil,nil, true, args}})
-    end
-
-    GenServer.cast(pid, {:activate, args} )
-  end
+#  defp activate_scene( scene_ref, pid, args ) when is_pid(pid) and
+#  (is_reference(scene_ref) or is_atom(scene_ref)) do
+#
+#    case :ets.lookup(@ets_scenes_table, scene_ref ) do
+#      [{_,{p0,p1,p2,_,_}}] ->
+#        :ets.insert(@ets_scenes_table, {scene_ref, {p0,p1,p2, true, args}})
+#      [] ->
+#        :ets.insert(@ets_scenes_table, {scene_ref, {nil,nil,nil, true, args}})
+#    end
+#
+#    GenServer.cast(pid, {:activate, args} )
+#  end
 
   #--------------------------------------------------------
-  defp deactivate_scene( scene_ref ) when is_reference(scene_ref) or is_atom(scene_ref) do
+#  defp deactivate_scene( scene_ref ) when is_reference(scene_ref) or is_atom(scene_ref) do
+#
+#    case :ets.lookup(@ets_scenes_table, scene_ref ) do
+#      [{_,{p0,p1,p2,_,_}}] ->
+#        :ets.insert(@ets_scenes_table, {scene_ref, {p0,p1,p2, false, nil}})
+#      [] ->
+#        :ets.insert(@ets_scenes_table, {scene_ref, {nil,nil,nil, false, nil}})
+#    end
+#
+#    scene_ref_to_pid( scene_ref )
+#    |> GenServer.call( :deactivate )
+#  end
 
-    case :ets.lookup(@ets_scenes_table, scene_ref ) do
-      [{_,{p0,p1,p2,_,_}}] ->
-        :ets.insert(@ets_scenes_table, {scene_ref, {p0,p1,p2, false, nil}})
-      [] ->
-        :ets.insert(@ets_scenes_table, {scene_ref, {nil,nil,nil, false, nil}})
+
+  defp activate_graph( {scene_ref, id} = graph_ref, args ) do
+    # get the graph
+    case get_graph(graph_ref) do
+      nil -> :ok
+      graph ->
+        # walk the members, of the graph and deactivate all the referenced graphs
+        Enum.each( graph_ref, fn
+          {_, %{ data: {Primitive.SceneRef, child_graph}}} ->
+            activate_graph( child_graph, args )
+          _ -> :ok
+        end)
     end
-
-    scene_ref_to_pid( scene_ref )
-    |> GenServer.call( :deactivate )
+    
+    # activate this graph
+    case scene_ref_to_pid(scene_ref) do
+      nil -> :ok
+      scene_pid ->
+        :ets.insert(@ets_graph_activation_table, {graph_ref, args})
+        GenServer.call(scene_pid, {:activate, id, args})
+    end
   end
 
+  defp deactivate_graph( {scene_ref, id} = graph_ref ) do
+    # get the graph
+    case get_graph(graph_ref) do
+      nil -> :ok
+      graph ->
+        # walk the members, of the graph and deactivate all the referenced graphs
+        Enum.each( graph_ref, fn
+          {_, %{ data: {Primitive.SceneRef, child_graph}}} ->
+            deactivate_graph( child_graph )
+          _ -> :ok
+        end)
+    end
+    
+    # deactivate this graph
+    case scene_ref_to_pid(scene_ref) do
+      nil -> :ok
+      scene_pid ->
+        record_graph_deactivation( graph_ref )
+        :ets.delete(@ets_graph_activation_table, graph_ref)
+        GenServer.call(scene_pid, {:deactivate, id})
+    end
+  end
 
   #============================================================================
   # handle_info
@@ -306,7 +368,7 @@ defmodule Scenic.ViewPort do
     # has not already registered them. Wand to avoid a possible race
     # condition when a scene crashes and is being restarted
     state = case :ets.lookup(@ets_scenes_table, scene_ref ) do
-      [{_,{^pid,_,_,_,_}}] -> nil
+      [{_,{^pid,_,_}}] -> nil
 
         # get all the graphs associated with this scene
         graphs = list_scene_graph_refs( scene_ref )
@@ -316,6 +378,15 @@ defmodule Scenic.ViewPort do
 
         # unregister the scene itself
         :ets.delete(@ets_scenes_table, scene_ref)
+
+        # delete the recorded activations
+        list = :ets.match(@ets_graph_activation_table, {{scene_ref, :"$1"}, :"_"})
+
+#        :ets.match(@ets_graph_activation_table, {{scene_ref, :"$1"}, :"_"})
+#        |> List.flatten()
+#        |> Enum.each(fn(id) ->
+#          :ets.delete(@ets_graph_activation_table, {scene_ref, id})
+#        end)
 
         # tell the drivers they can clean up this graph (if they need to...)
 
@@ -340,15 +411,8 @@ defmodule Scenic.ViewPort do
 
   #--------------------------------------------------------
   def handle_cast( {:register_scene, scene_ref, scene_pid, dynamic_pid, supervisor_pid}, state ) do
-
-    case :ets.lookup(@ets_scenes_table, scene_ref ) do
-      [{_, {_,_,_,active,args}}] ->
-        :ets.insert(@ets_scenes_table, {scene_ref, {scene_pid, dynamic_pid, supervisor_pid, true, args}})
-      [] ->
-        :ets.insert(@ets_scenes_table, {scene_ref, {scene_pid, dynamic_pid, supervisor_pid, false, nil}})
-    end
+    :ets.insert(@ets_scenes_table, {scene_ref, {scene_pid, dynamic_pid, supervisor_pid}})
     Process.monitor( scene_pid )
-
     {:noreply, state}
   end
 
@@ -361,8 +425,39 @@ defmodule Scenic.ViewPort do
 
   #--------------------------------------------------------
   # set a scene to be the new root
-  def handle_cast( {:set_scene, scene, args},
+  def handle_cast( {:set_scene, scene, activate_args},
   %{root_graph_ref: old_root} = state ) do
+
+    # reset all activations
+    :ets.delete_all_objects(@ets_graph_activation_table)
+    
+    # get or start the pid for the new scene being set as the root
+    {new_scene_pid, scene_ref} = case scene do
+      {mod, init_data} ->
+        ref = make_ref()
+        :ets.insert(@ets_graph_activation_table, {{ref, nil}, activate_args})
+        {:ok, scene_pid} = Scene.start_dynamic_scene( @dynamic_scenes, ref, mod, init_data )
+        { scene_pid, ref}
+
+      # the scene is managed externally
+      name when is_atom(name) ->
+        {Process.whereis( name ), name}
+    end
+    graph_ref = {scene_ref, nil}
+
+    # record that this is the new current scene
+    state = state
+    |> Map.put( :root_graph_ref, graph_ref )
+    |> Map.put( :hover_primitve, nil )
+    |> Map.put( :input_captures, %{} )
+    |> Map.put( :dynamic_scenes, %{} )
+
+
+    # activate the new root graph
+    activate_graph( graph_ref, activate_args )
+
+    # send a reset message to the drivers
+    Driver.cast( {:set_root, graph_ref} )
 
     # tear down the old scene
     with  {scene_ref, _} <- old_root,
@@ -372,32 +467,6 @@ defmodule Scenic.ViewPort do
         DynamicSupervisor.terminate_child( @dynamic_scenes, supervisor_pid )
       end
     end
-    
-    # get or start the pid for the new scene being set as the root
-    {new_scene_pid, scene_ref} = case scene do
-      {mod, opts} ->
-        ref = make_ref()
-        {:ok, scene_pid} = Scene.start_dynamic_scene( @dynamic_scenes, ref, mod, opts )
-        { scene_pid, ref}
-
-      # the scene is managed externally
-      name when is_atom(name) ->
-        {Process.whereis( name ), name}
-    end
-    graph_ref = {scene_ref, nil}
-
-    # tell the new scene that it has been activated
-    activate_scene( scene_ref, new_scene_pid, args )
-
-    # record that this is the new current scene
-    state = state
-    |> Map.put( :root_graph_ref, graph_ref )
-    |> Map.put( :hover_primitve, nil )
-    |> Map.put( :input_captures, %{} )
-    |> Map.put( :dynamic_scenes, %{} )
-
-    # send a reset message to the drivers
-    Driver.cast( {:set_root, graph_ref} )
 
     # record the root scene pid and return
     {:noreply, state}
@@ -408,13 +477,13 @@ defmodule Scenic.ViewPort do
   # reference. This is really the main point of the viewport. The drivers
   # shouldn't have any knowledge of the actual processes used and only
   # refer to graphs by unified keys
-  def handle_cast( {:put_graph, graph, graph_id, scene_ref}, %{
+  def handle_cast( {:put_graph, graph, graph_id, scene_ref, opts}, %{
     raw_scene_refs: raw_scene_refs, dyn_scene_refs: dyn_scene_refs
   } = state ) do
-    graph_key = {scene_ref, graph_id}
+    graph_ref = {scene_ref, graph_id}
 
     # get the old refs
-    old_raw_refs =  Map.get( raw_scene_refs, graph_key, %{} )
+    old_raw_refs =  Map.get( raw_scene_refs, graph_ref, %{} )
 
     # build a list of the dynamic scene references in this graph
     new_raw_refs = Enum.reduce( graph, %{}, fn
@@ -428,7 +497,7 @@ defmodule Scenic.ViewPort do
     raw_diff = Utilities.Map.difference( old_raw_refs, new_raw_refs )
 
     # get the old, resolved dynamic scene refs
-    old_dyn_refs = Map.get( dyn_scene_refs, graph_key, %{} )
+    old_dyn_refs = Map.get( dyn_scene_refs, graph_ref, %{} )
 
     # Enumerate the old refs, using the difference script to determine
     # what to start or stop.
@@ -440,6 +509,12 @@ defmodule Scenic.ViewPort do
         # make a new, scene ref
         new_scene_ref = make_ref()
 
+        case graph_active?( graph_ref ) do
+          {:active, args} ->
+            :ets.insert(@ets_graph_activation_table, {{new_scene_ref, nil}, args})
+          _ -> :ok
+        end
+
         # start up the new, dynamic, scene
         {:ok, pid} = Scene.start_dynamic_scene(
           dynamic_pid,
@@ -447,9 +522,6 @@ defmodule Scenic.ViewPort do
           mod,
           init_data
         )
-
-        # tell the new scene that it has been activated
-        activate_scene( new_scene_ref, pid, nil )
 
         # build the new graph_ref for the new scene
         new_graph_ref = {new_scene_ref, nil}
@@ -480,14 +552,19 @@ defmodule Scenic.ViewPort do
     end)
 
     # store the refs for next time
-    state = put_in(state, [:raw_scene_refs, graph_key], new_raw_refs)
-    state = put_in(state, [:dyn_scene_refs, graph_key], new_dyn_refs)
+    state = put_in(state, [:raw_scene_refs, graph_ref], new_raw_refs)
+    state = put_in(state, [:dyn_scene_refs, graph_ref], new_dyn_refs)
 
     # insert the graph into the etstable
-    resp = :ets.insert(@ets_graphs_table, {graph_key, graph})
+    resp = :ets.insert(@ets_graphs_table, {graph_ref, graph})
+
+    # if requested, activate the graph
+    if Enum.member?(opts, :activate) do
+      activate_graph( graph_ref, opts[:activate] )
+    end
 
     # tell the drivers about the updated graph
-    Driver.cast( {:put_graph, graph_key} )
+    Driver.cast( {:put_graph, graph_ref} )
 
     # store the dyanamic scenes references
     {:noreply, state}

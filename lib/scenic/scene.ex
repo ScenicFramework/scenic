@@ -36,8 +36,8 @@ defmodule Scenic.Scene do
 
 #  @callback handle_reset(any, any) :: {:noreply, any, any}
 #  @callback handle_update(any, any) :: {:noreply, any, any}
-  @callback handle_activate(any, any) :: {:noreply, any}
-  @callback handle_deactivate(any) :: {:noreply, any}
+  @callback handle_activate(any, any, any) :: {:noreply, any}
+  @callback handle_deactivate(any, any) :: {:noreply, any}
 
 
   #===========================================================================
@@ -86,6 +86,8 @@ defmodule Scenic.Scene do
       #--------------------------------------------------------
       # Here so that the scene can override if desired
       def init(_),                                do: {:ok, nil}
+      def handle_activate( _id, _args, state ),   do: {:noreply, state}
+      def handle_deactivate( _id, state ),        do: {:noreply, state}
  
       def handle_call(_msg, _from, state),        do: {:reply, :err_not_handled, state}
       def handle_cast(_msg, state),               do: {:noreply, state}
@@ -94,9 +96,6 @@ defmodule Scenic.Scene do
 #      def handle_raw_input( event, graph, scene_state ),  do: {:noreply, graph, scene_state}
       def handle_input( event, _, scene_state ),  do: {:noreply, scene_state}
       def filter_event( event, scene_state ),     do: {:continue, event, scene_state}
-
-#      def handle_activate( _args, state ),       do: {:noreply, state}
-      def handle_deactivate( state ),             do: {:noreply, state}
 
       def send_event( event, %Scenic.ViewPort.Input.Context{} = context ),
         do: Scenic.Scene.send_event( event, context.event_chain )
@@ -107,11 +106,12 @@ defmodule Scenic.Scene do
       #--------------------------------------------------------
       defoverridable [
         init:                   1,
+        handle_activate:        3,
+        handle_deactivate:      2,
+
         handle_call:            3,
         handle_cast:            2,
         handle_info:            2,
-#        handle_activate:    2,
-        handle_deactivate:      1,
 
         handle_input:           3,
         filter_event:           2,
@@ -148,12 +148,6 @@ defmodule Scenic.Scene do
 
     GenServer.cast(self(), {:after_init, scene_ref, args})
 
-    # test if this scene is supposed to be active. If yes, then take care of that
-    with {true, activate_args} <- ViewPort.scene_active?(scene_ref) do
-      Logger.warn("Reactivating from the scene #{inspect(scene_ref)} #{inspect(self())}")
-      GenServer.cast(self(), {:activate, activate_args})
-    end
-
     state = %{
       scene_module: module
     }
@@ -186,25 +180,27 @@ defmodule Scenic.Scene do
     {:reply, uid, state}
   end
 
+
+
   #--------------------------------------------------------
-  # support for losing focus
-  def handle_call(:deactivate, _, %{
+  def handle_call({:activate, id, args}, %{
     scene_module: mod,
     scene_state: sc_state,
-    dynamic_children_pid: dynamic_children_pid
   } = state) do
+    # tell the scene it is being activated
+    {:noreply, sc_state} = mod.handle_activate( id, args, sc_state )
+    { :noreply, %{state | scene_state: sc_state} }
+  end
 
+
+  #--------------------------------------------------------
+  # support for losing focus
+  def handle_call({:deactivate, id}, _, %{
+    scene_module: mod,
+    scene_state: sc_state,
+  } = state) do
     # tell the scene it is being deactivated
-    {:noreply, sc_state} = mod.handle_deactivate( sc_state )
-
-    # deactivate the dynamic children too
-    DynamicSupervisor.which_children( dynamic_children_pid )
-    # the children are all supervisors, so get their scene's and activate them
-    |> Enum.each( fn({_, super_pid, :supervisor, [Scenic.Scene.Supervisor]}) ->
-      get_supervised_scene( super_pid )
-      |> GenServer.call(:deactivate)
-    end)
-
+    {:noreply, sc_state} = mod.handle_deactivate( id, sc_state )
     { :reply, :ok, %{state | scene_state: sc_state} }
   end
 
@@ -238,6 +234,14 @@ defmodule Scenic.Scene do
 
     # initialize the scene itself
     {:ok, sc_state} = module.init( args )
+
+    # if this init is recovering from a crash, then the scene_ref will be able to
+    # recover a list of graphs associated with it. Activate the ones that are... active
+    sc_state = ViewPort.list_scene_activations( scene_ref )
+    |> Enum.reduce( sc_state, fn({id,args},ss) ->
+      {:noreply, ss} = module.handle_activate( id, args, ss )
+      ss
+    end)
 
     state = state
     |> Map.put( :scene_state, sc_state)
@@ -275,27 +279,6 @@ defmodule Scenic.Scene do
     end
     
     {:noreply, %{state | scene_state: sc_state}}
-  end
-
-  #--------------------------------------------------------
-  def handle_cast({:activate, args}, %{
-    scene_module: mod,
-    scene_state: sc_state,
-    dynamic_children_pid: dynamic_children_pid 
-  } = state) do
-
-    # tell it's already-running dynamic children that they are being activated too
-    DynamicSupervisor.which_children( dynamic_children_pid )
-    # the children are all supervisors, so get their scene's and activate them
-    |> Enum.each( fn({_, super_pid, :supervisor, [Scenic.Scene.Supervisor]}) ->
-      get_supervised_scene( super_pid )
-      |> GenServer.cast({:activate, nil})
-    end)
-
-    # tell the scene it is gaining focus
-    {:noreply, sc_state} = mod.handle_activate( args, sc_state )
-
-    { :noreply, %{state | scene_state: sc_state} }
   end
 
   #--------------------------------------------------------
