@@ -124,7 +124,9 @@ defmodule Scenic.Component.Button do
   def handle_input( {:cursor_button, {:left, :press, _, _}},
   context, state ) do
 #IO.puts( "handle_input :cursor_button :press")
-    state = Map.put(state, :pressed, true)
+    state = state
+    |> Map.put( :pressed, true )
+    |> Map.put( :contained, true )
     update_color(state)
 
     ViewPort.capture_input( [:cursor_button, :cursor_pos], context)
