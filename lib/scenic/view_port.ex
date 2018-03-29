@@ -431,7 +431,7 @@ defmodule Scenic.ViewPort do
       {mod, init_data} ->
         ref = make_ref()
         :ets.insert(@ets_graph_activation_table, {{ref, nil}, activate_args})
-        {:ok, scene_pid} = Scene.start_dynamic_scene( @dynamic_scenes, ref, mod, init_data )
+        {:ok, scene_pid} = mod.start_dynamic_scene( @dynamic_scenes, ref, init_data )
         { scene_pid, ref}
 
       # the scene is managed externally
@@ -510,10 +510,9 @@ defmodule Scenic.ViewPort do
         end
 
         # start up the new, dynamic, scene
-        {:ok, pid} = Scene.start_dynamic_scene(
+        {:ok, pid} = mod.start_dynamic_scene(
           dynamic_pid,
           new_scene_ref,
-          mod,
           init_data
         )
 

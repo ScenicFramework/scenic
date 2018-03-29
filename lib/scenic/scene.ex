@@ -97,8 +97,11 @@ defmodule Scenic.Scene do
       def handle_input( event, _, scene_state ),  do: {:noreply, scene_state}
       def filter_event( event, scene_state ),     do: {:continue, event, scene_state}
 
-      def send_event( event, %Scenic.ViewPort.Input.Context{} = context ),
-        do: Scenic.Scene.send_event( event, context.event_chain )
+      def send_event( event, %Scenic.ViewPort.Input.Context{} = context ), do:
+        Scenic.Scene.send_event( event, context.event_chain )
+
+      def start_dynamic_scene( sup, ref, opts ), do:
+        Scenic.Scene.start_dynamic_scene( sup, ref, __MODULE__, opts )
 
       #--------------------------------------------------------
 #      add local shortcuts to things like get/put graph and modify element
@@ -115,6 +118,8 @@ defmodule Scenic.Scene do
 
         handle_input:           3,
         filter_event:           2,
+
+        start_dynamic_scene:    3
       ]
 
     end # quote
@@ -154,7 +159,6 @@ defmodule Scenic.Scene do
 
     {:ok, state}
   end
-
 
 
   #--------------------------------------------------------

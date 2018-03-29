@@ -98,6 +98,7 @@ defmodule Scenic.Component.Button do
     {:ok, state}
   end
 
+
   #--------------------------------------------------------
 #  def handle_activate( _id, _args, %{graph: graph} = state ) do
 #    {:noreply, state}

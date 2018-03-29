@@ -34,17 +34,27 @@ defmodule Scenic.Component do
       def valid?(nil),              do: true
       def info(),                   do: "#{inspect(__MODULE__)} invalid add_to_graph data."
 
+      def start_dynamic_scene( dyn_sup, ref, opts ), do:
+        Scenic.Component.start_dynamic_scene( dyn_sup, ref, __MODULE__, opts )
+
 #      def normalize( data ),              do: data
 
       #--------------------------------------------------------
       defoverridable [
-#        build:            2,
-        add_to_graph:     3,
-        valid?:           1,
-        info:             0
+        add_to_graph:         3,
+        valid?:               1,
+        info:                 0,
+        start_dynamic_scene:  3
 #        normalize:        1
       ]
     end # quote
   end # defmacro
+
+
+  #--------------------------------------------------------
+  def start_dynamic_scene( dyn_sup, ref, mod, opts ) do
+    DynamicSupervisor.start_child( dyn_sup, {Scenic.Scene, {ref, mod, opts}} )
+  end
+
 
 end
