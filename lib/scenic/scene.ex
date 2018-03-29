@@ -191,6 +191,7 @@ defmodule Scenic.Scene do
     scene_module: mod,
     scene_state: sc_state,
   } = state) do
+    pry()
     # tell the scene it is being activated
     {:noreply, sc_state} = mod.handle_activate( id, args, sc_state )
     { :noreply, %{state | scene_state: sc_state} }
@@ -203,6 +204,7 @@ defmodule Scenic.Scene do
     scene_module: mod,
     scene_state: sc_state,
   } = state) do
+    pry()
     # tell the scene it is being deactivated
     {:noreply, sc_state} = mod.handle_deactivate( id, sc_state )
     { :reply, :ok, %{state | scene_state: sc_state} }
@@ -233,7 +235,7 @@ defmodule Scenic.Scene do
       _ -> nil
     end)
 
-    # register the scene with the viewport
+    # update the scene with the viewport
     ViewPort.register_scene( scene_ref, self(), dynamic_children_pid, supervisor_pid )
 
     # initialize the scene itself
