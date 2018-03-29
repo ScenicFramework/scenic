@@ -316,8 +316,8 @@ defmodule Scenic.ViewPort do
     case get_graph(graph_ref) do
       nil -> :ok
       graph ->
-        # walk the members, of the graph and deactivate all the referenced graphs
-        Enum.each( graph_ref, fn
+        # walk the members, of the graph and activate all the referenced graphs
+        Enum.each( graph, fn
           {_, %{ data: {Primitive.SceneRef, child_graph}}} ->
             activate_graph( child_graph, args )
           _ -> :ok
@@ -339,7 +339,7 @@ defmodule Scenic.ViewPort do
       nil -> :ok
       graph ->
         # walk the members, of the graph and deactivate all the referenced graphs
-        Enum.each( graph_ref, fn
+        Enum.each( graph, fn
           {_, %{ data: {Primitive.SceneRef, child_graph}}} ->
             deactivate_graph( child_graph )
           _ -> :ok
@@ -373,22 +373,17 @@ defmodule Scenic.ViewPort do
         # get all the graphs associated with this scene
         graphs = list_scene_graph_refs( scene_ref )
 
-        # delete the graphs associated with this scene from the ets table
-        Enum.each( graphs, &:ets.delete(@ets_graphs_table, &1) )
+        # delete the graphs associated with this scene
+        Enum.each( graphs, fn(graph_ref) ->
+          Driver.cast({:delete_graph, graph_ref})
+          :ets.delete(@ets_graphs_table, graph_ref)
+        end)
 
         # unregister the scene itself
         :ets.delete(@ets_scenes_table, scene_ref)
 
         # delete the recorded activations
         list = :ets.match(@ets_graph_activation_table, {{scene_ref, :"$1"}, :"_"})
-
-#        :ets.match(@ets_graph_activation_table, {{scene_ref, :"$1"}, :"_"})
-#        |> List.flatten()
-#        |> Enum.each(fn(id) ->
-#          :ets.delete(@ets_graph_activation_table, {scene_ref, id})
-#        end)
-
-        # tell the drivers they can clean up this graph (if they need to...)
 
         # clean up and return the state
         Enum.reduce(graphs, state, fn(graph_ref, s)->

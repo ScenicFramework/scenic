@@ -99,10 +99,9 @@ defmodule Scenic.Component.Button do
   end
 
   #--------------------------------------------------------
-  def handle_activate( _id, _args, %{graph: graph} = state ) do
-    
-    {:noreply, state}
-  end
+#  def handle_activate( _id, _args, %{graph: graph} = state ) do
+#    {:noreply, state}
+#  end
 
   #--------------------------------------------------------
   def handle_input( {:cursor_enter, uid}, context, state ) do
