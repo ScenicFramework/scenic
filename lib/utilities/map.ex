@@ -2,6 +2,22 @@ defmodule Scenic.Utilities.Map do
 #  @default_uid_length   4
 
   #============================================================================
+  @doc """
+    Convenience wrapper around Kernel.pop_in that allows for use in a simple pipeline.
+
+    See Kernel.pop_in
+
+    Returns the map directly
+  """
+  def delete_in( data, keys )
+  def delete_in( data, keys ) do
+#    do_delete_in(map, path)
+    {_, data} = pop_in( data, keys )
+    data
+  end
+
+
+  #============================================================================
   #============================================================================
   # Generate a unique uid for an element. Currently uses uuid4, which in
   # turn uses psuedo-random bytes. Odds of a collision are very low

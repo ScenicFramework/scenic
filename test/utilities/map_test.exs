@@ -92,10 +92,45 @@ defmodule Scenic.Utilities.MapTest do
       [{:del,{:b,:ff}}, {:put,{:b,:aa},4}, {:put,{:b,:bb},5}]
   end
 
+  #============================================================================
+  # delete_in
+
+  test "delete_in deletes a nested map member" do
+    map = %{a: %{b: %{c: 123, d: 456}}, e: 789}
+    assert Utilities.Map.delete_in( map, [:a, :b, :c]) == %{a: %{b: %{d: 456}}, e: 789}
+    assert Utilities.Map.delete_in( map, [:a, :b, :d]) == %{a: %{b: %{c: 123}}, e: 789}
+    assert Utilities.Map.delete_in( map, [:a, :b]) == %{a: %{}, e: 789}
+  end
+
+  test "delete_in does nothing if the final member is absent" do
+    map = %{a: %{b: %{c: 123, d: 456}}, e: 789}
+    assert Utilities.Map.delete_in( map, [:a, :b, :f]) == map
+  end
+
+  test "delete_in does nothing if middle members are absent" do
+    map = %{a: %{b: %{c: 123, d: 456}}, e: 789}
+    assert Utilities.Map.delete_in( map, [:a, :g, :e]) == map
+    assert Utilities.Map.delete_in( map, [:g, :c]) == map
+  end
+
 end
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+\
 
 
 
