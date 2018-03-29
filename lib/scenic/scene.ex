@@ -43,8 +43,8 @@ defmodule Scenic.Scene do
   #===========================================================================
   # calls for setting up a scene inside of a supervisor
 
-  def child_spec({ref, scene_module}), do:
-    child_spec({ref, scene_module, nil})
+#  def child_spec({ref, scene_module}), do:
+#    child_spec({ref, scene_module, nil})
 
   def child_spec({ref, scene_module, args}) do
     %{

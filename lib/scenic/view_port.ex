@@ -463,7 +463,6 @@ defmodule Scenic.ViewPort do
       end
     end
 
-    # record the root scene pid and return
     {:noreply, state}
   end
 

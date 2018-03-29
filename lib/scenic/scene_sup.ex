@@ -8,6 +8,21 @@
 defmodule Scenic.Scene.Supervisor do
   use Supervisor
 
+
+  def child_spec({ref, scene_module}), do:
+    child_spec({ref, scene_module, nil})
+
+  def child_spec({ref, scene_module, args}) do
+    %{
+      id: ref,
+      start: {__MODULE__, :start_link, [{ref, scene_module, args}]},
+      type: :supervisor,
+      restart: :permanent,
+      shutdown: 500
+    }
+  end
+
+
   def start_link( {ref, module, args} ) do
     Supervisor.start_link(__MODULE__, {ref, module, args})
   end
