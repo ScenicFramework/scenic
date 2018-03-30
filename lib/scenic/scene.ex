@@ -28,8 +28,6 @@ defmodule Scenic.Scene do
   end
 
 
-
-
   @callback init( any ) :: {:ok, any}
 
   # interacting with the scene's graph
@@ -116,7 +114,7 @@ defmodule Scenic.Scene do
     with { :ok, registration } <- registration( scene_ref ) do
       case registration.parent_pid do
         nil ->
-          {:error, :top_level}
+          {:error, :not_found}
         pid ->
           {:ok, pid}
       end
@@ -170,7 +168,7 @@ defmodule Scenic.Scene do
         # stop the scene
         DynamicSupervisor.terminate_child(parent_dyn_sup, pid_to_stop)
     else
-      {:error, :top_level} ->
+      {:error, :not_found} ->
         # attempt to stop this as a dynamic root
         case DynamicSupervisor.terminate_child(@dynamic_scenes, pid_to_stop) do
           :ok -> :ok
@@ -180,7 +178,40 @@ defmodule Scenic.Scene do
       _ ->
         {:error, :not_dynamic}
     end
+  end
 
+  #--------------------------------------------------------
+  def broadcast_children(scene_ref, msg) do
+    with {:ok, pids} <- child_pids( scene_ref ) do
+      Enum.each(pids, &GenServer.cast(&1, msg) )
+    end
+  end
+
+  #--------------------------------------------------------
+  def call_children(scene_ref, msg) do
+    with {:ok, pids} <- child_pids( scene_ref ) do
+      Enum.reduce(pids, [], fn(pid, tasks)->
+        task = Task.async( fn -> GenServer.call(pid, msg) end)
+        [task | tasks]
+      end)
+      |> Enum.reduce( [], fn(task, responses) ->
+        [Task.await(task) | responses]
+      end)
+    end
+  end
+
+  #--------------------------------------------------------
+  def cast_parent(scene_ref, msg) do
+    with {:ok, parent_pid} <- parent_pid( scene_ref ) do
+      GenServer.cast(parent_pid, msg)
+    end
+  end
+
+  #--------------------------------------------------------
+  def call_parent(scene_ref, msg) do
+    with {:ok, parent_pid} <- parent_pid( scene_ref ) do
+      GenServer.call(parent_pid, msg)
+    end
   end
 
 
