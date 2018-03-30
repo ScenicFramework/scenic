@@ -314,12 +314,15 @@ defmodule Scenic.ViewPort do
       # dynamic scene
       {mod, init_data} ->
         new_ref = make_ref()
+
+        # start the new scene
+        {:ok, pid} = mod.start_child_scene( @dynamic_scenes, new_ref, init_data)
+
         # start and activate the new scene
         Task.start_link(fn ->
-          # start the new scene
-          {:ok, _} = mod.start_child_scene( @dynamic_scenes, new_ref, init_data)
           # activate the new scene
           Scene.activate( new_ref, args )
+
           # send the message to the drivers
           Driver.cast( {:set_root, new_ref} )
         end)
@@ -383,16 +386,15 @@ defmodule Scenic.ViewPort do
         # make a new, scene ref
         new_scene_ref = make_ref()
 
-          case Scene.get_activation( scene_ref ) do
-            {:ok, args} ->
-              Task.start_link( fn->
-                mod.start_child_scene( scene_ref, new_scene_ref, init_data, activate: args )
-              end)
-            {:error, :not_found} ->
-              Task.start_link( fn->
-                mod.start_child_scene( scene_ref, new_scene_ref, init_data )
-              end)
-          end
+        # start the dynamic scene
+        mod.start_child_scene( scene_ref, new_scene_ref, init_data )
+
+        with {:ok, args} <- Scene.get_activation( scene_ref ) do
+          Task.start_link( fn->
+            # activate the new graph in an async task as it might call back in here
+            Scene.activate( scene_ref, args )
+          end)
+        end
 
         # add the this ref for next time
         Map.put(refs, uid, new_scene_ref)

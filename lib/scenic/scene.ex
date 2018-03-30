@@ -93,7 +93,7 @@ defmodule Scenic.Scene do
   def activate( scene_ref, args ) do
 IO.puts "-----------> activate #{inspect(scene_ref)}"
     with {:ok, pid} <- to_pid(scene_ref) do
-      GenServer.call(pid, {:activate, args})
+      GenServer.call( pid, {:activate, args} )
     end
   end
 
@@ -363,7 +363,6 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
       _ ->
         nil
     end)
-
     {:ok, scene_pid}
   end
 
@@ -406,16 +405,16 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
 
 
   #--------------------------------------------------------
-  def handle_call({:activate, args}, %{
+  def handle_call({:activate, args}, _, %{
     scene_ref: scene_ref,
     scene_module: mod,
     scene_state: sc_state,
   } = state) do
 IO.puts "SCENE ACTIVATE"
-    Viewport.register_activation( scene_ref, args )
+    ViewPort.register_activation( scene_ref, args )
     # tell the scene it is being activated
     {:noreply, sc_state} = mod.handle_activate( args, sc_state )
-    { :noreply, %{state | scene_state: sc_state} }
+    { :reply, :ok, %{state | scene_state: sc_state} }
   end
 
 
