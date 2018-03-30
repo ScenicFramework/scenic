@@ -467,10 +467,15 @@ defmodule Scenic.ViewPort do
 
 
     # activate the new root graph
+    Task.start_link(fn ->
+      # activate the new graph here
+      # send the message to the drivers
+      Driver.cast( {:set_root, graph_ref} )
+    end)
 #    activate_graph( graph_ref, activate_args )
 
     # send a reset message to the drivers
-    Driver.cast( {:set_root, graph_ref} )
+#    Driver.cast( {:set_root, graph_ref} )
 
     # tear down the old scene
     with  {scene_ref, _} <- old_root,
@@ -1036,7 +1041,7 @@ defmodule Scenic.ViewPort do
   %{root_graph_ref: root_graph, max_depth: depth} = state ) do
     identity = {@identity, @identity}
     event_chain = case graph_ref_to_pid( root_graph ) do
-      nil -> []
+      {:error, :not_found} -> []
       pid -> [pid]
     end
     do_find_by_screen_point( x, y, 0, root_graph, get_graph(root_graph),
