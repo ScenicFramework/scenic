@@ -122,13 +122,13 @@ defmodule Scenic.Component.Input.Checkbox do
 
   #--------------------------------------------------------
   def handle_input( {:cursor_button, {:left, :release, _, _}}, context,
-  %{contained: contained, msg: msg, checked: checked} = state ) do
+  %{contained: contained, msg: msg, pressed: pressed, checked: checked} = state ) do
     state = Map.put(state, :pressed, false)
 
     ViewPort.release_input( [:cursor_button, :cursor_pos])
 
     # only do the action if the cursor is still contained in the target
-    state = case contained do
+    state = case pressed && contained do
       true ->
         checked = !checked
         send_event({:value_changed, msg, checked}, context)

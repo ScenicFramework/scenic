@@ -135,14 +135,14 @@ defmodule Scenic.Component.Button do
 
   #--------------------------------------------------------
   def handle_input( {:cursor_button, {:left, :release, _, _}},
-  context, %{contained: contained, msg: msg} = state ) do
+  context, %{pressed: pressed, contained: contained, msg: msg} = state ) do
 #IO.puts( "handle_input :cursor_button :release")
     state = Map.put(state, :pressed, false)
     update_color(state)
 
     ViewPort.release_input( [:cursor_button, :cursor_pos])
 
-    if contained, do: send_event({:click, msg}, context)  
+    if pressed && contained, do: send_event({:click, msg}, context)  
 
     {:noreply, state}
   end
