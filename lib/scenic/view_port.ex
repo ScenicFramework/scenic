@@ -317,7 +317,7 @@ defmodule Scenic.ViewPort do
         # start and activate the new scene
         Task.start_link(fn ->
           # start the new scene
-          {:ok, _} = mod.start_child_scene( @dynamic_scenes, new_ref, init_data )
+          {:ok, _} = mod.start_child_scene( @dynamic_scenes, new_ref, init_data)
           # activate the new scene
           Scene.activate( new_ref, args )
           # send the message to the drivers
