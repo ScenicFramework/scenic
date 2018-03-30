@@ -125,8 +125,10 @@ defmodule Scenic.ViewPort do
 
   defp graph_ref_to_pid( nil ), do: nil
   defp graph_ref_to_pid( {scene_ref, _} ) do
-    {:ok, pid} = Scene.to_pid( scene_ref )
-    pid
+    case Scene.to_pid( scene_ref ) do
+      {:ok, pid} -> pid
+      _ -> nil
+    end
   end
 
   #--------------------------------------------------------
