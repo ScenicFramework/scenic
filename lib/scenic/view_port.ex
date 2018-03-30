@@ -87,39 +87,46 @@ defmodule Scenic.ViewPort do
     GenServer.cast(@viewport, {:register_scene, scene_ref, scene_pid, dynamic_pid, supervisor_pid})
   end
 
+  def register_scene( scene_ref, %Scene.Registration{} = registration ) do
+#    Registry.register( :viewport_registry, scene_ref, {scene_pid, dynamic_pid, supervisor_pid} )
+#    GenServer.cast(@viewport, {:monitor_scene, self()})
+    GenServer.cast(@viewport, {:register_scene, scene_ref, registration})
+  end
+
 #  def unregister_scene( scene_ref ) do
 #    Registry.unregister( :viewport_registry, scene_ref )
 #  end
 
   #--------------------------------------------------------
-  def scene_ref_to_pid( scene_ref ) do
-    case :ets.lookup(@ets_scenes_table, scene_ref ) do
-      [{_,{nil,_,_}}] -> nil
-      [{_,{pid,_,_}}] -> pid
-      [] -> nil
-    end
-  end
+#  def scene_ref_to_pid( scene_ref ) do
+#    case :ets.lookup(@ets_scenes_table, scene_ref ) do
+#      [{_,{nil,_,_}}] -> nil
+#      [{_,{pid,_,_}}] -> pid
+#      [] -> nil
+#    end
+#  end
 
   #--------------------------------------------------------
-  def scene_pid_to_ref( pid ) do
-    case :ets.match(:_scenic_viewport_scenes_table_, {:"$1", {pid,:"_",:"_"}}) do
-      [[ref]] -> ref
-      _ -> nil
-    end
-  end
+#  def scene_pid_to_ref( pid ) do
+#    case :ets.match(:_scenic_viewport_scenes_table_, {:"$1", {pid,:"_",:"_"}}) do
+#      [[ref]] -> ref
+#      _ -> nil
+#    end
+#  end
 
   #--------------------------------------------------------
-  def scene_ref_to_pids( scene_ref ) do
-    case :ets.lookup(@ets_scenes_table, scene_ref ) do
-      [{_,{nil,_,_}}] -> nil
-      [{_,{p0,p1,p2}}] -> {p0,p1,p2}
-      [] -> nil
-    end
-  end
+#  def scene_ref_to_pids( scene_ref ) do
+#    case :ets.lookup(@ets_scenes_table, scene_ref ) do
+#      [{_,{nil,_,_}}] -> nil
+#      [{_,{p0,p1,p2}}] -> {p0,p1,p2}
+#      [] -> nil
+#    end
+#  end
 
   defp graph_ref_to_pid( nil ), do: nil
   defp graph_ref_to_pid( {scene_ref, _} ) do
-    scene_ref_to_pid( scene_ref )
+    {:ok, pid} = Scene.to_pid( scene_ref )
+    pid
   end
 
   #--------------------------------------------------------
@@ -251,6 +258,8 @@ defmodule Scenic.ViewPort do
     GenServer.cast( @viewport, {:request_scene, to_pid} )
   end
 
+
+
   #============================================================================
   # internal server api
 
@@ -325,9 +334,9 @@ defmodule Scenic.ViewPort do
     end
     
     # activate this graph
-    case scene_ref_to_pid(scene_ref) do
+    case Scene.to_pid(scene_ref) do
       nil -> :ok
-      scene_pid ->
+      {:ok, scene_pid} ->
         :ets.insert(@ets_graph_activation_table, {graph_ref, args})
         GenServer.call(scene_pid, {:activate, id, args})
     end
@@ -356,13 +365,21 @@ defmodule Scenic.ViewPort do
     end
   end
 
+
+  defp internal_call_scene( scene_ref, msg, do_after ) when is_function(do_after, 1) do
+    
+  end
+
   #============================================================================
   # handle_info
+
+
+
 
   # when a scene goes down, clear it's graphs from the ets table
   def handle_info({:DOWN, _monitor_ref, :process, pid, reason}, state) do
     # get the scene_ref for this pid
-    scene_ref = scene_pid_to_ref( pid )
+    scene_ref = Scene.pid_to_scene( pid )
 
     # clear the related scene entry and graphs, but only if another scene
     # has not already registered them. Wand to avoid a possible race
@@ -405,12 +422,11 @@ defmodule Scenic.ViewPort do
   # handle_cast
 
   #--------------------------------------------------------
-  def handle_cast( {:register_scene, scene_ref, scene_pid, dynamic_pid, supervisor_pid}, state ) do
-    :ets.insert(@ets_scenes_table, {scene_ref, {scene_pid, dynamic_pid, supervisor_pid}})
-    Process.monitor( scene_pid )
+  def handle_cast( {:register_scene, scene_ref, registration}, state ) do
+    :ets.insert(@ets_scenes_table, {scene_ref, registration})
+    Process.monitor( registration.pid )
     {:noreply, state}
   end
-
 
   #--------------------------------------------------------
   def handle_cast( {:request_scene, to_pid}, %{root_graph_ref: graph_ref} = state ) do
@@ -431,7 +447,9 @@ defmodule Scenic.ViewPort do
       {mod, init_data} ->
         ref = make_ref()
         :ets.insert(@ets_graph_activation_table, {{ref, nil}, activate_args})
-        {:ok, scene_pid} = mod.start_dynamic_scene( @dynamic_scenes, ref, init_data )
+
+        {:ok, scene_pid} = mod.start_child_scene( @dynamic_scenes, ref, init_data )
+        
         { scene_pid, ref}
 
       # the scene is managed externally
@@ -449,17 +467,17 @@ defmodule Scenic.ViewPort do
 
 
     # activate the new root graph
-    activate_graph( graph_ref, activate_args )
+#    activate_graph( graph_ref, activate_args )
 
     # send a reset message to the drivers
     Driver.cast( {:set_root, graph_ref} )
 
     # tear down the old scene
     with  {scene_ref, _} <- old_root,
-          {scene_pid, _, supervisor_pid} <- scene_ref_to_pids( scene_ref ) do
+      {:ok, scene_pid} <- Scene.to_pid(scene_ref) do
       Task.start fn ->
         GenServer.call( scene_pid, :deactivate )
-        DynamicSupervisor.terminate_child( @dynamic_scenes, supervisor_pid )
+        Scene.stop( scene_ref )
       end
     end
 
@@ -497,8 +515,9 @@ defmodule Scenic.ViewPort do
     # what to start or stop.
     new_dyn_refs = Enum.reduce(raw_diff, old_dyn_refs, fn
       {:put, uid, {mod, init_data}}, refs ->     # start this dynamic scene
+
         # get the host scene's dynamic scene supervisor
-        {_, dynamic_pid, _} = scene_ref_to_pids( scene_ref )
+#        {:ok, dynamic_pid} = Scene.child_supervisor_pid( scene_ref )
 
         # make a new, scene ref
         new_scene_ref = make_ref()
@@ -509,9 +528,9 @@ defmodule Scenic.ViewPort do
           _ -> :ok
         end
 
-        # start up the new, dynamic, scene
-        {:ok, pid} = mod.start_dynamic_scene(
-          dynamic_pid,
+        # start up the new child scene
+        {:ok, pid} = mod.start_child_scene(
+          scene_ref,
           new_scene_ref,
           init_data
         )
@@ -1062,13 +1081,16 @@ defmodule Scenic.ViewPort do
 
       # if this is a SceneRef, then traverse into the next graph
       %{data: {Primitive.SceneRef, {scene_ref, _} = ref_id}} = p ->
-        scene_pid = scene_ref_to_pid( scene_ref )
-
-        {tx, inv_tx} = calc_transforms(p, parent_tx, parent_inv_tx)
-        do_find_by_screen_point(x, y, 0, ref_id, get_graph(ref_id),
-          {tx, inv_tx}, {tx, inv_tx},
-          [scene_pid | event_chain], depth - 1
-        )
+        case Scene.to_pid( scene_ref ) do
+          {:ok, scene_pid} ->
+            {tx, inv_tx} = calc_transforms(p, parent_tx, parent_inv_tx)
+            do_find_by_screen_point(x, y, 0, ref_id, get_graph(ref_id),
+              {tx, inv_tx}, {tx, inv_tx},
+              [scene_pid | event_chain], depth - 1
+            )
+          _ ->
+            nil
+        end
 
       # This is a regular primitive, test to see if it is hit
       %{data: {mod, data}} = p ->
