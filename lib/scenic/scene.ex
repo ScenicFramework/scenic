@@ -184,7 +184,8 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
     pid_to_stop = case supervisor_pid( scene_ref ) do
       {:ok, pid} ->
         pid
-      _ ->
+      other ->
+        pry()
         {:ok, pid} = to_pid(scene_ref)
         pid
     end

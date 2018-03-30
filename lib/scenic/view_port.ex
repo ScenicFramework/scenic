@@ -342,7 +342,7 @@ defmodule Scenic.ViewPort do
       with {:ok, scene_pid} <- Scene.to_pid(old_scene) do
         Task.start fn ->
           GenServer.call( scene_pid, :deactivate )
-          Scene.stop( scene_ref )
+          Scene.stop( old_scene )
         end
       end
     end
@@ -364,7 +364,7 @@ defmodule Scenic.ViewPort do
 
     # build a list of the dynamic scene references in this graph
     new_raw_refs = Enum.reduce( graph, %{}, fn
-      {uid,%{ data: {Primitive.SceneRef, {{mod, init_data}, nil}}}}, nr ->
+      {uid,%{ data: {Primitive.SceneRef, {mod, init_data}}}}, nr ->
         Map.put(nr, uid, {mod, init_data})
       # not a ref. ignore it
       _, nr -> nr

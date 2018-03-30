@@ -28,7 +28,7 @@ defmodule Scenic.Component do
       def add_to_graph(graph, data \\ nil, opts \\ [])
       def add_to_graph(%Scenic.Graph{} = graph, data, opts) do
         unless valid?(data), do: raise info()
-        Primitive.SceneRef.add_to_graph(graph, {{__MODULE__, data}, nil}, opts)
+        Primitive.SceneRef.add_to_graph(graph, {__MODULE__, data}, opts)
       end
 
       def valid?(nil),              do: true
