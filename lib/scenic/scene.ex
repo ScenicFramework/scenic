@@ -260,7 +260,7 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
 
   #===========================================================================
   # the using macro for scenes adopting this behavioiur
-  defmacro __using__(_opts) do
+  defmacro __using__(opts) do
     quote do
       @behaviour Scenic.Scene
 
@@ -280,8 +280,8 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
 
       def send_event( event ), do: GenServer.cast(self(), {:event, event})
 
-      def start_child_scene( parent_scene, ref, opts ), do:
-        Scenic.Scene.start_child_scene( parent_scene, ref, __MODULE__, opts )
+      def start_child_scene( parent_scene, ref, args ), do:
+        Scenic.Scene.start_child_scene( parent_scene, ref, __MODULE__, args, unquote(opts[:children]) )
 
       #--------------------------------------------------------
 #      add local shortcuts to things like get/put graph and modify element
@@ -349,10 +349,10 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
 
   #--------------------------------------------------------
   # this a root-level dynamic scene
-  def start_child_scene( @dynamic_scenes, ref, mod, opts ) do
+  def start_child_scene( @dynamic_scenes, ref, mod, args, true ) do
     # start the scene supervision tree
     {:ok, supervisor_pid} = DynamicSupervisor.start_child(  @dynamic_scenes,
-      {Scenic.Scene.Supervisor, {nil, ref, mod, opts}}
+      {Scenic.Scene.Supervisor, {nil, ref, mod, args}}
     )
 
     # we want to return the pid of the scene itself. not the supervisor
@@ -368,13 +368,13 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
 
   #--------------------------------------------------------
   # this is starting as the child of another scene
-  def start_child_scene( parent_scene, ref, mod, opts ) do
+  def start_child_scene( parent_scene, ref, mod, args, true ) do
     # get the dynamic supervisor for the parent
     case child_supervisor_pid( parent_scene ) do
       {:ok, child_sup_pid} ->
         # start the scene supervision tree
         {:ok, supervisor_pid} = DynamicSupervisor.start_child( child_sup_pid,
-          {Scenic.Scene.Supervisor, {parent_scene, ref, mod, opts}}
+          {Scenic.Scene.Supervisor, {parent_scene, ref, mod, args}}
         )
 
         # we want to return the pid of the scene itself. not the supervisor
@@ -391,6 +391,30 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
         {:error, :invalid_parent}
     end
   end
+
+  #--------------------------------------------------------
+  # this a root-level dynamic scene
+  def start_child_scene( @dynamic_scenes, ref, mod, args, false ) do
+    DynamicSupervisor.start_child( @dynamic_scenes, {Scenic.Scene, {ref, mod, args}} )
+  end
+
+  #--------------------------------------------------------
+  def start_dynamic_scene( parent_scene, ref, mod, args, false ) do
+pry()
+    # get the dynamic supervisor for the parent
+    case child_supervisor_pid( parent_scene ) do
+      {:ok, child_sup_pid} ->
+        # start the scene supervision tree
+        DynamicSupervisor.start_child( @dynamic_scenes, {Scenic.Scene, {ref, mod, args}} )
+      _ ->
+        {:error, :invalid_parent}
+    end
+  end
+
+  def start_dynamic_scene( parent_scene, ref, mod, args, other ) do
+    pry()
+  end
+
 
   #--------------------------------------------------------
   # somebody has a screen position and wants an uid for it

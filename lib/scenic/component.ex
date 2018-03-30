@@ -11,6 +11,7 @@ defmodule Scenic.Component do
   @callback add_to_graph(map, any, list) :: map
   @callback info() :: String.t
 
+  import IEx
 
   #===========================================================================
   defmacro __using__(_opts) do
@@ -34,8 +35,10 @@ defmodule Scenic.Component do
       def valid?(nil),              do: true
       def info(),                   do: "#{inspect(__MODULE__)} invalid add_to_graph data."
 
-      def start_dynamic_scene( dyn_sup, ref, opts ), do:
-        Scenic.Component.start_dynamic_scene( dyn_sup, ref, __MODULE__, opts )
+#      def start_child_scene( parent_scene, ref, args, with_children \\ false ) do
+#        IO.puts "in component start_child_scene, with_children: #{with_children}"
+#        Scenic.Component.start_child_scene( parent_scene, ref, __MODULE__, args, with_children )
+#      end
 
 #      def normalize( data ),              do: data
 
@@ -44,17 +47,14 @@ defmodule Scenic.Component do
         add_to_graph:         3,
         valid?:               1,
         info:                 0,
-        start_dynamic_scene:  3
+#        start_child_scene:  4
 #        normalize:        1
       ]
     end # quote
   end # defmacro
 
-
-  #--------------------------------------------------------
-  def start_dynamic_scene( dyn_sup, ref, mod, opts ) do
-    DynamicSupervisor.start_child( dyn_sup, {Scenic.Scene, {ref, mod, opts}} )
-  end
-
+#  def start_child_scene( parent_scene, ref, mod, args, with_children ) do
+#    Scenic.Scene.start_child_scene( parent_scene, ref, mod, args, with_children )
+#  end
 
 end
