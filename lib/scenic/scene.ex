@@ -21,7 +21,8 @@ defmodule Scenic.Scene do
   import IEx
 
   @dynamic_scenes     :dynamic_scenes
-  @ets_scenes_table   :_scenic_viewport_scenes_table_
+  @ets_scenes_table       :_scenic_viewport_scenes_table_
+  @ets_activation_table   :_scenic_viewport_activation_table_
 
   defmodule Registration do
     defstruct pid: nil, parent_pid: nil, dynamic_supervisor_pid: nil, supervisor_pid: nil
@@ -84,6 +85,22 @@ defmodule Scenic.Scene do
 #    GenServer.cast(scene_pid, :terminate)
 #  end
 
+  #--------------------------------------------------------
+#  def active?( scene_ref ) when is_atom(scene_ref) or is_reference(scene_ref) do
+#    case :ets.lookup(@ets_scenes_table, scene_ref ) do
+#      [{_,{_,_,_,active,args}}] -> {active,args}
+#      _ -> {:error, :not_found}
+#    end
+#  end
+
+
+  #--------------------------------------------------------
+  def get_activation( scene_ref ) do
+    case :ets.lookup(@ets_activation_table, scene_ref ) do
+      [{_,args}] -> {:ok, args}
+      [] -> {:error, :not_found}
+    end
+  end
 
   def registration( scene_ref ) do
     case :ets.lookup(@ets_scenes_table, scene_ref ) do
@@ -211,6 +228,20 @@ defmodule Scenic.Scene do
   def call_parent(scene_ref, msg) do
     with {:ok, parent_pid} <- parent_pid( scene_ref ) do
       GenServer.call(parent_pid, msg)
+    end
+  end
+
+  #--------------------------------------------------------
+  def cast(scene_ref, msg) do
+    with {:ok, pid} <- to_pid( scene_ref ) do
+      GenServer.cast(pid, msg)
+    end
+  end
+
+  #--------------------------------------------------------
+  def call(scene_ref, msg) do
+    with {:ok, pid} <- to_pid( scene_ref ) do
+      GenServer.call(pid, msg)
     end
   end
 
