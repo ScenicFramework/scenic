@@ -25,7 +25,7 @@ defmodule Scenic.Scene do
   @ets_activation_table   :_scenic_viewport_activation_table_
 
   defmodule Registration do
-    defstruct pid: nil, parent_pid: nil, dynamic_supervisor_pid: nil, supervisor_pid: nil
+    defstruct pid: nil, parent_scene: nil, dynamic_supervisor_pid: nil, supervisor_pid: nil
   end
 
 
@@ -74,11 +74,8 @@ defmodule Scenic.Scene do
     GenServer.call(pid, {:find_by_screen_pos, pos})
   end
 
-
-  def send_event( event, event_chain )
-  def send_event( event, [] ), do: :ok
-  def send_event( event, [scene_pid | tail] ) do
-    GenServer.cast(scene_pid, {:event, event, tail})
+  def send_event( scene, event ) do
+    cast(scene, {:event, event})
   end
 
 #  def terminate( scene_pid ) do
@@ -141,16 +138,17 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
     end
   end
 
-  def parent_pid( scene_ref ) do
-    with { :ok, registration } <- registration( scene_ref ) do
-      case registration.parent_pid do
-        nil ->
-          {:error, :not_found}
-        pid ->
-          {:ok, pid}
-      end
-    end
-  end
+#  def parent_pid( scene_ref ) do
+#    reg = registration( scene_ref )
+#    with { :ok, registration } <- registration( scene_ref ) do
+#      case registration.parent_pid do
+#        nil ->
+#          {:error, :not_found}
+#        pid ->
+#          {:ok, pid}
+#      end
+#    end
+#  end
 
   def child_pids( scene_ref ) do
     with { :ok, dyn_sup } <- child_supervisor_pid( scene_ref ) do
@@ -193,9 +191,8 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
 
     # first, get the parent's dynamic supervisor. If there isn't one,
     # then this is supervised by the app developer
-    with {:ok, parent_pid} <- parent_pid( scene_ref ),
-      {:ok, parent_scene} <- pid_to_scene( parent_pid ),
-      {:ok, parent_dyn_sup} <- child_supervisor_pid( scene_ref ) do
+    with {:ok, %{parent_scene: parent_scene}} <- registration( scene_ref ),
+      {:ok, parent_dyn_sup} <- child_supervisor_pid( parent_scene ) do
         # stop the scene
         DynamicSupervisor.terminate_child(parent_dyn_sup, pid_to_stop)
     else
@@ -233,15 +230,15 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
 
   #--------------------------------------------------------
   def cast_parent(scene_ref, msg) do
-    with {:ok, parent_pid} <- parent_pid( scene_ref ) do
-      GenServer.cast(parent_pid, msg)
+    with {:ok, %{parent_scene: parent_scene}} <- registration( scene_ref ) do
+      cast(parent_scene, msg)
     end
   end
 
   #--------------------------------------------------------
   def call_parent(scene_ref, msg) do
-    with {:ok, parent_pid} <- parent_pid( scene_ref ) do
-      GenServer.call(parent_pid, msg)
+    with {:ok, %{parent_scene: parent_scene}} <- registration( scene_ref ) do
+      call(parent_scene, msg)
     end
   end
 
@@ -280,8 +277,7 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
       def handle_input( event, _, scene_state ),  do: {:noreply, scene_state}
       def filter_event( event, scene_state ),     do: {:continue, event, scene_state}
 
-      def send_event( event, %Scenic.ViewPort.Input.Context{} = context ), do:
-        Scenic.Scene.send_event( event, context.event_chain )
+      def send_event( event ), do: GenServer.cast(self(), {:event, event})
 
       def start_child_scene( parent_scene, ref, opts ), do:
         Scenic.Scene.start_child_scene( parent_scene, ref, __MODULE__, opts )
@@ -335,13 +331,13 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
     Process.put(:scene_ref, scene_ref)
 
     # update the scene with the parent and supervisor info
-    ViewPort.register_scene( scene_ref, %Registration{ pid: self() })
+    ViewPort.register_scene( scene_ref, %Registration{ pid: self, parent_scene: parent})
 
     GenServer.cast(self(), {:after_init, scene_ref, args})
 
     state = %{
       scene_ref: scene_ref,
-      parent: parent,
+      parent_scene: parent,
       scene_module: module
     }
 
@@ -354,7 +350,7 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
   def start_child_scene( @dynamic_scenes, ref, mod, opts ) do
     # start the scene supervision tree
     {:ok, supervisor_pid} = DynamicSupervisor.start_child(  @dynamic_scenes,
-      {Scenic.Scene.Supervisor, {ref, mod, opts}}
+      {Scenic.Scene.Supervisor, {nil, ref, mod, opts}}
     )
 
     # we want to return the pid of the scene itself. not the supervisor
@@ -377,7 +373,7 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
       {:ok, child_sup_pid} ->
         # start the scene supervision tree
         {:ok, supervisor_pid} = DynamicSupervisor.start_child( child_sup_pid,
-          {Scenic.Scene.Supervisor, {ref, mod, opts}}
+          {Scenic.Scene.Supervisor, {parent_scene, ref, mod, opts}}
         )
 
         # we want to return the pid of the scene itself. not the supervisor
@@ -450,7 +446,7 @@ IO.puts "SCENE DEACTIVATE"
 
   #--------------------------------------------------------
   def handle_cast({:after_init, scene_ref, args}, %{
-    parent: parent,
+    parent_scene: parent_scene,
     scene_module: module
   } = state) do
 
@@ -476,24 +472,28 @@ IO.puts "SCENE DEACTIVATE"
       _ -> nil
     end)
 
-    # update the scene with the parent and supervisor info
-    ViewPort.register_scene( scene_ref, %Registration{
+    registration = %Registration{
       pid: self(),
-      parent_pid: parent,
+      parent_scene: parent_scene,
       dynamic_supervisor_pid: dynamic_children_pid,
       supervisor_pid: supervisor_pid
-    })
+    }
+
+    # update the scene with the parent and supervisor info
+    r = ViewPort.register_scene( scene_ref, registration)
+    IO.inspect registration
+    IO.inspect r
 
     # initialize the scene itself
     {:ok, sc_state} = module.init( args )
 
     # if this init is recovering from a crash, then the scene_ref will be able to
     # recover a list of graphs associated with it. Activate the ones that are... active
-    sc_state = ViewPort.list_scene_activations( scene_ref )
-    |> Enum.reduce( sc_state, fn({id,args},ss) ->
-      {:noreply, ss} = module.handle_activate( id, args, ss )
-      ss
-    end)
+#    sc_state = ViewPort.list_scene_activations( scene_ref )
+#    |> Enum.reduce( sc_state, fn({id,args},ss) ->
+#      {:noreply, ss} = module.handle_activate( id, args, ss )
+#      ss
+#    end)
 
     state = state
     |> Map.put( :scene_state, sc_state)
@@ -518,12 +518,14 @@ IO.puts "SCENE DEACTIVATE"
 
 
   #--------------------------------------------------------
-  def handle_cast({:event, event, event_chain}, 
-  %{scene_module: mod, scene_state: sc_state} = state) do
-
+  def handle_cast({:event, event},  %{
+    parent_scene: parent_scene,
+    scene_module: mod,
+    scene_state: sc_state
+  } = state) do
     sc_state = case mod.filter_event(event, sc_state ) do
       { :continue, event, sc_state } ->
-        send_event( event, event_chain )
+        cast(parent_scene, {:event, event})
         sc_state
 
       {:stop, sc_state} ->

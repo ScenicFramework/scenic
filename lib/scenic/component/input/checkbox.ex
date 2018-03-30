@@ -131,7 +131,7 @@ defmodule Scenic.Component.Input.Checkbox do
     state = case pressed && contained do
       true ->
         checked = !checked
-        send_event({:value_changed, msg, checked}, context)
+        send_event({:value_changed, msg, checked})
         Map.put(state, :checked, checked)
 
       false ->

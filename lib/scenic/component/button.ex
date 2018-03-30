@@ -142,7 +142,7 @@ defmodule Scenic.Component.Button do
 
     ViewPort.release_input( [:cursor_button, :cursor_pos])
 
-    if pressed && contained, do: send_event({:click, msg}, context)  
+    if pressed && contained, do: send_event({:click, msg})  
 
     {:noreply, state}
   end
