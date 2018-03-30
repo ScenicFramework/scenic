@@ -337,6 +337,7 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
     GenServer.cast(self(), {:after_init, scene_ref, args})
 
     state = %{
+#      scene_state: sc_state,
       scene_ref: scene_ref,
       parent_scene: parent,
       scene_module: module
@@ -391,10 +392,6 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
         {:error, :invalid_parent}
     end
   end
-
-
-
-
 
   #--------------------------------------------------------
   # somebody has a screen position and wants an uid for it
@@ -473,28 +470,27 @@ IO.puts "SCENE DEACTIVATE"
       _ -> nil
     end)
 
-    registration = %Registration{
+    # update the scene with the parent and supervisor info
+    ViewPort.register_scene( scene_ref, %Registration{
       pid: self(),
       parent_scene: parent_scene,
       dynamic_supervisor_pid: dynamic_children_pid,
       supervisor_pid: supervisor_pid
-    }
+    })
 
-    # update the scene with the parent and supervisor info
-    r = ViewPort.register_scene( scene_ref, registration)
-    IO.inspect registration
-    IO.inspect r
 
     # initialize the scene itself
     {:ok, sc_state} = module.init( args )
 
     # if this init is recovering from a crash, then the scene_ref will be able to
-    # recover a list of graphs associated with it. Activate the ones that are... active
-#    sc_state = ViewPort.list_scene_activations( scene_ref )
-#    |> Enum.reduce( sc_state, fn({id,args},ss) ->
-#      {:noreply, ss} = module.handle_activate( id, args, ss )
-#      ss
-#    end)
+    # recover an activation arg (if it was active when it crashed).
+    sc_state = case get_activation( scene_ref ) do
+      {:ok, activation_args} ->
+#        {:noreply, sc_state} = module.handle_activate( activation_args, sc_state )
+        sc_state
+      _ ->
+        sc_state
+    end
 
     state = state
     |> Map.put( :scene_state, sc_state)

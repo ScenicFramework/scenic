@@ -383,12 +383,16 @@ defmodule Scenic.ViewPort do
         # make a new, scene ref
         new_scene_ref = make_ref()
 
-        case Scene.get_activation( scene_ref ) do
-          {:ok, args} ->
-            mod.start_child_scene( scene_ref, new_scene_ref, init_data, activate: args )
-          {:error, :not_found} ->
-            mod.start_child_scene( scene_ref, new_scene_ref, init_data )
-        end
+          case Scene.get_activation( scene_ref ) do
+            {:ok, args} ->
+              Task.start_link( fn->
+                mod.start_child_scene( scene_ref, new_scene_ref, init_data, activate: args )
+              end)
+            {:error, :not_found} ->
+              Task.start_link( fn->
+                mod.start_child_scene( scene_ref, new_scene_ref, init_data )
+              end)
+          end
 
         # add the this ref for next time
         Map.put(refs, uid, new_scene_ref)
