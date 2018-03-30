@@ -83,18 +83,28 @@ defmodule Scenic.ViewPort do
     GenServer.cast(@viewport, {:register_scene, scene_ref, registration})
   end
 
+  #--------------------------------------------------------
+  def register_activation( scene_ref, args ) do
+    GenServer.cast(@viewport, {:register_activation, scene_ref, args})
+  end
+
 
   #--------------------------------------------------------
-  def list_scene_refs() do
+  def list_scenes() do
     :ets.match(@ets_scenes_table, {:"$1", :"_"})
     |> List.flatten()
-    |> Enum.uniq()
   end
 
   #--------------------------------------------------------
   def list_scene_activations( scene_ref ) do
     :ets.match(@ets_activation_table, {scene_ref, :"$2"})
     |> Enum.map( fn([id,args]) -> {id, args} end)
+  end
+
+  #--------------------------------------------------------
+  def list_active_scenes() do
+    :ets.match(@ets_activation_table, {:"1", :"_"})
+    |> List.flatten()
   end
 
   #--------------------------------------------------------
@@ -129,12 +139,25 @@ defmodule Scenic.ViewPort do
   #--------------------------------------------------------
   def get_graph( scene_ref )
 
+  def get_graph( nil ), do: nil
+
   def get_graph( scene_ref ) when is_reference(scene_ref) or is_atom(scene_ref) do
     case :ets.lookup(@ets_graphs_table, scene_ref) do
       [] -> nil
       [{_, graph}] -> graph
     end
   end
+
+  def get_graph( other ) do
+    pry()
+  end
+
+  #--------------------------------------------------------
+  def list_graphs() do
+    :ets.match(@ets_graphs_table, {:"$1", :"_"})
+    |> List.flatten()
+  end
+
 
   #--------------------------------------------------------
   @doc """
@@ -267,7 +290,7 @@ defmodule Scenic.ViewPort do
   end
 
   #--------------------------------------------------------
-  def handle_cast( {:record_activation, scene_ref, args}, state ) do
+  def handle_cast( {:register_activation, scene_ref, args}, state ) do
     :ets.insert(@ets_activation_table, {scene_ref, args})
     {:noreply, state}
   end
@@ -296,7 +319,7 @@ defmodule Scenic.ViewPort do
           # start the new scene
           {:ok, _} = mod.start_child_scene( @dynamic_scenes, new_ref, init_data )
           # activate the new scene
-
+          Scene.activate( new_ref, args )
           # send the message to the drivers
           Driver.cast( {:set_root, new_ref} )
         end)
@@ -307,7 +330,7 @@ defmodule Scenic.ViewPort do
         # activate the incoming scene
         Task.start_link(fn ->
           # activate the new graph here
-
+          Scene.activate( scene_ref, args )
           # send the message to the drivers
           Driver.cast( {:set_root, scene_ref} )
         end)

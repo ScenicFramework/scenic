@@ -44,8 +44,8 @@ defmodule Scenic.Scene do
 
 #  @callback handle_reset(any, any) :: {:noreply, any, any}
 #  @callback handle_update(any, any) :: {:noreply, any, any}
-  @callback handle_activate(any, any, any) :: {:noreply, any}
-  @callback handle_deactivate(any, any) :: {:noreply, any}
+  @callback handle_activate(any, any) :: {:noreply, any}
+  @callback handle_deactivate(any) :: {:noreply, any}
 
 
   #===========================================================================
@@ -92,6 +92,20 @@ defmodule Scenic.Scene do
 #      _ -> {:error, :not_found}
 #    end
 #  end
+
+  def activate( scene_ref, args ) do
+IO.puts "-----------> activate #{inspect(scene_ref)}"
+    with {:ok, pid} <- to_pid(scene_ref) do
+      GenServer.call(pid, {:activate, args})
+    end
+  end
+
+  def deactivate( scene_ref ) do
+IO.puts "-----------> deactivate #{inspect(scene_ref)}"
+    with {:ok, pid} <- to_pid(scene_ref) do
+      GenServer.call(pid, :deactivate)
+    end
+  end
 
 
   #--------------------------------------------------------
@@ -255,8 +269,8 @@ defmodule Scenic.Scene do
       #--------------------------------------------------------
       # Here so that the scene can override if desired
       def init(_),                                do: {:ok, nil}
-      def handle_activate( _id, _args, state ),   do: {:noreply, state}
-      def handle_deactivate( _id, state ),        do: {:noreply, state}
+      def handle_activate( _args, state ),        do: {:noreply, state}
+      def handle_deactivate( state ),             do: {:noreply, state}
  
       def handle_call(_msg, _from, state),        do: {:reply, :err_not_handled, state}
       def handle_cast(_msg, state),               do: {:noreply, state}
@@ -278,8 +292,8 @@ defmodule Scenic.Scene do
       #--------------------------------------------------------
       defoverridable [
         init:                   1,
-        handle_activate:        3,
-        handle_deactivate:      2,
+        handle_activate:        2,
+        handle_deactivate:      1,
 
         handle_call:            3,
         handle_cast:            2,
@@ -320,9 +334,13 @@ defmodule Scenic.Scene do
   def init( {parent, scene_ref, module, args} ) do
     Process.put(:scene_ref, scene_ref)
 
+    # update the scene with the parent and supervisor info
+    ViewPort.register_scene( scene_ref, %Registration{ pid: self() })
+
     GenServer.cast(self(), {:after_init, scene_ref, args})
 
     state = %{
+      scene_ref: scene_ref,
       parent: parent,
       scene_module: module
     }
@@ -394,26 +412,28 @@ defmodule Scenic.Scene do
 
 
   #--------------------------------------------------------
-  def handle_call({:activate, id, args}, %{
+  def handle_call({:activate, args}, %{
+    scene_ref: scene_ref,
     scene_module: mod,
     scene_state: sc_state,
   } = state) do
 IO.puts "SCENE ACTIVATE"
+    Viewport.register_activation( scene_ref, args )
     # tell the scene it is being activated
-    {:noreply, sc_state} = mod.handle_activate( id, args, sc_state )
+    {:noreply, sc_state} = mod.handle_activate( args, sc_state )
     { :noreply, %{state | scene_state: sc_state} }
   end
 
 
   #--------------------------------------------------------
   # support for losing focus
-  def handle_call({:deactivate, id}, _, %{
+  def handle_call(:deactivate, _, %{
     scene_module: mod,
     scene_state: sc_state,
   } = state) do
 IO.puts "SCENE DEACTIVATE"
     # tell the scene it is being deactivated
-    {:noreply, sc_state} = mod.handle_deactivate( id, sc_state )
+    {:noreply, sc_state} = mod.handle_deactivate( sc_state )
     { :reply, :ok, %{state | scene_state: sc_state} }
   end
 
@@ -456,7 +476,7 @@ IO.puts "SCENE DEACTIVATE"
       _ -> nil
     end)
 
-    # update the scene with the viewport
+    # update the scene with the parent and supervisor info
     ViewPort.register_scene( scene_ref, %Registration{
       pid: self(),
       parent_pid: parent,
