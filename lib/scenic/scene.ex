@@ -93,6 +93,10 @@ defmodule Scenic.Scene do
 #    end
 #  end
 
+  
+  #--------------------------------------------------------
+  # activate is synchronous (uses a call) because I want to make sure it has
+  # completed before finishing setting any scenes
   def activate( scene_ref, args ) do
 IO.puts "-----------> activate #{inspect(scene_ref)}"
     with {:ok, pid} <- to_pid(scene_ref) do
@@ -100,6 +104,9 @@ IO.puts "-----------> activate #{inspect(scene_ref)}"
     end
   end
 
+  #--------------------------------------------------------
+  # deactivate is synchronous (uses a call) because I want to make sure it has
+  # completed before tearing down the scene process
   def deactivate( scene_ref ) do
 IO.puts "-----------> deactivate #{inspect(scene_ref)}"
     with {:ok, pid} <- to_pid(scene_ref) do
