@@ -93,16 +93,15 @@ defmodule Scenic.Component.Button do
       msg: msg
     }
 
-    ViewPort.put_graph( graph )
-
     {:ok, state}
   end
 
 
   #--------------------------------------------------------
-#  def handle_activate( _id, _args, %{graph: graph} = state ) do
-#    {:noreply, state}
-#  end
+  def handle_activate(_args, %{graph: graph} = state ) do
+    ViewPort.put_graph( graph )
+    {:noreply, state}
+  end
 
   #--------------------------------------------------------
   def handle_input( {:cursor_enter, uid}, context, state ) do

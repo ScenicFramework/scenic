@@ -20,9 +20,10 @@ defmodule Scenic.Scene do
 
   import IEx
 
-  @dynamic_scenes     :dynamic_scenes
+  @dynamic_scenes         :dynamic_scenes
   @ets_scenes_table       :_scenic_viewport_scenes_table_
   @ets_activation_table   :_scenic_viewport_activation_table_
+  @viewport               :viewport
 
   defmodule Registration do
     defstruct pid: nil, parent_scene: nil, dynamic_supervisor_pid: nil, supervisor_pid: nil
@@ -97,10 +98,17 @@ defmodule Scenic.Scene do
   #--------------------------------------------------------
   # activate is synchronous (uses a call) because I want to make sure it has
   # completed before finishing setting any scenes
-  def activate( scene_ref, args ) do
+#  def activate( scene_ref, args ) do
+#IO.puts "-----------> activate #{inspect(scene_ref)}"
+#    with {:ok, pid} <- to_pid(scene_ref) do
+#      GenServer.call( pid, {:activate, args} )
+#    end
+#  end
+
+  def activate( scene_ref, args, activation_root \\ nil ) do
 IO.puts "-----------> activate #{inspect(scene_ref)}"
     with {:ok, pid} <- to_pid(scene_ref) do
-      GenServer.call( pid, {:activate, args} )
+      GenServer.cast( pid, {:activate, args, activation_root} )
     end
   end
 
@@ -320,6 +328,7 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
   #===========================================================================
   # internal code to this module
 
+
   #===========================================================================
   # Scene initialization
 
@@ -343,12 +352,22 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
     Process.put(:scene_ref, scene_ref)
 
     # update the scene with the parent and supervisor info
-    ViewPort.register_scene( scene_ref, %Registration{ pid: self, parent_scene: parent})
+IO.puts "--------------> register Scene #{inspect(scene_ref)} as #{inspect(self())}"
+    ViewPort.register_scene( %Registration{ pid: self, parent_scene: parent})
 
     GenServer.cast(self(), {:after_init, scene_ref, args})
 
+    # initialize the scene itself
+    {:ok, sc_state} = module.init( args )
+
+    # if this init is recovering from a crash, then the scene_ref will be able to
+    # recover an activation arg (if it was active when it crashed).
+    with  {:ok, activation_args} <- get_activation( scene_ref ) do
+      GenServer.cast(self(), {:activate, activation_args, nil})
+    end
+
     state = %{
-#      scene_state: sc_state,
+      scene_state: sc_state,
       scene_ref: scene_ref,
       parent_scene: parent,
       scene_module: module
@@ -446,17 +465,17 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
 
 
   #--------------------------------------------------------
-  def handle_call({:activate, args}, _, %{
-    scene_ref: scene_ref,
-    scene_module: mod,
-    scene_state: sc_state,
-  } = state) do
-IO.puts "SCENE ACTIVATE"
-    ViewPort.register_activation( scene_ref, args )
-    # tell the scene it is being activated
-    {:noreply, sc_state} = mod.handle_activate( args, sc_state )
-    { :reply, :ok, %{state | scene_state: sc_state} }
-  end
+#  def handle_call({:activate, args}, _, %{
+#    scene_ref: scene_ref,
+#    scene_module: mod,
+#    scene_state: sc_state,
+#  } = state) do
+#IO.puts "SCENE ACTIVATE"
+#    ViewPort.register_activation( scene_ref, args )
+#    # tell the scene it is being activated
+#    {:noreply, sc_state} = mod.handle_activate( args, sc_state )
+#    { :reply, :ok, %{state | scene_state: sc_state} }
+#  end
 
 
   #--------------------------------------------------------
@@ -481,6 +500,7 @@ IO.puts "SCENE DEACTIVATE"
 
   #===========================================================================
   # default cast handlers.
+
 
   #--------------------------------------------------------
   def handle_cast({:after_init, scene_ref, args}, %{
@@ -512,7 +532,7 @@ IO.puts "SCENE DEACTIVATE"
     end
 
     # update the scene with the parent and supervisor info
-    ViewPort.register_scene( scene_ref, %Registration{
+    ViewPort.register_scene( %Registration{
       pid: self(),
       parent_scene: parent_scene,
       dynamic_supervisor_pid: dynamic_children_pid,
@@ -521,25 +541,45 @@ IO.puts "SCENE DEACTIVATE"
 
 
     # initialize the scene itself
-    {:ok, sc_state} = module.init( args )
-
-    # if this init is recovering from a crash, then the scene_ref will be able to
-    # recover an activation arg (if it was active when it crashed).
-    sc_state = case get_activation( scene_ref ) do
-      {:ok, activation_args} ->
-#        {:noreply, sc_state} = module.handle_activate( activation_args, sc_state )
-        sc_state
-      _ ->
-        sc_state
-    end
+#    {:ok, sc_state} = module.init( args )
+#
+#    # if this init is recovering from a crash, then the scene_ref will be able to
+#    # recover an activation arg (if it was active when it crashed).
+#    sc_state = case get_activation( scene_ref ) do
+#      {:ok, activation_args} ->
+##        {:noreply, sc_state} = module.handle_activate( activation_args, sc_state )
+#        sc_state
+#      _ ->
+#        sc_state
+#    end
 
     state = state
-    |> Map.put( :scene_state, sc_state)
+#    |> Map.put( :scene_state, sc_state)
     |> Map.put( :supervisor_pid, supervisor_pid)
     |> Map.put( :dynamic_children_pid, dynamic_children_pid)
 
     {:noreply, state}
   end
+
+
+
+  #--------------------------------------------------------
+  def handle_cast({:activate, args, activation_root}, %{
+    scene_ref: scene_ref,
+    scene_module: mod,
+    scene_state: sc_state,
+  } = state) do
+IO.puts "SCENE ACTIVATE - NEW"
+    ViewPort.register_activation( scene_ref, args )
+    # tell the scene it is being activated
+    {:noreply, sc_state} = mod.handle_activate( args, sc_state )
+    # tell the ViewPort this activation is complete (if a secquence is requested)
+    if activation_root do
+      GenServer.cast(@viewport, {:activation_complete, scene_ref, activation_root})
+    end
+    { :noreply, %{state | scene_state: sc_state} }
+  end
+
 
   #--------------------------------------------------------
 #  def handle_cast(:terminate, %{ supervisor_pid: supervisor_pid } = state) do

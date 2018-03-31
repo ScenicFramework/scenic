@@ -80,8 +80,15 @@ defmodule Scenic.ViewPort do
   end
 
   #--------------------------------------------------------
-  def register_scene( scene_ref, %Scene.Registration{} = registration ) do
-    GenServer.cast(@viewport, {:register_scene, scene_ref, registration})
+  def register_scene( %Scene.Registration{} = registration ) do
+    scene_ref = case Process.get(:scene_ref) do
+      nil ->
+        raise "Scenic.ViewPort.register_scene can only be called from with in a Scene"
+      ref ->
+        ref
+    end
+    :ets.insert(@ets_scenes_table, {scene_ref, registration})
+    GenServer.cast(@viewport, {:monitor_scene, self()})
   end
 
   #--------------------------------------------------------
@@ -123,7 +130,7 @@ defmodule Scenic.ViewPort do
     min_graph = Enum.reduce(p_map, %{}, fn({uid, p}, g) ->
       Map.put( g, uid, Primitive.minimal(p) )
     end)
-    GenServer.cast( @viewport, {:put_graph, min_graph, scene_ref, opts} )
+    GenServer.call( @viewport, {:put_graph, min_graph, scene_ref, opts} )
 
     # return the original graph, allowing it to be used in a pipeline
     graph
@@ -231,7 +238,7 @@ defmodule Scenic.ViewPort do
 
       max_depth: opts[:max_depth] || @max_depth,
       graph_table: :ets.new(@ets_graphs_table, [:named_table, read_concurrency: true]),
-      scene_table: :ets.new(@ets_scenes_table, [:named_table, read_concurrency: true]),
+      scene_table: :ets.new(@ets_scenes_table, [:named_table, :public, {:read_concurrency, true}]),
       activation_table: :ets.new(@ets_activation_table, [:named_table, read_concurrency: true]),
 #      startup_table: :ets.new(@ets_startup_table, [:named_table, :public])
     }
@@ -287,56 +294,54 @@ defmodule Scenic.ViewPort do
   # scenes may (probably will) call ViewPort.put_graph, which means its reentrant. So...
   # this process cannot block while setting the scene.
   #
-  # the solution is to use Task.async when setting up the dynamic scenes. This will
-  # fire off a info message on completion, which is caught here. As new dynamic
-  # scenes are started (we can't know how many there will be in advance because they
-  # may be nested below the scene being immediately set) they are added to the 
-  # completion list saved in state. When the list is empty, then we are done and
-  # can send the signal to the drivers.
-  #
   # No blinkies...
   #
   # This was hard to figure out. Many approaches were tried and elimiated...
 
-  def handle_info({ref, {:set_complete, _, _}}, %{setting_scene: nil} = state) do
-    {:noreply, state}
-  end
-
-  def handle_info({ref, {:set_complete, set_ref, complete_ref}},
-  %{setting_scene: {set_scene, []}} = state) when set_ref == set_scene do
-    # setup is complete,send the message to the drivers
-    Driver.cast( {:set_root, set_scene} )
-    {:noreply, %{state | setting_scene: nil}}
-  end
-
-  def handle_info({ref, {:set_complete, set_ref, complete_ref}},
-  %{setting_scene: {set_scene, completion_list}} = state) do
-    completion_list = List.delete(completion_list, complete_ref)
-    state = case completion_list do
-      [] ->
-        # setup is complete,send the message to the drivers
-        Driver.cast( {:set_root, set_scene} )
-        %{state | setting_scene: nil}
-      list ->
-        %{state | setting_scene: {set_scene, completion_list}}
-    end
-    {:noreply, state}
-  end
-
-  def handle_info(other, state) do
-    pry()
-  end
+#  def handle_info({ref, {:set_complete, _, _}}, %{setting_scene: nil} = state) do
+#    {:noreply, state}
+#  end
+#
+#  def handle_info({ref, {:set_complete, set_ref, complete_ref}},
+#  %{setting_scene: {set_scene, []}} = state) when set_ref == set_scene do
+#    # setup is complete,send the message to the drivers
+#    Driver.cast( {:set_root, set_scene} )
+#    {:noreply, %{state | setting_scene: nil}}
+#  end
+#
+#  def handle_info({ref, {:set_complete, set_ref, complete_ref}},
+#  %{setting_scene: {set_scene, completion_list}} = state) do
+#    completion_list = List.delete(completion_list, complete_ref)
+#    state = case completion_list do
+#      [] ->
+#        # setup is complete,send the message to the drivers
+#        Driver.cast( {:set_root, set_scene} )
+#        %{state | setting_scene: nil}
+#      list ->
+#        %{state | setting_scene: {set_scene, completion_list}}
+#    end
+#    {:noreply, state}
+#  end
+#
+#  def handle_info(other, state) do
+#    pry()
+#  end
 
 
   #============================================================================
   # handle_cast
 
   #--------------------------------------------------------
-  def handle_cast( {:register_scene, scene_ref, registration}, state ) do
-    :ets.insert(@ets_scenes_table, {scene_ref, registration})
-    Process.monitor( registration.pid )
+#  def handle_cast( {:register_scene, scene_ref, registration}, state ) do
+##    :ets.insert(@ets_scenes_table, {scene_ref, registration})
+#    Process.monitor( registration.pid )
+#    {:noreply, state}
+#  end
+  def handle_cast( {:monitor_scene, scene_pid}, state ) do
+    Process.monitor( scene_pid )
     {:noreply, state}
   end
+
 
   #--------------------------------------------------------
   def handle_cast( {:request_scene, to_pid}, %{root_scene: scene} = state ) do
@@ -347,6 +352,60 @@ defmodule Scenic.ViewPort do
   #--------------------------------------------------------
   def handle_cast( {:register_activation, scene_ref, args}, state ) do
     :ets.insert(@ets_activation_table, {scene_ref, args})
+    {:noreply, state}
+  end
+
+
+  #--------------------------------------------------------
+  def handle_cast( {:activation_complete, _, _}, %{set_scene: nil} = state ) do
+    # Not setting a scene. Safe to ignore this.
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
+  def handle_cast( {:activation_complete, _, root_scene}, %{
+    set_scene: {set_scene, activate_args},
+    set_list: []
+  } = state ) when root_scene == set_scene do
+    # setup is complete,send the message to the drivers
+    Driver.cast( {:set_root, set_scene} )
+    {:noreply, %{state | set_scene: nil}}
+  end
+
+  #--------------------------------------------------------
+  def handle_cast( {:activation_complete, scene_ref, root_scene}, %{
+    set_scene: {set_scene, activate_args},
+    set_list: set_list
+  } = state ) when root_scene == set_scene do
+    state = List.delete(set_list, scene_ref)
+    |> case do
+      [] ->
+        # setup is complete,send the message to the drivers
+        Driver.cast( {:set_root, set_scene} )
+        %{state | set_scene: nil, set_list: []}
+      set_list ->
+        # record teh shortened list
+        %{state | set_list: set_list}
+    end
+    {:noreply, state}
+  end
+
+
+  #--------------------------------------------------------
+  # Start and activate
+  def handle_cast( {:start_dyn_scene, parent, scene_ref, mod, init_data}, %{
+    set_scene: {set_scene, activate_args},
+    set_list: set_list
+  } = state ) do
+    {:ok, _} = mod.start_child_scene( parent, scene_ref, init_data)
+    Scene.activate( scene_ref, activate_args, set_scene )
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
+  # start, but don't activate
+  def handle_cast( {:start_dyn_scene, parent, scene_ref, mod, init_data}, state ) do
+    {:ok, _} = mod.start_child_scene( parent, scene_ref, init_data)
     {:noreply, state}
   end
 
@@ -370,34 +429,43 @@ defmodule Scenic.ViewPort do
       {mod, init_data} ->
         new_ref = make_ref()
 
-        # start the new scene
-        {:ok, pid} = mod.start_child_scene( @dynamic_scenes, new_ref, init_data)
-
         # start and activate the new scene
-        Task.async(fn ->
-          # activate the new scene
-          Scene.activate( new_ref, args )
-          # send the message to the drivers
-#          Driver.cast( {:set_root, new_ref} )
-          {:set_complete, new_ref, new_ref}
-        end)
+        {:ok, _} = mod.start_child_scene( @dynamic_scenes, new_ref, init_data)
+        Scene.activate( new_ref, args, new_ref )
+
+#        GenServer.cast(self(), {:start_dyn_scene, @dynamic_scenes, new_ref, mod, init_data})
+#       {:ok, pid} = mod.start_child_scene( @dynamic_scenes, new_ref, init_data)
+#        Scene.activate( new_ref, args )
+        # start and activate the new scene
+#        Task.async(fn ->
+#          # activate the new scene
+#          Scene.activate( new_ref, args )
+#          # send the message to the drivers
+##          Driver.cast( {:set_root, new_ref} )
+#          {:set_complete, new_ref, new_ref}
+#        end)
+
         state
         |> Map.put( :root_scene, new_ref )
-        |> Map.put( :setting_scene, {new_ref, [new_ref]} )
+        |> Map.put( :set_scene, {new_ref, args} )
+        |> Map.put( :set_list, [new_ref] )
 
       # app supervised scene
       scene_ref when is_atom(scene_ref) ->
+        # activate the scene
+        Scene.activate( scene_ref, args, scene_ref )
         # activate the incoming scene
-        Task.async(fn ->
-          # activate the new graph here
-          Scene.activate( scene_ref, args )
-          # send the message to the drivers
-#          Driver.cast( {:set_root, scene_ref} )
-          {:set_complete, scene_ref, nil}
-        end)
+#        Task.async(fn ->
+#          # activate the new graph here
+#          Scene.activate( scene_ref, args )
+#          # send the message to the drivers
+##          Driver.cast( {:set_root, scene_ref} )
+#          {:set_complete, scene_ref, nil}
+#        end)
         state
         |> Map.put( :root_scene, scene_ref )
-        |> Map.put( :setting_scene, {scene_ref, []} )
+        |> Map.put( :set_scene, {scene_ref, args} )
+        |> Map.put( :set_list, [] )
     end
 
     # tear down the old scene
@@ -414,27 +482,16 @@ defmodule Scenic.ViewPort do
   end
 
 
-
-
-
-
-
-
-
-
-
-
-
-
   #--------------------------------------------------------
   # before putting the graph, we need to manage any dynamic scenes it
   # reference. This is really the main point of the viewport. The drivers
   # shouldn't have any knowledge of the actual processes used and only
   # refer to graphs by unified keys
-  def handle_cast( {:put_graph, graph, scene_ref, opts}, %{
+  def handle_call( {:put_graph, graph, scene_ref, opts}, _, %{
     raw_scene_refs: raw_scene_refs,
     dyn_scene_refs: dyn_scene_refs,
-    setting_scene: setting_scene
+    set_scene: set_scene,
+    set_list: set_list
   } = state ) do
 
     # get the old refs
@@ -462,26 +519,34 @@ defmodule Scenic.ViewPort do
         new_scene_ref = make_ref()
 
         # start the dynamic scene
-        mod.start_child_scene( scene_ref, new_scene_ref, init_data )
+#        GenServer.cast(self(), {:start_dyn_scene, scene_ref, new_scene_ref, mod, init_data})
 
-        with {:ok, args} <- Scene.get_activation( scene_ref ) do
-          case setting_scene do
-            nil ->
-              # not setting a scene. no need for fancy async stuff
-              Task.start_link( fn->
-                # activate the new graph in an async task as it might call back in here
-                Scene.activate( scene_ref, args )
-              end)
-
-            {setting_scene, _} ->
-              # setting a scene. Use async to trigger the completion message
-              Task.async( fn->
-                # activate the new graph in an async task as it might call back in here
-                Scene.activate( scene_ref, args )
-                {:set_complete, setting_scene, new_scene_ref}
-              end)
-          end
+        {:ok, _pid} = mod.start_child_scene( scene_ref, new_scene_ref, init_data)
+        with {root, activation_args} <- set_scene do
+          Scene.activate( new_scene_ref, activation_args, root )  
         end
+      
+
+#        mod.start_child_scene( scene_ref, new_scene_ref, init_data )
+#        with {:ok, args} <- Scene.get_activation( scene_ref ) do
+#          Scene.activate( scene_ref, args )
+#          case setting_scene do
+#            nil ->
+#              # not setting a scene. no need for fancy async stuff
+#              Task.start_link( fn->
+#                # activate the new graph in an async task as it might call back in here
+#                Scene.activate( scene_ref, args )
+#              end)
+#
+#            {setting_scene, _} ->
+#              # setting a scene. Use async to trigger the completion message
+#              Task.async( fn->
+#                # activate the new graph in an async task as it might call back in here
+#                Scene.activate( scene_ref, args )
+#                {:set_complete, setting_scene, new_scene_ref}
+#              end)
+#          end
+#        end
 
         # add the this ref for next time
         Map.put(refs, uid, new_scene_ref)
@@ -502,27 +567,33 @@ defmodule Scenic.ViewPort do
 
     # take all the new refs and insert them back into the graph, so that they are
     # nice and normalized for the drivers
-    graph = Enum.reduce(new_dyn_refs, graph, fn({uid, scene_ref}, g)->
-      put_in(g, [uid, :data], {Primitive.SceneRef, scene_ref})
+    graph = Enum.reduce(new_dyn_refs, graph, fn({uid, new_dyn_ref}, g)->
+      put_in(g, [uid, :data], {Primitive.SceneRef, new_dyn_ref})
     end)
+
+    # if we are in the process of setting a scene, add any newly created scenes to the
+    # set_list. This is so the drivers won't be notified until they have activated.
+    state = case set_scene do
+      nil -> state
+      {root_scene, _} ->
+        set_list = Enum.reduce(new_dyn_refs, set_list, fn({_, new_dyn_ref}, l)->
+          [new_dyn_ref | l]
+        end)
+        Map.put(state, :set_list, set_list)
+    end
 
     # store the refs for next time
     state = put_in(state, [:raw_scene_refs, scene_ref], new_raw_refs)
     state = put_in(state, [:dyn_scene_refs, scene_ref], new_dyn_refs)
 
     # insert the graph into the etstable
-    resp = :ets.insert(@ets_graphs_table, {scene_ref, graph})
-
-    # if requested, activate the graph
-#    if Enum.member?(opts, :activate) do
-#      activate_graph( scene_ref, opts[:activate] )
-#    end
+    :ets.insert(@ets_graphs_table, {scene_ref, graph})
 
     # tell the drivers about the updated graph
     Driver.cast( {:put_graph, scene_ref} )
 
     # store the dyanamic scenes references
-    {:noreply, state}
+    {:reply, :ok, state}
   end
 
 
