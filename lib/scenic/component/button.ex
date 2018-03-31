@@ -1,5 +1,5 @@
 defmodule Scenic.Component.Button do
-  use Scenic.Component
+  use Scenic.Component, has_children: false
 
   alias Scenic.Graph
   alias Scenic.Primitive

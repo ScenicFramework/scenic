@@ -48,6 +48,9 @@ defmodule Scenic.Scene do
   @callback handle_deactivate(any) :: {:noreply, any}
 
 
+  @children_default   true
+
+
   #===========================================================================
   # calls for setting up a scene inside of a supervisor
 
@@ -280,8 +283,9 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
 
       def send_event( event ), do: GenServer.cast(self(), {:event, event})
 
-      def start_child_scene( parent_scene, ref, args ), do:
-        Scenic.Scene.start_child_scene( parent_scene, ref, __MODULE__, args, unquote(opts[:children]) )
+      def start_child_scene( parent_scene, ref, args ) do
+        Scenic.Scene.start_child_scene( parent_scene, ref, __MODULE__, args, unquote(opts[:has_children]) )
+      end
 
       #--------------------------------------------------------
 #      add local shortcuts to things like get/put graph and modify element
@@ -346,10 +350,20 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
     {:ok, state}
   end
 
+  #--------------------------------------------------------
+  # this a root-level dynamic scene
+  def start_child_scene( parent_scene, ref, mod, args, has_children ) do
+    has_children = case has_children do
+      nil -> @children_default
+      true -> true
+      false -> false
+    end
+    do_start_child_scene( parent_scene, ref, mod, args, has_children )
+  end
 
   #--------------------------------------------------------
   # this a root-level dynamic scene
-  def start_child_scene( @dynamic_scenes, ref, mod, args, true ) do
+  defp do_start_child_scene( @dynamic_scenes, ref, mod, args, true ) do
     # start the scene supervision tree
     {:ok, supervisor_pid} = DynamicSupervisor.start_child(  @dynamic_scenes,
       {Scenic.Scene.Supervisor, {nil, ref, mod, args}}
@@ -367,8 +381,9 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
   end
 
   #--------------------------------------------------------
-  # this is starting as the child of another scene
-  def start_child_scene( parent_scene, ref, mod, args, true ) do
+  # this is starting as the child of another scene, children are requested, so
+  # start it up as it's own little supervision tree
+  defp do_start_child_scene( parent_scene, ref, mod, args, true ) do
     # get the dynamic supervisor for the parent
     case child_supervisor_pid( parent_scene ) do
       {:ok, child_sup_pid} ->
@@ -394,27 +409,22 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
 
   #--------------------------------------------------------
   # this a root-level dynamic scene
-  def start_child_scene( @dynamic_scenes, ref, mod, args, false ) do
-    DynamicSupervisor.start_child( @dynamic_scenes, {Scenic.Scene, {ref, mod, args}} )
+  defp do_start_child_scene( @dynamic_scenes, ref, mod, args, false ) do
+    DynamicSupervisor.start_child( @dynamic_scenes, {Scenic.Scene, {nil, ref, mod, args}} )
   end
 
   #--------------------------------------------------------
-  def start_dynamic_scene( parent_scene, ref, mod, args, false ) do
-pry()
+  # this is the child of another scene, but no children, so can start directly.
+  defp do_start_child_scene( parent_scene, ref, mod, args, false ) do
     # get the dynamic supervisor for the parent
     case child_supervisor_pid( parent_scene ) do
       {:ok, child_sup_pid} ->
         # start the scene supervision tree
-        DynamicSupervisor.start_child( @dynamic_scenes, {Scenic.Scene, {ref, mod, args}} )
+        DynamicSupervisor.start_child( child_sup_pid, {Scenic.Scene, {parent_scene, ref, mod, args}} )
       _ ->
         {:error, :invalid_parent}
     end
   end
-
-  def start_dynamic_scene( parent_scene, ref, mod, args, other ) do
-    pry()
-  end
-
 
   #--------------------------------------------------------
   # somebody has a screen position and wants an uid for it
@@ -476,22 +486,23 @@ IO.puts "SCENE DEACTIVATE"
     |> Process.info()
     |> get_in([:dictionary, :"$ancestors"])
     # make sure this really is a scene supervisor, not something else
-    supervisor_pid = case Process.info(supervisor_pid) do
-      nil -> nil
+    {supervisor_pid, dynamic_children_pid} = case Process.info(supervisor_pid) do
+      nil -> {nil, nil}
       info ->
         case get_in( info, [:dictionary, :"$initial_call"] ) do
           {:supervisor, Scene.Supervisor, _} ->
             supervisor_pid
+            dynamic_children_pid = Supervisor.which_children( supervisor_pid )
+            |> Enum.find_value( fn 
+              {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
+              _ -> nil
+            end)
+            {supervisor_pid, dynamic_children_pid}
+
           _ ->
-            nil
+            {nil, nil}
         end
     end
-
-    dynamic_children_pid = Supervisor.which_children( supervisor_pid )
-    |> Enum.find_value( fn 
-      {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
-      _ -> nil
-    end)
 
     # update the scene with the parent and supervisor info
     ViewPort.register_scene( scene_ref, %Registration{

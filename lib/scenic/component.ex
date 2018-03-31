@@ -14,11 +14,11 @@ defmodule Scenic.Component do
   import IEx
 
   #===========================================================================
-  defmacro __using__(_opts) do
+  defmacro __using__(opts) do
     quote do
       @behaviour Scenic.Component
 
-      use Scenic.Scene
+      use Scenic.Scene, unquote(opts)
 
 #      def build(data \\ nil, opts \\ [])
 #      def build(data, opts) do
