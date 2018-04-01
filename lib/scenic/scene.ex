@@ -82,7 +82,7 @@ defmodule Scenic.Scene do
 
 
   def activate( scene_ref, args, activation_root \\ nil ) do
-IO.puts "-----------> activate #{inspect(scene_ref)}"
+#IO.puts "-----------> activate #{inspect(scene_ref)}"
     with {:ok, pid} <- to_pid(scene_ref) do
       GenServer.cast( pid, {:activate, args, activation_root} )
     end
@@ -92,7 +92,7 @@ IO.puts "-----------> activate #{inspect(scene_ref)}"
   # deactivate is synchronous (uses a call) because I want to make sure it has
   # completed before tearing down the scene process
   def deactivate( scene_ref ) do
-IO.puts "-----------> deactivate #{inspect(scene_ref)}"
+#IO.puts "-----------> deactivate #{inspect(scene_ref)}"
     with {:ok, pid} <- to_pid(scene_ref) do
       GenServer.call(pid, :deactivate)
     end
