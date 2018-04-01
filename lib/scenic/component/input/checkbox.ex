@@ -84,6 +84,7 @@ defmodule Scenic.Component.Input.Checkbox do
       msg: msg
     }
 
+IO.puts "Checkbox.init"
 
     {:ok, state}
   end
@@ -91,6 +92,14 @@ defmodule Scenic.Component.Input.Checkbox do
 
   #--------------------------------------------------------
   def handle_activate( _args, %{graph: graph} = state ) do
+IO.puts "Checkbox.handle_activate"
+    ViewPort.put_graph( graph )
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
+  def handle_deactivate( _args, %{graph: graph} = state ) do
+IO.puts "Checkbox.handle_deactivate"
     ViewPort.put_graph( graph )
     {:noreply, state}
   end

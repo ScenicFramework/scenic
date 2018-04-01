@@ -93,13 +93,21 @@ defmodule Scenic.Component.Button do
       msg: msg
     }
 
+IO.puts "Button.init"
     {:ok, state}
   end
 
 
   #--------------------------------------------------------
   def handle_activate(_args, %{graph: graph} = state ) do
+IO.puts "Button.handle_activate"
     ViewPort.put_graph( graph )
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
+  def handle_deactivate( %{graph: graph} = state ) do
+IO.puts "Button.handle_deactivate"
     {:noreply, state}
   end
 
