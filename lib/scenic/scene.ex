@@ -43,8 +43,6 @@ defmodule Scenic.Scene do
 
   @callback filter_event( any, any ) :: { :continue, any, any } | {:stop, any}
 
-#  @callback handle_reset(any, any) :: {:noreply, any, any}
-#  @callback handle_update(any, any) :: {:noreply, any, any}
   @callback handle_activate(any, any) :: {:noreply, any}
   @callback handle_deactivate(any) :: {:noreply, any}
 
@@ -82,28 +80,6 @@ defmodule Scenic.Scene do
     cast(scene, {:event, event})
   end
 
-#  def terminate( scene_pid ) do
-#    GenServer.cast(scene_pid, :terminate)
-#  end
-
-  #--------------------------------------------------------
-#  def active?( scene_ref ) when is_atom(scene_ref) or is_reference(scene_ref) do
-#    case :ets.lookup(@ets_scenes_table, scene_ref ) do
-#      [{_,{_,_,_,active,args}}] -> {active,args}
-#      _ -> {:error, :not_found}
-#    end
-#  end
-
-  
-  #--------------------------------------------------------
-  # activate is synchronous (uses a call) because I want to make sure it has
-  # completed before finishing setting any scenes
-#  def activate( scene_ref, args ) do
-#IO.puts "-----------> activate #{inspect(scene_ref)}"
-#    with {:ok, pid} <- to_pid(scene_ref) do
-#      GenServer.call( pid, {:activate, args} )
-#    end
-#  end
 
   def activate( scene_ref, args, activation_root \\ nil ) do
 IO.puts "-----------> activate #{inspect(scene_ref)}"
@@ -352,7 +328,6 @@ IO.puts "-----------> deactivate #{inspect(scene_ref)}"
     Process.put(:scene_ref, scene_ref)
 
     # update the scene with the parent and supervisor info
-IO.puts "--------------> register Scene #{inspect(scene_ref)} as #{inspect(self())}"
     ViewPort.register_scene( %Registration{ pid: self, parent_scene: parent})
 
     GenServer.cast(self(), {:after_init, scene_ref, args})
@@ -569,7 +544,6 @@ IO.puts "SCENE DEACTIVATE"
     scene_module: mod,
     scene_state: sc_state,
   } = state) do
-IO.puts "SCENE ACTIVATE - NEW"
     ViewPort.register_activation( scene_ref, args )
     # tell the scene it is being activated
     {:noreply, sc_state} = mod.handle_activate( args, sc_state )

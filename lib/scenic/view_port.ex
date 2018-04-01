@@ -130,7 +130,8 @@ defmodule Scenic.ViewPort do
     min_graph = Enum.reduce(p_map, %{}, fn({uid, p}, g) ->
       Map.put( g, uid, Primitive.minimal(p) )
     end)
-    GenServer.call( @viewport, {:put_graph, min_graph, scene_ref, opts} )
+
+    GenServer.cast( @viewport, {:put_graph, min_graph, scene_ref, opts} )
 
     # return the original graph, allowing it to be used in a pipeline
     graph
@@ -234,7 +235,8 @@ defmodule Scenic.ViewPort do
       input_captures: %{},
       hover_primitve: nil,
 
-      setting_scene: nil,
+      set_scene: nil,
+      set_list: [],
 
       max_depth: opts[:max_depth] || @max_depth,
       graph_table: :ets.new(@ets_graphs_table, [:named_table, read_concurrency: true]),
@@ -329,6 +331,23 @@ defmodule Scenic.ViewPort do
 
 
   #============================================================================
+  # handle_call
+
+  #--------------------------------------------------------
+  # before putting the graph, we need to manage any dynamic scenes it
+  # reference. This is really the main point of the viewport. The drivers
+  # shouldn't have any knowledge of the actual processes used and only
+  # refer to graphs by unified keys
+#  def handle_call( {:put_graph, graph, scene_ref, opts}, _,  state ) do
+#    state = do_put_graph(graph, scene_ref, opts, state)
+#    {:reply, :ok, state}
+#  end
+
+  def handle_call( :flush, _,  state ) do
+    {:reply, :ok, state}
+  end
+
+  #============================================================================
   # handle_cast
 
   #--------------------------------------------------------
@@ -368,7 +387,10 @@ defmodule Scenic.ViewPort do
     set_list: []
   } = state ) when root_scene == set_scene do
     # setup is complete,send the message to the drivers
-    Driver.cast( {:set_root, set_scene} )
+    Task.start(fn ->
+      GenServer.call(@viewport, :flush)
+      Driver.cast( {:set_root, set_scene} )
+    end)
     {:noreply, %{state | set_scene: nil}}
   end
 
@@ -381,7 +403,10 @@ defmodule Scenic.ViewPort do
     |> case do
       [] ->
         # setup is complete,send the message to the drivers
-        Driver.cast( {:set_root, set_scene} )
+        Task.start(fn ->
+          GenServer.call(@viewport, :flush)
+          Driver.cast( {:set_root, set_scene} )
+        end)
         %{state | set_scene: nil, set_list: []}
       set_list ->
         # record teh shortened list
@@ -433,18 +458,6 @@ defmodule Scenic.ViewPort do
         {:ok, _} = mod.start_child_scene( @dynamic_scenes, new_ref, init_data)
         Scene.activate( new_ref, args, new_ref )
 
-#        GenServer.cast(self(), {:start_dyn_scene, @dynamic_scenes, new_ref, mod, init_data})
-#       {:ok, pid} = mod.start_child_scene( @dynamic_scenes, new_ref, init_data)
-#        Scene.activate( new_ref, args )
-        # start and activate the new scene
-#        Task.async(fn ->
-#          # activate the new scene
-#          Scene.activate( new_ref, args )
-#          # send the message to the drivers
-##          Driver.cast( {:set_root, new_ref} )
-#          {:set_complete, new_ref, new_ref}
-#        end)
-
         state
         |> Map.put( :root_scene, new_ref )
         |> Map.put( :set_scene, {new_ref, args} )
@@ -454,18 +467,11 @@ defmodule Scenic.ViewPort do
       scene_ref when is_atom(scene_ref) ->
         # activate the scene
         Scene.activate( scene_ref, args, scene_ref )
-        # activate the incoming scene
-#        Task.async(fn ->
-#          # activate the new graph here
-#          Scene.activate( scene_ref, args )
-#          # send the message to the drivers
-##          Driver.cast( {:set_root, scene_ref} )
-#          {:set_complete, scene_ref, nil}
-#        end)
+
         state
         |> Map.put( :root_scene, scene_ref )
         |> Map.put( :set_scene, {scene_ref, args} )
-        |> Map.put( :set_list, [] )
+        |> Map.put( :set_list, [scene_ref] )
     end
 
     # tear down the old scene
@@ -481,19 +487,17 @@ defmodule Scenic.ViewPort do
     {:noreply, state}
   end
 
-
   #--------------------------------------------------------
   # before putting the graph, we need to manage any dynamic scenes it
   # reference. This is really the main point of the viewport. The drivers
   # shouldn't have any knowledge of the actual processes used and only
   # refer to graphs by unified keys
-  def handle_call( {:put_graph, graph, scene_ref, opts}, _, %{
+  def handle_cast( {:put_graph, graph, scene_ref, opts}, %{
     raw_scene_refs: raw_scene_refs,
     dyn_scene_refs: dyn_scene_refs,
     set_scene: set_scene,
     set_list: set_list
   } = state ) do
-
     # get the old refs
     old_raw_refs =  Map.get( raw_scene_refs, scene_ref, %{} )
 
@@ -518,36 +522,11 @@ defmodule Scenic.ViewPort do
         # make a new, scene ref
         new_scene_ref = make_ref()
 
-        # start the dynamic scene
-#        GenServer.cast(self(), {:start_dyn_scene, scene_ref, new_scene_ref, mod, init_data})
-
         {:ok, _pid} = mod.start_child_scene( scene_ref, new_scene_ref, init_data)
         with {root, activation_args} <- set_scene do
           Scene.activate( new_scene_ref, activation_args, root )  
         end
       
-
-#        mod.start_child_scene( scene_ref, new_scene_ref, init_data )
-#        with {:ok, args} <- Scene.get_activation( scene_ref ) do
-#          Scene.activate( scene_ref, args )
-#          case setting_scene do
-#            nil ->
-#              # not setting a scene. no need for fancy async stuff
-#              Task.start_link( fn->
-#                # activate the new graph in an async task as it might call back in here
-#                Scene.activate( scene_ref, args )
-#              end)
-#
-#            {setting_scene, _} ->
-#              # setting a scene. Use async to trigger the completion message
-#              Task.async( fn->
-#                # activate the new graph in an async task as it might call back in here
-#                Scene.activate( scene_ref, args )
-#                {:set_complete, setting_scene, new_scene_ref}
-#              end)
-#          end
-#        end
-
         # add the this ref for next time
         Map.put(refs, uid, new_scene_ref)
 
@@ -571,15 +550,17 @@ defmodule Scenic.ViewPort do
       put_in(g, [uid, :data], {Primitive.SceneRef, new_dyn_ref})
     end)
 
-    # if we are in the process of setting a scene, add any newly created scenes to the
+    # if we are in the process of setting a scene, add any newly created dyn scenes to the
     # set_list. This is so the drivers won't be notified until they have activated.
-    state = case set_scene do
-      nil -> state
-      {root_scene, _} ->
-        set_list = Enum.reduce(new_dyn_refs, set_list, fn({_, new_dyn_ref}, l)->
-          [new_dyn_ref | l]
-        end)
-        Map.put(state, :set_list, set_list)
+    state = with {root_scene, _} <- set_scene do
+      dyn_diff = Utilities.Map.difference( old_dyn_refs, new_dyn_refs )
+      set_list = Enum.reduce(dyn_diff, set_list, fn
+        {:put, _, ref}, sl -> [ ref | sl ]
+        _, sl -> sl
+      end)
+      Map.put(state, :set_list, set_list)
+    else
+      _ -> state
     end
 
     # store the refs for next time
@@ -592,8 +573,8 @@ defmodule Scenic.ViewPort do
     # tell the drivers about the updated graph
     Driver.cast( {:put_graph, scene_ref} )
 
-    # store the dyanamic scenes references
-    {:reply, :ok, state}
+    # return the updated state
+    {:noreply, state}
   end
 
 
@@ -603,8 +584,8 @@ defmodule Scenic.ViewPort do
 
 
 
-
-
+  #============================================================================
+  # input handling
 
 
   #--------------------------------------------------------
@@ -648,11 +629,6 @@ defmodule Scenic.ViewPort do
     end)
     {:noreply, %{state | input_captures: captures}}
   end
-
-
-  #============================================================================
-  # input handling
-
 
 
   #============================================================================
@@ -1123,6 +1099,102 @@ defmodule Scenic.ViewPort do
 
 
   defp get_scene( scene_ref )
+
+  #============================================================================
+  # put_graph
+
+  #--------------------------------------------------------
+  # before putting the graph, we need to manage any dynamic scenes it
+  # reference. This is really the main point of the viewport. The drivers
+  # shouldn't have any knowledge of the actual processes used and only
+  # refer to graphs by unified keys
+#  defp do_put_graph( graph, scene_ref, opts, %{
+#    raw_scene_refs: raw_scene_refs,
+#    dyn_scene_refs: dyn_scene_refs,
+#    set_scene: set_scene,
+#    set_list: set_list
+#  } = state ) do
+#
+#    # get the old refs
+#    old_raw_refs =  Map.get( raw_scene_refs, scene_ref, %{} )
+#
+#    # build a list of the dynamic scene references in this graph
+#    new_raw_refs = Enum.reduce( graph, %{}, fn
+#      {uid,%{ data: {Primitive.SceneRef, {mod, init_data}}}}, nr ->
+#        Map.put(nr, uid, {mod, init_data})
+#      # not a ref. ignore it
+#      _, nr -> nr
+#    end)
+#
+#    # get the difference script between the raw refs
+#    raw_diff = Utilities.Map.difference( old_raw_refs, new_raw_refs )
+#
+#    # get the old, resolved dynamic scene refs
+#    old_dyn_refs = Map.get( dyn_scene_refs, scene_ref, %{} )
+#
+#    # Enumerate the old refs, using the difference script to determine
+#    # what to start or stop.
+#    new_dyn_refs = Enum.reduce(raw_diff, old_dyn_refs, fn
+#      {:put, uid, {mod, init_data}}, refs ->     # start this dynamic scene
+#        # make a new, scene ref
+#        new_scene_ref = make_ref()
+#
+#        {:ok, _pid} = mod.start_child_scene( scene_ref, new_scene_ref, init_data)
+#        with {root, activation_args} <- set_scene do
+#          Scene.activate( new_scene_ref, activation_args, root )  
+#        end
+#      
+#        # add the this ref for next time
+#        Map.put(refs, uid, new_scene_ref)
+#
+#      {:del, uid}, refs ->                      # stop this dynaic scene
+#        # get the old dynamic graph reference
+#        old_scene_ref = old_dyn_refs[uid]
+#
+#        # send the optional deactivate message and terminate. ok to be async
+#        Task.start fn ->
+#          Scene.deactivate( old_scene_ref )
+#          Scene.stop( old_scene_ref )
+#        end
+#
+#        # remove the reference from the old refs
+#        Map.delete(refs, uid)
+#    end)
+#
+#    # take all the new refs and insert them back into the graph, so that they are
+#    # nice and normalized for the drivers
+#    graph = Enum.reduce(new_dyn_refs, graph, fn({uid, new_dyn_ref}, g)->
+#      put_in(g, [uid, :data], {Primitive.SceneRef, new_dyn_ref})
+#    end)
+#
+#    # if we are in the process of setting a scene, add any newly created scenes to the
+#    # set_list. This is so the drivers won't be notified until they have activated.
+#    state = case set_scene do
+#      nil -> state
+#      {root_scene, _} ->
+#        set_list = Enum.reduce(new_dyn_refs, set_list, fn({_, new_dyn_ref}, l)->
+#          [new_dyn_ref | l]
+#        end)
+#        Map.put(state, :set_list, set_list)
+#    end
+#
+#    # store the refs for next time
+#    state = put_in(state, [:raw_scene_refs, scene_ref], new_raw_refs)
+#    state = put_in(state, [:dyn_scene_refs, scene_ref], new_dyn_refs)
+#
+#    # insert the graph into the etstable
+#    :ets.insert(@ets_graphs_table, {scene_ref, graph})
+#
+#    # tell the drivers about the updated graph
+#    Driver.cast( {:put_graph, scene_ref} )
+#
+#    # return the updated state
+#    state
+#  end
+
+
+
+
 
 
 end
