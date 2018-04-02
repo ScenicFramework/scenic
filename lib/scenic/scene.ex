@@ -329,6 +329,10 @@ defmodule Scenic.Scene do
     # update the scene with the parent and supervisor info
     ViewPort.register_scene( %Registration{ pid: self, parent_scene: parent})
 
+    # tell the viewport to start monitoring this scene
+    GenServer.cast(@viewport, {:monitor_scene, self()})
+
+    # some things need to be done after init
     GenServer.cast(self(), {:after_init, scene_ref, args})
 
     # initialize the scene itself
@@ -337,7 +341,8 @@ defmodule Scenic.Scene do
     # if this init is recovering from a crash, then the scene_ref will be able to
     # recover an activation arg (if it was active when it crashed).
     with  {:ok, activation_args} <- get_activation( scene_ref ) do
-      GenServer.cast(self(), {:activate, activation_args, nil})
+      GenServer.cast( self(), {:activate, activation_args, nil} )
+      GenServer.cast( @viewport, {:recover_scene, scene_ref} )
     end
 
     state = %{
@@ -455,10 +460,12 @@ defmodule Scenic.Scene do
   #--------------------------------------------------------
   # support for losing focus
   def handle_call(:deactivate, _, %{
+    scene_ref: scene_ref,
     scene_module: mod,
     scene_state: sc_state,
   } = state) do
 IO.puts "SCENE DEACTIVATE"
+    GenServer.cast( @viewport, {:unregister_activation, scene_ref} )
     # tell the scene it is being deactivated
     {:noreply, sc_state} = mod.handle_deactivate( sc_state )
     { :reply, :ok, %{state | scene_state: sc_state} }
@@ -544,7 +551,7 @@ IO.puts "SCENE DEACTIVATE"
     scene_state: sc_state,
   } = state) do
     ViewPort.register_activation( scene_ref, args )
-    
+
     # tell the scene it is being activated
     {:noreply, sc_state} = mod.handle_activate( args, sc_state )
 

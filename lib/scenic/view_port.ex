@@ -75,7 +75,6 @@ defmodule Scenic.ViewPort do
         ref
     end
     :ets.insert(@ets_scenes_table, {scene_ref, registration})
-    GenServer.cast(@viewport, {:monitor_scene, self()})
   end
 
   #--------------------------------------------------------
@@ -250,7 +249,7 @@ defmodule Scenic.ViewPort do
       # condition when a scene crashes and is being restarted
       case :ets.lookup(@ets_scenes_table, scene_ref ) do
         [{_,%Scene.Registration{pid: ^pid}}] -> nil
-
+IO.puts "DOWN cleanup on #{inspect(scene_ref)}"
           # delete the scene's graph
           ViewPort.Driver.cast({:delete_graph, scene_ref})
           :ets.delete(@ets_graphs_table, scene_ref)
@@ -258,20 +257,20 @@ defmodule Scenic.ViewPort do
           # unregister the scene itself
           :ets.delete(@ets_scenes_table, scene_ref)
 
-          # delete the activations - ok if there is none
-          :ets.delete(@ets_activation_table, scene_ref)
-
           # clean up the stored references and return the state
           state
           |> Utilities.Map.delete_in( [:raw_scene_refs, scene_ref] )
           |> Utilities.Map.delete_in( [:dyn_scene_refs, scene_ref] )
 
         _ ->
+IO.puts "DOWN skipping #{inspect(scene_ref)}"
           # either not there, or claimed by another scene
           state
       end
     else
-      _ -> state
+      _ ->
+IO.puts "DOWN no scene_ref for #{inspect(pid)}"
+        state
     end
 
     {:noreply, state}
@@ -297,9 +296,13 @@ defmodule Scenic.ViewPort do
 
     # if setting a scene, then record the set list
     set_list = case set_scene do
-      nil -> []
+      nil -> set_list
       _ ->
-        set_list ++ new_list
+        set_list = case set_scene do
+          nil -> []
+          _ ->
+            set_list ++ new_list
+        end
     end
     {:reply, :ok, %{state | set_list: set_list}}
   end
@@ -326,10 +329,28 @@ defmodule Scenic.ViewPort do
     {:noreply, state}
   end
 
+  #--------------------------------------------------------
+  def handle_cast( {:unregister_activation, scene_ref}, state ) do
+    :ets.delete(@ets_activation_table, scene_ref)
+    {:noreply, state}
+  end
 
   #--------------------------------------------------------
   def handle_cast( {:activation_complete, _, _}, %{set_scene: nil} = state ) do
     # Not setting a scene. Safe to ignore this.
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
+  def handle_cast( {:recover_scene, scene_ref}, %{
+    root_scene: root_scene
+  } = state ) when scene_ref == root_scene do
+    ViewPort.Driver.cast( {:set_root, scene_ref} )
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
+  def handle_cast( {:recover_scene, scene_ref}, state ) do
     {:noreply, state}
   end
 

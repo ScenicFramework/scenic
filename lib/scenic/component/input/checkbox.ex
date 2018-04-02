@@ -1,5 +1,5 @@
 defmodule Scenic.Component.Input.Checkbox do
-  use Scenic.Component
+  use Scenic.Component, has_children: false
 
   alias Scenic.Graph
   alias Scenic.Primitive
