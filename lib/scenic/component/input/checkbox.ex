@@ -29,16 +29,7 @@ defmodule Scenic.Component.Input.Checkbox do
 
 #  #--------------------------------------------------------
   def info() do
-    "#{IO.ANSI.red()}Button must be initialized with {{x,y}, text, message, opts}#{IO.ANSI.default_color()}\r\n" <>
-    "The message will be sent to you in a click event when the button is used.\r\n" <>
-    "Opts either a single or a list of option atoms\r\n" <>
-    "One size indicator: :small, :normal, :large. :normal is the default\r\n" <>
-    "One color indicator: :primary, :secondary, :success, :danger, :warning, :info, :light, :dark, :text\r\n" <>
-    "Other modifiers: :outline\r\n" <>
-    "#{IO.ANSI.yellow()}Example: {{20,20}, \"Button\", :primary}\r\n" <>
-    "Example: {{20,20}, \"Outline\", [:danger, :outline]}\r\n" <>
-    "Example: {{20,20}, \"Large\", [:warning, :large]}\r\n" <>
-    "Example: {{20,20}, \"Small Outline\", [:info, :small, :outline]}#{IO.ANSI.default_color()}\r\n"
+    "#{IO.ANSI.red()}Checkbox must be initialized with {text, message, opts}#{IO.ANSI.default_color()}\r\n" <>
   end
 
   #--------------------------------------------------------
