@@ -522,19 +522,6 @@ defmodule Scenic.ViewPort do
       put_in(g, [uid, :data], {Primitive.SceneRef, new_dyn_ref})
     end)
 
-    # if we are in the process of setting a scene, add any newly created dyn scenes to the
-    # set_list. This is so the drivers won't be notified until they have activated.
-    state = with {root_scene, _} <- set_scene do
-      dyn_diff = Utilities.Map.difference( old_dyn_refs, new_dyn_refs )
-      set_list = Enum.reduce(dyn_diff, set_list, fn
-        {:put, _, ref}, sl -> [ ref | sl ]
-        _, sl -> sl
-      end)
-      Map.put(state, :set_list, set_list)
-    else
-      _ -> state
-    end
-
     # store the refs for next time
     state = put_in(state, [:raw_scene_refs, scene_ref], new_raw_refs)
     state = put_in(state, [:dyn_scene_refs, scene_ref], new_dyn_refs)
