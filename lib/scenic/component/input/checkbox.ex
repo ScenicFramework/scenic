@@ -29,7 +29,7 @@ defmodule Scenic.Component.Input.Checkbox do
 
 #  #--------------------------------------------------------
   def info() do
-    "#{IO.ANSI.red()}Checkbox must be initialized with {text, message, opts}#{IO.ANSI.default_color()}\r\n" <>
+    "#{IO.ANSI.red()}Checkbox must be initialized with {text, message, opts}#{IO.ANSI.default_color()}\r\n"
   end
 
   #--------------------------------------------------------
@@ -91,7 +91,6 @@ IO.puts "Checkbox.handle_activate"
   #--------------------------------------------------------
   def handle_deactivate( _args, %{graph: graph} = state ) do
 IO.puts "Checkbox.handle_deactivate"
-    ViewPort.put_graph( graph )
     {:noreply, state}
   end
 

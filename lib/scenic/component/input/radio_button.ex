@@ -29,7 +29,9 @@ defmodule Scenic.Component.Input.RadioButton do
 
 #  #--------------------------------------------------------
   def info() do
-    "#{IO.ANSI.red()}RadioButton must be initialized with {{text, message, opts}#{IO.ANSI.default_color()}\r\n" <>
+#    "#{IO.ANSI.red()}RadioButton must be initialized with" <>
+#    "{text, message, value, opts}#{IO.ANSI.default_color()}\r\n"
+    "help goes here"
   end
 
   #--------------------------------------------------------
@@ -42,6 +44,7 @@ defmodule Scenic.Component.Input.RadioButton do
 
 
   #--------------------------------------------------------
+  def init( {text, msg} ), do: init( {text, msg, false, []} )
   def init( {text, msg, value} ), do: init( {text, msg, value, []} )
   def init( {text, msg, value, opt} ) when is_atom(opt), do: init( {text, msg, value, [opt]} )
   def init( {text, msg, value, opts} ) when is_list(opts) do
@@ -55,14 +58,8 @@ defmodule Scenic.Component.Input.RadioButton do
     |> Primitive.Group.add_to_graph(fn(graph) ->
       graph
       |> Primitive.Rectangle.add_to_graph({{-2,-2}, 140, 16}, color: :clear)
-      |> Primitive.RoundedRectangle.add_to_graph({{-2,-2}, 16, 16, 3},
-        color: box_background, border_color: border_color, border_width: 2, id: :box )
-
-      |> Primitive.Group.add_to_graph(fn(graph) ->
-        graph
-        |> Primitive.Line.add_to_graph({{2,2}, {10,10}})
-        |> Primitive.Line.add_to_graph({{2,10}, {10,2}})
-      end, id: :chx, hidden: !value, color: checkmark_color, line_width: 4)
+      |> Primitive.Oval.add_to_graph({{6,6}, 8}, color: box_background, border_color: border_color, border_width: 2, id: :box)
+      |> Primitive.Oval.add_to_graph({{6,6}, 5}, color: checkmark_color, id: :chx, hidden: !value)
     end, translate: {0, -11})
     |> Primitive.Text.add_to_graph({{20,0}, text}, color: text_color )
 
@@ -75,23 +72,35 @@ defmodule Scenic.Component.Input.RadioButton do
       msg: msg
     }
 
-IO.puts "Checkbox.init"
+IO.puts "RadioButton.init"
 
     {:ok, state}
   end
 
+  #--------------------------------------------------------
+  def handle_cast({:set_value, new_value}, %{checked: value} = state) do
+    state = Map.put( state, :checked, new_value )
+    graph = update_graph(state)
+    {:noreply, %{state | graph: graph}}
+  end
+
+  #--------------------------------------------------------
+  def handle_cast({:set_to_msg, set_msg}, %{msg: msg} = state) do
+    state = Map.put( state, :checked, set_msg == msg )
+    graph = update_graph(state)
+    {:noreply, %{state | graph: graph}}
+  end
 
   #--------------------------------------------------------
   def handle_activate( _args, %{graph: graph} = state ) do
-IO.puts "Checkbox.handle_activate"
+IO.puts "RadioButton.handle_activate"
     ViewPort.put_graph( graph )
     {:noreply, state}
   end
 
   #--------------------------------------------------------
   def handle_deactivate( _args, %{graph: graph} = state ) do
-IO.puts "Checkbox.handle_deactivate"
-    ViewPort.put_graph( graph )
+IO.puts "RadioButton.handle_deactivate"
     {:noreply, state}
   end
 
@@ -129,14 +138,8 @@ IO.puts "Checkbox.handle_deactivate"
     ViewPort.release_input( [:cursor_button, :cursor_pos])
 
     # only do the action if the cursor is still contained in the target
-    state = case pressed && contained do
-      true ->
-        checked = !checked
-        send_event({:value_changed, msg, checked})
-        Map.put(state, :checked, checked)
-
-      false ->
-        state
+    if pressed && contained do
+      send_event({:click, msg})
     end
 
     graph = update_graph(state)

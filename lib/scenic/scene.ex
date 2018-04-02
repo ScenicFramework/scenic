@@ -41,7 +41,7 @@ defmodule Scenic.Scene do
 #  @callback handle_raw_input(any, any, any) :: {:noreply, any, any}
   @callback handle_input(any, any, any) :: {:noreply, any, any}
 
-  @callback filter_event( any, any ) :: { :continue, any, any } | {:stop, any}
+  @callback filter_event( any, any, any ) :: { :continue, any, any } | {:stop, any}
 
   @callback handle_activate(any, any) :: {:noreply, any}
   @callback handle_deactivate(any) :: {:noreply, any}
@@ -77,7 +77,7 @@ defmodule Scenic.Scene do
   end
 
   def send_event( scene, event ) do
-    cast(scene, {:event, event})
+    cast(scene, {:event, event, Process.get(:scene_ref)})
   end
 
 
@@ -203,6 +203,12 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
+  def broadcast_children(msg) do
+    Process.get(:scene_ref)
+    |> broadcast_children(msg)
+  end
+
+  #--------------------------------------------------------
   def broadcast_children(scene_ref, msg) do
     with {:ok, pids} <- child_pids( scene_ref ) do
       Enum.each(pids, &GenServer.cast(&1, msg) )
@@ -259,19 +265,19 @@ defmodule Scenic.Scene do
 
       #--------------------------------------------------------
       # Here so that the scene can override if desired
-      def init(_),                                do: {:ok, nil}
-      def handle_activate( _args, state ),        do: {:noreply, state}
-      def handle_deactivate( state ),             do: {:noreply, state}
+      def init(_),                                    do: {:ok, nil}
+      def handle_activate( _args, state ),            do: {:noreply, state}
+      def handle_deactivate( state ),                 do: {:noreply, state}
  
-      def handle_call(_msg, _from, state),        do: {:reply, :err_not_handled, state}
-      def handle_cast(_msg, state),               do: {:noreply, state}
-      def handle_info(_msg, state),               do: {:noreply, state}
+      def handle_call(_msg, _from, state),            do: {:reply, :err_not_handled, state}
+      def handle_cast(_msg, state),                   do: {:noreply, state}
+      def handle_info(_msg, state),                   do: {:noreply, state}
 
 #      def handle_raw_input( event, graph, scene_state ),  do: {:noreply, graph, scene_state}
-      def handle_input( event, _, scene_state ),  do: {:noreply, scene_state}
-      def filter_event( event, scene_state ),     do: {:continue, event, scene_state}
+      def handle_input( event, _, scene_state ),      do: {:noreply, scene_state}
+      def filter_event( event, _from, scene_state ),  do: {:continue, event, scene_state}
 
-      def send_event( event ), do: GenServer.cast(self(), {:event, event})
+      def send_event( event ), do: GenServer.cast(self(), {:event, event, Process.get(:scene_ref)})
 
       def start_child_scene( parent_scene, ref, args ) do
         Scenic.Scene.start_child_scene( parent_scene, ref, __MODULE__, args, unquote(opts[:has_children]) )
@@ -291,7 +297,7 @@ defmodule Scenic.Scene do
         handle_info:            2,
 
         handle_input:           3,
-        filter_event:           2,
+        filter_event:           3,
 
         start_child_scene:      3
       ]
@@ -581,14 +587,14 @@ IO.puts "SCENE DEACTIVATE"
 
 
   #--------------------------------------------------------
-  def handle_cast({:event, event},  %{
+  def handle_cast({:event, event, from_scene},  %{
     parent_scene: parent_scene,
     scene_module: mod,
     scene_state: sc_state
   } = state) do
-    sc_state = case mod.filter_event(event, sc_state ) do
+    sc_state = case mod.filter_event(event, from_scene, sc_state ) do
       { :continue, event, sc_state } ->
-        cast(parent_scene, {:event, event})
+        cast(parent_scene, {:event, event, from_scene})
         sc_state
 
       {:stop, sc_state} ->

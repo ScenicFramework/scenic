@@ -520,8 +520,10 @@ IO.puts "DOWN no scene_ref for #{inspect(pid)}"
         # make a new, scene ref
         new_scene_ref = make_ref()
 
+IO.puts("starting #{inspect({mod, init_data})}")
         {:ok, _pid} = mod.start_child_scene( scene_ref, new_scene_ref, init_data)
-      
+IO.puts("finished starting #{inspect({mod, init_data})}")
+
         # add the this ref for next time
         Map.put(refs, uid, new_scene_ref)
 
