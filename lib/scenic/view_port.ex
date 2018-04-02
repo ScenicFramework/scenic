@@ -244,32 +244,34 @@ defmodule Scenic.ViewPort do
   # when a scene goes down, clear it's graphs from the ets table
   def handle_info({:DOWN, _monitor_ref, :process, pid, reason}, state) do
     # get the scene_ref for this pid
-    scene_ref = Scene.pid_to_scene( pid )
+    state = with {:ok, scene_ref} <- Scene.pid_to_scene( pid ) do
+      # clear the related scene entry and graphs, but only if another scene
+      # has not already registered them. Wand to avoid a possible race
+      # condition when a scene crashes and is being restarted
+      case :ets.lookup(@ets_scenes_table, scene_ref ) do
+        [{_,%Scene.Registration{pid: ^pid}}] -> nil
 
-    # clear the related scene entry and graphs, but only if another scene
-    # has not already registered them. Wand to avoid a possible race
-    # condition when a scene crashes and is being restarted
-    state = case :ets.lookup(@ets_scenes_table, scene_ref ) do
-      [{_,%Scene.Registration{pid: ^pid}}] -> nil
+          # delete the scene's graph
+          ViewPort.Driver.cast({:delete_graph, scene_ref})
+          :ets.delete(@ets_graphs_table, scene_ref)
 
-        # delete the scene's graph
-        ViewPort.Driver.cast({:delete_graph, scene_ref})
-        :ets.delete(@ets_graphs_table, scene_ref)
+          # unregister the scene itself
+          :ets.delete(@ets_scenes_table, scene_ref)
 
-        # unregister the scene itself
-        :ets.delete(@ets_scenes_table, scene_ref)
+          # delete the activations - ok if there is none
+          :ets.delete(@ets_activation_table, scene_ref)
 
-        # delete the activations - ok if there is none
-        :ets.delete(@ets_activation_table, scene_ref)
+          # clean up the stored references and return the state
+          state
+          |> Utilities.Map.delete_in( [:raw_scene_refs, scene_ref] )
+          |> Utilities.Map.delete_in( [:dyn_scene_refs, scene_ref] )
 
-        # clean up the stored references and return the state
-        state
-        |> Utilities.Map.delete_in( [:raw_scene_refs, scene_ref] )
-        |> Utilities.Map.delete_in( [:dyn_scene_refs, scene_ref] )
-
-      _ ->
-        # either not there, or claimed by another scene
-        state
+        _ ->
+          # either not there, or claimed by another scene
+          state
+      end
+    else
+      _ -> state
     end
 
     {:noreply, state}

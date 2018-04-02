@@ -107,15 +107,15 @@ IO.puts "Checkbox.handle_deactivate"
   #--------------------------------------------------------
   def handle_input( {:cursor_enter, uid}, _, state ) do
     state = Map.put(state, :contained, true)
-    update_graph(state)
-    {:noreply, state}
+    graph = update_graph(state)
+    {:noreply, %{state | graph: graph}}
   end
 
   #--------------------------------------------------------
   def handle_input( {:cursor_exit, uid}, _, state ) do
     state = Map.put(state, :contained, false)
-    update_graph(state)
-    {:noreply, state}
+    graph = update_graph(state)
+    {:noreply, %{state | graph: graph}}
   end
 
   #--------------------------------------------------------
@@ -123,10 +123,11 @@ IO.puts "Checkbox.handle_deactivate"
     state = state
     |> Map.put( :pressed, true )
     |> Map.put( :contained, true )
-    update_graph(state)
+    graph = update_graph(state)
 
     ViewPort.capture_input( [:cursor_button, :cursor_pos], context)
-    {:noreply, state}
+
+    {:noreply, %{state | graph: graph}}
   end
 
   #--------------------------------------------------------
@@ -147,9 +148,9 @@ IO.puts "Checkbox.handle_deactivate"
         state
     end
 
-    update_graph(state)
+    graph = update_graph(state)
 
-    {:noreply, state}
+    {:noreply, %{state | graph: graph}}
   end
 
   #--------------------------------------------------------
@@ -184,9 +185,6 @@ IO.puts "Checkbox.handle_deactivate"
     |> ViewPort.put_graph()
   end
 
-  defp update_graph( state ) do
-    pry()
-  end
 
 end
 
