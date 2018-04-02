@@ -173,13 +173,12 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  def stop( scene_ref ) do
+  def stop_dynamic( scene_ref ) do
     # figure out what to stop
     pid_to_stop = case supervisor_pid( scene_ref ) do
       {:ok, pid} ->
         pid
       other ->
-        pry()
         {:ok, pid} = to_pid(scene_ref)
         pid
     end
@@ -545,8 +544,13 @@ IO.puts "SCENE DEACTIVATE"
     scene_state: sc_state,
   } = state) do
     ViewPort.register_activation( scene_ref, args )
+    
     # tell the scene it is being activated
     {:noreply, sc_state} = mod.handle_activate( args, sc_state )
+
+    # have the ViewPort activate the children
+    GenServer.call(@viewport, {:activate_children, scene_ref, args, activation_root})
+
     # tell the ViewPort this activation is complete (if a secquence is requested)
     if activation_root do
       GenServer.cast(@viewport, {:activation_complete, scene_ref, activation_root})

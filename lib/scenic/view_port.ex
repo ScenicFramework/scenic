@@ -222,6 +222,8 @@ defmodule Scenic.ViewPort do
       input_captures: %{},
       hover_primitve: nil,
 
+      unset_scene: nil,
+      unset_exceptions: [],
       set_scene: nil,
       set_list: [],
 
@@ -229,7 +231,6 @@ defmodule Scenic.ViewPort do
       graph_table: :ets.new(@ets_graphs_table, [:named_table, read_concurrency: true]),
       scene_table: :ets.new(@ets_scenes_table, [:named_table, :public, {:read_concurrency, true}]),
       activation_table: :ets.new(@ets_activation_table, [:named_table, read_concurrency: true]),
-#      startup_table: :ets.new(@ets_startup_table, [:named_table, :public])
     }
 
     {:ok, state}
@@ -284,6 +285,23 @@ defmodule Scenic.ViewPort do
     {:reply, :ok, state}
   end
 
+  #--------------------------------------------------------
+  # set a scene to be the new root
+  def handle_call( {:activate_children, scene_ref, args, root_ref}, _, %{
+    set_scene: set_scene,
+    set_list: set_list
+  } = state ) do
+    new_list = activate_children( scene_ref, args, root_ref )
+
+    # if setting a scene, then record the set list
+    set_list = case set_scene do
+      nil -> []
+      _ ->
+        set_list ++ new_list
+    end
+    {:reply, :ok, %{state | set_list: set_list}}
+  end
+
   #============================================================================
   # handle_cast
 
@@ -314,35 +332,69 @@ defmodule Scenic.ViewPort do
   end
 
   #--------------------------------------------------------
-  def handle_cast( {:activation_complete, _, root_scene}, %{
+  def handle_cast( {:activation_complete, scene_ref, root_scene}, %{
     set_scene: {set_scene, activate_args},
-    set_list: []
+    set_list: [],
+    unset_scene: unset_scene,
+    unset_exceptions: unset_exceptions
   } = state ) when root_scene == set_scene do
     # setup is complete,send the message to the drivers
+    unset_exceptions = [ scene_ref | unset_exceptions ]
+
     Task.start(fn ->
       GenServer.call(@viewport, :flush)
       ViewPort.Driver.cast( {:set_root, set_scene} )
     end)
-    {:noreply, %{state | set_scene: nil}}
+
+    # tear down the old scene
+    if unset_scene && (unset_scene != root_scene) do
+      Task.start fn ->
+        # give all the deactivation tasks a chance to complete (in parallel)
+        deactivate_scene( unset_scene, unset_exceptions )
+        |> Enum.each( &Task.await(&1) )
+        Scene.stop_dynamic( unset_scene )
+      end
+    end
+
+    {:noreply, %{state | set_scene: nil, unset_scene: nil, unset_exceptions: []}}
   end
+
+
+
 
   #--------------------------------------------------------
   def handle_cast( {:activation_complete, scene_ref, root_scene}, %{
     set_scene: {set_scene, activate_args},
-    set_list: set_list
+    set_list: set_list,
+    unset_scene: unset_scene,
+    unset_exceptions: unset_exceptions
   } = state ) when root_scene == set_scene do
     state = List.delete(set_list, scene_ref)
     |> case do
       [] ->
+        unset_exceptions = [ scene_ref | unset_exceptions ]
+
         # setup is complete,send the message to the drivers
         Task.start(fn ->
           GenServer.call(@viewport, :flush)
           ViewPort.Driver.cast( {:set_root, set_scene} )
         end)
-        %{state | set_scene: nil, set_list: []}
+
+        # tear down the old scene
+        if unset_scene && (unset_scene != root_scene) do
+          Task.start fn ->
+            # give all the deactivation tasks a chance to complete (in parallel)
+            deactivate_scene( unset_scene, unset_exceptions )
+            |> Enum.each( &Task.await(&1) )
+            Scene.stop_dynamic( unset_scene )
+          end
+        end
+
+        %{state | set_scene: nil, set_list: [], unset_scene: nil, unset_exceptions: []}
+
       set_list ->
         # record teh shortened list
-        %{state | set_list: set_list}
+        %{state | set_list: set_list, unset_exceptions: [scene_ref | unset_exceptions]}
     end
     {:noreply, state}
   end
@@ -377,7 +429,8 @@ defmodule Scenic.ViewPort do
     state = state
     |> Map.put( :hover_primitve, nil )
     |> Map.put( :input_captures, %{} )
-    |> Map.put( :dynamic_scenes, %{} )
+    |> Map.put( :unset_scene, old_scene )
+    |> Map.put( :unset_exceptions, [] )
 
 
     # set the new scene - how depends on if it is dynamic or app supervised
@@ -398,28 +451,12 @@ defmodule Scenic.ViewPort do
       # app supervised scene
       scene_ref when is_atom(scene_ref) ->
         # activate an existing scene
-        # it isn't enough to activate this scene. It may (probably) have
-        # other scenes that it references that have already been built
-        # they need to be activated too. Since they won't be built on the
-        # fly as a dynamic scene, we need to crawl the graph to find them
-        # and activate them directly. Possible future optmization here
-        # by caching the refs and avoid the crawl.
-        set_list = activate_existing_scene( scene_ref, args, scene_ref )
+        Scene.activate( scene_ref, args, scene_ref )
 
         state
         |> Map.put( :root_scene, scene_ref )
         |> Map.put( :set_scene, {scene_ref, args} )
-        |> Map.put( :set_list, set_list )
-    end
-
-    # tear down the old scene
-    if old_scene != scene_ref do
-      with {:ok, scene_pid} <- Scene.to_pid(old_scene) do
-        Task.start fn ->
-          GenServer.call( scene_pid, :deactivate )
-          Scene.stop( old_scene )
-        end
-      end
+        |> Map.put( :set_list, [scene_ref] )
     end
 
     {:noreply, state}
@@ -461,9 +498,6 @@ defmodule Scenic.ViewPort do
         new_scene_ref = make_ref()
 
         {:ok, _pid} = mod.start_child_scene( scene_ref, new_scene_ref, init_data)
-        with {root, activation_args} <- set_scene do
-          Scene.activate( new_scene_ref, activation_args, root )  
-        end
       
         # add the this ref for next time
         Map.put(refs, uid, new_scene_ref)
@@ -541,27 +575,93 @@ defmodule Scenic.ViewPort do
   # at least order doesn't matter, so we can just to a flat scan of
   # the tree
   # returns a list of activated scenes
-  defp activate_existing_scene( existing_scene, args, root_scene, activated_scenes \\ [] ) do
-    # activate the existing scene
-    Scene.activate( existing_scene, args, root_scene )
+#  defp activate_existing_scene( existing_scene, args, root_scene, activated_scenes \\ [] ) do
+#    pry()
+#    # activate the existing scene
+#    Scene.activate( existing_scene, args, root_scene )
+#
+#    # get the scene's graph (if there is one). Then craw it and activate
+#    # any found existing scenes
+#    activated_scenes = case get_graph(existing_scene) do
+#      nil -> activated_scenes
+#      graph ->
+#        Enum.reduce(graph, activated_scenes, fn
+#          {_,%{data: {Primitive.SceneRef, ref}}}, as when is_reference(ref) or is_atom(ref) ->
+#            IO.inspect ref
+#            pry()
+#            activate_existing_scene( ref, args, root_scene, as )
+#
+#          p, as ->
+#            IO.inspect p
+#            pry()
+#            as
+#        end)
+#    end
+#
+#    [existing_scene | activated_scenes]
+#  end
 
-    # get the scene's graph (if there is one). Then craw it and activate
-    # any found existing scenes
-    activated_scenes = case get_graph(existing_scene) do
-      nil -> activated_scenes
+  defp activate_children( scene_ref, args, root_ref ) do
+    case get_graph(scene_ref) do
+      nil -> []
       graph ->
-        Enum.reduce(graph, activated_scenes, fn
+        Enum.reduce(graph, [], fn
           {_,%{data: {Primitive.SceneRef, ref}}}, as when is_reference(ref) or is_atom(ref) ->
-            activate_existing_scene( ref, args, root_scene, as )
+            Scene.activate( ref, args, root_ref )
+            [ ref | as ]
 
           _, as ->
             as
         end)
     end
-
-    [existing_scene | activated_scenes]
   end
 
+  # A scene is being deactivated. Like activation, we need to walk the graph
+  # and deactivate all the child scenes too. The trick here is that if any
+  # of those children have are permanenet scenes that have just been referenced
+  # and activated by  different scene, then don't deactivate them.
+
+  # We could just force all the sceneds to deactivate first, then activate them again,
+  # by that will most likely cause the screen to blink during the transition as
+  # graphs are destoyed and then re-instantiated at the drivers.
+
+  # so permanent scenes need to be aware of this.
+
+  # to make it more fun, deactivation is synchronous, to make sure that
+  # dynamic scenes have a chance to be deativated before being terminated.
+  # Using the Task.async / await pattern to make that faster
+
+  defp deactivate_scene( scene, activated_scenes, tasks \\ [] ) do
+    # don't deactivate this scene if it was already activated
+    tasks = case Enum.member?(activated_scenes, scene) do
+      true -> tasks
+      false -> do_deactivate_scene( scene, activated_scenes, tasks )
+    end
+  end
+
+  # deactivate a single scene in a task. add it's task to the task list
+  # walk the graph to recursively deactivate any children
+  defp do_deactivate_scene( scene, activated_scenes, tasks ) do
+    # get the scene's graph (if there is one). Then craw it and activate
+    # any found existing scenes
+    tasks = case get_graph(scene) do
+      nil -> tasks
+      graph ->
+        Enum.reduce(graph, tasks, fn
+          {_,%{data: {Primitive.SceneRef, ref}}}, tasks when is_reference(ref) or is_atom(ref) ->
+            deactivate_scene( ref, activated_scenes, tasks )
+
+          p, tasks ->
+            tasks
+        end)
+    end
+
+    # activate the existing scene
+    task = Task.async fn ->
+      Scene.deactivate( scene )
+    end
+    [task | tasks]
+  end
 
 end
 
