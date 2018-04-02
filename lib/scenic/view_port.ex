@@ -274,62 +274,12 @@ defmodule Scenic.ViewPort do
     {:noreply, state}
   end
 
-
-  #--------------------------------------------------------
-  # the startup sequence when setting a new scene is tricky. In order to prevent blinking
-  # during the transition, we need to make sure any dynamic scenes that are referenced
-  # by the scene being set are started and activated before sending :set_root to the drivers.
-  # These dynamic scenes may be nested. To make it more fun, init or actiavate on those
-  # scenes may (probably will) call ViewPort.put_graph, which means its reentrant. So...
-  # this process cannot block while setting the scene.
-  #
-  # No blinkies...
-  #
-  # This was hard to figure out. Many approaches were tried and elimiated...
-
-#  def handle_info({ref, {:set_complete, _, _}}, %{setting_scene: nil} = state) do
-#    {:noreply, state}
-#  end
-#
-#  def handle_info({ref, {:set_complete, set_ref, complete_ref}},
-#  %{setting_scene: {set_scene, []}} = state) when set_ref == set_scene do
-#    # setup is complete,send the message to the drivers
-#    ViewPort.Driver.cast( {:set_root, set_scene} )
-#    {:noreply, %{state | setting_scene: nil}}
-#  end
-#
-#  def handle_info({ref, {:set_complete, set_ref, complete_ref}},
-#  %{setting_scene: {set_scene, completion_list}} = state) do
-#    completion_list = List.delete(completion_list, complete_ref)
-#    state = case completion_list do
-#      [] ->
-#        # setup is complete,send the message to the drivers
-#        ViewPort.Driver.cast( {:set_root, set_scene} )
-#        %{state | setting_scene: nil}
-#      list ->
-#        %{state | setting_scene: {set_scene, completion_list}}
-#    end
-#    {:noreply, state}
-#  end
-#
-#  def handle_info(other, state) do
-#    pry()
-#  end
-
-
   #============================================================================
   # handle_call
 
   #--------------------------------------------------------
-  # before putting the graph, we need to manage any dynamic scenes it
-  # reference. This is really the main point of the viewport. The drivers
-  # shouldn't have any knowledge of the actual processes used and only
-  # refer to graphs by unified keys
-#  def handle_call( {:put_graph, graph, scene_ref, opts}, _,  state ) do
-#    state = do_put_graph(graph, scene_ref, opts, state)
-#    {:reply, :ok, state}
-#  end
-
+  # Since this is a call, it can be used by a client process to flush any pending
+  # put_graph messages on the ViewPort before returning. Used during activation.
   def handle_call( :flush, _,  state ) do
     {:reply, :ok, state}
   end
@@ -338,11 +288,6 @@ defmodule Scenic.ViewPort do
   # handle_cast
 
   #--------------------------------------------------------
-#  def handle_cast( {:register_scene, scene_ref, registration}, state ) do
-##    :ets.insert(@ets_scenes_table, {scene_ref, registration})
-#    Process.monitor( registration.pid )
-#    {:noreply, state}
-#  end
   def handle_cast( {:monitor_scene, scene_pid}, state ) do
     Process.monitor( scene_pid )
     {:noreply, state}
@@ -452,13 +397,19 @@ defmodule Scenic.ViewPort do
 
       # app supervised scene
       scene_ref when is_atom(scene_ref) ->
-        # activate the scene
-        Scene.activate( scene_ref, args, scene_ref )
+        # activate an existing scene
+        # it isn't enough to activate this scene. It may (probably) have
+        # other scenes that it references that have already been built
+        # they need to be activated too. Since they won't be built on the
+        # fly as a dynamic scene, we need to crawl the graph to find them
+        # and activate them directly. Possible future optmization here
+        # by caching the refs and avoid the crawl.
+        set_list = activate_existing_scene( scene_ref, args, scene_ref )
 
         state
         |> Map.put( :root_scene, scene_ref )
         |> Map.put( :set_scene, {scene_ref, args} )
-        |> Map.put( :set_list, [scene_ref] )
+        |> Map.put( :set_list, set_list )
     end
 
     # tear down the old scene
@@ -577,8 +528,74 @@ defmodule Scenic.ViewPort do
     ViewPort.Input.handle_cast( msg, state )
   end
 
+  #============================================================================
+  # Internal Utilities
+
+  #--------------------------------------------------------
+  # it isn't enough to activate this scene. It may (probably) have
+  # other scenes that it references that have already been built
+  # they need to be activated too. Since they won't be built on the
+  # fly as a dynamic scene, we need to crawl the graph to find them
+  # and activate them directly. Possible future optmization here
+  # by caching the refs and avoid the crawl.
+  # at least order doesn't matter, so we can just to a flat scan of
+  # the tree
+  # returns a list of activated scenes
+  defp activate_existing_scene( existing_scene, args, root_scene, activated_scenes \\ [] ) do
+    # activate the existing scene
+    Scene.activate( existing_scene, args, root_scene )
+
+    # get the scene's graph (if there is one). Then craw it and activate
+    # any found existing scenes
+    activated_scenes = case get_graph(existing_scene) do
+      nil -> activated_scenes
+      graph ->
+        Enum.reduce(graph, activated_scenes, fn
+          {_,%{data: {Primitive.SceneRef, ref}}}, as when is_reference(ref) or is_atom(ref) ->
+            activate_existing_scene( ref, args, root_scene, as )
+
+          _, as ->
+            as
+        end)
+    end
+
+    [existing_scene | activated_scenes]
+  end
+
 
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
