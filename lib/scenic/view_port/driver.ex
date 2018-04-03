@@ -16,7 +16,7 @@ defmodule Scenic.ViewPort.Driver do
 
   import IEx
 
-  @sync_message       :timer_sync
+#  @sync_message       :timer_sync
   
   @driver_registry    :driver_registry
 
@@ -62,14 +62,14 @@ defmodule Scenic.ViewPort.Driver do
 
   #===========================================================================
   # the using macro for scenes adopting this behavioiur
-  defmacro __using__(use_opts) do
+  defmacro __using__(_opts) do
     quote do
       def init(_),                        do: {:ok, nil}
 #      def register(_),                    do: Scenic.ViewPort.Driver.register()
 
-      def default_sync_interval(),        do: unquote(use_opts[:sync_interval])
+#      def default_sync_interval(),        do: unquote(use_opts[:sync_interval])
 
-      def handle_sync( state ),           do: { :noreply, state }
+#      def handle_sync( state ),           do: { :noreply, state }
 
       # simple, do-nothing default handlers
       def handle_call(msg, from, state),  do: { :noreply, state }
@@ -91,7 +91,7 @@ defmodule Scenic.ViewPort.Driver do
       #--------------------------------------------------------
       defoverridable [
         init:                   1,
-        handle_sync:            1,
+#        handle_sync:            1,
         handle_call:            3,
         handle_cast:            2,
         handle_info:            2,
@@ -121,28 +121,28 @@ defmodule Scenic.ViewPort.Driver do
 
     state = %{
       driver_module:  module,
-      driver_state:   driver_state,
-      sync_interval:  nil
+      driver_state:   driver_state
+#      sync_interval:  nil
     }
 
     # get the correct sync interval
-    interval = case Keyword.get(opts, :sync_interval, :none) do
-      nil      -> nil
-      :none    -> module.default_sync_interval()
-      interval -> interval
-    end
+#    interval = case Keyword.get(opts, :sync_interval, :none) do
+#      nil      -> nil
+#      :none    -> module.default_sync_interval()
+#      interval -> interval
+#    end
 
     # set up the sync timing
-    state = case interval do
-      nil -> state
-      interval when is_integer(interval) and (interval > 0) -> 
-        {:ok, timer} = :timer.send_interval(interval, @sync_message)
-        state
-        |> Map.put( :sync_interval, interval )
-        |> Map.put( :last_msg, :os.system_time(:millisecond) )
-        |> Map.put( :timer, timer )
-      _ -> raise Error, message: "Invalid interval. Must be a positive integer or nil."
-    end
+#    state = case interval do
+#      nil -> state
+#      interval when is_integer(interval) and (interval > 0) -> 
+#        {:ok, timer} = :timer.send_interval(interval, @sync_message)
+#        state
+#        |> Map.put( :sync_interval, interval )
+#        |> Map.put( :last_msg, :os.system_time(:millisecond) )
+#        |> Map.put( :timer, timer )
+#      _ -> raise Error, message: "Invalid interval. Must be a positive integer or nil."
+#    end
 
     {:ok, state}
   end
@@ -212,18 +212,18 @@ defmodule Scenic.ViewPort.Driver do
   #--------------------------------------------------------
   # there may be more than one driver sending update messages to the
   # scene. Go no faster than the fastest one
-  def handle_info(@sync_message,
-  %{last_msg: last_msg, driver_module: mod, driver_state: d_state, sync_interval: sync_interval} = state) do
-    cur_time = :os.system_time(:millisecond)
-    case (cur_time - last_msg) > sync_interval do
-      true  ->
-#        ViewPort.send_to_scene( :graph_update )
-        { :noreply, d_state } = mod.handle_sync( d_state )
-        { :noreply, Map.put(state, :driver_state, d_state) }
-      false ->
-        { :noreply, state }
-    end
-  end
+#  def handle_info(@sync_message,
+#  %{last_msg: last_msg, driver_module: mod, driver_state: d_state, sync_interval: sync_interval} = state) do
+#    cur_time = :os.system_time(:millisecond)
+#    case (cur_time - last_msg) > sync_interval do
+#      true  ->
+##        ViewPort.send_to_scene( :graph_update )
+#        { :noreply, d_state } = mod.handle_sync( d_state )
+#        { :noreply, Map.put(state, :driver_state, d_state) }
+#      false ->
+#        { :noreply, state }
+#    end
+#  end
 
   #--------------------------------------------------------
   # unrecognized message. Let the driver handle it
