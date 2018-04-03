@@ -167,10 +167,16 @@ defmodule Scenic.ViewPort do
     GenServer.cast( @viewport, {:input, input_event, context} )
   end
 
-  def capture_input( scene_ref, input_types ) when is_list(input_types) do
-    GenServer.cast( @viewport, {:capture_input, scene_ref, input_types} )
+  def capture_input( %ViewPort.Input.Context{} = context, input_types ) when is_list(input_types) do
+    scene_ref = case Process.get(:scene_ref) do
+      nil ->
+        raise "Scenic.ViewPort.capture_input can only be called from with in a Scene"
+      ref ->
+        ref
+    end
+    GenServer.cast( @viewport, {:capture_input, context, input_types} )
   end
-  def capture_input( scene_ref, input_type ), do: capture_input( scene_ref, [input_type] )
+  def capture_input( context, input_type ), do: capture_input( context, [input_type] )
 
   def release_input( input_types ) when is_list(input_types) do
     GenServer.cast( @viewport, {:release_input, input_types} )

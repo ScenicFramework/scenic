@@ -17,6 +17,8 @@ defmodule Scenic.ViewPort.Input do
 
   require Logger
 
+  import IEx
+
   defmodule Context do
     alias Scenic.Math.MatrixBin, as: Matrix
     @identity         Matrix.identity()
@@ -85,10 +87,7 @@ defmodule Scenic.ViewPort.Input do
 
   #--------------------------------------------------------
   defp do_handle_captured_input({:cursor_button, {button, action, mods, point}}, context, state ) do
-    uid = case find_by_captured_point( point, context, state[:max_depth] ) do
-      nil -> nil
-      {uid, point} -> uid
-    end
+    uid = find_by_captured_point( point, context, state[:max_depth] )
 
     Scene.cast(context.scene,
       {
@@ -104,10 +103,7 @@ defmodule Scenic.ViewPort.Input do
   #--------------------------------------------------------
   defp do_handle_captured_input( {:cursor_scroll, {offset, point}}, context,
   %{max_depth: max_depth} = state ) do
-    {uid, point} = case find_by_captured_point( point, context, max_depth ) do
-      nil -> {nil, point}
-      r -> r
-    end
+    {uid, point} = find_by_captured_point( point, context, max_depth )
 
     Scene.cast(context.scene,
       {
@@ -122,10 +118,7 @@ defmodule Scenic.ViewPort.Input do
   # cursor_enter is only sent to the root scene
   defp do_handle_captured_input( {:cursor_enter, point}, context,
   %{max_depth: max_depth} = state ) do
-    {uid, point} = case find_by_captured_point( point, context, max_depth ) do
-      nil -> {nil, point}
-      r -> r
-    end
+    {uid, point} = find_by_captured_point( point, context, max_depth )
 
     Scene.cast(context.scene,
       {
@@ -140,11 +133,7 @@ defmodule Scenic.ViewPort.Input do
   # cursor_exit is only sent to the root scene
   defp do_handle_captured_input( {:cursor_exit, point}, context,
   %{max_depth: max_depth} = state ) do
-    {uid, point} = case find_by_captured_point( point, context, max_depth ) do
-      nil -> {nil, point}
-      r -> r
-    end
-
+    {uid, point} = find_by_captured_point( point, context, max_depth )
     Scene.cast(context.scene,
       {
         :input,
@@ -159,11 +148,16 @@ defmodule Scenic.ViewPort.Input do
   defp do_handle_captured_input( {:cursor_pos, point} = msg, context,
   %{root_scene: root_scene, max_depth: max_depth} = state ) do
     case find_by_captured_point( point, context, max_depth ) do
-      nil ->
-        # no uid found. let the root scene handle the click
+      {nil, point} ->
+        # no uid found. let the capturing scene handle the raw positino
         # we already know the root scene has identity transforms
         state = send_primitive_exit_message(state)
-        Scene.cast( root_scene, {:input, msg, Map.put(context, :uid, nil)} )
+        Scene.cast(context.scene,
+          {
+            :input,
+            {:cursor_pos, point},
+            Map.put(context, :uid, nil)
+          })
         {:noreply, state}
 
       {uid, point} ->
@@ -378,28 +372,32 @@ defmodule Scenic.ViewPort.Input do
   #--------------------------------------------------------
   # find the indicated primitive in a single graph. use the incoming parent
   # transforms from the context
-  defp find_by_captured_point( {x,y}, context, max_depth ) do
+  defp find_by_captured_point( point, context, max_depth ) do
+    # project the point by that inverse matrix to get the local point
+    point = Matrix.project_vector( context.inverse_tx, point )
     case ViewPort.get_graph( context.scene ) do
       nil ->
-        nil
+        {nil, point}
       graph ->
-        do_find_by_captured_point( x, y, 0, graph, context.tx,
-          context.inverse_tx, context.inverse_tx, max_depth )
+        case do_find_by_captured_point( point, 0, graph, @identity, @identity, max_depth ) do
+          nil -> {nil, point}
+          out -> out
+        end
     end
   end
 
-  defp do_find_by_captured_point( _, _, _, graph, _, _, _, 0 ) do
+  defp do_find_by_captured_point( point, _, graph, _, _, 0 ) do
     Logger.error "do_find_by_captured_point max depth"
-    nil
+    {nil, point}
   end
 
-  defp do_find_by_captured_point( _, _, _, nil, _, _, _, _ ) do
+  defp do_find_by_captured_point( point, _, nil, _, _, _ ) do
     Logger.warn "do_find_by_captured_point nil graph"
-    nil
+    {nil, point}
   end
 
-  defp do_find_by_captured_point( x, y, uid, graph,
-  parent_tx, parent_inv_tx, graph_inv_tx, depth ) do
+  defp do_find_by_captured_point( point, uid, graph,
+  parent_tx, parent_inv_tx, depth ) do
     # get the primitive to test
     case Map.get(graph, uid) do
       # do nothing if the primitive is hidden
@@ -414,7 +412,7 @@ defmodule Scenic.ViewPort.Input do
         ids
         |> Enum.reverse()
         |> Enum.find_value( fn(uid) ->
-          do_find_by_captured_point( x, y, uid, graph, tx, inv_tx, graph_inv_tx, depth - 1 )
+          do_find_by_captured_point( point, uid, graph, tx, inv_tx, depth - 1 )
         end)
 
       # This is a regular primitive, test to see if it is hit
@@ -422,15 +420,12 @@ defmodule Scenic.ViewPort.Input do
         {_, inv_tx} = calc_transforms(p, parent_tx, parent_inv_tx)
 
         # project the point by that inverse matrix to get the local point
-        local_point = Matrix.project_vector( inv_tx, {x, y} )
+        local_point = Matrix.project_vector( inv_tx, point )
 
         # test if the point is in the primitive
         case mod.contains_point?( data, local_point ) do
           true  ->
-            # Return the point in graph coordinates. Local was good for the hit test
-            # but graph coords makes more sense for the scene logic
-            graph_point = Matrix.project_vector( graph_inv_tx, {x, y} )
-            {uid, graph_point}
+            {uid, point}
 
           false ->
             nil

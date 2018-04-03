@@ -125,7 +125,7 @@ IO.puts "RadioButton.handle_deactivate"
     |> Map.put( :contained, true )
     graph = update_graph(state)
 
-    ViewPort.capture_input( [:cursor_button, :cursor_pos], context)
+    ViewPort.capture_input( context, [:cursor_button, :cursor_pos])
 
     {:noreply, %{state | graph: graph}}
   end
