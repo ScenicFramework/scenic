@@ -18,9 +18,6 @@ defmodule Scenic.Animation.Basic.Rotate do
     end)
     {:continue, graph, {id, start_rads, rads_per_second} }
   end
-
-
-
-
+  
 
 end

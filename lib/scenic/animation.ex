@@ -1,19 +1,13 @@
 #
-#  Created by Boyd Multerer on 5/9/17.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Created by Boyd Multerer on 4/3/18.
+#  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
-
-# in general any given animation will story any private state it needs
-# in the primitive's assigns map, with that animation's reference as the key.
 
 defmodule Scenic.Animation do
   alias Scenic.Graph
-#  alias Scenic.Scene
-#  alias Scenic.Primitive
-#  alias Scenic.Primitive.Style
   alias Scenic.Utilities
 
-#  import IEx
+  import IEx
 
   @callback add_to_graph(map, any, atom | {atom,atom} | function) :: map
 
@@ -45,22 +39,26 @@ defmodule Scenic.Animation do
 
 
   #--------------------------------------------------------
-  def build(callback_or_module, args)
-
-  def build(callback, args) when is_function(callback, 3) do
-    do_build(callback, args)
+  def build(args, module_or_tick_callback)
+  def build(args, tick_callback) when is_function(tick_callback, 3) do
+    do_build(args, {tick_callback, nil} )
+  end
+  def build( args, module ) when is_atom(module) do
+    do_build( args, module )
   end
 
-  def build(module, args) when is_atom(module) do
-    do_build(module, args)
+  def build(args, tick_callback, stop_callback)
+  def build(args, tick_callback, stop_callback)
+  when is_function(tick_callback, 3) and is_function(stop_callback, 3) do
+    do_build(args, {tick_callback, nil} )
   end
 
-  def do_build(action, args) do
+  def do_build(args, actions) do
     ref = make_ref
     {
       :ok,
       {:animation, ref}.
-      {:animation, ref, action, args, nil}
+      {:animation, ref, actions, args, nil}
     }
   end
 
@@ -80,23 +78,20 @@ defmodule Scenic.Animation do
     # multiple animation steps
     current_time = :os.system_time(:milli_seconds)
     {animations, graph} = Utilities.Enum.filter_map_reduce(animations, graph, fn
-      {:animation, ref, action, args, nil}, g_acc ->
-        case tick_animation( g_acc, 0, action, args ) do
-          {:continue, %Graph{} = graph_out, args_out} ->
-            {true, {ref, action, args_out, current_time}, graph_out }
+      {:animation, ref, actions, args, start_time}, g_acc ->
 
-          {:stop, %Graph{} = graph_out} ->
-#            graph_out = stop_animation(graph_out, 0, action)
-            {false, graph_out}
+        start_time = case start_time do
+          nil -> current_time
+          time -> time
         end
+        elapsed_time = current_time - start_time
 
-      {:animation, ref, action, args, start_time}, g_acc ->
-        case tick_animation( g_acc, current_time - start_time, action, args ) do
+        case tick_animation( g_acc, elapsed_time, actions, args ) do
           {:continue, %Graph{} = graph_out, args_out} ->
-            {true, {ref, action, args_out, start_time}, graph_out }
+            {true, {ref, actions, args_out, current_time}, graph_out }
 
           {:stop, %Graph{} = graph_out} ->
-#            graph_out = stop_animation(graph_out, current_time - start_time, action)
+            {:ok, graph_out} = stop_animation(graph_out, elapsed_time, actions, args)
             {false, graph_out}
         end
     end)
@@ -109,17 +104,35 @@ defmodule Scenic.Animation do
   an opportunity to transform the graph one last time.
   """
   def stop(graph, animations, {:animation, stop_ref} ) do
+    current_time = :os.system_time(:milli_seconds)
+    {animations, graph} = Utilities.Enum.filter_reduce(animations, graph, fn
+      {:animation, ^stop_ref, actions, args, start_time}, g ->
+        start_time = case start_time do
+          nil -> current_time
+          time -> time
+        end
+        elapsed_time = current_time - start_time
+
+        # Give it a chance to transform the graph once more
+        {:ok, g} = stop_animation(g, elapsed_time, actions, args)
+
+        # filter out this animation
+        {false, g}
+
+      keeper, g ->
+        {true, g}
+    end) 
     {graph, animations}
   end
 
 
   #--------------------------------------------------------
-  defp tick_animation(graph, elapsed_time, callback, data)
-  defp tick_animation(graph, elapsed_time, callback, data) when is_function(callback, 3) do
-    callback.(graph, elapsed_time, data)
-  end
-  defp tick_animation(graph, elapsed_time, module, data) do
+  defp tick_animation(graph, elapsed_time, actions, data)
+  defp tick_animation(graph, elapsed_time, module, data) when is_atom(module) do
     module.tick(graph, elapsed_time, data)
+  end
+  defp tick_animation(graph, elapsed_time, {tick_action, _}, data) when is_function(tick_action, 3) do
+    tick_action.(graph, elapsed_time, data)
   end
 
   #--------------------------------------------------------
@@ -127,10 +140,12 @@ defmodule Scenic.Animation do
   # if you are returning stop from a callback, then you have already had the opportunity to stop...
   defp stop_animation(graph, elapsed_time, callback, data)
   defp stop_animation(graph, elapsed_time, module, data) when is_atom(module) do
-    {:ok, graph} = module.stop(graph, elapsed_time, data)
-    graph
+    module.stop(graph, elapsed_time, data)
   end
-  defp stop_animation(graph, _, _, _), do: graph
+  defp stop_animation(graph, elapsed_time, {_, stop_action}, data) when is_function(stop_action, 3) do
+    stop_action.(graph, elapsed_time, data)
+  end
+  defp stop_animation(graph, _, _, _), do: {:ok, graph}
 
 
 end
