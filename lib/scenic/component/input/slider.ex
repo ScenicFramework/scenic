@@ -17,8 +17,7 @@ defmodule Scenic.Component.Input.Slider do
 
   @slider_color       :antique_white
   @hit_target_color   :clear
-#  @line_color         :cornflower_blue
-  @line_color         :yellow
+  @line_color         :cornflower_blue
   @line_width         4
 
 #  #--------------------------------------------------------
