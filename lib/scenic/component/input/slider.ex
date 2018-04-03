@@ -31,18 +31,18 @@ defmodule Scenic.Component.Input.Slider do
 
 
   #--------------------------------------------------------
-  def init( {ext, init, width, id} ) do
+  def init( {extents, value, width, id} ) do
 
     graph = Graph.build()
       |> Primitive.Rectangle.add_to_graph( {{0,0}, width, @height}, color: :clear )
       |> Primitive.Line.add_to_graph( {{0,@mid_height},{width,@mid_height}}, color: @line_color, line_width: @line_width )
       |> Primitive.RoundedRectangle.add_to_graph( {{0,1}, @btn_size, @btn_size, @radius}, color: @slider_color, id: :thumb )
-#      |> update_slider_position( 0 )
+      |> update_slider_position( value, extents, width )
 
     state = %{
       graph: graph,
-      value: init,
-      extents: ext,
+      value: value,
+      extents: extents,
       width: width,
       id: id,
       tracking: false
@@ -125,16 +125,8 @@ IO.puts "Slider.handle_deactivate"
     # calc the new value based on it's position across the slider
     new_value = calc_value_by_percent(extents, x / width)
 
-    # calculate the slider position
-    new_x = calc_slider_position( width, extents, new_value )
-
-    # apply the x position
-    graph = Graph.modify(graph, :thumb, fn(p) ->
-      #Primitive.put_transform( p, :translate, {x,0} )
-      { {_, y}, width, height, radius } = Primitive.get(p)
-      Primitive.put(p, { {new_x, y}, width, height, radius })    
-    end)
-    |> ViewPort.put_graph()
+    # update the slider position
+    graph = update_slider_position(graph, new_value, extents, width)
 
     if new_value != old_value do
       send_event({:value_changed, id, new_value})
@@ -145,6 +137,21 @@ IO.puts "Slider.handle_deactivate"
       value: new_value
     }
   end
+
+  #--------------------------------------------------------
+  defp update_slider_position(graph, new_value, extents, width) do
+    # calculate the slider position
+    new_x = calc_slider_position( width, extents, new_value )
+
+    # apply the x position
+    graph = Graph.modify(graph, :thumb, fn(p) ->
+      #Primitive.put_transform( p, :translate, {x,0} )
+      { {_, y}, width, height, radius } = Primitive.get(p)
+      Primitive.put(p, { {new_x, y}, width, height, radius })    
+    end)
+    |> ViewPort.put_graph()
+  end
+
 
   #--------------------------------------------------------
   # calculate the position if the extents are numeric
