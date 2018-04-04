@@ -19,9 +19,10 @@ defmodule Scenic.Animation do
 
 
       def make(animations, data)
-      def make(animations, data) when is_list(animations) do
-        Scenic.Animation.make( animations, data, __MODULE__ )
-      end
+      def make(%{}=animations, data), do: Animation.make( animations, data, __MODULE__ )
+
+      def make!(animations, data)
+      def make!(%{}=animations, data), do: Animation.make!( animations, data, __MODULE__ )
 
       def stop(graph, elapsed_time, args), do: {:ok, graph}
 
@@ -90,17 +91,21 @@ defmodule Scenic.Animation do
 
     # enumerate the elements and run each
     Utilities.Enum.filter_map_reduce(animations, graph, fn
-      {ref, {actions, args, start_time}}, g_acc ->
-
-        start_time = case start_time do
-          nil -> current_time
-          time -> time
-        end
-        elapsed_time = current_time - start_time
-
-        case tick_animation( g_acc, elapsed_time, actions, args ) do
+      {ref, {actions, args, nil}}, g_acc ->
+        case tick_animation( g_acc, 0, actions, args ) do
           {:continue, %Graph{} = graph_out, args_out} ->
             {true, {ref, {actions, args_out, current_time}}, graph_out }
+
+          {:stop, %Graph{} = graph_out} ->
+            {:ok, graph_out} = stop_animation(graph_out, 0, actions, args)
+            {false, graph_out}
+        end
+
+      {ref, {actions, args, start_time}}, g_acc ->
+        elapsed_time = current_time - start_time
+        case tick_animation( g_acc, elapsed_time, actions, args ) do
+          {:continue, %Graph{} = graph_out, args_out} ->
+            {true, {ref, {actions, args_out, start_time}}, graph_out }
 
           {:stop, %Graph{} = graph_out} ->
             {:ok, graph_out} = stop_animation(graph_out, elapsed_time, actions, args)
@@ -122,11 +127,12 @@ defmodule Scenic.Animation do
       {nil, _} ->
         {graph, animations}
 
+      {{actions, args, nil}, animations} ->
+        # Give it a chance to transform the graph once more
+        {:ok, graph} = stop_animation(graph, 0, actions, args)
+        {graph, animations}
+
       {{actions, args, start_time}, animations} ->
-        start_time = case start_time do
-          nil -> current_time
-          time -> time
-        end
         elapsed_time = current_time - start_time
         # Give it a chance to transform the graph once more
         {:ok, graph} = stop_animation(graph, elapsed_time, actions, args)
