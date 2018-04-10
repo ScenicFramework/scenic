@@ -7,14 +7,13 @@ defmodule Scenic.ViewPort.Supervisor do
   use Supervisor
   alias Scenic.ViewPort
 
-  @name       :vp_supervisor
   @dynamic_scenes       :dynamic_scenes
 
   #============================================================================
   # setup the viewport supervisor
 
   def start_link( ) do
-    Supervisor.start_link(__MODULE__, :ok, name: @name)
+    Supervisor.start_link(__MODULE__, :ok)
   end
 
   def init( :ok ) do
@@ -25,7 +24,7 @@ defmodule Scenic.ViewPort.Supervisor do
       {DynamicSupervisor, name: @dynamic_scenes, strategy: :one_for_one},
 #      Supervisor.child_spec({Registry, keys: :duplicate, name: :input_registry},  id: :input_registry),
       supervisor(ViewPort.Driver.Supervisor, []),
-      supervisor(ViewPort.Input.Tracker.Supervisor, [])
+#      supervisor(ViewPort.Input.Tracker.Supervisor, [])
     ]
     |> Supervisor.init( strategy: :rest_for_one )
   end

@@ -278,7 +278,11 @@ defmodule Scenic.Scene3 do
       end
 
       defp push_graph( graph, sub_id \\ nil ) do
-        Scenic.Scene.push_graph( graph, sub_id )
+        Scenic.Scene.push_graph( graph, self(), sub_id )
+      end
+
+      defp update_children( graph, sub_id \\ nil ) do
+        Scenic.Scene.update_children( graph, self(), sub_id )
       end
 
       #--------------------------------------------------------
@@ -341,15 +345,16 @@ defmodule Scenic.Scene3 do
       tid -> tid
     end
 
-    # there should always be a tid. Stash that away in the process dictionary
-    # so that it can be quickly used by the injected push_graph function
-    Process.put(:viewport_tid, viewport_tid)
+    # there should always be a viewport pid andtid. Stash them away in
+    # the process dictionary so that it can be quickly used by the injected
+    # push_graph function
+    Process.put(:viewport, {viewport_pid, viewport_tid})
 
     # initialize the scene itself
     {:ok, sc_state} = module.init( args )
 
     # tell the viewport to start monitoring this scene
-    GenServer.cast(viewport_pid, {:monitor_scene, self()})
+    GenServer.cast(viewport_pid, {:monitor self()})
 
     # some setup needs to happen after init
     GenServer.cast(self(), :after_init)
@@ -360,8 +365,7 @@ defmodule Scenic.Scene3 do
 
     # build up the state
     state = %{
-      viewport_pid: viewport_pid,
-      viewport_tid: viewport_tid,
+      viewport: {viewport_pid, viewport_tid},
       parent_pid: parent_pid,
       children: %{},
       activation: :__not_set__,
@@ -414,7 +418,7 @@ defmodule Scenic.Scene3 do
 
   #--------------------------------------------------------
   def handle_cast({:activate, args, activation_ref}, %{
-    viewport_pid: viewport_pid,
+    viewport: {vp_pid, _},
     scene_module: mod,
     scene_state: sc_state,
   } = state) do
@@ -424,11 +428,11 @@ defmodule Scenic.Scene3 do
     {:noreply, sc_state} = mod.handle_activate( args, sc_state )
 
     # have the ViewPort activate the children
-    #GenServer.call(viewport_pid, {:activate_children, scene_ref, args, activation_root})
+    #GenServer.call(vp_pid, {:activate_children, scene_ref, args, activation_root})
 
     # tell the ViewPort this activation is complete (if a secquence is requested)
     if activation_ref do
-      GenServer.cast(viewport_pid, {:activation_complete, self, activation_ref})
+      GenServer.cast(vp_pid, {:activation_complete, self, activation_ref})
     end
 
     { :noreply, %{state | scene_state: sc_state, activation: args} }
@@ -490,24 +494,41 @@ defmodule Scenic.Scene3 do
   #============================================================================
   # internal utilities
 
-  # not documented as it should be called via the push_graph/2 that in injected
+
+
+  # not documented as it should be called via the push_graph/2 that is injected
   # into the scene module
   # push_graph adds the graph to the viewport's graph ets table. This could
   # live in viewport, which would receive the graph via cast. However, the
   # graph could be big and it seems better to avoid the cast.
   @doc false
-  def push_graph( scene, sub_id, graph ) do
-    tid = case Process.get(:viewport_tid) do
+  def push_graph( graph, scene_pid, sub_id ) when is_pid(scene_pid) do
+    {pid, tid} = case Process.get(:viewport) do
       nil ->
         raise "push_graph must be called from a scene process"
       tid ->
         tid
     end
 
-    # build the key for the graph table
-    key = {:graph, id, sub_id}
+    # update the child scene refs
+    graph = update_children( graph, scene_pid, sub_id, false )
 
+    # build the key for the graph table
+    graph_key = {:graph, scene_pid, sub_id}
+
+    # write the graph into the ets table
+    :ets.insert(tid, {graph_key, graph})
+
+    # tell the ViewPort's drivers about the updated graph
+    ViewPort.driver_cast( pid, {:push_graph, graph_key} )
   end
+
+
+  defp update_children( graph, _, _, false ), do: graph
+  defp update_children( graph, scene_pid, sub_id, true ) do
+    graph
+  end
+
 
 
 end

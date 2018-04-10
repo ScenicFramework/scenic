@@ -134,6 +134,14 @@ defmodule Scenic.ViewPort3 do
   def release_input( input_type ), do: release_input( [input_type] )
 
 
+  #--------------------------------------------------------
+  @doc """
+  Cast a message to all active drivers listening to a viewport.
+  """
+  def driver_cast( viewport, msg ), do
+    GenServer.cast(viewport, {:driver_cast, msg})
+  end
+
 
   #============================================================================
   # internal server api
@@ -155,6 +163,8 @@ defmodule Scenic.ViewPort3 do
       root_graph: nil,
       input_captures: %{},
       hover_primitve: nil,
+
+      drivers: [],
 
 #      unset_scene: nil,
 #      unset_exceptions: [],
@@ -193,7 +203,7 @@ defmodule Scenic.ViewPort3 do
   # handle_cast
 
   #--------------------------------------------------------
-  def handle_cast( {:monitor_scene, scene_pid}, state ) do
+  def handle_cast( {:monitor, scene_pid}, state ) do
     Process.monitor( scene_pid )
     {:noreply, state}
   end
@@ -238,11 +248,25 @@ defmodule Scenic.ViewPort3 do
     {:noreply, state}
   end
 
-
-
-
-
-
+  #--------------------------------------------------------
+  def handle_cast( {:driver_cast, msg}, %{drivers: drivers} = state ) do
+    # relay the graph_key to all listening drivers
+    Enum.each(drivers, &GenServer.cast(&1, msg)
+    {:noreply, state}
+  end
+  
+  #--------------------------------------------------------
+  def handle_cast( {:driver_ready, driver_pid}, %{drivers: drivers} = state ) do
+    drivers = [ driver_pid | drivers ] |> Enum.uniq()
+    {:noreply, %{state | drivers: drivers}}
+  end
+  
+  #--------------------------------------------------------
+  def handle_cast( {:driver_stopped, driver_pid}, %{drivers: drivers} = state ) do
+    drivers = Enum.reject(drivers, fn(d)-> d == driver_pid end)
+    {:noreply, %{state | drivers: drivers}}
+  end
+  
 end
 
 
