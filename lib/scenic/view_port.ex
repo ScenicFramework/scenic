@@ -142,13 +142,21 @@ defmodule Scenic.ViewPort do
     end)
 
     # write the graph into the ets table
-    :ets.insert(@ets_graphs_table, {graph_key, min_graph})
+    :ets.insert(@ets_graphs_table, {graph_key, {self(), min_graph}})
 
     # notify the drivers of the updated graph
     driver_cast( {:push_graph, graph_key} )
     :ok
   end
 
+
+  #--------------------------------------------------------
+  def get_graph( {:graph, _, _} = key ) do
+    case :ets.lookup(@ets_graphs_table, key) do
+      [] -> nil
+      [{_, {_, graph}}] -> graph
+    end
+  end
 
   #--------------------------------------------------------
   @doc """
@@ -184,20 +192,29 @@ defmodule Scenic.ViewPort do
   end
 
 
+  #--------------------------------------------------------
+  def start_driver( module, args ) do
+    
+  end
+
+  #--------------------------------------------------------
+  def stop_driver( driver_pid )
+
+
   #============================================================================
   # internal server api
 
 
   #--------------------------------------------------------
   @doc false
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts, name: @viewport)
+  def start_link({initial_scene, args, opts}) do
+    GenServer.start_link(__MODULE__, {initial_scene, args, opts}, name: @viewport)
   end
 
 
   #--------------------------------------------------------
   @doc false
-  def init( opts ) do
+  def init( {initial_scene, args, opts} ) do
 
     # set up the initial state
     state = %{
@@ -213,6 +230,16 @@ defmodule Scenic.ViewPort do
     }
 
     # :named_table, read_concurrency: true
+
+    # set the initial scene as the root
+    case initial_scene do
+      # dynamic scene can start right up without a splash screen
+      {mod, init} when is_atom(mod) ->
+        set_root( {mod, init}, args )
+
+      scene when is_atom(scene) ->
+        set_root( {Scenic.SplashScreen, {scene, args, opts}}, nil )
+    end
 
     {:ok, state}
   end
@@ -256,7 +283,6 @@ defmodule Scenic.ViewPort do
     {scene, dynamic_scene} = case scene do
       # dynamic scene
       {mod, init_data} ->
-        pry()
         # start the dynamic scene
         {:ok, pid, _} = mod.start_dynamic_scene( @dynamic_supervisor, nil, init_data )
         {pid, pid}

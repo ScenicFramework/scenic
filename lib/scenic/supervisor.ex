@@ -8,14 +8,14 @@
 defmodule Scenic.Supervisor do
   use Supervisor
 
-  def start_link( ) do
-    Supervisor.start_link(__MODULE__, :ok, name: :scenic)
+  def start_link( initial_scene, args, opts \\ [] ) do
+    Supervisor.start_link(__MODULE__, {initial_scene, args, opts}, name: :scenic)
   end
 
-  def init( :ok ) do
+  def init( {initial_scene, args, opts} ) do
     [
       supervisor(Scenic.Cache.Supervisor, []),
-      supervisor(Scenic.ViewPort.Supervisor, [])
+      supervisor(Scenic.ViewPort.Supervisor, [initial_scene, args, opts])
     ]
     |> Supervisor.init( strategy: :one_for_one )
   end

@@ -342,7 +342,8 @@ defmodule Scenic.Scene do
   #--------------------------------------------------------
   @doc false
   def init( {scene_module, args, opts} ) do
-    scene_ref = opts[:ref] || opts[:name]
+    scene_ref = opts[:scene_ref] || opts[:name]
+IO.puts "init Scene #{inspect(scene_module)}, ref: #{inspect(scene_ref)}"
     Process.put(:scene_ref, scene_ref)
 
     # interpret the options

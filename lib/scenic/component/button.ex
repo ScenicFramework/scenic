@@ -4,7 +4,6 @@ defmodule Scenic.Component.Button do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.ViewPort
-  alias Scenic.ViewPort.Input.Tracker
 
   import IEx
 
