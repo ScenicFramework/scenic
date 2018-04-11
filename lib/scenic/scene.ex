@@ -1,261 +1,250 @@
 #
-#  Created by Boyd Multerer on 5/8/17.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Created by Boyd Multerer on 04/07/18.
+#  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
-# Build from the pieces of older versions of Scene
-#
-
-# in general anything in the Scene's "internal" section of the state should
-# be accessed through Scene apis. Future versions may change the formatting
-# this data as needed, but will try to keep the APIs compatible.
-
+# Taking the learnings from several previous versions.
 
 defmodule Scenic.Scene do
   alias Scenic.Scene
-  alias Scenic.Graph
   alias Scenic.ViewPort
-  alias Scenic.ViewPort.Input.Context
-  alias Scenic.Primitive
-  require Logger
 
   import IEx
 
-  @dynamic_scenes         :dynamic_scenes
-  @ets_scenes_table       :_scenic_viewport_scenes_table_
-  @ets_activation_table   :_scenic_viewport_activation_table_
-  @viewport               :viewport
+  @moduledoc """
+  
+  ## Overview
 
-  defmodule Registration do
-    defstruct pid: nil, parent_scene: nil, dynamic_supervisor_pid: nil, supervisor_pid: nil
+  Scenes are the core of the UI model.
+
+  A `Scene` has two jobs.
+  1) Build and maintain a graph of UI primitives that gets drawn
+  to the screen.
+  2) Handle input and events related to that graph.
+
+  Before saying anything else I want to emphasize that the rest of your
+  application, meaining device control logic, sensor reading / writing,
+  services, whatever, do not need to have anything to do with Scenes.
+  Would recommend treating those these as seperate servers in their
+  own supervision trees. Then the UI Scenes would query or send
+  information to/from them via cast or call messages.
+
+  ## Scenes
+
+  So.. scenes are the core of the UI model. A scene consists of a
+  graph, which is a set of primitives that can be drawn to a screen,
+  and a set of event handlers.
+
+  Scene's can reference other scenes from the graphs. Typically,
+  this means that on a typical screen of UI, there is one scene
+  that is the root. Each control, it it's own scene process with
+  it's own state. These child scenes can in turn contain other
+  child scenes. This allows for strong code reuse, isolates knowledge
+  and logic to just the pieces that need it, and keeps the size of any
+  given graph to a reasonable size. For example, The graph
+  hand handlers of a checkbox don't need to know anything about
+  how a slider works, even though they are both used in the same
+  parent scene. At best, they only need to know that they
+  both conform to the `Component.Input` behaviour, and can thus
+  query or set each other's value. Though it is usually
+  the parent scene that does that.
+
+  The application developer is responsible for building and
+  maintaining the scene's graph. It only enters the world of the
+  `ViewPort` when you call `push_graph`. Once you have called
+  `push_graph`, that graph is sent to the drivers and is out of your
+  immediate control. You update that graph by either calling
+  `push_graph` again, or cleaning it up via `release_graph`.
+
+  This does mean you could maintain two seperate graphs
+  and rapidly switch back and forth between them via push_graph.
+  I have not yet hit a good usecase for that.
+
+  ### Graph ID.
+
+  This is an advanced feature...
+
+  Each scene has a default graph id of nil. When you send a graph
+  to the ViewPort by calling `push_graph(graph)`, you are really
+  sending it with a sub-id of nil. This encourages thinking that
+  scenes and graphs have a 1:1 relationship. There are, however,
+  times that you want a single scene to host multiple graphs that
+  can refer to each other via sub-ids. You would push them
+  like this: `push_graph(graph, id)`. Where the id is any term you
+  would like to use as a key.
+
+  There are several use cases where this makes sense.
+  1) You have a complex tree (perhaps a lot of text) that you want
+  to animate. Rather than re-rendering the text (relatively expensive)
+  every time you simply transform a rotation matrix, you could place
+  the text into it's own static sub-graph and then refer to it
+  from the primary. This will save energy as you animate.
+
+  2) Both the Remote and Recording clients make heavy use of sub-ids
+  to make sense of the graph being replayed.
+
+  The downside of using graph_ids comes with input handling.
+  because you have a single scene handling the input events for
+  multiple graphs, you will need to take extra care to correctly
+  handle position-dependent events, which may not be projected
+  into the coordinate space you think they are. The Remote and
+  Recording clients deal with this by rendering a single, completely
+  transparent rect above all the sub scenes. This invisible, yet
+  present rect hits all the position dependent events and makes
+  sure they are sent to the scene projected in to the main
+  (id is nil) graph's coordinate space.
+
+  ## Input vs. Events
+
+  Input is data generated at the drivers and sent up to the scenes
+  through the `ViewPort`. There is a limited set of input types and
+  they are standardized so that the drivers can be built independantly
+  of the scenes. Input follows certain rules about which scene receives them
+
+  Events are messages that one scene generates for consumption
+  by other scenes. For example, a `Component.Button` scene would
+  generate a `{:click, msg}` event that is sent to it's parent
+  scene.
+
+  You can generate any message you want, however, the standard
+  component libraries follow certain patterns to keep things sensible.
+
+  ## Input Handling
+
+  You handle incoming input events by adding `handle_input/3` functions
+  to your scene. Each `handle_input/3` call passes in the input message
+  itself, an input context struct, and your scene's state. You can
+  then take the appropriate actions, including generating events
+  (below) in response.
+
+  Under normal operation, input that is not position dependent
+  (keys, window events, more...) is sent to the root scene. Input
+  that does have a screen position (cursor_pos, cursor button
+  presses, etc...) Is sent to the scene that contains the
+  graph that was hit.
+
+  Your scene can "capture" all input of a given type so that
+  it is sent to itself instead of the default scene for that type.
+  this is how a text input field receives the key input. First,
+  the user selects that field by clicking on it. In response
+  to the cursor input, the text field captures text input (and
+  maybe transforms it's graph to show that it is selected).
+
+  Captured input types are should be released when no longer
+  needed so that normal operation can resume.
+
+  The input messages re not passed on to other scene if
+  the first one doesn't handle it.
+
+  ## Event Filtering
+
+  In response to input, (or anything else... a timer perhaps?),
+  a scene can generate an event (any term), which is sent backwards
+  up the tree of scenes that make up the current aggregate graph.
+
+  In this way, a `Component.Button` scene can generate a`{:click, msg}`
+  event that is sent to it's parent. If the parent doesn't
+  handle it, it is sent to that scene's parent. And so on util the
+  event reaches the root scene. If the root scene doesn't handle
+  it either then the event is dropped.
+
+  To handle events, you add `filter_event/3` functions to your scene.
+  This function handle the event, and stop it's progress backwards
+  up the graph. It can handle it and allow it to continue up the
+  graph. Or it can transform the event and pass the transformed
+  version up the graph.
+
+  You choose the behavior by returning either
+
+    {:continue, msg, state}
+
+  or
+
+    {:stop, state}
+
+  Parameters passed in to `filter_event/3` are the event itself, a
+  reference to the originating scene (which you can to communicate
+  back to it), and your scene's state.
+
+  A pattern I'm using is to handle and event at the filter and stop
+  it's progression. It also generates and sends new event to its
+  parent. I do this instead of transforming and continuing when
+  I want to change the originating scene.
+
+  """
+
+
+
+
+
+
+
+  # ets table names
+  @ets_graphs_table     ViewPort.graphs_table()
+
+
+
+
+  #============================================================================
+  # client api - working with the scene
+
+
+  @doc """
+  send a filterable event to a scene.
+
+  This is very similar in feel to casting a message to a GenServer. However,
+  This message will be handled by the Scene's `filter_event\3` function. If the 
+  Scene returns `{:continue, msg, state}` from `filter_event\3`, then the event
+  will also be sent to the scene's parent. This will continue until the message
+  reaches the root scene or some other permananently supervised scene.
+
+  Typically, when a scene wants to initiate an event, it will call `send_event/1`
+  which is a private function injected into the scene during `use Scenic.Scene`
+
+  This private version of send_event will take care of the housekeeping of
+  tracking the parent's pid. It will, in turn, call this function on the main
+  Scene module to send the event on it's way.
+
+      def handle_input( {:cursor_button, {:left, :release, _, _}}, _, %{msg: msg} = state ) do
+        send_event( {:click, msg} )
+        {:noreply, state}
+      end
+
+  On the other hand, if you know you want to send the event to a named scene
+  that you supervise yourself, then you would use `Scenic.Scene.send_event/2`
+
+      def handle_input( {:cursor_button, {:left, :release, _, _}}, _, %{msg: msg} = state ) do
+        Scenic.Scene.send_event( :some_scene, {:click, msg} )
+        {:noreply, state}
+      end
+
+  Be aware that named scenes that your supervise yourself are unable to continue
+  the event to their parent in the graph becuase they could be referenced by
+  multiple graphs making the continuation ambiguous.
+  """
+
+  def send_event( scene_pid, event_msg ) do
+    GenServer.cast(scene_pid, {:event, event_msg, self()})
   end
 
 
-  @callback init( any ) :: {:ok, any}
+  def start_dynamic_scene
 
-  # interacting with the scene's graph
-  
+  #============================================================================
+  # callback definitions
+
+  @callback init( any ) :: {:ok, any}
   @callback handle_call(any, any, any) :: {:reply, any, any} | {:noreply, any}
   @callback handle_cast(any, any) :: {:noreply, any}
   @callback handle_info(any, any) :: {:noreply, any}
 
-#  @callback handle_raw_input(any, any, any) :: {:noreply, any, any}
   @callback handle_input(any, any, any) :: {:noreply, any, any}
-
   @callback filter_event( any, any, any ) :: { :continue, any, any } | {:stop, any}
 
-  @callback handle_activate(any, any) :: {:noreply, any}
-  @callback handle_deactivate(any) :: {:noreply, any}
+  @callback handle_activation(any, any) :: {:noreply, any}
+  @callback handle_deactivation(any) :: {:noreply, any}
 
-
-  @children_default   true
-
-
-  #===========================================================================
-  # calls for setting up a scene inside of a supervisor
-
-#  def child_spec({ref, scene_module}), do:
-#    child_spec({ref, scene_module, nil})
-
-  def child_spec({parent, ref, scene_module, args}) do
-    %{
-      id: ref,
-      start: {__MODULE__, :start_link, [{parent, ref, scene_module, args}]},
-      type: :worker,
-      restart: :permanent,
-      shutdown: 500
-    }
-  end
-
-  #===========================================================================
-  # client APIs. In general if the first parameter is an atom or a pid, then it is coming
-  # from another process. call or cast to the real one.
-  # if the first parameter is state, then this is already on the right process
-  # to be called by other processes
-
-  def find_by_screen_pos( pos, pid ) do
-    GenServer.call(pid, {:find_by_screen_pos, pos})
-  end
-
-  def send_event( scene, event ) do
-    cast(scene, {:event, event, Process.get(:scene_ref)})
-  end
-
-
-  def activate( scene_ref, args, activation_root \\ nil ) do
-#IO.puts "-----------> activate #{inspect(scene_ref)}"
-    with {:ok, pid} <- to_pid(scene_ref) do
-      GenServer.cast( pid, {:activate, args, activation_root} )
-    end
-  end
-
-  #--------------------------------------------------------
-  # deactivate is synchronous (uses a call) because I want to make sure it has
-  # completed before tearing down the scene process
-  def deactivate( scene_ref ) do
-#IO.puts "-----------> deactivate #{inspect(scene_ref)}"
-    with {:ok, pid} <- to_pid(scene_ref) do
-      GenServer.call(pid, :deactivate)
-    end
-  end
-
-
-  #--------------------------------------------------------
-  def get_activation( scene_ref ) do
-    case :ets.lookup(@ets_activation_table, scene_ref ) do
-      [{_,args}] -> {:ok, args}
-      [] -> {:error, :not_found}
-    end
-  end
-
-  def registration( scene_ref ) do
-    case :ets.lookup(@ets_scenes_table, scene_ref ) do
-      [{_,registration}] -> {:ok, registration}
-      [] -> {:error, :not_found}
-    end
-  end
-
-  def child_supervisor_pid( scene_ref ) do
-    with { :ok, registration } <- registration( scene_ref ) do
-      {:ok, registration.dynamic_supervisor_pid}
-    end
-  end
-
-  def supervisor_pid( scene_ref ) do
-    with { :ok, registration } <- registration( scene_ref ) do
-      {:ok, registration.supervisor_pid}
-    end
-  end
-
-  def to_pid( scene_ref ) do
-    with { :ok, registration } <- registration( scene_ref ) do
-      {:ok, registration.pid}
-    end
-  end
-
-#  def parent_pid( scene_ref ) do
-#    reg = registration( scene_ref )
-#    with { :ok, registration } <- registration( scene_ref ) do
-#      case registration.parent_pid do
-#        nil ->
-#          {:error, :not_found}
-#        pid ->
-#          {:ok, pid}
-#      end
-#    end
-#  end
-
-  def child_pids( scene_ref ) do
-    with { :ok, dyn_sup } <- child_supervisor_pid( scene_ref ) do
-      pids = DynamicSupervisor.which_children( dyn_sup )
-      |> Enum.reduce( [], fn
-        {_, pid, :worker, [Scene]}, acc -> 
-          # easy case. scene is the direct child
-          [ pid | acc ]
-
-        {_, pid, :supervisor, [Scene.Supervisor]}, acc ->
-          # hard case. the scene is under it's own supervisor
-          Supervisor.which_children( pid )
-          |> Enum.reduce( [], fn
-            {_, pid, :worker, [Scene]}, acc -> [ pid | acc ]
-            _, acc -> acc
-          end)
-      end)
-      {:ok, pids}
-    end
-  end
-
-  #--------------------------------------------------------
-  def pid_to_scene( pid ) do
-    case :ets.match(:_scenic_viewport_scenes_table_, {:"$1", %{pid: pid}}) do
-      [[scene_ref]] -> {:ok, scene_ref}
-      _ -> {:error, :not_found}
-    end
-  end
-
-  #--------------------------------------------------------
-  def stop_dynamic( scene_ref ) do
-    # figure out what to stop
-    pid_to_stop = case supervisor_pid( scene_ref ) do
-      {:ok, pid} ->
-        pid
-      other ->
-        {:ok, pid} = to_pid(scene_ref)
-        pid
-    end
-
-    # first, get the parent's dynamic supervisor. If there isn't one,
-    # then this is supervised by the app developer
-    with {:ok, %{parent_scene: parent_scene}} <- registration( scene_ref ),
-      {:ok, parent_dyn_sup} <- child_supervisor_pid( parent_scene ) do
-        # stop the scene
-        DynamicSupervisor.terminate_child(parent_dyn_sup, pid_to_stop)
-    else
-      {:error, :not_found} ->
-        # attempt to stop this as a dynamic root
-        case DynamicSupervisor.terminate_child(@dynamic_scenes, pid_to_stop) do
-          :ok -> :ok
-          {:error, :not_found} -> {:error, :not_dynamic}
-        end
-
-      _ ->
-        {:error, :not_dynamic}
-    end
-  end
-
-  #--------------------------------------------------------
-  def broadcast_children(msg) do
-    Process.get(:scene_ref)
-    |> broadcast_children(msg)
-  end
-
-  #--------------------------------------------------------
-  def broadcast_children(scene_ref, msg) do
-    with {:ok, pids} <- child_pids( scene_ref ) do
-      Enum.each(pids, &GenServer.cast(&1, msg) )
-    end
-  end
-
-  #--------------------------------------------------------
-  def call_children(scene_ref, msg) do
-    with {:ok, pids} <- child_pids( scene_ref ) do
-      Enum.reduce(pids, [], fn(pid, tasks)->
-        task = Task.async( fn -> GenServer.call(pid, msg) end)
-        [task | tasks]
-      end)
-      |> Enum.reduce( [], fn(task, responses) ->
-        [Task.await(task) | responses]
-      end)
-    end
-  end
-
-  #--------------------------------------------------------
-  def cast_parent(scene_ref, msg) do
-    with {:ok, %{parent_scene: parent_scene}} <- registration( scene_ref ) do
-      cast(parent_scene, msg)
-    end
-  end
-
-  #--------------------------------------------------------
-  def call_parent(scene_ref, msg) do
-    with {:ok, %{parent_scene: parent_scene}} <- registration( scene_ref ) do
-      call(parent_scene, msg)
-    end
-  end
-
-  #--------------------------------------------------------
-  def cast(scene_ref, msg) do
-    with {:ok, pid} <- to_pid( scene_ref ) do
-      GenServer.cast(pid, msg)
-    end
-  end
-
-  #--------------------------------------------------------
-  def call(scene_ref, msg) do
-    with {:ok, pid} <- to_pid( scene_ref ) do
-      GenServer.call(pid, msg)
-    end
-  end
-
+  #============================================================================
+  # using macro
 
   #===========================================================================
   # the using macro for scenes adopting this behavioiur
@@ -266,8 +255,8 @@ defmodule Scenic.Scene do
       #--------------------------------------------------------
       # Here so that the scene can override if desired
       def init(_),                                    do: {:ok, nil}
-      def handle_activate( _args, state ),            do: {:noreply, state}
-      def handle_deactivate( state ),                 do: {:noreply, state}
+      def handle_activation( _args, state ),          do: {:noreply, state}
+      def handle_deactivation( state ),               do: {:noreply, state}
  
       def handle_call(_msg, _from, state),            do: {:reply, :err_not_handled, state}
       def handle_cast(_msg, state),                   do: {:noreply, state}
@@ -277,10 +266,24 @@ defmodule Scenic.Scene do
       def handle_input( event, _, scene_state ),      do: {:noreply, scene_state}
       def filter_event( event, _from, scene_state ),  do: {:continue, event, scene_state}
 
-      def send_event( event ), do: GenServer.cast(self(), {:event, event, Process.get(:scene_ref)})
+      def start_dynamic_scene( supervisor, parent, args ) do
+        Scenic.Scene.start_dynamic_scene(
+          supervisor, parent, __MODULE__,
+          args, unquote(opts[:has_children])
+        )
+      end
 
-      def start_child_scene( parent_scene, ref, args ) do
-        Scenic.Scene.start_child_scene( parent_scene, ref, __MODULE__, args, unquote(opts[:has_children]) )
+      defp send_event( event_msg ) do
+        case Process.get(:parent_pid) do
+          nil ->
+            {:error, :no_parent}
+          pid ->
+            GenServer.cast(pid, {:event, event_msg})
+        end
+      end
+
+      defp update_children( graph, sub_id \\ nil ) do
+        Scenic.Scene.update_children( graph, self(), sub_id )
       end
 
       #--------------------------------------------------------
@@ -289,8 +292,8 @@ defmodule Scenic.Scene do
       #--------------------------------------------------------
       defoverridable [
         init:                   1,
-        handle_activate:        2,
-        handle_deactivate:      1,
+        handle_activation:      2,
+        handle_deactivation:    1,
 
         handle_call:            3,
         handle_cast:            2,
@@ -299,7 +302,7 @@ defmodule Scenic.Scene do
         handle_input:           3,
         filter_event:           3,
 
-        start_child_scene:      3
+        start_dynamic_scene:    3
       ]
 
     end # quote
@@ -307,77 +310,264 @@ defmodule Scenic.Scene do
 
 
   #===========================================================================
-  # internal code to this module
+  # calls for setting up a scene inside of a supervisor
 
+#  def child_spec({ref, scene_module}), do:
+#    child_spec({ref, scene_module, nil})
 
-  #===========================================================================
-  # Scene initialization
-
-
-  #--------------------------------------------------------
-#  def start_link(super_pid, ref, module) do
-#    name_ref = make_ref()
-#    GenServer.start_link(__MODULE__, {ref, module, nil})
-#  end
-
-  def start_link({parent, name, module, args}) when is_atom(name) do
-    GenServer.start_link(__MODULE__, {parent, name, module, args}, name: name)
+  def child_spec({scene_module, args, opts}) do
+    %{
+      id: make_ref(),
+      start: {__MODULE__, :start_link, [scene_module, args, opts]},
+      type: :worker,
+      restart: :permanent,
+      shutdown: 500
+    }
   end
 
-  def start_link({parent, ref, module, args}) when is_reference(ref) do
-    GenServer.start_link(__MODULE__, {parent, ref, module, args})
+
+  #============================================================================
+  # internal server api
+  @doc false
+  def start_link(scene_module, args, opts \\ []) do
+    init_data = {scene_module, args, opts}
+    case opts[:name] do
+      nil ->
+        GenServer.start_link(__MODULE__, init_data)
+      name ->
+        GenServer.start_link(__MODULE__, init_data, name: name)
+    end    
   end
 
   #--------------------------------------------------------
-  def init( {parent, scene_ref, module, args} ) do
+  @doc false
+  def init( {scene_module, args, opts} ) do
+    scene_ref = opts[:ref] || opts[:name]
     Process.put(:scene_ref, scene_ref)
 
-    # update the scene with the parent and supervisor info
-    ViewPort.register_scene( %Registration{ pid: self, parent_scene: parent})
-
-    # tell the viewport to start monitoring this scene
-    GenServer.cast(@viewport, {:monitor_scene, self()})
-
-    # some things need to be done after init
-    GenServer.cast(self(), {:after_init, scene_ref, args})
-
-    # initialize the scene itself
-    {:ok, sc_state} = module.init( args )
-
-    # if this init is recovering from a crash, then the scene_ref will be able to
-    # recover an activation arg (if it was active when it crashed).
-    with  {:ok, activation_args} <- get_activation( scene_ref ) do
-      GenServer.cast( self(), {:activate, activation_args, nil} )
-      GenServer.cast( @viewport, {:recover_scene, scene_ref} )
+    # interpret the options
+    {parent_pid, graph_id, uid} = case opts[:parent] do
+      nil -> {nil, nil, nil}
+      {parent_pid, graph_id, uid} ->
+        # stash the parent pid away in the process dictionary. This
+        # is for fast lookup during the injected send_event/1 in the
+        # client module
+        Process.put(:parent_pid, parent_pid)
+        {parent_pid, graph_id, uid}
     end
 
+    # only fetch the tid from the viewport if it wasn't supplied
+#    viewport_tid = case opts[:viewport_tid] do
+#      nil ->
+#        {:ok, viewport_table} = GenServer.call(viewport_pid, :get_graph_table)
+#        viewport_table
+#      tid -> tid
+#    end
+
+    # there should always be a viewport pid andtid. Stash them away in
+    # the process dictionary so that it can be quickly used by the injected
+    # push_graph function
+#    Process.put(:viewport, {viewport_pid, viewport_tid})
+
+    # initialize the scene itself
+    {:ok, sc_state} = scene_module.init( args )
+
+    # tell the viewport to start monitoring this scene
+    # this is required to clean up the graph when this scene goes DOWN
+#    GenServer.cast(viewport_pid, {:monitor, self()})
+
+    # some setup needs to happen after init
+    GenServer.cast(self(), :after_init)
+
+    # tell the parent that this scene is alive and assocated with the given graph/uid.
+    # Obvs don't do this if a root scene (no parent)
+    if parent_pid, do: GenServer.cast(parent_pid, {:put_child, graph_id, uid, self()})
+
+    # if this scene is named... Meaning it is supervised by the app and is not a
+    # dyanimic scene, then we need monitor the view port. If the viewport goes
+    # down while this scene is activated, the scene will need to be able to
+    # deactivate itself while the viewport is recovering. This is especially
+    # true since the viewport may recover to a different default scene than this.
+#    if opts[:name], do: Process.monitor( viewport_pid )
+
+    # build up the state
     state = %{
+#      viewport: {viewport_pid, viewport_tid},
+      parent_pid: parent_pid,
+      children: %{},
+
       scene_state: sc_state,
-      scene_ref: scene_ref,
-      parent_scene: parent,
-      scene_module: module
+      scene_module: scene_module
     }
 
     {:ok, state}
   end
 
+
+  #============================================================================
+  # handle_info
+
+  #--------------------------------------------------------
+  # The viewport has gone down. Deactivate this scene.
+  # Note: the viewport is only monitored by this scene if it is a named scene.
+  # dynamic scenes rely on their parent (or the viewport supervisor itself)
+  # to take care of this for them.
+  def handle_info({:DOWN, _monitor_ref, :process, pid, reason}, %{
+      viewport: {viewport_pid, _},
+      activations: activations
+    } = state) when (pid == viewport_pid) and (activations != []) do
+    { :reply, :ok, state } = handle_call( :deactivate, pid,  state )
+    {:noreply, state}
+  end
+
+  #============================================================================
+  # handle_call
+
+
+  #--------------------------------------------------------
+  # The scene is losing activation. This is done syncronously (call) as the
+  # next thing to happen might be process termination. This makes sure the
+  # scene has a chance to clean itself up before it goes away.
+
+  def handle_call(:deactivate, _, %{
+    scene_module: mod,
+    scene_state: sc_state
+  } = state) do
+    # tell the scene it is being deactivated
+    {:noreply, sc_state} = mod.handle_deactivation( sc_state )
+    { :reply, :ok, %{state | scene_state: sc_state} }
+  end
+
+  #--------------------------------------------------------
+  def handle_call({:activate, args}, _, %{
+    scene_module: mod,
+    scene_state: sc_state
+  } = state) do
+    # tell the scene it is being deactivated
+    {:noreply, sc_state} = mod.handle_activation( args, sc_state )
+    { :reply, :ok, %{state | scene_state: sc_state} }
+  end
+
+  #--------------------------------------------------------
+  # generic handle_call. give the scene a chance to handle it
+  def handle_call(msg, from, %{scene_module: mod, scene_state: sc_state} = state) do
+    {:reply, reply, sc_state} = mod.handle_call(msg, from, sc_state)
+    {:reply, reply, %{state | scene_state: sc_state}}
+  end
+
+  #============================================================================
+  # handle_cast
+
+  #--------------------------------------------------------
+  def handle_cast(:after_init, state ) do
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
+  def handle_cast({:put_child, graph_id, uid, child_pid}, %{
+    activation: args
+  } = state ) do
+    {:noreply, put_in( state, [:children, graph_id, uid], child_pid ) }
+  end
+
+  #--------------------------------------------------------
+  def handle_cast({:activate, args, activation_ref}, %{
+    viewport: {vp_pid, _},
+    scene_module: mod,
+    scene_state: sc_state,
+  } = state) do
+#    ViewPort.register_activation( scene_ref, args )
+
+    # tell the scene it is being activated
+    {:noreply, sc_state} = mod.handle_activate( args, sc_state )
+
+    # have the ViewPort activate the children
+    #GenServer.call(vp_pid, {:activate_children, scene_ref, args, activation_root})
+
+    # tell the ViewPort this activation is complete (if a secquence is requested)
+    if activation_ref do
+      GenServer.cast(vp_pid, {:activation_complete, self, activation_ref})
+    end
+
+    { :noreply, %{state | scene_state: sc_state, activation: args} }
+  end
+
+
+# activation: :__not_set__
+
+  #--------------------------------------------------------
+  def handle_cast({:input, event, context}, 
+  %{scene_module: mod, scene_state: sc_state} = state) do
+    {:noreply, sc_state} = mod.handle_input(event, context, sc_state )
+    {:noreply, %{state | scene_state: sc_state}}
+  end
+
+    #--------------------------------------------------------
+  def handle_cast({:event, event, from_pid},  %{
+    parent_pid: parent_pid,
+    scene_module: mod,
+    scene_state: sc_state
+  } = state) do
+    sc_state = case mod.filter_event(event, from_pid, sc_state ) do
+      { :continue, event, sc_state } ->
+        GenServer.cast(parent_pid, {:event, event, from_pid})
+        sc_state
+
+      {:stop, sc_state} ->
+        sc_state
+    end
+    
+    {:noreply, %{state | scene_state: sc_state}}
+  end
+
+
+
+
+
+
+  #--------------------------------------------------------
+  # generic handle_cast. give the scene a chance to handle it
+  def handle_cast(msg, %{scene_module: mod, scene_state: sc_state} = state) do
+    {:noreply, sc_state} = mod.handle_cast(msg, sc_state)
+    {:noreply, %{state | scene_state: sc_state}}
+  end
+
+  #============================================================================
+  # handle_info
+
+  #--------------------------------------------------------
+  # generic handle_info. give the scene a chance to handle it
+  def handle_info(msg, %{scene_module: mod, scene_state: sc_state} = state) do
+    {:noreply, sc_state} = mod.handle_info(msg, sc_state)
+    {:noreply, %{state | scene_state: sc_state}}
+  end
+
+
+
+
+
+  #============================================================================
+  # Scene managment
+
   #--------------------------------------------------------
   # this a root-level dynamic scene
-  def start_child_scene( parent_scene, ref, mod, args, has_children ) do
+  @doc false
+  def start_dynamic_scene( dynamic_supervisor, parent, mod, args, has_children ) do
+    ref = make_ref()
     has_children = case has_children do
       nil -> @children_default
       true -> true
       false -> false
     end
-    do_start_child_scene( parent_scene, ref, mod, args, has_children )
+    do_start_child_scene( dynamic_supervisor, parent, ref, mod, args, has_children )
   end
 
   #--------------------------------------------------------
   # this a root-level dynamic scene
-  defp do_start_child_scene( @dynamic_scenes, ref, mod, args, true ) do
+  defp do_start_child_scene( dynamic_supervisor, parent, ref, mod, args, true ) do
     # start the scene supervision tree
-    {:ok, supervisor_pid} = DynamicSupervisor.start_child(  @dynamic_scenes,
-      {Scenic.Scene.Supervisor, {nil, ref, mod, args}}
+    {:ok, supervisor_pid} = DynamicSupervisor.start_child( dynamic_supervisor,
+      {Scenic.Scene.Supervisor, {mod, args, [parent: parent, scene_ref: ref]}}
     )
 
     # we want to return the pid of the scene itself. not the supervisor
@@ -388,261 +578,52 @@ defmodule Scenic.Scene do
       _ ->
         nil
     end)
-    {:ok, scene_pid}
-  end
-
-  #--------------------------------------------------------
-  # this is starting as the child of another scene, children are requested, so
-  # start it up as it's own little supervision tree
-  defp do_start_child_scene( parent_scene, ref, mod, args, true ) do
-    # get the dynamic supervisor for the parent
-    case child_supervisor_pid( parent_scene ) do
-      {:ok, child_sup_pid} ->
-        # start the scene supervision tree
-        {:ok, supervisor_pid} = DynamicSupervisor.start_child( child_sup_pid,
-          {Scenic.Scene.Supervisor, {parent_scene, ref, mod, args}}
-        )
-
-        # we want to return the pid of the scene itself. not the supervisor
-        scene_pid = Supervisor.which_children( supervisor_pid )
-        |> Enum.find_value( fn 
-          {_, pid, :worker, [Scenic.Scene]} ->
-            pid
-          _ ->
-            nil
-        end)
-
-        {:ok, scene_pid}
-      _ ->
-        {:error, :invalid_parent}
-    end
+    {:ok, scene_pid, ref}
   end
 
   #--------------------------------------------------------
   # this a root-level dynamic scene
-  defp do_start_child_scene( @dynamic_scenes, ref, mod, args, false ) do
-    DynamicSupervisor.start_child( @dynamic_scenes, {Scenic.Scene, {nil, ref, mod, args}} )
+  defp do_start_child_scene( dynamic_supervisor, parent, ref, mod, args, false ) do
+    {:ok, pid} = DynamicSupervisor.start_child(
+      dynamic_supervisor,
+      {Scenic.Scene, {mod, args, [parent: parent, scene_ref: ref]}}
+    )
+    {:ok, pid, ref}
   end
 
-  #--------------------------------------------------------
-  # this is the child of another scene, but no children, so can start directly.
-  defp do_start_child_scene( parent_scene, ref, mod, args, false ) do
-    # get the dynamic supervisor for the parent
-    case child_supervisor_pid( parent_scene ) do
-      {:ok, child_sup_pid} ->
-        # start the scene supervision tree
-        DynamicSupervisor.start_child( child_sup_pid, {Scenic.Scene, {parent_scene, ref, mod, args}} )
-      _ ->
-        {:error, :invalid_parent}
-    end
-  end
-
-  #--------------------------------------------------------
-  # somebody has a screen position and wants an uid for it
-  def handle_call({:find_by_screen_pos, pos}, _from, %{graph: graph} = state) do
-    uid = case Graph.find_by_screen_point( graph, pos ) do
-      %Primitive{uid: uid} -> uid
-      _ -> nil
-    end
-    {:reply, uid, state}
-  end
-
-
-
-  #--------------------------------------------------------
-#  def handle_call({:activate, args}, _, %{
-#    scene_ref: scene_ref,
-#    scene_module: mod,
-#    scene_state: sc_state,
-#  } = state) do
-#IO.puts "SCENE ACTIVATE"
-#    ViewPort.register_activation( scene_ref, args )
-#    # tell the scene it is being activated
-#    {:noreply, sc_state} = mod.handle_activate( args, sc_state )
-#    { :reply, :ok, %{state | scene_state: sc_state} }
-#  end
-
-
-  #--------------------------------------------------------
-  # support for losing focus
-  def handle_call(:deactivate, _, %{
-    scene_ref: scene_ref,
-    scene_module: mod,
-    scene_state: sc_state,
-  } = state) do
-IO.puts "SCENE DEACTIVATE"
-    GenServer.cast( @viewport, {:unregister_activation, scene_ref} )
-    # tell the scene it is being deactivated
-    {:noreply, sc_state} = mod.handle_deactivate( sc_state )
-    { :reply, :ok, %{state | scene_state: sc_state} }
-  end
-
-  #--------------------------------------------------------
-  # generic call. give the scene a chance to handle it
-  def handle_call(msg, from, %{scene_module: mod, scene_state: sc_state} = state) do
-    {:reply, reply, sc_state} = mod.handle_call(msg, from, sc_state)
-    {:reply, reply, %{state | scene_state: sc_state}}
-  end
-
-
-  #===========================================================================
-  # default cast handlers.
-
-
-  #--------------------------------------------------------
-  def handle_cast({:after_init, scene_ref, args}, %{
-    parent_scene: parent_scene,
-    scene_module: module
-  } = state) do
-
-    # get the scene supervisors
-    [supervisor_pid | _] = self()
-    |> Process.info()
-    |> get_in([:dictionary, :"$ancestors"])
-    # make sure this really is a scene supervisor, not something else
-    {supervisor_pid, dynamic_children_pid} = case Process.info(supervisor_pid) do
-      nil -> {nil, nil}
-      info ->
-        case get_in( info, [:dictionary, :"$initial_call"] ) do
-          {:supervisor, Scene.Supervisor, _} ->
-            supervisor_pid
-            dynamic_children_pid = Supervisor.which_children( supervisor_pid )
-            |> Enum.find_value( fn 
-              {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
-              _ -> nil
-            end)
-            {supervisor_pid, dynamic_children_pid}
-
-          _ ->
-            {nil, nil}
-        end
-    end
-
-    # update the scene with the parent and supervisor info
-    ViewPort.register_scene( %Registration{
-      pid: self(),
-      parent_scene: parent_scene,
-      dynamic_supervisor_pid: dynamic_children_pid,
-      supervisor_pid: supervisor_pid
-    })
-
-
-    # initialize the scene itself
-#    {:ok, sc_state} = module.init( args )
-#
-#    # if this init is recovering from a crash, then the scene_ref will be able to
-#    # recover an activation arg (if it was active when it crashed).
-#    sc_state = case get_activation( scene_ref ) do
-#      {:ok, activation_args} ->
-##        {:noreply, sc_state} = module.handle_activate( activation_args, sc_state )
-#        sc_state
-#      _ ->
-#        sc_state
-#    end
-
-    state = state
-#    |> Map.put( :scene_state, sc_state)
-    |> Map.put( :supervisor_pid, supervisor_pid)
-    |> Map.put( :dynamic_children_pid, dynamic_children_pid)
-
-    {:noreply, state}
-  end
-
-
-
-  #--------------------------------------------------------
-  def handle_cast({:activate, args, activation_root}, %{
-    scene_ref: scene_ref,
-    scene_module: mod,
-    scene_state: sc_state,
-  } = state) do
-    ViewPort.register_activation( scene_ref, args )
-
-    # tell the scene it is being activated
-    {:noreply, sc_state} = mod.handle_activate( args, sc_state )
-
-    # have the ViewPort activate the children
-    GenServer.call(@viewport, {:activate_children, scene_ref, args, activation_root})
-
-    # tell the ViewPort this activation is complete (if a secquence is requested)
-    if activation_root do
-      GenServer.cast(@viewport, {:activation_complete, scene_ref, activation_root})
-    end
-    { :noreply, %{state | scene_state: sc_state} }
-  end
-
-
-  #--------------------------------------------------------
-#  def handle_cast(:terminate, %{ supervisor_pid: supervisor_pid } = state) do
-#    Supervisor.stop(supervisor_pid)
-#    {:noreply, state}
-#  end
-
-  #--------------------------------------------------------
-  def handle_cast({:input, event, context}, 
-  %{scene_module: mod, scene_state: sc_state} = state) do
-    {:noreply, sc_state} = mod.handle_input(event, context, sc_state )
-    {:noreply, %{state | scene_state: sc_state}}
-  end
-
-
-  #--------------------------------------------------------
-  def handle_cast({:event, event, from_scene},  %{
-    parent_scene: parent_scene,
-    scene_module: mod,
-    scene_state: sc_state
-  } = state) do
-    sc_state = case mod.filter_event(event, from_scene, sc_state ) do
-      { :continue, event, sc_state } ->
-        cast(parent_scene, {:event, event, from_scene})
-        sc_state
-
-      {:stop, sc_state} ->
-        sc_state
-    end
-    
-    {:noreply, %{state | scene_state: sc_state}}
-  end
-
-  #--------------------------------------------------------
-  # generic cast. give the scene a chance to handle it
-  def handle_cast(msg, %{scene_module: mod, scene_state: sc_state} = state) do
-    {:noreply, sc_state} = mod.handle_cast(msg, sc_state)
-    {:noreply, %{state | scene_state: sc_state}}
-  end
-
-  def handle_cast(msg, state) do
-#    pry()
-    {:noreply, state}
-  end
-
-  #===========================================================================
-  # info handlers
-
-  #--------------------------------------------------------
-  # generic info. give the scene a chance to handle it
-  def handle_info(msg, %{scene_module: mod, scene_state: sc_state} = state) do
-    {:noreply, sc_state} = mod.handle_info(msg, sc_state)
-    {:noreply, %{state | scene_state: sc_state}}
-  end
 
   #============================================================================
-  # utilities
+  # internal utilities
 
-  #--------------------------------------------------------
-  # internal utility. Given a pid to a Scenic.Scene.Supervisor
-  # return the pid of the scene it supervises
-#  defp find_supervised_scene( supervisor_pid ) do
-#    Supervisor.which_children( supervisor_pid )
-#    |> Enum.find_value( fn 
-#      {_, pid, :worker, [Scenic.Scene]} ->
-#        pid
-#      _ ->
-#        nil
-#    end)
-#  end
+
+  defp update_children( graph, _, _, false ), do: graph
+  defp update_children( graph, scene_pid, sub_id, true ) do
+    graph
+  end
+
+
+
+
+
+
+
+
 
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

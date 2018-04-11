@@ -8,14 +8,10 @@
 defmodule Scenic.Scene.Supervisor do
   use Supervisor
 
-
-  def child_spec({ref, scene_module, args}), do:
-    child_spec({nil, ref, scene_module, args})
-
-  def child_spec({parent, ref, scene_module, args}) do
+  def child_spec({scene_module, args, opts}) do
     %{
-      id: ref,
-      start: {__MODULE__, :start_link, [{parent, ref, scene_module, args}]},
+      id: opts[:name] || make_ref(),
+      start: {__MODULE__, :start_link, [{scene_module, args, opts}]},
       type: :supervisor,
       restart: :permanent,
       shutdown: 500
@@ -23,8 +19,8 @@ defmodule Scenic.Scene.Supervisor do
   end
 
 
-  def start_link( {parent, ref, module, args} ) do
-    Supervisor.start_link(__MODULE__, {parent, ref, module, args})
+  def start_link( {scene_module, args, opts} ) do
+    Supervisor.start_link(__MODULE__, {scene_module, args, opts})
   end
 
   def init( args ) do
