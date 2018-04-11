@@ -354,7 +354,7 @@ defmodule Scenic.Scene3 do
     {:ok, sc_state} = module.init( args )
 
     # tell the viewport to start monitoring this scene
-    GenServer.cast(viewport_pid, {:monitor self()})
+    GenServer.cast(viewport_pid, {:monitor, self()})
 
     # some setup needs to happen after init
     GenServer.cast(self(), :after_init)
@@ -362,6 +362,14 @@ defmodule Scenic.Scene3 do
     # tell the parent that this scene is ready and assocated with the given graph/uid.
     # Obvs don't do this if a root scene (no parent)
     if parent_pid, do: GenServer.cast(parent_pid, {:put_child, graph_id, uid, self()})
+
+
+    # if this scene is named... Meaning it is supervised by the app and is not a
+    # dyanimic scene, then we need monitor the view port. If the viewport goes
+    # down while this scene is activated, the scene will need to be able to
+    # deactivate itself while the viewport is recovering. This is especially
+    # true since the viewport may recover to a different default scene than this.
+    if opts[:name], do: Process.monitor( viewport_pid )
 
     # build up the state
     state = %{
@@ -375,6 +383,23 @@ defmodule Scenic.Scene3 do
     }
 
     {:ok, state}
+  end
+
+
+  #============================================================================
+  # handle_info
+
+  #--------------------------------------------------------
+  # The viewport has gone down. Deactivate this scene.
+  # Note: the viewport is only monitored by this scene if it is a named scene.
+  # dynamic scenes rely on their parent (or the viewport supervisor itself)
+  # to take care of this for them.
+  def handle_info({:DOWN, _monitor_ref, :process, pid, reason}, %{
+      viewport: {viewport_pid, _},
+      activation: activation
+    } = state) when (pid == viewport_pid) and (activation != :__not_set__) do
+    { :reply, :ok, state } = handle_call( :deactivate, pid,  state )
+    {:noreply, state}
   end
 
   #============================================================================

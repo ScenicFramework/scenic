@@ -138,7 +138,7 @@ defmodule Scenic.ViewPort3 do
   @doc """
   Cast a message to all active drivers listening to a viewport.
   """
-  def driver_cast( viewport, msg ), do
+  def driver_cast( viewport, msg ) do
     GenServer.cast(viewport, {:driver_cast, msg})
   end
 
@@ -251,7 +251,7 @@ defmodule Scenic.ViewPort3 do
   #--------------------------------------------------------
   def handle_cast( {:driver_cast, msg}, %{drivers: drivers} = state ) do
     # relay the graph_key to all listening drivers
-    Enum.each(drivers, &GenServer.cast(&1, msg)
+    Enum.each(drivers, &GenServer.cast(&1, msg) )
     {:noreply, state}
   end
   
