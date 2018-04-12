@@ -122,38 +122,38 @@ defmodule Scenic.ViewPort do
 
   Pass in a list of activations that the scene received via handle_activation.
   """
-  def push_graph( graph, sub_id \\ nil )
-
-  def push_graph( %Graph{primitive_map: p_map} = graph, sub_id ) do
-    scene_ref = case Process.get(:scene_ref) do
-      nil ->
-        raise "Scenic.ViewPort.push_graph must be called from with in a Scene"
-      ref ->
-        ref
-    end
-#    IO.puts "--------------> push_graph"
-
-    graph_key = {:graph, scene_ref, sub_id}
-
-    # TEMPORARY HACK
-    # reduce the incoming graph to it's minimal form
-    min_graph = Enum.reduce(p_map, %{}, fn({uid, p}, g) ->
-      Map.put( g, uid, Primitive.minimal(p) )
-    end)
-    # merge in the dynamic references
-    min_graph = Enum.reduce(graph.dyn_refs, min_graph, fn({uid, dyn_ref}, g)->
-      put_in(g, [uid, :data], {Primitive.SceneRef, dyn_ref})
-    end)
-
-    # write the graph into the ets table
-    :ets.insert(@ets_graphs_table, {graph_key, {self(), min_graph}})
-
-    # notify the drivers of the updated graph
-    driver_cast( {:push_graph, graph_key} )
-
-    # return the graph itself so this can be chained in a pipeline
-    graph
-  end
+#  def push_graph( graph, sub_id \\ nil )
+#
+#  def push_graph( %Graph{primitive_map: p_map} = graph, sub_id ) do
+#    scene_ref = case Process.get(:scene_ref) do
+#      nil ->
+#        raise "Scenic.ViewPort.push_graph must be called from with in a Scene"
+#      ref ->
+#        ref
+#    end
+##    IO.puts "--------------> push_graph"
+#
+#    graph_key = {:graph, scene_ref, sub_id}
+#
+#    # TEMPORARY HACK
+#    # reduce the incoming graph to it's minimal form
+#    min_graph = Enum.reduce(p_map, %{}, fn({uid, p}, g) ->
+#      Map.put( g, uid, Primitive.minimal(p) )
+#    end)
+#    # merge in the dynamic references
+#    min_graph = Enum.reduce(graph.dyn_refs, min_graph, fn({uid, dyn_ref}, g)->
+#      put_in(g, [uid, :data], {Primitive.SceneRef, dyn_ref})
+#    end)
+#
+#    # write the graph into the ets table
+#    :ets.insert(@ets_graphs_table, {graph_key, {self(), min_graph}})
+#
+#    # notify the drivers of the updated graph
+#    driver_cast( {:push_graph, graph_key} )
+#
+#    # return the graph itself so this can be chained in a pipeline
+#    graph
+#  end
 
 
   #--------------------------------------------------------

@@ -33,7 +33,7 @@ defmodule Scenic.SplashScreen do
 
   #--------------------------------------------------------
   def handle_activation(_args, %{graph: graph} = state ) do
-    ViewPort.push_graph( graph )    
+    push_graph( graph )    
     {:noreply, state }
   end
 

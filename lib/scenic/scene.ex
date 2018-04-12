@@ -292,6 +292,8 @@ defmodule Scenic.Scene do
 
       defp push_graph( graph, sub_id \\ nil ) do
         GenServer.cast( self(), {:push_graph, graph, sub_id} )
+        # return the graph so this can be pipelined
+        graph
       end
 
       #--------------------------------------------------------
@@ -485,7 +487,6 @@ defmodule Scenic.Scene do
               {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
               _ -> nil
             end)
-            Process.put(:dynamic_children_pid, dynamic_children_pid)
             {supervisor_pid, dynamic_children_pid}
 
           _ ->
@@ -628,7 +629,8 @@ defmodule Scenic.Scene do
     new_dyn_refs = Enum.reduce(raw_diff, old_dyn_refs, fn
       {:put, uid, {mod, init_data}}, refs ->     # start this dynamic scene
         # start the dynamic scene
-        {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, self(), init_data )
+        parent = {self(), sub_id, uid}
+        {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, parent, init_data )
         # add the this ref for next time
         Map.put(refs, uid, {pid, ref})
 
@@ -710,13 +712,11 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  # this a root-level dynamic scene
   defp do_start_child_scene( dynamic_supervisor, parent, ref, mod, args, true ) do
     # start the scene supervision tree
     {:ok, supervisor_pid} = DynamicSupervisor.start_child( dynamic_supervisor,
       {Scenic.Scene.Supervisor, {mod, args, [parent: parent, scene_ref: ref]}}
     )
-
     # we want to return the pid of the scene itself. not the supervisor
     scene_pid = Supervisor.which_children( supervisor_pid )
     |> Enum.find_value( fn 
@@ -729,7 +729,6 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  # this a root-level dynamic scene
   defp do_start_child_scene( dynamic_supervisor, parent, ref, mod, args, false ) do
     {:ok, pid} = DynamicSupervisor.start_child(
       dynamic_supervisor,
@@ -742,60 +741,6 @@ defmodule Scenic.Scene do
   #============================================================================
   # internal utilities
 
-  @doc false
-  def update_dynamic_references( graph ) do
-    # get the dynamic supervisor belonging to the caller
-    dyn_sup = case Process.get(:dynamic_children_pid) do
-      nil ->
-        raise "Scenic.Scene.update_dynamic_references must be called from within a Scene with children"
-      dyn_sup -> dyn_sup
-    end
-
-    # get the old refs associated with this graph
-    old_raw_refs =  graph.raw_refs
-    old_dyn_refs =  graph.dyn_refs
-
-    # this is the only full graph scan in this process
-    new_raw_refs = Enum.reduce( graph.primitive_map, %{}, fn
-      {uid,%{ module: Primitive.SceneRef, data: {mod, init_data}}}, refs ->
-        Map.put(refs, uid, {mod, init_data})
-      # not a ref. ignore it
-      _, refs -> refs
-    end)
-
-    # get the difference script between the raw refs
-    raw_diff = Utilities.Map.difference( old_raw_refs, new_raw_refs )
-
-    # Enumerate the old refs, using the difference script to determine
-    # what to start or stop.
-    new_dyn_refs = Enum.reduce(raw_diff, old_dyn_refs, fn
-      {:put, uid, {mod, init_data}}, refs ->     # start this dynamic scene
-
-        # start the dynamic scene
-        {:ok, pid, new_scene_ref} = mod.start_dynamic_scene( dyn_sup, nil, init_data )
-
-        # add the this ref for next time
-        Map.put(refs, uid, new_scene_ref)
-
-      {:del, uid}, refs ->                      # stop this dynaic scene
-        # get the old dynamic graph reference
-        old_scene_ref = old_dyn_refs[uid]
-
-        # send the deactivate message and terminate. ok to be async
-        Task.start fn ->
-#          Scene.deactivate( old_scene_ref )
-#          Scene.stop( old_scene_ref )
-        end
-
-        # remove the reference from the old refs
-        Map.delete(refs, uid)
-    end)
-
-    # store the refs for next time
-    graph
-    |> Map.put( :raw_refs, new_raw_refs )
-    |> Map.put( :dyn_refs, new_dyn_refs )
-  end
 
 
 
