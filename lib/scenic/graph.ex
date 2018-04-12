@@ -36,7 +36,7 @@ defmodule Scenic.Graph do
 
 
   defstruct primitive_map: %{}, id_map: %{}, next_uid: 1, add_to: 0,
-    dynamic_refs: %{}, deltas: %{},
+    dyn_refs: %{}, raw_refs: %{}, deltas: %{},
     recurring_actions: [], focus: nil, input: []
     
 

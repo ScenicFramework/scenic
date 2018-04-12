@@ -100,7 +100,7 @@ IO.puts "Button.init"
   #--------------------------------------------------------
   def handle_activate(_args, %{graph: graph} = state ) do
 IO.puts "Button.handle_activate"
-    ViewPort.put_graph( graph )
+    ViewPort.push_graph( graph )
     {:noreply, state}
   end
 
@@ -168,7 +168,7 @@ IO.puts "Button.handle_deactivate"
       p
       |> Primitive.put_style(:color, color)
     end)
-    |> ViewPort.put_graph()
+    |> ViewPort.push_graph()
   end
 
   defp update_color( %{ graph: graph, colors: {_,_,color,_,_},
@@ -177,7 +177,7 @@ IO.puts "Button.handle_deactivate"
       p
       |> Primitive.put_style(:color, color)
     end)
-    |> ViewPort.put_graph()
+    |> ViewPort.push_graph()
   end
 
   defp update_color( %{ graph: graph, colors: {_,color,_,_,_},
@@ -186,7 +186,7 @@ IO.puts "Button.handle_deactivate"
       p
       |> Primitive.put_style(:color, color)
     end)
-    |> ViewPort.put_graph()
+    |> ViewPort.push_graph()
   end
 
   defp update_color( %{ graph: graph, colors: {_,_,_,color,_},
@@ -195,7 +195,7 @@ IO.puts "Button.handle_deactivate"
       p
       |> Primitive.put_style(:color, color)
     end)
-    |> ViewPort.put_graph()
+    |> ViewPort.push_graph()
   end
 
 end

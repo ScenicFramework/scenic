@@ -140,13 +140,19 @@ defmodule Scenic.ViewPort do
     min_graph = Enum.reduce(p_map, %{}, fn({uid, p}, g) ->
       Map.put( g, uid, Primitive.minimal(p) )
     end)
+    # merge in the dynamic references
+    min_graph = Enum.reduce(graph.dyn_refs, min_graph, fn({uid, dyn_ref}, g)->
+      put_in(g, [uid, :data], {Primitive.SceneRef, dyn_ref})
+    end)
 
     # write the graph into the ets table
     :ets.insert(@ets_graphs_table, {graph_key, {self(), min_graph}})
 
     # notify the drivers of the updated graph
     driver_cast( {:push_graph, graph_key} )
-    :ok
+
+    # return the graph itself so this can be chained in a pipeline
+    graph
   end
 
 
@@ -336,7 +342,6 @@ defmodule Scenic.ViewPort do
     {:noreply, %{state | drivers: drivers}}
   end
   
-
   #============================================================================
   # internal utilities
 
