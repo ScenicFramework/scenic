@@ -184,6 +184,7 @@ defmodule Scenic.Scene do
   @ets_graphs_table     ViewPort.graphs_table()
 
   @viewport             :viewport
+  @not_activated        :__not_activated__
 
   #============================================================================
   # client api - working with the scene
@@ -398,7 +399,8 @@ defmodule Scenic.Scene do
       scene_state: nil,
       scene_ref: scene_ref,
       supervisor_pid: nil,
-      dynamic_children_pid: nil
+      dynamic_children_pid: nil,
+      activation: @not_activated
     }
 
     {:ok, state}
@@ -432,21 +434,57 @@ defmodule Scenic.Scene do
 
   def handle_call(:deactivate, _, %{
     scene_module: mod,
-    scene_state: sc_state
+    scene_state: sc_state,
+    dynamic_children_pid: nil,
+    scene_ref: scene_ref,
   } = state) do
     # tell the scene it is being deactivated
     {:noreply, sc_state} = mod.handle_deactivation( sc_state )
-    { :reply, :ok, %{state | scene_state: sc_state} }
+    { :reply, :ok, %{state | scene_state: sc_state, activation: @not_activated} }
+  end
+
+  def handle_call(:deactivate, _, %{
+    scene_module: mod,
+    scene_state: sc_state,
+    dynamic_children_pid: dyn_sub,
+    scene_ref: scene_ref
+  } = state) do
+    # deactivate the dynamic children
+    dyn_sub
+    |> DynamicSupervisor.which_children()
+    |> Enum.each( &GenServer.call(&1, :deactivate))
+
+    # tell the scene it is being deactivated
+    {:noreply, sc_state} = mod.handle_deactivation( sc_state )
+    { :reply, :ok, %{state | scene_state: sc_state, activation: @not_activated} }
   end
 
   #--------------------------------------------------------
   def handle_call({:activate, args}, _, %{
     scene_module: mod,
-    scene_state: sc_state
+    scene_state: sc_state,
+    dynamic_children_pid: nil,
+    scene_ref: scene_ref
   } = state) do
     # tell the scene it is being deactivated
     {:noreply, sc_state} = mod.handle_activation( args, sc_state )
-    { :reply, :ok, %{state | scene_state: sc_state} }
+    { :reply, :ok, %{state | scene_state: sc_state, activation: args} }
+  end
+
+  def handle_call({:activate, args}, _, %{
+    scene_module: mod,
+    scene_state: sc_state,
+    dynamic_children_pid: dyn_sub,
+    scene_ref: scene_ref
+  } = state) do
+    # activate the dynamic children
+    dyn_sub
+    |> DynamicSupervisor.which_children()
+    |> Enum.each( &GenServer.call(&1, {:activate, args}) )
+
+    # tell the scene it is being deactivated
+    {:noreply, sc_state} = mod.handle_activation( args, sc_state )
+    { :reply, :ok, %{state | scene_state: sc_state, activation: args} }
   end
 
   #--------------------------------------------------------
@@ -461,9 +499,9 @@ defmodule Scenic.Scene do
 
   #--------------------------------------------------------
   def handle_cast({:after_init, args}, %{
-    scene_module: mod
+    scene_module: mod,
+    scene_ref: scene_ref
   } = state ) do
-
     # get the scene supervisors
     [supervisor_pid | _] = self()
     |> Process.info()
@@ -506,11 +544,12 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  def handle_cast({:put_child, graph_id, uid, child_pid}, %{
-    activation: args
-  } = state ) do
-    {:noreply, put_in( state, [:children, graph_id, uid], child_pid ) }
+  def handle_cast({:put_child, graph_id, uid, child_pid}, %{} = state ) do
+#    {:noreply, put_in( state, [:children, graph_id, uid], child_pid ) }
+    {:noreply, state }
   end
+
+
 
   #--------------------------------------------------------
 #  def handle_cast({:activate, args, activation_ref}, %{
@@ -533,6 +572,9 @@ defmodule Scenic.Scene do
 #
 #    { :noreply, %{state | scene_state: sc_state, activation: args} }
 #  end
+
+
+
 
   #--------------------------------------------------------
   def handle_cast({:input, event, context}, 
@@ -595,7 +637,8 @@ defmodule Scenic.Scene do
     scene_ref: scene_ref,
     raw_scene_refs: raw_scene_refs,
     dyn_scene_refs: dyn_scene_refs,
-    dynamic_children_pid: dyn_sup
+    dynamic_children_pid: dyn_sup,
+    activation: args
   } = state ) do
 
     graph_key = {:graph, scene_ref, sub_id}
@@ -631,6 +674,12 @@ defmodule Scenic.Scene do
         # start the dynamic scene
         parent = {self(), sub_id, uid}
         {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, parent, init_data )
+
+        # if this scene is activated, activate the new one too
+        unless args == @not_activated do
+          GenServer.call(pid, {:activate, args})
+        end
+
         # add the this ref for next time
         Map.put(refs, uid, {pid, ref})
 
