@@ -164,6 +164,13 @@ defmodule Scenic.ViewPort do
     end
   end
 
+  def get_graph( name ) when is_atom(name) do
+    case :ets.lookup(@ets_graphs_table, {:graph, name, nil}) do
+      [] -> nil
+      [{_, {_, graph}}] -> graph
+    end
+  end
+
   #--------------------------------------------------------
   @doc """
   Capture one or more types of input.
