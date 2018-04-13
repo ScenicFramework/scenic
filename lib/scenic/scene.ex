@@ -391,9 +391,7 @@ defmodule Scenic.Scene do
       raw_scene_refs: %{},      
       dyn_scene_pids: %{},
       dyn_scene_keys: %{},
-
-      dyn_scene_refs: %{},
-
+      static_ref_names: %{},
 
 #      viewport: {viewport_pid, viewport_tid},
       parent_pid: parent_pid,
@@ -465,7 +463,7 @@ defmodule Scenic.Scene do
     scene_ref: scene_ref
   } = state) do
     # deactivate the dynamic children
-    call_children(dyn_sub, :deactivate)
+#    call_children(dyn_sub, :deactivate)
 
     # tell the scene it is being deactivated
     {:noreply, sc_state} = mod.handle_deactivation( sc_state )
@@ -473,45 +471,45 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  def handle_call({:activate, args}, _, %{
-    scene_module: mod,
-    scene_state: sc_state,
-    dynamic_children_pid: nil,
-    scene_ref: scene_ref
-  } = state) do
-IO.puts "activating childless scene"
-    # tell the scene it is being deactivated
-    {:noreply, sc_state} = mod.handle_activation( args, sc_state )
-    { :reply, :ok, %{state | scene_state: sc_state, activation: args} }
-  end
-
-  def handle_call({:activate, args}, _, %{
-    scene_module: mod,
-    scene_state: sc_state,
-    dynamic_children_pid: dyn_sub,
-    scene_ref: scene_ref
-  } = state) do
-IO.puts "start activate call"
-
-    # activate the dynamic children
-    call_children(dyn_sub, {:activate, args})
-
-    # tell the scene it is being deactivated
-    {:noreply, sc_state} = mod.handle_activation( args, sc_state )
-
-IO.puts "end activate call"
-    { :reply, :ok, %{state | scene_state: sc_state, activation: args} }
-  end
-
-  def handle_call({:activate, args}, _, state ) do
-    pry()
-  end
+#  def handle_call({:activate, args}, _, %{
+#    scene_module: mod,
+#    scene_state: sc_state,
+#    dynamic_children_pid: nil
+#  } = state) do
+#IO.puts "activating childless scene"
+#    # tell the scene it is being deactivated
+#    {:noreply, sc_state} = mod.handle_activation( args, sc_state )
+#    { :reply, :ok, %{state | scene_state: sc_state, activation: args} }
+#  end
+#
+#  def handle_call({:activate, args}, _, %{
+#    scene_module: mod,
+#    scene_state: sc_state,
+#    dynamic_children_pid: dyn_sub
+#  } = state) do
+#IO.puts "start activate call"
+#
+#    # activate the dynamic children
+##    call_children(dyn_sub, {:activate, args})
+#    cast_children(dyn_sub, {:activate, args})
+#
+#
+#    # tell the scene it is being deactivated
+#    {:noreply, sc_state} = mod.handle_activation( args, sc_state )
+#
+#IO.puts "end activate call"
+#    { :reply, :ok, %{state | scene_state: sc_state, activation: args} }
+#  end
+#
+#  def handle_call({:activate, args}, _, state ) do
+#    pry()
+#  end
 
 
   #--------------------------------------------------------
   # generic handle_call. give the scene a chance to handle it
   def handle_call(msg, from, %{scene_module: mod, scene_state: sc_state} = state) do
-pry()
+IO.puts"-=-=-=-=-=-=-=- unhandled scene call #{inspect(msg)} -=-=-=-=-=-=-=-"
     {:reply, reply, sc_state} = mod.handle_call(msg, from, sc_state)
     {:reply, reply, %{state | scene_state: sc_state}}
   end
@@ -573,27 +571,38 @@ pry()
 
 
 
+
+
+
+
+
   #--------------------------------------------------------
-#  def handle_cast({:activate, args, activation_ref}, %{
-#    viewport: {vp_pid, _},
-#    scene_module: mod,
-#    scene_state: sc_state,
-#  } = state) do
-##    ViewPort.register_activation( scene_ref, args )
-#
-#    # tell the scene it is being activated
-#    {:noreply, sc_state} = mod.handle_activate( args, sc_state )
-#
-#    # have the ViewPort activate the children
-#    #GenServer.call(vp_pid, {:activate_children, scene_ref, args, activation_root})
-#
-#    # tell the ViewPort this activation is complete (if a secquence is requested)
-#    if activation_ref do
-#      GenServer.cast(vp_pid, {:activation_complete, self, activation_ref})
-#    end
-#
-#    { :noreply, %{state | scene_state: sc_state, activation: args} }
-#  end
+  def handle_cast({:activate, args}, %{
+    scene_module: mod,
+    scene_state: sc_state,
+    dynamic_children_pid: dyn_sub,
+    static_ref_names: static_refs
+  } = state) do
+IO.puts "{{{{{{{{{{{{{{{ HOopty Frood. in #{inspect(mod)} handle_cast :actiavte }}}}}}}}}}}}}}}}}}"
+    # activate the dynamic children
+#    call_children(dyn_sub, {:activate, args})
+#    cast_children(dyn_sub, {:activate, args})
+  IO.inspect(static_refs)
+
+
+    # tell the scene it is being deactivated
+    {:noreply, sc_state} = mod.handle_activation( args, sc_state )
+
+    { :noreply, %{state | scene_state: sc_state, activation: args} }
+  end
+
+
+
+
+
+
+
+
 
 
 
@@ -717,7 +726,9 @@ pry()
 
         # if this scene is activated, activate the new one too
         unless args == @not_activated do
-          GenServer.call(pid, {:activate, args})
+IO.puts "::::::::: trying to cast activate a dynamic child during put_graph:::::::::"
+#          GenServer.call(pid, {:activate, args})
+#          GenServer.cast(pid, {:activate, args})
         end
 
         # add the this dynamic child scene to tracking
@@ -740,6 +751,12 @@ pry()
         {Map.delete(old_pids, uid), Map.delete(old_keys, uid)}
     end)
 
+    # update the static ref names
+    static_ref_names = Enum.reduce(all_keys, [], fn
+      {:graph, name, nil}, names when is_atom(name) -> [name | names]
+      _, names -> names
+    end)
+
     # merge all_refs with the managed dyanmic keys
     all_keys = Map.merge( all_keys, new_dyn_keys )
 
@@ -756,6 +773,7 @@ pry()
     |> put_in( [:raw_scene_refs, sub_id], new_raw_refs )
     |> put_in( [:dyn_scene_pids, sub_id], new_dyn_pids )
     |> put_in( [:dyn_scene_keys, sub_id], new_dyn_keys )
+    |> put_in( [:static_ref_names, sub_id], static_ref_names )
 
     { :noreply, state }
   end

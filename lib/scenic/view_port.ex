@@ -345,7 +345,8 @@ defmodule Scenic.ViewPort do
     end
 
     # activate the scene
-    GenServer.call(scene_pid, {:activate, args})
+#    GenServer.call(scene_pid, {:activate, args})
+    GenServer.cast(scene_pid, {:activate, args})
 
     graph_key = {:graph, scene_ref, nil}
 

@@ -69,10 +69,6 @@ defmodule Scenic.Component.Button do
   def init( {text, msg} ), do: init( {text, msg, []} )
   def init( {text, msg, opt} ) when is_atom(opt), do: init( {text, msg, [opt]} )
   def init( {text, msg, opts} ) when is_list(opts) do
-
-IO.puts "============> Button.init <============"
-
-
     # get the size
     size_opt = Enum.find(opts, &Enum.member?(@valid_sizes, &1) ) || :normal
     color_opt = Enum.find(opts, &Enum.member?(@valid_colors, &1) ) || :primary
@@ -95,21 +91,23 @@ IO.puts "============> Button.init <============"
       contained: false,
       msg: msg
     }
+IO.puts "============> Button.init"
+
+push_graph( graph )
 
     {:ok, state}
   end
 
 
   #--------------------------------------------------------
-  def handle_activate(_args, %{graph: graph} = state ) do
+  def handle_activation(_args, %{graph: graph} = state ) do
 IO.puts "============> Button.handle_activate"
-pry()
-    push_graph( graph )
+#      push_graph( graph )
     {:noreply, state}
   end
 
   #--------------------------------------------------------
-  def handle_deactivate( %{graph: graph} = state ) do
+  def handle_deactivation( %{graph: graph} = state ) do
 IO.puts "Button.handle_deactivate"
     {:noreply, state}
   end
