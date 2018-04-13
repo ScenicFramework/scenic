@@ -177,12 +177,13 @@ defmodule Scenic.Scene do
 
 
 
-
-
-
+#  defmodule Registration do
+#    defstruct pid: nil, dynamic_supervisor_pid: nil, supervisor_pid: nil
+#  end
 
   # ets table names
   @ets_graphs_table     ViewPort.graphs_table()
+  @ets_scenes_table     ViewPort.scenes_table()
 
   @viewport             :viewport
   @not_activated        :__not_activated__
@@ -552,6 +553,12 @@ IO.puts"-=-=-=-=-=-=-=- unhandled scene call #{inspect(msg)} -=-=-=-=-=-=-=-"
         end
     end
 
+    # register the scene in the scenes ets table
+    :ets.insert(
+      @ets_scenes_table,
+      {scene_ref, {self(), dynamic_children_pid, supervisor_pid}}
+    )
+
     # initialize the scene itself
     {:ok, sc_state} = mod.init( args )
 
@@ -563,49 +570,16 @@ IO.puts"-=-=-=-=-=-=-=- unhandled scene call #{inspect(msg)} -=-=-=-=-=-=-=-"
     { :noreply, state }
   end
 
-  #--------------------------------------------------------
-#  def handle_cast({:put_child, graph_id, uid, child_pid}, %{} = state ) do
-#    {:noreply, put_in( state, [:children, graph_id, uid], child_pid ) }
-#    {:noreply, state }
-#  end
-
-
-
-
-
-
-
 
   #--------------------------------------------------------
   def handle_cast({:activate, args}, %{
     scene_module: mod,
     scene_state: sc_state,
-    dynamic_children_pid: dyn_sub,
-    static_ref_names: static_refs
   } = state) do
-IO.puts "{{{{{{{{{{{{{{{ HOopty Frood. in #{inspect(mod)} handle_cast :actiavte }}}}}}}}}}}}}}}}}}"
-    # activate the dynamic children
-#    call_children(dyn_sub, {:activate, args})
-#    cast_children(dyn_sub, {:activate, args})
-  IO.inspect(static_refs)
-
-
-    # tell the scene it is being deactivated
+    # tell the scene it is being activated
     {:noreply, sc_state} = mod.handle_activation( args, sc_state )
-
     { :noreply, %{state | scene_state: sc_state, activation: args} }
   end
-
-
-
-
-
-
-
-
-
-
-
 
   #--------------------------------------------------------
   def handle_cast({:input, event, context}, 

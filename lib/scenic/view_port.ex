@@ -91,6 +91,7 @@ defmodule Scenic.ViewPort do
 
   # ets table names
   @ets_graphs_table     :_scenic_vp3_graphs_table_
+  @ets_scenes_table     :_scenic_vp3_scenes_table_
 
 
 
@@ -100,6 +101,8 @@ defmodule Scenic.ViewPort do
   # Get the name of the graphs table. Used by Scene
   @doc false
   def graphs_table(), do: @ets_graphs_table
+  @doc false
+  def scenes_table(), do: @ets_scenes_table
 
   #--------------------------------------------------------
   @doc """
@@ -272,7 +275,8 @@ defmodule Scenic.ViewPort do
       drivers: [],
 
       max_depth: opts[:max_depth] || @max_depth,
-      graph_table_id: :ets.new(@ets_graphs_table, [:named_table, :public])
+      graph_table_id: :ets.new(@ets_graphs_table, [:named_table, :public]),
+      scene_table_id: :ets.new(@ets_scenes_table, [:named_table, :public])
     }
 
     # :named_table, read_concurrency: true
@@ -305,18 +309,6 @@ defmodule Scenic.ViewPort do
 
   #============================================================================
   # handle_cast
-
-  #--------------------------------------------------------
-  def handle_cast( {:monitor, scene_pid}, state ) do
-    Process.monitor( scene_pid )
-    {:noreply, state}
-  end
-
-  #--------------------------------------------------------
-  def handle_cast( {:request_root, to_pid}, %{root_graph_key: root_key} = state ) do
-    GenServer.cast( to_pid, {:set_root, root_key} )
-    {:noreply, state}
-  end
 
   #--------------------------------------------------------
   def handle_cast( {:set_root, scene, args}, %{
@@ -376,6 +368,9 @@ defmodule Scenic.ViewPort do
   end
 
 
+  #==================================================================
+  # casts from drivers
+
   #--------------------------------------------------------
   def handle_cast( {:driver_cast, msg}, %{drivers: drivers} = state ) do
     # relay the graph_key to all listening drivers
@@ -395,6 +390,23 @@ defmodule Scenic.ViewPort do
     {:noreply, %{state | drivers: drivers}}
   end
   
+  #--------------------------------------------------------
+  def handle_cast( {:request_root, to_pid}, %{root_graph_key: root_key} = state ) do
+    GenServer.cast( to_pid, {:set_root, root_key} )
+    {:noreply, state}
+  end
+
+  #==================================================================
+  # management casts from scenes
+  
+  #--------------------------------------------------------
+  def handle_cast( {:monitor, scene_pid}, state ) do
+    Process.monitor( scene_pid )
+    {:noreply, state}
+  end
+
+
+
   #============================================================================
   # internal utilities
 
