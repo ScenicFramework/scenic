@@ -10,6 +10,8 @@ defmodule Scenic.SplashScreen do
 
   @splash_interval  32
 
+  @default_min_time  1000
+
   @graph Graph.build( clear_color: :black, font: {:roboto, 20} )
     |> Primitive.Text.add_to_graph( {{40, 80}, "Welcome to Scenic"}, id: :text, color: :white )
 
@@ -23,7 +25,7 @@ defmodule Scenic.SplashScreen do
       animations: @animations,
       timer: timer,
       start_time: :os.system_time(:milli_seconds),
-      min_time: opts[:splash_time] || 0,
+      min_time: opts[:splash_time] || @default_min_time,
       initial_scene: initial_scene,
       initial_scene_args: args
     }    

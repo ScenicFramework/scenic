@@ -7,6 +7,7 @@
 defmodule Scenic.ViewPort do
   use GenServer
   alias Scenic.ViewPort
+  alias Scenic.ViewPort.Driver
   alias Scenic.Scene
   alias Scenic.Graph
 
@@ -158,18 +159,46 @@ defmodule Scenic.ViewPort do
 
   #--------------------------------------------------------
   def get_graph( {:graph, _, _} = key ) do
-    case :ets.lookup(@ets_graphs_table, key) do
+    r = case :ets.lookup(@ets_graphs_table, key) do
       [] -> nil
-      [{_, {_, graph}}] -> graph
+      [{_, _, graph, dyn_refs}] -> {graph, dyn_refs}
+      other ->
+        pry()
     end
   end
 
-  def get_graph( name ) when is_atom(name) do
-    case :ets.lookup(@ets_graphs_table, {:graph, name, nil}) do
+  def get_graph( scene ) when is_atom(scene) or is_reference(scene) do
+    case :ets.lookup(@ets_graphs_table, {:graph, scene, nil}) do
       [] -> nil
-      [{_, {_, graph}}] -> graph
+      [{_, _, graph, dyn_refs}] -> {graph, dyn_refs}
+      other ->
+        pry()
     end
   end
+
+  def list_graphs() do
+    :ets.match(@ets_graphs_table, {:"$1", :"_", :"_", :"_"})
+    |> List.flatten()
+  end
+
+  def request_root( send_to \\ nil )
+  def request_root( nil ) do
+    request_root( self() )
+  end
+  def request_root( to ) when is_pid(to) or is_atom(to) do
+    GenServer.cast( @viewport, {:request_root, to} )
+  end
+
+
+  #--------------------------------------------------------
+  def input( input_event ) do
+#    GenServer.cast( @viewport, {:input, input_event} )
+  end
+
+  def input( input_event, context ) do
+#    GenServer.cast( @viewport, {:input, input_event, context} )
+  end
+
 
   #--------------------------------------------------------
   @doc """
@@ -201,7 +230,8 @@ defmodule Scenic.ViewPort do
   Cast a message to all active drivers listening to a viewport.
   """
   def driver_cast( msg ) do
-    GenServer.cast(@viewport, {:driver_cast, msg})
+    Driver.cast( msg )
+    #GenServer.cast(@viewport, {:driver_cast, msg})
   end
 
 
@@ -280,6 +310,12 @@ defmodule Scenic.ViewPort do
   end
 
   #--------------------------------------------------------
+  def handle_cast( {:request_root, to_pid}, %{root_scene: root} = state ) do
+    GenServer.cast( to_pid, {:set_root, {:graph, root, nil}} )
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
   def handle_cast( {:set_root, scene, args}, %{
     graph_table_id: graph_table_id,
     drivers: drivers,
@@ -309,8 +345,7 @@ defmodule Scenic.ViewPort do
     GenServer.call(scene, {:activate, args})
 
     # tell the drivers about the new root
-#    driver_cast( {:set_root, {:graph, scene, nil}} )
-    do_driver_cast( drivers, {:set_root, {:graph, scene, nil}} )
+    driver_cast( {:set_root, {:graph, scene, nil}} )
 
     # clean up the old root graph. Can be done async so long as
     # terminating the dynamic scene (if set) is after deactivation

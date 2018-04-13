@@ -5,6 +5,7 @@
 # Taking the learnings from several previous versions.
 
 defmodule Scenic.Scene do
+  alias Scenic.Graph
   alias Scenic.Scene
   alias Scenic.ViewPort
   alias Scenic.Primitive
@@ -376,7 +377,7 @@ defmodule Scenic.Scene do
 
     # tell the parent that this scene is alive and assocated with the given graph/uid.
     # Obvs don't do this if a root scene (no parent)
-    if parent_pid, do: GenServer.cast(parent_pid, {:put_child, graph_id, uid, self()})
+#    if parent_pid, do: GenServer.cast(parent_pid, {:put_child, graph_id, uid, self()})
 
     # if this scene is named... Meaning it is supervised by the app and is not a
     # dyanimic scene, then we need monitor the ViewPort. If the viewport goes
@@ -415,13 +416,23 @@ defmodule Scenic.Scene do
   # Note: the viewport is only monitored by this scene if it is a named scene.
   # dynamic scenes rely on their parent (or the viewport supervisor itself)
   # to take care of this for them.
-  def handle_info({:DOWN, _monitor_ref, :process, pid, reason}, %{
-      viewport: {viewport_pid, _},
-      activations: activations
-    } = state) when (pid == viewport_pid) and (activations != []) do
-    { :reply, :ok, state } = handle_call( :deactivate, pid,  state )
+  def handle_info({:DOWN, _monitor_ref, :process, pid, reason}, state) do
+    state = case Process.whereis(@viewport) do
+      ^pid ->
+        { :reply, :ok, state } = handle_call( :deactivate, pid,  state )
+      _ ->
+        state
+    end
     {:noreply, state}
   end
+
+  #--------------------------------------------------------
+  # generic handle_info. give the scene a chance to handle it
+  def handle_info(msg, %{scene_module: mod, scene_state: sc_state} = state) do
+    {:noreply, sc_state} = mod.handle_info(msg, sc_state)
+    {:noreply, %{state | scene_state: sc_state}}
+  end
+
 
   #============================================================================
   # handle_call
@@ -544,10 +555,10 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  def handle_cast({:put_child, graph_id, uid, child_pid}, %{} = state ) do
+#  def handle_cast({:put_child, graph_id, uid, child_pid}, %{} = state ) do
 #    {:noreply, put_in( state, [:children, graph_id, uid], child_pid ) }
-    {:noreply, state }
-  end
+#    {:noreply, state }
+#  end
 
 
 
@@ -624,7 +635,7 @@ defmodule Scenic.Scene do
     end)
 
     # write the graph into the ets table
-    :ets.insert(@ets_graphs_table, {graph_key, self(), min_graph})
+    :ets.insert(@ets_graphs_table, {graph_key, self(), min_graph, %{}})
 
     # notify the drivers of the updated graph
     ViewPort.driver_cast( {:push_graph, graph_key} )
@@ -642,6 +653,8 @@ defmodule Scenic.Scene do
   } = state ) do
 
     graph_key = {:graph, scene_ref, sub_id}
+
+    test_push( graph, sub_id )
 
     # TEMPORARY HACK
     # reduce the incoming graph to it's minimal form
@@ -704,7 +717,7 @@ defmodule Scenic.Scene do
     end)
 
     # write the graph into the ets table
-    :ets.insert(@ets_graphs_table, {graph_key, self(), graph})
+    :ets.insert(@ets_graphs_table, {graph_key, self(), graph, new_dyn_refs})
 
     # notify the drivers of the updated graph
     ViewPort.driver_cast( {:push_graph, graph_key} )
@@ -730,15 +743,6 @@ defmodule Scenic.Scene do
     {:noreply, %{state | scene_state: sc_state}}
   end
 
-  #============================================================================
-  # handle_info
-
-  #--------------------------------------------------------
-  # generic handle_info. give the scene a chance to handle it
-  def handle_info(msg, %{scene_module: mod, scene_state: sc_state} = state) do
-    {:noreply, sc_state} = mod.handle_info(msg, sc_state)
-    {:noreply, %{state | scene_state: sc_state}}
-  end
 
 
 
@@ -790,6 +794,44 @@ defmodule Scenic.Scene do
   #============================================================================
   # internal utilities
 
+
+
+  defp test_push( %Graph{primitive_map: p_map}, sub_id ) do
+    
+    # reduce the incoming graph to it's minimal form
+    # while simultaneously extracting the SceneRefs
+    {graph, all_refs, dyn_refs} = Enum.reduce( p_map, {%{}, %{}, %{}}, fn
+      # named reference
+      ({uid, %{module: Primitive.SceneRef, data: name} = p},
+      {g, all_refs, dyn_refs}) when is_atom(name) ->
+        g = Map.put( g, uid, Primitive.minimal(p) )
+        all_refs = Map.put( all_refs, uid, {:graph, name, nil} )
+        {g, all_refs, dyn_refs}
+
+      # explicit reference
+      ({uid, %{module: Primitive.SceneRef, data: {:graph,_,_} = ref} = p},
+      {g, all_refs, dyn_refs}) ->
+        g = Map.put( g, uid, Primitive.minimal(p) )
+        all_refs = Map.put( all_refs, uid, ref )
+        {g, all_refs, dyn_refs}
+
+      # dynamic reference
+      # don't add to all_refs yet. Will add after it is started (or not)
+      ({uid, %{module: Primitive.SceneRef, data: {_,_} = ref} = p},
+      {g, all_refs, dyn_refs}) ->
+        g = Map.put( g, uid, Primitive.minimal(p) )
+        dyn_refs = Map.put( dyn_refs, uid, ref )
+        {g, all_refs, dyn_refs}
+
+      # all non-SceneRef primitives
+      ({uid, p}, {g, all_refs, dyn_refs}) ->
+        {Map.put( g, uid, Primitive.minimal(p) ), all_refs, dyn_refs}
+    end)
+
+    pry()
+
+
+  end
 
 
 

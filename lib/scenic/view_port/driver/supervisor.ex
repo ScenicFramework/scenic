@@ -9,7 +9,7 @@ defmodule Scenic.ViewPort.Driver.Supervisor do
 
   @name       :drivers
 
-#  import IEx
+  import IEx
 
   #============================================================================
   # setup the viewport supervisor - get the list of drivers from the config
@@ -24,6 +24,7 @@ defmodule Scenic.ViewPort.Driver.Supervisor do
       get_driver_config({driver, name})
       |> driver.child_spec()
     end)
+|> IO.inspect()
     |> Supervisor.init( strategy: :one_for_one )
   end
 
