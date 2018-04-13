@@ -388,8 +388,12 @@ defmodule Scenic.Scene do
 
     # build up the state
     state = %{
-      raw_scene_refs: %{},
+      raw_scene_refs: %{},      
+      dyn_scene_pids: %{},
+      dyn_scene_keys: %{},
+
       dyn_scene_refs: %{},
+
 
 #      viewport: {viewport_pid, viewport_tid},
       parent_pid: parent_pid,
@@ -651,82 +655,83 @@ defmodule Scenic.Scene do
     dynamic_children_pid: dyn_sup,
     activation: args
   } = state ) do
+    test_push( {:push_graph, graph, sub_id}, state )
 
-    graph_key = {:graph, scene_ref, sub_id}
-
-    test_push( graph, sub_id )
-
-    # TEMPORARY HACK
-    # reduce the incoming graph to it's minimal form
-    graph = Enum.reduce( graph.primitive_map, %{}, fn({uid, p}, g) ->
-      Map.put( g, uid, Primitive.minimal(p) )
-    end)
-
-
-    # that this part we need to manage the dynamic child references
-
-    # get the old refs
-    old_raw_refs =  Map.get( raw_scene_refs, sub_id, %{} )
-    old_dyn_refs =  Map.get( dyn_scene_refs, sub_id, %{} )
-
-    # build a list of the dynamic scene references in this graph
-    new_raw_refs = Enum.reduce( graph, %{}, fn
-      {uid,%{ data: {Primitive.SceneRef, {mod, init_data}}}}, nr ->
-        Map.put(nr, uid, {mod, init_data})
-      # not a ref. ignore it
-      _, nr -> nr
-    end)
-
-    # get the difference script between the raw refs
-    raw_diff = Utilities.Map.difference( old_raw_refs, new_raw_refs )
-
-    # Enumerate the old refs, using the difference script to determine
-    # what to start or stop.
-    new_dyn_refs = Enum.reduce(raw_diff, old_dyn_refs, fn
-      {:put, uid, {mod, init_data}}, refs ->     # start this dynamic scene
-        # start the dynamic scene
-        parent = {self(), sub_id, uid}
-        {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, parent, init_data )
-
-        # if this scene is activated, activate the new one too
-        unless args == @not_activated do
-          GenServer.call(pid, {:activate, args})
-        end
-
-        # add the this ref for next time
-        Map.put(refs, uid, {pid, ref})
-
-      {:del, uid}, refs ->                      # stop this dynaic scene
-        # get the old dynamic graph reference
-        {pid, _} = old_dyn_refs[uid]
-
-        # send the optional deactivate message and terminate. ok to be async
-        Task.start fn ->
-          GenServer.call(pid, :deactivate)
-          DynamicSupervisor.terminate_child( dyn_sup, pid )
-        end
-
-        # remove the reference from the old refs
-        Map.delete(refs, uid)
-    end)
-
-    # take all the new refs and insert them back into the graph, so that they are
-    # nice and normalized for the drivers
-    graph = Enum.reduce(new_dyn_refs, graph, fn({uid, {_, ref}}, g)->
-      put_in(g, [uid, :data], {Primitive.SceneRef, {:graph, ref, nil}})
-    end)
-
-    # write the graph into the ets table
-    :ets.insert(@ets_graphs_table, {graph_key, self(), graph, new_dyn_refs})
-
-    # notify the drivers of the updated graph
-    ViewPort.driver_cast( {:push_graph, graph_key} )
-
-    # store the refs for next time
-    state = put_in(state, [:raw_scene_refs, sub_id], new_raw_refs)
-    state = put_in(state, [:dyn_scene_refs, sub_id], new_dyn_refs)
-
-    { :noreply, state }
+#    graph_key = {:graph, scene_ref, sub_id}
+#
+#    test_push( {:push_graph, graph, sub_id}, state )
+#
+#    # TEMPORARY HACK
+#    # reduce the incoming graph to it's minimal form
+#    graph = Enum.reduce( graph.primitive_map, %{}, fn({uid, p}, g) ->
+#      Map.put( g, uid, Primitive.minimal(p) )
+#    end)
+#
+#
+#    # that this part we need to manage the dynamic child references
+#
+#    # get the old refs
+#    old_raw_refs =  Map.get( raw_scene_refs, sub_id, %{} )
+#    old_dyn_refs =  Map.get( dyn_scene_refs, sub_id, %{} )
+#
+#    # build a list of the dynamic scene references in this graph
+#    new_raw_refs = Enum.reduce( graph, %{}, fn
+#      {uid,%{ data: {Primitive.SceneRef, {mod, init_data}}}}, nr ->
+#        Map.put(nr, uid, {mod, init_data})
+#      # not a ref. ignore it
+#      _, nr -> nr
+#    end)
+#
+#    # get the difference script between the raw refs
+#    raw_diff = Utilities.Map.difference( old_raw_refs, new_raw_refs )
+#
+#    # Enumerate the old refs, using the difference script to determine
+#    # what to start or stop.
+#    new_dyn_refs = Enum.reduce(raw_diff, old_dyn_refs, fn
+#      {:put, uid, {mod, init_data}}, refs ->     # start this dynamic scene
+#        # start the dynamic scene
+#        parent = {self(), sub_id, uid}
+#        {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, parent, init_data )
+#
+#        # if this scene is activated, activate the new one too
+#        unless args == @not_activated do
+#          GenServer.call(pid, {:activate, args})
+#        end
+#
+#        # add the this ref for next time
+#        Map.put(refs, uid, {pid, ref})
+#
+#      {:del, uid}, refs ->                      # stop this dynaic scene
+#        # get the old dynamic graph reference
+#        {pid, _} = old_dyn_refs[uid]
+#
+#        # send the optional deactivate message and terminate. ok to be async
+#        Task.start fn ->
+#          GenServer.call(pid, :deactivate)
+#          DynamicSupervisor.terminate_child( dyn_sup, pid )
+#        end
+#
+#        # remove the reference from the old refs
+#        Map.delete(refs, uid)
+#    end)
+#
+#    # take all the new refs and insert them back into the graph, so that they are
+#    # nice and normalized for the drivers
+#    graph = Enum.reduce(new_dyn_refs, graph, fn({uid, {_, ref}}, g)->
+#      put_in(g, [uid, :data], {Primitive.SceneRef, {:graph, ref, nil}})
+#    end)
+#
+#    # write the graph into the ets table
+#    :ets.insert(@ets_graphs_table, {graph_key, self(), graph, new_dyn_refs})
+#
+#    # notify the drivers of the updated graph
+#    ViewPort.driver_cast( {:push_graph, graph_key} )
+#
+#    # store the refs for next time
+#    state = put_in(state, [:raw_scene_refs, sub_id], new_raw_refs)
+#    state = put_in(state, [:dyn_scene_refs, sub_id], new_dyn_refs)
+#
+#    { :noreply, state }
   end
 
 
@@ -796,11 +801,18 @@ defmodule Scenic.Scene do
 
 
 
-  defp test_push( %Graph{primitive_map: p_map}, sub_id ) do
-    
+  defp test_push( {:push_graph, graph, sub_id},  %{
+    scene_ref: scene_ref,
+    raw_scene_refs: raw_scene_refs,
+    dyn_scene_pids: dyn_scene_pids,
+    dyn_scene_keys: dyn_scene_keys,
+    dynamic_children_pid: dyn_sup,
+    activation: args
+  } = state ) do
+
     # reduce the incoming graph to it's minimal form
     # while simultaneously extracting the SceneRefs
-    {graph, all_refs, dyn_refs} = Enum.reduce( p_map, {%{}, %{}, %{}}, fn
+    {graph, all_keys, new_raw_refs} = Enum.reduce( graph.primitive_map, {%{}, %{}, %{}}, fn
       # named reference
       ({uid, %{module: Primitive.SceneRef, data: name} = p},
       {g, all_refs, dyn_refs}) when is_atom(name) ->
@@ -828,8 +840,64 @@ defmodule Scenic.Scene do
         {Map.put( g, uid, Primitive.minimal(p) ), all_refs, dyn_refs}
     end)
 
-    pry()
+    # get the old refs
+    old_raw_refs =  Map.get( raw_scene_refs, sub_id, %{} )
+    old_dyn_pids =  Map.get( dyn_scene_pids, sub_id, %{} )
+    old_dyn_keys =  Map.get( dyn_scene_keys, sub_id, %{} )
 
+    # get the difference script between the raw and new dynamic refs
+    raw_diff = Utilities.Map.difference( old_raw_refs, new_raw_refs )
+
+    # Use the difference script to determine what to start or stop.
+    {new_dyn_pids, new_dyn_keys} = Enum.reduce(raw_diff, {old_dyn_pids, old_dyn_keys}, fn
+      {:put, uid, {mod, init_data}}, {old_pids, old_keys} ->  # start this dynamic scene
+        # start the dynamic scene
+        parent = {self(), sub_id, uid}
+        {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, parent, init_data )
+
+        # if this scene is activated, activate the new one too
+        unless args == @not_activated do
+          GenServer.call(pid, {:activate, args})
+        end
+
+        # add the this dynamic child scene to tracking
+        {
+          Map.put(old_pids, uid, pid),
+          Map.put(old_keys, uid, {:graph, ref, nil})
+        }
+
+      {:del, uid}, {old_pids, old_keys} ->                      # stop this dynaic scene
+        # get the old dynamic graph reference
+        pid = old_pids[uid]
+
+        # send the optional deactivate message and terminate. ok to be async
+        Task.start fn ->
+          GenServer.call(pid, :deactivate)
+          DynamicSupervisor.terminate_child( dyn_sup, pid )
+        end
+
+        # remove old pid and key
+        {Map.delete(old_pids, uid), Map.delete(old_keys, uid)}
+    end)
+
+    # merge all_refs with the managed dyanmic keys
+    all_keys = Map.merge( all_keys, new_dyn_keys )
+
+    graph_key = {:graph, scene_ref, sub_id}
+
+    # write the graph into the ets table
+    :ets.insert(@ets_graphs_table, {graph_key, self(), graph, all_keys})
+
+    # notify the drivers of the updated graph
+    ViewPort.driver_cast( {:push_graph, graph_key} )
+
+    # store the refs for next time
+    state = state
+    |> put_in( [:raw_scene_refs, sub_id], new_raw_refs )
+    |> put_in( [:dyn_scene_pids, sub_id], new_dyn_pids )
+    |> put_in( [:dyn_scene_keys, sub_id], new_dyn_keys )
+
+    { :noreply, state }
 
   end
 
