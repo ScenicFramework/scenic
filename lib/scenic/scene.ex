@@ -716,7 +716,7 @@ defmodule Scenic.Scene do
           Map.put(old_keys, uid, {:graph, ref, nil})
         }
 
-      {:del, uid}, {old_pids, old_keys} ->                      # stop this dynaic scene
+      {:del, uid}, {old_pids, old_keys} ->  # stop this dynaic scene
         # get the old dynamic graph reference
         pid = old_pids[uid]
 
