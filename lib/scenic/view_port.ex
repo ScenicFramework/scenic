@@ -161,16 +161,17 @@ defmodule Scenic.ViewPort do
   def get_graph( {:graph, _, _} = key ) do
     r = case :ets.lookup(@ets_graphs_table, key) do
       [] -> nil
-      [{_, _, graph, dyn_refs}] -> {graph, dyn_refs}
+      [{_, _, graph, references}] -> {graph, references}
       other ->
         pry()
     end
   end
 
   def get_graph( scene ) when is_atom(scene) or is_reference(scene) do
+    IO.puts "~~~~~~~~~~~~~~~~~~~ get_graph with just an atom ~~~~~~~~~~~~~~~~~~~"
     case :ets.lookup(@ets_graphs_table, {:graph, scene, nil}) do
       [] -> nil
-      [{_, _, graph, dyn_refs}] -> {graph, dyn_refs}
+      [{_, _, graph, references}] -> {graph, references}
       other ->
         pry()
     end
@@ -261,8 +262,10 @@ defmodule Scenic.ViewPort do
 
     # set up the initial state
     state = %{
-      root_scene: nil,
-      dynamic_root: nil,
+      root_graph_key: nil,
+      root_scene_pid: nil,
+      dynamic_root_pid: nil,
+
       input_captures: %{},
       hover_primitve: nil,
 
@@ -310,8 +313,8 @@ defmodule Scenic.ViewPort do
   end
 
   #--------------------------------------------------------
-  def handle_cast( {:request_root, to_pid}, %{root_scene: root} = state ) do
-    GenServer.cast( to_pid, {:set_root, {:graph, root, nil}} )
+  def handle_cast( {:request_root, to_pid}, %{root_graph_key: root_key} = state ) do
+    GenServer.cast( to_pid, {:set_root, root_key} )
     {:noreply, state}
   end
 
@@ -319,8 +322,8 @@ defmodule Scenic.ViewPort do
   def handle_cast( {:set_root, scene, args}, %{
     graph_table_id: graph_table_id,
     drivers: drivers,
-    root_scene: old_root_scene,
-    dynamic_root: old_dynamic_root_scene
+    root_scene_pid: old_root_scene,
+    dynamic_root_pid: old_dynamic_root_scene
   } = state ) do
 
     # prep state, which is mostly about resetting input
@@ -329,23 +332,25 @@ defmodule Scenic.ViewPort do
     |> Map.put( :input_captures, %{} )
 
     # if the scene being set is dynamic, start it up
-    {scene, dynamic_scene} = case scene do
+    {scene_pid, scene_ref, dynamic_scene} = case scene do
       # dynamic scene
       {mod, init_data} ->
         # start the dynamic scene
-        {:ok, pid, _} = mod.start_dynamic_scene( @dynamic_supervisor, nil, init_data )
-        {pid, pid}
+        {:ok, pid, ref} = mod.start_dynamic_scene( @dynamic_supervisor, nil, init_data )
+        {pid, ref, pid}
 
       # app supervised scene - mark dynamic root as nil
       scene when is_atom(scene) ->
-        {scene, nil}
+        {scene, scene, nil}
     end
 
     # activate the scene
-    GenServer.call(scene, {:activate, args})
+    GenServer.call(scene_pid, {:activate, args})
+
+    graph_key = {:graph, scene_ref, nil}
 
     # tell the drivers about the new root
-    driver_cast( {:set_root, {:graph, scene, nil}} )
+    driver_cast( {:set_root, graph_key} )
 
     # clean up the old root graph. Can be done async so long as
     # terminating the dynamic scene (if set) is after deactivation
@@ -361,7 +366,12 @@ defmodule Scenic.ViewPort do
       end)
     end
 
-    {:noreply, %{state | root_scene: scene, dynamic_root: dynamic_scene}}
+    state = state
+    |> Map.put( :root_graph_key, graph_key )
+    |> Map.put( :root_scene_pid, scene_pid )
+    |> Map.put( :dynamic_root_pid, dynamic_scene )
+
+    { :noreply, state }
   end
 
 

@@ -292,8 +292,8 @@ defmodule Scenic.Scene do
         end
       end
 
-      defp push_graph( graph, sub_id \\ nil ) do
-        GenServer.cast( self(), {:push_graph, graph, sub_id} )
+      defp push_graph( graph, sub_id \\ nil, manage_dynamic_children \\ true ) do
+        GenServer.cast( self(), {:push_graph, graph, sub_id, manage_dynamic_children} )
         # return the graph so this can be pipelined
         graph
       end
@@ -465,9 +465,7 @@ defmodule Scenic.Scene do
     scene_ref: scene_ref
   } = state) do
     # deactivate the dynamic children
-    dyn_sub
-    |> DynamicSupervisor.which_children()
-    |> Enum.each( &GenServer.call(&1, :deactivate))
+    call_children(dyn_sub, :deactivate)
 
     # tell the scene it is being deactivated
     {:noreply, sc_state} = mod.handle_deactivation( sc_state )
@@ -481,6 +479,7 @@ defmodule Scenic.Scene do
     dynamic_children_pid: nil,
     scene_ref: scene_ref
   } = state) do
+IO.puts "activating childless scene"
     # tell the scene it is being deactivated
     {:noreply, sc_state} = mod.handle_activation( args, sc_state )
     { :reply, :ok, %{state | scene_state: sc_state, activation: args} }
@@ -492,19 +491,27 @@ defmodule Scenic.Scene do
     dynamic_children_pid: dyn_sub,
     scene_ref: scene_ref
   } = state) do
+IO.puts "start activate call"
+
     # activate the dynamic children
-    dyn_sub
-    |> DynamicSupervisor.which_children()
-    |> Enum.each( &GenServer.call(&1, {:activate, args}) )
+    call_children(dyn_sub, {:activate, args})
 
     # tell the scene it is being deactivated
     {:noreply, sc_state} = mod.handle_activation( args, sc_state )
+
+IO.puts "end activate call"
     { :reply, :ok, %{state | scene_state: sc_state, activation: args} }
   end
+
+  def handle_call({:activate, args}, _, state ) do
+    pry()
+  end
+
 
   #--------------------------------------------------------
   # generic handle_call. give the scene a chance to handle it
   def handle_call(msg, from, %{scene_module: mod, scene_state: sc_state} = state) do
+pry()
     {:reply, reply, sc_state} = mod.handle_call(msg, from, sc_state)
     {:reply, reply, %{state | scene_state: sc_state}}
   end
@@ -625,11 +632,9 @@ defmodule Scenic.Scene do
 
   #--------------------------------------------------------
   # not set up for dynamic children. Take the fast path
-  def handle_cast({:push_graph, graph, sub_id},  %{
-    scene_ref: scene_ref,
-    dynamic_children_pid: nil
+  def handle_cast({:push_graph, graph, sub_id, false},  %{
+    scene_ref: scene_ref
   } = state ) do
-
     graph_key = {:graph, scene_ref, sub_id}
 
     # TEMPORARY HACK
@@ -650,7 +655,7 @@ defmodule Scenic.Scene do
   #--------------------------------------------------------
   # push a graph to the ets table and manage embedded dynamic child scenes
   # to the reader: You have no idea how difficult this was to get right.
-  def handle_cast({:push_graph, graph, sub_id},  %{
+  def handle_cast({:push_graph, graph, sub_id, true},  %{
     scene_ref: scene_ref,
     raw_scene_refs: raw_scene_refs,
     dyn_scene_pids: dyn_scene_pids,
@@ -701,6 +706,11 @@ defmodule Scenic.Scene do
     # Use the difference script to determine what to start or stop.
     {new_dyn_pids, new_dyn_keys} = Enum.reduce(raw_diff, {old_dyn_pids, old_dyn_keys}, fn
       {:put, uid, {mod, init_data}}, {old_pids, old_keys} ->  # start this dynamic scene
+
+        unless dyn_sup do
+          raise "You have set a dynamic SceneRef on a graph in a scene where has_children is false"
+        end
+
         # start the dynamic scene
         parent = {self(), sub_id, uid}
         {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, parent, init_data )
@@ -815,7 +825,53 @@ defmodule Scenic.Scene do
   #============================================================================
   # internal utilities
 
+  #--------------------------------------------------------
+  defp cast_children(dyn_supervisor, msg) do
+    with {:ok, pids} <- child_pids( dyn_supervisor ) do
+      Enum.each(pids, &GenServer.cast(&1, msg))
+    end
+  end
 
+  #--------------------------------------------------------
+  defp call_children(dyn_supervisor, msg) do
+    IO.puts "------------------------------------------------"
+    IO.inspect child_pids( dyn_supervisor )
+
+    with {:ok, pids} <- child_pids( dyn_supervisor ) do
+      Enum.reduce(pids, [], fn(pid, tasks)->
+        task = Task.async( fn ->
+IO.puts "Calling child #{inspect(pid)} with #{inspect(msg)}"
+          GenServer.call(pid, msg)
+        end)
+        [task | tasks]
+      end)
+      |> Enum.reduce( [], fn(task, responses) ->
+        [Task.await(task) | responses]
+      end)
+IO.puts "Done Calling child with #{inspect(msg)}"
+
+    end
+  end
+
+  #--------------------------------------------------------
+  defp child_pids( nil ), do: {:ok, []}
+  defp child_pids( dyn_supervisor ) do
+    pids = DynamicSupervisor.which_children( dyn_supervisor )
+    |> Enum.reduce( [], fn
+      {_, pid, :worker, [Scene]}, acc -> 
+        # easy case. scene is the direct child
+        [ pid | acc ]
+
+      {_, pid, :supervisor, [Scene.Supervisor]}, acc ->
+        # harder case. the child scene is under it's own supervisor
+        Supervisor.which_children( pid )
+        |> Enum.reduce( [], fn
+          {_, pid, :worker, [Scene]}, acc -> [ pid | acc ]
+          _, acc -> acc
+        end)
+    end)
+    {:ok, pids}
+  end
 
 
 
