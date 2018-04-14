@@ -138,7 +138,6 @@ defmodule Scenic.ViewPort do
   @doc """
   Set a the root scene/graph of the ViewPort.
   """
-
   def set_root( scene, args \\ nil )
 
   def set_root( scene, args ) when is_atom(scene) do
@@ -149,6 +148,7 @@ defmodule Scenic.ViewPort do
     GenServer.cast( @viewport, {:set_root, {mod, init_data}, args} )
   end
 
+  #--------------------------------------------------------
   def request_root( send_to \\ nil )
   def request_root( nil ) do
     request_root( self() )
@@ -260,13 +260,13 @@ defmodule Scenic.ViewPort do
     # set the initial scene as the root
     case initial_scene do
       nil -> :ok
-
+      
       # dynamic scene can start right up without a splash screen
       {mod, init} when is_atom(mod) ->
-        set_root( {mod, init}, args )
+        GenServer.cast( self(), {:set_root, {mod, init}, args} )
 
       scene when is_atom(scene) ->
-        set_root( {Scenic.SplashScreen, {scene, args, opts}}, nil )
+        GenServer.cast( self(), {:set_root, scene, args} )
     end
 
     {:ok, state}

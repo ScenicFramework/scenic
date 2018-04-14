@@ -66,7 +66,7 @@ defmodule Scenic.SplashScreen do
 
         name when is_atom(name) ->
           if Process.whereis(name) do
-            ViewPort.set_root( name, args )
+#            ViewPort.set_root( name, args )
           end
       end
 

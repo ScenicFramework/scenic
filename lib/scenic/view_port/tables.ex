@@ -14,6 +14,7 @@ defmodule Scenic.ViewPort.Tables do
   import IEx
 
   # ets table names
+  @ets_subs_table       :_scenic_subs_table_
   @ets_graphs_table     :_scenic_graphs_table_
   @ets_scenes_table     :_scenic_scenes_table_
 
@@ -66,6 +67,11 @@ defmodule Scenic.ViewPort.Tables do
 
   def insert_graph( graph_key, scene_pid, graph, refs) when is_pid(scene_pid) do
     :ets.insert(@ets_graphs_table, {graph_key, scene_pid, graph, refs})
+
+    # let any subscribing listeners know the graph was updated
+    graph_key
+    |> list_subscribers()
+    |> Enum.each( &GenServer.cast(&1, {:update_graph, graph_key}) )
   end
 
   #--------------------------------------------------------
@@ -94,12 +100,13 @@ defmodule Scenic.ViewPort.Tables do
 
   #--------------------------------------------------------
   def subscribe( graph_key, pid ) do
-    GenServer.cast( @name, {:subscribe, graph_key, pid} )
+#    GenServer.cast( @name, {:graph_subscribe, graph_key, pid} )
+    GenServer.call( @name, {:graph_subscribe, graph_key, pid} )
   end
 
   #--------------------------------------------------------
   def unsubscribe( graph_key, pid ) do
-    GenServer.cast( @name, {:unsubscribe, graph_key, pid} )
+    GenServer.cast( @name, {:graph_unsubscribe, graph_key, pid} )
   end
 
   #============================================================================
@@ -119,10 +126,9 @@ defmodule Scenic.ViewPort.Tables do
 
     # set up the initial state
     state = %{
-      subscribers: %{},
-      subscriptions: %{},
       graph_table_id: :ets.new(@ets_graphs_table, [:named_table, :public, {:read_concurrency, true}]),
-      scene_table_id: :ets.new(@ets_scenes_table, [:named_table])
+      scene_table_id: :ets.new(@ets_scenes_table, [:named_table]),
+      subs_table_id: :ets.new(@ets_subs_table, [:named_table])
     }
 
     {:ok, state}
@@ -159,30 +165,34 @@ defmodule Scenic.ViewPort.Tables do
   end
 
 
-
+  #--------------------------------------------------------
+  def handle_cast( {:graph_subscribe, graph_key, pid}, state ) do
+    :ets.insert(@ets_subs_table, {graph_key, pid})
+    {:noreply, state}
+  end
 
   #--------------------------------------------------------
-  def handle_cast( {:subscribe, graph_key, pid}, %{
-    subscribers: subscribers,
-    subscriptions: subscriptions
-  } = state ) do
+  def handle_cast( {:graph_unsubscribe, :all, pid}, state ) do
+    :ets.match_delete(@ets_subs_table, {:"_", pid}) 
+    {:noreply, state}
+  end
 
-
+  #--------------------------------------------------------
+  def handle_cast( {:graph_unsubscribe, graph_key, pid}, state ) do
+    # delete all the specific subscription
+    :ets.match_delete(@ets_subs_table, {graph_key, pid}) 
     {:noreply, state}
   end
 
 
+  #============================================================================
+  # internal utilities
+
   #--------------------------------------------------------
-  def handle_cast( {:unsubscribe, graph_key, pid}, %{
-    subscribers: subscribers,
-    subscriptions: subscriptions
-  } = state ) do
-
-
-
-    {:noreply, state}
+  def handle_call( {:graph_subscribe, graph_key, pid}, _, state ) do
+    resp = :ets.insert(@ets_subs_table, {graph_key, pid})
+    {:reply, resp, state}
   end
-
 
 
 
@@ -205,42 +215,19 @@ defmodule Scenic.ViewPort.Tables do
     |> List.flatten()
   end
 
+
+  #--------------------------------------------------------
+  defp list_subscriptions( pid ) when is_pid(pid) do
+    :ets.match(@ets_subs_table, {:"$1", pid})
+    |> List.flatten()
+  end
+
+  #--------------------------------------------------------
+  defp list_subscribers( {:graph,_,_} = graph_key ) do
+    :ets.lookup(@ets_subs_table, graph_key)
+    |> Enum.map( fn({_,sub})-> sub end)
+  end
+
+
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
