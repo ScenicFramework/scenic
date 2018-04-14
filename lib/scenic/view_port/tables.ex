@@ -108,7 +108,7 @@ defmodule Scenic.ViewPort.Tables do
 
     # set up the initial state
     state = %{
-      graph_table_id: :ets.new(@ets_graphs_table, [:named_table, :public]),
+      graph_table_id: :ets.new(@ets_graphs_table, [:named_table, :public, {:read_concurrency, true}]),
       scene_table_id: :ets.new(@ets_scenes_table, [:named_table])
     }
 
