@@ -446,9 +446,9 @@ defmodule Scenic.ViewPort.Input do
   # backwards and return the first hit we find. We could just reduct the whole
   # thing and return the last one found (that was my first try), but this is
   # more efficient as we can stop as soon as we find the first one.
-  defp find_by_screen_point( {x,y}, %{root_scene: root_scene, max_depth: depth} = state) do
+  defp find_by_screen_point( {x,y}, %{root_graph_key: root_key, max_depth: depth} = state) do
     identity = {@identity, @identity}
-    do_find_by_screen_point( x, y, 0, root_scene, ViewPort.get_graph(root_scene),
+    do_find_by_screen_point( x, y, 0, root_key, ViewPort.Tables.get_graph(root_key),
       identity, identity, depth )
   end
 
@@ -492,7 +492,8 @@ defmodule Scenic.ViewPort.Input do
         case Scene.to_pid( scene_ref ) do
           {:ok, scene_pid} ->
             {tx, inv_tx} = calc_transforms(p, parent_tx, parent_inv_tx)
-            do_find_by_screen_point(x, y, 0, scene_ref, ViewPort.get_graph(scene_ref),
+            do_find_by_screen_point(x, y, 0, scene_ref,
+              ViewPort.Tables.get_graph(scene_ref),
               {tx, inv_tx}, {tx, inv_tx}, depth - 1
             )
           _ ->
