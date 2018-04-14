@@ -160,11 +160,18 @@ defmodule Scenic.ViewPort do
 
 
   #--------------------------------------------------------
-  def start_driver( module, args ) do
+  def start_driver( viewport, module, args, opts \\ [] ) when
+  is_atom(module) and is_list(opts) and
+  (is_atom(viewport) or is_pid(viewport) )do
+    GenServer.call(viewport, { :start_driver, module, args, opts })
   end
 
   #--------------------------------------------------------
-  def stop_driver( driver_pid ) do
+  def stop_driver( viewport, driver_pid ) when
+  (is_atom(viewport) or is_pid(viewport) ) and 
+  (is_atom(driver_pid) or is_pid(driver_pid) )
+  do
+    GenServer.cast(viewport, { :stop_driver, driver_pid })
   end
 
 
@@ -193,6 +200,7 @@ defmodule Scenic.ViewPort do
       hover_primitve: nil,
 
       drivers: [],
+      dynamic_supervisor: @dynamic_supervisor,
 
       max_depth: opts[:max_depth] || @max_depth,
     }
@@ -225,6 +233,27 @@ defmodule Scenic.ViewPort do
   # handle_call
 
 
+  #--------------------------------------------------------
+  def handle_call( {:start_driver, _, _, _}, _, %{
+    dynamic_supervisor: dyn_sup
+  } = state ) when is_nil(dyn_sup) do
+    {:reply, {:error, :viewport_not_ready}, state}
+  end
+
+  def handle_call( {:start_driver, module, args, opts}, _, %{
+    dynamic_supervisor: dyn_sup
+  } = state ) do
+    {
+      :reply,
+      DynamicSupervisor.start_child( dyn_sup,
+        {Scenic.ViewPort.Driver, {module, args, self(), opts}}
+      ),
+      state
+    }
+  end
+
+
+
   #============================================================================
   # handle_cast
 
@@ -232,7 +261,8 @@ defmodule Scenic.ViewPort do
   def handle_cast( {:set_root, scene, args}, %{
     drivers: drivers,
     root_scene_pid: old_root_scene,
-    dynamic_root_pid: old_dynamic_root_scene
+    dynamic_root_pid: old_dynamic_root_scene,
+    dynamic_supervisor: dyn_sup
   } = state ) do
 
     # prep state, which is mostly about resetting input
@@ -245,7 +275,7 @@ defmodule Scenic.ViewPort do
       # dynamic scene
       {mod, init_data} ->
         # start the dynamic scene
-        {:ok, pid, ref} = mod.start_dynamic_scene( @dynamic_supervisor, nil, init_data )
+        {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, nil, init_data )
         {pid, ref, pid}
 
       # app supervised scene - mark dynamic root as nil
@@ -269,7 +299,7 @@ defmodule Scenic.ViewPort do
         GenServer.call(old_root_scene, :deactivate)
         if old_dynamic_root_scene do
           DynamicSupervisor.terminate_child(
-            @dynamic_supervisor,
+            dyn_sup,
             old_dynamic_root_scene
           )
         end
@@ -286,7 +316,19 @@ defmodule Scenic.ViewPort do
 
 
   #==================================================================
-  # casts from drivers
+  # casts about drivers
+
+
+  #--------------------------------------------------------
+  def handle_cast( {:stop_driver, driver_pid}, %{
+    drivers: drivers,
+    dynamic_supervisor: dyn_sup
+  } = state ) do
+    DynamicSupervisor.terminate_child( dyn_sup, driver_pid )
+    drivers = Enum.reject(drivers, fn(pid) -> pid == driver_pid end)
+    {:noreply, %{state | drivers: drivers}}
+  end
+
 
   #--------------------------------------------------------
   def handle_cast( {:driver_cast, msg}, %{drivers: drivers} = state ) do
@@ -336,12 +378,6 @@ defmodule Scenic.ViewPort do
   end
 
 end
-
-
-
-
-
-
 
 
 

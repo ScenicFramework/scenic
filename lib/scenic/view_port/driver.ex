@@ -104,20 +104,24 @@ defmodule Scenic.ViewPort.Driver do
   # Driver initialization
 
   #--------------------------------------------------------
-  def start_link({module, name, config}) do
-    GenServer.start_link(__MODULE__, {module, config}, name: name)
+  def start_link({_, _, _, opts} = args) do
+    case opts[:name] do
+      nil -> GenServer.start_link(__MODULE__, args)
+      name -> GenServer.start_link(__MODULE__, args, name: name)
+    end
   end
 
   #--------------------------------------------------------
-  def init( {module, opts} ) do
+  def init( {module, args, viewport, opts} ) do
 
     # set up the driver with the viewport registry
 #    {:ok, _} = Registry.register(:driver_registry, :driver,        {module, opts} )
 
     # let the driver initialize itself
-    {:ok, driver_state} = module.init( opts )
+    {:ok, driver_state} = module.init( viewport, args )
 
     state = %{
+      viewport: viewport,
       driver_module:  module,
       driver_state:   driver_state
 #      sync_interval:  nil
