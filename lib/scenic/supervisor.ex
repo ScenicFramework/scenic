@@ -14,6 +14,7 @@ defmodule Scenic.Supervisor do
 
   def init( {initial_scene, args, opts} ) do
     [
+      {Scenic.ViewPort.Tables, nil},
       supervisor(Scenic.Cache.Supervisor, []),
       supervisor(Scenic.ViewPort.Supervisor, [initial_scene, args, opts])
     ]

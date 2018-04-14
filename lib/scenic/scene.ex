@@ -385,7 +385,7 @@ defmodule Scenic.Scene do
     # down while this scene is activated, the scene will need to be able to
     # deactivate itself while the viewport is recovering. This is especially
     # true since the viewport may recover to a different default scene than this.
-    if opts[:name], do: Process.monitor( @viewport )
+    if opts[:name], do: Process.monitor( Scenic.ViewPort.Tables )
 
     # build up the state
     state = %{
@@ -554,9 +554,9 @@ IO.puts"-=-=-=-=-=-=-=- unhandled scene call #{inspect(msg)} -=-=-=-=-=-=-=-"
     end
 
     # register the scene in the scenes ets table
-    :ets.insert(
-      @ets_scenes_table,
-      {scene_ref, {self(), dynamic_children_pid, supervisor_pid}}
+    Scenic.ViewPort.Tables.register_scene(
+      scene_ref,
+      {self(), dynamic_children_pid, supervisor_pid}
     )
 
     # initialize the scene itself
@@ -738,6 +738,7 @@ IO.puts "::::::::: trying to cast activate a dynamic child during put_graph:::::
 
     # write the graph into the ets table
     :ets.insert(@ets_graphs_table, {graph_key, self(), graph, all_keys})
+    ViewPort.Tables.insert_graph( graph_key, self(), graph, all_keys)
 
     # notify the drivers of the updated graph
     ViewPort.driver_cast( {:push_graph, graph_key} )
