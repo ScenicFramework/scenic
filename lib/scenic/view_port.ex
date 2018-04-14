@@ -92,12 +92,6 @@ defmodule Scenic.ViewPort do
   #============================================================================
   # client api
 
-  # Get the name of the graphs table. Used by Scene
-  @doc false
-  def graphs_table(), do: @ets_graphs_table
-  @doc false
-  def scenes_table(), do: @ets_scenes_table
-
   #--------------------------------------------------------
   @doc """
   Set a the root scene/graph of the ViewPort.
@@ -113,72 +107,6 @@ defmodule Scenic.ViewPort do
     GenServer.cast( @viewport, {:set_root, {mod, init_data}, args} )
   end
 
-  #--------------------------------------------------------
-  @doc """
-  Push a graph to one or more viewports. This will not start any dynamic
-  scenes the graph references. Use Scene.update_children for that.
-
-  Pass in a list of activations that the scene received via handle_activation.
-  """
-#  def push_graph( graph, sub_id \\ nil )
-#
-#  def push_graph( %Graph{primitive_map: p_map} = graph, sub_id ) do
-#    scene_ref = case Process.get(:scene_ref) do
-#      nil ->
-#        raise "Scenic.ViewPort.push_graph must be called from with in a Scene"
-#      ref ->
-#        ref
-#    end
-##    IO.puts "--------------> push_graph"
-#
-#    graph_key = {:graph, scene_ref, sub_id}
-#
-#    # TEMPORARY HACK
-#    # reduce the incoming graph to it's minimal form
-#    min_graph = Enum.reduce(p_map, %{}, fn({uid, p}, g) ->
-#      Map.put( g, uid, Primitive.minimal(p) )
-#    end)
-#    # merge in the dynamic references
-#    min_graph = Enum.reduce(graph.dyn_refs, min_graph, fn({uid, dyn_ref}, g)->
-#      put_in(g, [uid, :data], {Primitive.SceneRef, dyn_ref})
-#    end)
-#
-#    # write the graph into the ets table
-#    :ets.insert(@ets_graphs_table, {graph_key, {self(), min_graph}})
-#
-#    # notify the drivers of the updated graph
-#    driver_cast( {:push_graph, graph_key} )
-#
-#    # return the graph itself so this can be chained in a pipeline
-#    graph
-#  end
-
-
-  #--------------------------------------------------------
-  def get_graph( {:graph, _, _} = key ) do
-    r = case :ets.lookup(@ets_graphs_table, key) do
-      [] -> nil
-      [{_, _, graph, references}] -> {graph, references}
-      other ->
-        pry()
-    end
-  end
-
-  def get_graph( scene ) when is_atom(scene) or is_reference(scene) do
-    IO.puts "~~~~~~~~~~~~~~~~~~~ get_graph with just an atom ~~~~~~~~~~~~~~~~~~~"
-    case :ets.lookup(@ets_graphs_table, {:graph, scene, nil}) do
-      [] -> nil
-      [{_, _, graph, references}] -> {graph, references}
-      other ->
-        pry()
-    end
-  end
-
-  def list_graphs() do
-    :ets.match(@ets_graphs_table, {:"$1", :"_", :"_", :"_"})
-    |> List.flatten()
-  end
-
   def request_root( send_to \\ nil )
   def request_root( nil ) do
     request_root( self() )
@@ -186,7 +114,6 @@ defmodule Scenic.ViewPort do
   def request_root( to ) when is_pid(to) or is_atom(to) do
     GenServer.cast( @viewport, {:request_root, to} )
   end
-
 
   #--------------------------------------------------------
   def input( input_event ) do
@@ -196,7 +123,6 @@ defmodule Scenic.ViewPort do
   def input( input_event, context ) do
 #    GenServer.cast( @viewport, {:input, input_event, context} )
   end
-
 
   #--------------------------------------------------------
   @doc """
@@ -228,18 +154,18 @@ defmodule Scenic.ViewPort do
   Cast a message to all active drivers listening to a viewport.
   """
   def driver_cast( msg ) do
-    Driver.cast( msg )
-    #GenServer.cast(@viewport, {:driver_cast, msg})
+    #Driver.cast( msg )
+    GenServer.cast(@viewport, {:driver_cast, msg})
   end
 
 
   #--------------------------------------------------------
   def start_driver( module, args ) do
-    
   end
 
   #--------------------------------------------------------
-  def stop_driver( driver_pid )
+  def stop_driver( driver_pid ) do
+  end
 
 
   #============================================================================
@@ -370,8 +296,12 @@ defmodule Scenic.ViewPort do
   end
   
   #--------------------------------------------------------
-  def handle_cast( {:driver_ready, driver_pid}, %{drivers: drivers} = state ) do
+  def handle_cast( {:driver_ready, driver_pid}, %{
+    drivers: drivers,
+    root_graph_key: root_key
+  } = state ) do
     drivers = [ driver_pid | drivers ] |> Enum.uniq()
+    GenServer.cast( driver_pid, {:set_root, root_key} )
     {:noreply, %{state | drivers: drivers}}
   end
   

@@ -21,7 +21,7 @@ defmodule Scenic.ViewPort.Supervisor do
   def init( {initial_scene, args, opts} ) do
     [
 #      Supervisor.child_spec({Registry, keys: :unique, name: :viewport_registry},  id: :viewport_registry),
-      Supervisor.child_spec({Registry, keys: :duplicate, name: :driver_registry}, id: :driver_registry),
+#      Supervisor.child_spec({Registry, keys: :duplicate, name: :driver_registry}, id: :driver_registry),
       {DynamicSupervisor, name: @dynamic_supervisor, strategy: :one_for_one},
       {Scenic.ViewPort, {initial_scene, args, opts}},
       supervisor(ViewPort.Driver.Supervisor, []),

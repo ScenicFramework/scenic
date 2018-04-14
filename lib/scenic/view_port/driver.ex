@@ -18,7 +18,7 @@ defmodule Scenic.ViewPort.Driver do
 
 #  @sync_message       :timer_sync
   
-  @driver_registry    :driver_registry
+#  @driver_registry    :driver_registry
 
   #===========================================================================
   defmodule Error do
@@ -31,33 +31,33 @@ defmodule Scenic.ViewPort.Driver do
 
   #----------------------------------------------
   # cast a message to all registered drivers
-  def cast( message ) do
-    dispatch_cast( message )
-  end
+#  def cast( message ) do
+#    dispatch_cast( message )
+#  end
 
   #----------------------------------------------
-  defp dispatch_cast( message ) do
-    # dispatch the call to any listening drivers
-    Registry.dispatch(@driver_registry, :driver, fn(entries) ->
-      for {pid, _} <- entries do
-        try do
-          GenServer.cast(pid, message)
-        catch
-          kind, reason ->
-            formatted = Exception.format(kind, reason, System.stacktrace)
-            Logger.error "Registry.dispatch/3 failed with #{formatted}"
-        end
-      end
-    end)
-    :ok
-  end
+#  defp dispatch_cast( message ) do
+#    # dispatch the call to any listening drivers
+#    Registry.dispatch(@driver_registry, :driver, fn(entries) ->
+#      for {pid, _} <- entries do
+#        try do
+#          GenServer.cast(pid, message)
+#        catch
+#          kind, reason ->
+#            formatted = Exception.format(kind, reason, System.stacktrace)
+#            Logger.error "Registry.dispatch/3 failed with #{formatted}"
+#        end
+#      end
+#    end)
+#    :ok
+#  end
 
   #----------------------------------------------
   # identify the current, loaded drivers
-  def identify() do
-    Registry.match(@driver_registry, :driver, :_)
-    |> Enum.reduce( [], fn({pid, mod_opts},acc) -> [{mod_opts, pid} | acc] end)
-  end
+#  def identify() do
+#    Registry.match(@driver_registry, :driver, :_)
+#    |> Enum.reduce( [], fn({pid, mod_opts},acc) -> [{mod_opts, pid} | acc] end)
+#  end
 
 
   #===========================================================================
@@ -75,8 +75,6 @@ defmodule Scenic.ViewPort.Driver do
       def handle_call(msg, from, state),  do: { :noreply, state }
       def handle_cast(msg, state),        do: { :noreply, state }
       def handle_info(msg, state),        do: { :noreply, state }
-
-      def register()
 
       def child_spec({name, config}) do
         %{
@@ -114,7 +112,7 @@ defmodule Scenic.ViewPort.Driver do
   def init( {module, opts} ) do
 
     # set up the driver with the viewport registry
-    {:ok, _} = Registry.register(:driver_registry, :driver,        {module, opts} )
+#    {:ok, _} = Registry.register(:driver_registry, :driver,        {module, opts} )
 
     # let the driver initialize itself
     {:ok, driver_state} = module.init( opts )
