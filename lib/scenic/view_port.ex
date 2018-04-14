@@ -158,12 +158,12 @@ defmodule Scenic.ViewPort do
   end
 
   #--------------------------------------------------------
-  def input( input_event ) do
-#    GenServer.cast( @viewport, {:input, input_event} )
+  def input( viewport, input_event ) do
+    GenServer.cast( viewport, {:input, input_event} )
   end
 
-  def input( input_event, context ) do
-#    GenServer.cast( @viewport, {:input, input_event, context} )
+  def input( viewport, input_event, context ) do
+    GenServer.cast( viewport, {:input, input_event, context} )
   end
 
   #--------------------------------------------------------
@@ -264,18 +264,10 @@ defmodule Scenic.ViewPort do
       max_depth: opts[:max_depth] || @max_depth,
     }
 
-    # :named_table, read_concurrency: true
-
     # set the initial scene as the root
     case initial_scene do
       nil -> :ok
       scene -> GenServer.cast( self(), {:set_root, scene, args} )
-      # dynamic scene can start right up without a splash screen
-#      {mod, init} when is_atom(mod) ->
-#        GenServer.cast( self(), {:set_root, {mod, init}, args} )
-
-#      scene when is_atom(scene) ->
-#        GenServer.cast( self(), {:set_root, scene, args} )
     end
 
     {:ok, state}
@@ -439,6 +431,11 @@ IO.puts "{:init_pids, sup_pid, ds_pid}"
     {:noreply, state}
   end
 
+  #--------------------------------------------------------
+  # ignore input until a scene has been set
+  def handle_cast( msg, state ) do
+    ViewPort.Input.handle_cast( msg, state )
+  end
 
 
   #============================================================================

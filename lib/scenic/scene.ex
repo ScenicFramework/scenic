@@ -222,7 +222,11 @@ defmodule Scenic.Scene do
   end
 
 
-  def start_dynamic_scene
+  def cast( scene_or_graph_key, msg ) do
+    with {:ok, pid} <- ViewPort.Tables.get_scene_pid(scene_or_graph_key) do
+      GenServer.cast( pid, msg )
+    end
+  end
 
   #============================================================================
   # callback definitions

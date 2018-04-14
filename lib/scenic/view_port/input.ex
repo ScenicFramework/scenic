@@ -211,16 +211,16 @@ defmodule Scenic.ViewPort.Input do
   # key press input is only sent to the scene with the input focus.
   # If no scene has focus, then send the codepoint to the root scene
   defp do_handle_input( {:cursor_button, {button, action, mods, point}} = msg,
-  %{root_scene: root_scene} = state ) do
+  %{root_graph_key: root_key} = state ) do
     case find_by_screen_point( point, state ) do
       nil ->
         # no uid found. let the root scene handle the click
         # we already know the root scene has identity transforms
-        Scene.cast( root_scene,
+        Scene.cast( root_key,
           {
             :input,
             msg,
-            %Context{ scene: root_scene }
+            %Context{ scene: root_key }
           })
 
       {point, {uid, scene}, {tx, inv_tx}} ->
@@ -242,13 +242,13 @@ defmodule Scenic.ViewPort.Input do
   # key press input is only sent to the scene with the input focus.
   # If no scene has focus, then send the codepoint to the root scene
   defp do_handle_input( {:cursor_scroll, {offset, point}} = msg,
-  %{root_scene: root_scene} = state ) do
+  %{root_graph_key: root_key} = state ) do
 
     case find_by_screen_point( point, state ) do
       nil ->
         # no uid found. let the root scene handle the click
         # we already know the root scene has identity transforms
-        Scene.cast(root_scene, {:input, msg, %{graph_ref: root_scene}} )
+        Scene.cast(root_key, {:input, msg, %{graph_ref: root_key}} )
 
       {point, {uid, scene}, {tx, inv_tx}} ->
         # get the graph key, so we know what scene to send the event to
@@ -269,13 +269,13 @@ defmodule Scenic.ViewPort.Input do
   #--------------------------------------------------------
   # cursor_enter is only sent to the root scene
   defp do_handle_input( {:cursor_pos, point} = msg,
-  %{root_scene: root_scene} = state ) do
+  %{root_graph_key: root_key} = state ) do
     state = case find_by_screen_point( point, state ) do
       nil ->
         # no uid found. let the root scene handle the event
         # we already know the root scene has identity transforms
         state = send_primitive_exit_message(state)
-        Scene.cast(root_scene, {:input, msg, %Context{scene: root_scene}} )
+        Scene.cast(root_key, {:input, msg, %Context{scene: root_key}} )
         state
 
       {point, {uid, scene}, _} ->
@@ -295,28 +295,31 @@ defmodule Scenic.ViewPort.Input do
 
   #--------------------------------------------------------
   # cursor_enter is only sent to the root scene so no need to transform it
-  defp do_handle_input( {:viewport_enter, _} = msg, %{root_scene: root_scene} = state ) do
-    Scene.cast( root_scene,
+  defp do_handle_input( {:viewport_enter, _} = msg, %{root_graph_key: root_key} = state ) do
+    Scene.cast( root_key,
       {
         :input,
         msg,
-        %Context{ scene: root_scene }
+        %Context{ scene: root_key }
       })
     {:noreply, state}
   end
 
   #--------------------------------------------------------
   # Any other input (non-standard, generated, etc) get sent to the root scene
-  defp do_handle_input( msg, %{root_scene: root_scene} = state ) do
-    Scene.cast( root_scene,
+  defp do_handle_input( msg, %{root_graph_key: root_key} = state ) do
+    Scene.cast( root_key,
       {
         :input,
         msg,
-        %Context{ scene: root_scene }
+        %Context{ scene: root_key }
       })
     {:noreply, state}
   end
 
+  defp do_handle_input( msg, state ) do
+    pry()
+  end
   
   #============================================================================
   # regular input helper utilties
