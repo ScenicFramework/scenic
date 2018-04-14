@@ -220,6 +220,15 @@ defmodule Scenic.ViewPort do
   #============================================================================
   # internal server api
 
+  def child_spec({initial_scene, args, opts}) do
+    %{
+      id: make_ref(),
+      start: {__MODULE__, :start_link, [{initial_scene, args, opts}]},
+      type: :worker,
+      restart: :permanent,
+      shutdown: 500
+    }
+  end
 
   #--------------------------------------------------------
   @doc false
@@ -260,13 +269,13 @@ defmodule Scenic.ViewPort do
     # set the initial scene as the root
     case initial_scene do
       nil -> :ok
-      
+      scene -> GenServer.cast( self(), {:set_root, scene, args} )
       # dynamic scene can start right up without a splash screen
-      {mod, init} when is_atom(mod) ->
-        GenServer.cast( self(), {:set_root, {mod, init}, args} )
+#      {mod, init} when is_atom(mod) ->
+#        GenServer.cast( self(), {:set_root, {mod, init}, args} )
 
-      scene when is_atom(scene) ->
-        GenServer.cast( self(), {:set_root, scene, args} )
+#      scene when is_atom(scene) ->
+#        GenServer.cast( self(), {:set_root, scene, args} )
     end
 
     {:ok, state}
@@ -305,7 +314,6 @@ defmodule Scenic.ViewPort do
   end
 
 
-
   #============================================================================
   # handle_cast
 
@@ -322,7 +330,7 @@ IO.puts "{:init_pids, sup_pid, ds_pid}"
     dynamic_root_pid: old_dynamic_root_scene,
     dynamic_supervisor: dyn_sup
   } = state ) do
-IO.puts "{:set_root, scene, args}"
+
     # prep state, which is mostly about resetting input
     state = state
     |> Map.put( :hover_primitve, nil )
@@ -332,6 +340,11 @@ IO.puts "{:set_root, scene, args}"
     {scene_pid, scene_ref, dynamic_scene} = case scene do
       # dynamic scene
       {mod, init_data} ->
+        dyn_sup = case dyn_sup do
+          nil -> find_dyn_supervisor()
+          dyn_sup -> dyn_sup
+        end
+
         # start the dynamic scene
         {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, nil, init_data )
         {pid, ref, pid}
@@ -433,6 +446,34 @@ IO.puts "{:set_root, scene, args}"
 
   defp do_driver_cast( driver_pids, msg ) do
     Enum.each(driver_pids, &GenServer.cast(&1, msg) )
+  end
+
+  defp find_dyn_supervisor() do
+    # get the scene supervisors
+    [supervisor_pid | _] = self()
+    |> Process.info()
+    |> get_in([:dictionary, :"$ancestors"])
+
+    # make sure it is a pid and not a name
+    supervisor_pid = case supervisor_pid do
+      name when is_atom(name) -> Process.whereis(name)
+      pid when is_pid(pid) -> pid
+    end
+
+    case Process.info(supervisor_pid) do
+      nil -> nil
+      info ->
+        case get_in( info, [:dictionary, :"$initial_call"] ) do
+          {:supervisor, Scenic.ViewPort.Supervisor, _} ->
+            Supervisor.which_children( supervisor_pid )
+            |> IO.inspect()
+            |> Enum.find_value( fn 
+              {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
+              other -> nil
+            end)
+          other -> nil
+        end
+    end
   end
 
 end

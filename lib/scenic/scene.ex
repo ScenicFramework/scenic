@@ -378,6 +378,10 @@ defmodule Scenic.Scene do
     # true since the viewport may recover to a different default scene than this.
     if opts[:name], do: Process.monitor( Scenic.ViewPort.Tables )
 
+
+    # initialize the scene itself
+    {:ok, sc_state} = scene_module.init( args )
+
     # build up the state
     state = %{
       raw_scene_refs: %{},      
@@ -391,7 +395,7 @@ defmodule Scenic.Scene do
 
       scene_module: scene_module,
 
-      scene_state: nil,
+      scene_state: sc_state,
       scene_ref: scene_ref,
       supervisor_pid: nil,
       dynamic_children_pid: nil,
@@ -550,11 +554,8 @@ IO.puts"-=-=-=-=-=-=-=- unhandled scene call #{inspect(msg)} -=-=-=-=-=-=-=-"
       {self(), dynamic_children_pid, supervisor_pid}
     )
 
-    # initialize the scene itself
-    {:ok, sc_state} = mod.init( args )
-
     state = state
-    |> Map.put( :scene_state, sc_state)
+#    |> Map.put( :scene_state, sc_state)
     |> Map.put( :supervisor_pid, supervisor_pid)
     |> Map.put( :dynamic_children_pid, dynamic_children_pid)
 
@@ -784,6 +785,7 @@ IO.puts "::::::::: trying to cast activate a dynamic child during put_graph:::::
     {:ok, supervisor_pid} = DynamicSupervisor.start_child( dynamic_supervisor,
       {Scenic.Scene.Supervisor, {mod, args, [parent: parent, scene_ref: ref]}}
     )
+
     # we want to return the pid of the scene itself. not the supervisor
     scene_pid = Supervisor.which_children( supervisor_pid )
     |> Enum.find_value( fn 
@@ -792,6 +794,7 @@ IO.puts "::::::::: trying to cast activate a dynamic child during put_graph:::::
       _ ->
         nil
     end)
+
     {:ok, scene_pid, ref}
   end
 
