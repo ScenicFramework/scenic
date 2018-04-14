@@ -89,12 +89,6 @@ defmodule Scenic.ViewPort do
   @max_depth            256
 
 
-  # ets table names
-#  @ets_graphs_table     :_scenic_vp3_graphs_table_
-#  @ets_scenes_table     :_scenic_vp3_scenes_table_
-
-
-
   #============================================================================
   # client api
 
@@ -275,8 +269,6 @@ defmodule Scenic.ViewPort do
       drivers: [],
 
       max_depth: opts[:max_depth] || @max_depth,
-#      graph_table_id: :ets.new(@ets_graphs_table, [:named_table, :public]),
-#      scene_table_id: :ets.new(@ets_scenes_table, [:named_table, :public])
     }
 
     # :named_table, read_concurrency: true
