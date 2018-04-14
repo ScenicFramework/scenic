@@ -182,8 +182,8 @@ defmodule Scenic.Scene do
 #  end
 
   # ets table names
-  @ets_graphs_table     ViewPort.graphs_table()
-  @ets_scenes_table     ViewPort.scenes_table()
+#  @ets_graphs_table     ViewPort.graphs_table()
+#  @ets_scenes_table     ViewPort.scenes_table()
 
   @viewport             :viewport
   @not_activated        :__not_activated__
@@ -627,7 +627,8 @@ IO.puts"-=-=-=-=-=-=-=- unhandled scene call #{inspect(msg)} -=-=-=-=-=-=-=-"
     end)
 
     # write the graph into the ets table
-    :ets.insert(@ets_graphs_table, {graph_key, self(), min_graph, %{}})
+#    :ets.insert(@ets_graphs_table, {graph_key, self(), min_graph, %{}})
+    ViewPort.Tables.insert_graph( graph_key, self(), graph, %{})
 
     # notify the drivers of the updated graph
     ViewPort.driver_cast( {:push_graph, graph_key} )
@@ -737,7 +738,7 @@ IO.puts "::::::::: trying to cast activate a dynamic child during put_graph:::::
     graph_key = {:graph, scene_ref, sub_id}
 
     # write the graph into the ets table
-    :ets.insert(@ets_graphs_table, {graph_key, self(), graph, all_keys})
+#    :ets.insert(@ets_graphs_table, {graph_key, self(), graph, all_keys})
     ViewPort.Tables.insert_graph( graph_key, self(), graph, all_keys)
 
     # notify the drivers of the updated graph

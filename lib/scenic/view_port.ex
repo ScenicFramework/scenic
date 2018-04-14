@@ -90,8 +90,8 @@ defmodule Scenic.ViewPort do
 
 
   # ets table names
-  @ets_graphs_table     :_scenic_vp3_graphs_table_
-  @ets_scenes_table     :_scenic_vp3_scenes_table_
+#  @ets_graphs_table     :_scenic_vp3_graphs_table_
+#  @ets_scenes_table     :_scenic_vp3_scenes_table_
 
 
 
@@ -275,8 +275,8 @@ defmodule Scenic.ViewPort do
       drivers: [],
 
       max_depth: opts[:max_depth] || @max_depth,
-      graph_table_id: :ets.new(@ets_graphs_table, [:named_table, :public]),
-      scene_table_id: :ets.new(@ets_scenes_table, [:named_table, :public])
+#      graph_table_id: :ets.new(@ets_graphs_table, [:named_table, :public]),
+#      scene_table_id: :ets.new(@ets_scenes_table, [:named_table, :public])
     }
 
     # :named_table, read_concurrency: true
@@ -312,7 +312,6 @@ defmodule Scenic.ViewPort do
 
   #--------------------------------------------------------
   def handle_cast( {:set_root, scene, args}, %{
-    graph_table_id: graph_table_id,
     drivers: drivers,
     root_scene_pid: old_root_scene,
     dynamic_root_pid: old_dynamic_root_scene
