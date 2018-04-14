@@ -19,4 +19,6 @@ defmodule Scenic do
 #  defp view_ports( %{view_port: view_port} ), do: [view_port]
 #  defp view_ports( %{view_ports: view_ports} ), do: view_ports
 #  defp view_ports( _opts ), do: raise "Must set up at least one view_port."
+
+  def start_viewpart
 end

@@ -82,6 +82,7 @@ defmodule Scenic.ViewPort do
   weird state, so I wouldn't recommend it.
 
   """
+  @viewports            :scenic_viewports
 
   @viewport             :viewport
 #  @dynamic_scenes       :dynamic_scenes
@@ -91,6 +92,47 @@ defmodule Scenic.ViewPort do
 
   #============================================================================
   # client api
+
+
+  #--------------------------------------------------------
+  @doc """
+  Start a new viewport
+  """
+  def start( initial_scene, args, opts \\ [] ) do
+    # start the viewport's supervision tree
+    {:ok, sup_pid} = DynamicSupervisor.start_child( @viewports,
+      {ViewPort.Supervisor, {initial_scene, args, opts}}
+    )
+
+    # we want to return the pid of the viewport itself
+    {viewport_pid, ds_pid} = Supervisor.which_children( sup_pid )
+    |> Enum.reduce( {nil, nil}, fn 
+      {_, pid, :worker, [Scenic.ViewPort]}, {_, ds} -> {pid, ds}
+      {_, pid, :supervisor, [DynamicSupervisor]}, {vp, _} -> {vp, pid}
+    end)
+
+    # tell the new viewport about it's supervisors
+    GenServer.cast(viewport_pid, {:init_pids, sup_pid, ds_pid})
+
+    # return the pid to the viewport itself
+    {:ok, viewport_pid}
+  end
+
+  #--------------------------------------------------------
+  @doc """
+  Stop a running viewport
+  """
+
+  def stop( viewport )
+
+  def stop( viewport ) when is_atom(viewport) and not is_nil(viewport) do
+    Process.whereis( viewport ) |> stop()
+  end
+
+  def stop( viewport ) when is_pid(viewport) do
+    DynamicSupervisor.terminate_child( @viewports, viewport )
+  end
+
 
   #--------------------------------------------------------
   @doc """
@@ -181,8 +223,16 @@ defmodule Scenic.ViewPort do
 
   #--------------------------------------------------------
   @doc false
-  def start_link({initial_scene, args, opts}) do
-    GenServer.start_link(__MODULE__, {initial_scene, args, opts}, name: @viewport)
+  def start_link({_, _, opts} = args) do
+pry()
+    case opts[:name] do
+      nil -> GenServer.start_link(__MODULE__, args)
+      name -> GenServer.start_link(__MODULE__, args, name: name)
+    end
+  end
+
+  def start_link(args) do
+    pry()
   end
 
 
@@ -200,7 +250,8 @@ defmodule Scenic.ViewPort do
       hover_primitve: nil,
 
       drivers: [],
-      dynamic_supervisor: @dynamic_supervisor,
+      immediate_supervisor: nil,
+      dynamic_supervisor: nil,
 
       max_depth: opts[:max_depth] || @max_depth,
     }
@@ -209,6 +260,8 @@ defmodule Scenic.ViewPort do
 
     # set the initial scene as the root
     case initial_scene do
+      nil -> :ok
+
       # dynamic scene can start right up without a splash screen
       {mod, init} when is_atom(mod) ->
         set_root( {mod, init}, args )
@@ -258,13 +311,19 @@ defmodule Scenic.ViewPort do
   # handle_cast
 
   #--------------------------------------------------------
+  def handle_cast( {:init_pids, sup_pid, ds_pid}, state ) do
+IO.puts "{:init_pids, sup_pid, ds_pid}"
+    {:noreply, %{state | immediate_supervisor: sup_pid, dynamic_supervisor: ds_pid}}
+  end
+
+  #--------------------------------------------------------
   def handle_cast( {:set_root, scene, args}, %{
     drivers: drivers,
     root_scene_pid: old_root_scene,
     dynamic_root_pid: old_dynamic_root_scene,
     dynamic_supervisor: dyn_sup
   } = state ) do
-
+IO.puts "{:set_root, scene, args}"
     # prep state, which is mostly about resetting input
     state = state
     |> Map.put( :hover_primitve, nil )

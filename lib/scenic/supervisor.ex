@@ -8,6 +8,8 @@
 defmodule Scenic.Supervisor do
   use Supervisor
 
+  @viewports :scenic_viewports
+
   def start_link( initial_scene, args, opts \\ [] ) do
     Supervisor.start_link(__MODULE__, {initial_scene, args, opts}, name: :scenic)
   end
@@ -16,7 +18,8 @@ defmodule Scenic.Supervisor do
     [
       {Scenic.ViewPort.Tables, nil},
       supervisor(Scenic.Cache.Supervisor, []),
-      supervisor(Scenic.ViewPort.Supervisor, [initial_scene, args, opts])
+      {DynamicSupervisor, name: @viewports, strategy: :one_for_one}
+#      supervisor(Scenic.ViewPort.Supervisor, [initial_scene, args, opts])
     ]
     |> Supervisor.init( strategy: :one_for_one )
   end

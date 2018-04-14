@@ -14,16 +14,16 @@ defmodule Scenic.ViewPort.Supervisor do
   #============================================================================
   # setup the viewport supervisor
 
-  def start_link( initial_scene, args, opts \\ [] ) do
-    Supervisor.start_link(__MODULE__, {initial_scene, args, opts})
+  def start_link( args ) do
+    Supervisor.start_link(__MODULE__, args)
   end
 
-  def init( {initial_scene, args, opts} ) do
+  def init( args ) do
     [
 #      Supervisor.child_spec({Registry, keys: :unique, name: :viewport_registry},  id: :viewport_registry),
 #      Supervisor.child_spec({Registry, keys: :duplicate, name: :driver_registry}, id: :driver_registry),
       {DynamicSupervisor, name: @dynamic_supervisor, strategy: :one_for_one},
-      {Scenic.ViewPort, {initial_scene, args, opts}},
+      {Scenic.ViewPort, args},
 #      supervisor(ViewPort.Driver.Supervisor, []),
 #      {DynamicSupervisor, name: @dynamic_drivers, strategy: :one_for_one},
 #      Supervisor.child_spec({Registry, keys: :duplicate, name: :input_registry},  id: :input_registry),
