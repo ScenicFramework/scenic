@@ -224,7 +224,6 @@ defmodule Scenic.ViewPort do
   #--------------------------------------------------------
   @doc false
   def start_link({_, _, opts} = args) do
-pry()
     case opts[:name] do
       nil -> GenServer.start_link(__MODULE__, args)
       name -> GenServer.start_link(__MODULE__, args, name: name)

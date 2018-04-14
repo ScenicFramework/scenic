@@ -91,6 +91,17 @@ defmodule Scenic.ViewPort.Tables do
     |> Enum.map( fn(sub_id) -> {:graph, scene, sub_id} end)
   end
 
+
+  #--------------------------------------------------------
+  def subscribe( graph_key, pid ) do
+    GenServer.cast( @name, {:subscribe, graph_key, pid} )
+  end
+
+  #--------------------------------------------------------
+  def unsubscribe( graph_key, pid ) do
+    GenServer.cast( @name, {:unsubscribe, graph_key, pid} )
+  end
+
   #============================================================================
   # internal server api
 
@@ -108,6 +119,8 @@ defmodule Scenic.ViewPort.Tables do
 
     # set up the initial state
     state = %{
+      subscribers: %{},
+      subscriptions: %{},
       graph_table_id: :ets.new(@ets_graphs_table, [:named_table, :public, {:read_concurrency, true}]),
       scene_table_id: :ets.new(@ets_scenes_table, [:named_table])
     }
@@ -144,6 +157,32 @@ defmodule Scenic.ViewPort.Tables do
     Process.monitor( pid )
     {:noreply, state}
   end
+
+
+
+
+  #--------------------------------------------------------
+  def handle_cast( {:subscribe, graph_key, pid}, %{
+    subscribers: subscribers,
+    subscriptions: subscriptions
+  } = state ) do
+
+
+    {:noreply, state}
+  end
+
+
+  #--------------------------------------------------------
+  def handle_cast( {:unsubscribe, graph_key, pid}, %{
+    subscribers: subscribers,
+    subscriptions: subscriptions
+  } = state ) do
+
+
+
+    {:noreply, state}
+  end
+
 
 
 
