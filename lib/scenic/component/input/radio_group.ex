@@ -64,8 +64,10 @@ defmodule Scenic.Component.Input.RadioGroup do
 
   #============================================================================
 
-  def filter_event( {:click, msg}, _from, %{id: id} = state ) do
-    Scene.broadcast_children({:set_to_msg, msg})
+  def filter_event( {:click, msg}, _from, %{graph: graph, id: id} = state ) do
+
+    Scene.cast_to_refs( nil, {:set_to_msg, msg} )
+    
     send_event({:value_changed, id, msg})
     {:stop, %{state | value: msg}}
   end

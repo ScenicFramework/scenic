@@ -78,9 +78,26 @@ defmodule Scenic.ViewPort.Tables do
   def get_graph( {:graph,_,_} = graph_key ) do
     case :ets.lookup(@ets_graphs_table, graph_key) do
       [] -> nil
-      [{_, _, graph, refs}] -> {graph, refs}
+      [{_, _, graph, _}] -> {:ok, graph}
     end
   end
+
+  #--------------------------------------------------------
+  def get_refs( {:graph,_,_} = graph_key ) do
+    case :ets.lookup(@ets_graphs_table, graph_key) do
+      [] -> nil
+      [{_, _, _, refs}] -> {:ok, refs}
+    end
+  end
+
+  #--------------------------------------------------------
+  def get_graph_refs( {:graph,_,_} = graph_key ) do
+    case :ets.lookup(@ets_graphs_table, graph_key) do
+      [] -> nil
+      [{_, _, graph, refs}] -> {:ok, graph, refs}
+    end
+  end
+
 
   #--------------------------------------------------------
   # return a list of all the graph keys that have been pushed by a scene

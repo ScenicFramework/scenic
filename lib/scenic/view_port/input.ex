@@ -380,14 +380,13 @@ defmodule Scenic.ViewPort.Input do
   defp find_by_captured_point( point, context, max_depth ) do
     # project the point by that inverse matrix to get the local point
     point = Matrix.project_vector( context.inverse_tx, point )
-    case ViewPort.Tables.get_graph( context.graph_key ) do
-      nil ->
-        {nil, point}
-      {graph, _} ->
-        case do_find_by_captured_point( point, 0, graph, @identity, @identity, max_depth ) do
-          nil -> {nil, point}
-          out -> out
-        end
+    with {:ok, graph} <- ViewPort.Tables.get_graph( context.graph_key ) do
+      case do_find_by_captured_point( point, 0, graph, @identity, @identity, max_depth ) do
+        nil -> {nil, point}
+        out -> out
+      end
+    else
+      _ -> {nil, point}
     end
   end
 
@@ -450,7 +449,7 @@ defmodule Scenic.ViewPort.Input do
   # more efficient as we can stop as soon as we find the first one.
   defp find_by_screen_point( {x,y}, %{root_graph_key: root_key, max_depth: depth} = state) do
     identity = {@identity, @identity}
-    with {graph, _} <- ViewPort.Tables.get_graph(root_key) do
+    with {:ok, graph} <- ViewPort.Tables.get_graph(root_key) do
       do_find_by_screen_point( x, y, 0, root_key, graph, identity, identity, depth )
     end
   end
@@ -495,10 +494,11 @@ defmodule Scenic.ViewPort.Input do
         case ViewPort.Tables.get_scene_pid( ref_key ) do
           {:ok, scene_pid} ->
             {tx, inv_tx} = calc_transforms(p, parent_tx, parent_inv_tx)
-            {graph, _} = ViewPort.Tables.get_graph(ref_key)
-            do_find_by_screen_point(x, y, 0, ref_key, graph,
-              {tx, inv_tx}, {tx, inv_tx}, depth - 1
-            )
+            with {:ok, graph} <- ViewPort.Tables.get_graph(ref_key) do
+              do_find_by_screen_point(x, y, 0, ref_key, graph,
+                {tx, inv_tx}, {tx, inv_tx}, depth - 1
+              )
+            end
           _ ->
             nil
         end

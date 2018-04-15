@@ -222,10 +222,29 @@ defmodule Scenic.Scene do
   end
 
 
+  #--------------------------------------------------------
   def cast( scene_or_graph_key, msg ) do
     with {:ok, pid} <- ViewPort.Tables.get_scene_pid(scene_or_graph_key) do
       GenServer.cast( pid, msg )
     end
+  end
+
+
+  #--------------------------------------------------------
+  def cast_to_refs( graph_key_or_id, msg )
+
+  def cast_to_refs( {:graph, _, _} = graph_key, msg ) do
+    with {:ok, refs} <- ViewPort.Tables.get_refs( graph_key ) do
+      Enum.each(refs, fn({_,key})-> cast( key, msg ) end)
+    end
+  end
+
+  def cast_to_refs( sub_id, msg ) do
+    scene_ref = case Process.get(:scene_ref) do
+      nil -> raise "cast_to_refs requires a full graph_key or must be called within a scene"
+      scene_ref -> scene_ref
+    end
+    cast_to_refs( {:graph, scene_ref, sub_id}, msg )
   end
 
   #============================================================================
