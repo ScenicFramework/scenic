@@ -126,7 +126,7 @@ IO.puts "Checkbox.handle_deactivate"
   %{contained: contained, msg: msg, pressed: pressed, checked: checked} = state ) do
     state = Map.put(state, :pressed, false)
 
-    ViewPort.release_input( [:cursor_button, :cursor_pos])
+    ViewPort.release_input( context, [:cursor_button, :cursor_pos])
 
     # only do the action if the cursor is still contained in the target
     state = case pressed && contained do

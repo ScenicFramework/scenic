@@ -7,6 +7,7 @@
 defmodule Scenic.ViewPort do
   use GenServer
   alias Scenic.ViewPort
+  alias Scenic.ViewPort.Input.Context
   alias Scenic.ViewPort.Driver
   alias Scenic.Scene
   alias Scenic.Graph
@@ -173,8 +174,9 @@ defmodule Scenic.ViewPort do
   This must be called by a Scene process.
   """
 
-  def capture_input( %ViewPort.Input.Context{} = context, input_types )
+  def capture_input( %Context{viewport: pid} = context, input_types )
   when is_list(input_types) do
+    GenServer.cast( pid, {:capture_input, context, input_types} )
   end
   def capture_input( context, input_type ), do: capture_input( context, [input_type] )
 
@@ -185,10 +187,15 @@ defmodule Scenic.ViewPort do
 
   This is intended be called by a Scene process, but doesn't need to be.
   """
+  def release_input( context_or_viewport, input_types )
 
-  def release_input( input_types ) when is_list(input_types) do
+  def release_input( %Context{viewport: pid}, input_types ) do
+    release_input( pid, input_types )
   end
-  def release_input( input_type ), do: release_input( [input_type] )
+  def release_input( vp, types ) when (is_pid(vp) or is_atom(vp)) and is_list(types) do
+    GenServer.cast( vp, {:release_input, types} )
+  end
+  def release_input( vp, input_type ), do: release_input( vp, [input_type] )
 
 
   #--------------------------------------------------------

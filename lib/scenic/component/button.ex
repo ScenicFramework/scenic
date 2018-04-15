@@ -148,7 +148,7 @@ IO.puts "Button.handle_deactivate"
     state = Map.put(state, :pressed, false)
     update_color(state)
 
-    ViewPort.release_input( [:cursor_button, :cursor_pos] )
+    ViewPort.release_input( context, [:cursor_button, :cursor_pos] )
 
     if pressed && contained, do: send_event({:click, msg})  
 

@@ -84,7 +84,7 @@ IO.puts "Slider.handle_deactivate"
   def handle_input( {:cursor_button, {:left, :release, _, _}}, context, state ) do
     state = Map.put(state, :tracking, false)
 
-    ViewPort.release_input( [:cursor_button, :cursor_pos])
+    ViewPort.release_input( context, [:cursor_button, :cursor_pos])
 
     {:noreply, state} #%{state | graph: graph}}
   end

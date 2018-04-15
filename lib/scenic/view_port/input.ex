@@ -22,7 +22,7 @@ defmodule Scenic.ViewPort.Input do
   defmodule Context do
     alias Scenic.Math.MatrixBin, as: Matrix
     @identity         Matrix.identity()
-    defstruct viewport: nil, scene: nil, tx: @identity, inverse_tx: @identity, uid: nil
+    defstruct viewport: nil, graph_key: nil, tx: @identity, inverse_tx: @identity, uid: nil
   end
 
   @ets_graphs_table       :_scenic_viewport_graphs_table_
@@ -33,8 +33,8 @@ defmodule Scenic.ViewPort.Input do
   # input handling
 
   #--------------------------------------------------------
-  # ignore input until a scene has been set
-  def handle_cast( {:input, _}, %{root_scene: nil} = state ) do
+  # ignore input until a graph_key has been set
+  def handle_cast( {:input, _}, %{root_graph_key: nil} = state ) do
     {:noreply, state}
   end
 
@@ -56,10 +56,10 @@ defmodule Scenic.ViewPort.Input do
 
   #--------------------------------------------------------
   # capture a type of input
-  def handle_cast( {:capture_input, scene_ref, input_types},
+  def handle_cast( {:capture_input, graph_key, input_types},
   %{input_captures: captures} = state ) do
     captures = Enum.reduce(input_types, captures, fn(input_type, ic)->
-      Map.put( ic, input_type, scene_ref )
+      Map.put( ic, input_type, graph_key )
     end)
     {:noreply, %{state | input_captures: captures}}
   end
@@ -89,7 +89,7 @@ defmodule Scenic.ViewPort.Input do
   defp do_handle_captured_input({:cursor_button, {button, action, mods, point}}, context, state ) do
     uid = find_by_captured_point( point, context, state[:max_depth] )
 
-    Scene.cast(context.scene,
+    Scene.cast(context.graph_key,
       {
         :input,
         { :cursor_button, {button, action, mods, point}},
@@ -105,7 +105,7 @@ defmodule Scenic.ViewPort.Input do
   %{max_depth: max_depth} = state ) do
     {uid, point} = find_by_captured_point( point, context, max_depth )
 
-    Scene.cast(context.scene,
+    Scene.cast(context.graph_key,
       {
         :input,
         {:cursor_scroll, {offset, point}},
@@ -115,12 +115,12 @@ defmodule Scenic.ViewPort.Input do
   end
 
   #--------------------------------------------------------
-  # cursor_enter is only sent to the root scene
+  # cursor_enter is only sent to the root graph_key
   defp do_handle_captured_input( {:cursor_enter, point}, context,
   %{max_depth: max_depth} = state ) do
     {uid, point} = find_by_captured_point( point, context, max_depth )
 
-    Scene.cast(context.scene,
+    Scene.cast(context.graph_key,
       {
         :input,
         {:cursor_enter, point},
@@ -130,11 +130,11 @@ defmodule Scenic.ViewPort.Input do
   end
 
   #--------------------------------------------------------
-  # cursor_exit is only sent to the root scene
+  # cursor_exit is only sent to the root graph_key
   defp do_handle_captured_input( {:cursor_exit, point}, context,
   %{max_depth: max_depth} = state ) do
     {uid, point} = find_by_captured_point( point, context, max_depth )
-    Scene.cast(context.scene,
+    Scene.cast(context.graph_key,
       {
         :input,
         {:cursor_enter, point},
@@ -144,15 +144,15 @@ defmodule Scenic.ViewPort.Input do
   end
 
   #--------------------------------------------------------
-  # cursor_enter is only sent to the root scene
+  # cursor_enter is only sent to the root graph_key
   defp do_handle_captured_input( {:cursor_pos, point} = msg, context,
-  %{root_scene: root_scene, max_depth: max_depth} = state ) do
+  %{max_depth: max_depth} = state ) do
     case find_by_captured_point( point, context, max_depth ) do
       {nil, point} ->
         # no uid found. let the capturing scene handle the raw positino
         # we already know the root scene has identity transforms
         state = send_primitive_exit_message(state)
-        Scene.cast(context.scene,
+        Scene.cast(context.graph_key,
           {
             :input,
             {:cursor_pos, point},
@@ -162,8 +162,8 @@ defmodule Scenic.ViewPort.Input do
 
       {uid, point} ->
         # get the graph key, so we know what scene to send the event to
-        state = send_enter_message( uid, context.scene, state )
-        Scene.cast(context.scene,
+        state = send_enter_message( uid, context.graph_key, state )
+        Scene.cast(context.graph_key,
           {
             :input,
             {:cursor_pos, point},
@@ -177,7 +177,7 @@ defmodule Scenic.ViewPort.Input do
   #--------------------------------------------------------
   # all events that don't need a point transformed
   defp do_handle_captured_input( event, context, state ) do
-    Scene.cast(context.scene,
+    Scene.cast(context.graph_key,
       { :input, event, Map.put(context, :uid, nil) })
     {:noreply, state}
   end
@@ -220,17 +220,17 @@ defmodule Scenic.ViewPort.Input do
           {
             :input,
             msg,
-            %Context{ viewport: self(), scene: root_key }
+            %Context{ viewport: self(), graph_key: root_key }
           })
 
-      {point, {uid, scene}, {tx, inv_tx}} ->
-        Scene.cast( scene,
+      {point, {uid, graph_key}, {tx, inv_tx}} ->
+        Scene.cast( graph_key,
           {
             :input,
             {:cursor_button, {button, action, mods, point}},
             %Context{
               viewport: self(),
-              scene: scene,
+              graph_key: graph_key,
               uid: uid,
               tx: tx, inverse_tx: inv_tx
             }
@@ -251,15 +251,15 @@ defmodule Scenic.ViewPort.Input do
         # we already know the root scene has identity transforms
         Scene.cast(root_key, {:input, msg, %{graph_ref: root_key}} )
 
-      {point, {uid, scene}, {tx, inv_tx}} ->
+      {point, {uid, graph_key}, {tx, inv_tx}} ->
         # get the graph key, so we know what scene to send the event to
-        Scene.cast( scene,
+        Scene.cast( graph_key,
           {
             :input,
             {:cursor_scroll, {offset, point}},
             %Context{
               viewport: self(),
-              scene: scene,
+              graph_key: graph_key,
               uid: uid,
               tx: tx, inverse_tx: inv_tx,
             }
@@ -269,25 +269,25 @@ defmodule Scenic.ViewPort.Input do
   end
 
   #--------------------------------------------------------
-  # cursor_enter is only sent to the root scene
+  # cursor_enter is only sent to the root graph_key
   defp do_handle_input( {:cursor_pos, point} = msg,
   %{root_graph_key: root_key} = state ) do
     state = case find_by_screen_point( point, state ) do
       nil ->
-        # no uid found. let the root scene handle the event
-        # we already know the root scene has identity transforms
+        # no uid found. let the root graph_key handle the event
+        # we already know the root graph_key has identity transforms
         state = send_primitive_exit_message(state)
-        Scene.cast(root_key, {:input, msg, %Context{viewport: self(), scene: root_key}} )
+        Scene.cast(root_key, {:input, msg, %Context{viewport: self(), graph_key: root_key}} )
         state
 
-      {point, {uid, scene}, _} ->
-        # get the graph key, so we know what scene to send the event to
-        state = send_enter_message( uid, scene, state )
-        Scene.cast( scene,
+      {point, {uid, graph_key}, _} ->
+        # get the graph key, so we know what graph_key to send the event to
+        state = send_enter_message( uid, graph_key, state )
+        Scene.cast( graph_key,
           {
             :input,
             {:cursor_pos, point},
-            %Context{viewport: self(), scene: scene, uid: uid}
+            %Context{viewport: self(), graph_key: graph_key, uid: uid}
           })
         state
     end
@@ -296,25 +296,25 @@ defmodule Scenic.ViewPort.Input do
   end
 
   #--------------------------------------------------------
-  # cursor_enter is only sent to the root scene so no need to transform it
+  # cursor_enter is only sent to the root graph_key so no need to transform it
   defp do_handle_input( {:viewport_enter, _} = msg, %{root_graph_key: root_key} = state ) do
     Scene.cast( root_key,
       {
         :input,
         msg,
-        %Context{viewport: self(), scene: root_key }
+        %Context{viewport: self(), graph_key: root_key }
       })
     {:noreply, state}
   end
 
   #--------------------------------------------------------
-  # Any other input (non-standard, generated, etc) get sent to the root scene
+  # Any other input (non-standard, generated, etc) get sent to the root graph_key
   defp do_handle_input( msg, %{root_graph_key: root_key} = state ) do
     Scene.cast( root_key,
       {
         :input,
         msg,
-        %Context{viewport: self(), scene: root_key }
+        %Context{viewport: self(), graph_key: root_key }
       })
     {:noreply, state}
   end
@@ -327,24 +327,24 @@ defmodule Scenic.ViewPort.Input do
   # regular input helper utilties
 
   defp send_primitive_exit_message( %{hover_primitve: nil} = state ), do: state
-  defp send_primitive_exit_message( %{hover_primitve: {uid, scene}} = state ) do
-    Scene.cast( scene,
+  defp send_primitive_exit_message( %{hover_primitve: {uid, graph_key}} = state ) do
+    Scene.cast( graph_key,
       {
         :input,
         {:cursor_exit, uid},
-        %Context{viewport: self(), uid: uid, scene: scene}
+        %Context{viewport: self(), uid: uid, graph_key: graph_key}
       })
     %{state | hover_primitve: nil}
   end
 
-  defp send_enter_message( uid, scene, %{hover_primitve: hover_primitve} = state ) do
+  defp send_enter_message( uid, graph_key, %{hover_primitve: hover_primitve} = state ) do
     # first, send the previous hover_primitve an exit message
     state = case hover_primitve do
       nil ->
         # no previous hover_primitive set. do not send an exit message
         state
 
-      {^uid, ^scene} ->
+      {^uid, ^graph_key} ->
         # stil in the same hover_primitive. do not send an exit message
         state
 
@@ -357,13 +357,13 @@ defmodule Scenic.ViewPort.Input do
     state = case state.hover_primitve do
       nil ->
         # yes. setting a new one. send it.
-        Scene.cast( scene,
+        Scene.cast( graph_key,
           {
             :input,
             {:cursor_enter, uid},
-            %Context{viewport: self(), uid: uid, scene: scene}
+            %Context{viewport: self(), uid: uid, graph_key: graph_key}
           })
-        %{state | hover_primitve: {uid, scene}}
+        %{state | hover_primitve: {uid, graph_key}}
 
       _ ->
         # not setting a new one. do nothing.
@@ -380,10 +380,10 @@ defmodule Scenic.ViewPort.Input do
   defp find_by_captured_point( point, context, max_depth ) do
     # project the point by that inverse matrix to get the local point
     point = Matrix.project_vector( context.inverse_tx, point )
-    case ViewPort.get_graph( context.scene ) do
+    case ViewPort.Tables.get_graph( context.graph_key ) do
       nil ->
         {nil, point}
-      graph ->
+      {graph, _} ->
         case do_find_by_captured_point( point, 0, graph, @identity, @identity, max_depth ) do
           nil -> {nil, point}
           out -> out
@@ -466,7 +466,7 @@ defmodule Scenic.ViewPort.Input do
     nil
   end
 
-  defp do_find_by_screen_point( x, y, uid, scene, graph,
+  defp do_find_by_screen_point( x, y, uid, graph_key, graph,
     {parent_tx, parent_inv_tx}, {graph_tx, graph_inv_tx}, depth ) do
 
     # get the primitive to test
@@ -484,7 +484,7 @@ defmodule Scenic.ViewPort.Input do
         |> Enum.reverse()
         |> Enum.find_value( fn(uid) ->
           do_find_by_screen_point(
-            x, y, uid, scene, graph,
+            x, y, uid, graph_key, graph,
             {tx, inv_tx}, {graph_tx, graph_inv_tx}, depth - 1
           )
         end)
@@ -513,9 +513,9 @@ defmodule Scenic.ViewPort.Input do
         case mod.contains_point?( data, local_point ) do
           true  ->
             # Return the point in graph coordinates. Local was good for the hit test
-            # but graph coords makes more sense for the scene logic
+            # but graph coords makes more sense for the graph_key logic
             graph_point = Matrix.project_vector( graph_inv_tx, {x, y} )
-            {graph_point, {uid, scene}, {graph_tx, graph_inv_tx}}
+            {graph_point, {uid, graph_key}, {graph_tx, graph_inv_tx}}
           false -> nil
         end
     end
