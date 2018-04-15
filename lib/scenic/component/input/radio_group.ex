@@ -51,6 +51,7 @@ defmodule Scenic.Component.Input.RadioGroup do
     }
 
 IO.puts "RadioGroup.init"
+    push_graph( graph )
 
     {:ok, state}
   end
@@ -63,7 +64,7 @@ IO.puts "RadioGroup.init"
   #--------------------------------------------------------
   def handle_activate( _args, %{graph: graph} = state ) do
 IO.puts "RadioGroup.handle_activate"
-    ViewPort.put_graph( graph )
+#    push_graph( graph )
     {:noreply, state}
   end
 

@@ -49,6 +49,7 @@ defmodule Scenic.Component.Input.Slider do
     }
 
 IO.puts "Slider.init"
+    push_graph( graph )
 
     {:ok, state}
   end
@@ -57,7 +58,7 @@ IO.puts "Slider.init"
   #--------------------------------------------------------
   def handle_activate( _args, %{graph: graph} = state ) do
 IO.puts "Slider.handle_activate"
-    ViewPort.put_graph( graph )
+#    push_graph( graph )
     {:noreply, state}
   end
 
@@ -149,7 +150,7 @@ IO.puts "Slider.handle_deactivate"
       { {_, y}, width, height, radius } = Primitive.get(p)
       Primitive.put(p, { {new_x, y}, width, height, radius })    
     end)
-    |> ViewPort.put_graph()
+    |> push_graph()
   end
 
 

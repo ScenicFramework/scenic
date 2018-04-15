@@ -73,6 +73,7 @@ defmodule Scenic.Component.Input.RadioButton do
     }
 
 IO.puts "RadioButton.init"
+    push_graph( graph )
 
     {:ok, state}
   end
@@ -94,7 +95,7 @@ IO.puts "RadioButton.init"
   #--------------------------------------------------------
   def handle_activate( _args, %{graph: graph} = state ) do
 IO.puts "RadioButton.handle_activate"
-    ViewPort.put_graph( graph )
+    push_graph( graph )
     {:noreply, state}
   end
 
@@ -176,7 +177,7 @@ IO.puts "RadioButton.handle_deactivate"
       false ->
         Graph.modify( graph, :chx, &Primitive.put_style(&1, :hidden, true) )
     end
-    |> ViewPort.put_graph()
+    |> push_graph()
   end
 
 
