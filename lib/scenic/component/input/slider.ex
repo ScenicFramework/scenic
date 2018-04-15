@@ -54,20 +54,6 @@ IO.puts "Slider.init"
     {:ok, state}
   end
 
-
-  #--------------------------------------------------------
-  def handle_activate( _args, %{graph: graph} = state ) do
-IO.puts "Slider.handle_activate"
-#    push_graph( graph )
-    {:noreply, state}
-  end
-
-  #--------------------------------------------------------
-  def handle_deactivate( _args, %{graph: graph} = state ) do
-IO.puts "Slider.handle_deactivate"
-    {:noreply, state}
-  end
-
   #--------------------------------------------------------
   def handle_input( {:cursor_button, {:left, :press, _, {x,_}}}, context, state ) do
     state = state

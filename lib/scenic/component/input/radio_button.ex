@@ -93,19 +93,6 @@ IO.puts "RadioButton.init"
   end
 
   #--------------------------------------------------------
-  def handle_activate( _args, %{graph: graph} = state ) do
-IO.puts "RadioButton.handle_activate"
-    push_graph( graph )
-    {:noreply, state}
-  end
-
-  #--------------------------------------------------------
-  def handle_deactivate( _args, %{graph: graph} = state ) do
-IO.puts "RadioButton.handle_deactivate"
-    {:noreply, state}
-  end
-
-  #--------------------------------------------------------
   def handle_input( {:cursor_enter, uid}, _, state ) do
     state = Map.put(state, :contained, true)
     graph = update_graph(state)

@@ -81,20 +81,6 @@ IO.puts "Checkbox.init"
     {:ok, state}
   end
 
-
-  #--------------------------------------------------------
-  def handle_activate( _args, %{graph: graph} = state ) do
-IO.puts "Checkbox.handle_activate"
-#    push_graph( graph )
-    {:noreply, state}
-  end
-
-  #--------------------------------------------------------
-  def handle_deactivate( _args, %{graph: graph} = state ) do
-IO.puts "Checkbox.handle_deactivate"
-    {:noreply, state}
-  end
-
   #--------------------------------------------------------
   def handle_input( {:cursor_enter, uid}, _, state ) do
     state = Map.put(state, :contained, true)

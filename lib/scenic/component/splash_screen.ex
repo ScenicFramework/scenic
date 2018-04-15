@@ -28,23 +28,25 @@ defmodule Scenic.SplashScreen do
       min_time: opts[:splash_time] || @default_min_time,
       initial_scene: initial_scene,
       initial_scene_args: args
-    }    
+    }
+
+    push_graph( @graph )
 
     {:ok, state}
   end
 
   #--------------------------------------------------------
-  def handle_activation(_args, %{graph: graph} = state ) do
-    push_graph( graph )    
-    {:noreply, state }
-  end
+#  def handle_set_root(_vp, _args, %{graph: graph} = state ) do
+#    {:noreply, state }
+#  end
 
   #--------------------------------------------------------
-  def handle_deactivation(_args, %{timer: timer} = state ) do
+  def handle_lose_root(_, %{timer: timer} = state ) do
     # stop the animation timer
     if timer, do: :timer.cancel(timer)
     {:noreply, %{state | timer: nil} }
   end
+
 
   #--------------------------------------------------------
   def handle_info( :splash_interval, %{

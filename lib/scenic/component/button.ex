@@ -91,25 +91,11 @@ defmodule Scenic.Component.Button do
       contained: false,
       msg: msg
     }
-IO.puts "============> Button.init"
+#IO.puts "============> Button.init"
 
 push_graph( graph )
 
     {:ok, state}
-  end
-
-
-  #--------------------------------------------------------
-  def handle_activation(_args, %{graph: graph} = state ) do
-IO.puts "============> Button.handle_activate"
-#      push_graph( graph )
-    {:noreply, state}
-  end
-
-  #--------------------------------------------------------
-  def handle_deactivation( %{graph: graph} = state ) do
-IO.puts "Button.handle_deactivate"
-    {:noreply, state}
   end
 
   #--------------------------------------------------------

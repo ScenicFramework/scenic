@@ -239,8 +239,8 @@ defmodule Scenic.Scene do
   @callback handle_input(any, any, any) :: {:noreply, any, any}
   @callback filter_event( any, any, any ) :: { :continue, any, any } | {:stop, any}
 
-  @callback handle_activation(any, any) :: {:noreply, any}
-  @callback handle_deactivation(any) :: {:noreply, any}
+  @callback handle_set_root( pid, any, any ) :: {:noreply, any}
+  @callback handle_lose_root( pid, any ) :: {:noreply, any}
 
   #============================================================================
   # using macro
@@ -256,8 +256,8 @@ defmodule Scenic.Scene do
       #--------------------------------------------------------
       # Here so that the scene can override if desired
       def init(_),                                    do: {:ok, nil}
-      def handle_activation( _args, state ),          do: {:noreply, state}
-      def handle_deactivation( state ),               do: {:noreply, state}
+      def handle_set_root( _vp, _args, state ),       do: {:noreply, state}
+      def handle_lose_root( _vp, state ),             do: {:noreply, state}
  
       def handle_call(_msg, _from, state),            do: {:reply, :err_not_handled, state}
       def handle_cast(_msg, state),                   do: {:noreply, state}
@@ -300,8 +300,8 @@ defmodule Scenic.Scene do
       #--------------------------------------------------------
       defoverridable [
         init:                   1,
-        handle_activation:      2,
-        handle_deactivation:    1,
+        handle_set_root:        3,
+        handle_lose_root:       2,
 
         handle_call:            3,
         handle_cast:            2,
@@ -445,30 +445,25 @@ defmodule Scenic.Scene do
   # next thing to happen might be process termination. This makes sure the
   # scene has a chance to clean itself up before it goes away.
 
-  def handle_call(:deactivate, _, %{
+  def handle_call(:lose_root, from, %{
     scene_module: mod,
-    scene_state: sc_state,
-    dynamic_children_pid: nil,
-    scene_ref: scene_ref,
+    scene_state: sc_state
   } = state) do
     # tell the scene it is being deactivated
-    {:noreply, sc_state} = mod.handle_deactivation( sc_state )
+    {:noreply, sc_state} = mod.handle_lose_root( from, sc_state )
     { :reply, :ok, %{state | scene_state: sc_state, activation: @not_activated} }
   end
 
-  def handle_call(:deactivate, _, %{
+  def handle_call({:set_root, args}, from, %{
     scene_module: mod,
-    scene_state: sc_state,
-    dynamic_children_pid: dyn_sub,
-    scene_ref: scene_ref
+    scene_state: sc_state
   } = state) do
-    # deactivate the dynamic children
-#    call_children(dyn_sub, :deactivate)
-
-    # tell the scene it is being deactivated
-    {:noreply, sc_state} = mod.handle_deactivation( sc_state )
-    { :reply, :ok, %{state | scene_state: sc_state, activation: @not_activated} }
+    # tell the scene it is being activated
+    {:noreply, sc_state} = mod.handle_set_root( from, args, sc_state )
+    { :noreply, %{state | scene_state: sc_state, activation: args} }
   end
+
+
 
   #--------------------------------------------------------
 #  def handle_call({:activate, args}, _, %{
@@ -516,6 +511,17 @@ IO.puts"-=-=-=-=-=-=-=- unhandled scene call #{inspect(msg)} -=-=-=-=-=-=-=-"
 
   #============================================================================
   # handle_cast
+
+
+  def handle_cast({:set_root, args, vp}, %{
+    scene_module: mod,
+    scene_state: sc_state
+  } = state) do
+    # tell the scene it is being activated
+    {:noreply, sc_state} = mod.handle_set_root( vp, args, sc_state )
+    { :noreply, %{state | scene_state: sc_state, activation: args} }
+  end
+
 
   #--------------------------------------------------------
   def handle_cast({:after_init, args}, %{
@@ -568,14 +574,14 @@ IO.puts"-=-=-=-=-=-=-=- unhandled scene call #{inspect(msg)} -=-=-=-=-=-=-=-"
 
 
   #--------------------------------------------------------
-  def handle_cast({:activate, args}, %{
-    scene_module: mod,
-    scene_state: sc_state,
-  } = state) do
-    # tell the scene it is being activated
-    {:noreply, sc_state} = mod.handle_activation( args, sc_state )
-    { :noreply, %{state | scene_state: sc_state, activation: args} }
-  end
+#  def handle_cast({:activate, args}, %{
+#    scene_module: mod,
+#    scene_state: sc_state,
+#  } = state) do
+#    # tell the scene it is being activated
+#    {:noreply, sc_state} = mod.handle_activation( args, sc_state )
+#    { :noreply, %{state | scene_state: sc_state, activation: args} }
+#  end
 
   #--------------------------------------------------------
   def handle_cast({:input, event, context}, 
@@ -695,11 +701,11 @@ IO.puts"-=-=-=-=-=-=-=- unhandled scene call #{inspect(msg)} -=-=-=-=-=-=-=-"
         {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, parent, init_data )
 
         # if this scene is activated, activate the new one too
-        unless args == @not_activated do
-IO.puts "::::::::: trying to cast activate a dynamic child during put_graph:::::::::"
-#          GenServer.call(pid, {:activate, args})
-#          GenServer.cast(pid, {:activate, args})
-        end
+#        unless args == @not_activated do
+#IO.puts "::::::::: trying to cast activate a dynamic child during put_graph:::::::::"
+##          GenServer.call(pid, {:activate, args})
+##          GenServer.cast(pid, {:activate, args})
+#        end
 
         # add the this dynamic child scene to tracking
         {
@@ -744,12 +750,8 @@ IO.puts "::::::::: trying to cast activate a dynamic child during put_graph:::::
       put_in(g, [uid, :data], {Scenic.Primitive.SceneRef, key})
     end)
 
-
     # write the graph into the ets table
     ViewPort.Tables.insert_graph( graph_key, self(), graph, all_keys)
-
-    # notify the drivers of the updated graph
-    ViewPort.driver_cast( {:push_graph, graph_key} )
 
     # store the refs for next time
     state = state

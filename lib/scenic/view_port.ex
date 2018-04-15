@@ -202,9 +202,8 @@ defmodule Scenic.ViewPort do
   @doc """
   Cast a message to all active drivers listening to a viewport.
   """
-  def driver_cast( msg ) do
-    #Driver.cast( msg )
-    GenServer.cast(@viewport, {:driver_cast, msg})
+  def driver_cast( viewport, msg ) do
+    GenServer.cast(viewport, {:driver_cast, msg})
   end
 
 
@@ -353,21 +352,24 @@ IO.puts "{:init_pids, sup_pid, ds_pid}"
         {scene, scene, nil}
     end
 
-    # activate the scene
+    # let the scene know it is the new root
 #    GenServer.call(scene_pid, {:activate, args})
-    GenServer.cast(scene_pid, {:activate, args})
+#    GenServer.cast(scene_pid, {:set_root, args})
+#    GenServer.call(scene_pid, {:set_root, args})
 
     graph_key = {:graph, scene_ref, nil}
 
     # tell the drivers about the new root
-    driver_cast( {:set_root, graph_key} )
+    driver_cast( self(), {:set_root, graph_key} )
 
     # clean up the old root graph. Can be done async so long as
     # terminating the dynamic scene (if set) is after deactivation
     if old_root_scene do
       Task.start( fn ->
-        GenServer.call(old_root_scene, :deactivate)
-        GenServer.cast(old_root_scene, {:stop, dyn_sup})
+        GenServer.call(old_root_scene, :lose_root)
+        if old_dynamic_root_scene do
+          GenServer.cast(old_dynamic_root_scene, {:stop, dyn_sup})
+        end
       end)
     end
 

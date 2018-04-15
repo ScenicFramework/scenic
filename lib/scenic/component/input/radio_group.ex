@@ -61,18 +61,6 @@ IO.puts "RadioGroup.init"
     {:noreply, %{state | value: new_value}}
   end
 
-  #--------------------------------------------------------
-  def handle_activate( _args, %{graph: graph} = state ) do
-IO.puts "RadioGroup.handle_activate"
-#    push_graph( graph )
-    {:noreply, state}
-  end
-
-  #--------------------------------------------------------
-  def handle_deactivate( _args, %{graph: graph} = state ) do
-IO.puts "RadioGroup.handle_deactivate"
-    {:noreply, state}
-  end
 
   #============================================================================
 
