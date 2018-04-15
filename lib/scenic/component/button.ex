@@ -10,7 +10,7 @@ defmodule Scenic.Component.Button do
 
   @default_width      80
   @default_height     32
-  @default_radius     6
+  @default_radius     2
   @default_type       6
 
   @blue_color         :steel_blue
@@ -36,9 +36,9 @@ defmodule Scenic.Component.Button do
 
   # {width, hieght, radius, font_size}
   @sizes %{
-    small:      {80, 24, 4, 16},
-    normal:     {80, 30, 6, 18},
-    large:      {80, 40, 8, 20}
+    small:      {80, 24, 2, 16},
+    normal:     {80, 30, 4, 18},
+    large:      {80, 40, 4, 20}
   }
 
 #  #--------------------------------------------------------

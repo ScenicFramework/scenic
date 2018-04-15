@@ -284,7 +284,7 @@ defmodule Scenic.Scene do
           nil ->
             {:error, :no_parent}
           pid ->
-            GenServer.cast(pid, {:event, event_msg})
+            GenServer.cast(pid, {:event, event_msg, self()})
         end
       end
 
