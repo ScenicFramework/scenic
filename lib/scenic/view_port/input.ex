@@ -464,7 +464,7 @@ defmodule Scenic.ViewPort.Input do
     nil
   end
 
-  defp do_find_by_screen_point( x, y, uid, scene, graph,
+  defp do_find_by_screen_point( x, y, uid, scene, {graph, refs},
     {parent_tx, parent_inv_tx}, {graph_tx, graph_inv_tx}, depth ) do
 
     # get the primitive to test
@@ -482,18 +482,19 @@ defmodule Scenic.ViewPort.Input do
         |> Enum.reverse()
         |> Enum.find_value( fn(uid) ->
           do_find_by_screen_point(
-            x, y, uid, scene, graph,
+            x, y, uid, scene, {graph, refs},
             {tx, inv_tx}, {graph_tx, graph_inv_tx}, depth - 1
           )
         end)
 
       # if this is a SceneRef, then traverse into the next graph
-      %{data: {Primitive.SceneRef, scene_ref}} = p ->
-        case Scene.to_pid( scene_ref ) do
+      %{data: {Primitive.SceneRef, _}} = p ->
+        ref_key = refs[uid]
+        case ViewPort.Tables.get_scene_pid( ref_key ) do
           {:ok, scene_pid} ->
             {tx, inv_tx} = calc_transforms(p, parent_tx, parent_inv_tx)
-            do_find_by_screen_point(x, y, 0, scene_ref,
-              ViewPort.Tables.get_graph(scene_ref),
+            do_find_by_screen_point(x, y, 0, ref_key,
+              ViewPort.Tables.get_graph(ref_key),
               {tx, inv_tx}, {tx, inv_tx}, depth - 1
             )
           _ ->
@@ -518,6 +519,12 @@ defmodule Scenic.ViewPort.Input do
         end
     end
   end
+
+  defp do_find_by_screen_point( x, y, uid, key, graph, tx, invtx, depth ) do
+    pry()
+  end
+
+
 
 
   defp calc_transforms(p, parent_tx, parent_inv_tx) do
