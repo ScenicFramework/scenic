@@ -460,7 +460,7 @@ defmodule Scenic.Scene do
   } = state) do
     # tell the scene it is being activated
     {:noreply, sc_state} = mod.handle_set_root( from, args, sc_state )
-    { :noreply, %{state | scene_state: sc_state, activation: args} }
+    { :reply, :ok, %{state | scene_state: sc_state, activation: args} }
   end
 
 

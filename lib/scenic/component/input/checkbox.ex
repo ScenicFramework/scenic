@@ -75,7 +75,7 @@ defmodule Scenic.Component.Input.Checkbox do
       msg: msg
     }
 
-IO.puts "Checkbox.init"
+#IO.puts "Checkbox.init"
     push_graph( graph )
 
     {:ok, state}

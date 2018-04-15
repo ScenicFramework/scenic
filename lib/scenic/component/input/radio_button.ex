@@ -72,7 +72,7 @@ defmodule Scenic.Component.Input.RadioButton do
       msg: msg
     }
 
-IO.puts "RadioButton.init"
+#IO.puts "RadioButton.init"
     push_graph( graph )
 
     {:ok, state}

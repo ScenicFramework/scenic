@@ -352,26 +352,22 @@ IO.puts "{:init_pids, sup_pid, ds_pid}"
         {scene, scene, nil}
     end
 
-    # let the scene know it is the new root
-#    GenServer.call(scene_pid, {:activate, args})
-#    GenServer.cast(scene_pid, {:set_root, args})
-#    GenServer.call(scene_pid, {:set_root, args})
-
     graph_key = {:graph, scene_ref, nil}
+
+    # let the scene know it is the new root
+    GenServer.call(scene_pid, {:set_root, args})
 
     # tell the drivers about the new root
     driver_cast( self(), {:set_root, graph_key} )
 
     # clean up the old root graph. Can be done async so long as
     # terminating the dynamic scene (if set) is after deactivation
-    if old_root_scene do
-      Task.start( fn ->
-        GenServer.call(old_root_scene, :lose_root)
-        if old_dynamic_root_scene do
-          GenServer.cast(old_dynamic_root_scene, {:stop, dyn_sup})
-        end
-      end)
-    end
+    Task.start( fn ->
+      if old_root_scene, do: GenServer.call(old_root_scene, :lose_root)
+      if old_dynamic_root_scene do
+        GenServer.cast(old_dynamic_root_scene, {:stop, dyn_sup})
+      end
+    end)
 
     state = state
     |> Map.put( :root_graph_key, graph_key )

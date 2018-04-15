@@ -50,7 +50,7 @@ defmodule Scenic.Component.Input.RadioGroup do
       id: id
     }
 
-IO.puts "RadioGroup.init"
+#IO.puts "RadioGroup.init"
     push_graph( graph )
 
     {:ok, state}

@@ -48,7 +48,7 @@ defmodule Scenic.Component.Input.Slider do
       tracking: false
     }
 
-IO.puts "Slider.init"
+#IO.puts "Slider.init"
     push_graph( graph )
 
     {:ok, state}
