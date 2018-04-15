@@ -360,12 +360,7 @@ IO.puts "{:init_pids, sup_pid, ds_pid}"
     if old_root_scene do
       Task.start( fn ->
         GenServer.call(old_root_scene, :deactivate)
-        if old_dynamic_root_scene do
-          DynamicSupervisor.terminate_child(
-            dyn_sup,
-            old_dynamic_root_scene
-          )
-        end
+        GenServer.cast(old_root_scene, {:stop, dyn_sup})
       end)
     end
 

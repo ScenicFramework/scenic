@@ -714,7 +714,7 @@ IO.puts "::::::::: trying to cast activate a dynamic child during put_graph:::::
         # send the optional deactivate message and terminate. ok to be async
         Task.start fn ->
           GenServer.call(pid, :deactivate)
-          DynamicSupervisor.terminate_child( dyn_sup, pid )
+          GenServer.cast(pid, {:stop, dyn_sup})
         end
 
         # remove old pid and key
@@ -757,6 +757,22 @@ IO.puts "::::::::: trying to cast activate a dynamic child during put_graph:::::
 
   #--------------------------------------------------------
   # generic handle_cast. give the scene a chance to handle it
+  def handle_cast({:stop, dyn_sup}, %{supervisor_pid: nil} = state) do
+    DynamicSupervisor.terminate_child( dyn_sup, self() )
+    {:noreply, state}
+  end
+
+  #--------------------------------------------------------
+  # generic handle_cast. give the scene a chance to handle it
+  def handle_cast({:stop, dyn_sup}, %{supervisor_pid: supervisor_pid} = state) do
+    DynamicSupervisor.terminate_child( dyn_sup, supervisor_pid )
+    {:noreply, state}
+  end
+
+
+
+  #--------------------------------------------------------
+  # generic handle_cast. give the scene a chance to handle it
   def handle_cast(msg, %{scene_module: mod, scene_state: sc_state} = state) do
     {:noreply, sc_state} = mod.handle_cast(msg, sc_state)
     {:noreply, %{state | scene_state: sc_state}}
@@ -769,6 +785,7 @@ IO.puts "::::::::: trying to cast activate a dynamic child during put_graph:::::
 
   #============================================================================
   # Scene managment
+
 
   #--------------------------------------------------------
   # this a root-level dynamic scene
