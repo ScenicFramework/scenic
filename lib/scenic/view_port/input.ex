@@ -450,8 +450,9 @@ defmodule Scenic.ViewPort.Input do
   # more efficient as we can stop as soon as we find the first one.
   defp find_by_screen_point( {x,y}, %{root_graph_key: root_key, max_depth: depth} = state) do
     identity = {@identity, @identity}
-    {graph, _} = ViewPort.Tables.get_graph(root_key)
-    do_find_by_screen_point( x, y, 0, root_key, graph, identity, identity, depth )
+    with {graph, _} <- ViewPort.Tables.get_graph(root_key) do
+      do_find_by_screen_point( x, y, 0, root_key, graph, identity, identity, depth )
+    end
   end
 
 
