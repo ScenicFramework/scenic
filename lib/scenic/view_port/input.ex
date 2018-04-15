@@ -194,18 +194,22 @@ defmodule Scenic.ViewPort.Input do
   #--------------------------------------------------------
   # text codepoint input is only sent to the scene with the input focus.
   # If no scene has focus, then send the codepoint to the root scene
-#  defp do_handle_input( {:codepoint, _} = msg, state ) do
-#    send_input_to_focused_scene( msg, state )
-#    {:noreply, state}
-#  end
+  defp do_handle_input( {:codepoint, _} = msg, %{root_graph_key: root_key} = state ) do
+    Scene.cast( root_key,
+      { :input, msg, %Context{ viewport: self(), graph_key: root_key } } 
+    )
+    {:noreply, state}
+  end
 
   #--------------------------------------------------------
   # key press input is only sent to the scene with the input focus.
   # If no scene has focus, then send the codepoint to the root scene
-#  defp do_handle_input( {:key, _} = msg, state ) do
-#    send_input_to_focused_scene( msg, state )
-#    {:noreply, state}
-#  end
+  defp do_handle_input( {:key, _} = msg, %{root_graph_key: root_key} = state ) do
+    Scene.cast( root_key,
+      { :input, msg, %Context{ viewport: self(), graph_key: root_key } } 
+    )
+    {:noreply, state}
+  end
 
   #--------------------------------------------------------
   # key press input is only sent to the scene with the input focus.
