@@ -22,7 +22,7 @@ defmodule Scenic.ViewPort.Input do
   defmodule Context do
     alias Scenic.Math.MatrixBin, as: Matrix
     @identity         Matrix.identity()
-    defstruct scene: nil, tx: @identity, inverse_tx: @identity, uid: nil
+    defstruct viewport: nil, scene: nil, tx: @identity, inverse_tx: @identity, uid: nil
   end
 
   @ets_graphs_table       :_scenic_viewport_graphs_table_
@@ -220,7 +220,7 @@ defmodule Scenic.ViewPort.Input do
           {
             :input,
             msg,
-            %Context{ scene: root_key }
+            %Context{ viewport: self(), scene: root_key }
           })
 
       {point, {uid, scene}, {tx, inv_tx}} ->
@@ -229,6 +229,7 @@ defmodule Scenic.ViewPort.Input do
             :input,
             {:cursor_button, {button, action, mods, point}},
             %Context{
+              viewport: self(),
               scene: scene,
               uid: uid,
               tx: tx, inverse_tx: inv_tx
@@ -257,6 +258,7 @@ defmodule Scenic.ViewPort.Input do
             :input,
             {:cursor_scroll, {offset, point}},
             %Context{
+              viewport: self(),
               scene: scene,
               uid: uid,
               tx: tx, inverse_tx: inv_tx,
@@ -275,7 +277,7 @@ defmodule Scenic.ViewPort.Input do
         # no uid found. let the root scene handle the event
         # we already know the root scene has identity transforms
         state = send_primitive_exit_message(state)
-        Scene.cast(root_key, {:input, msg, %Context{scene: root_key}} )
+        Scene.cast(root_key, {:input, msg, %Context{viewport: self(), scene: root_key}} )
         state
 
       {point, {uid, scene}, _} ->
@@ -285,7 +287,7 @@ defmodule Scenic.ViewPort.Input do
           {
             :input,
             {:cursor_pos, point},
-            %Context{scene: scene, uid: uid}
+            %Context{viewport: self(), scene: scene, uid: uid}
           })
         state
     end
@@ -300,7 +302,7 @@ defmodule Scenic.ViewPort.Input do
       {
         :input,
         msg,
-        %Context{ scene: root_key }
+        %Context{viewport: self(), scene: root_key }
       })
     {:noreply, state}
   end
@@ -312,7 +314,7 @@ defmodule Scenic.ViewPort.Input do
       {
         :input,
         msg,
-        %Context{ scene: root_key }
+        %Context{viewport: self(), scene: root_key }
       })
     {:noreply, state}
   end
@@ -330,7 +332,7 @@ defmodule Scenic.ViewPort.Input do
       {
         :input,
         {:cursor_exit, uid},
-        %Context{uid: uid, scene: scene}
+        %Context{viewport: self(), uid: uid, scene: scene}
       })
     %{state | hover_primitve: nil}
   end
@@ -359,7 +361,7 @@ defmodule Scenic.ViewPort.Input do
           {
             :input,
             {:cursor_enter, uid},
-            %Context{uid: uid, scene: scene}
+            %Context{viewport: self(), uid: uid, scene: scene}
           })
         %{state | hover_primitve: {uid, scene}}
 
