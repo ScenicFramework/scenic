@@ -732,6 +732,19 @@ IO.puts "::::::::: trying to cast activate a dynamic child during put_graph:::::
 
     graph_key = {:graph, scene_ref, sub_id}
 
+    # insert the proper graph keys back into the graph to finish normalizing
+    # it for the drivers. Yes, the driver could do this from the all_keys term
+    # that is also being written into the ets table, but it gets done all the
+    # time for each reader and when consuming input, so it is better to do it
+    # once here. Note that the all_keys term is still being written becuase
+    # otherwise the drivers would need to do a full graph scan in order to prep
+    # whatever translators they need. Again, the info has already been
+    # calculated here, so just pass it along without throwing it out.
+    graph = Enum.reduce(all_keys, graph, fn({uid, key}, g)->
+      put_in(g, [uid, :data], {Scenic.Primitive.SceneRef, key})
+    end)
+
+
     # write the graph into the ets table
     ViewPort.Tables.insert_graph( graph_key, self(), graph, all_keys)
 
