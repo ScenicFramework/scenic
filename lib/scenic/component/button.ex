@@ -37,7 +37,7 @@ defmodule Scenic.Component.Button do
   # {width, hieght, radius, font_size}
   @sizes %{
     small:      {80, 24, 2, 16},
-    normal:     {80, 30, 4, 18},
+    normal:     {80, 30, 3, 18},
     large:      {80, 40, 4, 20}
   }
 
