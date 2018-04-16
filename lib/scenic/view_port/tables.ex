@@ -145,7 +145,7 @@ defmodule Scenic.ViewPort.Tables do
     state = %{
       graph_table_id: :ets.new(@ets_graphs_table, [:named_table, :public, {:read_concurrency, true}]),
       scene_table_id: :ets.new(@ets_scenes_table, [:named_table]),
-      subs_table_id: :ets.new(@ets_subs_table, [:named_table])
+      subs_table_id: :ets.new(@ets_subs_table, [:named_table, :bag])
     }
 
     {:ok, state}
