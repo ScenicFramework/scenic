@@ -283,9 +283,9 @@ defmodule Scenic.ViewPort do
   # handle_info
 
   # when a scene goes down, clean it up
-  def handle_info({:DOWN, _monitor_ref, :process, pid, reason}, state) do
-    {:noreply, state}
-  end
+#  def handle_info({:DOWN, _monitor_ref, :process, pid, reason}, state) do
+#    {:noreply, state}
+#  end
 
 
   #============================================================================
@@ -426,10 +426,10 @@ IO.puts "{:init_pids, sup_pid, ds_pid}"
   # management casts from scenes
   
   #--------------------------------------------------------
-  def handle_cast( {:monitor, scene_pid}, state ) do
-    Process.monitor( scene_pid )
-    {:noreply, state}
-  end
+#  def handle_cast( {:monitor, scene_pid}, state ) do
+#    Process.monitor( scene_pid )
+#    {:noreply, state}
+#  end
 
   #--------------------------------------------------------
   # ignore input until a scene has been set

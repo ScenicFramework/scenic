@@ -388,7 +388,7 @@ defmodule Scenic.Scene do
 
     # tell the viewport to start monitoring this scene
     # this is required to clean up the graph when this scene goes DOWN
-    GenServer.cast(@viewport, {:monitor, self()})
+#    GenServer.cast(@viewport, {:monitor, self()})
 
     # tell the parent that this scene is alive and assocated with the given graph/uid.
     # Obvs don't do this if a root scene (no parent)
