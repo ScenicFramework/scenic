@@ -313,6 +313,10 @@ defmodule Scenic.Scene do
         graph
       end
 
+      # return the local scene process's scene_ref
+      defp scene_ref(), do: Process.get( :scene_ref )
+
+
       #--------------------------------------------------------
 #      add local shortcuts to things like get/put graph and modify element
 #      do not add a put element. keep it at modify to stay atomic
