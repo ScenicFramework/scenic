@@ -472,8 +472,13 @@ defmodule Scenic.Scene do
     scene_module: mod,
     scene_state: sc_state
   } = state) do
+    vp = case from do
+      {pid, _} when is_pid(pid) -> pid
+      pid when is_pid(pid) -> pid
+    end
+
     # tell the scene it is being deactivated
-    {:noreply, sc_state} = mod.handle_lose_root( from, sc_state )
+    {:noreply, sc_state} = mod.handle_lose_root( vp, sc_state )
     { :reply, :ok, %{state | scene_state: sc_state, activation: @not_activated} }
   end
 
@@ -481,8 +486,13 @@ defmodule Scenic.Scene do
     scene_module: mod,
     scene_state: sc_state
   } = state) do
+    vp = case from do
+      {pid, _} when is_pid(pid) -> pid
+      pid when is_pid(pid) -> pid
+    end
+
     # tell the scene it is being activated
-    {:noreply, sc_state} = mod.handle_set_root( from, args, sc_state )
+    {:noreply, sc_state} = mod.handle_set_root( vp, args, sc_state )
     { :reply, :ok, %{state | scene_state: sc_state, activation: args} }
   end
 
@@ -541,6 +551,7 @@ IO.puts"-=-=-=-=-=-=-=- unhandled scene call #{inspect(msg)} -=-=-=-=-=-=-=-"
     scene_state: sc_state
   } = state) do
     # tell the scene it is being activated
+pry()
     {:noreply, sc_state} = mod.handle_set_root( vp, args, sc_state )
     { :noreply, %{state | scene_state: sc_state, activation: args} }
   end
