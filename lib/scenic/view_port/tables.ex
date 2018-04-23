@@ -75,7 +75,7 @@ defmodule Scenic.ViewPort.Tables do
   end
 
   #--------------------------------------------------------
-  def get_graph( {:graph,_,_} = graph_key ) do
+  def get_graph( {:graph,scene,id} = graph_key ) when is_atom(scene) or is_reference(scene) do
     case :ets.lookup(@ets_graphs_table, graph_key) do
       [] -> nil
       [{_, _, graph, _}] -> {:ok, graph}
@@ -83,7 +83,13 @@ defmodule Scenic.ViewPort.Tables do
   end
 
   #--------------------------------------------------------
-  def get_refs( {:graph,_,_} = graph_key ) do
+  def delete_graph( {:graph,scene,_} = graph_key ) when is_atom(scene) or is_reference(scene) do
+    :ets.delete(@ets_graphs_table, graph_key)
+  end
+
+
+  #--------------------------------------------------------
+  def get_refs( {:graph,scene,_} = graph_key ) when is_atom(scene) or is_reference(scene) do
     case :ets.lookup(@ets_graphs_table, graph_key) do
       [] -> nil
       [{_, _, _, refs}] -> {:ok, refs}
@@ -91,7 +97,7 @@ defmodule Scenic.ViewPort.Tables do
   end
 
   #--------------------------------------------------------
-  def get_graph_refs( {:graph,_,_} = graph_key ) do
+  def get_graph_refs( {:graph,scene,_} = graph_key ) when is_atom(scene) or is_reference(scene) do
     case :ets.lookup(@ets_graphs_table, graph_key) do
       [] -> nil
       [{_, _, graph, refs}] -> {:ok, graph, refs}

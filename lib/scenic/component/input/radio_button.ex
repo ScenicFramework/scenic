@@ -24,7 +24,8 @@ defmodule Scenic.Component.Input.RadioButton do
   # nil for text_color means to use whatever is inherited
   @colors %{
     light:    {:black, :white, :grey, {215, 215, 215}, :cornflower_blue},
-    dark:     {:white, :black, :grey, {40,40,40}, :cornflower_blue},
+#    dark:     {:white, :black, :grey, {40,40,40}, :cornflower_blue},
+    dark:     {:white, :black, :grey, {40,40,40}, {0x00,0x71,0xBC}},
   }
 
 #  #--------------------------------------------------------
