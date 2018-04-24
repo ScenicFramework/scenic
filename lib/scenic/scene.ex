@@ -5,7 +5,7 @@
 # Taking the learnings from several previous versions.
 
 defmodule Scenic.Scene do
-  alias Scenic.Graph
+#  alias Scenic.Graph
   alias Scenic.Scene
   alias Scenic.ViewPort
   alias Scenic.Primitive
@@ -13,7 +13,7 @@ defmodule Scenic.Scene do
 
   require Logger
 
-  import IEx
+#  import IEx
 
   @moduledoc """
   
@@ -384,7 +384,7 @@ defmodule Scenic.Scene do
     Process.put(:scene_ref, scene_ref)
 
     # interpret the options
-    {parent_pid, graph_id, uid} = case opts[:parent] do
+    {parent_pid, _graph_id, _uid} = case opts[:parent] do
       nil -> {nil, nil, nil}
       {parent_pid, graph_id, uid} ->
         # stash the parent pid away in the process dictionary. This
@@ -395,7 +395,7 @@ defmodule Scenic.Scene do
     end
 
     # some setup needs to happen after init - must be before the scene_module init
-    GenServer.cast(self(), {:after_init, args})
+    GenServer.cast(self(), :after_init)
 
     # tell the viewport to start monitoring this scene
     # this is required to clean up the graph when this scene goes DOWN
@@ -447,10 +447,11 @@ defmodule Scenic.Scene do
   # Note: the viewport is only monitored by this scene if it is a named scene.
   # dynamic scenes rely on their parent (or the viewport supervisor itself)
   # to take care of this for them.
-  def handle_info({:DOWN, _monitor_ref, :process, pid, reason}, state) do
+  def handle_info({:DOWN, _monitor_ref, :process, pid, _reason}, state) do
     state = case Process.whereis(@viewport) do
       ^pid ->
         { :reply, :ok, state } = handle_call( :deactivate, pid,  state )
+        state
       _ ->
         state
     end
@@ -501,7 +502,6 @@ defmodule Scenic.Scene do
     {:noreply, sc_state} = mod.handle_set_root( vp, args, sc_state )
     { :reply, :ok, %{state | scene_state: sc_state, activation: args} }
   end
-
 
 
   #--------------------------------------------------------
@@ -563,8 +563,7 @@ IO.puts"-=-=-=-=-=-=-=- unhandled scene call #{inspect(msg)} -=-=-=-=-=-=-=-"
 
 
   #--------------------------------------------------------
-  def handle_cast({:after_init, args}, %{
-    scene_module: mod,
+  def handle_cast( :after_init, %{
     scene_ref: scene_ref
   } = state ) do
     # get the scene supervisors
@@ -584,7 +583,6 @@ IO.puts"-=-=-=-=-=-=-=- unhandled scene call #{inspect(msg)} -=-=-=-=-=-=-=-"
       info ->
         case get_in( info, [:dictionary, :"$initial_call"] ) do
           {:supervisor, Scene.Supervisor, _} ->
-            supervisor_pid
             dynamic_children_pid = Supervisor.which_children( supervisor_pid )
             |> Enum.find_value( fn 
               {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
@@ -671,7 +669,7 @@ IO.puts"-=-=-=-=-=-=-=- unhandled scene call #{inspect(msg)} -=-=-=-=-=-=-=-"
 
       # dynamic reference
       # Log an error and remove the ref from the graph
-      ({uid, %{module: Primitive.SceneRef, data: {_,_} = ref} = p},
+      ({_uid, %{module: Primitive.SceneRef, data: {_,_} = ref}},
       {g, all_refs}) ->
         Logger.error "Attempting to manage dynamic reference on graph with has_children set to false. #{inspect(ref)}"
         {g, all_refs}
@@ -711,8 +709,7 @@ IO.puts"-=-=-=-=-=-=-=- unhandled scene call #{inspect(msg)} -=-=-=-=-=-=-=-"
     raw_scene_refs: raw_scene_refs,
     dyn_scene_pids: dyn_scene_pids,
     dyn_scene_keys: dyn_scene_keys,
-    dynamic_children_pid: dyn_sup,
-    activation: args
+    dynamic_children_pid: dyn_sup
   } = state ) do
     # reduce the incoming graph to it's minimal form
     # while simultaneously extracting the SceneRefs
@@ -764,13 +761,6 @@ IO.puts"-=-=-=-=-=-=-=- unhandled scene call #{inspect(msg)} -=-=-=-=-=-=-=-"
         # start the dynamic scene
         parent = {self(), sub_id, uid}
         {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, parent, init_data )
-
-        # if this scene is activated, activate the new one too
-#        unless args == @not_activated do
-#IO.puts "::::::::: trying to cast activate a dynamic child during put_graph:::::::::"
-##          GenServer.call(pid, {:activate, args})
-##          GenServer.cast(pid, {:activate, args})
-#        end
 
         # add the this dynamic child scene to tracking
         {
@@ -865,11 +855,6 @@ IO.puts"-=-=-=-=-=-=-=- unhandled scene call #{inspect(msg)} -=-=-=-=-=-=-=-"
   @doc false
   def start_dynamic_scene( dynamic_supervisor, parent, mod, args, has_children ) do
     ref = make_ref()
-    has_children = case has_children do
-      nil -> @children_default
-      true -> true
-      false -> false
-    end
     do_start_child_scene( dynamic_supervisor, parent, ref, mod, args, has_children )
   end
 
@@ -906,52 +891,52 @@ IO.puts"-=-=-=-=-=-=-=- unhandled scene call #{inspect(msg)} -=-=-=-=-=-=-=-"
   # internal utilities
 
   #--------------------------------------------------------
-  defp cast_children(dyn_supervisor, msg) do
-    with {:ok, pids} <- child_pids( dyn_supervisor ) do
-      Enum.each(pids, &GenServer.cast(&1, msg))
-    end
-  end
+#  defp cast_children(dyn_supervisor, msg) do
+#    with {:ok, pids} <- child_pids( dyn_supervisor ) do
+#      Enum.each(pids, &GenServer.cast(&1, msg))
+#    end
+#  end
 
   #--------------------------------------------------------
-  defp call_children(dyn_supervisor, msg) do
-    IO.puts "------------------------------------------------"
-    IO.inspect child_pids( dyn_supervisor )
-
-    with {:ok, pids} <- child_pids( dyn_supervisor ) do
-      Enum.reduce(pids, [], fn(pid, tasks)->
-        task = Task.async( fn ->
-IO.puts "Calling child #{inspect(pid)} with #{inspect(msg)}"
-          GenServer.call(pid, msg)
-        end)
-        [task | tasks]
-      end)
-      |> Enum.reduce( [], fn(task, responses) ->
-        [Task.await(task) | responses]
-      end)
-IO.puts "Done Calling child with #{inspect(msg)}"
-
-    end
-  end
+#  defp call_children(dyn_supervisor, msg) do
+#    IO.puts "------------------------------------------------"
+#    IO.inspect child_pids( dyn_supervisor )
+#
+#    with {:ok, pids} <- child_pids( dyn_supervisor ) do
+#      Enum.reduce(pids, [], fn(pid, tasks)->
+#        task = Task.async( fn ->
+#IO.puts "Calling child #{inspect(pid)} with #{inspect(msg)}"
+#          GenServer.call(pid, msg)
+#        end)
+#        [task | tasks]
+#      end)
+#      |> Enum.reduce( [], fn(task, responses) ->
+#        [Task.await(task) | responses]
+#      end)
+#IO.puts "Done Calling child with #{inspect(msg)}"
+#
+#    end
+#  end
 
   #--------------------------------------------------------
-  defp child_pids( nil ), do: {:ok, []}
-  defp child_pids( dyn_supervisor ) do
-    pids = DynamicSupervisor.which_children( dyn_supervisor )
-    |> Enum.reduce( [], fn
-      {_, pid, :worker, [Scene]}, acc -> 
-        # easy case. scene is the direct child
-        [ pid | acc ]
-
-      {_, pid, :supervisor, [Scene.Supervisor]}, acc ->
-        # harder case. the child scene is under it's own supervisor
-        Supervisor.which_children( pid )
-        |> Enum.reduce( [], fn
-          {_, pid, :worker, [Scene]}, acc -> [ pid | acc ]
-          _, acc -> acc
-        end)
-    end)
-    {:ok, pids}
-  end
+#  defp child_pids( nil ), do: {:ok, []}
+#  defp child_pids( dyn_supervisor ) do
+#    pids = DynamicSupervisor.which_children( dyn_supervisor )
+#    |> Enum.reduce( [], fn
+#      {_, pid, :worker, [Scene]}, acc -> 
+#        # easy case. scene is the direct child
+#        [ pid | acc ]
+#
+#      {_, pid, :supervisor, [Scene.Supervisor]}, acc ->
+#        # harder case. the child scene is under it's own supervisor
+#        Supervisor.which_children( pid )
+#        |> Enum.reduce( [], fn
+#          {_, pid, :worker, [Scene]}, acc -> [ pid | acc ]
+#          _, acc -> acc
+#        end)
+#    end)
+#    {:ok, pids}
+#  end
 
 
 
