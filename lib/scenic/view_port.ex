@@ -8,13 +8,13 @@ defmodule Scenic.ViewPort do
   use GenServer
   alias Scenic.ViewPort
   alias Scenic.ViewPort.Input.Context
-  alias Scenic.ViewPort.Driver
-  alias Scenic.Scene
-  alias Scenic.Graph
+#  alias Scenic.ViewPort.Driver
+#  alias Scenic.Scene
+#  alias Scenic.Graph
 
-  alias Scenic.Primitive
+#  alias Scenic.Primitive
 
-  import IEx
+#  import IEx
 
   @moduledoc """
 
@@ -87,7 +87,7 @@ defmodule Scenic.ViewPort do
 
   @viewport             :viewport
 #  @dynamic_scenes       :dynamic_scenes
-  @dynamic_supervisor   :vp_dynamic_sup
+#  @dynamic_supervisor   :vp_dynamic_sup
   @max_depth            256
 
 
@@ -245,11 +245,6 @@ defmodule Scenic.ViewPort do
     end
   end
 
-  def start_link(args) do
-    pry()
-  end
-
-
   #--------------------------------------------------------
   @doc false
   def init( {initial_scene, args, opts} ) do
@@ -323,7 +318,6 @@ IO.puts "{:init_pids, sup_pid, ds_pid}"
 
   #--------------------------------------------------------
   def handle_cast( {:set_root, scene, args}, %{
-    drivers: drivers,
     root_scene_pid: old_root_scene,
     dynamic_root_pid: old_dynamic_root_scene,
     dynamic_supervisor: dyn_sup
@@ -334,15 +328,16 @@ IO.puts "{:init_pids, sup_pid, ds_pid}"
     |> Map.put( :hover_primitve, nil )
     |> Map.put( :input_captures, %{} )
 
+    # fetch the dynamic supervisor
+    dyn_sup = case dyn_sup do
+      nil -> find_dyn_supervisor()
+      dyn_sup -> dyn_sup
+    end
+
     # if the scene being set is dynamic, start it up
     {scene_pid, scene_ref, dynamic_scene} = case scene do
       # dynamic scene
       {mod, init_data} ->
-        dyn_sup = case dyn_sup do
-          nil -> find_dyn_supervisor()
-          dyn_sup -> dyn_sup
-        end
-
         # start the dynamic scene
         {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, nil, init_data )
         {pid, ref, pid}
@@ -466,9 +461,9 @@ IO.puts "{:init_pids, sup_pid, ds_pid}"
             |> IO.inspect()
             |> Enum.find_value( fn 
               {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
-              other -> nil
+              _other -> nil
             end)
-          other -> nil
+          _other -> nil
         end
     end
   end

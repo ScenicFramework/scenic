@@ -5,11 +5,11 @@
 
 defmodule Scenic.ViewPort.Supervisor do
   use Supervisor
-  alias Scenic.ViewPort
+#  alias Scenic.ViewPort
 
   @dynamic_supervisor   :vp_dynamic_sup
-  @dynamic_scenes       :dynamic_scenes
-  @dynamic_drivers      :dynamic_drivers
+#  @dynamic_scenes       :dynamic_scenes
+#  @dynamic_drivers      :dynamic_drivers
 
   #============================================================================
   # setup the viewport supervisor

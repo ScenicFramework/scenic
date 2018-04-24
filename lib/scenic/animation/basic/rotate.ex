@@ -8,7 +8,7 @@ defmodule Scenic.Animation.Basic.Rotate do
   alias Scenic.Graph
   alias Scenic.Primitive
 
-  import IEx
+#  import IEx
 
   @hz_to_rpms   :math.pi / 1000
 

@@ -14,7 +14,7 @@ defmodule Scenic.ViewPort.Driver do
   require Logger
   alias Scenic.ViewPort
 
-  import IEx
+#  import IEx
 
 #  @sync_message       :timer_sync
   
@@ -112,7 +112,7 @@ defmodule Scenic.ViewPort.Driver do
   end
 
   #--------------------------------------------------------
-  def init( {module, args, viewport, opts} ) do
+  def init( {module, args, viewport, _opts} ) do
 
     # set up the driver with the viewport registry
 #    {:ok, _} = Registry.register(:driver_registry, :driver,        {module, opts} )

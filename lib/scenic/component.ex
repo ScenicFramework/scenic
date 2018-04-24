@@ -11,7 +11,7 @@ defmodule Scenic.Component do
   @callback add_to_graph(map, any, list) :: map
   @callback info() :: String.t
 
-  import IEx
+#  import IEx
 
   #===========================================================================
   defmacro __using__(opts) do

@@ -11,7 +11,7 @@
 defmodule Scenic.ViewPort.Tables do
   use GenServer
 
-  import IEx
+#  import IEx
 
   # ets table names
   @ets_subs_table       :_scenic_subs_table_
@@ -75,7 +75,7 @@ defmodule Scenic.ViewPort.Tables do
   end
 
   #--------------------------------------------------------
-  def get_graph( {:graph,scene,id} = graph_key ) when is_atom(scene) or is_reference(scene) do
+  def get_graph( {:graph,scene,_} = graph_key ) when is_atom(scene) or is_reference(scene) do
     case :ets.lookup(@ets_graphs_table, graph_key) do
       [] -> nil
       [{_, _, graph, _}] -> {:ok, graph}
@@ -161,7 +161,7 @@ defmodule Scenic.ViewPort.Tables do
   # handle_info
 
   # when a scene goes down, we need to clean up the tables
-  def handle_info({:DOWN, _monitor_ref, :process, pid, reason}, state) do
+  def handle_info({:DOWN, _monitor_ref, :process, pid, _reason}, state) do
     # delete any graphs that had been set by this pid
     pid
     |> list_graphs_for_scene_pid()
@@ -240,10 +240,10 @@ defmodule Scenic.ViewPort.Tables do
 
 
   #--------------------------------------------------------
-  defp list_subscriptions( pid ) when is_pid(pid) do
-    :ets.match(@ets_subs_table, {:"$1", pid})
-    |> List.flatten()
-  end
+#  defp list_subscriptions( pid ) when is_pid(pid) do
+#    :ets.match(@ets_subs_table, {:"$1", pid})
+#    |> List.flatten()
+#  end
 
   #--------------------------------------------------------
   defp list_subscribers( {:graph,_,_} = graph_key ) do
