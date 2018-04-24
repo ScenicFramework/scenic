@@ -116,6 +116,14 @@ defmodule Scenic.Cache do
   def keys( pid ) when is_pid(pid),             do: do_keys( pid )
 
 
+  def member?( key, scope \\ nil ) do
+    case status(key, scope) do
+      {:ok, _} -> true
+      {:err, :not_claimed} -> true
+      {:err, :not_found} -> false
+    end
+  end
+
   #============================================================================
 
   #--------------------------------------------------------
