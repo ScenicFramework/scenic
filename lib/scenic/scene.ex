@@ -11,6 +11,8 @@ defmodule Scenic.Scene do
   alias Scenic.Primitive
   alias Scenic.Utilities
 
+  require Logger
+
   import IEx
 
   @moduledoc """
@@ -266,11 +268,9 @@ defmodule Scenic.Scene do
 
   #===========================================================================
   # the using macro for scenes adopting this behavioiur
-  defmacro __using__(opts) do
+  defmacro __using__(opts \\ []) do
     quote do
       @behaviour Scenic.Scene
-
-      @default_has_children__  true
 
       #--------------------------------------------------------
       # Here so that the scene can override if desired
@@ -287,11 +287,11 @@ defmodule Scenic.Scene do
       def filter_event( event, _from, scene_state ),  do: {:continue, event, scene_state}
 
       def start_dynamic_scene( supervisor, parent, args ) do
-        has_children = case unquote(opts[:has_children]) do
-          nil -> @default_has_children__
-          true -> true
+        has_children = case unquote(opts)[:has_children] do
           false -> false
+          _ -> true
         end
+
         Scenic.Scene.start_dynamic_scene(
           supervisor, parent, __MODULE__,
           args, has_children
@@ -300,15 +300,22 @@ defmodule Scenic.Scene do
 
       defp send_event( event_msg ) do
         case Process.get(:parent_pid) do
-          nil ->
-            {:error, :no_parent}
-          pid ->
-            GenServer.cast(pid, {:event, event_msg, self()})
+          nil -> {:error, :no_parent}
+          pid -> GenServer.cast(pid, {:event, event_msg, self()})
         end
       end
 
-      defp push_graph( graph, sub_id \\ nil, manage_dynamic_children \\ true ) do
-        GenServer.cast( self(), {:push_graph, graph, sub_id, manage_dynamic_children} )
+#      defp push_graph( graph, sub_id \\ nil, manage_dynamic_children \\ true ) do
+      defp push_graph( graph, sub_id \\ nil ) do
+        has_children = case unquote(opts)[:has_children] do
+          false -> false
+          _ -> true
+        end
+
+#        IO.puts "push_graph manage_dynamic_children: #{inspect(manage_dynamic_children)}"
+#        IO.puts "push_graph has_children: #{inspect(has_children)}"
+
+        GenServer.cast( self(), {:push_graph, graph, sub_id, has_children} )
         # return the graph so this can be pipelined
         graph
       end
@@ -414,7 +421,6 @@ defmodule Scenic.Scene do
       raw_scene_refs: %{},      
       dyn_scene_pids: %{},
       dyn_scene_keys: %{},
-      static_ref_names: %{},
 
 #      viewport: {viewport_pid, viewport_tid},
       parent_pid: parent_pid,
@@ -551,7 +557,6 @@ IO.puts"-=-=-=-=-=-=-=- unhandled scene call #{inspect(msg)} -=-=-=-=-=-=-=-"
     scene_state: sc_state
   } = state) do
     # tell the scene it is being activated
-pry()
     {:noreply, sc_state} = mod.handle_set_root( vp, args, sc_state )
     { :noreply, %{state | scene_state: sc_state, activation: args} }
   end
@@ -608,16 +613,6 @@ pry()
 
 
   #--------------------------------------------------------
-#  def handle_cast({:activate, args}, %{
-#    scene_module: mod,
-#    scene_state: sc_state,
-#  } = state) do
-#    # tell the scene it is being activated
-#    {:noreply, sc_state} = mod.handle_activation( args, sc_state )
-#    { :noreply, %{state | scene_state: sc_state, activation: args} }
-#  end
-
-  #--------------------------------------------------------
   def handle_cast({:input, event, context}, 
   %{scene_module: mod, scene_state: sc_state} = state) do
     {:noreply, sc_state} = mod.handle_input(event, context, sc_state )
@@ -656,17 +651,54 @@ pry()
   } = state ) do
     graph_key = {:graph, scene_ref, sub_id}
 
-    # TEMPORARY HACK
     # reduce the incoming graph to it's minimal form
-    min_graph = Enum.reduce( graph.primitive_map, %{}, fn({uid, p}, g) ->
-      Map.put( g, uid, Primitive.minimal(p) )
+    # while simultaneously extracting the SceneRefs
+    {graph, all_keys} = Enum.reduce( graph.primitive_map, {%{}, %{}}, fn
+      # named reference
+      ({uid, %{module: Primitive.SceneRef, data: name} = p},
+      {g, all_refs}) when is_atom(name) ->
+        g = Map.put( g, uid, Primitive.minimal(p) )
+        all_refs = Map.put( all_refs, uid, {:graph, name, nil} )
+        {g, all_refs}
+
+      # explicit reference
+      ({uid, %{module: Primitive.SceneRef, data: {:graph,_,_} = ref} = p},
+      {g, all_refs}) ->
+        g = Map.put( g, uid, Primitive.minimal(p) )
+        all_refs = Map.put( all_refs, uid, ref )
+        {g, all_refs}
+
+
+      # dynamic reference
+      # Log an error and remove the ref from the graph
+      ({uid, %{module: Primitive.SceneRef, data: {_,_} = ref} = p},
+      {g, all_refs}) ->
+        Logger.error "Attempting to manage dynamic reference on graph with has_children set to false. #{inspect(ref)}"
+        {g, all_refs}
+
+      # all non-SceneRef primitives
+      ({uid, p}, {g, all_refs}) ->
+        {Map.put( g, uid, Primitive.minimal(p) ), all_refs}
+    end)
+
+
+    # insert the proper graph keys back into the graph to finish normalizing
+    # it for the drivers. Yes, the driver could do this from the all_keys term
+    # that is also being written into the ets table, but it gets done all the
+    # time for each reader and when consuming input, so it is better to do it
+    # once here. Note that the all_keys term is still being written becuase
+    # otherwise the drivers would need to do a full graph scan in order to prep
+    # whatever translators they need. Again, the info has already been
+    # calculated here, so just pass it along without throwing it out.
+    graph = Enum.reduce(all_keys, graph, fn({uid, key}, g)->
+      put_in(g, [uid, :data], {Scenic.Primitive.SceneRef, key})
     end)
 
     # write the graph into the ets table
-    ViewPort.Tables.insert_graph( graph_key, self(), graph, %{})
+    ViewPort.Tables.insert_graph( graph_key, self(), graph, all_keys)
 
-    # notify the drivers of the updated graph
-    ViewPort.driver_cast( {:push_graph, graph_key} )
+    # write the graph into the ets table
+    ViewPort.Tables.insert_graph( graph_key, self(), graph, all_keys)
 
     { :noreply, state }
   end
@@ -682,7 +714,6 @@ pry()
     dynamic_children_pid: dyn_sup,
     activation: args
   } = state ) do
-
     # reduce the incoming graph to it's minimal form
     # while simultaneously extracting the SceneRefs
     # this should be the only full scan when pushing a graph
@@ -761,12 +792,6 @@ pry()
         {Map.delete(old_pids, uid), Map.delete(old_keys, uid)}
     end)
 
-    # update the static ref names
-    static_ref_names = Enum.reduce(all_keys, [], fn
-      {:graph, name, nil}, names when is_atom(name) -> [name | names]
-      _, names -> names
-    end)
-
     # merge all_refs with the managed dyanmic keys
     all_keys = Map.merge( all_keys, new_dyn_keys )
 
@@ -792,7 +817,6 @@ pry()
     |> put_in( [:raw_scene_refs, sub_id], new_raw_refs )
     |> put_in( [:dyn_scene_pids, sub_id], new_dyn_pids )
     |> put_in( [:dyn_scene_keys, sub_id], new_dyn_keys )
-    |> put_in( [:static_ref_names, sub_id], static_ref_names )
 
     { :noreply, state }
   end
