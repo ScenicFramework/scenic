@@ -5,7 +5,7 @@ defmodule Scenic.SplashScreen do
   alias Scenic.Primitive
   alias Scenic.ViewPort
 
-  import IEx
+#  import IEx
 
 
   @splash_interval  32
@@ -22,7 +22,7 @@ defmodule Scenic.SplashScreen do
 
     state = %{
       graph: @graph,
-      animations: @animations,
+#      animations: @animations,
       timer: timer,
       start_time: :os.system_time(:milli_seconds),
       min_time: opts[:splash_time] || @default_min_time,
@@ -41,11 +41,11 @@ defmodule Scenic.SplashScreen do
 #  end
 
   #--------------------------------------------------------
-  def handle_lose_root(_, %{timer: timer} = state ) do
-    # stop the animation timer
-    if timer, do: :timer.cancel(timer)
-    {:noreply, %{state | timer: nil} }
-  end
+#  def handle_lose_root(_, %{timer: timer} = state ) do
+#    # stop the animation timer
+#    if timer, do: :timer.cancel(timer)
+#    {:noreply, %{state | timer: nil} }
+#  end
 
 
   #--------------------------------------------------------

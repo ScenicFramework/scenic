@@ -5,20 +5,18 @@ defmodule Scenic.Component.Input.Checkbox do
   alias Scenic.Primitive
   alias Scenic.ViewPort
 
-  import IEx
+#  import IEx
 
 
-  @default_width      80
-  @default_height     32
-  @default_radius     6
-  @default_type       6
+#  @default_width      80
+#  @default_height     32
+#  @default_radius     6
+#  @default_type       6
 
-  @blue_color         :steel_blue
-  @text_color         :white
+#  @blue_color         :steel_blue
+#  @text_color         :white
 
-  @valid_sizes [:small, :normal, :large]
-  @valid_colors [:primary, :secondary, :success, :danger, :warning, :info, :light, :dark, :text]
-  @valid_other [:outline]
+  @valid_colors [:light, :dark]
 
   # type is {text_color, box_background, border_color, pressed_color, checkmark_color}
   # nil for text_color means to use whatever is inherited
@@ -36,9 +34,9 @@ defmodule Scenic.Component.Input.Checkbox do
   def valid?( {text, msg, value} ), do: valid?( {text, msg, value, []} )
   def valid?( {text, msg, value, opts} ) when is_atom(opts), do: valid?( {text, msg, value, [opts]} )
 
-  def valid?( {text, msg, value, opts} ) when is_bitstring(text) and is_boolean(value)
+  def valid?( {text, _msg, value, opts} ) when is_bitstring(text) and is_boolean(value)
   and is_list(opts), do: true
-  def valid?( d ), do: false
+  def valid?( _ ), do: false
 
 
   #--------------------------------------------------------
@@ -82,14 +80,14 @@ defmodule Scenic.Component.Input.Checkbox do
   end
 
   #--------------------------------------------------------
-  def handle_input( {:cursor_enter, uid}, _, state ) do
+  def handle_input( {:cursor_enter, _uid}, _, state ) do
     state = Map.put(state, :contained, true)
     graph = update_graph(state)
     {:noreply, %{state | graph: graph}}
   end
 
   #--------------------------------------------------------
-  def handle_input( {:cursor_exit, uid}, _, state ) do
+  def handle_input( {:cursor_exit, _uid}, _, state ) do
     state = Map.put(state, :contained, false)
     graph = update_graph(state)
     {:noreply, %{state | graph: graph}}
@@ -131,7 +129,7 @@ defmodule Scenic.Component.Input.Checkbox do
   end
 
   #--------------------------------------------------------
-  def handle_input( event, context, state ) do
+  def handle_input( _event, _context, state ) do
     {:noreply, state}
   end
 

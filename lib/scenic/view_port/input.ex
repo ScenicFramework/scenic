@@ -9,8 +9,8 @@
 
 defmodule Scenic.ViewPort.Input do
   alias Scenic.Scene
-  alias Scenic.Utilities
-  alias Scenic.Graph
+#  alias Scenic.Utilities
+#  alias Scenic.Graph
   alias Scenic.ViewPort
   alias Scenic.Primitive
   alias Scenic.Math.MatrixBin, as: Matrix
@@ -24,8 +24,6 @@ defmodule Scenic.ViewPort.Input do
     @identity         Matrix.identity()
     defstruct viewport: nil, graph_key: nil, tx: @identity, inverse_tx: @identity, uid: nil
   end
-
-  @ets_graphs_table       :_scenic_viewport_graphs_table_
 
   @identity         Matrix.identity()
 
@@ -145,7 +143,7 @@ defmodule Scenic.ViewPort.Input do
 
   #--------------------------------------------------------
   # cursor_enter is only sent to the root graph_key
-  defp do_handle_captured_input( {:cursor_pos, point} = msg, context,
+  defp do_handle_captured_input( {:cursor_pos, point}, context,
   %{max_depth: max_depth} = state ) do
     case find_by_captured_point( point, context, max_depth ) do
       {nil, point} ->
@@ -394,7 +392,7 @@ defmodule Scenic.ViewPort.Input do
     end
   end
 
-  defp do_find_by_captured_point( point, _, graph, _, _, 0 ) do
+  defp do_find_by_captured_point( point, _, _, _, _, 0 ) do
     Logger.error "do_find_by_captured_point max depth"
     {nil, point}
   end
@@ -451,7 +449,7 @@ defmodule Scenic.ViewPort.Input do
   # backwards and return the first hit we find. We could just reduct the whole
   # thing and return the last one found (that was my first try), but this is
   # more efficient as we can stop as soon as we find the first one.
-  defp find_by_screen_point( {x,y}, %{root_graph_key: root_key, max_depth: depth} = state) do
+  defp find_by_screen_point( {x,y}, %{root_graph_key: root_key, max_depth: depth}) do
     identity = {@identity, @identity}
     with {:ok, graph} <- ViewPort.Tables.get_graph(root_key) do
       do_find_by_screen_point( x, y, 0, root_key, graph, identity, identity, depth )
@@ -495,17 +493,26 @@ defmodule Scenic.ViewPort.Input do
 
       # if this is a SceneRef, then traverse into the next graph
       %{data: {Primitive.SceneRef, ref_key}} = p ->
-        case ViewPort.Tables.get_scene_pid( ref_key ) do
-          {:ok, scene_pid} ->
-            {tx, inv_tx} = calc_transforms(p, parent_tx, parent_inv_tx)
-            with {:ok, graph} <- ViewPort.Tables.get_graph(ref_key) do
-              do_find_by_screen_point(x, y, 0, ref_key, graph,
-                {tx, inv_tx}, {tx, inv_tx}, depth - 1
-              )
-            end
-          _ ->
-            nil
-        end
+          {tx, inv_tx} = calc_transforms(p, parent_tx, parent_inv_tx)
+          with {:ok, graph} <- ViewPort.Tables.get_graph(ref_key) do
+            do_find_by_screen_point(x, y, 0, ref_key, graph,
+              {tx, inv_tx}, {tx, inv_tx}, depth - 1
+            )
+          else
+            _ -> nil
+          end
+#        case ViewPort.Tables.get_scene_pid( ref_key ) do
+#          {:ok, scene_pid} ->
+#            {tx, inv_tx} = calc_transforms(p, parent_tx, parent_inv_tx)
+#            with {:ok, graph} <- ViewPort.Tables.get_graph(ref_key) do
+#              do_find_by_screen_point(x, y, 0, ref_key, graph,
+#                {tx, inv_tx}, {tx, inv_tx}, depth - 1
+#              )
+#            end
+#          _ ->
+#            nil
+#        end
+
 
       # This is a regular primitive, test to see if it is hit
       %{data: {mod, data}} = p ->

@@ -5,20 +5,20 @@ defmodule Scenic.Component.Button do
   alias Scenic.Primitive
   alias Scenic.ViewPort
 
-  import IEx
+#  import IEx
 
 
-  @default_width      80
-  @default_height     32
-  @default_radius     2
-  @default_type       6
+#  @default_width      80
+#  @default_height     32
+#  @default_radius     2
+#  @default_type       6
 
-  @blue_color         :steel_blue
-  @text_color         :white
+#  @blue_color         :steel_blue
+#  @text_color         :white
 
   @valid_sizes [:small, :normal, :large]
   @valid_colors [:primary, :secondary, :success, :danger, :warning, :info, :light, :dark, :text]
-  @valid_other [:outline]
+#  @valid_other [:outline]
 
   # type is {text_color, button_color, hover_color, pressed_color, border_color}
   # nil for text_color means to use whatever is inherited
@@ -59,10 +59,10 @@ defmodule Scenic.Component.Button do
 
   #--------------------------------------------------------
   def valid?( {text, msg} ), do: valid?( {text, msg, []} )
-  def valid?( {text, msg, opts} ) when is_atom(opts), do: valid?( {text, [opts]} )
+  def valid?( {text, _msg, opts} ) when is_atom(opts), do: valid?( {text, [opts]} )
 
-  def valid?( {text, msg, opts} ) when is_bitstring(text) and is_list(opts), do: true
-  def valid?( d ), do: false
+  def valid?( {text, _msg, opts} ) when is_bitstring(text) and is_list(opts), do: true
+  def valid?( _ ), do: false
 
 
   #--------------------------------------------------------
@@ -72,10 +72,10 @@ defmodule Scenic.Component.Button do
     # get the size
     size_opt = Enum.find(opts, &Enum.member?(@valid_sizes, &1) ) || :normal
     color_opt = Enum.find(opts, &Enum.member?(@valid_colors, &1) ) || :primary
-    outline_opt = Enum.member?(opts, :outline)
+#    outline_opt = Enum.member?(opts, :outline)
 
     colors = @colors[color_opt]
-    {text_color, button_color, _, _, border_color} = colors
+    {text_color, button_color, _, _, _border_color} = colors
 
     {width, hieght, radius, font_size} = @sizes[size_opt]
 
@@ -99,7 +99,7 @@ push_graph( graph )
   end
 
   #--------------------------------------------------------
-  def handle_input( {:cursor_enter, uid}, context, state ) do
+  def handle_input( {:cursor_enter, _uid}, _context, state ) do
 #IO.puts( "handle_input :cursor_enter")
     state = Map.put(state, :contained, true)
     update_color(state)
@@ -107,7 +107,7 @@ push_graph( graph )
   end
 
   #--------------------------------------------------------
-  def handle_input( {:cursor_exit, uid}, context, state ) do
+  def handle_input( {:cursor_exit, _uid}, _context, state ) do
 #IO.puts( "handle_input :cursor_exit")
     state = Map.put(state, :contained, false)
     update_color(state)
@@ -142,7 +142,7 @@ push_graph( graph )
   end
 
   #--------------------------------------------------------
-  def handle_input( event, context, state ) do
+  def handle_input( _event, _context, state ) do
     {:noreply, state}
   end
 

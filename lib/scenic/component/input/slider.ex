@@ -5,7 +5,7 @@ defmodule Scenic.Component.Input.Slider do
   alias Scenic.Primitive
   alias Scenic.ViewPort
 
-  import IEx
+#  import IEx
 
 
   @height             16
@@ -13,10 +13,8 @@ defmodule Scenic.Component.Input.Slider do
   @radius             5
   @btn_size           14
 
-  @extents_mismatch   "Numeric extents must be the same type. Either both floats or both integers."
-
   @slider_color       :antique_white
-  @hit_target_color   :clear
+#  @hit_target_color   :clear
   @line_color         :cornflower_blue
   @line_width         4
 
@@ -26,8 +24,8 @@ defmodule Scenic.Component.Input.Slider do
   end
 
   #--------------------------------------------------------
-  def valid?( {ext, init, width, id} ), do: true
-  def valid?( d ), do: false
+  def valid?( {_ext, _init, _width, _id} ), do: true
+  def valid?( _d ), do: false
 
 
   #--------------------------------------------------------
@@ -48,7 +46,6 @@ defmodule Scenic.Component.Input.Slider do
       tracking: false
     }
 
-#IO.puts "Slider.init"
     push_graph( graph )
 
     {:ok, state}
@@ -77,14 +74,14 @@ defmodule Scenic.Component.Input.Slider do
 
 
   #--------------------------------------------------------
-  def handle_input( {:cursor_pos, {x,_}}, context, %{tracking: true} = state ) do
+  def handle_input( {:cursor_pos, {x,_}}, _context, %{tracking: true} = state ) do
     state = update_slider( x, state )
     {:noreply, state}
   end
 
 
   #--------------------------------------------------------
-  def handle_input( event, context, state ) do
+  def handle_input( _event, _context, state ) do
     {:noreply, state}
   end
 
@@ -131,14 +128,13 @@ defmodule Scenic.Component.Input.Slider do
     new_x = calc_slider_position( width, extents, new_value )
 
     # apply the x position
-    graph = Graph.modify(graph, :thumb, fn(p) ->
+    Graph.modify(graph, :thumb, fn(p) ->
       #Primitive.put_transform( p, :translate, {x,0} )
       { {_, y}, width, height, radius } = Primitive.get(p)
       Primitive.put(p, { {new_x, y}, width, height, radius })    
     end)
     |> push_graph()
   end
-
 
   #--------------------------------------------------------
   # calculate the position if the extents are numeric
@@ -162,7 +158,7 @@ defmodule Scenic.Component.Input.Slider do
     max_index = Enum.count(ext) - 1
 
     index = case Enum.find_index(ext, fn(v) -> v == value end) do
-      nil ->    raise Error, "Slider value not in extents list"
+      nil ->    raise "Slider value not in extents list"
       index ->  index
     end
 

@@ -4,11 +4,9 @@ defmodule Scenic.Component.Input.RadioGroup do
   alias Scenic.Graph
   alias Scenic.Scene
   alias Scenic.Primitive
-  alias Scenic.ViewPort
-  alias Scenic.ViewPort
   alias Scenic.Component.Input.RadioButton
 
-  import IEx
+#  import IEx
 
   @line_height      22
 
@@ -20,7 +18,7 @@ defmodule Scenic.Component.Input.RadioGroup do
   end
 
   #--------------------------------------------------------
-  def valid?( items ), do: true
+  def valid?( _items ), do: true
 
   #--------------------------------------------------------
   def init( {items, id} ) when is_list(items) do
@@ -39,9 +37,9 @@ defmodule Scenic.Component.Input.RadioGroup do
     end)
 
     value = Enum.find_value(items, fn
-      {t,m} -> nil
-      {t,m, false} -> nil
-      {t,m, true} -> m
+      {_t,_m} -> nil
+      {_t,_m, false} -> nil
+      {_t,m, true} -> m
     end)
 
     state = %{
@@ -57,14 +55,14 @@ defmodule Scenic.Component.Input.RadioGroup do
   end
 
   #--------------------------------------------------------
-  def handle_cast({:set_value, new_value}, %{checked: value} = state) do
+  def handle_cast({:set_value, new_value}, state) do
     {:noreply, %{state | value: new_value}}
   end
 
 
   #============================================================================
 
-  def filter_event( {:click, msg}, _from, %{graph: graph, id: id} = state ) do
+  def filter_event( {:click, msg}, _from, %{id: id} = state ) do
 
     Scene.cast_to_refs( nil, {:set_to_msg, msg} )
     
@@ -72,11 +70,9 @@ defmodule Scenic.Component.Input.RadioGroup do
     {:stop, %{state | value: msg}}
   end
 
-  def filter_event( msg, from,  state ) do
+  def filter_event( msg, _from,  state ) do
     {:continue, msg, state}
   end
-
-# {:set_to_msg, set_msg}
 
 end
 
