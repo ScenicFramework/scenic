@@ -268,7 +268,7 @@ defmodule Scenic.Scene do
 
   #===========================================================================
   # the using macro for scenes adopting this behavioiur
-  defmacro __using__(opts \\ []) do
+  defmacro __using__(using_opts \\ []) do
     quote do
       @behaviour Scenic.Scene
 
@@ -286,15 +286,15 @@ defmodule Scenic.Scene do
       def handle_input( event, _, scene_state ),      do: {:noreply, scene_state}
       def filter_event( event, _from, scene_state ),  do: {:continue, event, scene_state}
 
-      def start_dynamic_scene( supervisor, parent, args ) do
-        has_children = case unquote(opts)[:has_children] do
+      def start_dynamic_scene( supervisor, parent, args, opts \\ [] ) do
+        has_children = case unquote(using_opts)[:has_children] do
           false -> false
           _ -> true
         end
 
         Scenic.Scene.start_dynamic_scene(
           supervisor, parent, __MODULE__,
-          args, has_children
+          args, opts, has_children
         )
       end
 
@@ -307,7 +307,7 @@ defmodule Scenic.Scene do
 
 #      defp push_graph( graph, sub_id \\ nil, manage_dynamic_children \\ true ) do
       defp push_graph( graph, sub_id \\ nil ) do
-        has_children = case unquote(opts)[:has_children] do
+        has_children = case unquote(using_opts)[:has_children] do
           false -> false
           _ -> true
         end
@@ -852,16 +852,20 @@ defmodule Scenic.Scene do
   #--------------------------------------------------------
   # this a root-level dynamic scene
   @doc false
-  def start_dynamic_scene( dynamic_supervisor, parent, mod, args, has_children ) do
+  def start_dynamic_scene( dynamic_supervisor, parent, mod, args, opts, has_children )
+  when is_list(opts) and is_boolean(has_children) and is_atom(mod)do
     ref = make_ref()
-    do_start_child_scene( dynamic_supervisor, parent, ref, mod, args, has_children )
+    opts = opts
+    |> Keyword.put_new( :parent, parent)
+    |> Keyword.put_new( :scene_ref, ref)
+    do_start_child_scene( dynamic_supervisor, ref, mod, args, opts, has_children )
   end
 
   #--------------------------------------------------------
-  defp do_start_child_scene( dynamic_supervisor, parent, ref, mod, args, true ) do
+  defp do_start_child_scene( dynamic_supervisor, ref, mod, args, opts, true ) do
     # start the scene supervision tree
     {:ok, supervisor_pid} = DynamicSupervisor.start_child( dynamic_supervisor,
-      {Scenic.Scene.Supervisor, {mod, args, [parent: parent, scene_ref: ref]}}
+      {Scenic.Scene.Supervisor, {mod, args, opts}}
     )
 
     # we want to return the pid of the scene itself. not the supervisor
@@ -877,10 +881,10 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  defp do_start_child_scene( dynamic_supervisor, parent, ref, mod, args, false ) do
+  defp do_start_child_scene( dynamic_supervisor, ref, mod, args, opts, false ) do
     {:ok, pid} = DynamicSupervisor.start_child(
       dynamic_supervisor,
-      {Scenic.Scene, {mod, args, [parent: parent, scene_ref: ref]}}
+      {Scenic.Scene, {mod, args, opts}}
     )
     {:ok, pid, ref}
   end
