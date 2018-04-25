@@ -14,7 +14,7 @@ defmodule Scenic.ViewPort do
 
 #  alias Scenic.Primitive
 
-#  import IEx
+  import IEx
 
   @moduledoc """
 
@@ -338,7 +338,7 @@ defmodule Scenic.ViewPort do
       # dynamic scene
       {mod, init_data} ->
         # start the dynamic scene
-        {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, nil, init_data )
+        {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, nil, init_data, vp_dynamic_root: self() )
         {pid, ref, pid}
 
       # app supervised scene - mark dynamic root as nil
@@ -371,6 +371,17 @@ defmodule Scenic.ViewPort do
     { :noreply, state }
   end
 
+  #--------------------------------------------------------
+  def handle_cast( {:dyn_root_up, scene_ref, scene_pid}, %{
+    root_graph_key: {:graph, root_scene_ref, _}
+  } = state ) when (root_scene_ref == scene_ref) do
+    { :noreply, %{state | root_scene_pid: scene_pid, dynamic_root_pid: scene_pid} }
+  end
+
+  def handle_cast( {:dyn_root_up, _, }, state ) do
+    # ignore stale root_up messages
+    { :noreply, state }
+  end
 
   #==================================================================
   # casts about drivers
