@@ -240,10 +240,10 @@ defmodule Scenic.ViewPort.Tables do
 
 
   #--------------------------------------------------------
-#  defp list_subscriptions( pid ) when is_pid(pid) do
-#    :ets.match(@ets_subs_table, {:"$1", pid})
-#    |> List.flatten()
-#  end
+  def list_subscriptions( pid ) when is_pid(pid) do
+    :ets.match(@ets_subs_table, {:"$1", pid})
+    |> List.flatten()
+  end
 
   #--------------------------------------------------------
   defp list_subscribers( {:graph,_,_} = graph_key ) do
