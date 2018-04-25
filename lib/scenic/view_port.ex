@@ -312,7 +312,6 @@ defmodule Scenic.ViewPort do
 
   #--------------------------------------------------------
   def handle_cast( {:init_pids, sup_pid, ds_pid}, state ) do
-IO.puts "{:init_pids, sup_pid, ds_pid}"
     {:noreply, %{state | immediate_supervisor: sup_pid, dynamic_supervisor: ds_pid}}
   end
 
@@ -458,7 +457,6 @@ IO.puts "{:init_pids, sup_pid, ds_pid}"
         case get_in( info, [:dictionary, :"$initial_call"] ) do
           {:supervisor, Scenic.ViewPort.Supervisor, _} ->
             Supervisor.which_children( supervisor_pid )
-            |> IO.inspect()
             |> Enum.find_value( fn 
               {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
               _other -> nil

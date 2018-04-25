@@ -543,7 +543,6 @@ defmodule Scenic.Scene do
   #--------------------------------------------------------
   # generic handle_call. give the scene a chance to handle it
   def handle_call(msg, from, %{scene_module: mod, scene_state: sc_state} = state) do
-IO.puts"-=-=-=-=-=-=-=- unhandled scene call #{inspect(msg)} -=-=-=-=-=-=-=-"
     {:reply, reply, sc_state} = mod.handle_call(msg, from, sc_state)
     {:reply, reply, %{state | scene_state: sc_state}}
   end
