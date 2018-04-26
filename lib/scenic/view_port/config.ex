@@ -8,8 +8,12 @@ defmodule Scenic.ViewPort.Config do
   alias Scenic.ViewPort.Driver
   alias Scenic.ViewPort.Config
 
+
+  @max_depth            256
+
   # describe the struct. Name nil and opts as an empty list are good defaults
-  defstruct name: nil, default_scene: nil, default_scene_activation: nil, drivers: []
+  defstruct name: nil, default_scene: nil, default_scene_activation: nil,
+    drivers: [], max_depth: @max_depth
 
   #--------------------------------------------------------
   def valid?( %Config{default_scene: {mod, _}, name: name, drivers: drivers} ) do

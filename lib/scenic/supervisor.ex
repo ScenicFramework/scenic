@@ -8,16 +8,38 @@
 defmodule Scenic.Supervisor do
   use Supervisor
 
-  @viewports :scenic_viewports
+  @viewports :scenic_dyn_viewports
 
-  def start_link( opts \\ [] ) do
+  def start_link( opts \\ [] )
+  def start_link( {a,b} ), do: start_link( [{a,b}] )
+  def start_link( opts ) when is_list(opts) do
     Supervisor.start_link(__MODULE__, opts, name: :scenic)
   end
 
-  def init( _opts ) do
+  #--------------------------------------------------------
+  def init( opts ) do
+    Keyword.get(opts, :viewports, [])
+    |> do_init( opts )
+  end
+
+  #--------------------------------------------------------
+  # init with no default viewports
+  def do_init( [], opts ) do
     [
       {Scenic.ViewPort.Tables, nil},
       supervisor(Scenic.Cache.Supervisor, []),
+      {DynamicSupervisor, name: @viewports, strategy: :one_for_one}
+    ]
+    |> Supervisor.init( strategy: :one_for_one )
+  end
+
+  #--------------------------------------------------------
+  # init with default viewports
+  def do_init( viewports, opts ) do
+    [
+      {Scenic.ViewPort.Tables, nil},
+      supervisor(Scenic.Cache.Supervisor, []),
+      supervisor(Scenic.ViewPort.SupervisorTop, [viewports]),
       {DynamicSupervisor, name: @viewports, strategy: :one_for_one}
     ]
     |> Supervisor.init( strategy: :one_for_one )

@@ -83,12 +83,9 @@ defmodule Scenic.ViewPort do
   weird state, so I wouldn't recommend it.
 
   """
-  @viewports            :scenic_viewports
+  @viewports            :scenic_dyn_viewports
 
   @viewport             :viewport
-#  @dynamic_scenes       :dynamic_scenes
-#  @dynamic_supervisor   :vp_dynamic_sup
-  @max_depth            256
 
 
   #============================================================================
@@ -106,14 +103,12 @@ defmodule Scenic.ViewPort do
     )
 
     # we want to return the pid of the viewport itself
-    {viewport_pid, ds_pid} = Supervisor.which_children( sup_pid )
-    |> Enum.reduce( {nil, nil}, fn 
-      {_, pid, :worker, [Scenic.ViewPort]}, {_, ds} -> {pid, ds}
-      {_, pid, :supervisor, [DynamicSupervisor]}, {vp, _} -> {vp, pid}
-    end)
-
-    # tell the new viewport about it's supervisors
-    GenServer.cast(viewport_pid, {:init_pids, sup_pid, ds_pid})
+    viewport_pid = sup_pid
+    |> Supervisor.which_children()
+    |> Enum.find_value( fn
+      {_, pid, :worker, [Scenic.ViewPort]} -> pid
+      _ -> false
+    end) 
 
     # return the pid to the viewport itself
     {:ok, viewport_pid}
@@ -139,23 +134,26 @@ defmodule Scenic.ViewPort do
   @doc """
   Set a the root scene/graph of the ViewPort.
   """
-  def set_root( scene, args \\ nil )
+  def set_root( viewport, scene, args \\ nil )
 
-  def set_root( scene, args ) when is_atom(scene) do
-    GenServer.cast( @viewport, {:set_root, scene, args} )
+  def set_root( viewport, scene, args ) when
+  (is_pid(viewport) or is_atom(viewport)) and is_atom(scene) do
+    GenServer.cast( viewport, {:set_root, scene, args} )
   end
 
-  def set_root( {mod, init_data}, args ) when is_atom(mod) do
-    GenServer.cast( @viewport, {:set_root, {mod, init_data}, args} )
+  def set_root( viewport, {mod, init_data}, args ) when
+  (is_pid(viewport) or is_atom(viewport)) and is_atom(mod) do
+    GenServer.cast( viewport, {:set_root, {mod, init_data}, args} )
   end
 
   #--------------------------------------------------------
-  def request_root( send_to \\ nil )
-  def request_root( nil ) do
-    request_root( self() )
+  def request_root( viewport, send_to \\ nil )
+  def request_root( viewport, nil ) do
+    request_root( viewport, self() )
   end
-  def request_root( to ) when is_pid(to) or is_atom(to) do
-    GenServer.cast( @viewport, {:request_root, to} )
+  def request_root( viewport, to ) when
+  (is_pid(viewport) or is_atom(viewport)) and (is_pid(to) or is_atom(to)) do
+    GenServer.cast( viewport, {:request_root, to} )
   end
 
   #--------------------------------------------------------
@@ -226,10 +224,10 @@ defmodule Scenic.ViewPort do
   #============================================================================
   # internal server api
 
-  def child_spec({initial_scene, args, opts}) do
+  def child_spec( args ) do
     %{
       id: make_ref(),
-      start: {__MODULE__, :start_link, [{initial_scene, args, opts}]},
+      start: {__MODULE__, :start_link, [args]},
       type: :worker,
       restart: :permanent,
       shutdown: 500
@@ -238,8 +236,8 @@ defmodule Scenic.ViewPort do
 
   #--------------------------------------------------------
   @doc false
-  def start_link({_, _, opts} = args) do
-    case opts[:name] do
+  def start_link({_, config} = args) do
+    case config.name do
       nil -> GenServer.start_link(__MODULE__, args)
       name -> GenServer.start_link(__MODULE__, args, name: name)
     end
@@ -247,31 +245,9 @@ defmodule Scenic.ViewPort do
 
   #--------------------------------------------------------
   @doc false
-  def init( {initial_scene, args, opts} ) do
-
-    # set up the initial state
-    state = %{
-      root_graph_key: nil,
-      root_scene_pid: nil,
-      dynamic_root_pid: nil,
-
-      input_captures: %{},
-      hover_primitve: nil,
-
-      drivers: [],
-      immediate_supervisor: nil,
-      dynamic_supervisor: nil,
-
-      max_depth: opts[:max_depth] || @max_depth,
-    }
-
-    # set the initial scene as the root
-    case initial_scene do
-      nil -> :ok
-      scene -> GenServer.cast( self(), {:set_root, scene, args} )
-    end
-
-    {:ok, state}
+  def init( {vp_sup, config} ) do
+    GenServer.cast( self(), {:after_init, vp_sup, config} )
+    {:ok, %{}}
   end
 
   #============================================================================
@@ -310,10 +286,52 @@ defmodule Scenic.ViewPort do
   #============================================================================
   # handle_cast
 
-  #--------------------------------------------------------
-  def handle_cast( {:init_pids, sup_pid, ds_pid}, state ) do
-    {:noreply, %{state | immediate_supervisor: sup_pid, dynamic_supervisor: ds_pid}}
+
+  def handle_cast( {:after_init, vp_supervisor, config}, state ) do
+    
+    # find the viewport and associated pids this driver belongs to
+    dyn_sup_pid = vp_supervisor
+    |> Supervisor.which_children()
+    |> Enum.find_value( fn
+      {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
+      _ -> false
+    end) 
+
+    # set up the initial state
+    state = %{
+      root_graph_key: nil,
+      root_scene_pid: nil,
+      dynamic_root_pid: nil,
+
+      input_captures: %{},
+      hover_primitve: nil,
+
+      drivers: [],
+      supervisor: vp_supervisor,
+      dynamic_supervisor: dyn_sup_pid,
+
+      max_depth: config.max_depth
+    }
+
+    # set the initial scene as the root
+    case config.default_scene do
+      nil -> :ok
+      scene ->
+        GenServer.cast(
+          self(),
+          {:set_root, scene, config.default_scene_activation}
+        )
+    end
+
+    {:noreply, state}
   end
+
+
+
+  #--------------------------------------------------------
+  # def handle_cast( {:init_pids, sup_pid, ds_pid}, state ) do
+  #   {:noreply, %{state | immediate_supervisor: sup_pid, dynamic_supervisor: ds_pid}}
+  # end
 
   #--------------------------------------------------------
   def handle_cast( {:set_root, scene, args}, %{

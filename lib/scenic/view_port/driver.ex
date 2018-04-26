@@ -14,7 +14,7 @@ defmodule Scenic.ViewPort.Driver do
   require Logger
   alias Scenic.ViewPort
 
-#  import IEx
+  import IEx
 
 #  @sync_message       :timer_sync
   
@@ -103,29 +103,48 @@ defmodule Scenic.ViewPort.Driver do
   #===========================================================================
   # Driver initialization
 
+
+    def child_spec({root_sup, config}) do
+    %{
+      id: make_ref(),
+      start: {__MODULE__, :start_link, [{root_sup, config}]},
+      type: :worker,
+      restart: :permanent,
+      shutdown: 500
+    }
+  end
+
+
   #--------------------------------------------------------
-  def start_link({_, _, _, opts} = args) do
-    case opts[:name] do
+  def start_link({_, config} = args) do
+    case config.name do
       nil -> GenServer.start_link(__MODULE__, args)
       name -> GenServer.start_link(__MODULE__, args, name: name)
     end
   end
 
+  def start_link(other) do
+    pry()
+  end
+
+
   #--------------------------------------------------------
-  def init( {module, args, viewport, _opts} ) do
+  def init( {root_sup, config} ) do
+
+    GenServer.cast(self(), {:after_init, root_sup, config})
 
     # set up the driver with the viewport registry
 #    {:ok, _} = Registry.register(:driver_registry, :driver,        {module, opts} )
 
     # let the driver initialize itself
-    {:ok, driver_state} = module.init( viewport, args )
+#     {:ok, driver_state} = module.init( viewport, args )
 
-    state = %{
-      viewport: viewport,
-      driver_module:  module,
-      driver_state:   driver_state
-#      sync_interval:  nil
-    }
+#     state = %{
+#       viewport: viewport,
+#       driver_module:  module,
+#       driver_state:   driver_state
+# #      sync_interval:  nil
+#     }
 
     # get the correct sync interval
 #    interval = case Keyword.get(opts, :sync_interval, :none) do
@@ -146,7 +165,7 @@ defmodule Scenic.ViewPort.Driver do
 #      _ -> raise Error, message: "Invalid interval. Must be a positive integer or nil."
 #    end
 
-    {:ok, state}
+    {:ok, %{}}
   end
 
   #============================================================================
@@ -163,6 +182,41 @@ defmodule Scenic.ViewPort.Driver do
 
   #============================================================================
   # handle_cast
+
+  #--------------------------------------------------------
+  # finish init
+  def handle_cast({:after_init, vp_supervisor, config}, state) do
+    # find the viewport this driver belongs to
+    viewport_pid = vp_supervisor
+    |> Supervisor.which_children()
+    |> Enum.find_value( fn
+      {_, pid, :worker, [Scenic.ViewPort]} -> pid
+      _ -> false
+    end) 
+
+    # {vp_pid, dyn_sup_pid} = vp_supervisor
+    # |> Supervisor.which_children()
+    # |> Enum.reduce( {nil, nil}, fn
+    #   {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]}, {vp, _} ->
+    #     {vp, pid}
+    #   {_, pid, :worker, [Scenic.ViewPort]}, {_, dyn} ->
+    #     {pid, dyn}
+    #   _, {vp, dyn} ->
+    #     {vp, dyn}
+    # end)    
+
+    # let the driver module initialize itself
+    module = config.module
+     {:ok, driver_state} = module.init( viewport_pid, config.opts )
+
+    state = %{
+      viewport: viewport_pid,
+      driver_module:  module,
+      driver_state:   driver_state
+    }
+
+    { :noreply, state }
+  end
 
   #--------------------------------------------------------
   # set the graph
