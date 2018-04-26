@@ -206,10 +206,9 @@ defmodule Scenic.ViewPort do
 
 
   #--------------------------------------------------------
-  def start_driver( viewport, module, args, opts \\ [] ) when
-  is_atom(module) and is_list(opts) and
-  (is_atom(viewport) or is_pid(viewport) )do
-    GenServer.call(viewport, { :start_driver, module, args, opts })
+  def start_driver( viewport, %ViewPort.Driver.Config{} = config ) when
+  (is_atom(viewport) or is_pid(viewport) ) do
+    GenServer.call(viewport, { :start_driver, config })
   end
 
   #--------------------------------------------------------
@@ -264,19 +263,14 @@ defmodule Scenic.ViewPort do
 
 
   #--------------------------------------------------------
-  def handle_call( {:start_driver, _, _, _}, _, %{
-    dynamic_supervisor: dyn_sup
-  } = state ) when is_nil(dyn_sup) do
-    {:reply, {:error, :viewport_not_ready}, state}
-  end
-
-  def handle_call( {:start_driver, module, args, opts}, _, %{
+  def handle_call( {:start_driver, config}, _, %{
+    supervisor: vp_supervisor,
     dynamic_supervisor: dyn_sup
   } = state ) do
     {
       :reply,
       DynamicSupervisor.start_child( dyn_sup,
-        {Scenic.ViewPort.Driver, {module, args, self(), opts}}
+        {Scenic.ViewPort.Driver, {vp_supervisor, config}}
       ),
       state
     }
