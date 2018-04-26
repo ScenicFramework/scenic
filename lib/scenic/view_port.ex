@@ -8,13 +8,8 @@ defmodule Scenic.ViewPort do
   use GenServer
   alias Scenic.ViewPort
   alias Scenic.ViewPort.Input.Context
-#  alias Scenic.ViewPort.Driver
-#  alias Scenic.Scene
-#  alias Scenic.Graph
 
-#  alias Scenic.Primitive
-
-  import IEx
+#  import IEx
 
   @moduledoc """
 
@@ -84,9 +79,6 @@ defmodule Scenic.ViewPort do
 
   """
   @viewports            :scenic_dyn_viewports
-
-  @viewport             :viewport
-
 
   #============================================================================
   # client api
@@ -246,7 +238,7 @@ defmodule Scenic.ViewPort do
   @doc false
   def init( {vp_sup, config} ) do
     GenServer.cast( self(), {:after_init, vp_sup, config} )
-    {:ok, %{}}
+    {:ok, nil}
   end
 
   #============================================================================
@@ -281,7 +273,7 @@ defmodule Scenic.ViewPort do
   # handle_cast
 
 
-  def handle_cast( {:after_init, vp_supervisor, config}, state ) do
+  def handle_cast( {:after_init, vp_supervisor, config}, _ ) do
     
     # find the viewport and associated pids this driver belongs to
     dyn_sup_pid = vp_supervisor

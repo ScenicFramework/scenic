@@ -18,13 +18,14 @@ defmodule Scenic.Supervisor do
 
   #--------------------------------------------------------
   def init( opts ) do
-    Keyword.get(opts, :viewports, [])
-    |> do_init( opts )
+    opts
+    |> Keyword.get( :viewports, [] )
+    |> do_init
   end
 
   #--------------------------------------------------------
   # init with no default viewports
-  def do_init( [], opts ) do
+  def do_init( [] ) do
     [
       {Scenic.ViewPort.Tables, nil},
       supervisor(Scenic.Cache.Supervisor, []),
@@ -35,7 +36,7 @@ defmodule Scenic.Supervisor do
 
   #--------------------------------------------------------
   # init with default viewports
-  def do_init( viewports, opts ) do
+  def do_init( viewports ) do
     [
       {Scenic.ViewPort.Tables, nil},
       supervisor(Scenic.Cache.Supervisor, []),

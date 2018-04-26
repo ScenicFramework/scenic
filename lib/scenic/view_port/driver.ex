@@ -14,11 +14,7 @@ defmodule Scenic.ViewPort.Driver do
   require Logger
   alias Scenic.ViewPort
 
-  import IEx
-
-#  @sync_message       :timer_sync
-  
-#  @driver_registry    :driver_registry
+#  import IEx
 
   #===========================================================================
   defmodule Error do
@@ -26,50 +22,10 @@ defmodule Scenic.ViewPort.Driver do
   end
 
   #===========================================================================
-  # generic apis for sending a message to the drivers
-
-
-  #----------------------------------------------
-  # cast a message to all registered drivers
-#  def cast( message ) do
-#    dispatch_cast( message )
-#  end
-
-  #----------------------------------------------
-#  defp dispatch_cast( message ) do
-#    # dispatch the call to any listening drivers
-#    Registry.dispatch(@driver_registry, :driver, fn(entries) ->
-#      for {pid, _} <- entries do
-#        try do
-#          GenServer.cast(pid, message)
-#        catch
-#          kind, reason ->
-#            formatted = Exception.format(kind, reason, System.stacktrace)
-#            Logger.error "Registry.dispatch/3 failed with #{formatted}"
-#        end
-#      end
-#    end)
-#    :ok
-#  end
-
-  #----------------------------------------------
-  # identify the current, loaded drivers
-#  def identify() do
-#    Registry.match(@driver_registry, :driver, :_)
-#    |> Enum.reduce( [], fn({pid, mod_opts},acc) -> [{mod_opts, pid} | acc] end)
-#  end
-
-
-  #===========================================================================
   # the using macro for scenes adopting this behavioiur
   defmacro __using__(_opts) do
     quote do
       def init(_),                        do: {:ok, nil}
-#      def register(_),                    do: Scenic.ViewPort.Driver.register()
-
-#      def default_sync_interval(),        do: unquote(use_opts[:sync_interval])
-
-#      def handle_sync( state ),           do: { :noreply, state }
 
       # simple, do-nothing default handlers
       def handle_call(msg, from, state),  do: { :noreply, state }
@@ -123,49 +79,11 @@ defmodule Scenic.ViewPort.Driver do
     end
   end
 
-  def start_link(other) do
-    pry()
-  end
-
 
   #--------------------------------------------------------
   def init( {root_sup, config} ) do
-
     GenServer.cast(self(), {:after_init, root_sup, config})
-
-    # set up the driver with the viewport registry
-#    {:ok, _} = Registry.register(:driver_registry, :driver,        {module, opts} )
-
-    # let the driver initialize itself
-#     {:ok, driver_state} = module.init( viewport, args )
-
-#     state = %{
-#       viewport: viewport,
-#       driver_module:  module,
-#       driver_state:   driver_state
-# #      sync_interval:  nil
-#     }
-
-    # get the correct sync interval
-#    interval = case Keyword.get(opts, :sync_interval, :none) do
-#      nil      -> nil
-#      :none    -> module.default_sync_interval()
-#      interval -> interval
-#    end
-
-    # set up the sync timing
-#    state = case interval do
-#      nil -> state
-#      interval when is_integer(interval) and (interval > 0) -> 
-#        {:ok, timer} = :timer.send_interval(interval, @sync_message)
-#        state
-#        |> Map.put( :sync_interval, interval )
-#        |> Map.put( :last_msg, :os.system_time(:millisecond) )
-#        |> Map.put( :timer, timer )
-#      _ -> raise Error, message: "Invalid interval. Must be a positive integer or nil."
-#    end
-
-    {:ok, %{}}
+    {:ok, nil}
   end
 
   #============================================================================
@@ -185,7 +103,7 @@ defmodule Scenic.ViewPort.Driver do
 
   #--------------------------------------------------------
   # finish init
-  def handle_cast({:after_init, vp_supervisor, config}, state) do
+  def handle_cast({:after_init, vp_supervisor, config}, _) do
     # find the viewport this driver belongs to
     viewport_pid = vp_supervisor
     |> Supervisor.which_children()
