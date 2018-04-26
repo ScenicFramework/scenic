@@ -168,7 +168,8 @@ defmodule Scenic.ViewPort do
   when is_list(input_types) do
     GenServer.cast( pid, {:capture_input, context, input_types} )
   end
-  def capture_input( context, input_type ), do: capture_input( context, [input_type] )
+  def capture_input( context, input_type ) when not is_list(input_type), do:
+    capture_input( context, [input_type] )
 
 
   #--------------------------------------------------------
@@ -185,7 +186,8 @@ defmodule Scenic.ViewPort do
   def release_input( vp, types ) when (is_pid(vp) or is_atom(vp)) and is_list(types) do
     GenServer.cast( vp, {:release_input, types} )
   end
-  def release_input( vp, input_type ), do: release_input( vp, [input_type] )
+  def release_input( vp, input_type ) when not is_list(input_type), do:
+    release_input( vp, [input_type] )
 
 
   #--------------------------------------------------------
@@ -434,12 +436,6 @@ defmodule Scenic.ViewPort do
   #==================================================================
   # management casts from scenes
   
-  #--------------------------------------------------------
-#  def handle_cast( {:monitor, scene_pid}, state ) do
-#    Process.monitor( scene_pid )
-#    {:noreply, state}
-#  end
-
   #--------------------------------------------------------
   # ignore input until a scene has been set
   def handle_cast( msg, state ) do
