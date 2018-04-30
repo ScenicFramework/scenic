@@ -4,7 +4,7 @@ defmodule Scenic.Component.Input.Checkbox do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.ViewPort
-
+  import Scenic.Primitives, only: [{:group, 3}, {:rect, 3}, {:rrect, 3}, {:line, 2}, {:text, 3}]
 #  import IEx
 
 
@@ -50,19 +50,19 @@ defmodule Scenic.Component.Input.Checkbox do
     {text_color, box_background, border_color, _, checkmark_color} = colors
 
     graph = Graph.build( font: {:roboto, 16} )
-    |> Primitive.Group.add_to_graph(fn(graph) ->
+    |> group(fn(graph) ->
       graph
-      |> Primitive.Rectangle.add_to_graph({{-2,-2}, 140, 16}, color: :clear)
-      |> Primitive.RoundedRectangle.add_to_graph({{-2,-2}, 16, 16, 3},
+      |> rect({{-2,-2}, 140, 16}, color: :clear)
+      |> rrect({{-2,-2}, 16, 16, 3},
         color: box_background, border_color: border_color, border_width: 2, id: :box )
 
-      |> Primitive.Group.add_to_graph(fn(graph) ->
+      |> group(fn(graph) ->
         graph
-        |> Primitive.Line.add_to_graph({{2,2}, {10,10}})
-        |> Primitive.Line.add_to_graph({{2,10}, {10,2}})
+        |> line({{2,2}, {10,10}})
+        |> line({{2,10}, {10,2}})
       end, id: :chx, hidden: !value, color: checkmark_color, line_width: 4)
     end, translate: {0, -11})
-    |> Primitive.Text.add_to_graph({{20,0}, text}, color: text_color )
+    |> text({{20,0}, text}, color: text_color )
 
     state = %{
       graph: graph,

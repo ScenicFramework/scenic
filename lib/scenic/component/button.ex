@@ -4,8 +4,7 @@ defmodule Scenic.Component.Button do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.ViewPort
-  import Scenic.Primitives
-#  import IEx
+  import Scenic.Primitives, only: [{:rrect, 3}, {:text, 3}]
 
 
 #  @default_width      80

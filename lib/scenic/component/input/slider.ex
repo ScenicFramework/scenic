@@ -4,8 +4,7 @@ defmodule Scenic.Component.Input.Slider do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.ViewPort
-
-#  import IEx
+  import Scenic.Primitives, only: [{:rect, 3}, {:line, 3}, {:rrect, 3}]
 
 
   @height             16
@@ -32,9 +31,9 @@ defmodule Scenic.Component.Input.Slider do
   def init( {extents, value, width, id} ) do
 
     graph = Graph.build()
-      |> Primitive.Rectangle.add_to_graph( {{0,0}, width, @height}, color: :clear )
-      |> Primitive.Line.add_to_graph( {{0,@mid_height},{width,@mid_height}}, color: @line_color, line_width: @line_width )
-      |> Primitive.RoundedRectangle.add_to_graph( {{0,1}, @btn_size, @btn_size, @radius}, color: @slider_color, id: :thumb )
+      |> rect( {{0,0}, width, @height}, color: :clear )
+      |> line( {{0,@mid_height},{width,@mid_height}}, color: @line_color, line_width: @line_width )
+      |> rrect( {{0,1}, @btn_size, @btn_size, @radius}, color: @slider_color, id: :thumb )
       |> update_slider_position( value, extents, width )
 
     state = %{

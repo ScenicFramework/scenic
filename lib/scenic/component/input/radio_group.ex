@@ -5,7 +5,7 @@ defmodule Scenic.Component.Input.RadioGroup do
   alias Scenic.Scene
   alias Scenic.Primitive
   alias Scenic.Component.Input.RadioButton
-
+  import Scenic.Primitives, only: [{:group, 2}]
 #  import IEx
 
   @line_height      22
@@ -23,7 +23,7 @@ defmodule Scenic.Component.Input.RadioGroup do
   #--------------------------------------------------------
   def init( {items, id} ) when is_list(items) do
     graph = Graph.build(font: {:roboto, 16})
-    |> Primitive.Group.add_to_graph(fn(graph) ->
+    |> group(fn(graph) ->
       {graph, _} = Enum.reduce(items, {graph, 0}, fn
         {t,m}, {g, voffset} ->
           g = RadioButton.add_to_graph(g, {t, m, false}, translate: {0,voffset} )

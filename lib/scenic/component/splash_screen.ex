@@ -4,7 +4,7 @@ defmodule Scenic.SplashScreen do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.ViewPort
-
+  import Scenic.Primitives, only: [{:text, 3}]
 #  import IEx
 
 
@@ -13,7 +13,7 @@ defmodule Scenic.SplashScreen do
   @default_min_time  1000
 
   @graph Graph.build( clear_color: :black, font: {:roboto, 20} )
-    |> Primitive.Text.add_to_graph( {{40, 80}, "Welcome to Scenic"}, id: :text, color: :white )
+    |> text( {{40, 80}, "Welcome to Scenic"}, id: :text, color: :white )
 
 
   #--------------------------------------------------------

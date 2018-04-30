@@ -4,8 +4,7 @@ defmodule Scenic.Component.Input.RadioButton do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.ViewPort
-  import Scenic.Primitives
-
+  import Scenic.Primitives, only: [{:rect, 3}, {:oval, 3}, {:text, 3}]
 #  import IEx
 
 

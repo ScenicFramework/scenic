@@ -14,6 +14,12 @@ defmodule Scenic.Primitives do
   @tau    2.0 * :math.pi();
 
   #--------------------------------------------------------
+  def group( graph, builder, opts \\ [] )
+  def group( graph, builder, opts ) when is_function(builder, 1) do
+    Primitive.Group.add_to_graph(graph, builder, opts)
+  end
+
+  #--------------------------------------------------------
   def line( graph, data, opts \\ [] )
   def line( graph, {{x0,y0}, {x1,y1}}, opts ) when
   is_number(x0) and is_number(y0) and
