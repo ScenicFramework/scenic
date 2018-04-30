@@ -129,4 +129,59 @@ defmodule Scenic.Primitives do
     sector( graph, {{x,y}, 0, @tau, radius, {1.0, 1.0}}, opts )
   end
 
+
+
+
+  #--------------------------------------------------------
+  def texture( graph, data, opts \\ [] )
+
+  def texture( graph, {width, height, key}, opts ) when
+  is_number(width) and is_number(height) do
+    texture( graph, {
+    {{0, 0}, {width, 0}, {width, height}, {0, height}},
+    {{0.0, 0.0}, {1.0, 0.0}, {1.0, 1.0}, {0.0, 1.0}},
+    key
+  }, opts )
+  end
+
+  def texture( graph, {{x,y}, width, height, key}, opts ) do
+    texture( graph, {
+    {{x, y}, {x + width, y}, {x + width, y + height}, {x, y + height}},
+    {{0.0, 0.0}, {1.0, 0.0}, {1.0, 1.0}, {0.0, 1.0}},
+    key
+  }, opts )
+  end
+
+  def texture( graph, {{{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}}, key}, opts ) do
+    texture( graph, {
+    {{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}},
+    {{0.0, 0.0}, {1.0, 0.0}, {1.0, 1.0}, {0.0, 1.0}},
+    key
+  }, opts )
+  end
+
+  def texture( graph, {
+    {{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}},
+    {{s0, t0}, {s1, t1}, {s2, t2}, {s3, t3}},
+    key
+  } = data, opts ) when is_bitstring(key) and
+  is_number(x0) and is_number(y0) and
+  is_number(x1) and is_number(y1) and
+  is_number(x2) and is_number(y2) and
+  is_number(x3) and is_number(y3) and
+  is_number(s0) and is_number(t0) and
+  is_number(s1) and is_number(t1) and
+  is_number(s2) and is_number(t2) and
+  is_number(s3) and is_number(t3) do
+    Primitive.Texture.add_to_graph( graph, data, opts )
+  end
+
+
+
 end
+
+
+
+
+
+

@@ -2,7 +2,7 @@ defmodule Scenic.SplashScreen do
   use Scenic.Scene, has_children: false
 
   alias Scenic.Graph
-  alias Scenic.Primitive
+  # alias Scenic.Primitive
   alias Scenic.ViewPort
   import Scenic.Primitives, only: [{:text, 3}]
 #  import IEx

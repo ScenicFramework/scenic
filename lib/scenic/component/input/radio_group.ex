@@ -3,7 +3,7 @@ defmodule Scenic.Component.Input.RadioGroup do
 
   alias Scenic.Graph
   alias Scenic.Scene
-  alias Scenic.Primitive
+  # alias Scenic.Primitive
   alias Scenic.Component.Input.RadioButton
   import Scenic.Primitives, only: [{:group, 2}]
 #  import IEx
