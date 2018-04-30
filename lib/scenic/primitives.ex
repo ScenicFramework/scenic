@@ -177,6 +177,28 @@ defmodule Scenic.Primitives do
   end
 
 
+  #--------------------------------------------------------
+  def scene_ref( graph, data, opts \\ [] )
+
+  def scene_ref( graph, {:graph,_,_} = key, opts ) do
+    Primitive.SceneRef.add_to_graph( graph, key, opts )
+  end
+
+  def scene_ref( graph, name, opts ) when is_atom(name) do
+    Primitive.SceneRef.add_to_graph( graph, name, opts )
+  end
+
+  def scene_ref( graph, {name,_} = data, opts ) when is_atom(name) do
+    Primitive.SceneRef.add_to_graph( graph, data, opts )
+  end
+
+  def scene_ref( graph, {pid,_} = data, opts ) when is_pid(pid) do
+    Primitive.SceneRef.add_to_graph( graph, data, opts )
+  end
+
+  def scene_ref( graph, {{module,_},_} = data, opts ) when is_atom(module) do
+    Primitive.SceneRef.add_to_graph( graph, data, opts )
+  end
 
 end
 
