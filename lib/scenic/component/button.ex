@@ -4,7 +4,7 @@ defmodule Scenic.Component.Button do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.ViewPort
-
+  import Scenic.Primitives
 #  import IEx
 
 
@@ -80,9 +80,9 @@ defmodule Scenic.Component.Button do
     {width, hieght, radius, font_size} = @sizes[size_opt]
 
     graph = Graph.build( font: {:roboto, font_size} )
-    |> Primitive.RoundedRectangle.add_to_graph( {{0,0}, width, hieght, radius},
+    |> rrect( {{0,0}, width, hieght, radius},
       color: button_color, id: :btn )
-    |> Primitive.Text.add_to_graph( {{8,(hieght*0.7)}, text}, color: text_color )
+    |> text( {{8,(hieght*0.7)}, text}, color: text_color )
 
     state = %{
       graph: graph,

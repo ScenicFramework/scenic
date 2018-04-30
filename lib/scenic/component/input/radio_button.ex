@@ -4,6 +4,7 @@ defmodule Scenic.Component.Input.RadioButton do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.ViewPort
+  import Scenic.Primitives
 
 #  import IEx
 
@@ -56,11 +57,11 @@ defmodule Scenic.Component.Input.RadioButton do
     graph = Graph.build( font: {:roboto, 16} )
     |> Primitive.Group.add_to_graph(fn(graph) ->
       graph
-      |> Primitive.Rectangle.add_to_graph({{-2,-2}, 140, 16}, color: :clear)
-      |> Primitive.Oval.add_to_graph({{6,6}, 8}, color: box_background, border_color: border_color, border_width: 2, id: :box)
-      |> Primitive.Oval.add_to_graph({{6,6}, 5}, color: checkmark_color, id: :chx, hidden: !value)
+      |> rect({{-2,-2}, 140, 16}, color: :clear)
+      |> oval({{6,6}, 8}, color: box_background, border_color: border_color, border_width: 2, id: :box)
+      |> oval({{6,6}, 5}, color: checkmark_color, id: :chx, hidden: !value)
     end, translate: {0, -11})
-    |> Primitive.Text.add_to_graph({{20,0}, text}, color: text_color )
+    |> text({{20,0}, text}, color: text_color )
 
     state = %{
       graph: graph,
