@@ -6,7 +6,7 @@ defmodule Scenic.Math.Vector3Test do
   use ExUnit.Case
   doctest Scenic.Math
   alias Scenic.Math.Vector3
-  alias Scenic.Math.MatrixBin, as: Matrix
+  alias Scenic.Math.Matrix
 
   @projection_mx  Matrix.build_translation({5,7,11})
 

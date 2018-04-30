@@ -4,7 +4,7 @@
 
 defmodule Scenic.Math.Vector3 do
   alias Scenic.Math.Vector3
-  alias Scenic.Math.MatrixBin, as: Matrix
+  alias Scenic.Math.Matrix
 
   # a vector3 is a tuple with three dimentions. {x, y, z}
 

@@ -2,10 +2,10 @@
 #  Copyright © 2017 Boyd Multerer. All rights reserved.
 #
 
-defmodule Scenic.Math.MatrixBinTest do
+defmodule Scenic.Math.MatrixTest do
   use ExUnit.Case
   doctest Scenic.Math
-  alias Scenic.Math.MatrixBin, as: Matrix
+  alias Scenic.Math.Matrix
   alias Scenic.Math.Matrix.Utils
 
   @matrix_a {

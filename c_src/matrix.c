@@ -666,4 +666,4 @@ static ErlNifFunc nif_funcs[] = {
   {"nif_project_vector3s",  2, nif_project_vector3s},
 };
 
-ERL_NIF_INIT(Elixir.Scenic.Math.MatrixBin, nif_funcs, NULL, NULL, NULL, NULL)
+ERL_NIF_INIT(Elixir.Scenic.Math.Matrix, nif_funcs, NULL, NULL, NULL, NULL)

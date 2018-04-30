@@ -4,7 +4,7 @@
 #
 
 defmodule Scenic.Math.Vector do
-  alias Scenic.Math.MatrixBin, as: Matrix
+  alias Scenic.Math.Matrix
 
 #  import IEx
 

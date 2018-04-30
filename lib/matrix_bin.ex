@@ -7,8 +7,8 @@
 
 # always row major
 
-defmodule Scenic.Math.MatrixBin do
-  alias Scenic.Math.MatrixBin, as: Matrix
+defmodule Scenic.Math.Matrix do
+  alias Scenic.Math.Matrix
 
 #  import IEx
 
