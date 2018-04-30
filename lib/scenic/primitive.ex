@@ -9,7 +9,7 @@ defmodule Scenic.Primitive do
   alias Scenic.Primitive
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Transform
-  alias Scenic.Math.MatrixBin, as: Matrix
+  alias Scenic.Math.Matrix
 
 #  import IEx
 

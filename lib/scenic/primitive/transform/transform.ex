@@ -6,7 +6,7 @@
 # generic code for the transform styles. Not intended to be used directly
 
 defmodule Scenic.Primitive.Transform do
-  alias Scenic.Math.MatrixBin, as: Matrix
+  alias Scenic.Math.Matrix
   alias Scenic.Math.Vector
   alias Scenic.Primitive.Transform
 

@@ -13,7 +13,7 @@ defmodule Scenic.Primitive.Transform.Matrix do
 
   #--------------------------------------------------------
   def info(), do: "Transform :matrix must be a either a binary containing 16 32-bit floats\n" <>
-    "Please use the Scenic.Math.MatrixBin module for this."
+    "Please use the Scenic.Math.Matrix module for this."
 
   #--------------------------------------------------------
   def verify( <<_ :: binary-size(@matrix_byte_size) >> ), do: true

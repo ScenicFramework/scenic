@@ -10,16 +10,16 @@ defmodule Scenic.Primitive.TransformTest do
 #  import IEx
 
   alias Scenic.Primitive.Transform
-  alias Scenic.Math.MatrixBin
+  alias Scenic.Math.Matrix
   alias Scenic.Math.Vector
 
-  @identity     MatrixBin.identity()
+  @identity     Matrix.identity()
 
   @pin          {10,20}
   @rotation     {:z, 1.1}
   @scale        {1.1,0.8}
   @translate    {4,5}
-  @mx           MatrixBin.build_rotation(-0.2)
+  @mx           Matrix.build_rotation(-0.2)
 
   @tx           %{
       pin:        @pin,
@@ -43,20 +43,20 @@ defmodule Scenic.Primitive.TransformTest do
 
   test "calculate_local calculates the local matrix in the right order" do
     # first calc all the matrices
-    mx_pin          = MatrixBin.build_translation( @pin )
-    mx_inv_pin      = MatrixBin.build_translation( Vector.invert(@pin) )
-    mx_rotation     = MatrixBin.build_rotation( @rotation )
-    mx_scale        = MatrixBin.build_scale( @scale )
-    mx_translation  = MatrixBin.build_translation( @translate )
+    mx_pin          = Matrix.build_translation( @pin )
+    mx_inv_pin      = Matrix.build_translation( Vector.invert(@pin) )
+    mx_rotation     = Matrix.build_rotation( @rotation )
+    mx_scale        = Matrix.build_scale( @scale )
+    mx_translation  = Matrix.build_translation( @translate )
 
     # multiply them together
     expected = @identity
-      |> MatrixBin.mul( @mx )
-      |> MatrixBin.mul( mx_translation )
-      |> MatrixBin.mul( mx_pin )
-      |> MatrixBin.mul( mx_rotation )
-      |> MatrixBin.mul( mx_scale )
-      |> MatrixBin.mul( mx_inv_pin )
+      |> Matrix.mul( @mx )
+      |> Matrix.mul( mx_translation )
+      |> Matrix.mul( mx_pin )
+      |> Matrix.mul( mx_rotation )
+      |> Matrix.mul( mx_scale )
+      |> Matrix.mul( mx_inv_pin )
 
     # calcualte the normal way
     assert Transform.calculate_local( @tx ) == expected

@@ -9,7 +9,7 @@ defmodule Scenic.PrimitiveTest do
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Group
-  alias Scenic.Math.MatrixBin, as: Matrix
+  alias Scenic.Math.Matrix
 
 #  import IEx
 

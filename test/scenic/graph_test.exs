@@ -7,7 +7,7 @@ defmodule Scenic.GraphTest do
   use ExUnit.Case, async: true
   doctest Scenic
 
-  alias Scenic.Math.MatrixBin, as: Matrix
+  alias Scenic.Math.Matrix
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.Primitive.Group

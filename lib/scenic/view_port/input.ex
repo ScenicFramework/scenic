@@ -13,14 +13,14 @@ defmodule Scenic.ViewPort.Input do
 #  alias Scenic.Graph
   alias Scenic.ViewPort
   alias Scenic.Primitive
-  alias Scenic.Math.MatrixBin, as: Matrix
+  alias Scenic.Math.Matrix
 
   require Logger
 
   import IEx
 
   defmodule Context do
-    alias Scenic.Math.MatrixBin, as: Matrix
+    alias Scenic.Math.Matrix
     @identity         Matrix.identity()
     defstruct viewport: nil, graph_key: nil, tx: @identity, inverse_tx: @identity, uid: nil
   end
