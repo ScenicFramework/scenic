@@ -184,8 +184,9 @@ defmodule Scenic.Primitives do
     Primitive.SceneRef.add_to_graph( graph, key, opts )
   end
 
-  def scene_ref( graph, name, opts ) when is_atom(name) do
-    Primitive.SceneRef.add_to_graph( graph, name, opts )
+  def scene_ref( graph, name_pid, opts ) when
+  is_atom(name_pid) or is_pid(name_pid) do
+    Primitive.SceneRef.add_to_graph( graph, {name_pid, nil}, opts )
   end
 
   def scene_ref( graph, {name,_} = data, opts ) when is_atom(name) do
