@@ -24,7 +24,6 @@ defmodule Scenic.Primitive.TextTest do
     assert Primitive.get(p) == @data
   end
 
-
   #============================================================================
   # verify
 
