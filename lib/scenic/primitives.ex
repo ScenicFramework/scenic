@@ -123,8 +123,6 @@ defmodule Scenic.Primitives do
     Primitive.Group.add_to_graph(graph, builder, opts)
   end
 
-
-
   @doc """
   Add a line to a graph
 
@@ -158,7 +156,6 @@ defmodule Scenic.Primitives do
 
   See the style documentation for more detail.
   """
-
 
   #--------------------------------------------------------
   def line( graph, data, opts \\ [] )
