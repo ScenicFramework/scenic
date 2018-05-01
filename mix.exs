@@ -5,11 +5,11 @@ defmodule Scenic.Mixfile do
     [
       app: :scenic,
       version: "0.1.0",
-      build_path: "../../_build",
-      config_path: "../../config/config.exs",
-      deps_path: "../../deps",
-      lockfile: "../../mix.lock",
-      elixir: "~> 1.3",
+      build_path: "_build",
+      config_path: "config/config.exs",
+      deps_path: "deps",
+      lockfile: "mix.lock",
+      elixir: "~> 1.4",
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
       deps: deps(),
@@ -41,11 +41,7 @@ defmodule Scenic.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      #{ :uuid, "~> 1.1" },
-      #{ :floki, "~> 0.12", only: :dev },
-      { :scenic_math, in_umbrella: true},
-
-      { :benchwarmer, "~> 0.0.2", only: :dev }
+      {:scenic_math, git: "git@github.com:boydm/scenic_math.git"}
     ]
   end
 end
