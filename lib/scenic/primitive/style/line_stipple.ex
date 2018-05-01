@@ -47,6 +47,7 @@ defmodule Scenic.Primitive.Style.LineStipple do
   #--------------------------------------------------------
   # resolve named stipples
 
+  defp to_pattern( :solid ),            do: 0xFFFF
   defp to_pattern( :dot ),              do: 0xAAAA
   defp to_pattern( :dash ),             do: 0x0FFF
   defp to_pattern( :dash_dot ),         do: 0x1C47
