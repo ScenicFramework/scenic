@@ -25,9 +25,5 @@ erl_crash.dump
 
 *.log
 
-# generally ignore object files
-*.o
-*.so
-
 # ignore office temp files
 ~*.xlsx

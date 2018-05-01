@@ -34,7 +34,7 @@ defmodule Scenic.Primitive.Style.Font do
   def normalize( name ) when is_atom(name),     do: normalize( {name, @default_point_size} )
   def normalize( key ) when is_bitstring(key),  do: normalize( {key, @default_point_size} )
   def normalize( {name, point_size} ) when is_integer(point_size) and
-  point_size >=2 and point_size <= 80 do
+  point_size >=2 do # and point_size <= 80
     {name, point_size}
   end
 end
