@@ -1,6 +1,7 @@
 # Scenic
 
-**TODO: Add description**
+## Core Scenic Library
+
 
 ## Installation
 
