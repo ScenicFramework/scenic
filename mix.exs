@@ -4,10 +4,10 @@ defmodule ScenicMath.Mixfile do
   def project do
     [app: :scenic_math,
      version: "0.1.0",
-     build_path: "../../_build",
-     config_path: "../../config/config.exs",
-     deps_path: "../../deps",
-     lockfile: "../../mix.lock",
+     build_path: "_build",
+     config_path: "config/config.exs",
+     deps_path: "deps",
+     lockfile: "mix.lock",
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -41,7 +41,7 @@ defmodule ScenicMath.Mixfile do
   defp deps do
     [
       { :elixir_make, "~> 0.4" },
-      { :benchwarmer, "~> 0.0.2", only: :dev }
+      # { :benchwarmer, "~> 0.0.2", only: :dev }
     ]
   end
 end
