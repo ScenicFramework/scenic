@@ -1,6 +1,6 @@
 # ScenicMath
 
-**TODO: Add description**
+Math support for Scenic applications
 
 ## Installation
 
