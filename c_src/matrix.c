@@ -214,8 +214,7 @@ void matrix_project_vector3(float mx[], float* x, float* y, float* z) {
 
 static ERL_NIF_TERM
 nif_close(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
-  ErlNifBinary      a_term, b_term, t_term;
-  ERL_NIF_TERM      result;
+  ErlNifBinary      a_term, b_term;
 
   float *   a;
   float *   b;
@@ -345,10 +344,10 @@ nif_multiply_list(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   ErlNifBinary      matrix_term;
   ERL_NIF_TERM      result;
 
-  float *           a;
+  // float *           a;
   float *           c;
   unsigned          list_len;
-  int               i;
+  unsigned          i;
   int               src = 1;
   int               dst = 0;
 
@@ -457,7 +456,6 @@ nif_divide_scalar(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
 static ERL_NIF_TERM
 nif_determinant(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   ErlNifBinary      a_term;
-  ERL_NIF_TERM      result;
   float *           a;
 
   // retrieve the a matrix
@@ -672,20 +670,20 @@ nif_project_vector3s(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
 static ErlNifFunc nif_funcs[] = {
   // {erl_function_name, erl_function_arity, c_function}
 //  {"do_put", 4, nif_put},
-  {"nif_close",             3, nif_close},
-  {"nif_add",               2, nif_add},
-  {"nif_subtract",          2, nif_subtract},
-  {"nif_multiply",          2, nif_multiply},
-  {"nif_multiply_list",     1, nif_multiply_list},
-  {"nif_multiply_scalar",   2, nif_multiply_scalar},
-  {"nif_divide_scalar",     2, nif_divide_scalar},
-  {"nif_determinant",       1, nif_determinant},
-  {"nif_transpose",         1, nif_transpose},
-  {"nif_adjugate",          1, nif_adjugate},
-  {"nif_project_vector2",   3, nif_project_vector2},
-  {"nif_project_vector2s",  2, nif_project_vector2s},
-  {"nif_project_vector3",   4, nif_project_vector3},
-  {"nif_project_vector3s",  2, nif_project_vector3s},
+  {"nif_close",             3, nif_close, 0},
+  {"nif_add",               2, nif_add, 0},
+  {"nif_subtract",          2, nif_subtract, 0},
+  {"nif_multiply",          2, nif_multiply, 0},
+  {"nif_multiply_list",     1, nif_multiply_list, 0},
+  {"nif_multiply_scalar",   2, nif_multiply_scalar, 0},
+  {"nif_divide_scalar",     2, nif_divide_scalar, 0},
+  {"nif_determinant",       1, nif_determinant, 0},
+  {"nif_transpose",         1, nif_transpose, 0},
+  {"nif_adjugate",          1, nif_adjugate, 0},
+  {"nif_project_vector2",   3, nif_project_vector2, 0},
+  {"nif_project_vector2s",  2, nif_project_vector2s, 0},
+  {"nif_project_vector3",   4, nif_project_vector3, 0},
+  {"nif_project_vector3s",  2, nif_project_vector3s, 0},
 };
 
 ERL_NIF_INIT(Elixir.Scenic.Math.Matrix, nif_funcs, NULL, NULL, NULL, NULL)

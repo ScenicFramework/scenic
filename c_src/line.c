@@ -138,8 +138,8 @@ nif_intersection(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
 static ErlNifFunc nif_funcs[] = {
   // {erl_function_name, erl_function_arity, c_function}
 //  {"do_put", 4, nif_put},
-  {"nif_parallel",          5, nif_parallel},
-  {"nif_intersection",      8, nif_intersection}
+  {"nif_parallel",          5, nif_parallel, 0},
+  {"nif_intersection",      8, nif_intersection, 0}
 };
 
 
