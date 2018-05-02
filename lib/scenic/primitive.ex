@@ -11,7 +11,7 @@ defmodule Scenic.Primitive do
   alias Scenic.Primitive.Transform
   alias Scenic.Math.Matrix
 
-#  import IEx
+  import IEx
 
   @callback add_to_graph(map, any, list) :: map
 
@@ -32,6 +32,8 @@ defmodule Scenic.Primitive do
     :scale, :translate]
 
   @transform_types [:pin, :rotate, :matrix, :scale, :translate]
+
+  @standard_options [:id, :tags]
 
 
   # note: the following fields are all optional on a primitive.
@@ -120,7 +122,7 @@ defmodule Scenic.Primitive do
   # assume most elements do not hvae these items set.
   def build( module, data, opts \\ [] ) do
     # first build the map with the non-optional fields
-    %{
+    p = %{
       __struct__:   __MODULE__,       # per Jose. Declaring stuct this way saves memory
       module:       module,
       data:         data,
@@ -130,69 +132,79 @@ defmodule Scenic.Primitive do
     |> apply_options( opts )
   end
 
-  defp apply_options( %{module: module} = p, opts ) do
+  defp apply_options( p, opts ) do
     p
-    |> put_if_set( :id,            prep_id_opt( opts[:id] ) )
-    |> put_if_set( :tags,          prep_tags_opt(opts[:tags]) )
-    |> put_if_set( :event_filter,  prep_event_filter_opt( opts[:event_filter]) )
-    |> put_if_set( :state,         prep_state_opt( opts[:state]) )
-    |> put_if_set( :styles,        prep_styles( module, opts ) )
-    |> put_if_set( :transforms,    prep_transforms( opts ) )
+    |> apply_standard_options( opts )
+    |> apply_style_options( opts )
+    |> apply_transform_options( opts )
   end
 
-  defp put_if_set(p, k, nil),                  do: Map.delete(p, k)
-  defp put_if_set(p, k, map) when map == %{},  do: Map.delete(p, k)
-  defp put_if_set(p, k, list) when list == [], do: Map.delete(p, k)
-  defp put_if_set(p, k, v),                    do: Map.put(p, k, v)
+  defp apply_standard_options( p, opts ) do
+    # extract the standard options from the opts
+    opts = Enum.filter(opts, fn({k,_}) -> Enum.member?(@standard_options, k) end)
 
-  defp prep_state_opt( state )
-  defp prep_state_opt( state ),                 do: state
+    # enumerate and apply each of the standard opts
+    Enum.reduce( opts, p, fn
+      {:id,v}, p when is_atom(v) or is_bitstring(v) ->
+        Map.put(p, :id, v)
+      {:id,_}, _ ->
+        raise Error, message: "id option must be an atom"
 
-  defp prep_event_filter_opt( event_handler )
-  defp prep_event_filter_opt( nil ),            do: nil
-  defp prep_event_filter_opt( {mod,act} )       when is_atom(mod) and is_atom(act), do: {mod,act}
-  defp prep_event_filter_opt( handler )         when is_function(handler, 4), do: handler
-  defp prep_event_filter_opt( _ ) do
-    raise Error, message: "event_handler option must be a function or {module, action}"
-  end
-
-  defp prep_tags_opt( tag_list )
-  defp prep_tags_opt( nil ),                              do: []
-  defp prep_tags_opt( tag_list ) when is_list(tag_list),  do: tag_list
-  defp prep_tags_opt( _ ) do
-    raise Error, message: "tags option must be a list"
-  end
-
-  defp prep_id_opt( id )
-  defp prep_id_opt( nil ),                                          do: nil
-  defp prep_id_opt( id ) when (is_atom(id) or is_bitstring(id)),    do: id
-  defp prep_id_opt( _ ) do
-    raise Error, message: "id option must be an atom"
-  end
-
-  defp prep_styles( module, opts ) do
-    # strip out any reserved options
-    Enum.reduce(@not_styles, opts, &Keyword.delete(&2, &1) )
-    # build the new styles map using the given data. verify the data.
-    |> Enum.reduce( %{}, fn({k,v},acc) ->
-      Style.verify!( k, v )
-      Map.put(acc, k, v)
+      {:tags,v}, p when is_list(v) ->
+        Map.put(p, :tags, v)
+      {:tags,_}, _ ->
+        raise Error, message: "tags option must be a list"
     end)
-    |> module.filter_styles()
   end
 
-  defp prep_transforms( opts ) do
+  defp apply_style_options( p, opts ) do
+    # extract the styles from the opts
+    styles = Enum.reject(opts, fn({k,_}) -> Enum.member?(@not_styles, k) end)
+    |> Enum.into( %{} )
+
+    # verify the transforms
+    Enum.each(styles, fn{k,v} -> Style.verify!( k, v ) end)
+
+    # return the verified transforms
+    Map.get(p, :styles, %{})
+    |> Map.merge( styles )
+    |> case do
+      s when s == %{} ->
+        p
+      styles ->
+        Map.put(p, :styles, styles)
+    end
+  end
+
+  defp apply_transform_options( p, opts ) do
     # extract the transforms from the opts
-    txs = Enum.reduce(@transform_types, %{}, fn(type, acc) ->
-      put_if_set(acc, type, Keyword.get(opts, type))
-    end)
+    txs = Enum.filter(opts, fn({k,_}) -> Enum.member?(@transform_types, k) end)
+    |> Enum.into( %{} )
 
     # verify the transforms
     Enum.each(txs, fn{k,v} -> Transform.verify!( k, v ) end)
 
     # return the verified transforms
-    txs
+    Map.get(p, :transforms, %{})
+    |> Map.merge( txs )
+    |> case do
+      t when t == %{} ->
+        p
+      txs ->
+        Map.put(p, :transforms, txs)
+    end
   end
+
+  # defp prep_state_opt( state )
+  # defp prep_state_opt( state ),                 do: state
+
+  # defp prep_event_filter_opt( event_handler )
+  # defp prep_event_filter_opt( nil ),            do: nil
+  # defp prep_event_filter_opt( {mod,act} )       when is_atom(mod) and is_atom(act), do: {mod,act}
+  # defp prep_event_filter_opt( handler )         when is_function(handler, 4), do: handler
+  # defp prep_event_filter_opt( _ ) do
+  #   raise Error, message: "event_handler option must be a function or {module, action}"
+  # end
 
 
   #============================================================================
@@ -239,8 +251,9 @@ defmodule Scenic.Primitive do
   end
 
   def put_id( primitive, id )
+  def put_id( %Primitive{} = p, nil ), do: Map.delete(p, :id)
   def put_id( %Primitive{} = p, id ) when (is_atom(id) or is_bitstring(id)) do
-    put_if_set(p, :id, id)
+    Map.put(p, :id, id)
   end
 
   #--------------------------------------------------------
@@ -254,8 +267,10 @@ defmodule Scenic.Primitive do
   end
 
   def put_tags( primitive, tags )
-  def put_tags(%Primitive{} = p, tags)  when is_nil(tags) or is_list(tags) do
-    put_if_set(p, :tags, tags)
+  def put_tags( %Primitive{} = p, nil ), do: Map.delete(p, :tags)
+  def put_tags( %Primitive{} = p, [] ), do: Map.delete(p, :tags)
+  def put_tags(%Primitive{} = p, tags) when is_list(tags) do
+    Map.put(p, :tags, tags)
   end
 
   def has_tag?( primitive, tag )
@@ -324,8 +339,10 @@ defmodule Scenic.Primitive do
   end
 
   def put_styles( primitve, styles )
+  def put_styles( %Primitive{} = p, nil ), do: Map.delete(p, :styles)
+  def put_styles( %Primitive{} = p, s ) when s == %{}, do: Map.delete(p, :styles)
   def put_styles( %Primitive{} = p, styles ) do
-    put_if_set(p, :styles, styles)
+    Map.put(p, :styles, styles)
   end
 
   def get_style(primitive, type, default \\ nil)
@@ -336,12 +353,16 @@ defmodule Scenic.Primitive do
 
   # the public facing put_style gives the primitive module a chance to filter the styles
   # do_put_style does the actual work
-  def put_style(%Primitive{} = p, type, data) when is_atom(type) do
+  def put_style(%Primitive{} = p, type, nil) when is_atom(type) do
     Map.get(p, :styles, %{})
-    |> put_if_set(type, data)
+    |> Map.delete(type)
     |> ( &put_styles(p, &1) ).()
   end
-
+  def put_style(%Primitive{} = p, type, data) when is_atom(type) do
+    Map.get(p, :styles, %{})
+    |> Map.put(type, data)
+    |> ( &put_styles(p, &1) ).()
+  end
   def put_style(%Primitive{} = p, list) when is_list(list) do
     Enum.reduce(list, p, fn({type,data},acc)->
       put_style(acc, type, data)
@@ -367,8 +388,10 @@ defmodule Scenic.Primitive do
   end
 
   def put_transforms( primitve, transforms )
+  def put_transforms( %Primitive{} = p, nil ), do: Map.delete(p, :transforms)
+  def put_transforms( %Primitive{} = p, t ) when t == %{}, do: Map.delete(p, :transforms)
   def put_transforms( %Primitive{} = p, txs ) do
-    put_if_set(p, :transforms, txs)
+    Map.put(p, :transforms, txs)
   end
 
   def get_transform(primitive, tx_type, default \\ nil)
@@ -379,12 +402,16 @@ defmodule Scenic.Primitive do
 
   # the public facing put_style gives the primitive module a chance to filter the styles
   # do_put_style does the actual work
-  def put_transform(%Primitive{} = p, tx_type, data) when is_atom(tx_type) do
+  def put_transform(%Primitive{} = p, tx_type, nil) when is_atom(tx_type) do
     Map.get(p, :transforms, %{})
-    |> put_if_set(tx_type, data)
+    |> Map.delete(tx_type)
     |> ( &put_transforms(p, &1) ).()
   end
-
+  def put_transform(%Primitive{} = p, tx_type, data) when is_atom(tx_type) do
+    Map.get(p, :transforms, %{})
+    |> Map.put(tx_type, data)
+    |> ( &put_transforms(p, &1) ).()
+  end
   def put_transform(%Primitive{} = p, tx_list) when is_list(tx_list) do
     Enum.reduce(tx_list, p, fn({k,v},acc) ->
       put_transform(acc, k, v)
@@ -468,8 +495,9 @@ defmodule Scenic.Primitive do
   end
 
   def put_state( primitive, state )
+  def put_state( %Primitive{} = p, nil ), do: Map.delete(p, :state)
   def put_state( %Primitive{} = p, state ) do
-    put_if_set(p, :state, state)
+    Map.put(p, :state, state)
   end
 
 

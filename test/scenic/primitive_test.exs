@@ -49,7 +49,6 @@ defmodule Scenic.PrimitiveTest do
   }
 
   @minimal_primitive   %{
-    puid:       @parent_uid,
     data:       {Group, @data},
     styles:     %{color: {{255, 0, 0, 255}, {255, 255, 0, 255}}, line_width: 10},
     transforms: %{pin: {10, 11}, rotate: 0.1}
@@ -64,12 +63,12 @@ defmodule Scenic.PrimitiveTest do
     }
   end
 
-  test "build sets the optional event handler" do
-    assert Primitive.build(Group, @data, event_filter: @event_filter) == %{
-      __struct__: Primitive, module: Group, uid: nil, parent_uid: -1, data: @data,
-      event_filter: @event_filter
-    }
-  end
+  # test "build sets the optional event handler" do
+  #   assert Primitive.build(Group, @data, event_filter: @event_filter) == %{
+  #     __struct__: Primitive, module: Group, uid: nil, parent_uid: -1, data: @data,
+  #     event_filter: @event_filter
+  #   }
+  # end
 
   test "build sets the optional tag list" do
     assert Primitive.build(Group, @data, tags: [:one, "two"]) == %{
@@ -93,12 +92,12 @@ defmodule Scenic.PrimitiveTest do
     }
   end
 
-  test "build sets the optional state" do
-    assert Primitive.build(Group, @data, state: @state) == %{
-      __struct__: Primitive, module: Group, uid: nil, parent_uid: -1, data: @data,
-      state: @state
-    }
-  end
+  # test "build sets the optional state" do
+  #   assert Primitive.build(Group, @data, state: @state) == %{
+  #     __struct__: Primitive, module: Group, uid: nil, parent_uid: -1, data: @data,
+  #     state: @state
+  #   }
+  # end
 
   test "build sets the optional id" do
     assert Primitive.build(Group, @data, id: :test_id) == %{
@@ -422,10 +421,10 @@ defmodule Scenic.PrimitiveTest do
     assert Primitive.delta_script(@primitive, p) == [{:put, :data, {Scenic.Primitive.Line, [1, 2, 3, 4, 5]}}]
   end
 
-  test "delta_script picks up change to parent uid" do
-    p = Map.put(@primitive, :parent_uid, 12)
-    assert Primitive.delta_script(@primitive, p) == [{:put, :puid, 12}]
-  end
+  # test "delta_script picks up change to parent uid" do
+  #   p = Map.put(@primitive, :parent_uid, 12)
+  #   assert Primitive.delta_script(@primitive, p) == [{:put, :puid, 12}]
+  # end
 
   test "delta_script picks up addition to style" do
     p = Primitive.put_style(@primitive, :hidden, true)
