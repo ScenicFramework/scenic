@@ -130,7 +130,7 @@ defmodule Scenic.Primitive do
     |> apply_options( opts )
   end
 
-  defp apply_options( p, opts ) do
+  defp apply_options( %{module: module} = p, opts ) do
     p
     |> put_if_set( :id,            prep_id_opt( opts[:id] ) )
     |> put_if_set( :tags,          prep_tags_opt(opts[:tags]) )
