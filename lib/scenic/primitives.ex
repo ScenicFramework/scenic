@@ -339,6 +339,16 @@ defmodule Scenic.Primitives do
     Primitive.SceneRef.add_to_graph( graph, data, opts )
   end
 
+
+  #============================================================================
+
+  def update( primitive, data, opts \\ [] )
+
+  def update( %Primitive{module: mod} = p, data, opts ) do
+    mod.put( p, data )
+  end
+
+
 end
 
 
