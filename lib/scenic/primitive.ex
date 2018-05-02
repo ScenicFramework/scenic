@@ -127,6 +127,11 @@ defmodule Scenic.Primitive do
       uid:          nil,
       parent_uid:   -1
     }
+    |> apply_options( opts )
+  end
+
+  defp apply_options( p, opts ) do
+    p
     |> put_if_set( :id,            prep_id_opt( opts[:id] ) )
     |> put_if_set( :tags,          prep_tags_opt(opts[:tags]) )
     |> put_if_set( :event_filter,  prep_event_filter_opt( opts[:event_filter]) )
@@ -438,10 +443,11 @@ defmodule Scenic.Primitive do
     mod.get(p)
   end
 
-  def put( primitive, data )
-  def put( %Primitive{module: mod} = p, data ) do
+  def put( primitive, data, opts \\ [] )
+  def put( %Primitive{module: mod} = p, data, opts ) do
     # give the primitive a chance to own the put
     mod.put( p, data )
+    |> apply_options( opts )
   end
 
   # the default behavior for put - just verify the data and put it in place

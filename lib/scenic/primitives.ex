@@ -340,15 +340,6 @@ defmodule Scenic.Primitives do
   end
 
 
-  #============================================================================
-
-  def update( primitive, data, opts \\ [] )
-
-  def update( %Primitive{module: mod} = p, data, opts ) do
-    mod.put( p, data )
-  end
-
-
 end
 
 
