@@ -470,6 +470,11 @@ defmodule Scenic.Primitive do
     mod.get(p)
   end
 
+  def put_opts( primitive, opts )
+  def put_opts( %Primitive{} = p, opts ) when is_list(opts) do
+    apply_options( p, opts )
+  end
+
   def put( primitive, data, opts \\ [] )
   def put( %Primitive{module: mod} = p, data, opts ) do
     # give the primitive a chance to own the put

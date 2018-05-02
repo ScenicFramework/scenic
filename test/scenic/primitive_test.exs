@@ -122,6 +122,49 @@ defmodule Scenic.PrimitiveTest do
   # structure
 
   #--------------------------------------------------------
+  # put
+
+  test "put updates a primitives data field" do
+    assert Primitive.put(@primitive, [1,2,5,6]).data == [1,2,5,6]
+  end
+
+  test "put rejects invalid data for a primitive" do
+    assert_raise Primitive.Error, fn ->
+      Primitive.put(@primitive, :banana)
+    end
+  end
+
+  test "put updates the options on a primitive" do
+    assert Primitive.put(@primitive, [1,2,5,6], color: :blue).styles == %{
+      color: :blue,
+      line_width: 10
+    }
+  end
+
+  test "put rejects invalid options" do
+    assert_raise Primitive.Error, fn ->
+      Primitive.put(@primitive, [1,2,5,6], [id: [:invalid]])
+    end
+  end
+
+  #--------------------------------------------------------
+  # put
+
+  test "put_opts updates only the options on a primitive" do
+    assert Primitive.put_opts(@primitive, color: :blue).styles == %{
+      color: :blue,
+      line_width: 10
+    }
+  end
+
+  test "put_opts rejects invalid options" do
+    assert_raise Primitive.Error, fn ->
+      Primitive.put_opts(@primitive, [id: [:invalid]])
+    end
+  end
+
+
+  #--------------------------------------------------------
   # module
 
   test "get_module returns the type module" do
