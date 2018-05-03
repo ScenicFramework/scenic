@@ -19,10 +19,10 @@
 # back to binary. Again, this is to gain some consistency on how you store the data. On most
 # machines, you will use the hardware accelerated version, which will be binary only.
 
-defmodule Scenic.Math.Matrix do
+defmodule Scenic.Math.MatrixOld do
 #  import IEx
   alias Scenic.Math.Vector
-  alias Scenic.Math.Matrix
+  alias Scenic.Math.MatrixOld, as: Matrix
   alias Scenic.Math.Matrix.Utils
 
   @binary_format        :binary
