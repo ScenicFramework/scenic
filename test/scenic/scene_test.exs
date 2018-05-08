@@ -15,6 +15,9 @@ defmodule Scenic.SceneTest do
   import Scenic.Primitives
 #  import IEx
 
+  @not_activated        :__not_activated__
+
+
   @driver_registry      :driver_registry
   @viewport_registry    :viewport_registry
 
@@ -80,7 +83,41 @@ defmodule Scenic.SceneTest do
   end
 
   test "init stores parent_pid in the process dictionary if set" do
+    ref = make_ref()
+    Scene.init( {__MODULE__, [1,2,3], [scene_ref: ref, parent: self()]} )
+    # verify the process dictionary
+    assert Process.get(:parent_pid) == self()
+  end
 
+  test "init stores nothing in the process dictionary if parent clear" do
+    ref = make_ref()
+    Scene.init( {__MODULE__, [1,2,3], [scene_ref: ref]} )
+    # verify the process dictionary
+    assert Process.get(:parent_pid) == nil
+  end
+
+  test "init sends self :after_init" do
+    Scene.init( {__MODULE__, [1,2,3], [name: :scene_name]} )
+    assert_receive( {:"$gen_cast", :after_init} )
+  end
+  test "init call mod.init and returns first round of state" do
+    self = self()
+    {:ok, %{
+      raw_scene_refs: %{},      
+      dyn_scene_pids: %{},
+      dyn_scene_keys: %{},
+
+      parent_pid: self,
+      children: %{},
+
+      scene_module: __MODULE__,
+
+      scene_state: :init_state,
+      scene_ref: :scene_name,
+      supervisor_pid: nil,
+      dynamic_children_pid: nil,
+      activation: @not_activated
+    }} = Scene.init( {__MODULE__, [1,2,3], [name: :scene_name, parent: self]} )
   end
 
   #============================================================================

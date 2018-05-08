@@ -389,14 +389,14 @@ defmodule Scenic.Scene do
     end
 
     # interpret the options
-    {parent_pid, _graph_id, _uid} = case opts[:parent] do
-      nil -> {nil, nil, nil}
-      {parent_pid, graph_id, uid} ->
+    parent_pid = case opts[:parent] do
+      nil -> nil
+      parent_pid ->
         # stash the parent pid away in the process dictionary. This
         # is for fast lookup during the injected send_event/1 in the
         # client module
         Process.put(:parent_pid, parent_pid)
-        {parent_pid, graph_id, uid}
+        parent_pid
     end
 
     # some setup needs to happen after init - must be before the scene_module init
@@ -745,8 +745,7 @@ defmodule Scenic.Scene do
         end
 
         # start the dynamic scene
-        parent = {self(), sub_id, uid}
-        {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, parent, init_data )
+        {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, self(), init_data )
 
         # add the this dynamic child scene to tracking
         {
