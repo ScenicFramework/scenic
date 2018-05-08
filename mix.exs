@@ -41,7 +41,8 @@ defmodule Scenic.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:scenic_math, git: "git@github.com:boydm/scenic_math.git"}
+      {:scenic_math, git: "git@github.com:boydm/scenic_math.git"},
+      {:mox, "~> 0.3.2"}
     ]
   end
 end
