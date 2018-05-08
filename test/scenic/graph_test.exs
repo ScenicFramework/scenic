@@ -43,7 +43,7 @@ defmodule Scenic.GraphTest do
     |> Group.add_to_graph( fn(g) ->
       g
       |> Text.add_to_graph({{10,10}, "inner text"}, id: :inner_text, tags: ["inner", "text", :text_atom])
-      |> Line.add_to_graph({{10,10}, {100, 100}}, id: :inner_line, tags: ["inner", "line"], state: {:abc, 123})
+      |> Line.add_to_graph({{10,10}, {100, 100}}, id: :inner_line, tags: ["inner", "line"])
     end, id: :group)
 
   @graph_ordered Graph.build()
@@ -487,12 +487,6 @@ defmodule Scenic.GraphTest do
     [uid] = Graph.resolve_id(@graph_find, :group)
     [p] = Graph.find(@graph_find, uid, module: Line)
     [uid] = Graph.resolve_id(@graph_find, :inner_line)
-    assert Primitive.get_uid(p) == uid
-  end
-
-  test "find returns items by a single assign value" do
-    [uid] = Graph.resolve_id(@graph_find, :inner_line)
-    [p] = Graph.find(@graph_find, 0, state: {:abc, 123})
     assert Primitive.get_uid(p) == uid
   end
 
