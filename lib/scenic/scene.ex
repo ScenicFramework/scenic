@@ -178,7 +178,7 @@ defmodule Scenic.Scene do
   """
 
 
-  @viewport             :viewport
+  # @viewport             :viewport
   @not_activated        :__not_activated__
 
   #============================================================================
@@ -442,16 +442,16 @@ defmodule Scenic.Scene do
   # Note: the viewport is only monitored by this scene if it is a named scene.
   # dynamic scenes rely on their parent (or the viewport supervisor itself)
   # to take care of this for them.
-  def handle_info({:DOWN, _monitor_ref, :process, pid, _reason}, state) do
-    state = case Process.whereis(@viewport) do
-      ^pid ->
-        { :reply, :ok, state } = handle_call( :deactivate, pid,  state )
-        state
-      _ ->
-        state
-    end
-    {:noreply, state}
-  end
+  # def handle_info({:DOWN, _monitor_ref, :process, pid, _reason}, state) do
+  #   state = case Process.whereis(@viewport) do
+  #     ^pid ->
+  #       { :reply, :ok, state } = handle_call( :deactivate, pid,  state )
+  #       state
+  #     _ ->
+  #       state
+  #   end
+  #   {:noreply, state}
+  # end
 
   #--------------------------------------------------------
   # generic handle_info. give the scene a chance to handle it

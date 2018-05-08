@@ -37,6 +37,10 @@ defmodule Scenic.SceneTest do
     {:ok, :init_state}
   end
 
+  def handle_info( _, _ ) do
+    {:noreply, :handle_info_state}
+  end
+
 
   #============================================================================
   # child_spec
@@ -121,7 +125,9 @@ defmodule Scenic.SceneTest do
   end
 
   #============================================================================
-
-
+  # handle_info
+  test "handle_info sends unhandles messages to the module" do
+    assert Scene.handle_info(:abc, 123) == {:noreply, :handle_info_state}
+  end
 
 end
