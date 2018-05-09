@@ -28,7 +28,7 @@ defmodule Scenic.Component.Input.Slider do
 
 
   #--------------------------------------------------------
-  def init( {extents, value, width, id} ) do
+  def init( {extents, value, width, id}, _ ) do
 
     graph = Graph.build()
       |> rect( {{0,0}, width, @height}, color: :clear )

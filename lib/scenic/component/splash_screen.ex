@@ -17,7 +17,7 @@ defmodule Scenic.SplashScreen do
 
 
   #--------------------------------------------------------
-  def init( {initial_scene, args, opts} ) do
+  def init( {initial_scene, args, opts}, _ ) do
     {:ok, timer} = :timer.send_interval(@splash_interval, :splash_interval)
 
     state = %{

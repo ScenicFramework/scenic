@@ -65,9 +65,11 @@ defmodule Scenic.Component.Button do
 
 
   #--------------------------------------------------------
-  def init( {text, msg} ), do: init( {text, msg, []} )
-  def init( {text, msg, opt} ) when is_atom(opt), do: init( {text, msg, [opt]} )
-  def init( {text, msg, opts} ) when is_list(opts) do
+  def init( {text, msg}, opts ), do: init( {text, msg, []}, opts )
+  def init( {text, msg, opt}, init_opts ) when is_atom(opt) do
+    init( {text, msg, [opt]}, init_opts )
+  end
+  def init( {text, msg, opts}, _ ) when is_list(opts) do
     # get the size
     size_opt = Enum.find(opts, &Enum.member?(@valid_sizes, &1) ) || :normal
     color_opt = Enum.find(opts, &Enum.member?(@valid_colors, &1) ) || :primary

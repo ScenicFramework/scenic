@@ -43,10 +43,12 @@ defmodule Scenic.Component.Input.RadioButton do
 
 
   #--------------------------------------------------------
-  def init( {text, msg} ), do: init( {text, msg, false, []} )
-  def init( {text, msg, value} ), do: init( {text, msg, value, []} )
-  def init( {text, msg, value, opt} ) when is_atom(opt), do: init( {text, msg, value, [opt]} )
-  def init( {text, msg, value, opts} ) when is_list(opts) do
+  def init( {text, msg}, i_opts ), do: init( {text, msg, false, []}, i_opts )
+  def init( {text, msg, value}, i_opts ), do: init( {text, msg, value, []}, i_opts )
+  def init( {text, msg, value, opt}, i_opts ) when is_atom(opt) do
+    init( {text, msg, value, [opt]}, i_opts )
+  end
+  def init( {text, msg, value, opts}, _ ) when is_list(opts) do
     # get the color
     color_opt = Enum.find(opts, &Enum.member?(@valid_colors, &1) ) || :dark
 
