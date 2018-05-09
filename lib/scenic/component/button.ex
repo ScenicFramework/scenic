@@ -15,7 +15,7 @@ defmodule Scenic.Component.Button do
 #  @blue_color         :steel_blue
 #  @text_color         :white
 
-  @valid_sizes [:small, :normal, :large]
+  # @valid_sizes [:small, :normal, :large]
   @valid_colors [:primary, :secondary, :success, :danger, :warning, :info, :light, :dark, :text]
 #  @valid_other [:outline]
 
@@ -33,12 +33,17 @@ defmodule Scenic.Component.Button do
     text:       {nil, :clear, :clear, :clear, :clear}
   }
 
-  # {width, hieght, radius, font_size}
-  @sizes %{
-    small:      {80, 24, 2, 16},
-    normal:     {80, 30, 3, 18},
-    large:      {80, 40, 4, 20}
-  }
+  # # {width, hieght, radius, font_size}
+  # @sizes %{
+  #   small:      {80, 24, 2, 16},
+  #   normal:     {80, 30, 3, 18},
+  #   large:      {80, 40, 4, 20}
+  # }
+
+  @default_width      80
+  @default_height     30
+  @default_radius     3
+  @default_font_size  18
 
 #  #--------------------------------------------------------
   def info() do
@@ -63,27 +68,32 @@ defmodule Scenic.Component.Button do
   def valid?( {text, _msg, opts} ) when is_bitstring(text) and is_list(opts), do: true
   def valid?( _ ), do: false
 
-
   #--------------------------------------------------------
-  def init( {text, msg}, opts ), do: init( {text, msg, []}, opts )
-  def init( {text, msg, opt}, init_opts ) when is_atom(opt) do
-    init( {text, msg, [opt]}, init_opts )
-  end
-  def init( {text, msg, opts}, _ ) when is_list(opts) do
+  def init( {text, msg}, opts ) when is_list(opts) do
     # get the size
-    size_opt = Enum.find(opts, &Enum.member?(@valid_sizes, &1) ) || :normal
-    color_opt = Enum.find(opts, &Enum.member?(@valid_colors, &1) ) || :primary
-#    outline_opt = Enum.member?(opts, :outline)
+    color_opt = opts[:button_type] || :primary
+    case opts[:button_type] do
+      nil -> :primary
+      type ->
+        case Enum.member?(@valid_colors, type) do
+          true -> type
+          false -> :primary
+        end
+    end
 
     colors = @colors[color_opt]
     {text_color, button_color, _, _, _border_color} = colors
 
-    {width, hieght, radius, font_size} = @sizes[size_opt]
+    # get the dimentions
+    width = opts[:width] || @default_width
+    height = opts[:height] || @default_height
+    radius = opts[:radius] || @default_radius
+    font_size = opts[:font_size] || @default_font_size
 
     graph = Graph.build( font: {:roboto, font_size} )
-    |> rrect( {{0,0}, width, hieght, radius},
+    |> rrect( {{0,0}, width, height, radius},
       color: button_color, id: :btn )
-    |> text( {{8,(hieght*0.7)}, text}, color: text_color )
+    |> text( {{8,(height*0.7)}, text}, color: text_color )
 
     state = %{
       graph: graph,
