@@ -184,6 +184,23 @@ defmodule Scenic.SceneTest do
     assert new_state.scene_state == :other
   end
 
+
+  #============================================================================
+  # handle_cast
+
+  test "handle_cast :set_root calls the mod set root handler" do
+    {:noreply, new_state} = assert Scene.handle_cast(
+      {:set_root, :args}, self(), %{
+      scene_module: __MODULE__,
+      scene_state: nil,
+      activation: nil
+    })
+    assert resp == :ok
+    assert new_state.scene_state == :set_root_state
+    assert new_state.activation == :args
+  end
+
+
 end
 
 
