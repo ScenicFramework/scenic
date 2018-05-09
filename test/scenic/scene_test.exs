@@ -7,27 +7,11 @@
 defmodule Scenic.SceneTest do
   use ExUnit.Case, async: false
   doctest Scenic
-  alias Scenic.ViewPort
   alias Scenic.Scene
-  alias Scenic.Animation
-  alias Scenic.Graph
-  alias Scenic.Primitive
-  import Scenic.Primitives
-#  import IEx
+
+  #  import IEx
 
   @not_activated        :__not_activated__
-
-
-  @driver_registry      :driver_registry
-  @viewport_registry    :viewport_registry
-
-
-  @graph  Graph.build()
-  |> rect({{10,11},100,200}, id: :rect)
-
-  @graph_2  Graph.build()
-  |> triangle({{20, 300}, {400, 300}, {400, 0}}, id: :triangle)
-
 
   #============================================================================
   # faux scene module callbacks...
@@ -59,12 +43,13 @@ defmodule Scenic.SceneTest do
 
   def handle_input(event, context, state ) do
     GenServer.cast(self(), {:test_input, event, context, state})
-    {:noreply, state}
+    {:noreply, :input_state}
   end
 
-  # def handle_cast( _vp, _state ) do
-  #   {:noreply, :set_root_state}
-  # end
+  def handle_cast( msg, state ) do
+    GenServer.cast(self(), {:test_handle_cast, msg, state})
+    {:noreply, :handle_cast_state}
+  end
 
   #============================================================================
   # child_spec
@@ -100,11 +85,10 @@ defmodule Scenic.SceneTest do
     self = self()
     Scene.init( {__MODULE__, [1,2,3], [name: :scene_name, vp_dynamic_root: self]} )
     # verify the message
-    assert_receive( {:"$gen_cast", {:dyn_root_up, :scene_name, self}} )
+    assert_receive( {:"$gen_cast", {:dyn_root_up, :scene_name, ^self}} )
   end
 
   test "init does not send root_up message if vp_dynamic_root is clear" do
-    self = self()
     Scene.init( {__MODULE__, [1,2,3], [name: :scene_name]} )
     # verify the message
     refute_receive( {:"$gen_cast", {:dyn_root_up, _, _}} )
@@ -135,7 +119,7 @@ defmodule Scenic.SceneTest do
       dyn_scene_pids: %{},
       dyn_scene_keys: %{},
 
-      parent_pid: self,
+      parent_pid: ^self,
       children: %{},
 
       scene_module: __MODULE__,
@@ -180,13 +164,15 @@ defmodule Scenic.SceneTest do
     assert new_state.activation == :args
 
     assert_receive( {:"$gen_cast",
-      {:test_set_root, vp, :args, :scene_state}
+      {:test_set_root, ^vp, :args, :scene_state}
     } )
   end
 
   test "handle_call :lose_root sends lose_root to the module" do
+    vp = self()
+
     {:reply, resp, new_state} = assert Scene.handle_call(
-      :lose_root, self(), %{
+      :lose_root, vp, %{
       scene_module: __MODULE__,
       scene_state: :scene_state,
       activation: :args
@@ -196,7 +182,7 @@ defmodule Scenic.SceneTest do
     assert new_state.activation == @not_activated
 
     assert_receive( {:"$gen_cast",
-      {:test_lose_root, vp, :scene_state}
+      {:test_lose_root, ^vp, :scene_state}
     } )
   end
 
@@ -211,7 +197,7 @@ defmodule Scenic.SceneTest do
     assert new_state.scene_state == :handle_call_state
 
     assert_receive( {:"$gen_cast",
-      {:test_handle_call, :other, self, :scene_state}
+      {:test_handle_call, :other, ^self, :scene_state}
     } )
   end
 
@@ -230,7 +216,7 @@ defmodule Scenic.SceneTest do
     assert new_state.activation == :args
 
     assert_receive( {:"$gen_cast",
-      {:test_set_root, vp, :args, :scene_state}
+      {:test_set_root, ^vp, :args, :scene_state}
     } )
   end
 
@@ -248,7 +234,19 @@ defmodule Scenic.SceneTest do
       activation: nil
     })
 
-    assert_receive( {:"$gen_cast", {:test_input, event, context, sc_state}} )
+    assert new_state.scene_state == :input_state
+    assert_receive( {:"$gen_cast", {:test_input, ^event, ^context, ^sc_state}} )
+  end
+
+  test "handle_cast unknown calls the mod input handler" do
+    {:noreply, new_state} = assert Scene.handle_cast(
+      :other, %{
+      scene_module: __MODULE__,
+      scene_state: :scene_state,
+      activation: nil
+    })
+    assert new_state.scene_state == :handle_cast_state
+    assert_receive( {:"$gen_cast", {:test_handle_cast, :other, :scene_state}} )
   end
 
 end
