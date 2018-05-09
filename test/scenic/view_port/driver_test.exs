@@ -36,6 +36,16 @@ defmodule Scenic.ViewPort.DriverTest do
     {:noreply, :handle_cast_state}
   end
 
+
+  #============================================================================
+  # stop
+  
+  test "stop sends stop message to driver" do
+    :ok = assert Driver.stop( self() )
+    assert_receive( {:"$gen_cast", :stop} )
+  end
+
+
   #============================================================================
   # child_spec
   # need a custom child_spec because there can easily be multiple scenes running at the same time
@@ -95,8 +105,18 @@ defmodule Scenic.ViewPort.DriverTest do
   end
 
   #============================================================================
-  # handle_info
+  # handle_cast
   
+  test "handle_cast :stop sends driver stop to viewport" do
+    self = self()
+
+    {:noreply, new_state} = assert Driver.handle_cast(:stop, %{
+      viewport: self
+    })
+
+    assert_receive( {:"$gen_cast", {:stop_driver, ^self} } )
+  end
+
   test "handle_cast sends unhandles messages to the module" do
     {:noreply, new_state} = assert Driver.handle_cast(:abc, %{
       driver_module: __MODULE__,
