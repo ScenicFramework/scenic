@@ -609,7 +609,7 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  def handle_cast({:input, event, context}, 
+  def handle_cast({:input, event, %Scenic.ViewPort.Input.Context{} = context},
   %{scene_module: mod, scene_state: sc_state} = state) do
     {:noreply, sc_state} = mod.handle_input(event, context, sc_state )
     {:noreply, %{state | scene_state: sc_state}}

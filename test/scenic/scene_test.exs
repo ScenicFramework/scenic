@@ -37,21 +37,34 @@ defmodule Scenic.SceneTest do
     {:ok, :init_state}
   end
 
-  def handle_info( msg, _state ) do
-    {:noreply, msg}
+  def handle_info( msg, state ) do
+    GenServer.cast(self(), {:test_handle_info, msg, state})
+    {:noreply, :handle_info_state}
   end
-  def handle_set_root( _vp, :args, _state ) do
+
+  def handle_set_root( vp, args, state ) do
+    GenServer.cast(self(), {:test_set_root, vp, args, state})
     {:noreply, :set_root_state}
   end
 
-  def handle_lose_root( _vp, _state ) do
+  def handle_lose_root( vp, state ) do
+    GenServer.cast(self(), {:test_lose_root, vp, state})
     {:noreply, :lose_root_state}
   end
 
-  def handle_call( msg, _from, _state ) do
-    {:reply, msg, msg}
+  def handle_call( msg, from, state ) do
+    GenServer.cast(self(), {:test_handle_call, msg, from, state})
+    {:reply, :handle_call_reply, :handle_call_state}
   end
 
+  def handle_input(event, context, state ) do
+    GenServer.cast(self(), {:test_input, event, context, state})
+    {:noreply, state}
+  end
+
+  # def handle_cast( _vp, _state ) do
+  #   {:noreply, :set_root_state}
+  # end
 
   #============================================================================
   # child_spec
@@ -141,9 +154,13 @@ defmodule Scenic.SceneTest do
   test "handle_info sends unhandles messages to the module" do
     {:noreply, new_state} = assert Scene.handle_info(:abc, %{
       scene_module: __MODULE__,
-      scene_state: nil
+      scene_state: :scene_state
     })
-    assert new_state.scene_state == :abc
+    assert new_state.scene_state == :handle_info_state
+
+    assert_receive( {:"$gen_cast",
+      {:test_handle_info, :abc, :scene_state}
+    } )
   end
 
 
@@ -151,55 +168,88 @@ defmodule Scenic.SceneTest do
   # handle_call
   
   test "handle_call :set_root calls set_root on module" do
+    vp = self()
     {:reply, resp, new_state} = assert Scene.handle_call(
-      {:set_root, :args}, self(), %{
+      {:set_root, :args}, vp, %{
       scene_module: __MODULE__,
-      scene_state: nil,
+      scene_state: :scene_state,
       activation: nil
     })
     assert resp == :ok
     assert new_state.scene_state == :set_root_state
     assert new_state.activation == :args
+
+    assert_receive( {:"$gen_cast",
+      {:test_set_root, vp, :args, :scene_state}
+    } )
   end
 
-  test "handle_call sends unhandles messages to the module" do
+  test "handle_call :lose_root sends lose_root to the module" do
     {:reply, resp, new_state} = assert Scene.handle_call(
       :lose_root, self(), %{
       scene_module: __MODULE__,
-      scene_state: nil,
+      scene_state: :scene_state,
       activation: :args
     })
     assert resp == :ok
     assert new_state.scene_state == :lose_root_state
     assert new_state.activation == @not_activated
+
+    assert_receive( {:"$gen_cast",
+      {:test_lose_root, vp, :scene_state}
+    } )
   end
 
   test "handle_call sends unhandled messages to mod" do
+    self = self()
     {:reply, resp, new_state} = assert Scene.handle_call(
-      :other, self(), %{
+      :other, self, %{
       scene_module: __MODULE__,
-      scene_state: nil,
+      scene_state: :scene_state,
     })
-    assert resp == :other
-    assert new_state.scene_state == :other
-  end
+    assert resp == :handle_call_reply
+    assert new_state.scene_state == :handle_call_state
 
+    assert_receive( {:"$gen_cast",
+      {:test_handle_call, :other, self, :scene_state}
+    } )
+  end
 
   #============================================================================
   # handle_cast
 
   test "handle_cast :set_root calls the mod set root handler" do
+    vp = self()
     {:noreply, new_state} = assert Scene.handle_cast(
-      {:set_root, :args}, self(), %{
+      {:set_root, :args, vp}, %{
       scene_module: __MODULE__,
-      scene_state: nil,
+      scene_state: :scene_state,
       activation: nil
     })
-    assert resp == :ok
     assert new_state.scene_state == :set_root_state
     assert new_state.activation == :args
+
+    assert_receive( {:"$gen_cast",
+      {:test_set_root, vp, :args, :scene_state}
+    } )
   end
 
+  test "handle_cast :input calls the mod input handler" do
+    context = %Scenic.ViewPort.Input.Context{
+      viewport: self()
+    }
+    event = {:cursor_enter, 1}
+    sc_state = :sc_state
+
+    {:noreply, new_state} = assert Scene.handle_cast(
+      {:input, event, context}, %{
+      scene_module: __MODULE__,
+      scene_state: sc_state,
+      activation: nil
+    })
+
+    assert_receive( {:"$gen_cast", {:test_input, event, context, sc_state}} )
+  end
 
 end
 
