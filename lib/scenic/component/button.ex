@@ -70,6 +70,8 @@ defmodule Scenic.Component.Button do
 
   #--------------------------------------------------------
   def init( {text, msg}, opts ) when is_list(opts) do
+    IO.puts "Button opts: #{inspect(opts)}"
+    
     # get the size
     color_opt = opts[:button_type] || :primary
     case opts[:button_type] do
