@@ -1,5 +1,5 @@
 #
-#  re-re-Created by Boyd Multerer on May 2018.
+#  re-re-Created by Boyd Multerer May 2018.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 #
@@ -14,7 +14,7 @@ defmodule Scenic.SceneTest do
   @not_activated        :__not_activated__
 
   #============================================================================
-  # faux scene module callbacks...
+  # faux module callbacks...
 
   def init( opts ) do
     assert opts == [1,2,3]
@@ -112,6 +112,7 @@ defmodule Scenic.SceneTest do
     Scene.init( {__MODULE__, [1,2,3], [name: :scene_name]} )
     assert_receive( {:"$gen_cast", :after_init} )
   end
+  
   test "init call mod.init and returns first round of state" do
     self = self()
     {:ok, %{

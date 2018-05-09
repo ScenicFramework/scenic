@@ -11,10 +11,18 @@
 
 defmodule Scenic.ViewPort.Driver do
   use GenServer
-  require Logger
   alias Scenic.ViewPort
 
 #  import IEx
+
+  #============================================================================
+  # callback definitions
+
+  @callback init( any ) :: {:ok, any}
+  @callback handle_call(any, any, any) :: {:reply, any, any} | {:noreply, any}
+  @callback handle_cast(any, any) :: {:noreply, any}
+  @callback handle_info(any, any) :: {:noreply, any}
+
 
   #===========================================================================
   defmodule Error do
@@ -25,10 +33,12 @@ defmodule Scenic.ViewPort.Driver do
   # the using macro for scenes adopting this behavioiur
   defmacro __using__(_opts) do
     quote do
+      @behaviour Scenic.ViewPort.Driver
+      
       def init(_),                        do: {:ok, nil}
 
       # simple, do-nothing default handlers
-      def handle_call(msg, from, state),  do: { :noreply, state }
+      def handle_call(msg, from, state),  do: { :reply, :error_no_impl, state }
       def handle_cast(msg, state),        do: { :noreply, state }
       def handle_info(msg, state),        do: { :noreply, state }
 
@@ -45,7 +55,6 @@ defmodule Scenic.ViewPort.Driver do
       #--------------------------------------------------------
       defoverridable [
         init:                   1,
-#        handle_sync:            1,
         handle_call:            3,
         handle_cast:            2,
         handle_info:            2,
@@ -110,18 +119,7 @@ defmodule Scenic.ViewPort.Driver do
     |> Enum.find_value( fn
       {_, pid, :worker, [Scenic.ViewPort]} -> pid
       _ -> false
-    end) 
-
-    # {vp_pid, dyn_sup_pid} = vp_supervisor
-    # |> Supervisor.which_children()
-    # |> Enum.reduce( {nil, nil}, fn
-    #   {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]}, {vp, _} ->
-    #     {vp, pid}
-    #   {_, pid, :worker, [Scenic.ViewPort]}, {_, dyn} ->
-    #     {pid, dyn}
-    #   _, {vp, dyn} ->
-    #     {vp, dyn}
-    # end)    
+    end)    
 
     # let the driver module initialize itself
     module = config.module
@@ -138,40 +136,33 @@ defmodule Scenic.ViewPort.Driver do
 
   #--------------------------------------------------------
   # set the graph
-  def handle_cast({:set_graph, _} = msg, %{driver_module: mod, driver_state: d_state} = state) do
-    { :noreply, d_state } = mod.handle_cast( msg, d_state )
+  # def handle_cast({:set_graph, _} = msg, %{driver_module: mod, driver_state: d_state} = state) do
+  #   { :noreply, d_state } = mod.handle_cast( msg, d_state )
 
-    state = state
-    |> Map.put( :driver_state, d_state )
-    |> Map.put( :last_msg, :os.system_time(:millisecond) )
+  #   state = state
+  #   |> Map.put( :driver_state, d_state )
+  #   |> Map.put( :last_msg, :os.system_time(:millisecond) )
 
-    { :noreply, state }
-  end
+  #   { :noreply, state }
+  # end
 
   #--------------------------------------------------------
   # update the graph
-  def handle_cast({:update_graph, {_, deltas}} = msg, %{driver_module: mod, driver_state: d_state} = state) do
-    # don't call handle_update_graph if the list is empty
-    d_state = case deltas do
-      []      -> d_state
-      _  ->
-        { :noreply, d_state } = mod.handle_cast( msg, d_state )
-        d_state
-    end
+  # def handle_cast({:update_graph, {_, deltas}} = msg, %{driver_module: mod, driver_state: d_state} = state) do
+  #   # don't call handle_update_graph if the list is empty
+  #   d_state = case deltas do
+  #     []      -> d_state
+  #     _  ->
+  #       { :noreply, d_state } = mod.handle_cast( msg, d_state )
+  #       d_state
+  #   end
     
-    state = state
-    |> Map.put( :driver_state, d_state )
-    |> Map.put( :last_msg, :os.system_time(:millisecond) )
+  #   state = state
+  #   |> Map.put( :driver_state, d_state )
+  #   |> Map.put( :last_msg, :os.system_time(:millisecond) )
 
-    { :noreply, state }
-  end
-
-  #--------------------------------------------------------
-  # unrecognized message. Let the driver handle it
-#  def handle_cast({:driver_cast, msg}, %{driver_module: mod, driver_state: d_state} = state) do
-#    { :noreply, d_state } = mod.handle_cast( msg, d_state )
-#    { :noreply, Map.put(state, :driver_state, d_state) }
-#  end
+  #   { :noreply, state }
+  # end
 
   #--------------------------------------------------------
   # unrecognized message. Let the driver handle it
@@ -182,22 +173,6 @@ defmodule Scenic.ViewPort.Driver do
 
   #============================================================================
   # handle_info
-
-  #--------------------------------------------------------
-  # there may be more than one driver sending update messages to the
-  # scene. Go no faster than the fastest one
-#  def handle_info(@sync_message,
-#  %{last_msg: last_msg, driver_module: mod, driver_state: d_state, sync_interval: sync_interval} = state) do
-#    cur_time = :os.system_time(:millisecond)
-#    case (cur_time - last_msg) > sync_interval do
-#      true  ->
-##        ViewPort.send_to_scene( :graph_update )
-#        { :noreply, d_state } = mod.handle_sync( d_state )
-#        { :noreply, Map.put(state, :driver_state, d_state) }
-#      false ->
-#        { :noreply, state }
-#    end
-#  end
 
   #--------------------------------------------------------
   # unrecognized message. Let the driver handle it
