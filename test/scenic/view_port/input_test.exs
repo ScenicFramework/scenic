@@ -8,7 +8,7 @@ defmodule Scenic.ViewPort.InputTest do
   use ExUnit.Case, async: true
   use Bitwise
   doctest Scenic
-  alias Scenic.ViewPort.Input
+
 
 #  import IEx
 

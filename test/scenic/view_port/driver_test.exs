@@ -110,7 +110,7 @@ defmodule Scenic.ViewPort.DriverTest do
   test "handle_cast :stop sends driver stop to viewport" do
     self = self()
 
-    {:noreply, new_state} = assert Driver.handle_cast(:stop, %{
+    {:noreply, _} = assert Driver.handle_cast(:stop, %{
       viewport: self
     })
 
