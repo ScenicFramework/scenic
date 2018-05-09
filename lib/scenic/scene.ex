@@ -464,7 +464,26 @@ defmodule Scenic.Scene do
   #============================================================================
   # handle_call
 
+  #--------------------------------------------------------
+  # The scene is gaining activation. This is done syncronously (call) as
+  # we want this to complete before setting the root. This reduces
+  # blinking.
 
+  def handle_call({:set_root, args}, from, %{
+    scene_module: mod,
+    scene_state: sc_state
+  } = state) do
+    vp = case from do
+      {pid, _} when is_pid(pid) -> pid
+      pid when is_pid(pid) -> pid
+    end
+
+    # tell the scene it is being activated
+    {:noreply, sc_state} = mod.handle_set_root( vp, args, sc_state )
+    { :reply, :ok, %{state | scene_state: sc_state, activation: args} }
+  end
+
+ 
   #--------------------------------------------------------
   # The scene is losing activation. This is done syncronously (call) as the
   # next thing to happen might be process termination. This makes sure the
@@ -484,19 +503,6 @@ defmodule Scenic.Scene do
     { :reply, :ok, %{state | scene_state: sc_state, activation: @not_activated} }
   end
 
-  def handle_call({:set_root, args}, from, %{
-    scene_module: mod,
-    scene_state: sc_state
-  } = state) do
-    vp = case from do
-      {pid, _} when is_pid(pid) -> pid
-      pid when is_pid(pid) -> pid
-    end
-
-    # tell the scene it is being activated
-    {:noreply, sc_state} = mod.handle_set_root( vp, args, sc_state )
-    { :reply, :ok, %{state | scene_state: sc_state, activation: args} }
-  end
 
 
   #--------------------------------------------------------

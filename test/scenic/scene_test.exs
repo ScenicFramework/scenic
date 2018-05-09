@@ -37,8 +37,19 @@ defmodule Scenic.SceneTest do
     {:ok, :init_state}
   end
 
-  def handle_info( _, _ ) do
-    {:noreply, :handle_info_state}
+  def handle_info( msg, _state ) do
+    {:noreply, msg}
+  end
+  def handle_set_root( _vp, :args, _state ) do
+    {:noreply, :set_root_state}
+  end
+
+  def handle_lose_root( _vp, _state ) do
+    {:noreply, :lose_root_state}
+  end
+
+  def handle_call( msg, _from, _state ) do
+    {:reply, msg, msg}
   end
 
 
@@ -126,8 +137,68 @@ defmodule Scenic.SceneTest do
 
   #============================================================================
   # handle_info
+  
   test "handle_info sends unhandles messages to the module" do
-    assert Scene.handle_info(:abc, 123) == {:noreply, :handle_info_state}
+    {:noreply, new_state} = assert Scene.handle_info(:abc, %{
+      scene_module: __MODULE__,
+      scene_state: nil
+    })
+    assert new_state.scene_state == :abc
+  end
+
+
+  #============================================================================
+  # handle_call
+  
+  test "handle_call :set_root calls set_root on module" do
+    {:reply, resp, new_state} = assert Scene.handle_call(
+      {:set_root, :args}, self(), %{
+      scene_module: __MODULE__,
+      scene_state: nil,
+      activation: nil
+    })
+    assert resp == :ok
+    assert new_state.scene_state == :set_root_state
+    assert new_state.activation == :args
+  end
+
+  test "handle_call sends unhandles messages to the module" do
+    {:reply, resp, new_state} = assert Scene.handle_call(
+      :lose_root, self(), %{
+      scene_module: __MODULE__,
+      scene_state: nil,
+      activation: :args
+    })
+    assert resp == :ok
+    assert new_state.scene_state == :lose_root_state
+    assert new_state.activation == @not_activated
+  end
+
+  test "handle_call sends unhandled messages to mod" do
+    {:reply, resp, new_state} = assert Scene.handle_call(
+      :other, self(), %{
+      scene_module: __MODULE__,
+      scene_state: nil,
+    })
+    assert resp == :other
+    assert new_state.scene_state == :other
   end
 
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
