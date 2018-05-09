@@ -23,6 +23,16 @@ defmodule Scenic.ViewPort.Driver do
   @callback handle_cast(any, any) :: {:noreply, any}
   @callback handle_info(any, any) :: {:noreply, any}
 
+  #--------------------------------------------------------
+  def start( viewport, %ViewPort.Driver.Config{} = config ) when
+  (is_atom(viewport) or is_pid(viewport) ) do
+    GenServer.call(viewport, { :start_driver, config })
+  end
+
+  #--------------------------------------------------------
+  def stop( driver_pid ) when is_pid(driver_pid) do
+    GenServer.cast(driver_pid, :stop )
+  end
 
   #===========================================================================
   defmodule Error do
@@ -131,6 +141,13 @@ defmodule Scenic.ViewPort.Driver do
       driver_state:   driver_state
     }
 
+    { :noreply, state }
+  end
+
+  #--------------------------------------------------------
+  # tell the viewport to stop this driver
+  def handle_cast(:stop, %{viewport: viewport} = state) do
+    GenServer.cast(viewport, { :stop_driver, self() })
     { :noreply, state }
   end
 

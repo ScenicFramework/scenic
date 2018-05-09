@@ -16,8 +16,8 @@ defmodule Scenic.SceneTest do
   #============================================================================
   # faux module callbacks...
 
-  def init( opts ) do
-    assert opts == [1,2,3]
+  def init( args, _opts ) do
+    assert args == [1,2,3]
     {:ok, :init_state}
   end
 

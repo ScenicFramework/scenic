@@ -252,7 +252,7 @@ defmodule Scenic.Scene do
   #============================================================================
   # callback definitions
 
-  @callback init( any ) :: {:ok, any}
+  @callback init( any, list ) :: {:ok, any}
   @callback handle_call(any, any, any) :: {:reply, any, any} | {:noreply, any}
   @callback handle_cast(any, any) :: {:noreply, any}
   @callback handle_info(any, any) :: {:noreply, any}
@@ -274,7 +274,7 @@ defmodule Scenic.Scene do
 
       #--------------------------------------------------------
       # Here so that the scene can override if desired
-      def init(_),                                    do: {:ok, nil}
+      def init(_, _),                                 do: {:ok, nil}
       def handle_set_root( _vp, _args, state ),       do: {:noreply, state}
       def handle_lose_root( _vp, state ),             do: {:noreply, state}
  
@@ -324,7 +324,7 @@ defmodule Scenic.Scene do
      # do not add a put element. keep it at modify to stay atomic
       #--------------------------------------------------------
       defoverridable [
-        init:                   1,
+        init:                   2,
         handle_set_root:        3,
         handle_lose_root:       2,
 
@@ -410,7 +410,11 @@ defmodule Scenic.Scene do
     if opts[:name], do: Process.monitor( Scenic.ViewPort.Tables )
 
     # initialize the scene itself
-    {:ok, sc_state} = scene_module.init( args )
+    init_opts = case opts[:viewport] do
+      nil -> []
+      vp -> [viewport: vp]
+    end
+    {:ok, sc_state} = scene_module.init( args, init_opts )
 
     # build up the state
     state = %{
@@ -423,6 +427,7 @@ defmodule Scenic.Scene do
 
       scene_module: scene_module,
 
+      viewport: opts[:viewport],
       scene_state: sc_state,
       scene_ref: scene_ref,
       supervisor_pid: nil,
@@ -701,7 +706,8 @@ defmodule Scenic.Scene do
     raw_scene_refs: raw_scene_refs,
     dyn_scene_pids: dyn_scene_pids,
     dyn_scene_keys: dyn_scene_keys,
-    dynamic_children_pid: dyn_sup
+    dynamic_children_pid: dyn_sup,
+    viewport: viewport
   } = state ) do
     # reduce the incoming graph to it's minimal form
     # while simultaneously extracting the SceneRefs
@@ -750,8 +756,13 @@ defmodule Scenic.Scene do
           raise "You have set a dynamic SceneRef on a graph in a scene where has_children is false"
         end
 
+        init_opts = case viewport do
+          nil -> []
+          vp -> [viewport: vp]
+        end
+
         # start the dynamic scene
-        {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, self(), init_data )
+        {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, self(), init_data, init_opts )
 
         # add the this dynamic child scene to tracking
         {

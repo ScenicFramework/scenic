@@ -88,10 +88,10 @@ defmodule Scenic.ViewPort do
   @doc """
   Start a new viewport
   """
-  def start( initial_scene, args, opts \\ [] ) do
+  def start( %ViewPort.Config{} = config ) do
     # start the viewport's supervision tree
     {:ok, sup_pid} = DynamicSupervisor.start_child( @viewports,
-      {ViewPort.Supervisor, {initial_scene, args, opts}}
+      {ViewPort.Supervisor, config}
     )
 
     # we want to return the pid of the viewport itself
@@ -196,21 +196,6 @@ defmodule Scenic.ViewPort do
   """
   def driver_cast( viewport, msg ) do
     GenServer.cast(viewport, {:driver_cast, msg})
-  end
-
-
-  #--------------------------------------------------------
-  def start_driver( viewport, %ViewPort.Driver.Config{} = config ) when
-  (is_atom(viewport) or is_pid(viewport) ) do
-    GenServer.call(viewport, { :start_driver, config })
-  end
-
-  #--------------------------------------------------------
-  def stop_driver( viewport, driver_pid ) when
-  (is_atom(viewport) or is_pid(viewport) ) and 
-  (is_atom(driver_pid) or is_pid(driver_pid) )
-  do
-    GenServer.cast(viewport, { :stop_driver, driver_pid })
   end
 
 
@@ -344,7 +329,10 @@ defmodule Scenic.ViewPort do
       # dynamic scene
       {mod, init_data} ->
         # start the dynamic scene
-        {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, nil, init_data, vp_dynamic_root: self() )
+        {:ok, pid, ref} = mod.start_dynamic_scene(
+          dyn_sup, nil, init_data,
+          vp_dynamic_root: self(), viewport: self()
+        )
         {pid, ref, pid}
 
       # app supervised scene - mark dynamic root as nil
