@@ -5,7 +5,7 @@
 # Taking the learnings from several previous versions.
 
 defmodule Scenic.Scene do
-#  alias Scenic.Graph
+  alias Scenic.Graph
   alias Scenic.Scene
   alias Scenic.ViewPort
   alias Scenic.Primitive
@@ -13,7 +13,7 @@ defmodule Scenic.Scene do
 
   require Logger
 
-#  import IEx
+  import IEx
 
   @moduledoc """
   
@@ -412,7 +412,12 @@ defmodule Scenic.Scene do
     # initialize the scene itself
     init_opts = case opts[:viewport] do
       nil -> []
-      vp -> [viewport: vp]
+      vp ->
+        # remove reserved keywords from opts
+        opts
+        |> Keyword.delete( :vp_dynamic_root )
+        |> Keyword.delete( :scene_ref )
+        |> Keyword.delete( :name )
     end
     {:ok, sc_state} = scene_module.init( args, init_opts )
 
@@ -756,9 +761,11 @@ defmodule Scenic.Scene do
           raise "You have set a dynamic SceneRef on a graph in a scene where has_children is false"
         end
 
+        styles = Map.get(graph[uid], :styles, %{})
+
         init_opts = case viewport do
-          nil -> []
-          vp -> [viewport: vp]
+          nil -> [styles: styles]
+          vp -> [viewport: vp, styles: styles]
         end
 
         # start the dynamic scene

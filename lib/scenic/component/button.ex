@@ -6,18 +6,9 @@ defmodule Scenic.Component.Button do
   alias Scenic.ViewPort
   import Scenic.Primitives, only: [{:rrect, 3}, {:text, 3}]
 
+  import IEx
 
-#  @default_width      80
-#  @default_height     32
-#  @default_radius     2
-#  @default_type       6
-
-#  @blue_color         :steel_blue
-#  @text_color         :white
-
-  # @valid_sizes [:small, :normal, :large]
   @valid_colors [:primary, :secondary, :success, :danger, :warning, :info, :light, :dark, :text]
-#  @valid_other [:outline]
 
   # type is {text_color, button_color, hover_color, pressed_color, border_color}
   # nil for text_color means to use whatever is inherited
@@ -33,17 +24,10 @@ defmodule Scenic.Component.Button do
     text:       {nil, :clear, :clear, :clear, :clear}
   }
 
-  # # {width, hieght, radius, font_size}
-  # @sizes %{
-  #   small:      {80, 24, 2, 16},
-  #   normal:     {80, 30, 3, 18},
-  #   large:      {80, 40, 4, 20}
-  # }
-
   @default_width      80
   @default_height     30
   @default_radius     3
-  @default_font_size  18
+  @default_font       {:roboto, 18}
 
 #  #--------------------------------------------------------
   def info() do
@@ -70,7 +54,6 @@ defmodule Scenic.Component.Button do
 
   #--------------------------------------------------------
   def init( {text, msg}, opts ) when is_list(opts) do
-    IO.puts "Button opts: #{inspect(opts)}"
     
     # get the size
     color_opt = opts[:button_type] || :primary
@@ -83,16 +66,18 @@ defmodule Scenic.Component.Button do
         end
     end
 
+    # get the colors
     colors = @colors[color_opt]
     {text_color, button_color, _, _, _border_color} = colors
 
     # get the dimentions
-    width = opts[:width] || @default_width
-    height = opts[:height] || @default_height
-    radius = opts[:radius] || @default_radius
-    font_size = opts[:font_size] || @default_font_size
+    styles = opts[:styles] || %{}
+    width = styles[:width] || @default_width
+    height = styles[:height] || @default_height
+    radius = styles[:radius] || @default_radius
+    font = styles[:font] || @default_font
 
-    graph = Graph.build( font: {:roboto, font_size} )
+    graph = Graph.build( font: font )
     |> rrect( {{0,0}, width, height, radius},
       color: button_color, id: :btn )
     |> text( {{8,(height*0.7)}, text}, color: text_color )
