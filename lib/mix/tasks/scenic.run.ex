@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Ui.Run do
+defmodule Mix.Tasks.Scenic.Run do
   use Mix.Task
 
   @shortdoc "Starts the UI application"
