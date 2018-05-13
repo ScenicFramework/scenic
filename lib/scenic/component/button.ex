@@ -97,15 +97,19 @@ push_graph( graph )
   end
 
   #--------------------------------------------------------
-  def handle_input( {:cursor_enter, _uid}, _context, state ) do
-#IO.puts( "handle_input :cursor_enter")
+  def handle_input( {:cursor_enter, _uid}, _context, %{
+    pressed: true
+  } = state ) do
+#IO.puts( "handle_input :cursor_enter"
     state = Map.put(state, :contained, true)
     update_color(state)
     {:noreply, state}
   end
 
   #--------------------------------------------------------
-  def handle_input( {:cursor_exit, _uid}, _context, state ) do
+  def handle_input( {:cursor_exit, _uid}, _context, %{
+    pressed: true
+  } = state ) do
 #IO.puts( "handle_input :cursor_exit")
     state = Map.put(state, :contained, false)
     update_color(state)
