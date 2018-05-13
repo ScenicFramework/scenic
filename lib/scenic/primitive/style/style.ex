@@ -102,13 +102,13 @@ defmodule Scenic.Primitive.Style do
   # filter a style map so only the primitive types remain
   def primitives( style_map )
   def primitives( style_map ) do
-    # Enum.reduce(@primitive_styles, %{}, fn(k,acc) ->
-    #   case Map.get(style_map, k) do
-    #     nil ->  acc
-    #     v   ->  Map.put(acc, k, normalize(k,v) )
-    #   end
-    # end)
-    style_map
+    Enum.reduce(@primitive_styles, %{}, fn(k,acc) ->
+      case Map.get(style_map, k) do
+        nil ->  acc
+        v   ->  Map.put(acc, k, normalize(k,v) )
+      end
+    end)
+    # style_map
   end
 
 end
