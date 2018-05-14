@@ -85,6 +85,9 @@ defmodule Scenic.ViewPort.Tables do
   #--------------------------------------------------------
   def delete_graph( {:graph,scene,_} = graph_key ) when is_atom(scene) or is_reference(scene) do
     :ets.delete(@ets_graphs_table, graph_key)
+      # tell the subscribers the key is went away
+      list_subscribers(graph_key)
+      |> Enum.each( &GenServer.cast(&1, {:delete_graph, graph_key}) )
   end
 
 
