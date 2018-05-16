@@ -81,6 +81,7 @@ defmodule Scenic.ViewPort.Tables do
       [{_, _, graph, _}] -> {:ok, graph}
     end
   end
+  def get_graph( _ ), do: {:error, :invalid_graph_key}
 
   #--------------------------------------------------------
   def delete_graph( {:graph,scene,_} = graph_key ) when is_atom(scene) or is_reference(scene) do
@@ -89,6 +90,7 @@ defmodule Scenic.ViewPort.Tables do
       list_subscribers(graph_key)
       |> Enum.each( &GenServer.cast(&1, {:delete_graph, graph_key}) )
   end
+  def delete_graph( _ ), do: {:error, :invalid_graph_key}
 
 
   #--------------------------------------------------------
@@ -98,6 +100,7 @@ defmodule Scenic.ViewPort.Tables do
       [{_, _, _, refs}] -> {:ok, refs}
     end
   end
+  def get_refs( _ ), do: {:error, :invalid_graph_key}
 
   #--------------------------------------------------------
   def get_graph_refs( {:graph,scene,_} = graph_key ) when is_atom(scene) or is_reference(scene) do
@@ -106,6 +109,7 @@ defmodule Scenic.ViewPort.Tables do
       [{_, _, graph, refs}] -> {:ok, graph, refs}
     end
   end
+  def get_graph_refs( _ ), do: {:error, :invalid_graph_key}
 
 
   #--------------------------------------------------------
