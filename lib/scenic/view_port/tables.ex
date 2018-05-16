@@ -169,10 +169,15 @@ defmodule Scenic.ViewPort.Tables do
     pid
     |> list_graphs_for_scene_pid()
     |> Enum.each( fn(graph_key) ->
-      :ets.delete( @ets_graphs_table, graph_key )
       # tell the subscribers the key is going away
       list_subscribers(graph_key)
-      |> Enum.each( &GenServer.cast(&1, {:delete_graph, graph_key}) )
+      |> Enum.each( fn(sub) ->
+        GenServer.cast(sub, {:delete_graph, graph_key} )
+        unsubscribe(graph_key, sub )
+      end)
+
+      # delete the entry
+      :ets.delete( @ets_graphs_table, graph_key )
     end)
 
     # unregister the scene itself
