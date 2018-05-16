@@ -10,7 +10,7 @@ defmodule Scenic.Math.Line do
 #  import IEx
 
   @app Mix.Project.config[:app]
-  @env Mix.env
+  # @env Mix.env
 
   # load the NIF
   @on_load :load_nifs
