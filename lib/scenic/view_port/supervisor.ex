@@ -12,6 +12,16 @@ defmodule Scenic.ViewPort.Supervisor do
   #============================================================================
   # setup the viewport supervisor
 
+  def child_spec(config) do
+    %{
+      id: Map.get(config, :name) || make_ref(),
+      start: {__MODULE__, :start_link, [config]},
+      type: :supervisor,
+      restart: :permanent,
+      shutdown: 500
+    }
+  end
+
   def start_link( %ViewPort.Config{} = config ) do
     Supervisor.start_link(__MODULE__, config)
   end
