@@ -14,24 +14,13 @@ defmodule Scenic.Math.Matrix do
 
 
   @app Mix.Project.config[:app]
-  # @env Mix.env
+  @env Mix.env
 
   # load the NIF
   @on_load :load_nifs
   def load_nifs do
-    # app = :code.priv_dir(@app)
-    # env = to_charlist(@env)
-    # path = :filename.join(:code.priv_dir(@app), to_charlist(@env) ++ '/line')
-    # path = app ++ '/matrix'
-    # :ok = :filename.join(:code.priv_dir(@app), path)
-    # |> :erlang.load_nif(0)
-
-    nif_file = '#{:code.priv_dir(@app)}/matrix'
-    case :erlang.load_nif(nif_file, 0) do
-      :ok -> :ok
-      {:error, {:reload, _}} -> :ok
-      {:error, reason} -> IO.puts "Failed to load NIF MATRIX: #{inspect reason}"
-    end
+    :ok = :filename.join(:code.priv_dir(@app), 'matrix')
+    |> :erlang.load_nif(0)
   end
 
 

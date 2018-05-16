@@ -7,26 +7,16 @@
 defmodule Scenic.Math.Line do
   alias Scenic.Math
 
-  # import IEx
+#  import IEx
 
   @app Mix.Project.config[:app]
-  # @env Mix.env
+  @env Mix.env
 
   # load the NIF
   @on_load :load_nifs
   def load_nifs do
-    # app = :code.priv_dir(@app)
-    # env = to_charlist(@env)
-    # path = :filename.join(:code.priv_dir(@app), to_charlist(@env) ++ '/line')
-    # path = app ++ '/line'
-    # :ok = :filename.join(:code.priv_dir(@app), path)
-    # |> :erlang.load_nif(0)
-    nif_file = '#{:code.priv_dir(@app)}/line'
-    case :erlang.load_nif(nif_file, 0) do
-      :ok -> :ok
-      {:error, {:reload, _}} -> :ok
-      {:error, reason} -> IO.puts "Failed to load NIF LINE: #{inspect reason}"
-    end
+    :ok = :filename.join(:code.priv_dir(@app), 'line')
+    |> :erlang.load_nif(0)
   end
 
 

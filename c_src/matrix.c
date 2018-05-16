@@ -10,6 +10,7 @@
 #include <math.h>
 #include <erl_nif.h>
 
+// #include "erl_utils.h"
 
 static const float matrix_identity[16] = {
   1.0f, 0.0f, 0.0f, 0.0f,
@@ -21,8 +22,9 @@ static const float matrix_identity[16] = {
 
 #define   MATRIX_SIZE     (sizeof(float) * 16)
 
+
 //=============================================================================
-// utils
+// utilities
 
 //---------------------------------------------------------
 // get a double. cast if it is an integer
@@ -35,7 +37,7 @@ bool get_double_num(ErlNifEnv *env, ERL_NIF_TERM term, double* d ) {
 }
 
 //---------------------------------------------------------
-// get a double. cast if it is an integer
+// get a float. cast if it is an integer
 bool get_float_num(ErlNifEnv *env, ERL_NIF_TERM term, float* f ) {
   double  d;
   int     i;
@@ -344,7 +346,6 @@ nif_multiply_list(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   ErlNifBinary      matrix_term;
   ERL_NIF_TERM      result;
 
-  // float *           a;
   float *           c;
   unsigned          list_len;
   unsigned          i;

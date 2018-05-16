@@ -10,9 +10,11 @@
 #include <math.h>
 #include <erl_nif.h>
 
+// #include "erl_utils.h"
+
 
 //=============================================================================
-// utils
+// utilities
 
 //---------------------------------------------------------
 // get a double. cast if it is an integer
@@ -25,7 +27,7 @@ bool get_double_num(ErlNifEnv *env, ERL_NIF_TERM term, double* d ) {
 }
 
 //---------------------------------------------------------
-// get a double. cast if it is an integer
+// get a float. cast if it is an integer
 bool get_float_num(ErlNifEnv *env, ERL_NIF_TERM term, float* f ) {
   double  d;
   int     i;
@@ -91,7 +93,6 @@ nif_parallel(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
 #  end
 */
 
-
 //-----------------------------------------------------------------------------
 // find a point that is the intersection of two lines
 static ERL_NIF_TERM
@@ -144,5 +145,3 @@ static ErlNifFunc nif_funcs[] = {
 
 
 ERL_NIF_INIT(Elixir.Scenic.Math.Line, nif_funcs, NULL, NULL, NULL, NULL)
-
-
