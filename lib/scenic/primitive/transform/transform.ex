@@ -9,7 +9,6 @@ defmodule Scenic.Primitive.Transform do
   alias Scenic.Math.Matrix
   alias Scenic.Math.Vector
   alias Scenic.Primitive.Transform
-  import Scenic.Math.Matrix, only: [{:identity,0}]
 
   @callback info() :: bitstring
   @callback verify( any ) :: boolean
@@ -74,7 +73,7 @@ defmodule Scenic.Primitive.Transform do
   
   defp do_calculate_local( txs ) do
     # start with identity - which is like multiplying by 1
-    identity()
+    Matrix.identity()
     |> multiply_partial( :matrix, txs[:matrix] )
     |> multiply_partial( :translate, txs[:translate] )
     |> rotate_and_scale( txs )
