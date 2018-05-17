@@ -30,8 +30,6 @@ defmodule Scenic.Graph do
   # make reserved uids, 3 or shorter to avoid potential conflicts
   @root_uid               0
 
-  @identity               Matrix.identity()
-
   @default_max_depth      128
 
 
@@ -1017,7 +1015,7 @@ defmodule Scenic.Graph do
   def get_merged_tx(graph, uid)
   def get_merged_tx(graph, uid) do
     case get(graph, uid) do
-      nil -> @identity
+      nil -> Matrix.identity()
       %{parent_uid: puid} = p ->
         merged = get_merged_tx(graph, puid)
         case Map.get(p, :local_tx) do

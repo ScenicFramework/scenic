@@ -21,11 +21,10 @@ defmodule Scenic.ViewPort.Input do
 
   defmodule Context do
     alias Scenic.Math.Matrix
-    @identity         Matrix.identity()
-    defstruct viewport: nil, graph_key: nil, tx: @identity, inverse_tx: @identity, uid: nil
+    defstruct viewport: nil, graph_key: nil, tx: Matrix.identity(),
+    inverse_tx: Matrix.identity(), uid: nil
   end
 
-  @identity         Matrix.identity()
 
   #============================================================================
   # input handling
@@ -383,7 +382,12 @@ defmodule Scenic.ViewPort.Input do
     # project the point by that inverse matrix to get the local point
     point = Matrix.project_vector( context.inverse_tx, point )
     with {:ok, graph} <- ViewPort.Tables.get_graph( context.graph_key ) do
-      case do_find_by_captured_point( point, 0, graph, @identity, @identity, max_depth ) do
+      do_find_by_captured_point(
+        point, 0, graph,
+        Matrix.identity(), Matrix.identity(),
+        max_depth
+      )
+      |> case do
         nil -> {nil, point}
         out -> out
       end
@@ -450,7 +454,7 @@ defmodule Scenic.ViewPort.Input do
   # thing and return the last one found (that was my first try), but this is
   # more efficient as we can stop as soon as we find the first one.
   defp find_by_screen_point( {x,y}, %{root_graph_key: root_key, max_depth: depth}) do
-    identity = {@identity, @identity}
+    identity = {Matrix.identity(), Matrix.identity()}
     with {:ok, graph} <- ViewPort.Tables.get_graph(root_key) do
       do_find_by_screen_point( x, y, 0, root_key, graph, identity, identity, depth )
     end
