@@ -1,3 +1,18 @@
+# Variables to override
+#
+# CC            C compiler
+# CROSSCOMPILE	crosscompiler prefix, if any
+# CFLAGS	compiler flags for compiling all C files
+# ERL_CFLAGS	additional compiler flags for files using Erlang header files
+# ERL_EI_LIBDIR path to libei.a
+# LDFLAGS	linker flags for linking all binaries
+# ERL_LDFLAGS	additional linker flags for projects referencing Erlang libraries
+
+# Look for the EI library and header files
+# For crosscompiled builds, ERL_EI_INCLUDE_DIR and ERL_EI_LIBDIR must be
+# passed into the Makefile.
+
+# Set Erlang-specific compile and linker flags
 ERL_CFLAGS ?= -I$(ERL_EI_INCLUDE_DIR)
 ERL_LDFLAGS ?= -L$(ERL_EI_LIBDIR)
 
@@ -12,8 +27,8 @@ endif
 
 NIF=priv/line.so priv/matrix.so
 
-# calling_from_make:
-# 	mix compile
+calling_from_make:
+	mix compile
 
 all: priv $(NIF)
 

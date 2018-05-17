@@ -3,14 +3,11 @@
 //  Copyright © 2017 Kry10 Industries. All rights reserved.
 //
 
-//#include <stdio.h>
 
 #include <stdbool.h>
-//#include <string.h>
 #include <math.h>
 #include <erl_nif.h>
 
-// #include "erl_utils.h"
 
 
 //=============================================================================
@@ -122,16 +119,7 @@ nif_intersection(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
       enif_make_double(env, y)
     );
 }
-/*
-#  def intersection({{x0, y0}, {x1, y1}}, {{x2, y2}, {x3, y3}}) do
-#    d = (x0-x1)*(y2-y3)-(y0-y1)*(x2-x3)
-#    d0 = x0*y1-y0*x1
-#    d1 = x2*y3-y2*x3
-#    x = d0*(x2-x3)-d1*(x0-x1)
-#    y = d0*(y2-y3)-d1*(y0-y1)
-#    {x / d, y / d}
-#  end
-*/
+
 
 //=============================================================================
 // erl housekeeping. This is the list of functions available to the erl side
@@ -139,8 +127,8 @@ nif_intersection(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
 static ErlNifFunc nif_funcs[] = {
   // {erl_function_name, erl_function_arity, c_function}
 //  {"do_put", 4, nif_put},
-  {"nif_parallel",          5, nif_parallel, 0},
-  {"nif_intersection",      8, nif_intersection, 0}
+  {"nif_parallel",          5, nif_parallel,      0},
+  {"nif_intersection",      8, nif_intersection,  0}
 };
 
 
