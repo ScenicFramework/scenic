@@ -17,6 +17,7 @@ defmodule Scenic.Math.Matrix do
   # @env Mix.env
 
   # load the NIF
+  @compile {:autoload, false}
   @on_load :load_nifs
   def load_nifs do
     :ok = :filename.join(:code.priv_dir(@app), 'matrix')
