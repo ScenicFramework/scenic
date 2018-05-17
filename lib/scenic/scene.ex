@@ -5,7 +5,6 @@
 # Taking the learnings from several previous versions.
 
 defmodule Scenic.Scene do
-  alias Scenic.Graph
   alias Scenic.Scene
   alias Scenic.ViewPort
   alias Scenic.Primitive
@@ -13,7 +12,7 @@ defmodule Scenic.Scene do
 
   require Logger
 
-  import IEx
+  # import IEx
 
   @moduledoc """
   
@@ -412,7 +411,7 @@ defmodule Scenic.Scene do
     # initialize the scene itself
     init_opts = case opts[:viewport] do
       nil -> []
-      vp ->
+      _vp ->
         # remove reserved keywords from opts
         opts
         |> Keyword.delete( :vp_dynamic_root )

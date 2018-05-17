@@ -6,7 +6,7 @@ defmodule Scenic.Component.Button do
   alias Scenic.ViewPort
   import Scenic.Primitives, only: [{:rrect, 3}, {:text, 3}]
 
-  import IEx
+  # import IEx
 
   @valid_colors [:primary, :secondary, :success, :danger, :warning, :info, :light, :dark, :text]
 

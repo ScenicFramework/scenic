@@ -11,7 +11,7 @@ defmodule Scenic.Primitive do
   alias Scenic.Primitive.Transform
   alias Scenic.Math.Matrix
 
-  import IEx
+  # import IEx
 
   @callback add_to_graph(map, any, list) :: map
 
@@ -122,7 +122,7 @@ defmodule Scenic.Primitive do
   # assume most elements do not hvae these items set.
   def build( module, data, opts \\ [] ) do
     # first build the map with the non-optional fields
-    p = %{
+    %{
       __struct__:   __MODULE__,       # per Jose. Declaring stuct this way saves memory
       module:       module,
       data:         data,
