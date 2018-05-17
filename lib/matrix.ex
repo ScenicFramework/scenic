@@ -70,16 +70,6 @@ defmodule Scenic.Math.Matrix do
       1.0 :: float-size(32)-native
     >>
 
-
-if Mix.env() == :dev do
-  def time() do
-    a = Matrix.build_rotation( 0.1 )
-    b = Matrix.build_translation( 10, 20 )
-    c = Matrix.build_rotation( -0.05 )
-    Benchwarmer.benchmark fn -> Matrix.mul( [a,b,c,a,b,c] ) end
-  end
-end
-
   #============================================================================
   # common constants
 

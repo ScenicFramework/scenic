@@ -2,19 +2,22 @@ defmodule ScenicMath.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :scenic_math,
-     version: "0.1.0",
-     build_path: "_build",
-     config_path: "config/config.exs",
-     deps_path: "deps",
-     elixir: "~> 1.6",
-     description: description(),
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     compilers: [:elixir_make] ++ Mix.compilers,
-     make_env: make_env(),
-     make_clean: ["clean"],
-     deps: deps()]
+    [
+      app: :scenic_math,
+      version: "0.1.0",
+      package: package(),
+      # build_path: "_build",
+      # deps_path: "deps",
+      elixir: "~> 1.6",
+      description: description(),
+      # build_embedded: Mix.env == :prod,
+      start_permanent: Mix.env == :prod,
+      compilers: [:elixir_make | Mix.compilers()],
+      make_targets: ["all"],
+      make_clean: ["clean"],
+      make_env: make_env(),
+      deps: deps()
+    ]
   end
 
   defp make_env() do
@@ -23,11 +26,10 @@ defmodule ScenicMath.Mixfile do
         %{
           "ERL_EI_INCLUDE_DIR" => "#{:code.root_dir()}/usr/include",
           "ERL_EI_LIBDIR" => "#{:code.root_dir()}/usr/lib",
-          "MIX_ENV" => to_string(Mix.env)
         }
 
       _ ->
-        %{"MIX_ENV" => to_string(Mix.env)}
+        %{}
     end
   end
 
@@ -49,7 +51,15 @@ defmodule ScenicMath.Mixfile do
   defp deps do
     [
       { :elixir_make, "~> 0.4" },
-      { :benchwarmer, "~> 0.0.2", only: :dev }
+      {:ex_doc, "~> 0.18.3", only: :dev, runtime: false}
+      # { :benchwarmer, "~> 0.0.2", only: :dev }
+    ]
+  end
+
+  defp package() do
+    [
+      name: :scenic_math,
+      maintainers: ["Boyd Multerer"]
     ]
   end
 end
