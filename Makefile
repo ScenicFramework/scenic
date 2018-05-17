@@ -25,7 +25,8 @@ LDFLAGS += -undefined dynamic_lookup
 endif
 endif
 
-NIF=priv/line.so priv/matrix.so
+# priv/line.so
+NIF= priv/matrix.so
 
 calling_from_make:
 	mix compile
@@ -38,8 +39,8 @@ priv:
 %.o: %.c
 	$(CC) -c $(ERL_CFLAGS) $(CFLAGS) -o $@ $<
 
-priv/line.so: c_src/line.o
-	$(CC) $^ $(ERL_LDFLAGS) $(LDFLAGS) -o $@
+# priv/line.so: c_src/line.o
+# 	$(CC) $^ $(ERL_LDFLAGS) $(LDFLAGS) -o $@
 
 priv/matrix.so: c_src/matrix.o
 	$(CC) $^ $(ERL_LDFLAGS) $(LDFLAGS) -o $@
