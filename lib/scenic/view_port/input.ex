@@ -17,12 +17,26 @@ defmodule Scenic.ViewPort.Input do
 
   require Logger
 
-  import IEx
+  # import IEx
 
   defmodule Context do
     alias Scenic.Math.Matrix
-    defstruct viewport: nil, graph_key: nil, tx: Matrix.identity(),
-    inverse_tx: Matrix.identity(), uid: nil
+    alias Scenic.ViewPort.Input.Context
+
+    # note: would liek to define tx: and inverse_tx: as Matrix.identity() directly
+    # as defaults in the struct. However, this breaks when cross-compiling to
+    # opposite endian devices under Nerves. So call Context.build() when you want
+    # to create a new Context, or fill in the matrices with a runtime call
+    # to Matrix.identity yourself.
+
+    defstruct viewport: nil, graph_key: nil, tx: nil, inverse_tx: nil, uid: nil
+
+    def build( %{} = params ) do
+      Map.merge(
+        %Context{tx: Matrix.identity(), inverse_tx: Matrix.identity()},
+        params
+      )
+    end
   end
 
 
@@ -193,7 +207,7 @@ defmodule Scenic.ViewPort.Input do
   # If no scene has focus, then send the codepoint to the root scene
   defp do_handle_input( {:codepoint, _} = msg, %{root_graph_key: root_key} = state ) do
     Scene.cast( root_key,
-      { :input, msg, %Context{ viewport: self(), graph_key: root_key } } 
+      { :input, msg, Context.build(%{ viewport: self(), graph_key: root_key }) } 
     )
     {:noreply, state}
   end
@@ -203,7 +217,7 @@ defmodule Scenic.ViewPort.Input do
   # If no scene has focus, then send the codepoint to the root scene
   defp do_handle_input( {:key, _} = msg, %{root_graph_key: root_key} = state ) do
     Scene.cast( root_key,
-      { :input, msg, %Context{ viewport: self(), graph_key: root_key } } 
+      { :input, msg, Context.build(%{viewport: self(), graph_key: root_key }) } 
     )
     {:noreply, state}
   end
@@ -221,7 +235,7 @@ defmodule Scenic.ViewPort.Input do
           {
             :input,
             msg,
-            %Context{ viewport: self(), graph_key: root_key }
+            Context.build(%{ viewport: self(), graph_key: root_key })
           })
 
       {point, {uid, graph_key}, {tx, inv_tx}} ->
@@ -229,12 +243,12 @@ defmodule Scenic.ViewPort.Input do
           {
             :input,
             {:cursor_button, {button, action, mods, point}},
-            %Context{
+            Context.build(%{
               viewport: self(),
               graph_key: graph_key,
               uid: uid,
               tx: tx, inverse_tx: inv_tx
-            }
+            })
           })
     end
     {:noreply, state}
@@ -258,12 +272,12 @@ defmodule Scenic.ViewPort.Input do
           {
             :input,
             {:cursor_scroll, {offset, point}},
-            %Context{
+            Context.build(%{
               viewport: self(),
               graph_key: graph_key,
               uid: uid,
               tx: tx, inverse_tx: inv_tx,
-            }
+            })
           })
     end
     {:noreply, state}
@@ -278,7 +292,7 @@ defmodule Scenic.ViewPort.Input do
         # no uid found. let the root graph_key handle the event
         # we already know the root graph_key has identity transforms
         state = send_primitive_exit_message(state)
-        Scene.cast(root_key, {:input, msg, %Context{viewport: self(), graph_key: root_key}} )
+        Scene.cast(root_key, {:input, msg, Context.build(%{viewport: self(), graph_key: root_key})} )
         state
 
       {point, {uid, graph_key}, _} ->
@@ -288,7 +302,7 @@ defmodule Scenic.ViewPort.Input do
           {
             :input,
             {:cursor_pos, point},
-            %Context{viewport: self(), graph_key: graph_key, uid: uid}
+            Context.build(%{viewport: self(), graph_key: graph_key, uid: uid})
           })
         state
     end
@@ -303,7 +317,7 @@ defmodule Scenic.ViewPort.Input do
       {
         :input,
         msg,
-        %Context{viewport: self(), graph_key: root_key }
+        Context.build(%{viewport: self(), graph_key: root_key })
       })
     {:noreply, state}
   end
@@ -315,14 +329,11 @@ defmodule Scenic.ViewPort.Input do
       {
         :input,
         msg,
-        %Context{viewport: self(), graph_key: root_key }
+        Context.build(%{viewport: self(), graph_key: root_key })
       })
     {:noreply, state}
   end
 
-  defp do_handle_input( msg, state ) do
-    pry()
-  end
   
   #============================================================================
   # regular input helper utilties
@@ -333,7 +344,7 @@ defmodule Scenic.ViewPort.Input do
       {
         :input,
         {:cursor_exit, uid},
-        %Context{viewport: self(), uid: uid, graph_key: graph_key}
+        Context.build(%{viewport: self(), uid: uid, graph_key: graph_key})
       })
     %{state | hover_primitve: nil}
   end
@@ -362,7 +373,7 @@ defmodule Scenic.ViewPort.Input do
           {
             :input,
             {:cursor_enter, uid},
-            %Context{viewport: self(), uid: uid, graph_key: graph_key}
+            Context.build(%{viewport: self(), uid: uid, graph_key: graph_key})
           })
         %{state | hover_primitve: {uid, graph_key}}
 
@@ -536,12 +547,6 @@ defmodule Scenic.ViewPort.Input do
         end
     end
   end
-
-  defp do_find_by_screen_point( x, y, uid, key, graph, tx, invtx, depth ) do
-    pry()
-  end
-
-
 
 
   defp calc_transforms(p, parent_tx, parent_inv_tx) do
