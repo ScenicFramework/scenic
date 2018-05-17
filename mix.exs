@@ -8,7 +8,6 @@ defmodule Scenic.Mixfile do
       build_path: "_build",
       config_path: "config/config.exs",
       deps_path: "deps",
-      lockfile: "mix.lock",
       elixir: "~> 1.6",
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
@@ -42,7 +41,7 @@ defmodule Scenic.Mixfile do
   defp deps do
     [
       {:scenic_math, git: "git@github.com:boydm/scenic_math.git"},
-      {:mox, "~> 0.3.2"}
+      # {:mox, "~> 0.3.2"}
     ]
   end
 end
