@@ -9,11 +9,10 @@ defmodule Scenic.Primitive.Transform do
   alias Scenic.Math.Matrix
   alias Scenic.Math.Vector
   alias Scenic.Primitive.Transform
+  import Scenic.Math.Matrix, only: [{:identity,0}]
 
   @callback info() :: bitstring
   @callback verify( any ) :: boolean
-
-  @identity   Matrix.identity()
 
   #===========================================================================
   defmodule FormatError do
@@ -47,7 +46,6 @@ defmodule Scenic.Primitive.Transform do
     end # quote
   end # defmacro
 
-
   #===========================================================================
   def verify!( tx_key, tx_data ) do
     case Map.get(@style_name_map, tx_key) do
@@ -76,7 +74,7 @@ defmodule Scenic.Primitive.Transform do
   
   defp do_calculate_local( txs ) do
     # start with identity - which is like multiplying by 1
-    @identity
+    identity()
     |> multiply_partial( :matrix, txs[:matrix] )
     |> multiply_partial( :translate, txs[:translate] )
     |> rotate_and_scale( txs )
