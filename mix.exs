@@ -7,14 +7,28 @@ defmodule ScenicMath.Mixfile do
      build_path: "_build",
      config_path: "config/config.exs",
      deps_path: "deps",
-     lockfile: "mix.lock",
      elixir: "~> 1.6",
+     description: description(),
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      compilers: [:elixir_make] ++ Mix.compilers,
-     make_env: %{"MIX_ENV" => to_string(Mix.env)},
+     make_env: make_env(),
      make_clean: ["clean"],
      deps: deps()]
+  end
+
+  defp make_env() do
+    case System.get_env("ERL_EI_INCLUDE_DIR") do
+      nil ->
+        %{
+          "ERL_EI_INCLUDE_DIR" => "#{:code.root_dir()}/usr/include",
+          "ERL_EI_LIBDIR" => "#{:code.root_dir()}/usr/lib",
+          "MIX_ENV" => to_string(Mix.env)
+        }
+
+      _ ->
+        %{"MIX_ENV" => to_string(Mix.env)}
+    end
   end
 
   # Configuration for the OTP application
@@ -25,19 +39,13 @@ defmodule ScenicMath.Mixfile do
     [extra_applications: [:logger]]
   end
 
+  defp description() do
+    """
+    ScenicMath - a NIF math support library for Scenic.
+    """
+  end
+
   # Dependencies can be Hex packages:
-  #
-  #   {:my_dep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:my_dep, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
-  #
-  # To depend on another app inside the umbrella:
-  #
-  #   {:my_app, in_umbrella: true}
-  #
-  # Type "mix help deps" for more examples and options
   defp deps do
     [
       { :elixir_make, "~> 0.4" },
