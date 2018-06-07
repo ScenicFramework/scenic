@@ -17,7 +17,7 @@ defmodule Scenic.SplashScreen do
   def init( {initial_scene, args, opts}, _ ) do
     {:ok, timer} = :timer.send_interval(@splash_interval, :splash_interval)
 
-    graph = Graph.build( clear_color: :black, font: {:roboto, 20} )
+    graph = Graph.build( clear_color: :black, font: :roboto, font_size: 20 )
     |> text( {{40, 80}, "Welcome to Scenic"}, id: :text, color: :white )
     |> push_graph()
 

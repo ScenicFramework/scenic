@@ -1,9 +1,9 @@
 #
-#  Created by Boyd Multerer on 10/29/17.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Created by Boyd Multerer on June 6, 2018.
+#  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Primitive.Sector do
+defmodule Scenic.Primitive.Arc do
   use Scenic.Primitive
 
 # alias Scenic.Primitive
@@ -17,9 +17,9 @@ defmodule Scenic.Primitive.Sector do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Sector should look like this: {{0,y}, radius, start, finish, h, k}\r\n" <>
-  "Circle sector looks like this: {{x0,y0}, width, height, 1.0, 1.0}\r\n" <>
-  "Ellipse sector looks like this: {{x0,y0}, width, height, 2.0, 1.0}"
+  def info(), do: "Arc should look like this: {{0,y}, radius, start, finish, h, k}\r\n" <>
+  "Circle arc looks like this: {{x0,y0}, width, height, 1.0, 1.0}\r\n" <>
+  "Ellipse arc looks like this: {{x0,y0}, width, height, 2.0, 1.0}"
 
   #--------------------------------------------------------
   def verify( data ) do
@@ -41,11 +41,6 @@ defmodule Scenic.Primitive.Sector do
 
   #============================================================================
   def valid_styles(), do: @styles
-
-  #--------------------------------------------------------
-  def expand( {{x, y}, radius, start, finish, h, k}, width ) do
-    {{x, y}, radius + width, start, finish, h, k}
-  end
 
   #--------------------------------------------------------
   def default_pin( data ) do

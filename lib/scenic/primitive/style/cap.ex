@@ -1,30 +1,35 @@
 #
-#  Created by Boyd Multerer on 10/02/17.
+#  Created by Boyd Multerer on 6/4/18.
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Primitive.Transform.Scale do
-  use Scenic.Primitive.Transform
+defmodule Scenic.Primitive.Style.Cap do
+  use Scenic.Primitive.Style
 
   #============================================================================
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Transform :scale must conform to the documentation\n"
-
-  #--------------------------------------------------------
-  def verify( percent ) do
-    try do
-      normalize( percent )
-      true
-    rescue
-      _ -> false
-    end
+  def info() do
+    ":cap must be one of :butt, :round, :square\r\n"
   end
 
   #--------------------------------------------------------
-  # normalize named stipples
-  def normalize( pct ) when is_number(pct), do: {pct, pct}
-  def normalize( {px, py} ) when is_number(px) and is_number(py), do: {px, py}
+  # named color
+
+  def verify( stroke ) do
+    try do
+      normalize( stroke )
+      true
+    rescue
+      _ -> false
+    end    
+  end
+
+  #--------------------------------------------------------
+
+  def normalize( :butt ), do: :butt
+  def normalize( :round ), do: :round
+  def normalize( :square ), do: :square
 
 end

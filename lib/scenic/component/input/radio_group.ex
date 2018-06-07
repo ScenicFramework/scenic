@@ -22,7 +22,7 @@ defmodule Scenic.Component.Input.RadioGroup do
 
   #--------------------------------------------------------
   def init( {items, id}, _ ) when is_list(items) do
-    graph = Graph.build(font: {:roboto, 16})
+    graph = Graph.build(font: :roboto, font_size: 16)
     |> group(fn(graph) ->
       {graph, _} = Enum.reduce(items, {graph, 0}, fn
         {t,m}, {g, voffset} ->

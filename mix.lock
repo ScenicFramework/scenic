@@ -1,0 +1,4 @@
+%{
+  "elixir_make": {:hex, :elixir_make, "0.4.1", "6628b86053190a80b9072382bb9756a6c78624f208ec0ff22cb94c8977d80060", [:mix], [], "hexpm"},
+  "scenic_math": {:git, "git@github.com:boydm/scenic_math.git", "0adc8f1f9c9294ca34caa9fa3a0a5d1e7b56cf4a", []},
+}

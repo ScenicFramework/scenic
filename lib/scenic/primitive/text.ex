@@ -9,7 +9,7 @@ defmodule Scenic.Primitive.Text do
 #  alias Scenic.Primitive.Style
 
 
-  @styles   [:hidden, :font, :color, :text_height]
+  @styles   [:hidden, :fill, :font, :font_size, :font_blur, :text_align, :text_height]
 
 
   #============================================================================

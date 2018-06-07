@@ -6,8 +6,6 @@ defmodule Scenic.Component.Button do
   alias Scenic.ViewPort
   import Scenic.Primitives, only: [{:rrect, 3}, {:text, 3}]
 
-  # import IEx
-
   @valid_colors [:primary, :secondary, :success, :danger, :warning, :info, :light, :dark, :text]
 
   # type is {text_color, button_color, hover_color, pressed_color, border_color}
@@ -27,7 +25,8 @@ defmodule Scenic.Component.Button do
   @default_width      80
   @default_height     30
   @default_radius     3
-  @default_font       {:roboto, 18}
+  @default_font       :roboto
+  @default_font_size  20
 
 #  #--------------------------------------------------------
   def info() do
@@ -76,11 +75,11 @@ defmodule Scenic.Component.Button do
     height = styles[:height] || @default_height
     radius = styles[:radius] || @default_radius
     font = styles[:font] || @default_font
+    font_size = styles[:font_size] || @default_font_size
 
-    graph = Graph.build( font: font )
-    |> rrect( {{0,0}, width, height, radius},
-      color: button_color, id: :btn )
-    |> text( {{8,(height*0.7)}, text}, color: text_color )
+    graph = Graph.build( font: font, font_size: font_size )
+    |> rrect( {{0,0}, width, height, radius}, fill: button_color, id: :btn )
+    |> text( {{8,(height*0.7)}, text}, fill: text_color )
 
     state = %{
       graph: graph,
@@ -100,7 +99,7 @@ push_graph( graph )
   def handle_input( {:cursor_enter, _uid}, _context, %{
     pressed: true
   } = state ) do
-#IO.puts( "handle_input :cursor_enter"
+# IO.puts( "handle_input :cursor_enter" )
     state = Map.put(state, :contained, true)
     update_color(state)
     {:noreply, state}
@@ -110,7 +109,7 @@ push_graph( graph )
   def handle_input( {:cursor_exit, _uid}, _context, %{
     pressed: true
   } = state ) do
-#IO.puts( "handle_input :cursor_exit")
+# IO.puts( "handle_input :cursor_exit")
     state = Map.put(state, :contained, false)
     update_color(state)
     {:noreply, state}
@@ -119,26 +118,29 @@ push_graph( graph )
   #--------------------------------------------------------
   def handle_input( {:cursor_button, {:left, :press, _, _}},
   context, state ) do
-#IO.puts( "handle_input :cursor_button :press")
+# IO.puts( "handle_input :cursor_button :press")
     state = state
     |> Map.put( :pressed, true )
     |> Map.put( :contained, true )
     update_color(state)
 
     ViewPort.capture_input( context, [:cursor_button, :cursor_pos])
+
     {:noreply, state}
   end
 
   #--------------------------------------------------------
   def handle_input( {:cursor_button, {:left, :release, _, _}},
   context, %{pressed: pressed, contained: contained, msg: msg} = state ) do
-#IO.puts( "handle_input :cursor_button :release")
+# IO.puts( "handle_input :cursor_button :release")
     state = Map.put(state, :pressed, false)
     update_color(state)
 
     ViewPort.release_input( context, [:cursor_button, :cursor_pos] )
 
-    if pressed && contained, do: send_event({:click, msg})  
+    if pressed && contained do
+      send_event({:click, msg})
+    end
 
     {:noreply, state}
   end
@@ -156,7 +158,7 @@ push_graph( graph )
   pressed: false, contained: false} ) do
     Graph.modify(graph, :btn, fn(p)->
       p
-      |> Primitive.put_style(:color, color)
+      |> Primitive.put_style(:fill, color)
     end)
     |> push_graph()
   end
@@ -165,7 +167,7 @@ push_graph( graph )
   pressed: false, contained: true} ) do
     Graph.modify(graph, :btn, fn(p)->
       p
-      |> Primitive.put_style(:color, color)
+      |> Primitive.put_style(:fill, color)
     end)
     |> push_graph()
   end
@@ -174,7 +176,7 @@ push_graph( graph )
   pressed: true, contained: false} ) do
     Graph.modify(graph, :btn, fn(p)->
       p
-      |> Primitive.put_style(:color, color)
+      |> Primitive.put_style(:fill, color)
     end)
     |> push_graph()
   end
@@ -182,8 +184,7 @@ push_graph( graph )
   defp update_color( %{ graph: graph, colors: {_,_,_,color,_},
   pressed: true, contained: true} ) do
     Graph.modify(graph, :btn, fn(p)->
-      p
-      |> Primitive.put_style(:color, color)
+      Primitive.put_style(p, :fill, color)
     end)
     |> push_graph()
   end

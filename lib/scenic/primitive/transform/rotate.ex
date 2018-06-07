@@ -13,10 +13,18 @@ defmodule Scenic.Primitive.Transform.Rotate do
   def info(), do: "Transform :rotate must conform to the documentation\n"
 
   #--------------------------------------------------------
-  def verify( rotation )
-  def verify( rz ) when is_number(rz), do: true         # rotate z axis - no pin
-  def verify( {rx,ry,rz} ) when is_number(rx) and is_number(ry) and is_number(rz), do: true
-  def verify( _ ), do: false
+  def verify( angle ) do
+    try do
+      normalize( angle )
+      true
+    rescue
+      _ -> false
+    end
+  end
+
+  #--------------------------------------------------------
+  # normalize named stipples
+  def normalize( a ) when is_number(a), do: a
 
 
 end

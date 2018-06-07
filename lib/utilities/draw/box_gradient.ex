@@ -1,0 +1,20 @@
+#
+#  Created by Boyd Multerer on 6/4/18.
+#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#
+
+defmodule Scenic.Utilities.Draw.BoxGradient do
+  alias Scenic.Utilities.Draw.Color
+
+  #--------------------------------------------------------
+  def normalize( {x, y, w, h, radius, feather, color_start, color_end} ) when
+  is_number(x) and is_number(y) and is_number(w) and is_number(h) and
+  is_number(radius) and is_number(feather) do
+    {
+      x, y, w, h, radius, feather,
+      Color.normalize( color_start ),
+      Color.normalize( color_end )
+    }
+  end
+
+end

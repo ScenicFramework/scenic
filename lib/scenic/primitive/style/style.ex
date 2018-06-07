@@ -11,26 +11,34 @@ defmodule Scenic.Primitive.Style do
 
 #  import IEx
 
-#  @dflag      2
-
-
   @style_name_map     %{
-    :border_color =>                      Style.BorderColor,
-    :border_width =>                      Style.BorderWidth,
-    :color =>                             Style.Color,
     :hidden =>                            Style.Hidden,
-    :line_width =>                        Style.LineWidth,
-    :line_stipple =>                      Style.LineStipple,
     :clear_color =>                       Style.ClearColor,
-    :font =>                              Style.Font,
     :texture_wrap =>                      Style.TextureWrap,
     :texture_filter =>                    Style.TextureFilter,
+
+    :fill =>                              Style.Fill,
+    :stroke =>                            Style.Stroke,
+    :join =>                              Style.Join,
+    :cap =>                               Style.Cap,
+    :miter_limit =>                       Style.MiterLimit,
+
+    :font =>                              Style.Font,
+    :font_blur =>                         Style.FontBlur,
+    :font_size =>                         Style.FontSize,
+    :text_align =>                        Style.TextAlign,
     :text_height =>                       Style.TextHeight,
+
+    :scissor =>                           Style.Scissor
   }
 
-  @primitive_styles   [:hidden, :color, :border_color, :border_width, :line_width,
-    :line_stipple, :clear_color, :font, :texture_wrap, :texture_filter, :text_height]
-
+  @primitive_styles   [
+    :hidden, :clear_color,
+    :texture_wrap, :texture_filter,
+    :fill, :stroke, :join, :cap, :miter_limit,
+    :font, :font_blur, :font_size, :text_align, :text_height,
+    :scissor
+  ]
 
   @callback info() :: bitstring
   @callback verify( any ) :: boolean

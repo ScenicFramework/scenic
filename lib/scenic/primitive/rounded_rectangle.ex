@@ -11,7 +11,7 @@ defmodule Scenic.Primitive.RoundedRectangle do
 
 
 
-  @styles   [:hidden, :color, :border_color, :border_width]
+  @styles   [:hidden, :fill, :stroke]
 
 
   #============================================================================

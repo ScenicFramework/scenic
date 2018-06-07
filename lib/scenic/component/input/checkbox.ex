@@ -4,7 +4,8 @@ defmodule Scenic.Component.Input.Checkbox do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.ViewPort
-  import Scenic.Primitives, only: [{:group, 3}, {:rect, 3}, {:rrect, 3}, {:line, 2}, {:text, 3}]
+  import Scenic.Primitives, only: [{:group, 3}, {:rect, 3}, {:rrect, 3},
+                                {:text, 3}, {:path, 3}]
 #  import IEx
 
 
@@ -51,20 +52,23 @@ defmodule Scenic.Component.Input.Checkbox do
     colors = @colors[color_opt]
     {text_color, box_background, border_color, _, checkmark_color} = colors
 
-    graph = Graph.build( font: {:roboto, 16} )
+    graph = Graph.build( font: :roboto, font_size: 16 )
     |> group(fn(graph) ->
       graph
-      |> rect({{-2,-2}, 140, 16}, color: :clear)
+      |> rect({{-2,-2}, 140, 16}, fill: :clear)
       |> rrect({{-2,-2}, 16, 16, 3},
-        color: box_background, border_color: border_color, border_width: 2, id: :box )
+        fill: box_background, stroke: {2, border_color}, id: :box )
 
       |> group(fn(graph) ->
         graph
-        |> line({{2,2}, {10,10}})
-        |> line({{2,10}, {10,2}})
-      end, id: :chx, hidden: !value, color: checkmark_color, line_width: 4)
+        |> path([                 # this is the checkmark
+            {:move_to, 1, 7},
+            {:line_to, 5, 10},
+            {:line_to, 10,1}
+          ], stroke: {2, checkmark_color}, join: :round)
+      end, id: :chx, hidden: !value)
     end, translate: {0, -11})
-    |> text({{20,0}, text}, color: text_color )
+    |> text({{20,0}, text}, fill: text_color )
 
     state = %{
       graph: graph,

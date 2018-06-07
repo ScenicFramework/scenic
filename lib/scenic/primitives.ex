@@ -114,9 +114,6 @@ defmodule Scenic.Primitives do
 
   """
 
-
-  @tau    2.0 * :math.pi();
-
   #--------------------------------------------------------
   def group( graph, builder, opts \\ [] )
   def group( graph, builder, opts ) when is_function(builder, 1) do
@@ -156,6 +153,12 @@ defmodule Scenic.Primitives do
 
   See the style documentation for more detail.
   """
+
+  #--------------------------------------------------------
+  def path( graph, data, opts \\ [] )
+  def path( graph, actions, opts ) when is_list(actions) do
+    Primitive.Path.add_to_graph( graph, actions, opts )
+  end
 
   #--------------------------------------------------------
   def line( graph, data, opts \\ [] )
@@ -230,90 +233,64 @@ defmodule Scenic.Primitives do
   end
 
   #--------------------------------------------------------
-  def sector( graph, data, opts \\ [] )
-  def sector( graph, {start, finish, radius}, opts ), do:
-    sector( graph, {{0,0}, start, finish, radius, {1.0,1.0}}, opts )
-  def sector( graph, {{x,y}, start, finish, radius}, opts ), do:
-    sector( graph, {{x,y}, start, finish, radius, {1.0,1.0}}, opts )
-  def sector( graph, {{x,y}, start, finish, radius, {h,k}}, opts ) when
+  def arc( graph, data, opts \\ [] )
+  def arc( graph, {radius, start, finish}, opts ), do:
+    arc( graph, {{0,0}, radius, start, finish, 1.0, 1.0}, opts )
+  def arc( graph, {radius, start, finish, h, k}, opts ), do:
+    arc( graph, {{0,0}, radius, start, finish, h, k}, opts )
+  def arc( graph, {{x,y}, radius, start, finish}, opts ), do:
+    arc( graph, {{x,y}, radius, start, finish, 1.0, 1.0}, opts )
+  def arc( graph, {{x,y}, radius, start, finish, h, k }, opts ) when
   is_number(x) and is_number(y) and
   is_number(start) and is_number(finish) and is_number(radius) and
   is_number(h) and is_number(k) do
-    Primitive.Sector.add_to_graph(
+    Primitive.Arc.add_to_graph(
       graph,
-      {{x,y}, start, finish, radius, {h,k}},
+      { {x,y}, radius, start, finish, h, k },
       opts
     )
   end
 
   #--------------------------------------------------------
-  def oval( graph, data, opts \\ [] )
-  def oval( graph, radius, opts ) when is_number(radius), do: circle( graph, radius, opts )
-  def oval( graph, {{_,_}, _} = data, opts ), do: circle( graph, data, opts )
-  def oval( graph, {radius, {h,k}}, opts ) do
-    sector( graph, {{0,0}, 0, @tau, radius, {h,k}}, opts )
-  end
-  def oval( graph, {{x,y}, radius, {h,k}}, opts ) do
-    sector( graph, {{x,y}, 0, @tau, radius, {h,k}}, opts )
+  def sector( graph, data, opts \\ [] )
+  def sector( graph, {radius, start, finish}, opts ), do:
+    sector( graph, {{0,0}, radius, start, finish, 1.0, 1.0}, opts )
+  def sector( graph, {radius, start, finish, h, k}, opts ), do:
+    sector( graph, {{0,0}, radius, start, finish, h, k}, opts )
+  def sector( graph, {{x,y}, radius, start, finish}, opts ), do:
+    sector( graph, {{x,y}, radius, start, finish, 1.0, 1.0}, opts )
+  def sector( graph, {{x,y}, radius, start, finish, h, k }, opts ) when
+  is_number(x) and is_number(y) and
+  is_number(start) and is_number(finish) and is_number(radius) and
+  is_number(h) and is_number(k) do
+    Primitive.Sector.add_to_graph(
+      graph,
+      { {x,y}, radius, start, finish, h, k },
+      opts
+    )
   end
 
   #--------------------------------------------------------
   def circle( graph, data, opts \\ [] )
-  def circle( graph, radius, opts ) when is_number(radius) do
-    sector( graph, {{0,0}, 0, @tau, radius, {1.0, 1.0}}, opts )
+  def circle( graph, {{x,y}, radius}, opts ) when
+  is_number(x) and is_number(y) and is_number(radius) do
+    Primitive.Circle.add_to_graph(
+      graph,
+      {{x,y}, radius},
+      opts
+    )
   end
-  def circle( graph, {{x,y},radius}, opts ) when
-  is_number(radius) and is_number(x) and is_number(y) do
-    sector( graph, {{x,y}, 0, @tau, radius, {1.0, 1.0}}, opts )
-  end
-
-
-
 
   #--------------------------------------------------------
-  def texture( graph, data, opts \\ [] )
-
-  def texture( graph, {width, height, key}, opts ) when
-  is_number(width) and is_number(height) do
-    texture( graph, {
-    {{0, 0}, {width, 0}, {width, height}, {0, height}},
-    {{0.0, 0.0}, {1.0, 0.0}, {1.0, 1.0}, {0.0, 1.0}},
-    key
-  }, opts )
+  def ellipse( graph, data, opts \\ [] )
+  def ellipse( graph, {{x,y}, r1, r2}, opts ) when
+  is_number(x) and is_number(y) and is_number(r1) and is_number(r2) do
+    Primitive.Ellipse.add_to_graph(
+      graph,
+      {{x,y}, r1, r2},
+      opts
+    )
   end
-
-  def texture( graph, {{x,y}, width, height, key}, opts ) do
-    texture( graph, {
-    {{x, y}, {x + width, y}, {x + width, y + height}, {x, y + height}},
-    {{0.0, 0.0}, {1.0, 0.0}, {1.0, 1.0}, {0.0, 1.0}},
-    key
-  }, opts )
-  end
-
-  def texture( graph, {{{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}}, key}, opts ) do
-    texture( graph, {
-    {{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}},
-    {{0.0, 0.0}, {1.0, 0.0}, {1.0, 1.0}, {0.0, 1.0}},
-    key
-  }, opts )
-  end
-
-  def texture( graph, {
-    {{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}},
-    {{s0, t0}, {s1, t1}, {s2, t2}, {s3, t3}},
-    key
-  } = data, opts ) when is_bitstring(key) and
-  is_number(x0) and is_number(y0) and
-  is_number(x1) and is_number(y1) and
-  is_number(x2) and is_number(y2) and
-  is_number(x3) and is_number(y3) and
-  is_number(s0) and is_number(t0) and
-  is_number(s1) and is_number(t1) and
-  is_number(s2) and is_number(t2) and
-  is_number(s3) and is_number(t3) do
-    Primitive.Texture.add_to_graph( graph, data, opts )
-  end
-
 
   #--------------------------------------------------------
   def scene_ref( graph, data, opts \\ [] )

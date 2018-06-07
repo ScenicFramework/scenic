@@ -3,7 +3,7 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Primitive.Style.Font do
+defmodule Scenic.Primitive.Style.FontSize do
   use Scenic.Primitive.Style
 
 # import IEx
@@ -13,11 +13,9 @@ defmodule Scenic.Primitive.Style.Font do
 
   #--------------------------------------------------------
   def info() do
-    "Style :font must be a key_or_atom\r\n" <>
-    "Example: :roboto             # system font\r\n" <>
-    "Example: \"w29afwkj23ry8\"   # hash key of font in the cache\r\n"
-    "\r\n" <>
-    "The system fonts are: :roboto, :roboto_mono, :robot_slab\r\n"
+    "Style :font_size must be a number >= 26\r\n" <>
+    "Many different sizes, or large sizes consume more memory.\r\n" <>
+    "The default size is usually 14."
   end
 
   #--------------------------------------------------------
@@ -31,6 +29,7 @@ defmodule Scenic.Primitive.Style.Font do
   end
 
   #--------------------------------------------------------
-  def normalize( name ) when is_atom(name),     do: name
-  def normalize( key ) when is_bitstring(key),  do: key
+  def normalize( point_size ) when is_number(point_size) and point_size >= 6 do
+    point_size
+  end
 end

@@ -9,7 +9,7 @@ defmodule Scenic.Primitive.Triangle do
 #  alias Scenic.Primitive
 #  alias Scenic.Primitive.Style
 
-  @styles   [:hidden, :color, :border_color, :border_width]
+  @styles   [:hidden, :fill, :stroke]
 
 
   #===========================================================================

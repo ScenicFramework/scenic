@@ -10,12 +10,21 @@ defmodule Scenic.Primitive.Transform.Pin do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Transform :pin must be a 2d, or 3d point {x,y} or {x,y,z}\n"
+  def info(), do: "Transform :pin must be a 2d vector {x,y}\n"
 
   #--------------------------------------------------------
-  def verify( pin )
-  def verify( {x,y} ) when is_number(x) and is_number(y), do: true
-  def verify( {x,y,z} ) when is_number(x) and is_number(y) and is_number(z), do: true
-  def verify( _ ), do: false
+  def verify( percent ) do
+    try do
+      normalize( percent )
+      true
+    rescue
+      _ -> false
+    end
+  end
+
+  #--------------------------------------------------------
+  # normalize named stipples
+  def normalize( {x, y} ) when is_number(x) and is_number(y), do: {x, y}
+
 
 end

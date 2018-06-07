@@ -1,9 +1,9 @@
 #
-#  Created by Boyd Multerer on 5/6/17.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Created by Boyd Multerer on June 5, 2018.
+#  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Primitive.Line do
+defmodule Scenic.Primitive.Path do
   use Scenic.Primitive
 #  alias Scenic.Primitive
 #  alias Scenic.Primitive.Style
@@ -16,13 +16,11 @@ defmodule Scenic.Primitive.Line do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Line data must be two points, like this: {{x0,y0}, {x1,y1}}"
+  def info(), do: "Path must be a list of actions. See docs."
 
 
   #--------------------------------------------------------
-  def verify( {{x0, y0}, {x1, y1}} = data ) when
-    is_number(x0) and is_number(y0) and
-    is_number(x1) and is_number(y1), do: {:ok, data}
+  def verify( actions ) when is_list(actions), do: {:ok, actions}
   def verify( _ ), do: :invalid_data
 
 
@@ -32,16 +30,10 @@ defmodule Scenic.Primitive.Line do
   #============================================================================
 
   #--------------------------------------------------------
-  def default_pin(data), do: centroid( data )
-
-  #--------------------------------------------------------
-  def centroid(data)
-  def centroid({{x0, y0}, {x1, y1}}) do
-    {
-      round( (x0 + x1) / 2 ),
-      round( (y0 + y1) / 2 )
-    }
+  def default_pin( _ ) do
+    {0,0}
   end
+
 
 end
 

@@ -12,7 +12,7 @@ defmodule Scenic.Primitive.Transform.Matrix do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Transform :matrix must be a either a binary containing 16 32-bit floats\n" <>
+  def info(), do: "Transform :matrix must be a binary containing 16 32-bit floats\n" <>
     "Please use the Scenic.Math.Matrix module for this."
 
   #--------------------------------------------------------

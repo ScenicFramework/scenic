@@ -5,7 +5,7 @@
 
 defmodule Scenic.Primitive.Style.ClearColor do
   use Scenic.Primitive.Style
-  alias Scenic.Primitive.Style.Color
+  alias Scenic.Utilities.Draw.Color
 
 
   #============================================================================

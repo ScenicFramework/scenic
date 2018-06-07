@@ -11,7 +11,7 @@ defmodule Scenic.Primitive.Quad do
 #  import IEx
 
 
-  @styles   [:hidden, :color, :border_color, :border_width]
+  @styles   [:hidden, :fill, :stroke]
 
 
   #============================================================================

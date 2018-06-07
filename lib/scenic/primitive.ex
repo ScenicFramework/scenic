@@ -538,6 +538,14 @@ defmodule Scenic.Primitive do
               false -> txs
             end
 
+            # normalize scale if necessary
+            txs = case txs[:scale] do
+              nil -> txs
+              pct when is_number(pct) ->
+                Map.put(txs, :scale, {pct,pct})
+              {_,_} -> txs
+            end
+
             Map.put(min_p, :transforms, txs)
       end
   end

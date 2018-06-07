@@ -1,21 +1,25 @@
 #
-#  Created by Boyd Multerer on 10/02/17.
+#  Re-Created by Boyd Multerer on November 30, 2017.
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Primitive.Transform.Scale do
-  use Scenic.Primitive.Transform
+defmodule Scenic.Primitive.Style.FontBlur do
+  use Scenic.Primitive.Style
+
+# import IEx
 
   #============================================================================
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Transform :scale must conform to the documentation\n"
+  def info() do
+    "Style :font_size must be a number\r\n"
+  end
 
   #--------------------------------------------------------
-  def verify( percent ) do
+  def verify( blur ) do
     try do
-      normalize( percent )
+      normalize( blur )
       true
     rescue
       _ -> false
@@ -23,8 +27,7 @@ defmodule Scenic.Primitive.Transform.Scale do
   end
 
   #--------------------------------------------------------
-  # normalize named stipples
-  def normalize( pct ) when is_number(pct), do: {pct, pct}
-  def normalize( {px, py} ) when is_number(px) and is_number(py), do: {px, py}
-
+  def normalize( blur ) when is_number(blur) do
+    blur
+  end
 end

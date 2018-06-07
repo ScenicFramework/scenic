@@ -1,9 +1,9 @@
 #
-#  Created by Boyd Multerer on 10/29/17.
+#  Created by Boyd Multerer on June 6, 2018.
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Primitive.Sector do
+defmodule Scenic.Primitive.Ellipse do
   use Scenic.Primitive
 
 # alias Scenic.Primitive
@@ -17,9 +17,8 @@ defmodule Scenic.Primitive.Sector do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Sector should look like this: {{0,y}, radius, start, finish, h, k}\r\n" <>
-  "Circle sector looks like this: {{x0,y0}, width, height, 1.0, 1.0}\r\n" <>
-  "Ellipse sector looks like this: {{x0,y0}, width, height, 2.0, 1.0}"
+  def info(), do: "Ellipse data must be a point, and a two radii. Like this: {{x,y}, r1, r2}\r\n" <>
+    "hint: if you want to rotate or skew the ellipse, apply transforms..."
 
   #--------------------------------------------------------
   def verify( data ) do
@@ -33,24 +32,32 @@ defmodule Scenic.Primitive.Sector do
 
 
   #--------------------------------------------------------
-  def normalize( {{x, y}, radius, start, finish, h, k} = data )
-  when is_number(x) and is_number(y) and
-  is_number(start) and is_number(finish) and is_number(radius) and
-  is_number(h) and is_number(k), do: data
+  def normalize( {{x, y}, r1, r2} = data )
+  when is_number(x) and is_number(y) and is_number(r1) and is_number(r2) do
+    data
+  end
 
 
   #============================================================================
   def valid_styles(), do: @styles
 
   #--------------------------------------------------------
-  def expand( {{x, y}, radius, start, finish, h, k}, width ) do
-    {{x, y}, radius + width, start, finish, h, k}
-  end
-
-  #--------------------------------------------------------
   def default_pin( data ) do
-    {{x, y},_,_,_,_,_} = normalize(data)
+    {{x, y},_,_} = normalize(data)
     {x,y}
   end
 
+  #--------------------------------------------------------
+  def expand( data, width ) do
+    { {x,y}, r1, r2 } = normalize(data)
+    { {x,y}, r1 + width, r2 + width }
+  end
+
+  #--------------------------------------------------------
+  def contains_point?( {{x, y}, r1, r2}, {xp,yp} ) do
+    dx = ((x - xp) * (x - xp)) / (r1 * r1)
+    dy = ((y - yp) * (y - yp)) / (r2 * r2)
+    # test if less or equal to 1
+    dx + dy <= 1
+  end
 end
