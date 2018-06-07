@@ -252,75 +252,75 @@ defmodule Scenic.Math.Matrix do
 #      when is_number(radians) and is_atom(axis) do
 #    build_rotation( radians, axis )
 #  end
-  def build_rotation( {axis, radians} )
-      when is_number(radians) and is_atom(axis) do
-    build_rotation( radians, axis )
-  end
+  # def build_rotation( {axis, radians} )
+  #     when is_number(radians) and is_atom(axis) do
+  #   build_rotation( radians, axis )
+  # end
 
-  def build_rotation( radians, axis \\ :z )
+  def build_rotation( radians)
 
-  def build_rotation( radians, :x ) do
+  # def build_rotation( radians, :x ) do
+  #   cos = :math.cos( radians )
+  #   sin = :math.sin( radians )
+  #   <<
+  #     1.0 :: float-size(32)-native,
+  #     0.0 :: float-size(32)-native,
+  #     0.0 :: float-size(32)-native,
+  #     0.0 :: float-size(32)-native,
+
+  #     0.0 :: float-size(32)-native,
+  #     cos :: float-size(32)-native,
+  #     sin :: float-size(32)-native,
+  #     0.0 :: float-size(32)-native,
+
+  #     0.0 :: float-size(32)-native,
+  #     -sin :: float-size(32)-native,
+  #     cos :: float-size(32)-native,
+  #     0.0 :: float-size(32)-native,
+
+  #     0.0 :: float-size(32)-native,
+  #     0.0 :: float-size(32)-native,
+  #     0.0 :: float-size(32)-native,
+  #     1.0 :: float-size(32)-native
+  #   >>
+  # end
+
+  # def build_rotation( radians, :y ) do
+  #   cos = :math.cos( radians )
+  #   sin = :math.sin( radians )
+  #   <<
+  #     cos :: float-size(32)-native,
+  #     0.0 :: float-size(32)-native,
+  #     sin :: float-size(32)-native,
+  #     0.0 :: float-size(32)-native,
+
+  #     0.0 :: float-size(32)-native,
+  #     1.0 :: float-size(32)-native,
+  #     0.0 :: float-size(32)-native,
+  #     0.0 :: float-size(32)-native,
+
+  #     -sin :: float-size(32)-native,
+  #     0.0 :: float-size(32)-native,
+  #     cos :: float-size(32)-native,
+  #     0.0 :: float-size(32)-native,
+
+  #     0.0 :: float-size(32)-native,
+  #     0.0 :: float-size(32)-native,
+  #     0.0 :: float-size(32)-native,
+  #     1.0 :: float-size(32)-native
+  #   >>
+  # end
+
+  def build_rotation( radians ) do
     cos = :math.cos( radians )
     sin = :math.sin( radians )
     <<
-      1.0 :: float-size(32)-native,
-      0.0 :: float-size(32)-native,
-      0.0 :: float-size(32)-native,
-      0.0 :: float-size(32)-native,
-
-      0.0 :: float-size(32)-native,
       cos :: float-size(32)-native,
-      sin :: float-size(32)-native,
-      0.0 :: float-size(32)-native,
-
-      0.0 :: float-size(32)-native,
-      -sin :: float-size(32)-native,
-      cos :: float-size(32)-native,
-      0.0 :: float-size(32)-native,
-
-      0.0 :: float-size(32)-native,
-      0.0 :: float-size(32)-native,
-      0.0 :: float-size(32)-native,
-      1.0 :: float-size(32)-native
-    >>
-  end
-
-  def build_rotation( radians, :y ) do
-    cos = :math.cos( radians )
-    sin = :math.sin( radians )
-    <<
-      cos :: float-size(32)-native,
-      0.0 :: float-size(32)-native,
-      sin :: float-size(32)-native,
-      0.0 :: float-size(32)-native,
-
-      0.0 :: float-size(32)-native,
-      1.0 :: float-size(32)-native,
-      0.0 :: float-size(32)-native,
-      0.0 :: float-size(32)-native,
-
       -sin :: float-size(32)-native,
       0.0 :: float-size(32)-native,
-      cos :: float-size(32)-native,
       0.0 :: float-size(32)-native,
 
-      0.0 :: float-size(32)-native,
-      0.0 :: float-size(32)-native,
-      0.0 :: float-size(32)-native,
-      1.0 :: float-size(32)-native
-    >>
-  end
-
-  def build_rotation( radians, :z ) do
-    cos = :math.cos( radians )
-    sin = :math.sin( radians )
-    <<
-      cos :: float-size(32)-native,
       sin :: float-size(32)-native,
-      0.0 :: float-size(32)-native,
-      0.0 :: float-size(32)-native,
-
-      -sin :: float-size(32)-native,
       cos :: float-size(32)-native,
       0.0 :: float-size(32)-native,
       0.0 :: float-size(32)-native,
@@ -338,10 +338,10 @@ defmodule Scenic.Math.Matrix do
   end
 
   #--------------------------------------------------------
-  def build_rotate_around( radians, point, axis \\ :z)
-  def build_rotate_around( radians, {x,y}, axis ) do
+  def build_rotate_around( radians, point)
+  def build_rotate_around( radians, {x,y} ) do
     build_translation(-x, -y)
-    |> Matrix.mul( build_rotation( radians, axis ) )
+    |> Matrix.mul( build_rotation( radians ) )
     |> Matrix.mul( build_translation( x, y ) )
   end
 
@@ -355,10 +355,10 @@ defmodule Scenic.Math.Matrix do
     build_rotation( amount )
     |> ( &Matrix.mul(matrix, &1) ).()
   end
-  def rotate( matrix, radians, axis ) when is_atom(axis) do
-    build_rotation( radians, axis )
-    |> ( &Matrix.mul(matrix, &1) ).()
-  end
+  # def rotate( matrix, radians, axis ) when is_atom(axis) do
+  #   build_rotation( radians, axis )
+  #   |> ( &Matrix.mul(matrix, &1) ).()
+  # end
 
   #--------------------------------------------------------
   def translate( matrix, {x, y} ),    do: translate( matrix, x, y )
