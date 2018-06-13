@@ -99,7 +99,7 @@ defmodule Scenic.Graph do
       primitive_map:  %{ @root_uid => root },
       focus:          nil
     }
-    |> calculate_transforms( 0 )
+    # |> calculate_transforms( 0 )
 
     graph = case opts[:id] do
       nil ->  graph
@@ -472,7 +472,7 @@ defmodule Scenic.Graph do
       nil -> graph
       id ->   map_id_to_uid(graph, id, uid)
     end
-    |> calculate_transforms( uid )
+    # |> calculate_transforms( uid )
 
     # increment the next uid and gen the completed graph
     {put_next_uid(graph, next_uid + 1), uid}
@@ -559,7 +559,7 @@ defmodule Scenic.Graph do
     |> Map.put(:primitive_map, p_map)
     |> Map.put(:id_map, id_map)
     |> Map.put(:next_uid, next_uid)
-    |> calculate_transforms( uid )
+    # |> calculate_transforms( uid )
 
     # add the input in only if there is some to add in
     graph = case input do
@@ -610,8 +610,8 @@ defmodule Scenic.Graph do
             |> put( uid, p_modified )
 
             # update the transforms. This means recalc the local_tx and recursivly update the inverse_tx
-            |> calculate_local_transform( uid )
-            |> calculate_inverse_transforms( uid )
+            # |> calculate_local_transform( uid )
+            # |> calculate_inverse_transforms( uid )
 
           _ ->  raise Error, message: "Action must return a valid primitive"
         end
@@ -966,140 +966,119 @@ defmodule Scenic.Graph do
   #============================================================================
   # transforms in action
 
-  def calculate_transforms( graph, uid )
-  def calculate_transforms( graph, uid ) do
-    map(graph, uid, fn(%Primitive{parent_uid: puid} = p) ->
-      # get this primitive's parent's local_tx
-      parent_tx = get_merged_tx(graph, puid)
-      # calculate the local transforms
-      Primitive.calculate_transforms( p, parent_tx )
-    end)
-  end
+  # def calculate_transforms( graph, uid )
+  # def calculate_transforms( graph, uid ) do
+  #   map(graph, uid, fn(%Primitive{parent_uid: puid} = p) ->
+  #     # get this primitive's parent's local_tx
+  #     parent_tx = get_merged_tx(graph, puid)
+  #     # calculate the local transforms
+  #     Primitive.calculate_transforms( p, parent_tx )
+  #   end)
+  # end
 
-  #--------------------------------------------------------
-  def calculate_local_transform( graph, uid )
-  def calculate_local_transform( graph, uid ) do
-    #only calculate the lcoal transform for the given item
-    case get(graph, uid) do
-      nil -> graph
-      p ->
-        # calculate the local transform only
-        p = Map.get( p, :transforms )
-        |> Primitive.Transform.calculate_local()
-        |> case do
-          nil ->
-            p
-            |> Map.delete( :local_tx )
-            |> Map.delete( :inverse_tx )
-          tx  ->
-            Map.put(p, :local_tx, tx)
-        end
+  # #--------------------------------------------------------
+  # def calculate_local_transform( graph, uid )
+  # def calculate_local_transform( graph, uid ) do
+  #   #only calculate the lcoal transform for the given item
+  #   case get(graph, uid) do
+  #     nil -> graph
+  #     p ->
+  #       # calculate the local transform only
+  #       p = Map.get( p, :transforms )
+  #       |> Primitive.Transform.calculate_local()
+  #       |> case do
+  #         nil ->
+  #           p
+  #           |> Map.delete( :local_tx )
+  #           |> Map.delete( :inverse_tx )
+  #         tx  ->
+  #           Map.put(p, :local_tx, tx)
+  #       end
 
-        # put it back in place
-        put(graph, uid, p)
-    end
-  end
+  #       # put it back in place
+  #       put(graph, uid, p)
+  #   end
+  # end
 
-  #--------------------------------------------------------
-  def calculate_inverse_transforms( graph, uid )
-  def calculate_inverse_transforms( graph, uid ) do
-    map(graph, uid, fn(%Primitive{parent_uid: puid} = p) ->
-      # get this primitive's parent's local_tx
-      parent_tx = get_merged_tx(graph, puid)
-      # calculate the inverse transform
-      Primitive.calculate_inverse_transform( p, parent_tx )
-    end)
-  end
+  # #--------------------------------------------------------
+  # def calculate_inverse_transforms( graph, uid )
+  # def calculate_inverse_transforms( graph, uid ) do
+  #   map(graph, uid, fn(%Primitive{parent_uid: puid} = p) ->
+  #     # get this primitive's parent's local_tx
+  #     parent_tx = get_merged_tx(graph, puid)
+  #     # calculate the inverse transform
+  #     Primitive.calculate_inverse_transform( p, parent_tx )
+  #   end)
+  # end
 
-  #--------------------------------------------------------
-  def get_merged_tx(graph, uid)
-  def get_merged_tx(graph, uid) do
-    case get(graph, uid) do
-      nil -> Matrix.identity()
-      %{parent_uid: puid} = p ->
-        merged = get_merged_tx(graph, puid)
-        case Map.get(p, :local_tx) do
-          nil ->  merged
-          tx  ->  Matrix.mul( merged, tx )
-        end
-    end
-  end
+  # #--------------------------------------------------------
+  # def get_merged_tx(graph, uid)
+  # def get_merged_tx(graph, uid) do
+  #   case get(graph, uid) do
+  #     nil -> Matrix.identity()
+  #     %{parent_uid: puid} = p ->
+  #       merged = get_merged_tx(graph, puid)
+  #       case Map.get(p, :local_tx) do
+  #         nil ->  merged
+  #         tx  ->  Matrix.mul( merged, tx )
+  #       end
+  #   end
+  # end
 
-  #--------------------------------------------------------
-  # not good enough to get the inverse tx directly off of p.
-  # the inverse tx can be inherited from groups above this
-  def get_inverse_tx(_, nil), do: nil
-  def get_inverse_tx(graph, %Primitive{parent_uid: puid} = p) do
-    case Map.get(p, :inverse_tx) do
-      nil -> get_inverse_tx(graph, Graph.get(graph, puid))
-      tx -> tx
-    end
-  end
-
-  #--------------------------------------------------------
-  # possible optimization here by rolling into a custom traversal that keeps track
-  # of the current inverse_tx without having to walk backwards to find it for each
-  # primitive.
-#  def find_by_screen_point(%Graph{} = graph, {x,y}) when is_number(x) and is_number(y) do
-#    reduce(graph, nil, fn(%Primitive{module: mod, data: data} = p,acc) ->
-#      # get the local (or inherited) inverse tx for this primitive
-#      # then project the point by that matrix to get the local point
-#      local_point = case get_inverse_tx(graph, p) do
-#        nil -> {x, y}
-#        tx -> Matrix.project_vector( tx, {x, y} )
-#      end
-#
-#      # test if the point is in the primitive
-#      case mod.contains_point?( data, local_point ) do
-#        true  -> p
-#        false -> acc
-#      end
-#    end)
-#  end
+  # #--------------------------------------------------------
+  # # not good enough to get the inverse tx directly off of p.
+  # # the inverse tx can be inherited from groups above this
+  # def get_inverse_tx(_, nil), do: nil
+  # def get_inverse_tx(graph, %Primitive{parent_uid: puid} = p) do
+  #   case Map.get(p, :inverse_tx) do
+  #     nil -> get_inverse_tx(graph, Graph.get(graph, puid))
+  #     tx -> tx
+  #   end
+  # end
 
 
-  #--------------------------------------------------------
-  # find the indicated primitive in the graph given a point in screen coordinates.
-  # to do this, we need to project the point into primitive local coordinates by
-  # projecting it with the primitive's inverse final matrix.
-  # 
-  # Since the last primitive drawn is always on top, we should walk the tree
-  # backwards and return the first hit we find. We could just reduct the whole
-  # thing and return the last one found (that was my first try), but this is
-  # more efficient as we can stop as soon as we find the first one.
-  def find_by_screen_point(%Graph{} = graph, {x,y}) when is_number(x) and is_number(y) do
-    do_find_by_screen_point( graph, 0, x, y )
-  end
+  # #--------------------------------------------------------
+  # # find the indicated primitive in the graph given a point in screen coordinates.
+  # # to do this, we need to project the point into primitive local coordinates by
+  # # projecting it with the primitive's inverse final matrix.
+  # # 
+  # # Since the last primitive drawn is always on top, we should walk the tree
+  # # backwards and return the first hit we find. We could just reduct the whole
+  # # thing and return the last one found (that was my first try), but this is
+  # # more efficient as we can stop as soon as we find the first one.
+  # def find_by_screen_point(%Graph{} = graph, {x,y}) when is_number(x) and is_number(y) do
+  #   do_find_by_screen_point( graph, 0, x, y )
+  # end
 
-  defp do_find_by_screen_point( graph, uid, x, y ) do
+  # defp do_find_by_screen_point( graph, uid, x, y ) do
 
-    # get the primitive to test
-    p = get(graph, uid)
+  #   # get the primitive to test
+  #   p = get(graph, uid)
 
-    # test to see if it is hidden. If yes do nothing. If no, test for hit.
-    if Primitive.get_style(p, :hidden) do
-      nil
-    else
-      case p do
-        %Primitive{module: Group, data: ids} ->
-          ids
-          |> Enum.reverse()
-          |> Enum.find_value( &do_find_by_screen_point(graph, &1, x, y ) )
-        %Primitive{module: mod, data: data} = p ->
-          # get the local (or inherited) inverse tx for this primitive
-          # then project the point by that matrix to get the local point
-          local_point = case get_inverse_tx(graph, p) do
-            nil -> {x, y}
-            tx -> Matrix.project_vector( tx, {x, y} )
-          end
-          # test if the point is in the primitive
-          case mod.contains_point?( data, local_point ) do
-            true  -> p
-            false -> nil
-          end
-      end
-    end
-  end
+  #   # test to see if it is hidden. If yes do nothing. If no, test for hit.
+  #   if Primitive.get_style(p, :hidden) do
+  #     nil
+  #   else
+  #     case p do
+  #       %Primitive{module: Group, data: ids} ->
+  #         ids
+  #         |> Enum.reverse()
+  #         |> Enum.find_value( &do_find_by_screen_point(graph, &1, x, y ) )
+  #       %Primitive{module: mod, data: data} = p ->
+  #         # get the local (or inherited) inverse tx for this primitive
+  #         # then project the point by that matrix to get the local point
+  #         local_point = case get_inverse_tx(graph, p) do
+  #           nil -> {x, y}
+  #           tx -> Matrix.project_vector( tx, {x, y} )
+  #         end
+  #         # test if the point is in the primitive
+  #         case mod.contains_point?( data, local_point ) do
+  #           true  -> p
+  #           false -> nil
+  #         end
+  #     end
+  #   end
+  # end
 
 
   #--------------------------------------------------------
