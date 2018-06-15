@@ -25,6 +25,9 @@ defmodule Scenic.ViewPort.Supervisor do
   def start_link( %ViewPort.Config{} = config ) do
     Supervisor.start_link(__MODULE__, config)
   end
+  def start_link( %{} = config ) do
+    start_link( struct(ViewPort.Config, config) )
+  end
 
   def init( config ) do
     # seperate the drivers from the rest of the config

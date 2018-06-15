@@ -28,6 +28,9 @@ defmodule Scenic.ViewPort.Driver do
   (is_atom(viewport) or is_pid(viewport) ) do
     GenServer.call(viewport, { :start_driver, config })
   end
+  def start( viewport, %{} = config ) do
+    start( viewport, struct(ViewPort.Driver.Config, config) )
+  end
 
   #--------------------------------------------------------
   # cast stop to driver as the viewport is stored in it's state
