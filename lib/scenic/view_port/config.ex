@@ -37,6 +37,7 @@ defmodule Scenic.ViewPort.Config do
       Driver.Config.valid?(driver_config) && ok
     end)
   end
+  def valid?( %{} = config ), do: valid?( struct(Config, config) )
 
 
   #--------------------------------------------------------
@@ -53,5 +54,6 @@ defmodule Scenic.ViewPort.Config do
     Enum.each(drivers, &Driver.Config.valid!(&1) )
     :ok
   end
+  def valid!( %{} = config ), do: valid?( struct(Config, config) )
 
 end
