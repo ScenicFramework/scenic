@@ -223,60 +223,28 @@ defmodule Scenic.PrimitivesTest do
 
   #============================================================================
 
-  test "path adds to the graph"
+  test "path adds empty list to the graph" do
+    actions = []
+    p = Primitives.path( @graph, actions, id: :path )
+    |> Graph.get(1)
+    assert p.module == Scenic.Primitive.Path
+    assert p.data == actions
+    assert p.id == :path
+  end
 
+  test "path adds actions to the graph" do
+    actions = [
+      {:move_to, 1, 2},
+      {:path_to, 3, 4},
+      {:path_to, 3, 5},
+    ]
+    p = Primitives.path( @graph, actions, id: :path )
+    |> Graph.get(1)
+    assert p.module == Scenic.Primitive.Path
+    assert p.data == actions
+    assert p.id == :path
+  end
 
-
-  # test "texture adds simple default rect target to a graph" do
-  #   p = Primitives.texture(@graph, {100, 200,"test_sig" }, id: :texture)
-  #   |> Graph.get(1)
-  #   assert p.module == Scenic.Primitive.Texture
-  #   assert p.data == {
-  #     {{0,0}, {100, 0}, {100, 200}, {0, 200}},
-  #     {{0,0}, {1,0}, {1,1}, {0,1}},
-  #     "test_sig"
-  #   }
-  #   assert p.id == :texture
-  # end
-
-  # test "texture adds positioned default rect target to a graph" do
-  #   p = Primitives.texture(@graph, {{10,20}, 100, 200,"test_sig" }, id: :texture)
-  #   |> Graph.get(1)
-  #   assert p.module == Scenic.Primitive.Texture
-  #   assert p.data == {
-  #     {{10,20}, {110, 20}, {110, 220}, {10, 220}},
-  #     {{0,0}, {1,0}, {1,1}, {0,1}},
-  #     "test_sig"
-  #   }
-  #   assert p.id == :texture
-  # end
-
-  # test "texture adds quad target to a graph" do
-  #   p = Primitives.texture(@graph, {
-  #     {{1,2}, {3,4}, {3, 10}, {2, 8}
-  #   },"test_sig" }, id: :texture)
-  #   |> Graph.get(1)
-  #   assert p.module == Scenic.Primitive.Texture
-  #   assert p.data == {
-  #     {{1,2}, {3,4}, {3, 10}, {2, 8}},
-  #     {{0,0}, {1,0}, {1,1}, {0,1}},
-  #     "test_sig"
-  #   }
-  #   assert p.id == :texture
-  # end
-
-  # test "texture adds to a graph" do
-  #   data = {
-  #     {{0,1}, {100, 2}, {99, 100}, {0, 99}},
-  #     {{0.1,0.1}, {1.0, 0.1}, {0.99, 0.99}, {0.1, 1.0}},
-  #     "test_sig"
-  #   }
-  #   p = Primitives.texture(@graph, data, id: :texture)
-  #   |> Graph.get(1)
-  #   assert p.module == Scenic.Primitive.Texture
-  #   assert p.data == data
-  #   assert p.id == :texture
-  # end
 
   #============================================================================
   test "scene_ref adds graph key reference to a graph" do
