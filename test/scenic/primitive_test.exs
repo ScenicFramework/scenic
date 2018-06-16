@@ -25,7 +25,7 @@ defmodule Scenic.PrimitiveTest do
   @tx_rotate          0.1
   @transforms         %{pin: @tx_pin, rotate: @tx_rotate}
 
-  @styles             %{color: {:red, :yellow}, line_width: 10}
+  @styles             %{fill: :yellow, stroke: {10, :green}}
 
   @parent_uid         123
   @type_module        Group
@@ -50,7 +50,10 @@ defmodule Scenic.PrimitiveTest do
 
   @minimal_primitive   %{
     data:       {Group, @data},
-    styles:     %{color: {{255, 0, 0, 255}, {255, 255, 0, 255}}, line_width: 10},
+    styles:     %{
+      fill: {:color, {255, 255, 0, 255}},
+      stroke: {10, {:color, {0, 128, 0, 255}}}
+      },
     transforms: %{pin: {10, 11}, rotate: 0.1}
   }
 
@@ -86,7 +89,7 @@ defmodule Scenic.PrimitiveTest do
 
 
   test "build adds the style opts" do
-    assert Primitive.build(Group, @data, color: {:red, :yellow}, line_width: 10) == %{
+    assert Primitive.build(Group, @data, fill: :yellow, stroke: {10, :green}) == %{
       __struct__: Primitive, module: Group, uid: nil, parent_uid: -1, data: @data,
       styles: @styles
     }
@@ -114,7 +117,7 @@ defmodule Scenic.PrimitiveTest do
 
   test "build raises on bad style" do
     assert_raise Primitive.Style.FormatError, fn ->
-      Primitive.build(Group, @data, color: :invalid)
+      Primitive.build(Group, @data, fill: :invalid)
     end
   end
 
@@ -135,9 +138,9 @@ defmodule Scenic.PrimitiveTest do
   end
 
   test "put updates the options on a primitive" do
-    assert Primitive.put(@primitive, [1,2,5,6], color: :blue).styles == %{
-      color: :blue,
-      line_width: 10
+    assert Primitive.put(@primitive, [1,2,5,6], fill: :blue).styles == %{
+      fill: :blue,
+      stroke: {10, :green}
     }
   end
 
@@ -151,9 +154,9 @@ defmodule Scenic.PrimitiveTest do
   # put
 
   test "put_opts updates only the options on a primitive" do
-    assert Primitive.put_opts(@primitive, color: :blue).styles == %{
-      color: :blue,
-      line_width: 10
+    assert Primitive.put_opts(@primitive, fill: :blue).styles == %{
+      fill: :blue,
+      stroke: {10, :green}
     }
   end
 
@@ -376,7 +379,7 @@ defmodule Scenic.PrimitiveTest do
   end
 
   test "get_style returns a style by key" do
-    assert Primitive.get_style(@primitive, :color) == {:red, :yellow}
+    assert Primitive.get_style(@primitive, :fill) == :yellow
   end
 
   test "get_style returns nil if missing by default" do
@@ -387,26 +390,31 @@ defmodule Scenic.PrimitiveTest do
     assert Primitive.get_style(@primitive, :missing, "default") == "default"
   end
 
-  test "put_style adds to the head of the style list" do
-    p = Primitive.put_style(@primitive, :color, :khaki )
-    assert Primitive.get_styles(p) == %{color: :khaki, line_width: 10}
+  test "put_style adds to the style map" do
+    p = Primitive.put_style(@primitive, :font, :roboto )
+    assert Primitive.get_styles(p) == %{
+      font: :roboto,
+      fill: :yellow,
+      stroke: {10, :green}
+    }
   end
 
-  test "put_style replaces a style in the style list" do
+  test "put_style replaces a style in the style map" do
     p = @primitive
-      |> Primitive.put_style( :color, :khaki )
-      |> Primitive.put_style( :color, :cornsilk )
-    assert Primitive.get_styles(p) == %{color: :cornsilk, line_width: 10}
+      |> Primitive.put_style( :fill, :khaki )
+      |> Primitive.put_style( :fill, :cornsilk )
+    assert Primitive.get_styles(p) == %{fill: :cornsilk, stroke: {10, :green}}
   end
 
   test "put_style a list of styles" do
-    new_styles = %{line_width: 4, color: :magenta}
-    p = Primitive.put_style(@primitive, [line_width: 4, color: :magenta] )
+    new_styles = %{fill: :magenta, stroke: {4, :green}}
+    p = Primitive.put_style(@primitive, [fill: :magenta, stroke: {4, :green}] )
     assert Primitive.get_styles(p) == new_styles
   end
 
   test "drop_style removes a style in the style list" do
-    assert Primitive.drop_style(@primitive, :color ) |> Primitive.get_styles() == %{line_width: 10}
+    assert Primitive.drop_style(@primitive, :fill )
+    |> Primitive.get_styles() == %{stroke: {10, :green}}
   end
 
 
@@ -475,8 +483,8 @@ defmodule Scenic.PrimitiveTest do
   end
 
   test "delta_script picks up style deletion" do
-    p = Primitive.put_style(@primitive, :color, nil)
-    assert Primitive.delta_script(@primitive, p) == [{:del, {:styles, :color}}]
+    p = Primitive.put_style(@primitive, :fill, nil)
+    assert Primitive.delta_script(@primitive, p) == [{:del, {:styles, :fill}}]
   end
 
   test "delta_script picks up addition to transforms" do
