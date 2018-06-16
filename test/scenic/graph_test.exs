@@ -117,24 +117,24 @@ defmodule Scenic.GraphTest do
     |> Primitive.get_transforms()  == %{rotate: 1.3}
   end
 
-  test "build calculates transforms" do
-    graph = Graph.build( rotate: 1.2)
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, rotate: 1.3, id: :rect)
+  # test "build calculates transforms" do
+  #   graph = Graph.build( rotate: 1.2)
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, rotate: 1.3, id: :rect)
 
-    root = Graph.get(graph, @root_uid)
-    root_local    = Map.get(root, :local_tx)
-    root_inverse  = Map.get(root, :inverse_tx)
-    assert root_local
-    assert root_inverse
+  #   root = Graph.get(graph, @root_uid)
+  #   root_local    = Map.get(root, :local_tx)
+  #   root_inverse  = Map.get(root, :inverse_tx)
+  #   assert root_local
+  #   assert root_inverse
 
-    [rect] = Graph.get(graph, :rect)
-    rect_local    = Map.get(rect, :local_tx)
-    rect_inverse  = Map.get(rect, :inverse_tx)
-    assert rect_local
-    assert rect_inverse
-    assert rect_local != root_local
-    assert rect_inverse != root_inverse
-  end
+  #   [rect] = Graph.get(graph, :rect)
+  #   rect_local    = Map.get(rect, :local_tx)
+  #   rect_inverse  = Map.get(rect, :inverse_tx)
+  #   assert rect_local
+  #   assert rect_inverse
+  #   assert rect_local != root_local
+  #   assert rect_inverse != root_inverse
+  # end
 
   test "build barfs on attempted circular graphs" do
     assert_raise Graph.Error, fn ->
@@ -805,71 +805,71 @@ defmodule Scenic.GraphTest do
   end
 
 
-  test "modify recalculates local and inverse transforms" do
-    graph = Graph.build( rotate: 1.1 )
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
-    [uid] = Graph.resolve_id( graph, :rect )
+  # test "modify recalculates local and inverse transforms" do
+  #   graph = Graph.build( rotate: 1.1 )
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
+  #   [uid] = Graph.resolve_id( graph, :rect )
 
-    rect = Graph.get(graph, uid)
-    before_local   = Map.get(rect, :local_tx)
-    before_inverse = Map.get(rect, :inverse_tx)
-    assert before_local
-    assert before_inverse
+  #   rect = Graph.get(graph, uid)
+  #   before_local   = Map.get(rect, :local_tx)
+  #   before_inverse = Map.get(rect, :inverse_tx)
+  #   assert before_local
+  #   assert before_inverse
 
-    graph = Graph.modify(graph, :rect, fn(p)->
-      Primitive.put_transform(p, :rotate, 2.3)
-    end)
+  #   graph = Graph.modify(graph, :rect, fn(p)->
+  #     Primitive.put_transform(p, :rotate, 2.3)
+  #   end)
 
-    rect = Graph.get(graph, uid)
-    after_local   = Map.get(rect, :local_tx)
-    after_inverse = Map.get(rect, :inverse_tx)
+  #   rect = Graph.get(graph, uid)
+  #   after_local   = Map.get(rect, :local_tx)
+  #   after_inverse = Map.get(rect, :inverse_tx)
 
-    assert after_local
-    assert after_inverse
+  #   assert after_local
+  #   assert after_inverse
 
-    assert after_local != before_local
-    assert after_inverse != before_inverse
-  end
+  #   assert after_local != before_local
+  #   assert after_inverse != before_inverse
+  # end
 
-  test "modify recalculates inverse transforms down the graph" do
-    graph = Graph.build( rotate: 1.1 )
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
-    [uid] = Graph.resolve_id( graph, :rect )
+  # test "modify recalculates inverse transforms down the graph" do
+  #   graph = Graph.build( rotate: 1.1 )
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
+  #   [uid] = Graph.resolve_id( graph, :rect )
 
-    root = Graph.get(graph, @root_uid)
-    before_root_local   = Map.get(root, :local_tx)
-    before_root_inverse = Map.get(root, :inverse_tx)
-    assert before_root_local
-    assert before_root_inverse
+  #   root = Graph.get(graph, @root_uid)
+  #   before_root_local   = Map.get(root, :local_tx)
+  #   before_root_inverse = Map.get(root, :inverse_tx)
+  #   assert before_root_local
+  #   assert before_root_inverse
 
-    rect = Graph.get(graph, uid)
-    before_rect_local   = Map.get(rect, :local_tx)
-    before_rect_inverse = Map.get(rect, :inverse_tx)
-    assert before_rect_local
-    assert before_rect_inverse
+  #   rect = Graph.get(graph, uid)
+  #   before_rect_local   = Map.get(rect, :local_tx)
+  #   before_rect_inverse = Map.get(rect, :inverse_tx)
+  #   assert before_rect_local
+  #   assert before_rect_inverse
 
-    graph = Graph.modify(graph, @root_uid, fn(p)->
-      Primitive.put_transform(p, :rotate, 2.3)
-    end)
+  #   graph = Graph.modify(graph, @root_uid, fn(p)->
+  #     Primitive.put_transform(p, :rotate, 2.3)
+  #   end)
 
-    root = Graph.get(graph, @root_uid)
-    after_root_local   = Map.get(root, :local_tx)
-    after_root_inverse = Map.get(root, :inverse_tx)
-    assert before_root_local
-    assert before_root_inverse
+  #   root = Graph.get(graph, @root_uid)
+  #   after_root_local   = Map.get(root, :local_tx)
+  #   after_root_inverse = Map.get(root, :inverse_tx)
+  #   assert before_root_local
+  #   assert before_root_inverse
 
-    assert before_root_local != after_root_local
-    assert before_root_inverse != after_root_inverse
+  #   assert before_root_local != after_root_local
+  #   assert before_root_inverse != after_root_inverse
 
-    rect = Graph.get(graph, uid)
-    after_rect_local   = Map.get(rect, :local_tx)
-    after_rect_inverse = Map.get(rect, :inverse_tx)
-    assert before_rect_local
-    assert before_rect_inverse
+  #   rect = Graph.get(graph, uid)
+  #   after_rect_local   = Map.get(rect, :local_tx)
+  #   after_rect_inverse = Map.get(rect, :inverse_tx)
+  #   assert before_rect_local
+  #   assert before_rect_inverse
 
-    assert before_rect_local == after_rect_local
-    assert before_rect_inverse != after_rect_inverse
-  end
+  #   assert before_rect_local == after_rect_local
+  #   assert before_rect_inverse != after_rect_inverse
+  # end
 
   test "modify modifies transforms" do
     graph = Graph.build( rotate: 1.1 )
@@ -886,15 +886,15 @@ defmodule Scenic.GraphTest do
 
   test "modify modifies styles" do
     graph = Graph.build( rotate: 1.1 )
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, color: :red)
+    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, fill: :red)
     [uid] = Graph.resolve_id( graph, :rect )
 
     graph = Graph.modify(graph, uid, fn(p)->
-      Primitive.put_style(p, :border_width, 10)
+      Primitive.put_style(p, :stroke, {10, :blue})
     end)
 
     rect = Graph.get(graph, uid)
-    assert Primitive.get_styles(rect) == %{color: :red, border_width: 10}
+    assert Primitive.get_styles(rect) == %{fill: :red, stroke: {10, :blue}}
   end
 
 
@@ -1521,283 +1521,283 @@ defmodule Scenic.GraphTest do
   #============================================================================
   # get_merged_tx
 
-  test "get_merged_tx gets the merged up the graph tx on a primitive" do
-    graph = Graph.build( rotate: 1.1 )
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
-    [uid] = Graph.resolve_id( graph, :rect )
+  # test "get_merged_tx gets the merged up the graph tx on a primitive" do
+  #   graph = Graph.build( rotate: 1.1 )
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
+  #   [uid] = Graph.resolve_id( graph, :rect )
 
-    root_local = Graph.get(graph, @root_uid) |> Map.get(:local_tx)
-    rect_local = Graph.get(graph, uid) |> Map.get(:local_tx)
+  #   root_local = Graph.get(graph, @root_uid) |> Map.get(:local_tx)
+  #   rect_local = Graph.get(graph, uid) |> Map.get(:local_tx)
 
-    assert Graph.get_merged_tx(graph, uid) == Matrix.mul(root_local, rect_local)
-  end
+  #   assert Graph.get_merged_tx(graph, uid) == Matrix.mul(root_local, rect_local)
+  # end
 
-  test "get_merged_tx gets an inherited merged tx" do
-    graph = Graph.build( rotate: 1.1 )
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect)
-    [uid] = Graph.resolve_id( graph, :rect )
+  # test "get_merged_tx gets an inherited merged tx" do
+  #   graph = Graph.build( rotate: 1.1 )
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect)
+  #   [uid] = Graph.resolve_id( graph, :rect )
 
-    root_local = Graph.get(graph, @root_uid) |> Map.get(:local_tx)
+  #   root_local = Graph.get(graph, @root_uid) |> Map.get(:local_tx)
 
-    assert Graph.get_merged_tx(graph, uid) == root_local
-  end
+  #   assert Graph.get_merged_tx(graph, uid) == root_local
+  # end
 
-  test "get_merged_tx returns identity if there is no inverse_tx" do
-    [uid] = Graph.resolve_id(@graph_find, :inner_line)
-    assert Graph.get_merged_tx(@graph_find, uid) == @identity
-  end
+  # test "get_merged_tx returns identity if there is no inverse_tx" do
+  #   [uid] = Graph.resolve_id(@graph_find, :inner_line)
+  #   assert Graph.get_merged_tx(@graph_find, uid) == @identity
+  # end
 
   #============================================================================
   # get_inverse_tx
 
-  test "get_inverse_tx gets the inverse_tx on a primitive" do
-    graph = Graph.build( rotate: 1.1 )
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
-    [uid] = Graph.resolve_id( graph, :rect )
+  # test "get_inverse_tx gets the inverse_tx on a primitive" do
+  #   graph = Graph.build( rotate: 1.1 )
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
+  #   [uid] = Graph.resolve_id( graph, :rect )
 
-    rect = Graph.get(graph, uid)
-    rect_inverse = Map.get(rect, :inverse_tx)
+  #   rect = Graph.get(graph, uid)
+  #   rect_inverse = Map.get(rect, :inverse_tx)
 
-    assert Graph.get_inverse_tx(graph, rect) == rect_inverse
-  end
+  #   assert Graph.get_inverse_tx(graph, rect) == rect_inverse
+  # end
 
-  test "get_inverse_tx gets the inherited inverse_tx" do
-    graph = Graph.build( rotate: 1.1 )
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect)
-    [uid] = Graph.resolve_id( graph, :rect )
+  # test "get_inverse_tx gets the inherited inverse_tx" do
+  #   graph = Graph.build( rotate: 1.1 )
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect)
+  #   [uid] = Graph.resolve_id( graph, :rect )
 
-    root_inverse = Graph.get(graph, @root_uid) |> Map.get(:inverse_tx)
-    rect = Graph.get(graph, uid)
+  #   root_inverse = Graph.get(graph, @root_uid) |> Map.get(:inverse_tx)
+  #   rect = Graph.get(graph, uid)
 
-    assert Graph.get_inverse_tx(graph, rect) == root_inverse
-  end
+  #   assert Graph.get_inverse_tx(graph, rect) == root_inverse
+  # end
 
-  test "get_inverse_tx returns nil if there is no invere_tx anywhere" do
-    [uid] = Graph.resolve_id(@graph_find, :inner_line)
-    p = Graph.get(@graph_find, uid)
-    assert Graph.get_inverse_tx(@graph_find, p) == nil
-  end
+  # test "get_inverse_tx returns nil if there is no invere_tx anywhere" do
+  #   [uid] = Graph.resolve_id(@graph_find, :inner_line)
+  #   p = Graph.get(@graph_find, uid)
+  #   assert Graph.get_inverse_tx(@graph_find, p) == nil
+  # end
 
   #============================================================================
   # calculate_transforms
 
-  test "calculate_transforms calculates transforms on the root, but not down-graph items with to transforms set on them" do
-    graph = Graph.build( rotate: 1.2)
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect)
-    root = Graph.get(graph, @root_uid)
-    root = Map.delete(root, :local_tx)
-    root = Map.delete(root, :inverse_tx)
-    graph = Graph.put(graph, @root_uid, root)
+  # test "calculate_transforms calculates transforms on the root, but not down-graph items with to transforms set on them" do
+  #   graph = Graph.build( rotate: 1.2)
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect)
+  #   root = Graph.get(graph, @root_uid)
+  #   root = Map.delete(root, :local_tx)
+  #   root = Map.delete(root, :inverse_tx)
+  #   graph = Graph.put(graph, @root_uid, root)
 
-    graph = Graph.calculate_transforms(graph, @root_uid)
+  #   graph = Graph.calculate_transforms(graph, @root_uid)
 
-    root = Graph.get(graph, @root_uid)
-    root_local    = Map.get(root, :local_tx)
-    root_inverse  = Map.get(root, :inverse_tx)
-    assert root_local
-    assert root_inverse
+  #   root = Graph.get(graph, @root_uid)
+  #   root_local    = Map.get(root, :local_tx)
+  #   root_inverse  = Map.get(root, :inverse_tx)
+  #   assert root_local
+  #   assert root_inverse
 
-    [rect] = Graph.get(graph, :rect)
-    rect_local    = Map.get(rect, :local_tx)
-    rect_inverse  = Map.get(rect, :inverse_tx)
-    refute rect_local
-    refute rect_inverse
-  end
+  #   [rect] = Graph.get(graph, :rect)
+  #   rect_local    = Map.get(rect, :local_tx)
+  #   rect_inverse  = Map.get(rect, :inverse_tx)
+  #   refute rect_local
+  #   refute rect_inverse
+  # end
 
-  test "calculate_transforms calculates transforms nested items below root" do
-    graph = Graph.build( )
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
-    root = Graph.get(graph, @root_uid)
-    root = Map.delete(root, :local_tx)
-    root = Map.delete(root, :inverse_tx)
-    graph = Graph.put(graph, @root_uid, root)
+  # test "calculate_transforms calculates transforms nested items below root" do
+  #   graph = Graph.build( )
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
+  #   root = Graph.get(graph, @root_uid)
+  #   root = Map.delete(root, :local_tx)
+  #   root = Map.delete(root, :inverse_tx)
+  #   graph = Graph.put(graph, @root_uid, root)
     
-    graph = Graph.calculate_transforms(graph, @root_uid)
+  #   graph = Graph.calculate_transforms(graph, @root_uid)
 
-    root = Graph.get(graph, @root_uid)
-    root_local    = Map.get(root, :local_tx)
-    root_inverse  = Map.get(root, :inverse_tx)
-    refute root_local
-    refute root_inverse
+  #   root = Graph.get(graph, @root_uid)
+  #   root_local    = Map.get(root, :local_tx)
+  #   root_inverse  = Map.get(root, :inverse_tx)
+  #   refute root_local
+  #   refute root_inverse
 
-    [rect] = Graph.get(graph, :rect)
-    rect_local    = Map.get(rect, :local_tx)
-    rect_inverse  = Map.get(rect, :inverse_tx)
-    assert rect_local
-    assert rect_inverse
-  end
+  #   [rect] = Graph.get(graph, :rect)
+  #   rect_local    = Map.get(rect, :local_tx)
+  #   rect_inverse  = Map.get(rect, :inverse_tx)
+  #   assert rect_local
+  #   assert rect_inverse
+  # end
 
-  test "calculate_transforms calculates transforms starting at a given id" do
-    graph = Graph.build( rotate: 1.1 )
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
-    [uid] = Graph.resolve_id( graph, :rect )
+  # test "calculate_transforms calculates transforms starting at a given id" do
+  #   graph = Graph.build( rotate: 1.1 )
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
+  #   [uid] = Graph.resolve_id( graph, :rect )
 
-    root = Graph.get(graph, @root_uid)
-    root = Map.delete(root, :local_tx)
-    root = Map.delete(root, :inverse_tx)
-    graph = Graph.put(graph, @root_uid, root)
+  #   root = Graph.get(graph, @root_uid)
+  #   root = Map.delete(root, :local_tx)
+  #   root = Map.delete(root, :inverse_tx)
+  #   graph = Graph.put(graph, @root_uid, root)
 
-    rect = Graph.get(graph, uid)
-    rect = Map.delete(rect, :local_tx)
-    rect = Map.delete(rect, :inverse_tx)
-    graph = Graph.put(graph, uid, rect)
+  #   rect = Graph.get(graph, uid)
+  #   rect = Map.delete(rect, :local_tx)
+  #   rect = Map.delete(rect, :inverse_tx)
+  #   graph = Graph.put(graph, uid, rect)
 
-    graph = Graph.calculate_transforms(graph, uid)
+  #   graph = Graph.calculate_transforms(graph, uid)
 
-    root = Graph.get(graph, @root_uid)
-    root_local    = Map.get(root, :local_tx)
-    root_inverse  = Map.get(root, :inverse_tx)
-    refute root_local
-    refute root_inverse
+  #   root = Graph.get(graph, @root_uid)
+  #   root_local    = Map.get(root, :local_tx)
+  #   root_inverse  = Map.get(root, :inverse_tx)
+  #   refute root_local
+  #   refute root_inverse
 
-    [rect] = Graph.get(graph, :rect)
-    rect_local    = Map.get(rect, :local_tx)
-    rect_inverse  = Map.get(rect, :inverse_tx)
-    assert rect_local
-    assert rect_inverse
-  end
+  #   [rect] = Graph.get(graph, :rect)
+  #   rect_local    = Map.get(rect, :local_tx)
+  #   rect_inverse  = Map.get(rect, :inverse_tx)
+  #   assert rect_local
+  #   assert rect_inverse
+  # end
 
 
   #============================================================================
   # calculate_local_transform
-  test "calculate_local_transform recalcs the local transform of the given primitive" do
-    graph = Graph.build()
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
-    [uid] = Graph.resolve_id( graph, :rect )
+  # test "calculate_local_transform recalcs the local transform of the given primitive" do
+  #   graph = Graph.build()
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
+  #   [uid] = Graph.resolve_id( graph, :rect )
 
-    rect = Graph.get(graph, uid)
-    before_local   = Map.get(rect, :local_tx)
-    before_inverse = Map.get(rect, :inverse_tx)
-    assert before_local
-    assert before_inverse
+  #   rect = Graph.get(graph, uid)
+  #   before_local   = Map.get(rect, :local_tx)
+  #   before_inverse = Map.get(rect, :inverse_tx)
+  #   assert before_local
+  #   assert before_inverse
 
-    # change the setting on the transform
-    rect = Map.put(rect, :transforms, %{rotate: 2.3})
-    graph = Graph.put(graph, uid, rect)
+  #   # change the setting on the transform
+  #   rect = Map.put(rect, :transforms, %{rotate: 2.3})
+  #   graph = Graph.put(graph, uid, rect)
 
-    # recalc only the local transform
-    graph = Graph.calculate_local_transform(graph, uid)
+  #   # recalc only the local transform
+  #   graph = Graph.calculate_local_transform(graph, uid)
 
-    rect = Graph.get(graph, uid)
-    after_local   = Map.get(rect, :local_tx)
-    after_inverse = Map.get(rect, :inverse_tx)
-    assert after_local
-    assert after_local != before_local
-    assert before_inverse == after_inverse
-  end
+  #   rect = Graph.get(graph, uid)
+  #   after_local   = Map.get(rect, :local_tx)
+  #   after_inverse = Map.get(rect, :inverse_tx)
+  #   assert after_local
+  #   assert after_local != before_local
+  #   assert before_inverse == after_inverse
+  # end
 
-  test "calculate_local_transform deletes the local transform of the given primitive if transforms is empty" do
-    graph = Graph.build()
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
-    [uid] = Graph.resolve_id( graph, :rect )
+  # test "calculate_local_transform deletes the local transform of the given primitive if transforms is empty" do
+  #   graph = Graph.build()
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
+  #   [uid] = Graph.resolve_id( graph, :rect )
 
-    rect = Graph.get(graph, uid)
-    before_local   = Map.get(rect, :local_tx)
-    before_inverse = Map.get(rect, :inverse_tx)
-    assert before_local
-    assert before_inverse
+  #   rect = Graph.get(graph, uid)
+  #   before_local   = Map.get(rect, :local_tx)
+  #   before_inverse = Map.get(rect, :inverse_tx)
+  #   assert before_local
+  #   assert before_inverse
 
-    # change the setting on the transform
-    rect = Map.delete(rect, :transforms)
-    graph = Graph.put(graph, uid, rect)
+  #   # change the setting on the transform
+  #   rect = Map.delete(rect, :transforms)
+  #   graph = Graph.put(graph, uid, rect)
 
-    # recalc only the local transform
-    graph = Graph.calculate_local_transform(graph, uid)
+  #   # recalc only the local transform
+  #   graph = Graph.calculate_local_transform(graph, uid)
 
-    rect = Graph.get(graph, uid)
-    after_local   = Map.get(rect, :local_tx)
-    after_inverse = Map.get(rect, :inverse_tx)
-    refute after_local
-    refute after_inverse
-  end
-
-
-  #============================================================================
-  # calculate_inverse_transforms
-
-  test "calculate_inverse_transforms recursively updates the inverse transforms" do
-    graph = Graph.build( rotate: 1.1 )
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
-    [uid] = Graph.resolve_id( graph, :rect )
-
-    root = Graph.get(graph, @root_uid)
-    before_root_inverse = Map.get(root, :inverse_tx)
-
-    rect = Graph.get(graph, uid)
-    before_rect_local   = Map.get(rect, :local_tx)
-    before_rect_inverse = Map.get(rect, :inverse_tx)
+  #   rect = Graph.get(graph, uid)
+  #   after_local   = Map.get(rect, :local_tx)
+  #   after_inverse = Map.get(rect, :inverse_tx)
+  #   refute after_local
+  #   refute after_inverse
+  # end
 
 
-    # modify the local_tx of the root - then recalc the inverse txs down the graph
-    root = Map.put(root, :transforms, %{rotate: 2.3})
-    graph = Graph.put(graph, @root_uid, root)
-    |> Graph.calculate_local_transform( @root_uid )
-    |> Graph.calculate_inverse_transforms( @root_uid )
+  # #============================================================================
+  # # calculate_inverse_transforms
 
-    root = Graph.get(graph, @root_uid)
-    after_root_inverse  = Map.get(root, :inverse_tx)
-    assert after_root_inverse
-    assert before_root_inverse != after_root_inverse
+  # test "calculate_inverse_transforms recursively updates the inverse transforms" do
+  #   graph = Graph.build( rotate: 1.1 )
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, rotate: 1.2)
+  #   [uid] = Graph.resolve_id( graph, :rect )
 
-    [rect] = Graph.get(graph, :rect)
-    after_rect_local    = Map.get(rect, :local_tx)
-    after_rect_inverse  = Map.get(rect, :inverse_tx)
-    assert before_rect_local == after_rect_local
-    assert before_rect_inverse != after_rect_inverse
-  end
+  #   root = Graph.get(graph, @root_uid)
+  #   before_root_inverse = Map.get(root, :inverse_tx)
+
+  #   rect = Graph.get(graph, uid)
+  #   before_rect_local   = Map.get(rect, :local_tx)
+  #   before_rect_inverse = Map.get(rect, :inverse_tx)
+
+
+  #   # modify the local_tx of the root - then recalc the inverse txs down the graph
+  #   root = Map.put(root, :transforms, %{rotate: 2.3})
+  #   graph = Graph.put(graph, @root_uid, root)
+  #   |> Graph.calculate_local_transform( @root_uid )
+  #   |> Graph.calculate_inverse_transforms( @root_uid )
+
+  #   root = Graph.get(graph, @root_uid)
+  #   after_root_inverse  = Map.get(root, :inverse_tx)
+  #   assert after_root_inverse
+  #   assert before_root_inverse != after_root_inverse
+
+  #   [rect] = Graph.get(graph, :rect)
+  #   after_rect_local    = Map.get(rect, :local_tx)
+  #   after_rect_inverse  = Map.get(rect, :inverse_tx)
+  #   assert before_rect_local == after_rect_local
+  #   assert before_rect_inverse != after_rect_inverse
+  # end
 
 
   #============================================================================
   # find_by_screen_point
 
-  test "find_by_screen_point returns nil if not over a primitive" do
-    graph = Graph.build()
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect)
+  # test "find_by_screen_point returns nil if not over a primitive" do
+  #   graph = Graph.build()
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect)
 
-    assert Graph.find_by_screen_point(graph, {0, 0}) == nil
-  end
+  #   assert Graph.find_by_screen_point(graph, {0, 0}) == nil
+  # end
 
-  test "find_by_screen_point finds a non-transformed primitive" do
-    graph = Graph.build()
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect)
-    [rect] = Graph.get(graph, :rect)
+  # test "find_by_screen_point finds a non-transformed primitive" do
+  #   graph = Graph.build()
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect)
+  #   [rect] = Graph.get(graph, :rect)
 
-    assert Graph.find_by_screen_point(graph, {20, 20}) == rect
-  end
+  #   assert Graph.find_by_screen_point(graph, {20, 20}) == rect
+  # end
 
-  test "find_by_screen_point finds a transformed primitive" do
-    # first, confirm the point I'm chosing is not in the non-transformed rect
-    graph = Graph.build()
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect)
-    assert Graph.find_by_screen_point(graph, {210, 50}) == nil
+  # test "find_by_screen_point finds a transformed primitive" do
+  #   # first, confirm the point I'm chosing is not in the non-transformed rect
+  #   graph = Graph.build()
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect)
+  #   assert Graph.find_by_screen_point(graph, {210, 50}) == nil
 
-    # rotate the rect and try again
-    graph = Graph.modify(graph, :rect, fn(p)->
-      Primitive.put_transform(p, :rotate, 1)
-    end)
-    [rect] = Graph.get(graph, :rect)
-    assert Graph.find_by_screen_point(graph, {210, 50}) == rect
-  end
+  #   # rotate the rect and try again
+  #   graph = Graph.modify(graph, :rect, fn(p)->
+  #     Primitive.put_transform(p, :rotate, 1)
+  #   end)
+  #   [rect] = Graph.get(graph, :rect)
+  #   assert Graph.find_by_screen_point(graph, {210, 50}) == rect
+  # end
 
-  test "find_by_screen_point finds the topmost primitive in an overlapping stack" do
-    graph = Graph.build()
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect_0)
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect_1)
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect_2)
-    [rect_2] = Graph.get(graph, :rect_2)
+  # test "find_by_screen_point finds the topmost primitive in an overlapping stack" do
+  #   graph = Graph.build()
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect_0)
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect_1)
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect_2)
+  #   [rect_2] = Graph.get(graph, :rect_2)
 
-    assert Graph.find_by_screen_point(graph, {20, 20}) == rect_2
-  end
+  #   assert Graph.find_by_screen_point(graph, {20, 20}) == rect_2
+  # end
 
-  test "find_by_screen_point does NOT find hidden objects" do
-    graph = Graph.build()
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect_0)
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect_1)
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect_2, hidden: true)
-    [rect_1] = Graph.get(graph, :rect_1)
+  # test "find_by_screen_point does NOT find hidden objects" do
+  #   graph = Graph.build()
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect_0)
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect_1)
+  #   |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect_2, hidden: true)
+  #   [rect_1] = Graph.get(graph, :rect_1)
 
-    assert Graph.find_by_screen_point(graph, {20, 20}) == rect_1
-  end
+  #   assert Graph.find_by_screen_point(graph, {20, 20}) == rect_1
+  # end
 
 
 
