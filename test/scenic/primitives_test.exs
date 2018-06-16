@@ -11,7 +11,7 @@ defmodule Scenic.PrimitivesTest do
 
   @graph  Graph.build()
 
-  @tau    2.0 * :math.pi();
+  # @tau    2.0 * :math.pi();
 
 #  import IEx
 
@@ -135,12 +135,39 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :quad
   end
 
+
+  #============================================================================
+  test "arc adds simple default to a graph" do
+    p = Primitives.arc(@graph, {0, 1, 20}, id: :arc)
+    |> Graph.get(1)
+    assert p.module == Scenic.Primitive.Arc
+    assert p.data == {{0,0}, 0, 1, 20, 1.0, 1.0}
+    assert p.id == :arc
+  end
+
+  test "arc adds x, y default to a graph" do
+    p = Primitives.arc(@graph, {{1,2}, 0, 1, 20}, id: :arc)
+    |> Graph.get(1)
+    assert p.module == Scenic.Primitive.Arc
+    assert p.data == {{1,2}, 0, 1, 20, 1.0, 1.0}
+    assert p.id == :arc
+  end
+
+  test "arc adds to a graph" do
+    p = Primitives.arc(@graph, {{1,2}, 0, 1, 20, 2, 8}, id: :arc)
+    |> Graph.get(1)
+    assert p.module == Scenic.Primitive.Arc
+    assert p.data == {{1,2}, 0, 1, 20, 2, 8}
+    assert p.id == :arc
+  end
+
+
   #============================================================================
   test "sector adds simple default to a graph" do
     p = Primitives.sector(@graph, {0, 1, 20}, id: :sector)
     |> Graph.get(1)
     assert p.module == Scenic.Primitive.Sector
-    assert p.data == {{0,0}, 0, 1, 20, {1, 1}}
+    assert p.data == {{0,0}, 0, 1, 20, 1.0, 1.0}
     assert p.id == :sector
   end
 
@@ -148,121 +175,108 @@ defmodule Scenic.PrimitivesTest do
     p = Primitives.sector(@graph, {{1,2}, 0, 1, 20}, id: :sector)
     |> Graph.get(1)
     assert p.module == Scenic.Primitive.Sector
-    assert p.data == {{1,2}, 0, 1, 20, {1, 1}}
+    assert p.data == {{1,2}, 0, 1, 20, 1.0, 1.0}
     assert p.id == :sector
   end
 
   test "sector adds to a graph" do
-    p = Primitives.sector(@graph, {{1,2}, 0, 1, 20, {2, 8}}, id: :sector)
+    p = Primitives.sector(@graph, {{1,2}, 0, 1, 20, 2, 8}, id: :sector)
     |> Graph.get(1)
     assert p.module == Scenic.Primitive.Sector
-    assert p.data == {{1,2}, 0, 1, 20, {2, 8}}
+    assert p.data == {{1,2}, 0, 1, 20, 2, 8}
     assert p.id == :sector
   end
 
   #============================================================================
-  test "oval adds simple circle to a graph" do
-    p = Primitives.oval(@graph, 20, id: :oval_circle)
+  test "ellipse adds to a graph" do
+    p = Primitives.ellipse(@graph, {20,30}, id: :ellipse)
     |> Graph.get(1)
-    assert p.module == Scenic.Primitive.Sector
-    assert p.data == {{0,0}, 0, @tau, 20, {1, 1}}
-    assert p.id == :oval_circle
+    assert p.module == Scenic.Primitive.Ellipse
+    assert p.data == {{0,0}, 20, 30}
+    assert p.id == :ellipse
   end
 
-  test "oval adds positioned circle to a graph" do
-    p = Primitives.oval(@graph, {{1,2}, 20}, id: :oval_circle)
+  test "ellipse adds with position to a graph" do
+    p = Primitives.ellipse(@graph, {{1,2}, 20, 30}, id: :ellipse)
     |> Graph.get(1)
-    assert p.module == Scenic.Primitive.Sector
-    assert p.data == {{1,2}, 0, @tau, 20, {1, 1}}
-    assert p.id == :oval_circle
-  end
-
-  test "oval adds default to a graph" do
-    p = Primitives.oval(@graph, {20, {2, 8}}, id: :oval)
-    |> Graph.get(1)
-    assert p.module == Scenic.Primitive.Sector
-    assert p.data == {{0,0}, 0, @tau, 20, {2, 8}}
-    assert p.id == :oval
-  end
-
-  test "oval adds to a graph" do
-    p = Primitives.oval(@graph, {{1,2}, 20, {2, 8}}, id: :oval)
-    |> Graph.get(1)
-    assert p.module == Scenic.Primitive.Sector
-    assert p.data == {{1,2}, 0, @tau, 20, {2, 8}}
-    assert p.id == :oval
+    assert p.module == Scenic.Primitive.Ellipse
+    assert p.data == {{1,2}, 20, 30}
+    assert p.id == :ellipse
   end
 
   #============================================================================
   test "circle adds default to a graph" do
     p = Primitives.circle(@graph, 20, id: :circle)
     |> Graph.get(1)
-    assert p.module == Scenic.Primitive.Sector
-    assert p.data == {{0,0}, 0, @tau, 20, {1, 1}}
+    assert p.module == Scenic.Primitive.Circle
+    assert p.data == {{0,0}, 20}
     assert p.id == :circle
   end
 
   test "circle adds positioned circle to a graph" do
     p = Primitives.circle(@graph, {{1,2}, 20}, id: :circle)
     |> Graph.get(1)
-    assert p.module == Scenic.Primitive.Sector
-    assert p.data == {{1,2}, 0, @tau, 20, {1, 1}}
+    assert p.module == Scenic.Primitive.Circle
+    assert p.data == {{1,2}, 20}
     assert p.id == :circle
   end
 
-
   #============================================================================
 
-  test "texture adds simple default rect target to a graph" do
-    p = Primitives.texture(@graph, {100, 200,"test_sig" }, id: :texture)
-    |> Graph.get(1)
-    assert p.module == Scenic.Primitive.Texture
-    assert p.data == {
-      {{0,0}, {100, 0}, {100, 200}, {0, 200}},
-      {{0,0}, {1,0}, {1,1}, {0,1}},
-      "test_sig"
-    }
-    assert p.id == :texture
-  end
+  test "path adds to the graph"
 
-  test "texture adds positioned default rect target to a graph" do
-    p = Primitives.texture(@graph, {{10,20}, 100, 200,"test_sig" }, id: :texture)
-    |> Graph.get(1)
-    assert p.module == Scenic.Primitive.Texture
-    assert p.data == {
-      {{10,20}, {110, 20}, {110, 220}, {10, 220}},
-      {{0,0}, {1,0}, {1,1}, {0,1}},
-      "test_sig"
-    }
-    assert p.id == :texture
-  end
 
-  test "texture adds quad target to a graph" do
-    p = Primitives.texture(@graph, {
-      {{1,2}, {3,4}, {3, 10}, {2, 8}
-    },"test_sig" }, id: :texture)
-    |> Graph.get(1)
-    assert p.module == Scenic.Primitive.Texture
-    assert p.data == {
-      {{1,2}, {3,4}, {3, 10}, {2, 8}},
-      {{0,0}, {1,0}, {1,1}, {0,1}},
-      "test_sig"
-    }
-    assert p.id == :texture
-  end
 
-  test "texture adds to a graph" do
-    data = {
-      {{0,1}, {100, 2}, {99, 100}, {0, 99}},
-      {{0.1,0.1}, {1.0, 0.1}, {0.99, 0.99}, {0.1, 1.0}},
-      "test_sig"
-    }
-    p = Primitives.texture(@graph, data, id: :texture)
-    |> Graph.get(1)
-    assert p.module == Scenic.Primitive.Texture
-    assert p.data == data
-    assert p.id == :texture
-  end
+  # test "texture adds simple default rect target to a graph" do
+  #   p = Primitives.texture(@graph, {100, 200,"test_sig" }, id: :texture)
+  #   |> Graph.get(1)
+  #   assert p.module == Scenic.Primitive.Texture
+  #   assert p.data == {
+  #     {{0,0}, {100, 0}, {100, 200}, {0, 200}},
+  #     {{0,0}, {1,0}, {1,1}, {0,1}},
+  #     "test_sig"
+  #   }
+  #   assert p.id == :texture
+  # end
+
+  # test "texture adds positioned default rect target to a graph" do
+  #   p = Primitives.texture(@graph, {{10,20}, 100, 200,"test_sig" }, id: :texture)
+  #   |> Graph.get(1)
+  #   assert p.module == Scenic.Primitive.Texture
+  #   assert p.data == {
+  #     {{10,20}, {110, 20}, {110, 220}, {10, 220}},
+  #     {{0,0}, {1,0}, {1,1}, {0,1}},
+  #     "test_sig"
+  #   }
+  #   assert p.id == :texture
+  # end
+
+  # test "texture adds quad target to a graph" do
+  #   p = Primitives.texture(@graph, {
+  #     {{1,2}, {3,4}, {3, 10}, {2, 8}
+  #   },"test_sig" }, id: :texture)
+  #   |> Graph.get(1)
+  #   assert p.module == Scenic.Primitive.Texture
+  #   assert p.data == {
+  #     {{1,2}, {3,4}, {3, 10}, {2, 8}},
+  #     {{0,0}, {1,0}, {1,1}, {0,1}},
+  #     "test_sig"
+  #   }
+  #   assert p.id == :texture
+  # end
+
+  # test "texture adds to a graph" do
+  #   data = {
+  #     {{0,1}, {100, 2}, {99, 100}, {0, 99}},
+  #     {{0.1,0.1}, {1.0, 0.1}, {0.99, 0.99}, {0.1, 1.0}},
+  #     "test_sig"
+  #   }
+  #   p = Primitives.texture(@graph, data, id: :texture)
+  #   |> Graph.get(1)
+  #   assert p.module == Scenic.Primitive.Texture
+  #   assert p.data == data
+  #   assert p.id == :texture
+  # end
 
   #============================================================================
   test "scene_ref adds graph key reference to a graph" do

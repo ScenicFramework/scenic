@@ -272,6 +272,8 @@ defmodule Scenic.Primitives do
 
   #--------------------------------------------------------
   def circle( graph, data, opts \\ [] )
+  def circle( graph, radius, opts ) when is_number(radius), do:
+    circle( graph, {{0,0}, radius}, opts )
   def circle( graph, {{x,y}, radius}, opts ) when
   is_number(x) and is_number(y) and is_number(radius) do
     Primitive.Circle.add_to_graph(
@@ -283,6 +285,8 @@ defmodule Scenic.Primitives do
 
   #--------------------------------------------------------
   def ellipse( graph, data, opts \\ [] )
+  def ellipse( graph, {r1, r2}, opts ) when is_number(r1) and is_number(r2), do:
+    ellipse( graph, {{0,0}, r1, r2}, opts )
   def ellipse( graph, {{x,y}, r1, r2}, opts ) when
   is_number(x) and is_number(y) and is_number(r1) and is_number(r2) do
     Primitive.Ellipse.add_to_graph(
