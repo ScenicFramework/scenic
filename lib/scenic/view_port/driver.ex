@@ -96,7 +96,7 @@ defmodule Scenic.ViewPort.Driver do
 
   #--------------------------------------------------------
   def start_link({_, config} = args) do
-    case config.name do
+    case config[:name] do
       nil -> GenServer.start_link(__MODULE__, args)
       name -> GenServer.start_link(__MODULE__, args, name: name)
     end
