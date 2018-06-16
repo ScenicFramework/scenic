@@ -136,7 +136,7 @@ defmodule Scenic.GraphTest do
   #   assert rect_inverse != root_inverse
   # end
 
-  test "build barfs on attempted circular graphs" do
+  test "build rejects circular graphs" do
     assert_raise Graph.Error, fn ->
       Graph.build()
       |> Group.add_to_graph( [0] )
