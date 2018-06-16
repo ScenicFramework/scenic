@@ -137,7 +137,7 @@ defmodule Scenic.ViewPort.Driver do
 
     # let the driver module initialize itself
     module = config.module
-     {:ok, driver_state} = module.init( viewport_pid, config.opts )
+     {:ok, driver_state} = module.init( viewport_pid, config[:opts] || %{} )
 
     state = %{
       viewport: viewport_pid,
