@@ -7,7 +7,7 @@ defmodule Scenic.GraphTest do
   use ExUnit.Case, async: true
   doctest Scenic
 
-  alias Scenic.Math.Matrix
+  # alias Scenic.Math.Matrix
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.Primitive.Group
@@ -52,7 +52,7 @@ defmodule Scenic.GraphTest do
     |> Line.add_to_graph( {{30,30}, {300, 300}}, id: :line, tags: ["second"] )
 
 
-  @identity     Matrix.identity()
+  # @identity     Matrix.identity()
 
   #============================================================================
   # access to the basics. These concentrate knowledge of the internal format
