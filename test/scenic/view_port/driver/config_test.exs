@@ -64,7 +64,7 @@ defmodule Scenic.ViewPort.Driver.ConfigTest do
   end
 
   test "valid! fails a nil module" do
-    assert_raise FunctionClauseError, fn ->
+    assert_raise RuntimeError, fn ->
       Config.valid!( %Config{module: nil} )
     end
   end
