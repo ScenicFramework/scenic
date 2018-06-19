@@ -9,22 +9,17 @@ defmodule Scenic.Primitive.Transform.ScaleTest do
 
   alias Scenic.Primitive.Transform.Scale
 
-  @data_1   1.0
-  @data_3   { 1.0, 2.0, 3.0 }
-
-
   #============================================================================
   # verify
 
   test "verify passes valid data" do
-    assert Scale.verify( @data_1 ) == true
-    assert Scale.verify( @data_3 ) == true
+    assert Scale.verify( 1.0 ) == true
+    assert Scale.verify( {1.0, 2.0} ) == true
   end
 
   test "verify fails invalid data" do
-    assert Scale.verify( {1.1, 1.2} )            == false
-    assert Scale.verify( {1.1, 1.2, 1.3, 1.4} )  == false
-    assert Scale.verify( {1.1, 1.2, :banana} )   == false
+    assert Scale.verify( {1.1, 1.2, 1.3} )  == false
+    assert Scale.verify( {1.1, :banana} )   == false
     assert Scale.verify( :banana )               == false
   end
 

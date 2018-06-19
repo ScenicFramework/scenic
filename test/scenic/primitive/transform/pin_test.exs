@@ -9,16 +9,11 @@ defmodule Scenic.Primitive.Transform.PinTest do
 
   alias Scenic.Primitive.Transform.Pin
 
-  @data_2         { 1, 2 }
-  @data_3         { 1, 2, 3 }
-
-
   #============================================================================
   # verify
 
   test "verify passes valid data" do
-    assert Pin.verify( @data_2 ) == true
-    assert Pin.verify( @data_3 ) == true
+    assert Pin.verify( { 1, 2 } ) == true
   end
 
   test "verify fails invalid data" do
