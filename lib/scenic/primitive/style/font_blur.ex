@@ -27,7 +27,7 @@ defmodule Scenic.Primitive.Style.FontBlur do
   end
 
   #--------------------------------------------------------
-  def normalize( blur ) when is_number(blur) do
+  def normalize( blur ) when is_number(blur) and blur >= 0 do
     blur
   end
 end
