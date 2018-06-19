@@ -71,7 +71,6 @@ defmodule Scenic.ViewPort.Config do
   end
 
   def valid!( %{} = config ) do
-    pry()
     valid!( struct(Config, config) )
   end
 
