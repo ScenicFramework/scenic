@@ -10,6 +10,8 @@ defmodule Scenic.ViewPort.Driver.Config do
   # describe the struct. Name nil and opts as an empty list are good defaults
   defstruct module: nil, name: nil, opts: []
 
+  import IEx
+
   def valid?( %Config{module: mod, name: name} ) do
     is_atom(mod) && !is_nil(mod) && is_atom(name)
   end
@@ -20,6 +22,11 @@ defmodule Scenic.ViewPort.Driver.Config do
   do
     :ok
   end
-  def valid!( %{} = config ), do: valid?( struct(Config, config) ) 
+
+  def valid!( %Config{module: _ } ) do
+    raise "Driver.Config must reference a valid module"
+  end
+
+  def valid!( %{} = config ), do: valid!( struct(Config, config) ) 
 
 end

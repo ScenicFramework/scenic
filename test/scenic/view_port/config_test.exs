@@ -88,13 +88,13 @@ defmodule Scenic.ViewPort.ConfigTest do
   end
 
   test "valid! fails a nil default scene" do
-    assert_raise FunctionClauseError, fn ->
+    assert_raise RuntimeError, fn ->
       Config.valid!( %Config{default_scene: nil} )
     end
   end
 
   test "valid! fails an invalid name" do
-    assert_raise FunctionClauseError, fn ->
+    assert_raise RuntimeError, fn ->
       Config.valid!( %Config{
         default_scene: :some_scene,
         name: "invalid name"
@@ -103,7 +103,7 @@ defmodule Scenic.ViewPort.ConfigTest do
   end
 
   test "valid! fails an invalid driver" do
-    assert_raise FunctionClauseError, fn ->
+    assert_raise RuntimeError, fn ->
       Config.valid!( %Config{
         default_scene: :some_scene,
         drivers: [%Driver.Config{module: "invalid driver name"}]

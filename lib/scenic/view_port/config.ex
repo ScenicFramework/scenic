@@ -8,6 +8,7 @@ defmodule Scenic.ViewPort.Config do
   alias Scenic.ViewPort.Driver
   alias Scenic.ViewPort.Config
 
+  import IEx
 
   @max_depth            256
 
@@ -37,6 +38,8 @@ defmodule Scenic.ViewPort.Config do
       Driver.Config.valid?(driver_config) && ok
     end)
   end
+
+
   def valid?( %{} = config ), do: valid?( struct(Config, config) )
 
 
@@ -54,6 +57,22 @@ defmodule Scenic.ViewPort.Config do
     Enum.each(drivers, &Driver.Config.valid!(&1) )
     :ok
   end
-  def valid!( %{} = config ), do: valid?( struct(Config, config) )
+    
+  def valid!( %Config{default_scene: nil} ) do
+    raise "Viewport Config requires a default_scene"
+  end
+
+  def valid!( %Config{name: name} ) when not is_atom(name) do
+    raise "Viewport Config name must be an atom"
+  end
+  
+  def valid!( %Config{default_scene: nil} ) do
+    raise "Viewport Config requires a default_scene"
+  end
+
+  def valid!( %{} = config ) do
+    pry()
+    valid!( struct(Config, config) )
+  end
 
 end
