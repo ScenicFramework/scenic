@@ -42,7 +42,7 @@ defmodule Scenic.Primitive.TriangleTest do
   # styles
 
   test "valid_styles works" do
-    assert Triangle.valid_styles() == [:hidden, :color, :border_color, :border_width]
+    assert Triangle.valid_styles() == [:hidden, :fill, :stroke]
   end
 
   #============================================================================

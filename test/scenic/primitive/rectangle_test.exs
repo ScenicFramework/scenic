@@ -45,7 +45,7 @@ defmodule Scenic.Primitive.RectangleTest do
   # styles
 
   test "valid_styles works" do
-    assert Rectangle.valid_styles() == [:hidden, :color, :border_color, :border_width]
+    assert Rectangle.valid_styles() == [:hidden, :fill, :stroke]
   end
 
   #============================================================================
