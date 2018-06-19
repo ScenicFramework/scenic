@@ -23,7 +23,7 @@ defmodule Scenic.Graph do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.Primitive.Group
-  alias Scenic.Math.Matrix
+  # alias Scenic.Math.Matrix
 
 #  import IEx
 

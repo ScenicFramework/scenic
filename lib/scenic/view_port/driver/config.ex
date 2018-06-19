@@ -10,7 +10,7 @@ defmodule Scenic.ViewPort.Driver.Config do
   # describe the struct. Name nil and opts as an empty list are good defaults
   defstruct module: nil, name: nil, opts: []
 
-  import IEx
+  # import IEx
 
   def valid?( %Config{module: mod, name: name} ) do
     is_atom(mod) && !is_nil(mod) && is_atom(name)

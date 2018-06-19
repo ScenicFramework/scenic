@@ -8,7 +8,7 @@ defmodule Scenic.ViewPort.Config do
   alias Scenic.ViewPort.Driver
   alias Scenic.ViewPort.Config
 
-  import IEx
+  # import IEx
 
   @max_depth            256
 
