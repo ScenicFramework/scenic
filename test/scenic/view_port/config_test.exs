@@ -60,6 +60,10 @@ defmodule Scenic.ViewPort.ConfigTest do
     } )
   end
 
+  test "valid? accepts a plane-jane map as would be define in config" do
+    assert Config.valid?( %{default_scene: :some_scene} )
+  end
+
   # #============================================================================
   # # valid!
 
@@ -109,6 +113,10 @@ defmodule Scenic.ViewPort.ConfigTest do
         drivers: [%Driver.Config{module: "invalid driver name"}]
       } )
     end
+  end
+
+  test "valid! accepts a plane-jane map as would be define in config" do
+    assert Config.valid!( %{default_scene: :some_scene} )
   end
 
 end

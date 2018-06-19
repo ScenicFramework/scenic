@@ -41,6 +41,10 @@ defmodule Scenic.ViewPort.Driver.ConfigTest do
     refute Config.valid?( %Config{module: :some_module, name: "invalid name"} )
   end
 
+  test "valid? accepts a plane-jane map as would be define in config" do
+    assert Config.valid?( %{module: :some_module} )
+  end
+
   #============================================================================
   # valid!
 
@@ -67,6 +71,10 @@ defmodule Scenic.ViewPort.Driver.ConfigTest do
     assert_raise RuntimeError, fn ->
       Config.valid!( %Config{module: nil} )
     end
+  end
+
+  test "valid! accepts a plane-jane map as would be define in config" do
+    assert Config.valid!( %{module: :some_module} )
   end
 
 end
