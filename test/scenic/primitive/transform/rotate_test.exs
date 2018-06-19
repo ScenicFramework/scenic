@@ -9,9 +9,6 @@ defmodule Scenic.Primitive.Transform.RotateTest do
 
   alias Scenic.Primitive.Transform.Rotate
 
-  @data_1   1.0
-
-
   #============================================================================
   # verify
 
