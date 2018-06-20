@@ -111,11 +111,10 @@ defmodule Scenic.ViewPort do
   query the last recorded viewport status
   """
 
-  def status( viewport )
-  def status( viewport ) when is_atom(viewport) or is_pid(viewport) do
+  def query_status( viewport )
+  def query_status( viewport ) when is_atom(viewport) or is_pid(viewport) do
     GenServer.call(viewport, :query_status)
   end
-
 
 
   #--------------------------------------------------------
@@ -271,16 +270,16 @@ defmodule Scenic.ViewPort do
   #--------------------------------------------------------
   # query the status of the viewport
   def handle_call( :query_status, _, %{
-      width: width,
-      height: height,
-      max_depth: max_depth,
-      drivers: drivers
+      driver_registry: driver_registry,
+      root_config: root_config,
+      root_scene_pid: root_scene_pid,
+      root_graph_key: root_graph_key
   } = state ) do
     status = %{
-      width: width,
-      height: height,
-      max_depth: max_depth,
-      drivers: drivers
+      root_pid: root_scene_pid,
+      root_config: root_config,
+      root_graph: root_graph_key,
+      drivers: driver_registry
     }
     { :reply, {:ok, status}, state }
   end
@@ -305,18 +304,17 @@ defmodule Scenic.ViewPort do
       root_graph_key: nil,
       root_scene_pid: nil,
       dynamic_root_pid: nil,
+      root_config: nil,
 
       input_captures: %{},
       hover_primitve: nil,
 
       drivers: [],
+      driver_registry: %{},
       supervisor: vp_supervisor,
       dynamic_supervisor: dyn_sup_pid,
 
-      max_depth: config.max_depth,
-
-      width: -1,
-      height: -1
+      max_depth: config.max_depth
     }
 
     # set the initial scene as the root
@@ -394,6 +392,7 @@ defmodule Scenic.ViewPort do
     |> Map.put( :root_graph_key, graph_key )
     |> Map.put( :root_scene_pid, scene_pid )
     |> Map.put( :dynamic_root_pid, dynamic_scene )
+    |> Map.put( :root_config, {scene, args} )
 
     { :noreply, state }
   end
@@ -441,22 +440,26 @@ defmodule Scenic.ViewPort do
     GenServer.cast( driver_pid, {:set_root, root_key} )
     {:noreply, %{state | drivers: drivers}}
   end
-
-  #--------------------------------------------------------
-  def handle_cast( {:driver_dimentions, width, height}, state ) do
-    {:noreply, %{state | width: width, height: height}}
-  end
   
   #--------------------------------------------------------
-  def handle_cast( {:driver_stopped, driver_pid}, %{drivers: drivers} = state ) do
+  def handle_cast( {:driver_stopped, driver_pid}, %{
+    drivers: drivers,
+    driver_registry: registry
+  } = state ) do
     drivers = Enum.reject(drivers, fn(d)-> d == driver_pid end)
-    {:noreply, %{state | drivers: drivers}}
+    registry = Map.delete(registry, driver_pid)
+    {:noreply, %{state | drivers: drivers, driver_registry: registry}}
   end
   
   #--------------------------------------------------------
   def handle_cast( {:request_root, to_pid}, %{root_graph_key: root_key} = state ) do
     GenServer.cast( to_pid, {:set_root, root_key} )
     {:noreply, state}
+  end
+
+  #--------------------------------------------------------
+  def handle_cast( {:driver_register, %ViewPort.Driver.Info{pid: pid} = driver}, state) do
+    {:noreply, put_in(state, [:driver_registry, pid], driver)}
   end
 
 
