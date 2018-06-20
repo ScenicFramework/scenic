@@ -108,6 +108,18 @@ defmodule Scenic.ViewPort do
 
   #--------------------------------------------------------
   @doc """
+  query the last recorded viewport status
+  """
+
+  def status( viewport )
+  def status( viewport ) when is_atom(viewport) or is_pid(viewport) do
+    GenServer.call(viewport, :query_status)
+  end
+
+
+
+  #--------------------------------------------------------
+  @doc """
   Stop a running viewport
   """
 
@@ -256,6 +268,24 @@ defmodule Scenic.ViewPort do
   end
 
 
+  #--------------------------------------------------------
+  # query the status of the viewport
+  def handle_call( :query_status, _, %{
+      width: width,
+      height: height,
+      max_depth: max_depth,
+      drivers: drivers
+  } = state ) do
+    status = %{
+      width: width,
+      height: height,
+      max_depth: max_depth,
+      drivers: drivers
+    }
+    { :reply, {:ok, status}, state }
+  end
+
+
   #============================================================================
   # handle_cast
 
@@ -283,7 +313,10 @@ defmodule Scenic.ViewPort do
       supervisor: vp_supervisor,
       dynamic_supervisor: dyn_sup_pid,
 
-      max_depth: config.max_depth
+      max_depth: config.max_depth,
+
+      width: -1,
+      height: -1
     }
 
     # set the initial scene as the root
@@ -408,6 +441,11 @@ defmodule Scenic.ViewPort do
     GenServer.cast( driver_pid, {:set_root, root_key} )
     {:noreply, %{state | drivers: drivers}}
   end
+
+  #--------------------------------------------------------
+  def handle_cast( {:driver_dimentions, width, height}, state ) do
+    {:noreply, %{state | width: width, height: height}}
+  end
   
   #--------------------------------------------------------
   def handle_cast( {:driver_stopped, driver_pid}, %{drivers: drivers} = state ) do
@@ -420,6 +458,7 @@ defmodule Scenic.ViewPort do
     GenServer.cast( to_pid, {:set_root, root_key} )
     {:noreply, state}
   end
+
 
   #==================================================================
   # management casts from scenes
