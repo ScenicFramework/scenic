@@ -198,7 +198,7 @@ defmodule Scenic.ViewPort.Driver do
   #--------------------------------------------------------
   # unrecognized message. Let the driver handle it
   def handle_info(msg, %{driver_module: mod, driver_state: d_state} = state) do
-IO.puts "Scenic unhandled river info. mod: #{inspect(mod)}, msg: #{inspect(msg)}"
+IO.puts "Scenic unhandled driver info. mod: #{inspect(mod)}, msg: #{inspect(msg)}"
     { :noreply, d_state } = mod.handle_info( msg, d_state )
     { :noreply, Map.put(state, :driver_state, d_state) }
   end
