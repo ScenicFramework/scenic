@@ -88,6 +88,7 @@ defmodule Scenic.Primitive do
       # this is the case for groups, lines, and polygons
       def expand( data ), do: data
 
+
       # the default is false for contains_point?. Primitive types
       # are effectively un-clickable unless this is overridden.
       # point must already be transformed into local coordinates
@@ -565,6 +566,10 @@ defmodule Scenic.Primitive do
     Utilities.Map.difference(p_o, p_m)
   end
 
+
+  def contains_point?( %Primitive{module: mod, data: data}, pt) do
+    mod.contains_point?(data, pt)
+  end
 end
 
 

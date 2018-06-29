@@ -48,4 +48,9 @@ defmodule Scenic.Primitive.Arc do
     {x,y}
   end
 
+  #--------------------------------------------------------
+  def expand( {{x, y},r,s,f,h,k}, amount ) do
+    {{x, y},r + amount,s,f,h,k}
+  end
+
 end

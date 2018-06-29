@@ -53,4 +53,26 @@ defmodule Scenic.Primitive.Sector do
     {x,y}
   end
 
+  #--------------------------------------------------------
+  def contains_point?( {{x, y}, radius, start, finish, h, k}, {xp,yp} ) do
+    # using polar coordinates...
+    point_angle = :math.atan2( (yp-y), (xp-x) )
+    point_radius_sqr = (xp - x) * (xp - x) + (yp - y) * (yp - y)
+
+    # calculate the sector radius for that angle. Not just a simple
+    # radius check as h and k get muliplied in to make it a sector
+    # of an ellipse. Gotta check that too
+    sx = h * radius * :math.cos(point_angle);
+    sy = k * radius * :math.sin(point_angle);
+    sector_radius_sqr = sx * sx + sy * sy
+
+    if point_angle > start &&
+    point_angle < finish &&
+    point_radius_sqr < sector_radius_sqr do
+      true
+    else
+      false
+    end
+  end
+
 end
