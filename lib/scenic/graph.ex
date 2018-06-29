@@ -343,7 +343,7 @@ defmodule Scenic.Graph do
 
   #--------------------------------------------------------
   # get a single element by id. Raise error if it finds any count other than one
-  def get_id_one(graph, id) do
+  def get_id!(graph, id) do
     case resolve_id(graph, id) do
       [uid] ->  get( graph, uid )
       _ ->      raise Error, message: @err_msg_get_id_one
