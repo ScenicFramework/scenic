@@ -29,7 +29,7 @@ defmodule Scenic.ViewPort.Input do
     # to create a new Context, or fill in the matrices with a runtime call
     # to Matrix.identity yourself.
 
-    defstruct viewport: nil, graph_key: nil, tx: nil, inverse_tx: nil, uid: nil
+    defstruct viewport: nil, graph_key: nil, tx: nil, inverse_tx: nil, uid: nil, id: nil
 
     def build( %{} = params ) do
       Map.merge(
