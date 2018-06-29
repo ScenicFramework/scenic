@@ -538,7 +538,7 @@ defmodule Scenic.ViewPort.Input do
 
 
       # This is a regular primitive, test to see if it is hit
-      %{data: {mod, data}, id: id} = p ->
+      %{data: {mod, data}} = p ->
         {_, inv_tx} = calc_transforms(p, parent_tx, parent_inv_tx)
 
         # project the point by that inverse matrix to get the local point
@@ -547,6 +547,7 @@ defmodule Scenic.ViewPort.Input do
         # test if the point is in the primitive
         case mod.contains_point?( data, local_point ) do
           true  ->
+            id = p[:id]
             # Return the point in graph coordinates. Local was good for the hit test
             # but graph coords makes more sense for the graph_key logic
             graph_point = Matrix.project_vector( graph_inv_tx, {x, y} )
