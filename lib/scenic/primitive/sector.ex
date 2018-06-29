@@ -9,6 +9,7 @@ defmodule Scenic.Primitive.Sector do
 # alias Scenic.Primitive
 #  alias Scenic.Primitive.Style
 
+import IEx
 
   @styles   [:hidden, :fill, :stroke]
 
@@ -55,9 +56,11 @@ defmodule Scenic.Primitive.Sector do
 
   #--------------------------------------------------------
   def contains_point?( {{x, y}, radius, start, finish, h, k}, {xp,yp} ) do
+    xp = xp - x
+    yp = yp - y
     # using polar coordinates...
-    point_angle = :math.atan2( (yp-y), (xp-x) )
-    point_radius_sqr = (xp - x) * (xp - x) + (yp - y) * (yp - y)
+    point_angle = :math.atan2( yp, xp )
+    point_radius_sqr = xp * xp + yp * yp
 
     # calculate the sector radius for that angle. Not just a simple
     # radius check as h and k get muliplied in to make it a sector
@@ -65,7 +68,7 @@ defmodule Scenic.Primitive.Sector do
     sx = h * radius * :math.cos(point_angle);
     sy = k * radius * :math.sin(point_angle);
     sector_radius_sqr = sx * sx + sy * sy
-
+pry()
     if point_angle > start &&
     point_angle < finish &&
     point_radius_sqr < sector_radius_sqr do
