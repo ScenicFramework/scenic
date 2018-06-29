@@ -9,7 +9,7 @@ defmodule Scenic.Primitive.Sector do
 # alias Scenic.Primitive
 #  alias Scenic.Primitive.Style
 
-import IEx
+# import IEx
 
   @styles   [:hidden, :fill, :stroke]
 
@@ -68,7 +68,7 @@ import IEx
     sx = h * radius * :math.cos(point_angle);
     sy = k * radius * :math.sin(point_angle);
     sector_radius_sqr = sx * sx + sy * sy
-pry()
+
     if point_angle > start &&
     point_angle < finish &&
     point_radius_sqr < sector_radius_sqr do
