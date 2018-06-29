@@ -235,18 +235,14 @@ defmodule Scenic.Primitives do
   #--------------------------------------------------------
   def arc( graph, data, opts \\ [] )
   def arc( graph, {radius, start, finish}, opts ), do:
-    arc( graph, {{0,0}, radius, start, finish, 1.0, 1.0}, opts )
-  def arc( graph, {radius, start, finish, h, k}, opts ), do:
-    arc( graph, {{0,0}, radius, start, finish, h, k}, opts )
-  def arc( graph, {{x,y}, radius, start, finish}, opts ), do:
-    arc( graph, {{x,y}, radius, start, finish, 1.0, 1.0}, opts )
-  def arc( graph, {{x,y}, radius, start, finish, h, k }, opts ) when
+    arc( graph, {{0,0}, radius, start, finish}, opts )
+  def arc( graph, {{x,y}, radius, start, finish }, opts ) when
   is_number(x) and is_number(y) and
-  is_number(start) and is_number(finish) and is_number(radius) and
-  is_number(h) and is_number(k) do
+  is_number(start) and is_number(finish) and
+  is_number(radius) do
     Primitive.Arc.add_to_graph(
       graph,
-      { {x,y}, radius, start, finish, h, k },
+      { {x,y}, radius, start, finish },
       opts
     )
   end
@@ -254,18 +250,14 @@ defmodule Scenic.Primitives do
   #--------------------------------------------------------
   def sector( graph, data, opts \\ [] )
   def sector( graph, {radius, start, finish}, opts ), do:
-    sector( graph, {{0,0}, radius, start, finish, 1.0, 1.0}, opts )
-  def sector( graph, {radius, start, finish, h, k}, opts ), do:
-    sector( graph, {{0,0}, radius, start, finish, h, k}, opts )
-  def sector( graph, {{x,y}, radius, start, finish}, opts ), do:
-    sector( graph, {{x,y}, radius, start, finish, 1.0, 1.0}, opts )
-  def sector( graph, {{x,y}, radius, start, finish, h, k }, opts ) when
+    sector( graph, {{0,0}, radius, start, finish}, opts )
+  def sector( graph, {{x,y}, radius, start, finish }, opts ) when
   is_number(x) and is_number(y) and
-  is_number(start) and is_number(finish) and is_number(radius) and
-  is_number(h) and is_number(k) do
+  is_number(start) and is_number(finish) and
+  is_number(radius) do
     Primitive.Sector.add_to_graph(
       graph,
-      { {x,y}, radius, start, finish, h, k },
+      { {x,y}, radius, start, finish },
       opts
     )
   end

@@ -5,6 +5,8 @@
 
 defmodule Scenic.Primitive.Arc do
   use Scenic.Primitive
+  alias Scenic.Primitive.Sector
+  alias Scenic.Primitive.Triangle
 
 # alias Scenic.Primitive
 #  alias Scenic.Primitive.Style
@@ -17,9 +19,8 @@ defmodule Scenic.Primitive.Arc do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Arc should look like this: {{0,y}, radius, start, finish, h, k}\r\n" <>
-  "Circle arc looks like this: {{x0,y0}, width, height, 1.0, 1.0}\r\n" <>
-  "Ellipse arc looks like this: {{x0,y0}, width, height, 2.0, 1.0}"
+  def info(), do: "Arc should look like this: {{0,y}, radius, start, finish}\r\n" <>
+  "Add a scale transform to make it an arc along an ellipse"
 
   #--------------------------------------------------------
   def verify( data ) do
@@ -33,10 +34,10 @@ defmodule Scenic.Primitive.Arc do
 
 
   #--------------------------------------------------------
-  def normalize( {{x, y}, radius, start, finish, h, k} = data )
-  when is_number(x) and is_number(y) and
-  is_number(start) and is_number(finish) and is_number(radius) and
-  is_number(h) and is_number(k), do: data
+  def normalize( {{x, y}, radius, start, finish} = data ) when
+  is_number(x) and is_number(y) and
+  is_number(start) and is_number(finish) and
+  is_number(radius), do: data
 
 
   #============================================================================
@@ -44,13 +45,34 @@ defmodule Scenic.Primitive.Arc do
 
   #--------------------------------------------------------
   def default_pin( data ) do
-    {{x, y},_,_,_,_,_} = normalize(data)
+    {{x, y},_,_,_} = normalize(data)
     {x,y}
   end
 
   #--------------------------------------------------------
-  def expand( {{x, y},r,s,f,h,k}, amount ) do
-    {{x, y},r + amount,s,f,h,k}
+  def expand( {{x, y},r,s,f}, amount ) do
+    {{x, y},r + amount,s,f}
   end
+
+  #--------------------------------------------------------
+  def contains_point?( {{x, y} = p0, radius, start, finish} = data, pt ) do
+    # first, see if it is in the sector described by the arc data
+    if Sector.contains_point?(data, pt) do
+      # See if it is NOT in the triangle part of sector.
+      # If it isn't in the triangle, then it must be in the arc part.
+      p1 = {
+        x + radius * :math.cos(start),
+        y + radius * :math.sin(start)
+      }
+      p2 = {
+        x + radius * :math.cos(finish),
+        y + radius * :math.sin(finish)
+      }
+      !Triangle.contains_point?( {p0,p1,p2}, pt )
+    else
+      false
+    end
+  end
+
 
 end
