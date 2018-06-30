@@ -25,10 +25,11 @@ defmodule Scenic.Primitive.Quad do
   is_number(x1) and is_number(y1) and
   is_number(x2) and is_number(y2) and
   is_number(x3) and is_number(y3) do
-    case Math.Quad.classification(data) == :convex do
-      true -> {:ok, data}
-      false -> :invalid_data
-    end
+    # case Math.Quad.classification(data) == :convex do
+    #   true -> {:ok, data}
+    #   false -> :invalid_data
+    # end
+    {:ok, data}
   end
   def verify( _ ), do: :invalid_data
 
