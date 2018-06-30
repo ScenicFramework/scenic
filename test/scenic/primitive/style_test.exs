@@ -10,7 +10,7 @@ defmodule Scenic.Primitive.StyleTest do
   alias Scenic.Primitive.Style
 
   @styles %{
-      color:  :red,
+      fill:  :red,
       fruit:  :bananas,
       hidden: false
     }
