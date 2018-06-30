@@ -149,13 +149,21 @@ defmodule Scenic.Primitives do
   def circle( gp, radius, opts ) when is_number(radius), do:
     circle( gp, {{0,0}, radius}, opts )
 
-  def circle( graph, {{x,y}, radius}, opts ) when
+  def circle( %Graph{} = graph, {{x,y}, radius}, opts ) when
   is_number(x) and is_number(y) and is_number(radius) do
     Primitive.Circle.add_to_graph(
       graph,
       {{x,y}, radius},
       opts
     )
+  end
+
+  def circle(
+    %Primitive{module: Primitive.Circle} = p,
+    {{x,y}, radius}, opts
+  ) when is_number(x) and is_number(y) and is_number(radius) do
+    Primitive.put( p, {{x,y}, radius} )
+    |> Primitive.update_opts( opts )
   end
 
 
@@ -165,7 +173,7 @@ defmodule Scenic.Primitives do
   def ellipse( gp, {r1, r2}, opts ) when is_number(r1) and is_number(r2), do:
     ellipse( gp, {{0,0}, r1, r2}, opts )
 
-  def ellipse( graph, {{x,y}, r1, r2}, opts ) when
+  def ellipse( %Graph{} = graph, {{x,y}, r1, r2}, opts ) when
   is_number(x) and is_number(y) and is_number(r1) and is_number(r2) do
     Primitive.Ellipse.add_to_graph(
       graph,
@@ -173,6 +181,14 @@ defmodule Scenic.Primitives do
       opts
     )
   end
+
+  # def circle(
+  #   %Primitive{module: Primitive.Circle} = p,
+  #   {{x,y}, radius}, opts
+  # ) when is_number(x) and is_number(y) and is_number(radius) do
+  #   Primitive.put( p, {{x,y}, radius} )
+  #   |> Primitive.update_opts( opts )
+  # end
 
 
   #--------------------------------------------------------
@@ -216,8 +232,8 @@ defmodule Scenic.Primitives do
 
   See the style documentation for more detail.
   """
-  def line( graph, data, opts \\ [] )
-  def line( graph, {{x0,y0}, {x1,y1}}, opts ) when
+  def line( graph_or_primitive, data, opts \\ [] )
+  def line( %Graph{} = graph, {{x0,y0}, {x1,y1}}, opts ) when
   is_number(x0) and is_number(y0) and
   is_number(x1) and is_number(y1) do
     Primitive.Line.add_to_graph(
@@ -229,15 +245,15 @@ defmodule Scenic.Primitives do
 
 
   #--------------------------------------------------------
-  def path( graph, data, opts \\ [] )
-  def path( graph, actions, opts ) when is_list(actions) do
+  def path( graph_or_primitive, data, opts \\ [] )
+  def path( %Graph{} = graph, actions, opts ) when is_list(actions) do
     Primitive.Path.add_to_graph( graph, actions, opts )
   end
 
 
   #--------------------------------------------------------
-  def quad( graph, data, opts \\ [] )
-  def quad( graph, {{x0,y0}, {x1,y1}, {x2,y2}, {x3,y3}}, opts ) when
+  def quad( graph_or_primitive, data, opts \\ [] )
+  def quad( %Graph{} = graph, {{x0,y0}, {x1,y1}, {x2,y2}, {x3,y3}}, opts ) when
   is_number(x0) and is_number(y0) and
   is_number(x1) and is_number(y1) and
   is_number(x2) and is_number(y2) and
@@ -251,12 +267,15 @@ defmodule Scenic.Primitives do
 
 
   #--------------------------------------------------------
-  def rect( graph, data, opts \\ [] ), do: rectangle( graph, data, opts )
-  def rectangle( graph, data, opts \\ [] )
-  def rectangle( graph, {width, height}, opts ) do
-    rectangle( graph, {{0,0}, width, height}, opts )
+  def rect( graph_or_primitive, data, opts \\ [] ) do
+    rectangle( graph_or_primitive, data, opts )
   end
-  def rectangle( graph, {{x,y}, width, height}, opts ) when
+
+  def rectangle( graph_or_primitive, data, opts \\ [] )
+  def rectangle( gp, {width, height}, opts ) do
+    rectangle( gp, {{0,0}, width, height}, opts )
+  end
+  def rectangle( %Graph{} = graph, {{x,y}, width, height}, opts ) when
   is_number(width) and is_number(height) and
   is_number(x) and is_number(y) do
     Primitive.Rectangle.add_to_graph( graph, {{x,y}, width, height}, opts )
@@ -264,12 +283,15 @@ defmodule Scenic.Primitives do
 
 
   #--------------------------------------------------------
-  def rrect( graph, data, opts \\ [] ), do: rounded_rectangle( graph, data, opts )
-  def rounded_rectangle( graph, data, opts \\ [] )
-  def rounded_rectangle( graph, {width, height, radius}, opts ) do
-    rounded_rectangle( graph, {{0,0}, width, height, radius}, opts )
+  def rrect( graph_or_primitive, data, opts \\ [] ) do
+    rounded_rectangle( graph_or_primitive, data, opts )
   end
-  def rounded_rectangle( graph, {{x,y},width, height, radius}, opts )
+  
+  def rounded_rectangle( graph_or_primitive, data, opts \\ [] )
+  def rounded_rectangle( gp, {width, height, radius}, opts ) do
+    rounded_rectangle( gp, {{0,0}, width, height, radius}, opts )
+  end
+  def rounded_rectangle( %Graph{} = graph, {{x,y},width, height, radius}, opts )
   when is_number(width) and is_number(height) and
   is_number(radius) and radius > 0 and
   is_number(x) and is_number(y) do
@@ -278,35 +300,35 @@ defmodule Scenic.Primitives do
 
 
   #--------------------------------------------------------
-  def scene_ref( graph, data, opts \\ [] )
+  def scene_ref( graph_or_primitive, data, opts \\ [] )
 
-  def scene_ref( graph, {:graph,_,_} = key, opts ) do
+  def scene_ref( %Graph{} = graph, {:graph,_,_} = key, opts ) do
     Primitive.SceneRef.add_to_graph( graph, key, opts )
   end
 
-  def scene_ref( graph, name_pid, opts ) when
+  def scene_ref( %Graph{} = graph, name_pid, opts ) when
   is_atom(name_pid) or is_pid(name_pid) do
     Primitive.SceneRef.add_to_graph( graph, {name_pid, nil}, opts )
   end
 
-  def scene_ref( graph, {name,_} = data, opts ) when is_atom(name) do
+  def scene_ref( %Graph{} = graph, {name,_} = data, opts ) when is_atom(name) do
     Primitive.SceneRef.add_to_graph( graph, data, opts )
   end
 
-  def scene_ref( graph, {pid,_} = data, opts ) when is_pid(pid) do
+  def scene_ref( %Graph{} = graph, {pid,_} = data, opts ) when is_pid(pid) do
     Primitive.SceneRef.add_to_graph( graph, data, opts )
   end
 
-  def scene_ref( graph, {{module,_},_} = data, opts ) when is_atom(module) do
+  def scene_ref( %Graph{} = graph, {{module,_},_} = data, opts ) when is_atom(module) do
     Primitive.SceneRef.add_to_graph( graph, data, opts )
   end
 
 
   #--------------------------------------------------------
-  def sector( graph, data, opts \\ [] )
-  def sector( graph, {radius, start, finish}, opts ), do:
-    sector( graph, {{0,0}, radius, start, finish}, opts )
-  def sector( graph, {{x,y}, radius, start, finish }, opts ) when
+  def sector( graph_or_primitive, data, opts \\ [] )
+  def sector( gp, {radius, start, finish}, opts ), do:
+    sector( gp, {{0,0}, radius, start, finish}, opts )
+  def sector( %Graph{} = graph, {{x,y}, radius, start, finish }, opts ) when
   is_number(x) and is_number(y) and
   is_number(start) and is_number(finish) and
   is_number(radius) do
@@ -319,17 +341,22 @@ defmodule Scenic.Primitives do
 
 
   #--------------------------------------------------------
-  def text( graph, data, opts \\ [] )
-  def text( graph, {{x,y}, text}, opts ) when is_bitstring(text) and
+  def text( graph_or_primitive, data, opts \\ [] )
+
+  def text( gp, text, opts ) when is_bitstring(text) do
+    text( gp, {{0,0}, text}, opts )
+  end
+
+  def text( %Graph{} = graph, {{x,y}, text}, opts ) when is_bitstring(text) and
   is_number(x) and is_number(y) do
     Primitive.Text.add_to_graph( graph, {{x,y}, text}, opts )
   end
-  def text( graph, text, opts ), do: text( graph, {{0,0}, text}, opts )
 
 
   #--------------------------------------------------------
-  def triangle( graph, data, opts \\ [] )
-  def triangle( graph, {{x0,y0}, {x1,y1}, {x2,y2}}, opts ) when
+  def triangle( graph_or_primitive, data, opts \\ [] )
+
+  def triangle( %Graph{} = graph, {{x0,y0}, {x1,y1}, {x2,y2}}, opts ) when
   is_number(x0) and is_number(y0) and
   is_number(x1) and is_number(y1) and
   is_number(x2) and is_number(y2) do
