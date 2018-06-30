@@ -11,6 +11,8 @@ defmodule Scenic.AnimationTest do
   alias Scenic.Animation
   alias Scenic.Primitive
 
+  import IEx
+
   @graph Graph.build()
     |> Primitive.Text.add_to_graph({{10,10}, "hello"}, id: :text_id)
 
@@ -104,36 +106,36 @@ defmodule Scenic.AnimationTest do
   test "tick calls the animations, updates the graph and updates states whith continue" do
     {animations, ref} = Animation.make(%{}, {:text_id, 1}, TestAnimation)
     {TestAnimation, {:text_id, 1}, time_0} = animations[ref]
-    assert Graph.get_id_one(@graph, :text_id).data == {{10,10}, "hello"}
+    assert Graph.get_id!(@graph, :text_id).data == {{10,10}, "hello"}
     refute time_0
 
     {animations, %Graph{} = graph} = Animation.tick(animations, @graph)
     {TestAnimation, {:text_id, 2}, time_1} = animations[ref]
-    assert Graph.get_id_one(graph, :text_id).data == {{10,10}, "2"}
+    assert Graph.get_id!(graph, :text_id).data == {{10,10}, "2"}
     assert time_1
 
-    # force at least one millisecond to go by so we can consistently tell
+    # force at least two milliseconds to go by so we can consistently tell
     # that time advanced in the next part of the test
-    Process.sleep(1)
+    Process.sleep(2)
 
     {animations, %Graph{} = graph} = Animation.tick(animations, graph)
     {TestAnimation, {:text_id, 3}, time_2} = animations[ref]
-    assert Graph.get_id_one(graph, :text_id).data == {{10,10}, "3"}
+    assert Graph.get_id!(graph, :text_id).data == {{10,10}, "3"}
     assert time_1 != time_2
   end
 
   test "tick calls the animations, updates the graph and allows the animations to stop" do
     {animations, ref} = Animation.make(%{}, {:text_id, 8}, TestAnimation)
     {TestAnimation, {:text_id, 8}, _} = animations[ref]
-    assert Graph.get_id_one(@graph, :text_id).data == {{10,10}, "hello"}
+    assert Graph.get_id!(@graph, :text_id).data == {{10,10}, "hello"}
 
     {animations, %Graph{} = graph} = Animation.tick(animations, @graph)
     {TestAnimation, {:text_id, 9}, _} = animations[ref]
-    assert Graph.get_id_one(graph, :text_id).data == {{10,10}, "9"}
+    assert Graph.get_id!(graph, :text_id).data == {{10,10}, "9"}
 
     {animations, %Graph{} = graph} = Animation.tick(animations, graph)
     refute animations[ref]
-    assert Graph.get_id_one(graph, :text_id).data == {{10,10}, "-1"}
+    assert Graph.get_id!(graph, :text_id).data == {{10,10}, "-1"}
   end
 
   #============================================================================
@@ -158,7 +160,7 @@ defmodule Scenic.AnimationTest do
     {animations, ref0} = Animation.make(%{}, {:text_id, 1}, TestAnimation)
     {graph, animations} = Animation.stop(@graph, animations, ref0)
     assert animations == %{}
-    assert Graph.get_id_one(graph, :text_id).data == {{10,10}, "-1"}
+    assert Graph.get_id!(graph, :text_id).data == {{10,10}, "-1"}
   end
 
   test "stop with nil stop callback is OK" do
