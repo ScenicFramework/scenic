@@ -394,22 +394,22 @@ defmodule Scenic.GraphTest do
 
 
   #============================================================================
-  # get_id_one returns a single object indicated by id
+  # get_id! returns a single object indicated by id
 
-  test "get_id_one returns a single primitive matching the id" do
-    text = Graph.get_id_one(@graph_ordered, :text)
+  test "get_id! returns a single primitive matching the id" do
+    text = Graph.get_id!(@graph_ordered, :text)
     assert Primitive.get_module(text) == Text
   end
 
-  test "get_id_one raises if it doesn't fine any prmitives" do
+  test "get_id! raises if it doesn't fine any prmitives" do
     assert_raise Graph.Error, fn ->
-      Graph.get_id_one(@graph_ordered, :missing)
+      Graph.get_id!(@graph_ordered, :missing)
     end
   end
 
-  test "get_id_one raises if finds more than one primitive" do
+  test "get_id! raises if finds more than one primitive" do
     assert_raise Graph.Error, fn ->
-      Graph.get_id_one(@graph_ordered, :line)
+      Graph.get_id!(@graph_ordered, :line)
     end
   end
 
@@ -905,27 +905,27 @@ defmodule Scenic.GraphTest do
     graph = @graph_find
 
     # confirm setup
-    assert Map.get( Graph.get_id_one(graph, :outer_text), :transforms ) == nil
-    assert Map.get( Graph.get_id_one(graph, :outer_line), :transforms ) == nil
-    assert Map.get( Graph.get_id_one(graph, :inner_text), :transforms ) == nil
-    assert Map.get( Graph.get_id_one(graph, :inner_line), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :outer_text), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :outer_line), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :inner_text), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :inner_line), :transforms ) == nil
 
     graph = Graph.find_modify(graph, 0, {:tag, "line"}, fn(p)->
       Primitive.put_transforms( p, @transform )
     end)
 
     # confirm result
-    assert Map.get( Graph.get_id_one(graph, :outer_text), :transforms ) == nil
-    assert Map.get( Graph.get_id_one(graph, :outer_line), :transforms ) == @transform
-    assert Map.get( Graph.get_id_one(graph, :inner_text), :transforms ) == nil
-    assert Map.get( Graph.get_id_one(graph, :inner_line), :transforms ) == @transform
+    assert Map.get( Graph.get_id!(graph, :outer_text), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :outer_line), :transforms ) == @transform
+    assert Map.get( Graph.get_id!(graph, :inner_text), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :inner_line), :transforms ) == @transform
 
     # confirm update list
     deltas = Graph.get_delta_scripts(graph)
     assert Enum.count(deltas) == 2
-    uid = Primitive.get_uid(Graph.get_id_one(graph, :outer_line))
+    uid = Primitive.get_uid(Graph.get_id!(graph, :outer_line))
     assert Enum.find(deltas, fn({k,_})-> k == uid end)
-    uid = Primitive.get_uid(Graph.get_id_one(graph, :inner_line))
+    uid = Primitive.get_uid(Graph.get_id!(graph, :inner_line))
     assert Enum.find(deltas, fn({k,_})-> k == uid end)
   end
 
@@ -933,25 +933,25 @@ defmodule Scenic.GraphTest do
     graph = @graph_find
 
     # confirm setup
-    assert Map.get( Graph.get_id_one(graph, :outer_text), :transforms ) == nil
-    assert Map.get( Graph.get_id_one(graph, :outer_line), :transforms ) == nil
-    assert Map.get( Graph.get_id_one(graph, :inner_text), :transforms ) == nil
-    assert Map.get( Graph.get_id_one(graph, :inner_line), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :outer_text), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :outer_line), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :inner_text), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :inner_line), :transforms ) == nil
 
     graph = Graph.find_modify(graph, 0, [tag: "outer", type: Line], fn(p)->
       Primitive.put_transforms( p, @transform )
     end)
 
     # confirm result
-    assert Map.get( Graph.get_id_one(graph, :outer_text), :transforms ) == nil
-    assert Map.get( Graph.get_id_one(graph, :outer_line), :transforms ) == @transform
-    assert Map.get( Graph.get_id_one(graph, :inner_text), :transforms ) == nil
-    assert Map.get( Graph.get_id_one(graph, :inner_line), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :outer_text), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :outer_line), :transforms ) == @transform
+    assert Map.get( Graph.get_id!(graph, :inner_text), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :inner_line), :transforms ) == nil
 
     # confirm update deltas
     deltas = Graph.get_delta_scripts(graph)
     assert Enum.count(deltas) == 1
-    uid = Primitive.get_uid(Graph.get_id_one(graph, :outer_line))
+    uid = Primitive.get_uid(Graph.get_id!(graph, :outer_line))
     assert Enum.find(deltas, fn({k,_})-> k == uid end)
   end
 
@@ -960,25 +960,25 @@ defmodule Scenic.GraphTest do
     [group_uid] = Graph.resolve_id(graph, :group)
 
     # confirm setup
-    assert Map.get( Graph.get_id_one(graph, :outer_text), :transforms ) == nil
-    assert Map.get( Graph.get_id_one(graph, :outer_line), :transforms ) == nil
-    assert Map.get( Graph.get_id_one(graph, :inner_text), :transforms ) == nil
-    assert Map.get( Graph.get_id_one(graph, :inner_line), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :outer_text), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :outer_line), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :inner_text), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :inner_line), :transforms ) == nil
 
     graph = Graph.find_modify(graph, group_uid, [tag: "line"], fn(p)->
       Primitive.put_transforms( p, @transform )
     end)
 
     # confirm result
-    assert Map.get( Graph.get_id_one(graph, :outer_text), :transforms ) == nil
-    assert Map.get( Graph.get_id_one(graph, :outer_line), :transforms ) == nil
-    assert Map.get( Graph.get_id_one(graph, :inner_text), :transforms ) == nil
-    assert Map.get( Graph.get_id_one(graph, :inner_line), :transforms ) == @transform
+    assert Map.get( Graph.get_id!(graph, :outer_text), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :outer_line), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :inner_text), :transforms ) == nil
+    assert Map.get( Graph.get_id!(graph, :inner_line), :transforms ) == @transform
 
     # confirm update deltas
     deltas = Graph.get_delta_scripts(graph)
     assert Enum.count(deltas) == 1
-    uid = Primitive.get_uid(Graph.get_id_one(graph, :inner_line))
+    uid = Primitive.get_uid(Graph.get_id!(graph, :inner_line))
     assert Enum.find(deltas, fn({k,_})-> k == uid end)
   end
 

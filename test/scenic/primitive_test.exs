@@ -54,7 +54,8 @@ defmodule Scenic.PrimitiveTest do
       fill: {:color, {255, 255, 0, 255}},
       stroke: {10, {:color, {0, 128, 0, 255}}}
       },
-    transforms: %{pin: {10, 11}, rotate: 0.1}
+    transforms: %{pin: {10, 11}, rotate: 0.1},
+    id: :test_id
   }
 
   #============================================================================
