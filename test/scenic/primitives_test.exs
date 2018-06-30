@@ -400,6 +400,22 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :text
   end
 
+  test "text modifies primitive with simple data" do
+    p = Primitives.text(@graph, "Hello", id: :text)
+    |> Graph.get(1)
+    |> Primitives.text("World", id: :modified)
+    assert p.data == {{0,0}, "World"}
+    assert p.id == :modified
+  end
+
+  test "text modifies primitive with full data" do
+    p = Primitives.text(@graph, {{1,2}, "Hello"}, id: :text)
+    |> Graph.get(1)
+    |> Primitives.text({{10,20}, "World"}, id: :modified)
+    assert p.data == {{10,20}, "World"}
+    assert p.id == :modified
+  end
+
 
   #============================================================================
   test "triangle adds to a graph" do
@@ -409,5 +425,14 @@ defmodule Scenic.PrimitivesTest do
     assert p.data == {{0,0}, {10, 100}, {100, 40}}
     assert p.id == :triangle
   end
+
+  test "triangle modifies primitive" do
+    p = Primitives.triangle(@graph, {{0,0}, {10, 100}, {100, 40}}, id: :triangle)
+    |> Graph.get(1)
+    |> Primitives.triangle({{1,2}, {11, 102}, {101, 42}}, id: :modified)
+    assert p.data == {{1,2}, {11, 102}, {101, 42}}
+    assert p.id == :modified
+  end
+
 
 end
