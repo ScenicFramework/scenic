@@ -527,6 +527,12 @@ defmodule Scenic.Primitive do
           end
       end
 
+      # add the id if set
+      min_p = case Map.get(p, :id) do
+        nil -> min_p
+        id -> Map.put(min_p, :id, id)
+      end
+
       # add transforms, if any are set
       case Map.get(p, :transforms) do
         nil -> min_p
