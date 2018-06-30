@@ -12,7 +12,7 @@ defmodule Scenic.Primitive.SectorTest do
 
 
 
-  @data     {{10, 20}, 100, 0.0, 1.4, 1, 2}
+  @data     {{10, 20}, 100, 0.0, 1.4}
 
   #============================================================================
   # build / add
@@ -33,8 +33,8 @@ defmodule Scenic.Primitive.SectorTest do
   end
 
   test "verify fails invalid data" do
-    assert Sector.verify( {{10, 20}, :atom, 0.0, 1.4, 1, 2} ) == :invalid_data
-    assert Sector.verify( :banana )                   == :invalid_data
+    assert Sector.verify( {{10, 20}, :atom, 0.0, 1.4} ) == :invalid_data
+    assert Sector.verify( :banana ) == :invalid_data
   end
 
   #============================================================================
@@ -52,7 +52,7 @@ defmodule Scenic.Primitive.SectorTest do
   end
 
  test "expand makes the radius larger" do
-   assert Sector.expand(@data, 10) == {{10, 20}, 110, 0.0, 1.4, 1, 2}
+   assert Sector.expand(@data, 10) == {{10, 20}, 110, 0.0, 1.4}
  end
 
   #============================================================================

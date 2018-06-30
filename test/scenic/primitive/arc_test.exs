@@ -10,7 +10,7 @@ defmodule Scenic.Primitive.ArcTest do
   alias Scenic.Primitive
   alias Scenic.Primitive.Arc
 
-  @data     {{10, 20}, 100, 0.0, 1.4, 1, 2}
+  @data     {{10, 20}, 100, 0.0, 1.4}
 
   #============================================================================
   # build / add
@@ -31,7 +31,7 @@ defmodule Scenic.Primitive.ArcTest do
   end
 
   test "verify fails invalid data" do
-    assert Arc.verify( {{10, 20}, :atom, 0.0, 1.4, 1, 2} ) == :invalid_data
+    assert Arc.verify( {{10, 20}, :atom, 0.0, 1.4} ) == :invalid_data
     assert Arc.verify( :banana )                   == :invalid_data
   end
 
@@ -50,7 +50,7 @@ defmodule Scenic.Primitive.ArcTest do
   end
 
  test "expand makes the radius larger" do
-   assert Arc.expand(@data, 10) == {{10, 20}, 110, 0.0, 1.4, 1, 2}
+   assert Arc.expand(@data, 10) == {{10, 20}, 110, 0.0, 1.4}
  end
 
   #============================================================================
