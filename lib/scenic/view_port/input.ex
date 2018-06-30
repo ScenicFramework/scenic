@@ -454,7 +454,7 @@ defmodule Scenic.ViewPort.Input do
         # test if the point is in the primitive
         case mod.contains_point?( data, local_point ) do
           true  ->
-            {uid, p.id, point}
+            {uid, p[:id], point}
 
           false ->
             nil
