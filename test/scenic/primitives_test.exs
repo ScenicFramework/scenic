@@ -7,13 +7,14 @@ defmodule Scenic.PrimitivesTest do
   use ExUnit.Case, async: true
   doctest Scenic.Primitives
   alias Scenic.Graph
+  alias Scenic.Primitive
   alias Scenic.Primitives
 
   @graph  Graph.build()
 
   # @tau    2.0 * :math.pi();
 
-#  import IEx
+ import IEx
 
 
   #============================================================================
@@ -33,6 +34,21 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :arc
   end
 
+  test "arc modifies primitive with simple data" do
+    p = Primitives.arc(@graph, {0, 1, 20}, id: :arc)
+    |> Graph.get(1)
+    |> Primitives.arc({0, 1.5, 200}, id: :modified_arc)
+    assert p.data == {{0,0}, 0, 1.5, 200}
+    assert p.id == :modified_arc
+  end
+
+  test "arc modifies primitive with full data" do
+    p = Primitives.arc(@graph, {0, 1, 20}, id: :arc)
+    |> Graph.get(1)
+    |> Primitives.arc({{10, 20}, 0, 1.5, 200}, id: :modified_arc)
+    assert p.data == {{10, 20}, 0, 1.5, 200}
+    assert p.id == :modified_arc
+  end
 
   #============================================================================
   test "circle adds default to a graph" do
