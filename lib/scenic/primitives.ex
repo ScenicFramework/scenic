@@ -333,6 +333,8 @@ defmodule Scenic.Primitives do
     modify( p, data, opts )
   end
 
+  #--------------------------------------------------------
+  def update_opts( p, opts ), do: Primitive.update_opts( p, opts )
 
   #============================================================================
   # generic workhorse versions

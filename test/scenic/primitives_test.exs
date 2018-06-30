@@ -454,5 +454,8 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :modified
   end
 
+  #============================================================================
+  test "test update_opts"
+
 
 end
