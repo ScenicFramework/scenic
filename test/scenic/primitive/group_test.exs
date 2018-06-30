@@ -86,7 +86,7 @@ defmodule Scenic.Primitive.GroupTest do
 
   test "filter_styles passes all the style, whether or not they are standard ones" do
     styles = %{
-      color: :red,
+      fill: :red,
       banana: :yellow
     }
     assert Group.filter_styles( styles ) == styles
