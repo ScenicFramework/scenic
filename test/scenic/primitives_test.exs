@@ -167,6 +167,26 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :path
   end
 
+  test "path modifies primitive" do
+    actions = [
+      {:move_to, 1, 2},
+      {:line_to, 3, 4},
+      {:line_to, 3, 5}
+    ]
+    p = Primitives.path( @graph, actions, id: :path )
+    |> Graph.get(1)
+
+    actions2 = [
+      :begin,
+      {:move_to, 1, 2},
+      {:line_to, 3, 4},
+      {:bezier_to, 10, 11, 20, 21, 30, 40}
+    ]
+    p = Primitives.path(p, actions2, id: :modified)
+    assert p.data == actions2
+    assert p.id == :modified
+  end
+
 
   #============================================================================
   test "quad adds to a graph" do
@@ -175,6 +195,14 @@ defmodule Scenic.PrimitivesTest do
     assert p.module == Scenic.Primitive.Quad
     assert p.data == {{1,2}, {3,4}, {3, 10}, {2, 8}}
     assert p.id == :quad
+  end
+
+  test "quad modifies primitive with full data" do
+    p = Primitives.quad(@graph, {{1,2}, {3,4}, {3, 10}, {2, 8}}, id: :quad)
+    |> Graph.get(1)
+    |> Primitives.quad({{10,20}, {30,40}, {30, 100}, {20, 80}}, id: :modified)
+    assert p.data == {{10,20}, {30,40}, {30, 100}, {20, 80}}
+    assert p.id == :modified
   end
 
 
@@ -195,6 +223,13 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :rect
   end
 
+  test "rect modifies primitive with full data" do
+    p = Primitives.rect(@graph, {{10,20}, 200, 100}, id: :rect)
+    |> Graph.get(1)
+    |> Primitives.rect({{100,200}, 20, 10}, id: :modified)
+    assert p.data == {{100,200}, 20, 10}
+    assert p.id == :modified
+  end
 
   #============================================================================
   test "rectangle adds default to a graph" do
@@ -213,6 +248,13 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :rectangle
   end
 
+  test "rectangle modifies primitive with full data" do
+    p = Primitives.rectangle(@graph, {{10,20}, 200, 100}, id: :rectangle)
+    |> Graph.get(1)
+    |> Primitives.rectangle({{100,200}, 20, 10}, id: :modified)
+    assert p.data == {{100,200}, 20, 10}
+    assert p.id == :modified
+  end
 
   #============================================================================
   test "rrect adds default to a graph" do
@@ -231,6 +273,13 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :rrect
   end
 
+  test "rrect modifies primitive with full data" do
+    p = Primitives.rrect(@graph, {{10,20}, 200, 100, 5}, id: :rrect)
+    |> Graph.get(1)
+    |> Primitives.rrect({{100,200}, 20, 10, 2}, id: :modified)
+    assert p.data == {{100,200}, 20, 10, 2}
+    assert p.id == :modified
+  end
 
   #============================================================================
   test "rounded_rectangle adds default to a graph" do
@@ -249,6 +298,13 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :rounded_rectangle
   end
 
+  test "rounded_rectangle modifies primitive with full data" do
+    p = Primitives.rounded_rectangle(@graph, {{10,20}, 200, 100, 5}, id: :rounded_rectangle)
+    |> Graph.get(1)
+    |> Primitives.rounded_rectangle({{100,200}, 20, 10, 2}, id: :modified)
+    assert p.data == {{100,200}, 20, 10, 2}
+    assert p.id == :modified
+  end
 
   #============================================================================
   test "scene_ref adds graph key reference to a graph" do
@@ -316,6 +372,14 @@ defmodule Scenic.PrimitivesTest do
     assert p.module == Scenic.Primitive.Sector
     assert p.data == {{1,2}, 0, 1, 20}
     assert p.id == :sector
+  end
+
+  test "sector modifies primitive with full data" do
+    p = Primitives.sector(@graph, {{1,2}, 0, 1, 20}, id: :sector)
+    |> Graph.get(1)
+    |> Primitives.sector({{10,20}, 0, 1.5, 22}, id: :modified)
+    assert p.data == {{10,20}, 0, 1.5, 22}
+    assert p.id == :modified
   end
 
 
