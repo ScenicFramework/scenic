@@ -122,8 +122,20 @@ defmodule Scenic.PrimitivesTest do
     p = Primitives.group(@graph, fn(g) -> g end, id: :group)
     |> Graph.get(1)
     assert p.module == Scenic.Primitive.Group
+    assert Enum.count(p.data) == 0
     assert p.id == :group
   end
+
+  # test "group modifies primitive" do
+  #   p = Primitives.group(@graph, fn(g) -> g end, id: :group)
+  #   |> Graph.get(1)
+  #   |> Primitives.group(fn(g) ->
+  #     Primitives.ellipse(g, {20,30})
+  #   end, id: :modified)
+  #   assert p.module == Scenic.Primitive.Group
+  #   assert Enum.count(p.data) == 1
+  #   assert p.id == :group
+  # end
 
 
   #============================================================================
@@ -354,6 +366,14 @@ defmodule Scenic.PrimitivesTest do
     assert p.module == Scenic.Primitive.SceneRef
     assert p.data == {{:mod, "abc"}, 123}
     assert p.id == :ref
+  end
+
+  test "scene_ref modifies primitive" do
+    p = Primitives.scene_ref(@graph, {{:mod, "abc"}, 123}, id: :ref)
+    |> Graph.get(1)
+    |> Primitives.scene_ref({{:new_mod, "abcd"}, 456}, id: :modified)
+    assert p.data == {{:new_mod, "abcd"}, 456}
+    assert p.id == :modified
   end
 
 

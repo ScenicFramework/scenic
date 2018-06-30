@@ -10,7 +10,6 @@ defmodule Scenic.Primitive.SceneRefTest do
   alias Scenic.Primitive
   alias Scenic.Primitive.SceneRef
 
-  @data_named     :named_scene
   @data_name_id   {:named_scene, 123}
 #  pid version must be made dynamically
 #  ref version must be made dynamically
@@ -19,15 +18,15 @@ defmodule Scenic.Primitive.SceneRefTest do
   #============================================================================
   # build / add
 
-  test "build named works" do
-    p = SceneRef.build( @data_named )
+  test "build name works" do
+    p = SceneRef.build( :named_scene )
     assert Primitive.get_parent_uid(p) == -1
     assert Primitive.get_module(p) == SceneRef
-    assert Primitive.get(p) == @data_named
+    assert Primitive.get(p) == {:named_scene, nil}
   end
 
 
-  test "build named id works" do
+  test "build {name, id} works" do
     p = SceneRef.build( @data_name_id )
     assert Primitive.get_parent_uid(p) == -1
     assert Primitive.get_module(p) == SceneRef
@@ -42,6 +41,13 @@ defmodule Scenic.Primitive.SceneRefTest do
   end
 
   test "build pid works" do
+    p = SceneRef.build( self() )
+    assert Primitive.get_parent_uid(p) == -1
+    assert Primitive.get_module(p) == SceneRef
+    assert Primitive.get(p) == {self(), nil}
+  end
+
+  test "build {pid, ref} works" do
     p = SceneRef.build( {self(), 123} )
     assert Primitive.get_parent_uid(p) == -1
     assert Primitive.get_module(p) == SceneRef
@@ -61,7 +67,7 @@ defmodule Scenic.Primitive.SceneRefTest do
   # verify
 
   test "verify passes valid data" do
-    assert SceneRef.verify( @data_named ) == {:ok, @data_named}
+    assert SceneRef.verify( :named_scene ) == {:ok, {:named_scene, nil}}
     assert SceneRef.verify( @data_name_id ) == {:ok, @data_name_id}
     assert SceneRef.verify( @data_mod ) == {:ok, @data_mod}
     assert SceneRef.verify( {self(), 123} ) == {:ok, {self(), 123}}
@@ -92,7 +98,7 @@ defmodule Scenic.Primitive.SceneRefTest do
   # transforms
 
   test "default pin simply returns {0,0}" do
-    assert SceneRef.default_pin(@data_named) == {0,0}
+    assert SceneRef.default_pin({:named, nil}) == {0,0}
     assert SceneRef.default_pin(@data_name_id) == {0,0}
     assert SceneRef.default_pin(@data_mod) == {0,0}
     assert SceneRef.default_pin({self(), 123}) == {0,0}

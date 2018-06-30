@@ -162,9 +162,14 @@ defmodule Scenic.Primitives do
 
   #--------------------------------------------------------
   def group( graph_or_primitive, builder, opts \\ [] )
+  
   def group( %Graph{} = graph, builder, opts ) when is_function(builder, 1) do
     Primitive.Group.add_to_graph(graph, builder, opts)
   end
+
+  # def group( %Primitive{module: Primitive.Group} = p, data, opts ) do
+  #   modify( p, data, opts )
+  # end
 
 
   #--------------------------------------------------------
@@ -279,34 +284,13 @@ defmodule Scenic.Primitives do
   #--------------------------------------------------------
   def scene_ref( graph_or_primitive, data, opts \\ [] )
 
-  # def scene_ref( %Graph{} = graph, {:graph,_,_} = key, opts ) do
-  #   Primitive.SceneRef.add_to_graph( graph, key, opts )
-  # end
-
-  # def scene_ref( %Graph{} = graph, name_pid, opts ) when
-  # is_atom(name_pid) or is_pid(name_pid) do
-  #   Primitive.SceneRef.add_to_graph( graph, {name_pid, nil}, opts )
-  # end
-
-  # def scene_ref( %Graph{} = graph, {name,_} = data, opts ) when is_atom(name) do
-  #   Primitive.SceneRef.add_to_graph( graph, data, opts )
-  # end
-
-  # def scene_ref( %Graph{} = graph, {pid,_} = data, opts ) when is_pid(pid) do
-  #   Primitive.SceneRef.add_to_graph( graph, data, opts )
-  # end
-
-  # def scene_ref( %Graph{} = graph, {{module,_},_} = data, opts ) when is_atom(module) do
-  #   Primitive.SceneRef.add_to_graph( graph, data, opts )
-  # end
-
   def scene_ref( %Graph{} = g, data, opts ) do
     add_to_graph( g, Primitive.SceneRef, data, opts )
   end
 
-  # def scene_ref( %Primitive{module: Primitive.SceneRef} = p, data, opts ) do
-  #   modify( p, data, opts )
-  # end
+  def scene_ref( %Primitive{module: Primitive.SceneRef} = p, data, opts ) do
+    modify( p, data, opts )
+  end
 
 
   #--------------------------------------------------------
@@ -340,7 +324,7 @@ defmodule Scenic.Primitives do
 
   #--------------------------------------------------------
   def triangle( graph_or_primitive, data, opts \\ [] )
-  
+
   def triangle( %Graph{} = g, data, opts ) do
     add_to_graph( g, Primitive.Triangle, data, opts )
   end
