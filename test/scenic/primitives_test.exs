@@ -135,6 +135,14 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :line
   end
 
+  test "line modifies primitive with full data" do
+    p = Primitives.line(@graph, {{0,0}, {10, 100}}, id: :line)
+    |> Graph.get(1)
+    |> Primitives.line({{10,20}, {100, 200}}, id: :modified)
+    assert p.data == {{10,20}, {100, 200}}
+    assert p.id == :modified
+  end
+
 
   #============================================================================
   test "path adds empty list to the graph" do

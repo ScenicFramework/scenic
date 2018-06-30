@@ -233,6 +233,7 @@ defmodule Scenic.Primitives do
   See the style documentation for more detail.
   """
   def line( graph_or_primitive, data, opts \\ [] )
+
   def line( %Graph{} = graph, {{x0,y0}, {x1,y1}}, opts ) when
   is_number(x0) and is_number(y0) and
   is_number(x1) and is_number(y1) do
@@ -243,6 +244,13 @@ defmodule Scenic.Primitives do
     )
   end
 
+  def line(
+    %Primitive{module: Primitive.Line} = p,
+    {{x0,y0}, {x1,y1}}, opts
+  ) when is_number(x0) and is_number(y0) and is_number(x1) and is_number(y1) do
+    Primitive.put( p, {{x0,y0}, {x1,y1}} )
+    |> Primitive.update_opts( opts )
+  end
 
   #--------------------------------------------------------
   def path( graph_or_primitive, data, opts \\ [] )
