@@ -455,7 +455,23 @@ defmodule Scenic.PrimitivesTest do
   end
 
   #============================================================================
-  test "test update_opts"
+  test "test update_opts" do
+    p = Primitives.arc(@graph, {0, 1, 20}, id: :arc)
+    |> Graph.get(1)
+    |> Primitives.update_opts(id: :modified)
+    assert p.data == {{0,0},0,1,20}
+    assert p.id == :modified
+  end
+
+  test "test update_opts is additive to existing opts" do
+    p = Primitives.arc(@graph, {0, 1, 20}, id: :arc, translate: {1,2} )
+    |> Graph.get(1)
+    |> Primitives.update_opts(rotate: 1)
+    assert p.data == {{0,0},0,1,20}
+    assert p.id == :arc
+    assert p.transforms == %{rotate: 1, translate: {1,2}}
+  end
+
 
 
 end
