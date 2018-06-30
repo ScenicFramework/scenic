@@ -133,6 +133,10 @@ defmodule Scenic.Primitive do
     |> apply_options( opts )
   end
 
+  def update_opts( %Primitive{} = p, opts ) do
+    apply_options( p, opts )
+  end
+
   defp apply_options( p, opts ) do
     p
     |> apply_standard_options( opts )

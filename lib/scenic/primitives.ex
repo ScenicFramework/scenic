@@ -139,6 +139,7 @@ defmodule Scenic.Primitives do
   is_number(start) and is_number(finish) and
   is_number(radius) do
     Primitive.put( p, {{x,y}, radius, start, finish} )
+    |> Primitive.update_opts( opts )
   end
 
 
