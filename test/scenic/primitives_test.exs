@@ -141,7 +141,7 @@ defmodule Scenic.PrimitivesTest do
     p = Primitives.arc(@graph, {0, 1, 20}, id: :arc)
     |> Graph.get(1)
     assert p.module == Scenic.Primitive.Arc
-    assert p.data == {{0,0}, 0, 1, 20, 1.0, 1.0}
+    assert p.data == {{0,0}, 0, 1, 20}
     assert p.id == :arc
   end
 
@@ -149,25 +149,16 @@ defmodule Scenic.PrimitivesTest do
     p = Primitives.arc(@graph, {{1,2}, 0, 1, 20}, id: :arc)
     |> Graph.get(1)
     assert p.module == Scenic.Primitive.Arc
-    assert p.data == {{1,2}, 0, 1, 20, 1.0, 1.0}
+    assert p.data == {{1,2}, 0, 1, 20}
     assert p.id == :arc
   end
-
-  test "arc adds to a graph" do
-    p = Primitives.arc(@graph, {{1,2}, 0, 1, 20, 2, 8}, id: :arc)
-    |> Graph.get(1)
-    assert p.module == Scenic.Primitive.Arc
-    assert p.data == {{1,2}, 0, 1, 20, 2, 8}
-    assert p.id == :arc
-  end
-
 
   #============================================================================
   test "sector adds simple default to a graph" do
     p = Primitives.sector(@graph, {0, 1, 20}, id: :sector)
     |> Graph.get(1)
     assert p.module == Scenic.Primitive.Sector
-    assert p.data == {{0,0}, 0, 1, 20, 1.0, 1.0}
+    assert p.data == {{0,0}, 0, 1, 20}
     assert p.id == :sector
   end
 
@@ -175,17 +166,10 @@ defmodule Scenic.PrimitivesTest do
     p = Primitives.sector(@graph, {{1,2}, 0, 1, 20}, id: :sector)
     |> Graph.get(1)
     assert p.module == Scenic.Primitive.Sector
-    assert p.data == {{1,2}, 0, 1, 20, 1.0, 1.0}
+    assert p.data == {{1,2}, 0, 1, 20}
     assert p.id == :sector
   end
 
-  test "sector adds to a graph" do
-    p = Primitives.sector(@graph, {{1,2}, 0, 1, 20, 2, 8}, id: :sector)
-    |> Graph.get(1)
-    assert p.module == Scenic.Primitive.Sector
-    assert p.data == {{1,2}, 0, 1, 20, 2, 8}
-    assert p.id == :sector
-  end
 
   #============================================================================
   test "ellipse adds to a graph" do
@@ -235,8 +219,8 @@ defmodule Scenic.PrimitivesTest do
   test "path adds actions to the graph" do
     actions = [
       {:move_to, 1, 2},
-      {:path_to, 3, 4},
-      {:path_to, 3, 5},
+      {:line_to, 3, 4},
+      {:line_to, 3, 5},
     ]
     p = Primitives.path( @graph, actions, id: :path )
     |> Graph.get(1)
