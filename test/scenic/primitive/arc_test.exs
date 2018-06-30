@@ -55,10 +55,13 @@ defmodule Scenic.Primitive.ArcTest do
 
   #============================================================================
   # point containment
-  test "contains_point? always returns false" do
-    assert Arc.contains_point?(@data, {30, 52})  == false
-    assert Arc.contains_point?(@data, {10,12})   == false
-    assert Arc.contains_point?(@data, {40, 80})  == false
+  test "contains_point? works" do
+    # in the sector, but not the arc
+    assert Arc.contains_point?(@data, {56, 65})  == false
+    # in the arc
+    assert Arc.contains_point?(@data, {75, 81})  == true
+    # beyond the sector and the arc
+    assert Arc.contains_point?(@data, {99, 90})  == false
   end
 
 
