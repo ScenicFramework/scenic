@@ -67,7 +67,6 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :circle
   end
 
-
   test "circle modifies primitive with simple data" do
     p = Primitives.circle(@graph, 20, id: :circle)
     |> Graph.get(1)
@@ -102,6 +101,21 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :ellipse
   end
 
+  test "ellipse modifies primitive with simple data" do
+    p = Primitives.ellipse(@graph, {20,30}, id: :ellipse)
+    |> Graph.get(1)
+    |> Primitives.ellipse({40,50}, id: :modified)
+    assert p.data == {{0,0}, 40, 50}
+    assert p.id == :modified
+  end
+
+  test "ellipse modifies primitive with full data" do
+    p = Primitives.ellipse(@graph, {20,30}, id: :ellipse)
+    |> Graph.get(1)
+    |> Primitives.ellipse({{10, 20}, 40, 50}, id: :modified)
+    assert p.data == {{10, 20}, 40, 50}
+    assert p.id == :modified
+  end
 
   #============================================================================
   test "group adds to a graph" do

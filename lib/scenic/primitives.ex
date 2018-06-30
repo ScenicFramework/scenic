@@ -182,13 +182,13 @@ defmodule Scenic.Primitives do
     )
   end
 
-  # def circle(
-  #   %Primitive{module: Primitive.Circle} = p,
-  #   {{x,y}, radius}, opts
-  # ) when is_number(x) and is_number(y) and is_number(radius) do
-  #   Primitive.put( p, {{x,y}, radius} )
-  #   |> Primitive.update_opts( opts )
-  # end
+  def ellipse(
+    %Primitive{module: Primitive.Ellipse} = p,
+    {{x,y}, r1, r2}, opts
+  ) when is_number(x) and is_number(y) and is_number(r1) and is_number(r2) do
+    Primitive.put( p, {{x,y}, r1, r2} )
+    |> Primitive.update_opts( opts )
+  end
 
 
   #--------------------------------------------------------
@@ -286,7 +286,7 @@ defmodule Scenic.Primitives do
   def rrect( graph_or_primitive, data, opts \\ [] ) do
     rounded_rectangle( graph_or_primitive, data, opts )
   end
-  
+
   def rounded_rectangle( graph_or_primitive, data, opts \\ [] )
   def rounded_rectangle( gp, {width, height, radius}, opts ) do
     rounded_rectangle( gp, {{0,0}, width, height, radius}, opts )
