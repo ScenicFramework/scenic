@@ -12,8 +12,8 @@ defmodule Scenic.Primitive.QuadTest do
 
 
   @convex       {{100,300},{300,180},{400,310},{300,520}}
-  @concave      {{100,300},{300,180},{400,310},{300,200}}
-  @complex      {{100,300},{400,100},{400,300},{100,100}}
+  # @concave      {{100,300},{300,180},{400,310},{300,200}}
+  # @complex      {{100,300},{400,100},{400,300},{100,100}}
 
   @reverse      {{300,520},{400,310},{300,180},{100,300}}
 
@@ -35,15 +35,7 @@ defmodule Scenic.Primitive.QuadTest do
     assert Quad.verify( @convex )     == {:ok, @convex}
   end
 
-  test "verify fails concave quads" do
-    assert Quad.verify( @concave ) == :invalid_data
-  end
-
-  test "verify fails complex quads" do
-    assert Quad.verify( @complex ) == :invalid_data
-  end
-
-  test "verify fails obviously invalid" do
+  test "verify fails obviously invalid quads" do
     assert Quad.verify( {{10,11}, 40, 80, 666} )   == :invalid_data
     assert Quad.verify( {10, 40, 80} )             == :invalid_data
     assert Quad.verify( {{10,11,12}, 40, 80} )     == :invalid_data
