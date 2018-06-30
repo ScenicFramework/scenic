@@ -43,15 +43,6 @@ defmodule Scenic.Primitive.Rectangle do
   end
 
   #--------------------------------------------------------
-  def expand( { {x,y}, w, h }, width ) do
-    {
-      {x - width, y - width},
-      w + width + width,
-      h + width + width
-    }
-  end
-
-  #--------------------------------------------------------
   def contains_point?( { {x,y}, w, h }, {xp,yp} ) do
     cond do
       xp < x       -> false

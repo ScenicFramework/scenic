@@ -49,10 +49,6 @@ defmodule Scenic.Primitive.ArcTest do
     assert Arc.default_pin(@data) == {10, 20}
   end
 
- test "expand makes the radius larger" do
-   assert Arc.expand(@data, 10) == {{10, 20}, 110, 0.0, 1.4}
- end
-
   #============================================================================
   # point containment
   test "contains_point? works" do

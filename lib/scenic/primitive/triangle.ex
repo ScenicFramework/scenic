@@ -52,31 +52,30 @@ defmodule Scenic.Primitive.Triangle do
   # Special thanks to Mike Schacht, who is a math/physics wiz.
   # Seriously.
   #
-  def expand( {p0, p1, p2}, width ) do
-    # account for the winding of triangle
-    cross = Math.Vector2.cross(
-      Math.Vector2.sub(p1, p0),
-      Math.Vector2.sub(p2, p0)
-    )
-    width = cond do
-      cross < 0 -> -width
-      true      -> width
-    end
+  # def expand( {p0, p1, p2}, width ) do
+  #   # account for the winding of triangle
+  #   cross = Math.Vector2.cross(
+  #     Math.Vector2.sub(p1, p0),
+  #     Math.Vector2.sub(p2, p0)
+  #   )
+  #   width = cond do
+  #     cross < 0 -> -width
+  #     true      -> width
+  #   end
     
-    # find the new parallel lines
-    l01 = Math.Line.parallel( {p0, p1}, width )
-    l12 = Math.Line.parallel( {p1, p2}, width )
-    l20 = Math.Line.parallel( {p2, p0}, width )
+  #   # find the new parallel lines
+  #   l01 = Math.Line.parallel( {p0, p1}, width )
+  #   l12 = Math.Line.parallel( {p1, p2}, width )
+  #   l20 = Math.Line.parallel( {p2, p0}, width )
 
-    # calc the new poins from the intersections of the lines
-    p0 = Math.Line.intersection( l01, l12 )
-    p1 = Math.Line.intersection( l12, l20 )
-    p2 = Math.Line.intersection( l20, l01 )
+  #   # calc the new poins from the intersections of the lines
+  #   p0 = Math.Line.intersection( l01, l12 )
+  #   p1 = Math.Line.intersection( l12, l20 )
+  #   p2 = Math.Line.intersection( l20, l01 )
 
-    # return the new triangle
-    {p0, p1, p2}
-  end
-
+  #   # return the new triangle
+  #   {p0, p1, p2}
+  # end
 
 
   # http://blackpawn.com/texts/pointinpoly/

@@ -43,11 +43,6 @@ defmodule Scenic.Primitive.Sector do
   def valid_styles(), do: @styles
 
   #--------------------------------------------------------
-  def expand( {{x, y}, radius, start, finish}, width ) do
-    {{x, y}, radius + width, start, finish}
-  end
-
-  #--------------------------------------------------------
   def default_pin( data ) do
     {{x, y},_,_,_} = normalize(data)
     {x,y}

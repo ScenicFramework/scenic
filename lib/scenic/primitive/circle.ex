@@ -47,12 +47,6 @@ defmodule Scenic.Primitive.Circle do
   end
 
   #--------------------------------------------------------
-  def expand( data, width ) do
-    { {x,y}, r } = normalize(data)
-    { {x,y}, r + width }
-  end
-
-  #--------------------------------------------------------
   def contains_point?( {{x, y}, radius}, {xp,yp} ) do
     # calc the distance squared fromthe pont to the center
     d_sqr = (x - xp) * (x - xp) + (y - yp) * (y - yp)

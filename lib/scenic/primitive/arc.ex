@@ -50,11 +50,6 @@ defmodule Scenic.Primitive.Arc do
   end
 
   #--------------------------------------------------------
-  def expand( {{x, y},r,s,f}, amount ) do
-    {{x, y},r + amount,s,f}
-  end
-
-  #--------------------------------------------------------
   def contains_point?( {{x, y} = p0, radius, start, finish} = data, pt ) do
     # first, see if it is in the sector described by the arc data
     if Sector.contains_point?(data, pt) do

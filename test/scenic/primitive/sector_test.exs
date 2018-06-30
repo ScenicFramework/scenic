@@ -51,10 +51,6 @@ defmodule Scenic.Primitive.SectorTest do
     assert Sector.default_pin(@data) == {10, 20}
   end
 
- test "expand makes the radius larger" do
-   assert Sector.expand(@data, 10) == {{10, 20}, 110, 0.0, 1.4}
- end
-
   #============================================================================
   # point containment
   test "contains_point? always returns false" do

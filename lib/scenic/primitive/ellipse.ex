@@ -48,12 +48,6 @@ defmodule Scenic.Primitive.Ellipse do
   end
 
   #--------------------------------------------------------
-  def expand( data, width ) do
-    { {x,y}, r1, r2 } = normalize(data)
-    { {x,y}, r1 + width, r2 + width }
-  end
-
-  #--------------------------------------------------------
   def contains_point?( {{x, y}, r1, r2}, {xp,yp} ) do
     dx = ((x - xp) * (x - xp)) / (r1 * r1)
     dy = ((y - yp) * (y - yp)) / (r2 * r2)

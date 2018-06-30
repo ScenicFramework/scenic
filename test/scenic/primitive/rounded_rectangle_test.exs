@@ -59,10 +59,6 @@ defmodule Scenic.Primitive.RoundedRectangleTest do
     assert RoundedRectangle.centroid(@data) == {30, 52}
   end
 
-  test "expand expands the data" do
-    assert RoundedRectangle.expand(@data, 10) == {{0,2}, 60, 100, 15}
-  end
-
   #============================================================================
   # point containment
   test "contains_point? returns true if it contains the point" do

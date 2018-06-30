@@ -56,16 +56,6 @@ defmodule Scenic.Primitive.TriangleTest do
     assert Triangle.centroid(@data) == {273, 200}
   end
 
-  test "expand expands the data" do
-    {{x0,y0},{x1,y1},{x2,y2}} = Triangle.expand(@data, 10)
-    # rounding to avoid floating-point errors from messing up the tests
-    assert {
-      {round(x0), round(y0)},
-      {round(x1), round(y1)},
-      {round(x2), round(y2)}
-    } ==   {{410, 310}, {410, -21}, {-9, 310}}
-  end
-
   #============================================================================
   # point containment
   test "contains_point? returns true if it contains the point" do

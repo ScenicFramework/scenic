@@ -66,32 +66,6 @@ defmodule Scenic.Primitive.QuadTest do
     assert Quad.default_pin(@convex) == {275, 328}
   end
 
-#  test "centroid returns the center of the rect" do
-#    assert Quad.centroid(@convex) == {30, 52}
-#  end
-
-  test "expand expands the convex quad" do
-    {{x0,y0},{x1,y1},{x2,y2},{x3,y3}} = Quad.expand(@convex, 10)
-    # rounding to avoid floating-point errors from messing up the tests
-    assert {
-      {round(x0), round(y0)},
-      {round(x1), round(y1)},
-      {round(x2), round(y2)},
-      {round(x3), round(y3)}
-    } ==   {{84, 298}, {302, 167}, {412, 309}, {303, 538}}
-  end
-
-  test "expand expands when the quad is counter wound" do
-    {{x0,y0},{x1,y1},{x2,y2},{x3,y3}} = Quad.expand(@reverse, 10)
-    # rounding to avoid floating-point errors from messing up the tests
-    assert {
-      {round(x0), round(y0)},
-      {round(x1), round(y1)},
-      {round(x2), round(y2)},
-      {round(x3), round(y3)}
-    } ==   {{303, 538}, {412, 309}, {302, 167}, {84, 298}}
-  end
-
   #============================================================================
   # point containment
   test "contains_point? returns true if it contains the point" do
