@@ -11,7 +11,7 @@ defmodule Scenic.AnimationTest do
   alias Scenic.Animation
   alias Scenic.Primitive
 
-  import IEx
+  # import IEx
 
   @graph Graph.build()
     |> Primitive.Text.add_to_graph({{10,10}, "hello"}, id: :text_id)
@@ -104,24 +104,19 @@ defmodule Scenic.AnimationTest do
   # tick
 
   test "tick calls the animations, updates the graph and updates states whith continue" do
+    # create a simple animation entry
     {animations, ref} = Animation.make(%{}, {:text_id, 1}, TestAnimation)
+    # prove that it was set up correctly with nil last time
     {TestAnimation, {:text_id, 1}, time_0} = animations[ref]
     assert Graph.get_id!(@graph, :text_id).data == {{10,10}, "hello"}
     refute time_0
 
+    # Tick the animation for the first time. This should set a last_time
     {animations, %Graph{} = graph} = Animation.tick(animations, @graph)
+    # prove the time was set
     {TestAnimation, {:text_id, 2}, time_1} = animations[ref]
     assert Graph.get_id!(graph, :text_id).data == {{10,10}, "2"}
     assert time_1
-
-    # force at least two milliseconds to go by so we can consistently tell
-    # that time advanced in the next part of the test
-    Process.sleep(2)
-
-    {animations, %Graph{} = graph} = Animation.tick(animations, graph)
-    {TestAnimation, {:text_id, 3}, time_2} = animations[ref]
-    assert Graph.get_id!(graph, :text_id).data == {{10,10}, "3"}
-    assert time_1 != time_2
   end
 
   test "tick calls the animations, updates the graph and allows the animations to stop" do
