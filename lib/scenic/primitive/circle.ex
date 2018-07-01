@@ -31,8 +31,8 @@ defmodule Scenic.Primitive.Circle do
 
 
   #--------------------------------------------------------
-  def normalize( radius = data ) when is_number(radius) do
-    data
+  def normalize( radius ) when is_number(radius) do
+    radius
   end
 
 

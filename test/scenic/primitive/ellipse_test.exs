@@ -10,7 +10,7 @@ defmodule Scenic.Primitive.EllipseTest do
   alias Scenic.Primitive
   alias Scenic.Primitive.Ellipse
 
-  @data     {{10, 20}, 100, 200}
+  @data     {100, 200}
 
   #============================================================================
   # build / add
@@ -31,7 +31,7 @@ defmodule Scenic.Primitive.EllipseTest do
   end
 
   test "verify fails invalid data" do
-    assert Ellipse.verify( {{10, 20}, :atom, 0.0, 1.4} ) == :invalid_data
+    assert Ellipse.verify( {:atom, 0.0, 1.4} ) == :invalid_data
     assert Ellipse.verify( :banana )                   == :invalid_data
   end
 
@@ -46,19 +46,19 @@ defmodule Scenic.Primitive.EllipseTest do
   # transform helpers
 
   test "default_pin returns the center of the arc" do
-    assert Ellipse.default_pin(@data) == {10, 20}
+    assert Ellipse.default_pin(@data) == {0, 0}
   end
 
   #============================================================================
   # point containment
   test "contains_point? works" do
-    assert Ellipse.contains_point?(@data, {30, 52})  == true
-    assert Ellipse.contains_point?(@data, {109,20})   == true
-    assert Ellipse.contains_point?(@data, {110,20})   == true
-    assert Ellipse.contains_point?(@data, {111,20})   == false
-    assert Ellipse.contains_point?(@data, {10, 219})  == true
-    assert Ellipse.contains_point?(@data, {10, 220})  == true
-    assert Ellipse.contains_point?(@data, {10, 221})  == false
+    assert Ellipse.contains_point?(@data, {10, 32})  == true
+    assert Ellipse.contains_point?(@data, {99,0})   == true
+    assert Ellipse.contains_point?(@data, {100,0})   == true
+    assert Ellipse.contains_point?(@data, {101,0})   == false
+    assert Ellipse.contains_point?(@data, {0, 199})  == true
+    assert Ellipse.contains_point?(@data, {0, 200})  == true
+    assert Ellipse.contains_point?(@data, {0, 201})  == false
   end
 
 

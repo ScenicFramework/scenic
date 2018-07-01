@@ -12,7 +12,8 @@ defmodule Scenic.Primitive.SectorTest do
 
 
 
-  @data     {{10, 20}, 100, 0.0, 1.4}
+  # @data     {{10, 20}, 100, 0.0, 1.4}
+  @data     {100, 0.0, 1.4}
 
   #============================================================================
   # build / add
@@ -33,7 +34,7 @@ defmodule Scenic.Primitive.SectorTest do
   end
 
   test "verify fails invalid data" do
-    assert Sector.verify( {{10, 20}, :atom, 0.0, 1.4} ) == :invalid_data
+    assert Sector.verify( {:atom, 0.0, 1.4} ) == :invalid_data
     assert Sector.verify( :banana ) == :invalid_data
   end
 
@@ -48,20 +49,36 @@ defmodule Scenic.Primitive.SectorTest do
   # transform helpers
 
   test "default_pin returns the center of the arc" do
-    assert Sector.default_pin(@data) == {10, 20}
+    assert Sector.default_pin(@data) == {0, 0}
   end
 
   #============================================================================
   # point containment
   test "contains_point? always returns false" do
-    assert Sector.contains_point?(@data, {30, 52})  == true
-    assert Sector.contains_point?(@data, {-30, 52}) == false
-    assert Sector.contains_point?(@data, {40, 80})  == true
-    assert Sector.contains_point?(@data, {140, 300})  == false
+    assert Sector.contains_point?(@data, {20, 32})  == true
+    assert Sector.contains_point?(@data, {-20, 32}) == false
+    assert Sector.contains_point?(@data, {30, 60})  == true
+    assert Sector.contains_point?(@data, {130, 280})  == false
+  end
 
+  test "contains_point? straight up and down" do
+    # make it big enough to catch the straight down case
+    data = {100, 0.0, 2}
     # straight up or down is a degenerate case
-    assert Sector.contains_point?(@data, {10, 10})  == false
-    assert Sector.contains_point?(@data, {10, 30})  == false
+    assert Sector.contains_point?(data, {0, -10})  == false
+    assert Sector.contains_point?(data, {0, 10})  == true
+
+    assert Sector.contains_point?(data, {0, -101})  == false
+    assert Sector.contains_point?(data, {0, 101})  == false
+  end
+
+  test "contains_point? straight side to side" do
+    # prob not denerate, but might as well check
+    assert Sector.contains_point?(@data, {-10, 0})  == false
+    assert Sector.contains_point?(@data, {10, 0})  == true
+
+    assert Sector.contains_point?(@data, {-101, 0})  == false
+    assert Sector.contains_point?(@data, {101, 0})  == false
   end
 
 

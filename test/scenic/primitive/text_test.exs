@@ -11,7 +11,7 @@ defmodule Scenic.Primitive.TextTest do
   alias Scenic.Primitive.Text
 
 
-  @data     {{10,12}, "test text"}
+  @data     "test text"
 
 
   #============================================================================
@@ -32,8 +32,7 @@ defmodule Scenic.Primitive.TextTest do
   end
 
   test "verify fails invalid data" do
-    assert Text.verify( {{10,12}, :text_text} )       == :invalid_data
-    assert Text.verify( {{10,:banana}, "test text"} ) == :invalid_data
+    assert Text.verify( :text_text )       == :invalid_data
   end
 
   #============================================================================
@@ -48,7 +47,7 @@ defmodule Scenic.Primitive.TextTest do
   # transform helpers
 
   test "default_pin returns the origin of the text" do
-    assert Text.default_pin(@data) == {10,12}
+    assert Text.default_pin(@data) == {0,0}
   end
 
   #============================================================================
@@ -56,14 +55,8 @@ defmodule Scenic.Primitive.TextTest do
 
   test "put can update position and string" do
     p = Text.build( @data )
-    |> Text.put( {{100, 200}, "new text"} )
-    assert Primitive.get(p) == {{100,200}, "new text"}
-  end
-
-  test "put can set a string without affecting the position" do
-    p = Text.build( @data )
     |> Text.put( "new text" )
-    assert Primitive.get(p) == {{10,12}, "new text"}
+    assert Primitive.get(p) == "new text"
   end
 
 end

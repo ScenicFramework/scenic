@@ -10,9 +10,9 @@ defmodule Scenic.Primitive.RoundedRectangleTest do
   alias Scenic.Primitive
   alias Scenic.Primitive.RoundedRectangle
 
-
-  @data     {{10,12}, 40, 80, 10}
-
+  @data           {40, 80, 10}
+  @data_neg_w     {-40, 80, 10}
+  @data_neg_h     {40, -80, 10}
 
   #============================================================================
   # build / add
@@ -33,12 +33,7 @@ defmodule Scenic.Primitive.RoundedRectangleTest do
   end
 
   test "verify fails invalid data" do
-    assert RoundedRectangle.verify( {{10,11}, 40, 80, 666} )   == :invalid_data
-    assert RoundedRectangle.verify( {10, 40, 80} )             == :invalid_data
-    assert RoundedRectangle.verify( {{10,11,12}, 40, 80} )     == :invalid_data
-    assert RoundedRectangle.verify( {{10,11}, 40, :banana} )   == :invalid_data
-    assert RoundedRectangle.verify( {{10,:banana}, 40, 80} )   == :invalid_data
-    assert RoundedRectangle.verify( :banana )                  == :invalid_data
+    assert RoundedRectangle.verify( {10, 40, :banana} ) == :invalid_data
   end
 
   #============================================================================
@@ -52,39 +47,79 @@ defmodule Scenic.Primitive.RoundedRectangleTest do
   # transform helpers
 
   test "default_pin returns the center of the rect" do
-    assert RoundedRectangle.default_pin(@data) == {30, 52}
+    assert RoundedRectangle.default_pin(@data) == {20, 40}
   end
 
   test "centroid returns the center of the rect" do
-    assert RoundedRectangle.centroid(@data) == {30, 52}
+    assert RoundedRectangle.centroid(@data) == {20, 40}
   end
 
   #============================================================================
   # point containment
   test "contains_point? returns true if it contains the point" do
-    assert RoundedRectangle.contains_point?(@data, {30, 52}) == true
+    assert RoundedRectangle.contains_point?(@data, {20, 40}) == true
 
-    assert RoundedRectangle.contains_point?(@data, {30,12}) == true
-    assert RoundedRectangle.contains_point?(@data, {30,92}) == true
-    assert RoundedRectangle.contains_point?(@data, {10,52}) == true
-    assert RoundedRectangle.contains_point?(@data, {50,52}) == true
+    assert RoundedRectangle.contains_point?(@data, {20,0}) == true
+    assert RoundedRectangle.contains_point?(@data, {20,80}) == true
+    assert RoundedRectangle.contains_point?(@data, {0,40}) == true
+    assert RoundedRectangle.contains_point?(@data, {40,40}) == true
   end
 
   test "contains_point? returns false if the point is outside the primary rectangle" do
-    assert RoundedRectangle.contains_point?(@data, {9, 52}) == false
-    assert RoundedRectangle.contains_point?(@data, {51, 52}) == false
+    assert RoundedRectangle.contains_point?(@data, {-1, 40}) == false
+    assert RoundedRectangle.contains_point?(@data, {41, 40}) == false
 
-    assert RoundedRectangle.contains_point?(@data, {30, 11}) == false
-    assert RoundedRectangle.contains_point?(@data, {30, 93}) == false
+    assert RoundedRectangle.contains_point?(@data, {20, -1}) == false
+    assert RoundedRectangle.contains_point?(@data, {20, 81}) == false
   end
 
   test "contains_point? returns false if the point is outside the rounded corners but in the primary rect" do
-    assert RoundedRectangle.contains_point?(@data, {11, 13}) == false
-    assert RoundedRectangle.contains_point?(@data, {49, 13}) == false
+    assert RoundedRectangle.contains_point?(@data, {1, 1}) == false
+    assert RoundedRectangle.contains_point?(@data, {39, 1}) == false
 
-    assert RoundedRectangle.contains_point?(@data, {49, 91}) == false
-    assert RoundedRectangle.contains_point?(@data, {11, 91}) == false
+    assert RoundedRectangle.contains_point?(@data, {39, 79}) == false
+    assert RoundedRectangle.contains_point?(@data, {1, 79}) == false
   end
+
+  #------------------------
+  # negative width
+  test "contains_point? returns true if it contains the point - negative width" do
+    assert RoundedRectangle.contains_point?(@data_neg_w, {-20, 40}) == true
+  end
+
+  test "contains_point? returns false if the point is outside the primary rectangle - negative width" do
+    assert RoundedRectangle.contains_point?(@data_neg_w, {1, 40}) == false
+    assert RoundedRectangle.contains_point?(@data_neg_w, {-41, 40}) == false
+  end
+
+  test "contains_point? returns false if the point is outside the rounded corners but in the primary rect - negative width" do
+    assert RoundedRectangle.contains_point?(@data_neg_w, {-1, 1}) == false
+    assert RoundedRectangle.contains_point?(@data_neg_w, {-39, 1}) == false
+
+    assert RoundedRectangle.contains_point?(@data_neg_w, {-39, 79}) == false
+    assert RoundedRectangle.contains_point?(@data_neg_w, {-1, 79}) == false
+  end
+
+  #------------------------
+  # negative height
+
+  test "contains_point? returns true if it contains the point - negative height" do
+    assert RoundedRectangle.contains_point?(@data_neg_h, {20, -40}) == true
+  end
+
+  test "contains_point? returns false if the point is outside the primary rectangle - negative height" do
+    assert RoundedRectangle.contains_point?(@data_neg_h, {20, 1}) == false
+    assert RoundedRectangle.contains_point?(@data_neg_h, {20, -81}) == false
+  end
+
+  test "contains_point? returns false if the point is outside the rounded corners but in the primary rect - negative height" do
+    assert RoundedRectangle.contains_point?(@data_neg_h, {1, -1}) == false
+    assert RoundedRectangle.contains_point?(@data_neg_h, {39, -1}) == false
+
+    assert RoundedRectangle.contains_point?(@data_neg_h, {39, -79}) == false
+    assert RoundedRectangle.contains_point?(@data_neg_h, {1, -79}) == false
+  end
+
 
 
 end

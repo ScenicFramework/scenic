@@ -10,7 +10,7 @@ defmodule Scenic.Primitive.CircleTest do
   alias Scenic.Primitive
   alias Scenic.Primitive.Circle
 
-  @data     {{10, 20}, 100}
+  @data     100
 
   #============================================================================
   # build / add
@@ -46,17 +46,17 @@ defmodule Scenic.Primitive.CircleTest do
   # transform helpers
 
   test "default_pin returns the center of the arc" do
-    assert Circle.default_pin(@data) == {10, 20}
+    assert Circle.default_pin(@data) == {0,0}
   end
 
   #============================================================================
   # point containment
   test "contains_point? works" do
-    assert Circle.contains_point?(@data, {10, 20})  == true
-    assert Circle.contains_point?(@data, {10, 120})  == true
-    assert Circle.contains_point?(@data, {10, 121})  == false
-    assert Circle.contains_point?(@data, {110, 20})  == true
-    assert Circle.contains_point?(@data, {111, 20})  == false
+    assert Circle.contains_point?(@data, {0,0})  == true
+    assert Circle.contains_point?(@data, {0, 100})  == true
+    assert Circle.contains_point?(@data, {0, 101})  == false
+    assert Circle.contains_point?(@data, {100, 0})  == true
+    assert Circle.contains_point?(@data, {101, 0})  == false
   end
 
 

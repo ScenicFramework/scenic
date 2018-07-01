@@ -41,10 +41,10 @@ defmodule Scenic.Primitive.Rectangle do
 
   #--------------------------------------------------------
   def contains_point?( { w, h }, {xp,yp} ) do
-    xp * w > 0 &&           # width and xp must be the same sign
-    yp * h > 0 &&           # height and yp must be the same sign
-    abs(xp) < abs(w) &&     # xp must be less than the width
-    abs(yp) < abs(h)        # yp must be less than the height
+    xp * w >= 0 &&           # width and xp must be the same sign
+    yp * h >= 0 &&           # height and yp must be the same sign
+    abs(xp) <= abs(w) &&     # xp must be less than the width
+    abs(yp) <= abs(h)        # yp must be less than the height
   end
 
 end

@@ -7,7 +7,7 @@ defmodule Scenic.Primitive.RoundedRectangle do
   use Scenic.Primitive
   alias Scenic.Primitive.Rectangle
 
-
+  # import IEx
 
   @styles   [:hidden, :fill, :stroke]
 
@@ -72,7 +72,6 @@ defmodule Scenic.Primitive.RoundedRectangle do
 
   #--------------------------------------------------------
   def contains_point?( { w, h, r }, {xp,yp} ) do
-
     # check that it is in the bounding rectangle first
     if Rectangle.contains_point?( { w, h }, {xp,yp} ) do
       # we now know the signs are the same, so we can use abs to make things easier
@@ -83,8 +82,18 @@ defmodule Scenic.Primitive.RoundedRectangle do
       xp = abs(xp)
       yp = abs(yp)
       point = {xp,yp}
+
       # check the rounding quadrants
       cond do
+        # # if it is in the inner rect, then we are done
+        # Rectangle.contains_point?(
+        #   {
+        #     abs(inner_right - inner_left),
+        #     abs(inner_bottom - inner_top)
+        #   },
+        #   {abs(xp-r),abs(yp-r)}
+        # ) -> true
+
         # top left
         (xp < inner_left) && (yp < inner_top) ->
           inside_radius?({inner_left, inner_left}, r, point)
@@ -100,6 +109,9 @@ defmodule Scenic.Primitive.RoundedRectangle do
         # bottom left
         (xp < inner_left) && (yp > inner_bottom) ->
           inside_radius?({inner_left, inner_bottom}, r, point)
+
+        # not in the radius areas, but in the overall rect
+        true -> true
       end
     else
       # not in the bounding rectangle

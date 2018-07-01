@@ -10,7 +10,7 @@ defmodule Scenic.Primitive.ArcTest do
   alias Scenic.Primitive
   alias Scenic.Primitive.Arc
 
-  @data     {{10, 20}, 100, 0.0, 1.4}
+  @data     {100, 0.0, 1.4}
 
   #============================================================================
   # build / add
@@ -31,8 +31,8 @@ defmodule Scenic.Primitive.ArcTest do
   end
 
   test "verify fails invalid data" do
-    assert Arc.verify( {{10, 20}, :atom, 0.0, 1.4} ) == :invalid_data
-    assert Arc.verify( :banana )                   == :invalid_data
+    assert Arc.verify( {:atom, 0.0, 1.4} )  == :invalid_data
+    assert Arc.verify( :banana )            == :invalid_data
   end
 
   #============================================================================
@@ -46,18 +46,18 @@ defmodule Scenic.Primitive.ArcTest do
   # transform helpers
 
   test "default_pin returns the center of the arc" do
-    assert Arc.default_pin(@data) == {10, 20}
+    assert Arc.default_pin(@data) == {0,0}
   end
 
   #============================================================================
   # point containment
   test "contains_point? works" do
     # in the sector, but not the arc
-    assert Arc.contains_point?(@data, {56, 65})  == false
+    assert Arc.contains_point?(@data, {46, 45})  == false
     # in the arc
-    assert Arc.contains_point?(@data, {75, 81})  == true
+    assert Arc.contains_point?(@data, {65, 61})  == true
     # beyond the sector and the arc
-    assert Arc.contains_point?(@data, {99, 90})  == false
+    assert Arc.contains_point?(@data, {89, 90})  == false
   end
 
 
