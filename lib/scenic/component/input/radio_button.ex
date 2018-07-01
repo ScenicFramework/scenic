@@ -58,11 +58,11 @@ defmodule Scenic.Component.Input.RadioButton do
     graph = Graph.build( font: :roboto, font_size: 16 )
     |> Primitive.Group.add_to_graph(fn(graph) ->
       graph
-      |> rect({{-2,-2}, 140, 16}, fill: :clear)
-      |> circle({{6,6}, 8}, fill: box_background, stroke: {2, border_color}, id: :box)
-      |> circle({{6,6}, 5}, fill: checkmark_color, id: :chx, hidden: !value)
+      |> rect({140, 16}, fill: :clear, translate: {-2,-2})
+      |> circle(8, fill: box_background, stroke: {2, border_color}, id: :box, t: {6,6})
+      |> circle(5, fill: checkmark_color, id: :chx, hidden: !value, t: {6,6})
     end, translate: {0, -11})
-    |> text({{20,0}, text}, fill: text_color )
+    |> text(text, fill: text_color, translate: {20,0})
 
     state = %{
       graph: graph,

@@ -30,9 +30,9 @@ defmodule Scenic.Component.Input.Slider do
   #--------------------------------------------------------
   def init( {extents, value, width, id}, _ ) do
     graph = Graph.build()
-      |> rect( {{0,0}, width, @height}, fill: :clear )
+      |> rect( {width, @height}, fill: :clear )
       |> line( {{0,@mid_height},{width,@mid_height}}, stroke: {@line_width, @line_color} )
-      |> rrect( {{0,1}, @btn_size, @btn_size, @radius}, fill: @slider_color, id: :thumb )
+      |> rrect( {@btn_size, @btn_size, @radius}, fill: @slider_color, id: :thumb, t: {0,1} )
       |> update_slider_position( value, extents, width )
 
     state = %{

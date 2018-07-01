@@ -55,9 +55,13 @@ defmodule Scenic.Component.Input.Checkbox do
     graph = Graph.build( font: :roboto, font_size: 16 )
     |> group(fn(graph) ->
       graph
-      |> rect({{-2,-2}, 140, 16}, fill: :clear)
-      |> rrect({{-2,-2}, 16, 16, 3},
-        fill: box_background, stroke: {2, border_color}, id: :box )
+      |> rect({140, 16}, fill: :clear, translate: {-2,-2})
+      |> rrect({16, 16, 3},
+        fill: box_background,
+        stroke: {2, border_color},
+        id: :box,
+        translate: {-2,-2}
+      )
 
       |> group(fn(graph) ->
         graph
@@ -68,7 +72,7 @@ defmodule Scenic.Component.Input.Checkbox do
           ], stroke: {2, checkmark_color}, join: :round)
       end, id: :chx, hidden: !value)
     end, translate: {0, -11})
-    |> text({{20,0}, text}, fill: text_color )
+    |> text({text}, fill: text_color, translate: {20,0} )
 
     state = %{
       graph: graph,

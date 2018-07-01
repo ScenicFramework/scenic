@@ -78,8 +78,8 @@ defmodule Scenic.Component.Button do
     font_size = styles[:font_size] || @default_font_size
 
     graph = Graph.build( font: font, font_size: font_size )
-    |> rrect( {{0,0}, width, height, radius}, fill: button_color, id: :btn )
-    |> text( {{8,(height*0.7)}, text}, fill: text_color )
+    |> rrect( {width, height, radius}, fill: button_color, id: :btn )
+    |> text( text, fill: text_color, translate: {8,(height*0.7)} )
 
     state = %{
       graph: graph,
