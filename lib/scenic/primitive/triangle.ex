@@ -80,7 +80,7 @@ defmodule Scenic.Primitive.Triangle do
 
   # http://blackpawn.com/texts/pointinpoly/
   #--------------------------------------------------------
-  @degenerate 0.00001
+  @degenerate 0.0001
   def contains_point?( {{x0,y0}=p0, {x1,y1}=p1, {x2,y2}=p2}, px ) do
 
     # make sure the points are not collinear, if so the abs(area) will be very small
