@@ -182,6 +182,14 @@ defmodule Scenic.Primitive do
   end
 
   defp apply_transform_options( p, opts ) do
+    # map the shortcut transforms options
+    opts = Enum.map(opts, fn
+      {:t,v} -> {:translate,v}
+      {:s,v} -> {:scale,v}
+      {:r,v} -> {:rotate,v}
+      opt -> opt
+    end)
+
     # extract the transforms from the opts
     txs = Enum.filter(opts, fn({k,_}) -> Enum.member?(@transform_types, k) end)
     |> Enum.into( %{} )

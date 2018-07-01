@@ -11,7 +11,7 @@
 defmodule Scenic.ViewPort.Tables do
   use GenServer
 
-#  import IEx
+ # import IEx
 
   # ets table names
   @ets_subs_table       :_scenic_subs_table_
@@ -167,8 +167,8 @@ defmodule Scenic.ViewPort.Tables do
   #============================================================================
   # handle_info
 
-  # when a scene goes down, we need to clean up the tables
-  def handle_info({:DOWN, _monitor_ref, :process, pid, _reason}, state) do
+  # when a scene shuts down, we need to clean up the tables
+  def handle_info({:DOWN, _monitor_ref, :process, pid, :shutdown}, state) do
     # delete any graphs that had been set by this pid
     pid
     |> list_graphs_for_scene_pid()
@@ -191,6 +191,10 @@ defmodule Scenic.ViewPort.Tables do
 
     {:noreply, state}
   end
+
+  # if the scene crashed - let the supervisor do its thing
+  def handle_info({:DOWN,_,:process,_,_}=msg, state), do: {:noreply, state}
+
 
 
   #============================================================================
