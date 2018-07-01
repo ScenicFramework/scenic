@@ -8,7 +8,7 @@ defmodule Scenic.Primitive.TriangleTest do
   doctest Scenic
 
   alias Scenic.Primitive
-  alias Scenic.Primitive.Triangle
+  alias Scenic.Primitive.Triangle 
 
 
   @data     {{20, 300}, {400, 300}, {400, 0}}
@@ -73,6 +73,14 @@ defmodule Scenic.Primitive.TriangleTest do
     assert Triangle.contains_point?(@data, {401, 200})  == false
     assert Triangle.contains_point?(@data, {273, -1})   == false
     assert Triangle.contains_point?(@data, {273, 301})  == false
+  end
+
+
+  test "contains_point? can handle degenerate triangles - is really a line" do
+    assert Triangle.contains_point?(
+      {{0,0}, {10,0}, {-10,0}},
+      {30, 100}
+    ) == false
   end
 
 

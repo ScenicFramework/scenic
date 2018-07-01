@@ -80,26 +80,37 @@ defmodule Scenic.Primitive.Triangle do
 
   # http://blackpawn.com/texts/pointinpoly/
   #--------------------------------------------------------
-  def contains_point?( {p0, p1, p2}, px ) do
-    # compute vectors
-    v0 = Math.Vector2.sub( p2, p0 )
-    v1 = Math.Vector2.sub( p1, p0 )
-    v2 = Math.Vector2.sub( px, p0 )
+  @degenerate 0.00001
+  def contains_point?( {{x0,y0}=p0, {x1,y1}=p1, {x2,y2}=p2}, px ) do
 
-    # compute dot products
-    dot00 = Math.Vector2.dot(v0, v0)
-    dot01 = Math.Vector2.dot(v0, v1)
-    dot02 = Math.Vector2.dot(v0, v2)
-    dot11 = Math.Vector2.dot(v1, v1)
-    dot12 = Math.Vector2.dot(v1, v2)
+    # make sure the points are not collinear, if so the abs(area) will be very small
+    area = abs(x0 * (y1 - y2) + x1 * (y2 - y0) + x2 * (y0 - y1))
 
-    # Compute barycentric coordinates
-    invDenom = 1.0 / (dot00 * dot11 - dot01 * dot01)
-    u = (dot11 * dot02 - dot01 * dot12) * invDenom
-    v = (dot00 * dot12 - dot01 * dot02) * invDenom
+    if area < @degenerate do
+      false
+    else
+      # compute vectors
+      v0 = Math.Vector2.sub( p2, p0 )
+      v1 = Math.Vector2.sub( p1, p0 )
+      v2 = Math.Vector2.sub( px, p0 )
 
-    # Check if point is in triangle
-    (u >= 0) && (v >= 0) && (u + v < 1)
+      # compute dot products
+      dot00 = Math.Vector2.dot(v0, v0)
+      dot01 = Math.Vector2.dot(v0, v1)
+      dot02 = Math.Vector2.dot(v0, v2)
+      dot11 = Math.Vector2.dot(v1, v1)
+      dot12 = Math.Vector2.dot(v1, v2)
+
+      # Compute barycentric coordinates
+      invDenom = 1.0 / (dot00 * dot11 - dot01 * dot01)
+      u = (dot11 * dot02 - dot01 * dot12) * invDenom
+      v = (dot00 * dot12 - dot01 * dot02) * invDenom
+
+      # Check if point is in triangle
+      (u >= 0) && (v >= 0) && (u + v < 1)
+    end
+
+
   end
 
 
