@@ -119,9 +119,6 @@ defmodule Scenic.Primitives do
   #--------------------------------------------------------
   def arc( graph_or_primitive, data, opts \\ [] )
 
-  def arc( gp, {radius, start, finish}, opts ), do:
-    arc( gp, {{0,0}, radius, start, finish}, opts )
-
   def arc( %Graph{} = g, data, opts ) do
     add_to_graph( g, Primitive.Arc, data, opts )
   end
@@ -134,9 +131,6 @@ defmodule Scenic.Primitives do
   #--------------------------------------------------------
   def circle( graph_or_primitive, data, opts \\ [] )
 
-  def circle( gp, radius, opts ) when is_number(radius), do:
-    circle( gp, {{0,0}, radius}, opts )
-
   def circle( %Graph{} = g, data, opts ) do
     add_to_graph( g, Primitive.Circle, data, opts )
   end
@@ -148,9 +142,6 @@ defmodule Scenic.Primitives do
 
   #--------------------------------------------------------
   def ellipse( graph_or_primitive, data, opts \\ [] )
-
-  def ellipse( gp, {r1, r2}, opts ) when is_number(r1) and is_number(r2), do:
-    ellipse( gp, {{0,0}, r1, r2}, opts )
 
   def ellipse( %Graph{} = g, data, opts ) do
     add_to_graph( g, Primitive.Ellipse, data, opts )
@@ -248,10 +239,6 @@ defmodule Scenic.Primitives do
 
   def rectangle( graph_or_primitive, data, opts \\ [] )
 
-  def rectangle( gp, {width, height}, opts ) do
-    rectangle( gp, {{0,0}, width, height}, opts )
-  end
-
   def rectangle( %Graph{} = g, data, opts ) do
     add_to_graph( g, Primitive.Rectangle, data, opts )
   end
@@ -267,10 +254,6 @@ defmodule Scenic.Primitives do
   end
 
   def rounded_rectangle( graph_or_primitive, data, opts \\ [] )
-
-  def rounded_rectangle( gp, {width, height, radius}, opts ) do
-    rounded_rectangle( gp, {{0,0}, width, height, radius}, opts )
-  end
 
   def rounded_rectangle( %Graph{} = g, data, opts ) do
     add_to_graph( g, Primitive.RoundedRectangle, data, opts )
@@ -296,9 +279,6 @@ defmodule Scenic.Primitives do
   #--------------------------------------------------------
   def sector( graph_or_primitive, data, opts \\ [] )
 
-  def sector( gp, {radius, start, finish}, opts ), do:
-    sector( gp, {{0,0}, radius, start, finish}, opts )
-
   def sector( %Graph{} = g, data, opts ) do
     add_to_graph( g, Primitive.Sector, data, opts )
   end
@@ -309,10 +289,6 @@ defmodule Scenic.Primitives do
 
   #--------------------------------------------------------
   def text( graph_or_primitive, data, opts \\ [] )
-
-  def text( gp, text, opts ) when is_bitstring(text) do
-    text( gp, {{0,0}, text}, opts )
-  end
 
   def text( %Graph{} = g, data, opts ) do
     add_to_graph( g, Primitive.Text, data, opts )

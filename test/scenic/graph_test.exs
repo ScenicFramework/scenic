@@ -33,22 +33,22 @@ defmodule Scenic.GraphTest do
 
   @filter_graph Graph.build()
     |> Primitive.Group.add_to_graph( fn(g) ->
-      Rectangle.add_to_graph( g, {{0, 0}, 100, 200}, id: :rect )
+      Rectangle.add_to_graph( g, {100, 200}, id: :rect )
     end, id: "group")
 
 
   @graph_find       Graph.build()
-    |> Text.add_to_graph( {{10,10}, "Some sample text"}, id: :outer_text, tags: ["outer", "text", :text_atom, :on_root] )
+    |> Text.add_to_graph( "Some sample text", id: :outer_text, tags: ["outer", "text", :text_atom, :on_root] )
     |> Line.add_to_graph( {{10,10}, {100, 100}}, id: :outer_line, tags: ["outer", "line"] )
     |> Group.add_to_graph( fn(g) ->
       g
-      |> Text.add_to_graph({{10,10}, "inner text"}, id: :inner_text, tags: ["inner", "text", :text_atom])
+      |> Text.add_to_graph("inner text", id: :inner_text, tags: ["inner", "text", :text_atom])
       |> Line.add_to_graph({{10,10}, {100, 100}}, id: :inner_line, tags: ["inner", "line"])
     end, id: :group)
 
   @graph_ordered Graph.build()
     |> Line.add_to_graph( {{10,10}, {100, 100}}, id: :line, tags: ["first"] )
-    |> Text.add_to_graph( {{20,20}, "text"}, id: :text )
+    |> Text.add_to_graph( "text", id: :text )
     |> Line.add_to_graph( {{30,30}, {300, 300}}, id: :line, tags: ["second"] )
 
 
@@ -781,7 +781,7 @@ defmodule Scenic.GraphTest do
 
   test "modify modifies transforms" do
     graph = Graph.build( rotate: 1.1 )
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, translate: {10,11})
+    |> Rectangle.add_to_graph({100, 200}, id: :rect, translate: {10,11})
     [uid] = Graph.resolve_id( graph, :rect )
 
     graph = Graph.modify(graph, uid, fn(p)->
@@ -794,7 +794,7 @@ defmodule Scenic.GraphTest do
 
   test "modify modifies styles" do
     graph = Graph.build( rotate: 1.1 )
-    |> Rectangle.add_to_graph({{10,10}, 100, 200}, id: :rect, fill: :red)
+    |> Rectangle.add_to_graph({100, 200}, id: :rect, fill: :red)
     [uid] = Graph.resolve_id( graph, :rect )
 
     graph = Graph.modify(graph, uid, fn(p)->
@@ -1214,7 +1214,7 @@ defmodule Scenic.GraphTest do
       |> Graph.put_event_filter(:rect, fn(_, p, graph) ->
         # modify the graph
         graph = Graph.modify(graph, p, fn(p) ->
-          Primitive.put(p, {{1000, 1001}, 300, 400})
+          Primitive.put(p, {301, 401})
         end)
 
         {:stop, graph}
@@ -1224,7 +1224,7 @@ defmodule Scenic.GraphTest do
     {:stop, graph} = Graph.filter_input( graph, :event_start, rect_uid )
 
     rect = Graph.get(graph, rect_uid)
-    assert Primitive.get(rect) == {{1000, 1001}, 300, 400}
+    assert Primitive.get(rect) == {301, 401}
   end
 
   #============================================================================
