@@ -5,9 +5,7 @@
 
 defmodule Scenic.Primitive.RoundedRectangle do
   use Scenic.Primitive
-
-#  alias Scenic.Primitive
-#  alias Scenic.Primitive.Style
+  alias Scenic.Primitive.Rectangle
 
 
 
@@ -18,14 +16,46 @@ defmodule Scenic.Primitive.RoundedRectangle do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Rounded Rectangle data must be a point, width, height, and radius. Like this: {{x0,y0}, width, height, radius}"
+  def info() do
+    "Rounded Rectangle data must be {width, height, radius}\r\n" <>
+    "Radius will be clamped to half of the smaller of width or height."
+  end
 
   #--------------------------------------------------------
-  def verify( {{x0, y0}, width, height, radius} = data ) when
-    is_number(x0) and is_number(y0) and
-    is_number(width) and is_number(height) and
-    is_integer(radius) and (radius >= 0) and (radius <= 255), do: {:ok, data}
-  def verify( _ ), do: :invalid_data
+  def verify( data ) do
+    try do
+      normalize(data)
+      {:ok, data}
+    rescue
+      _ -> :invalid_data
+    end
+  end
+
+  #--------------------------------------------------------
+  def normalize( {width, height, radius} ) when
+  is_number(width) and is_number(height) and
+  is_number(radius) and (radius >= 0) do
+    w = abs(width)
+    h = abs(height)
+    
+    # clamp the radius
+    radius = case w <= h do
+      true -> # width is smaller
+        case radius > w / 2 do
+          true -> w / 2
+          false -> radius
+        end
+      false -> # height is smaller
+        case radius > h / 2 do
+          true -> h / 2
+          false -> radius
+        end
+    end
+
+    {width, height, radius}
+  end
+
+
 
 
   #============================================================================
@@ -36,53 +66,44 @@ defmodule Scenic.Primitive.RoundedRectangle do
 
   #--------------------------------------------------------
   def centroid(data)
-  def centroid({{x0, y0}, width, height, _}) do
-    {
-      x0 + round(width / 2),
-      y0 + round(height / 2),
-    }
+  def centroid({width, height, _}) do
+    { width / 2, height / 2 }
   end
 
   #--------------------------------------------------------
-  def contains_point?( { {x,y}, w, h, r }, {xp,yp} ) do
-    left          = x
-    top           = y
-    right         = x + w
-    bottom        = y + h
-    inner_left    = left + r
-    inner_top     = top + r
-    inner_right   = right - r
-    inner_bottom  = bottom - r
+  def contains_point?( { w, h, r }, {xp,yp} ) do
 
-    cond do
-      # check the clear outer boundary
-      xp < left    -> false
-      yp < top     -> false
-      xp > right   -> false
-      yp > bottom  -> false
-
-      # check the clear inner boundary
-      (xp >= inner_left) && (xp <= inner_right)  -> true
-      (yp >= inner_top) && (yp <= inner_bottom)  -> true
-
+    # check that it is in the bounding rectangle first
+    if Rectangle.contains_point?( { w, h }, {xp,yp} ) do
+      # we now know the signs are the same, so we can use abs to make things easier
+      inner_left    = r
+      inner_top     = r
+      inner_right   = abs(w) - r
+      inner_bottom  = abs(h) - r
+      xp = abs(xp)
+      yp = abs(yp)
+      point = {xp,yp}
       # check the rounding quadrants
-      # top left
-      (xp < inner_left) && (yp < inner_top) ->
-        inside_radius?({inner_left, inner_left}, r, {xp,yp})
+      cond do
+        # top left
+        (xp < inner_left) && (yp < inner_top) ->
+          inside_radius?({inner_left, inner_left}, r, point)
 
-      # top right
-      (xp > inner_right) && (yp < inner_top) ->
-        inside_radius?({inner_right, inner_left}, r, {xp,yp})
+        # top right
+        (xp > inner_right) && (yp < inner_top) ->
+          inside_radius?({inner_right, inner_left}, r, point)
 
-      # bottom right
-      (xp > inner_right) && (yp > inner_bottom) ->
-        inside_radius?({inner_right, inner_bottom}, r, {xp,yp})
+        # bottom right
+        (xp > inner_right) && (yp > inner_bottom) ->
+          inside_radius?({inner_right, inner_bottom}, r, point)
 
-      # bottom left
-      (xp < inner_left) && (yp > inner_bottom) ->
-        inside_radius?({inner_left, inner_bottom}, r, {xp,yp})
-
-      # that should cover all the cases
+        # bottom left
+        (xp < inner_left) && (yp > inner_bottom) ->
+          inside_radius?({inner_left, inner_bottom}, r, point)
+      end
+    else
+      # not in the bounding rectangle
+      false
     end
   end
 

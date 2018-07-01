@@ -17,12 +17,12 @@ defmodule Scenic.Primitive.Rectangle do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Rectangle data must be a point, width and height. Like this: {{x0,y0}, width, height}"
+  def info(), do: "Rectangle data must width and height. Like this: {width, height}"
 
   #--------------------------------------------------------
-  def verify( {{x0, y0}, width, height} = data ) when
-    is_number(x0) and is_number(y0) and
-    is_number(width) and is_number(height), do: {:ok, data}
+  def verify( {width, height} = data ) when is_number(width) and is_number(height) do
+    {:ok, data}
+  end
   def verify( _ ), do:  :invalid_data
 
 
@@ -35,22 +35,16 @@ defmodule Scenic.Primitive.Rectangle do
 
   #--------------------------------------------------------
   def centroid(data)
-  def centroid({{x0, y0}, width, height}) do
-    {
-      x0 + round(width / 2),
-      y0 + round(height / 2),
-    }
+  def centroid({width, height}) do
+    { width / 2, round(height / 2) }
   end
 
   #--------------------------------------------------------
-  def contains_point?( { {x,y}, w, h }, {xp,yp} ) do
-    cond do
-      xp < x       -> false
-      yp < y       -> false
-      xp > x + w   -> false
-      yp > y + h   -> false
-      true         -> true
-    end
+  def contains_point?( { w, h }, {xp,yp} ) do
+    xp * w > 0 &&           # width and xp must be the same sign
+    yp * h > 0 &&           # height and yp must be the same sign
+    abs(xp) < abs(w) &&     # xp must be less than the width
+    abs(yp) < abs(h)        # yp must be less than the height
   end
 
 end

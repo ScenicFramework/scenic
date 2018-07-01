@@ -32,8 +32,7 @@ defmodule Scenic.Primitive.Ellipse do
 
 
   #--------------------------------------------------------
-  def normalize( {{x, y}, r1, r2} = data )
-  when is_number(x) and is_number(y) and is_number(r1) and is_number(r2) do
+  def normalize( {r1, r2} = data ) when is_number(r1) and is_number(r2) do
     data
   end
 
@@ -42,15 +41,9 @@ defmodule Scenic.Primitive.Ellipse do
   def valid_styles(), do: @styles
 
   #--------------------------------------------------------
-  def default_pin( data ) do
-    {{x, y},_,_} = normalize(data)
-    {x,y}
-  end
-
-  #--------------------------------------------------------
-  def contains_point?( {{x, y}, r1, r2}, {xp,yp} ) do
-    dx = ((x - xp) * (x - xp)) / (r1 * r1)
-    dy = ((y - yp) * (y - yp)) / (r2 * r2)
+  def contains_point?( {r1, r2}, {xp,yp} ) do
+    dx = (xp * xp) / (r1 * r1)
+    dy = (yp * yp) / (r2 * r2)
     # test if less or equal to 1
     dx + dy <= 1
   end

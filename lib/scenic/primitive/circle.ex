@@ -31,8 +31,7 @@ defmodule Scenic.Primitive.Circle do
 
 
   #--------------------------------------------------------
-  def normalize( {{x, y}, radius} = data )
-  when is_number(x) and is_number(y) and is_number(radius) do
+  def normalize( radius = data ) when is_number(radius) do
     data
   end
 
@@ -41,15 +40,9 @@ defmodule Scenic.Primitive.Circle do
   def valid_styles(), do: @styles
 
   #--------------------------------------------------------
-  def default_pin( data ) do
-    {{x, y},_} = normalize(data)
-    {x,y}
-  end
-
-  #--------------------------------------------------------
-  def contains_point?( {{x, y}, radius}, {xp,yp} ) do
+  def contains_point?( radius, {xp,yp} ) do
     # calc the distance squared fromthe pont to the center
-    d_sqr = (x - xp) * (x - xp) + (y - yp) * (y - yp)
+    d_sqr = xp * xp + yp * yp
     # test if less or equal to radius squared
     d_sqr <= radius * radius
   end

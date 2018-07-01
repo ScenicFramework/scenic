@@ -33,8 +33,7 @@ defmodule Scenic.Primitive.Sector do
 
 
   #--------------------------------------------------------
-  def normalize( {{x, y}, radius, start, finish} = data ) when
-  is_number(x) and is_number(y) and
+  def normalize( {radius, start, finish} = data ) when
   is_number(start) and is_number(finish) and
   is_number(radius), do: data
 
@@ -43,15 +42,7 @@ defmodule Scenic.Primitive.Sector do
   def valid_styles(), do: @styles
 
   #--------------------------------------------------------
-  def default_pin( data ) do
-    {{x, y},_,_,_} = normalize(data)
-    {x,y}
-  end
-
-  #--------------------------------------------------------
-  def contains_point?( {{x, y}, radius, start, finish}, {xp,yp} ) do
-    xp = xp - x
-    yp = yp - y
+  def contains_point?( {radius, start, finish}, {xp,yp} ) do
     # using polar coordinates...
     point_angle = :math.atan2( yp, xp )
     point_radius_sqr = (xp * xp) + (yp * yp)

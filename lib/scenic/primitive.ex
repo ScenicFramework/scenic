@@ -94,6 +94,9 @@ defmodule Scenic.Primitive do
       # point must already be transformed into local coordinates
       def contains_point?( _, _), do: false
 
+      # unless otherwise defined, the default pin is {0,0}
+      def default_pin(_), do: {0,0}
+
       # simple defaults that can be overridden
       def get( %Primitive{data: data} ),  do: data
       def put( p, data ),                 do: Primitive.do_put( p, data )
@@ -106,6 +109,7 @@ defmodule Scenic.Primitive do
         filter_styles:    1,
         expand:           1,
         contains_point?:  2,
+        default_pin:      1,
         get:              1,
         put:              2,
         normalize:        1

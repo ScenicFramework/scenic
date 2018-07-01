@@ -34,8 +34,7 @@ defmodule Scenic.Primitive.Arc do
 
 
   #--------------------------------------------------------
-  def normalize( {{x, y}, radius, start, finish} = data ) when
-  is_number(x) and is_number(y) and
+  def normalize( {radius, start, finish} = data ) when
   is_number(start) and is_number(finish) and
   is_number(radius), do: data
 
@@ -44,26 +43,20 @@ defmodule Scenic.Primitive.Arc do
   def valid_styles(), do: @styles
 
   #--------------------------------------------------------
-  def default_pin( data ) do
-    {{x, y},_,_,_} = normalize(data)
-    {x,y}
-  end
-
-  #--------------------------------------------------------
-  def contains_point?( {{x, y} = p0, radius, start, finish} = data, pt ) do
+  def contains_point?( {radius, start, finish} = data, pt ) do
     # first, see if it is in the sector described by the arc data
     if Sector.contains_point?(data, pt) do
       # See if it is NOT in the triangle part of sector.
       # If it isn't in the triangle, then it must be in the arc part.
       p1 = {
-        x + radius * :math.cos(start),
-        y + radius * :math.sin(start)
+        radius * :math.cos(start),
+        radius * :math.sin(start)
       }
       p2 = {
-        x + radius * :math.cos(finish),
-        y + radius * :math.sin(finish)
+        radius * :math.cos(finish),
+        radius * :math.sin(finish)
       }
-      !Triangle.contains_point?( {p0,p1,p2}, pt )
+      !Triangle.contains_point?( {{0,0},p1,p2}, pt )
     else
       false
     end
