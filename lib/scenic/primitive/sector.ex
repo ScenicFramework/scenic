@@ -18,7 +18,7 @@ defmodule Scenic.Primitive.Sector do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Sector should look like this: {{0,y}, radius, start, finish}\r\n" <>
+  def info(), do: "Sector must be: {radius, start, finish}\r\n" <>
   "Add a scale transform to make it a sector of an ellipse"
 
   #--------------------------------------------------------

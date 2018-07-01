@@ -17,8 +17,7 @@ defmodule Scenic.Primitive.Ellipse do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Ellipse data must be a point, and a two radii. Like this: {{x,y}, r1, r2}\r\n" <>
-    "hint: if you want to rotate or skew the ellipse, apply transforms..."
+  def info(), do: "Ellipse data must be: {radius_1, radius_2}"
 
   #--------------------------------------------------------
   def verify( data ) do

@@ -16,7 +16,7 @@ defmodule Scenic.Primitive.Triangle do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Triangle data must be three points, like this: {{x0,y0}, {x1,y1}, {x2,y2}}"
+  def info(), do: "Triangle data must be three points: {{x0,y0}, {x1,y1}, {x2,y2}}"
 
   def verify( {{x0, y0}, {x1, y1}, {x2, y2}} = data ) when
     is_number(x0) and is_number(y0) and

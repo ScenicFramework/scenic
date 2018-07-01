@@ -17,7 +17,7 @@ defmodule Scenic.Primitive.Rectangle do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Rectangle data must width and height. Like this: {width, height}"
+  def info(), do: "Rectangle data be: {width, height}"
 
   #--------------------------------------------------------
   def verify( {width, height} = data ) when is_number(width) and is_number(height) do

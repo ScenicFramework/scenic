@@ -17,7 +17,7 @@ defmodule Scenic.Primitive.Circle do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Circle data must be a point, and a radius. Like this: {{x,y}, radius}"
+  def info(), do: "Circle data must be: radius"
 
   #--------------------------------------------------------
   def verify( data ) do

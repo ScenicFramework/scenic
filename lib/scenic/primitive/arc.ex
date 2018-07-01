@@ -19,8 +19,9 @@ defmodule Scenic.Primitive.Arc do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Arc should look like this: {{0,y}, radius, start, finish}\r\n" <>
+  def info(), do: "Arc data must be: {radius, start, finish}\r\n" <>
   "Add a scale transform to make it an arc along an ellipse"
+
 
   #--------------------------------------------------------
   def verify( data ) do

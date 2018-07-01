@@ -18,7 +18,7 @@ defmodule Scenic.Primitive.Quad do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Quad data must be four points, like this: {{x0,y0}, {x1,y1}, {x2,y2}, {x3,y3}}"
+  def info(), do: "Quad data must be four points: {{x0,y0}, {x1,y1}, {x2,y2}, {x3,y3}}"
 
   def verify( {{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}} = data ) when
   is_number(x0) and is_number(y0) and

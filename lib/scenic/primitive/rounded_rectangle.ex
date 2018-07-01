@@ -17,7 +17,7 @@ defmodule Scenic.Primitive.RoundedRectangle do
 
   #--------------------------------------------------------
   def info() do
-    "Rounded Rectangle data must be {width, height, radius}\r\n" <>
+    "Rounded Rectangle data must be: {width, height, radius}\r\n" <>
     "Radius will be clamped to half of the smaller of width or height."
   end
 

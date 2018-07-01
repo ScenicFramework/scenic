@@ -16,7 +16,7 @@ defmodule Scenic.Primitive.Line do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Line data must be two points, like this: {{x0,y0}, {x1,y1}}"
+  def info(), do: "Line data must be two points: {{x0,y0}, {x1,y1}}"
 
 
   #--------------------------------------------------------
