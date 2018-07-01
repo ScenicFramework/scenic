@@ -72,7 +72,7 @@ defmodule Scenic.Component.Input.Checkbox do
           ], stroke: {2, checkmark_color}, join: :round)
       end, id: :chx, hidden: !value)
     end, translate: {0, -11})
-    |> text({text}, fill: text_color, translate: {20,0} )
+    |> text(text, fill: text_color, translate: {20,0} )
 
     state = %{
       graph: graph,
