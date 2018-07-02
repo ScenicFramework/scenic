@@ -6,20 +6,17 @@ defmodule Scenic.Component.Button do
   alias Scenic.ViewPort
   import Scenic.Primitives, only: [{:rrect, 3}, {:text, 3}]
 
-  @valid_colors [:primary, :secondary, :success, :danger, :warning, :info, :light, :dark, :text]
-
-  # type is {text_color, button_color, hover_color, pressed_color, border_color}
-  # nil for text_color means to use whatever is inherited
+  # type is {text_color, button_color, pressed_color}
   @colors %{
-    primary:    {:white, {72,122,252}, {60,104,214}, {58,94,201}, {164,186,253}},
-    secondary:  {:white, {111,117,125}, :dark_blue, :light_blue, :clear},
-    success:    {:white, {99,163,74}, :dark_blue, :light_blue, :clear},
-    danger:     {:white, {191,72,71}, :dark_blue, :light_blue, :clear},
-    warning:    {:white, {239,196,42}, :dark_blue, :light_blue, :clear},
-    info:       {:white, {94,159,183}, :dark_blue, :light_blue, :clear},
-    light:      {:white, :steel_blue, :dark_blue, :light_blue, :black},
-    dark:       {:white, :steel_blue, :dark_blue, :light_blue, :clear},
-    text:       {nil, :clear, :clear, :clear, :clear}
+    primary:    {:white, {72,122,252}, {58,94,201}},
+    secondary:  {:white, {111,117,125}, {86,90,95}},
+    success:    {:white, {99,163,74}, {74,123,56}},
+    danger:     {:white, {191,72,71}, {164,54,51}},
+    warning:    {:black, {239,196,42}, {197,160,31}},
+    info:       {:white, {94,159,183}, {70,119,138}},
+    light:      {:black, {248,249,250}, {220,224,229}},
+    dark:       {:white, {54,58,64}, {31,33,36}},
+    text:       {{72,122,252}, :clear, :clear}
   }
 
   @default_width      80
@@ -31,17 +28,14 @@ defmodule Scenic.Component.Button do
 #  #--------------------------------------------------------
   def info() do
 #    "#{IO.ANSI.red()}Button must be initialized with {{x,y}, text, message, opts}#{IO.ANSI.default_color()}\r\n" <>
-    "#{IO.ANSI.red()}Button must be initialized with {text, message, opts}#{IO.ANSI.default_color()}\r\n" <>
+    "#{IO.ANSI.red()}Button data must be: {text, message, opts}#{IO.ANSI.default_color()}\r\n" <>
     "Position the button with a transform\r\n" <>
     "The message will be sent to you in a click event when the button is used.\r\n" <>
-    "Opts either a single or a list of option atoms\r\n" <>
-    "One size indicator: :small, :normal, :large. :normal is the default\r\n" <>
-    "One color indicator: :primary, :secondary, :success, :danger, :warning, :info, :light, :dark, :text\r\n" <>
-    "Other modifiers: :outline\r\n" <>
-    "#{IO.ANSI.yellow()}Example: {\"Button\", :primary}\r\n" <>
-    "Example: { \"Outline\", [:danger, :outline]}\r\n" <>
-    "Example: {\"Large\", [:warning, :large]}\r\n" <>
-    "Example: {\"Small Outline\", [:info, :small, :outline]}#{IO.ANSI.default_color()}\r\n"
+    "Options can be {:width, width} {:height, height}, {:radius, raidus}, and {:color, color}\r\n" <>
+    "The color can be wone of the following presets:\r\n"
+    ":primary, :secondary, :success, :danger, :warning, :info, :light, :dark, :text\r\n" <>
+    "Or a custom color set of {text_color, button_color, pressed_color}\r\n" <>
+    "Example: button({\"Something\", :message, width: 28, type: :danger}, translate: {90,0})"
   end
 
   #--------------------------------------------------------
@@ -52,30 +46,26 @@ defmodule Scenic.Component.Button do
   def valid?( _ ), do: false
 
   #--------------------------------------------------------
-  def init( {text, msg}, opts ) when is_list(opts) do
-    
-    # get the size
-    color_opt = opts[:button_type] || :primary
-    case opts[:button_type] do
-      nil -> :primary
-      type ->
-        case Enum.member?(@valid_colors, type) do
-          true -> type
-          false -> :primary
-        end
+  def init( {text, msg}, args ), do: init( {text, msg, []}, args )
+  def init( {text, msg, opts}, _args ) when is_list(opts) do
+
+    # the button-specific color scheme
+    colors = case opts[:type] do
+      {_,_,_} = colors -> colors
+      type -> Map.get(@colors, type) || Map.get(@colors, :primary)
     end
 
     # get the colors
-    colors = @colors[color_opt]
-    {text_color, button_color, _, _, _border_color} = colors
+    {text_color, button_color, _} = colors
 
-    # get the dimentions
-    styles = opts[:styles] || %{}
-    width = styles[:width] || @default_width
-    height = styles[:height] || @default_height
-    radius = styles[:radius] || @default_radius
-    font = styles[:font] || @default_font
-    font_size = styles[:font_size] || @default_font_size
+    # get button specific options
+    width = opts[:width] || opts[:w] || @default_width
+    height = opts[:height] || opts[:h] || @default_height
+    radius = opts[:radius] || opts[:r] || @default_radius
+
+    # get style args
+    font = opts[:font] || @default_font
+    font_size = opts[:font_size] || @default_font_size
 
     graph = Graph.build( font: font, font_size: font_size )
     |> rrect( {width, height, radius}, fill: button_color, id: :btn )
@@ -88,9 +78,8 @@ defmodule Scenic.Component.Button do
       contained: false,
       msg: msg
     }
-#IO.puts "============> Button.init"
 
-push_graph( graph )
+    push_graph( graph )
 
     {:ok, state}
   end
@@ -154,7 +143,7 @@ push_graph( graph )
   #============================================================================
   # internal utilities
 
-  defp update_color( %{ graph: graph, colors: {_,color,_,_,_},
+  defp update_color( %{ graph: graph, colors: {_,color,_},
   pressed: false, contained: false} ) do
     Graph.modify(graph, :btn, fn(p)->
       p
@@ -163,7 +152,7 @@ push_graph( graph )
     |> push_graph()
   end
 
-  defp update_color( %{ graph: graph, colors: {_,_,color,_,_},
+  defp update_color( %{ graph: graph, colors: {_,color,_},
   pressed: false, contained: true} ) do
     Graph.modify(graph, :btn, fn(p)->
       p
@@ -172,7 +161,7 @@ push_graph( graph )
     |> push_graph()
   end
 
-  defp update_color( %{ graph: graph, colors: {_,color,_,_,_},
+  defp update_color( %{ graph: graph, colors: {_,color,_},
   pressed: true, contained: false} ) do
     Graph.modify(graph, :btn, fn(p)->
       p
@@ -181,7 +170,7 @@ push_graph( graph )
     |> push_graph()
   end
 
-  defp update_color( %{ graph: graph, colors: {_,_,_,color,_},
+  defp update_color( %{ graph: graph, colors: {_,_,color},
   pressed: true, contained: true} ) do
     Graph.modify(graph, :btn, fn(p)->
       Primitive.put_style(p, :fill, color)
