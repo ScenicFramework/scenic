@@ -16,36 +16,19 @@ defmodule Scenic.Primitive.Style.ClearColorTest do
 
   test "verfy works for a single color" do
     assert ClearColor.verify( :red )
-    assert ClearColor.verify( {:red} )
     assert ClearColor.verify( {:red, 128} )
-    assert ClearColor.verify( {{:red, 128}} )
     assert ClearColor.verify( {1,2,3} )
-    assert ClearColor.verify( {{1,2,3}} )
     assert ClearColor.verify( {1,2,3,4} )
-    assert ClearColor.verify( {{1,2,3,4}} )
   end
 
   test "verify rejects negative channels" do
-    refute ClearColor.verify( {{:red, -1}} )
-    refute ClearColor.verify( {{-1,2,3,4}} )
-    refute ClearColor.verify( {{1,-2,3,4}} )
-    refute ClearColor.verify( {{1,2,-3,4}} )
-    refute ClearColor.verify( {{1,2,3,-4}} )
+    refute ClearColor.verify( {:red, -1} )
+    refute ClearColor.verify( {-1,2,3,4} )
   end
 
   test "verify rejects out of bounds channels" do
     refute ClearColor.verify( {:red, 256} )
     refute ClearColor.verify( {256,2,3,4} )
-    refute ClearColor.verify( {1,256,3,4} )
-    refute ClearColor.verify( {1,2,256,4} )
-    refute ClearColor.verify( {1,2,3,256} )
-  end
-
-  test "verfy rejects multiple colors" do
-    refute ClearColor.verify( {:red, :green} )
-    refute ClearColor.verify( {:red, :green, :khaki} )
-    refute ClearColor.verify( {:red, :green, :crimson, :khaki} )
-    refute ClearColor.verify( {:red, {:green, 128}, {1,2,3}, {1,2,3,4}} )
   end
 
   test "verify! works" do
@@ -62,14 +45,10 @@ defmodule Scenic.Primitive.Style.ClearColorTest do
   # normalize - various forms
 
   test "normalize works for a single color" do
-    assert ClearColor.normalize( :red )            == {{255, 0, 0, 255}}
-    assert ClearColor.normalize( {:red} )          == {{255, 0, 0, 255}}
-    assert ClearColor.normalize( {:red, 128} )     == {{255, 0, 0, 128}}
-    assert ClearColor.normalize( {{:red, 128}} )   == {{255, 0, 0, 128}}
-    assert ClearColor.normalize( {1,2,3} )         == {{1, 2, 3, 255}}
-    assert ClearColor.normalize( {{1,2,3}} )       == {{1, 2, 3, 255}}
-    assert ClearColor.normalize( {1,2,3,4} )       == {{1, 2, 3, 4}}
-    assert ClearColor.normalize( {{1,2,3,4}} )     == {{1, 2, 3, 4}}
+    assert ClearColor.normalize( :red )            == {255, 0, 0, 255}
+    assert ClearColor.normalize( {:red, 128} )     == {255, 0, 0, 128}
+    assert ClearColor.normalize( {1,2,3} )         == {1, 2, 3, 255}
+    assert ClearColor.normalize( {1,2,3,4} )       == {1, 2, 3, 4}
   end
 
 

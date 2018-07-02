@@ -34,19 +34,6 @@ defmodule Scenic.Primitive.Style.ClearColor do
   end
 
   #--------------------------------------------------------
-
-  def normalize( color )   when is_atom(color),  do: {Color.to_rgba( color )}
-  def normalize( {color} ) when is_atom(color),  do: {Color.to_rgba( color )}
-
-  def normalize( {color, alpha} )  when is_atom(color) and is_integer(alpha), do: normalize( {{color, alpha}} )
-  def normalize( {{color, alpha}} ), do: {Color.to_rgba( {color, alpha} )}
-
-  def normalize( {r,g,b} ) when is_integer(r) and is_integer(g) and is_integer(b), do: normalize( {{r,g,b}} )
-  def normalize( {{r,g,b}} ), do: {Color.to_rgba( {r,g,b} )}
-
-  def normalize( {r,g,b,a} ) when is_integer(r) and is_integer(g) and is_integer(b) and is_integer(a), do:
-    normalize( {{r,g,b,a}} )
-  def normalize( {{r,g,b,a}} ), do: {Color.to_rgba( {r,g,b,a} )}
-
+  def normalize( color ),  do: Color.to_rgba( color )
 
 end
