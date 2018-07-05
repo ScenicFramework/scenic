@@ -10,8 +10,9 @@
 
 defmodule Scenic.ViewPort.Tables do
   use GenServer
+  alias Scenic.Utilities
 
- import IEx
+ # import IEx
 
   # ets table names
   @ets_subs_table       :_scenic_subs_table_
@@ -22,6 +23,7 @@ defmodule Scenic.ViewPort.Tables do
 
   #============================================================================
   # external client api
+
 
   #--------------------------------------------------------
   # helpers so that other modules can get the name graphs during compile time
@@ -50,7 +52,7 @@ defmodule Scenic.ViewPort.Tables do
 
   #--------------------------------------------------------
   def get_scene_registration( scene_or_graph_key )
-  def get_scene_registration( {:graph, scene, _} ), do: get_scene_pid( scene )
+  def get_scene_registration( {:graph, scene, _} ), do: get_scene_registration( scene )
   def get_scene_registration( scene ) when is_atom(scene) or is_reference(scene) do
     case :ets.lookup(@ets_scenes_table, scene ) do
       [{_,registration}] -> {:ok, registration}
@@ -171,7 +173,8 @@ defmodule Scenic.ViewPort.Tables do
     state = %{
       graph_table_id: :ets.new(@ets_graphs_table, [:named_table, :public, {:read_concurrency, true}]),
       scene_table_id: :ets.new(@ets_scenes_table, [:named_table]),
-      subs_table_id: :ets.new(@ets_subs_table, [:named_table, :bag])
+      subs_table_id: :ets.new(@ets_subs_table, [:named_table, :bag]),
+      sub_monitors: %{}
     }
 
     {:ok, state}
@@ -182,6 +185,10 @@ defmodule Scenic.ViewPort.Tables do
 
   # when a scene shuts down, we need to clean up the tables
   def handle_info({:DOWN, _monitor_ref, :process, pid, :shutdown}, state) do
+
+    # clean up any subscriptions
+    state = handle_cast( {:graph_unsubscribe, :all, pid}, state )
+
     # delete any graphs that had been set by this pid
     pid
     |> list_graphs_for_scene_pid()
@@ -207,7 +214,11 @@ defmodule Scenic.ViewPort.Tables do
   end
 
   # if the scene crashed - let the supervisor do its thing
-  def handle_info({:DOWN,_,:process,_,_}=msg, state), do: {:noreply, state}
+  def handle_info({:DOWN,_,:process,pid,_}, state) do
+    # clean up any subscriptions
+    state = handle_cast( {:graph_unsubscribe, :all, pid}, state )
+    {:noreply, state}
+  end
 
 
 
@@ -226,19 +237,21 @@ defmodule Scenic.ViewPort.Tables do
   #--------------------------------------------------------
   def handle_cast( {:graph_subscribe, graph_key, pid}, state ) do
     :ets.insert(@ets_subs_table, {graph_key, pid})
-    {:noreply, state}
+    {:noreply, monitor_subscriber(pid, graph_key, state)}
   end
 
   #--------------------------------------------------------
   def handle_cast( {:graph_unsubscribe, :all, pid}, state ) do
-    :ets.match_delete(@ets_subs_table, {:"_", pid}) 
+    :ets.match_delete(@ets_subs_table, {:"_", pid})
+    demonitor_subscriber(pid, :all, state)
     {:noreply, state}
   end
 
   #--------------------------------------------------------
   def handle_cast( {:graph_unsubscribe, graph_key, pid}, state ) do
     # delete all the specific subscription
-    :ets.match_delete(@ets_subs_table, {graph_key, pid}) 
+    :ets.match_delete(@ets_subs_table, {graph_key, pid})
+    demonitor_subscriber(pid, graph_key, state)
     {:noreply, state}
   end
 
@@ -249,7 +262,7 @@ defmodule Scenic.ViewPort.Tables do
   #--------------------------------------------------------
   def handle_call( {:graph_subscribe, graph_key, pid}, _, state ) do
     resp = :ets.insert(@ets_subs_table, {graph_key, pid})
-    {:reply, resp, state}
+    {:reply, resp, monitor_subscriber(pid, graph_key, state)}
   end
 
 
@@ -275,6 +288,94 @@ defmodule Scenic.ViewPort.Tables do
     |> Enum.map( fn({_,sub})-> sub end)
   end
 
+  #============================================================================
+  # internal monitor subscriber helpers
+  # somewhat complicated as a listener can subscribe to more than one graph.
+  # not globally accessed, so can be in local state
+
+  #--------------------------------------------------------
+  defp monitor_subscriber(sub, graph_key,
+  %{sub_monitors: sub_monitors} = state) do
+    case sub_monitors[sub] do
+      nil ->
+        # first-time subscription
+        ref = Process.monitor(sub)
+        put_in(state, [:sub_monitors, sub], {ref, [graph_key]})
+
+      {ref, keys} ->
+        # already monitoring something
+        keys = [graph_key | keys]
+        |> Enum.uniq()
+        put_in(state, [:sub_monitors, sub], {ref, keys})
+    end
+  end
+
+  #--------------------------------------------------------
+  # demonitor :all is a nice shortcut. It is not longer monitoring any graphs...
+  defp demonitor_subscriber(sub, :all, %{sub_monitors: sub_monitors} = state) do
+    case sub_monitors[sub] do
+      nil ->
+        # not subscribed. do nothing
+        state
+
+      {ref, _} ->
+        # don't care about the keys.
+        Process.demonitor(ref)
+        Utilities.Map.delete_in(state, [:sub_monitors, sub])
+    end
+  end
+
+  # demonitor based on a single going away graph_key
+  defp demonitor_subscriber(sub, graph_key,
+  %{sub_monitors: sub_monitors} = state) do
+    case sub_monitors[sub] do
+      nil ->
+        # not subscribed. do nothing
+        state
+
+      {ref, keys} ->
+        # is subscribed so something. Remove the graph_key
+        keys = Enum.reject(keys, fn(key)-> key == graph_key end)
+        case keys do
+          [] ->
+            # totally unsubscribed
+            Process.demonitor(ref)
+            Utilities.Map.delete_in(state, [:sub_monitors, sub])
+          keys ->
+            # save the updated list
+            put_in(state, [:sub_monitors, sub], {ref, keys})
+        end
+    end
+  end
 
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

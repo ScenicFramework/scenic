@@ -13,7 +13,7 @@ defmodule Scenic.ViewPort.TablesTest do
   alias Scenic.ViewPort.Tables
   import Scenic.Primitives
 
- import IEx
+ # import IEx
 
   # ets table names
   @ets_subs_table       :_scenic_subs_table_
@@ -25,8 +25,10 @@ defmodule Scenic.ViewPort.TablesTest do
   @graph    Graph.build()
     |> text( "Main Graph" )
 
-  @graph_2  Graph.build()
+  @graph_1  Graph.build()
     |> text( "Second Graph" )
+
+  @state %{sub_monitors: %{}}
 
 
   #--------------------------------------------------------
@@ -74,8 +76,8 @@ defmodule Scenic.ViewPort.TablesTest do
     :ets.insert(@ets_scenes_table, {scene_ref, registration})
 
     # it works with either scene_ref or graph
-    Tables.get_scene_pid(scene_ref) == self()
-    Tables.get_scene_pid(graph) == self()
+    assert Tables.get_scene_pid(scene_ref) == {:ok, self()}
+    assert Tables.get_scene_pid(graph) == {:ok, self()}
 
     Agent.stop(agent_1)
   end
@@ -94,8 +96,8 @@ defmodule Scenic.ViewPort.TablesTest do
     :ets.insert(@ets_scenes_table, {scene_ref, registration})
 
     # it works with either scene_ref or graph
-    Tables.get_scene_registration(scene_ref) == registration
-    Tables.get_scene_registration(graph) == registration
+    assert Tables.get_scene_registration(scene_ref) == {:ok, registration}
+    assert Tables.get_scene_registration(graph) == {:ok, registration}
 
     Agent.stop(agent_1)
   end
@@ -160,7 +162,7 @@ defmodule Scenic.ViewPort.TablesTest do
     # setup
     graph_key = {:graph, make_ref(), 123}
     Tables.insert_graph( graph_key, scene, @graph, [])
-    Tables.handle_cast( {:graph_subscribe, graph_key, self()}, :state )
+    Tables.handle_cast( {:graph_subscribe, graph_key, self()}, @state )
 
     # confirm setup
     assert :ets.lookup(@ets_subs_table, graph_key) == [ {graph_key, self()} ]
@@ -171,7 +173,7 @@ defmodule Scenic.ViewPort.TablesTest do
     assert :ets.lookup(@ets_subs_table, graph_key) == []
 
     # we should have also gotten the delete graph messages
-    assert_received( {:"$gen_cast", {:delete_graph, graph_key}} )
+    assert_received( {:"$gen_cast", {:delete_graph, ^graph_key}} )
   end
 
   test "delete_graph returns error for bad key" do
@@ -225,16 +227,16 @@ defmodule Scenic.ViewPort.TablesTest do
     scene_ref = make_ref()
 
     # insert the graph
-    graph_key = {:graph, scene_ref, 123}
-    Tables.insert_graph( graph_key, self(), @graph, [1, 2, 3])
+    graph_key_0 = {:graph, scene_ref, 123}
+    Tables.insert_graph( graph_key_0, self(), @graph, [1, 2, 3])
 
     # insert a graph to another scene
-    graph_key_2 = {:graph, :scene_ref, 123}
-    Tables.insert_graph( graph_key_2, self(), @graph_2, [1, 2, 3])
+    graph_key_1 = {:graph, :scene_ref, 123}
+    Tables.insert_graph( graph_key_1, self(), @graph_1, [1, 2, 3])
 
     # list_graphs_for_scene works
-    Tables.list_graphs_for_scene(scene_ref) == [graph_key]
-    Tables.list_graphs_for_scene(:scene_ref) == [graph_key_2]
+    assert Tables.list_graphs_for_scene(scene_ref) == [graph_key_0]
+    assert Tables.list_graphs_for_scene(:scene_ref) == [graph_key_1]
   end
 
   #============================================================================
@@ -247,7 +249,7 @@ defmodule Scenic.ViewPort.TablesTest do
     Tables.insert_graph( graph_key_0, self(), @graph, [1, 2])
     # insert a graph to another scene
     graph_key_1 = {:graph, :scene_ref, 456}
-    Tables.insert_graph( graph_key_1, self(), @graph_2, [3, 4])
+    Tables.insert_graph( graph_key_1, self(), @graph_1, [3, 4])
 
     # subscribe to the graphs
     :ets.insert(@ets_subs_table, {graph_key_0, agent_0})
@@ -276,7 +278,7 @@ defmodule Scenic.ViewPort.TablesTest do
     assert Tables.list_graphs() == [graph_key]
 
     # process a fake a DOWN message
-    Tables.handle_info( {:DOWN, make_ref(), :process, self(), :shutdown}, :state )
+    Tables.handle_info( {:DOWN, make_ref(), :process, self(), :shutdown}, @state )
 
     assert Tables.list_graphs() == []
   end
@@ -294,13 +296,13 @@ defmodule Scenic.ViewPort.TablesTest do
     assert Tables.list_graphs() == [graph_key]
 
     # subscribe to the graph
-    Tables.handle_cast( {:graph_subscribe, graph_key, self()}, :state )
+    Tables.handle_cast( {:graph_subscribe, graph_key, self()}, @state )
 
     # process a fake a DOWN message
-    Tables.handle_info( {:DOWN, make_ref(), :process, scene, :shutdown}, :state )
+    Tables.handle_info( {:DOWN, make_ref(), :process, scene, :shutdown}, @state )
 
     # we should have gotten the delete graph messages
-    assert_received( {:"$gen_cast", {:delete_graph, graph_key}} )
+    assert_received( {:"$gen_cast", {:delete_graph, ^graph_key}} )
 
     Agent.stop(scene)
   end
@@ -318,10 +320,10 @@ defmodule Scenic.ViewPort.TablesTest do
     assert Tables.list_graphs() == [graph_key]
 
     # subscribe to the graph
-    Tables.handle_cast( {:graph_subscribe, graph_key, self()}, :state )
+    Tables.handle_cast( {:graph_subscribe, graph_key, self()}, @state )
 
     # process a fake a DOWN message
-    Tables.handle_info( {:DOWN, make_ref(), :process, scene, :shutdown}, :state )
+    Tables.handle_info( {:DOWN, make_ref(), :process, scene, :shutdown}, @state )
 
     # inspect the subs table to make sure it is empty
     assert :ets.lookup(@ets_subs_table, graph_key) == []
@@ -337,11 +339,11 @@ defmodule Scenic.ViewPort.TablesTest do
 
     # set up the subscriber
     {:ok, subscriber} = Agent.start( fn -> 1 + 1 end )
-    Tables.handle_cast( {:graph_subscribe, graph_key, subscriber}, :state )
-    assert :ets.lookup(@ets_subs_table, graph_key) == []
+    Tables.handle_cast( {:graph_subscribe, graph_key, subscriber}, @state )
+    assert :ets.lookup(@ets_subs_table, graph_key) == [{graph_key, subscriber}]
 
     # process a fake a DOWN message
-    Tables.handle_info( {:DOWN, make_ref(), :process, subscriber, :shutdown}, :state )
+    Tables.handle_info( {:DOWN, make_ref(), :process, subscriber, :shutdown}, @state )
 
     # inspect the subs table to make sure it is empty
     assert :ets.lookup(@ets_subs_table, graph_key) == []
@@ -364,10 +366,10 @@ defmodule Scenic.ViewPort.TablesTest do
     registration = {scene, self(), agent_1}
 
     # register the scene
-    Tables.handle_cast( {:register, scene_ref, registration}, :state )
+    Tables.handle_cast( {:register, scene_ref, registration}, @state )
 
     # it works with either scene_ref or graph
-    Tables.get_scene_registration(scene_ref) == registration
+    assert Tables.get_scene_registration(scene_ref) == {:ok, registration}
 
     Agent.stop(agent_1)
   end
@@ -379,7 +381,7 @@ defmodule Scenic.ViewPort.TablesTest do
     registration = {scene, self(), agent}
 
     # register the scene
-    Tables.handle_cast( {:register, scene_ref, registration}, :state )
+    Tables.handle_cast( {:register, scene_ref, registration}, @state )
 
     # stop the scene
     Agent.stop(scene)
@@ -395,11 +397,10 @@ defmodule Scenic.ViewPort.TablesTest do
     graph_key = {:graph, make_ref(), 123}
     Tables.insert_graph( graph_key, self(), @graph, [1, 2])
 
-    assert Tables.handle_call( {:graph_subscribe, graph_key, agent}, 123, :state ) ==
-      {:reply, true, :state}
+    Tables.handle_call( {:graph_subscribe, graph_key, agent}, 123, @state )
 
     # confirm it was subscribed to
-    Tables.list_subscriptions(agent) == [graph_key]
+    assert Tables.list_subscriptions(agent) == [graph_key]
   end
 
   test "handle_call {:graph_subscribe does not create duplicate subscriptions",
@@ -407,11 +408,11 @@ defmodule Scenic.ViewPort.TablesTest do
     graph_key = {:graph, make_ref(), 123}
     Tables.insert_graph( graph_key, agent, @graph, [1, 2])
 
-    Tables.handle_call( {:graph_subscribe, graph_key, agent}, 123, :state )
-    Tables.handle_call( {:graph_subscribe, graph_key, agent}, 123, :state )
+    Tables.handle_call( {:graph_subscribe, graph_key, agent}, 123, @state )
+    Tables.handle_call( {:graph_subscribe, graph_key, agent}, 123, @state )
 
     # confirm it was subscribed to
-    Tables.list_subscriptions(agent) == [graph_key]
+    assert Tables.list_subscriptions(agent) == [graph_key]
   end
 
   test "handle_call {:graph_subscribe starts monitoring the subscriber",
@@ -421,7 +422,7 @@ defmodule Scenic.ViewPort.TablesTest do
     graph_key = {:graph, make_ref(), 123}
     Tables.insert_graph( graph_key, scene, @graph, [1, 2])
 
-    Tables.handle_call( {:graph_subscribe, graph_key, subscriber}, 123, :state )
+    Tables.handle_call( {:graph_subscribe, graph_key, subscriber}, 123, @state )
 
     # confirm it was monitored by stopping the agent and checking for the message
     Agent.stop(subscriber)
@@ -437,11 +438,10 @@ defmodule Scenic.ViewPort.TablesTest do
     graph_key = {:graph, make_ref(), 123}
     Tables.insert_graph( graph_key, agent, @graph, [1, 2])
 
-    assert Tables.handle_cast( {:graph_subscribe, graph_key, agent}, :state ) ==
-      {:noreply, :state}
+    Tables.handle_cast( {:graph_subscribe, graph_key, agent}, @state )
 
     # confirm it was subscribed to
-    Tables.list_subscriptions(agent) == [graph_key]
+    assert Tables.list_subscriptions(agent) == [graph_key]
   end
 
   test "handle_cast {:graph_subscribe does not create duplicate subscriptions",
@@ -449,11 +449,11 @@ defmodule Scenic.ViewPort.TablesTest do
     graph_key = {:graph, make_ref(), 123}
     Tables.insert_graph( graph_key, agent, @graph, [1, 2])
 
-    Tables.handle_cast( {:graph_subscribe, graph_key, agent}, :state )
-    Tables.handle_cast( {:graph_subscribe, graph_key, agent}, :state )
+    Tables.handle_cast( {:graph_subscribe, graph_key, agent}, @state )
+    Tables.handle_cast( {:graph_subscribe, graph_key, agent}, @state )
 
     # confirm it was subscribed to
-    Tables.list_subscriptions(agent) == [graph_key]
+    assert Tables.list_subscriptions(agent) == [graph_key]
   end
 
   test "handle_cast {:graph_subscribe starts monitoring the subscriber",
@@ -463,7 +463,7 @@ defmodule Scenic.ViewPort.TablesTest do
     graph_key = {:graph, make_ref(), 123}
     Tables.insert_graph( graph_key, scene, @graph, [1, 2])
 
-    Tables.handle_cast( {:graph_subscribe, graph_key, subscriber}, :state )
+    Tables.handle_cast( {:graph_subscribe, graph_key, subscriber}, @state )
 
     # confirm it was monitored by stopping the agent and checking for the message
     Agent.stop(subscriber)
@@ -483,17 +483,17 @@ defmodule Scenic.ViewPort.TablesTest do
     graph_key_1 = {:graph, make_ref(), 123}
     Tables.insert_graph( graph_key_0, scene, @graph, [])
     Tables.insert_graph( graph_key_1, scene, @graph_1, [])
-    Tables.handle_cast( {:graph_subscribe, graph_key_0, subscriber}, :state )
-    Tables.handle_cast( {:graph_subscribe, graph_key_1, subscriber}, :state )
+    Tables.handle_cast( {:graph_subscribe, graph_key_0, subscriber}, @state )
+    Tables.handle_cast( {:graph_subscribe, graph_key_1, subscriber}, @state )
 
     # confirm setup
-    Tables.list_subscriptions(subscriber) == [graph_key_0, graph_key_1]
+    [_, _] = Tables.list_subscriptions(subscriber)
 
     # unsubscribe
-    Tables.handle_cast( {:graph_unsubscribe, graph_key_0, subscriber}, :state )
+    Tables.handle_cast( {:graph_unsubscribe, graph_key_0, subscriber}, @state )
 
     # confirm unsubscription
-    Tables.list_subscriptions(subscriber) == [graph_key_1]
+    assert Tables.list_subscriptions(subscriber) == [graph_key_1]
 
     Agent.stop(subscriber)
   end
@@ -506,38 +506,75 @@ defmodule Scenic.ViewPort.TablesTest do
     graph_key_1 = {:graph, make_ref(), 123}
     Tables.insert_graph( graph_key_0, scene, @graph, [])
     Tables.insert_graph( graph_key_1, scene, @graph_1, [])
-    Tables.handle_cast( {:graph_subscribe, graph_key_0, subscriber}, :state )
-    Tables.handle_cast( {:graph_subscribe, graph_key_1, subscriber}, :state )
+    Tables.handle_cast( {:graph_subscribe, graph_key_0, subscriber}, @state )
+    Tables.handle_cast( {:graph_subscribe, graph_key_1, subscriber}, @state )
 
     # confirm setup
-    Tables.list_subscriptions(subscriber) == [graph_key_0, graph_key_1]
+    [_, _] = Tables.list_subscriptions(subscriber)
 
     # unsubscribe
-    Tables.handle_cast( {:graph_unsubscribe, :all, subscriber}, :state )
+    Tables.handle_cast( {:graph_unsubscribe, :all, subscriber}, @state )
 
     # confirm unsubscription
-    Tables.list_subscriptions(subscriber) == []
+    assert Tables.list_subscriptions(subscriber) == []
 
     Agent.stop(subscriber)
   end
 
-  test "handle_cast {:graph_unsubscribe, :graph_key de-monitors the subscriber",
-  %{agent: scene} do
-    # setup
-    {:ok, subscriber} = Agent.start( fn -> 1 + 1 end )
-    graph_key = {:graph, make_ref(), 123}
-    Tables.insert_graph( graph_key, scene, @graph, [])
-    Tables.handle_cast( {:graph_subscribe, graph_key, subscriber}, :state )
+  test "handle_cast {:graph_unsubscribe, :graph_key de-monitors the subscriber"  do
+    # set up the scene
+    {:ok, scene} = Agent.start( fn -> 1 + 1 end )
+    scene_ref = make_ref()
+    registration = {scene, nil, nil}
+    :ets.insert(@ets_scenes_table, {scene_ref, registration})
+
+    # set up the graph
+    graph_key = {:graph, scene_ref, 123}
+    Tables.insert_graph( graph_key, scene, @graph, [1, 2])
+    assert Tables.list_graphs() == [graph_key]
+
+    # subscribe to the graph
+    {:noreply, state} = Tables.handle_cast( {:graph_subscribe, graph_key, self()}, @state )
 
     # unsubscribe
-    Tables.handle_cast( {:graph_unsubscribe, :all, subscriber}, :state )
+    {:noreply, state} = Tables.handle_cast( {:graph_unsubscribe, graph_key, self()}, state )
 
-    # stop the subscriber
-    Agent.stop(subscriber)
+    # process a fake a DOWN message
+    Tables.handle_info( {:DOWN, make_ref(), :process, scene, :shutdown}, state )
 
     # should NOT get a DOWN messate
-    refute_received( {:DOWN, _, :process, ^subscriber, _}  )
+    refute_received( {:"$gen_cast", {:delete_graph, _}}  )
+
+    Agent.stop(scene)
   end
+
+  test "handle_cast {:graph_unsubscribe, :all de-monitors the subscriber"  do
+    # set up the scene
+    {:ok, scene} = Agent.start( fn -> 1 + 1 end )
+    scene_ref = make_ref()
+    registration = {scene, nil, nil}
+    :ets.insert(@ets_scenes_table, {scene_ref, registration})
+
+    # set up the graph
+    graph_key = {:graph, scene_ref, 123}
+    Tables.insert_graph( graph_key, scene, @graph, [1, 2])
+    assert Tables.list_graphs() == [graph_key]
+
+    # subscribe to the graph
+    {:noreply, state} = Tables.handle_cast( {:graph_subscribe, graph_key, self()}, @state )
+
+    # unsubscribe
+    {:noreply, state} = Tables.handle_cast( {:graph_unsubscribe, :all, self()}, state )
+
+    # process a fake a DOWN message
+    Tables.handle_info( {:DOWN, make_ref(), :process, scene, :shutdown}, state )
+
+    # should NOT get a DOWN messate
+    refute_received( {:"$gen_cast", {:delete_graph, _}}  )
+
+    Agent.stop(scene)
+  end
+
 
 end
 
