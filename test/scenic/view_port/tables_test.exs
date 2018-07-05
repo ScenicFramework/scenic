@@ -329,6 +329,7 @@ defmodule Scenic.ViewPort.TablesTest do
     Agent.stop(scene)
   end
 
+  test "handle_info :DOWN of a subscriber cleans up its subscription"
 
 
 
