@@ -32,6 +32,9 @@ defmodule Scenic.ViewPort.Tables do
   @doc false
   def scenes_table(), do: @ets_scenes_table
 
+  @doc false
+  def subs_table(), do: @ets_subs_table
+
 
   #--------------------------------------------------------
   def register_scene( scene_ref, {pid,_,_} = registration ) when is_pid(pid) do
@@ -113,7 +116,7 @@ defmodule Scenic.ViewPort.Tables do
 
 
   #--------------------------------------------------------
-  # return a list of all the graph keys that have been pushed by a scene
+  # return a list of all the graph keys
   def list_graphs() do
     :ets.match(@ets_graphs_table, {:"$1", :"_", :"_", :"_"})
     |> List.flatten()
@@ -137,6 +140,12 @@ defmodule Scenic.ViewPort.Tables do
   #--------------------------------------------------------
   def unsubscribe( graph_key, pid ) do
     GenServer.cast( @name, {:graph_unsubscribe, graph_key, pid} )
+  end
+
+  #--------------------------------------------------------
+  def list_subscriptions( pid ) when is_pid(pid) do
+    :ets.match(@ets_subs_table, {:"$1", pid})
+    |> List.flatten()
   end
 
   #============================================================================
@@ -239,10 +248,6 @@ defmodule Scenic.ViewPort.Tables do
   end
 
 
-
-  #============================================================================
-  # internal utilities
-
   #--------------------------------------------------------
   defp pid_to_scene( pid ) do
     case :ets.match(@ets_scenes_table, {:"$1", {pid,:"_",:"_"}}) do
@@ -256,13 +261,6 @@ defmodule Scenic.ViewPort.Tables do
   # return a list of all the graph keys that have been pushed by a scene
   defp list_graphs_for_scene_pid( pid ) do
     :ets.match(@ets_graphs_table, {:"$1", pid, :"_", :"_"})
-    |> List.flatten()
-  end
-
-
-  #--------------------------------------------------------
-  def list_subscriptions( pid ) when is_pid(pid) do
-    :ets.match(@ets_subs_table, {:"$1", pid})
     |> List.flatten()
   end
 
