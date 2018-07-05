@@ -15,16 +15,16 @@ defmodule Scenic.Primitive.Style.ScissorTest do
   # verify - various forms
 
   test "verfy works" do
-    assert Scissor.verify( {{10,20}, 100, 200} )
+    assert Scissor.verify( {100, 200} )
   end
 
   test "verify rejects invalid values" do
     refute Scissor.verify( 123 )
-    refute Scissor.verify( {10, 20, 100, 200} )
+    refute Scissor.verify( {10, 20, 100} )
   end
 
   test "verify! works" do
-    assert Scissor.verify!( {{10,20}, 100, 200} )
+    assert Scissor.verify!( {100, 200} )
   end
 
   test "verify! raises an error" do

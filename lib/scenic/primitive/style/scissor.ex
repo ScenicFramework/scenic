@@ -11,15 +11,16 @@ defmodule Scenic.Primitive.Style.Scissor do
 
   #--------------------------------------------------------
   def info() do
-    "Scissor region is a rect. Like this: {{x,y}, w, h}\r\n"
+    "Scissor data should be: {width, height}\r\n" <>
+    "The scissor region will be positioned by the transform stack"
   end
 
   #--------------------------------------------------------
   # named color
 
-  def verify( paint ) do
+  def verify( data ) do
     try do
-      normalize( paint )
+      normalize( data )
       true
     rescue
       _ -> false
@@ -28,8 +29,8 @@ defmodule Scenic.Primitive.Style.Scissor do
 
   #--------------------------------------------------------
 
-  def normalize( {{x,y}, w, h} ) do
-    {{x,y}, w, h}
+  def normalize( {w, h} ) when is_number(w) and is_number(h) do
+    {w, h}
   end
 
 end
