@@ -13,7 +13,6 @@ defmodule Scenic.ViewPort.TablesTest do
   alias Scenic.ViewPort.Tables
   import Scenic.Primitives
 
-
  import IEx
 
   # ets table names
@@ -157,7 +156,23 @@ defmodule Scenic.ViewPort.TablesTest do
     refute Tables.get_graph(graph_key)
   end
 
-  test "delete_graph unsubscribes all to the graph"
+  test "delete_graph unsubscribes all to the graph", %{agent: scene} do
+    # setup
+    graph_key = {:graph, make_ref(), 123}
+    Tables.insert_graph( graph_key, scene, @graph, [])
+    Tables.handle_cast( {:graph_subscribe, graph_key, self()}, :state )
+
+    # confirm setup
+    assert :ets.lookup(@ets_subs_table, graph_key) == [ {graph_key, self()} ]
+
+    # delete the graph
+    Tables.delete_graph(graph_key)
+    refute Tables.get_graph(graph_key)
+    assert :ets.lookup(@ets_subs_table, graph_key) == []
+
+    # we should have also gotten the delete graph messages
+    assert_received( {:"$gen_cast", {:delete_graph, graph_key}} )
+  end
 
   test "delete_graph returns error for bad key" do
     graph_key = :invalid_graph_key
@@ -257,39 +272,187 @@ defmodule Scenic.ViewPort.TablesTest do
   #============================================================================
   # handle_cast( {:register, scene_ref, registration}, state )
 
-  test "handle_cast {:register works"
+  test "handle_cast {:register works", %{agent: scene} do
+    {:ok, agent_1} = Agent.start( fn -> 1 + 1 end )
 
-  test "handle_cast {:register starts monitoring the scene"
+    scene_ref = make_ref()
+    registration = {scene, self(), agent_1}
+
+    # register the scene
+    Tables.handle_cast( {:register, scene_ref, registration}, :state )
+
+    # it works with either scene_ref or graph
+    Tables.get_scene_registration(scene_ref) == registration
+
+    Agent.stop(agent_1)
+  end
+
+  test "handle_cast {:register starts monitoring the scene", %{agent: agent} do
+    {:ok, scene} = Agent.start( fn -> 1 + 1 end )
+
+    scene_ref = make_ref()
+    registration = {scene, self(), agent}
+
+    # register the scene
+    Tables.handle_cast( {:register, scene_ref, registration}, :state )
+
+    # stop the scene
+    Agent.stop(scene)
+
+    # this process should get a DOWN message
+    assert_received( {:DOWN, _, :process, ^scene, _}  )
+  end
+
+  #============================================================================
+  # handle_call( {:graph_subscribe, graph_key, pid}, state )
+
+  test "handle_call {:graph_subscribe works", %{agent: agent} do
+    graph_key = {:graph, make_ref(), 123}
+    Tables.insert_graph( graph_key, self(), @graph, [1, 2])
+
+    assert Tables.handle_call( {:graph_subscribe, graph_key, agent}, 123, :state ) ==
+      {:reply, true, :state}
+
+    # confirm it was subscribed to
+    Tables.list_subscriptions(agent) == [graph_key]
+  end
+
+  test "handle_call {:graph_subscribe does not create duplicate subscriptions",
+  %{agent: agent} do
+    graph_key = {:graph, make_ref(), 123}
+    Tables.insert_graph( graph_key, agent, @graph, [1, 2])
+
+    Tables.handle_call( {:graph_subscribe, graph_key, agent}, 123, :state )
+    Tables.handle_call( {:graph_subscribe, graph_key, agent}, 123, :state )
+
+    # confirm it was subscribed to
+    Tables.list_subscriptions(agent) == [graph_key]
+  end
+
+  test "handle_call {:graph_subscribe starts monitoring the subscriber",
+  %{agent: scene} do
+    {:ok, subscriber} = Agent.start( fn -> 1 + 1 end )
+
+    graph_key = {:graph, make_ref(), 123}
+    Tables.insert_graph( graph_key, scene, @graph, [1, 2])
+
+    Tables.handle_call( {:graph_subscribe, graph_key, subscriber}, 123, :state )
+
+    # confirm it was monitored by stopping the agent and checking for the message
+    Agent.stop(subscriber)
+
+    # this process should get a DOWN message
+    assert_received( {:DOWN, _, :process, ^subscriber, _}  )
+  end
 
   #============================================================================
   # handle_cast( {:graph_subscribe, graph_key, pid}, state )
 
-  test "handle_call {:graph_subscribe works"
+  test "handle_cast {:graph_subscribe works", %{agent: agent} do
+    graph_key = {:graph, make_ref(), 123}
+    Tables.insert_graph( graph_key, agent, @graph, [1, 2])
 
-  test "handle_call {:graph_subscribe does not create duplicate subscriptions"
+    assert Tables.handle_cast( {:graph_subscribe, graph_key, agent}, :state ) ==
+      {:noreply, :state}
 
-  test "handle_call {:graph_subscribe starts monitoring the subscriber"
+    # confirm it was subscribed to
+    Tables.list_subscriptions(agent) == [graph_key]
+  end
+
+  test "handle_cast {:graph_subscribe does not create duplicate subscriptions",
+  %{agent: agent} do
+    graph_key = {:graph, make_ref(), 123}
+    Tables.insert_graph( graph_key, agent, @graph, [1, 2])
+
+    Tables.handle_cast( {:graph_subscribe, graph_key, agent}, :state )
+    Tables.handle_cast( {:graph_subscribe, graph_key, agent}, :state )
+
+    # confirm it was subscribed to
+    Tables.list_subscriptions(agent) == [graph_key]
+  end
+
+  test "handle_cast {:graph_subscribe starts monitoring the subscriber",
+  %{agent: scene} do
+    {:ok, subscriber} = Agent.start( fn -> 1 + 1 end )
+
+    graph_key = {:graph, make_ref(), 123}
+    Tables.insert_graph( graph_key, scene, @graph, [1, 2])
+
+    Tables.handle_cast( {:graph_subscribe, graph_key, subscriber}, :state )
+
+    # confirm it was monitored by stopping the agent and checking for the message
+    Agent.stop(subscriber)
+
+    # this process should get a DOWN message
+    assert_received( {:DOWN, _, :process, ^subscriber, _}  )
+  end
 
   #============================================================================
-  # handle_cast( {:graph_subscribe, graph_key, pid}, state )
+  # handle_cast( {:graph_unsubscribe, _, pid}, state )
 
-  test "handle_cast {:graph_subscribe works"
+  test "handle_cast {:graph_unsubscribe, :graph_key works",
+  %{agent: scene} do
+    # setup
+    {:ok, subscriber} = Agent.start( fn -> 1 + 1 end )
+    graph_key_0 = {:graph, make_ref(), 123}
+    graph_key_1 = {:graph, make_ref(), 123}
+    Tables.insert_graph( graph_key_0, scene, @graph, [])
+    Tables.insert_graph( graph_key_1, scene, @graph_1, [])
+    Tables.handle_cast( {:graph_subscribe, graph_key_0, subscriber}, :state )
+    Tables.handle_cast( {:graph_subscribe, graph_key_1, subscriber}, :state )
 
-  test "handle_cast {:graph_subscribe does not create duplicate subscriptions"
+    # confirm setup
+    Tables.list_subscriptions(subscriber) == [graph_key_0, graph_key_1]
 
-  test "handle_cast {:graph_subscribe starts monitoring the subscriber"
+    # unsubscribe
+    Tables.handle_cast( {:graph_unsubscribe, graph_key_0, subscriber}, :state )
 
-  #============================================================================
-  # handle_cast( {:graph_unsubscribe, :all, pid}, state )
+    # confirm unsubscription
+    Tables.list_subscriptions(subscriber) == [graph_key_1]
 
-  test "handle_cast {:graph_unsubscribe, :all works"
+    Agent.stop(subscriber)
+  end
 
-  #============================================================================
-  # handle_cast( {:graph_unsubscribe, :graph_key, pid}, state )
+  test "handle_cast {:graph_unsubscribe, :all removes all",
+  %{agent: scene} do
+    # setup
+    {:ok, subscriber} = Agent.start( fn -> 1 + 1 end )
+    graph_key_0 = {:graph, make_ref(), 123}
+    graph_key_1 = {:graph, make_ref(), 123}
+    Tables.insert_graph( graph_key_0, scene, @graph, [])
+    Tables.insert_graph( graph_key_1, scene, @graph_1, [])
+    Tables.handle_cast( {:graph_subscribe, graph_key_0, subscriber}, :state )
+    Tables.handle_cast( {:graph_subscribe, graph_key_1, subscriber}, :state )
 
-  test "handle_cast {:graph_unsubscribe, :graph_key works"
+    # confirm setup
+    Tables.list_subscriptions(subscriber) == [graph_key_0, graph_key_1]
 
+    # unsubscribe
+    Tables.handle_cast( {:graph_unsubscribe, :all, subscriber}, :state )
 
+    # confirm unsubscription
+    Tables.list_subscriptions(subscriber) == []
+
+    Agent.stop(subscriber)
+  end
+
+  test "handle_cast {:graph_unsubscribe, :graph_key de-monitors the subscriber",
+  %{agent: scene} do
+    # setup
+    {:ok, subscriber} = Agent.start( fn -> 1 + 1 end )
+    graph_key = {:graph, make_ref(), 123}
+    Tables.insert_graph( graph_key, scene, @graph, [])
+    Tables.handle_cast( {:graph_subscribe, graph_key, subscriber}, :state )
+
+    # unsubscribe
+    Tables.handle_cast( {:graph_unsubscribe, :all, subscriber}, :state )
+
+    # stop the subscriber
+    Agent.stop(subscriber)
+
+    # should NOT get a DOWN messate
+    refute_received( {:DOWN, _, :process, ^subscriber, _}  )
+  end
 
 end
 
