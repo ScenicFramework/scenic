@@ -187,7 +187,7 @@ defmodule Scenic.ViewPort.Tables do
   def handle_info({:DOWN, _monitor_ref, :process, pid, :shutdown}, state) do
 
     # clean up any subscriptions
-    state = handle_cast( {:graph_unsubscribe, :all, pid}, state )
+    {:noreply, state} = handle_cast( {:graph_unsubscribe, :all, pid}, state )
 
     # delete any graphs that had been set by this pid
     pid
@@ -216,8 +216,7 @@ defmodule Scenic.ViewPort.Tables do
   # if the scene crashed - let the supervisor do its thing
   def handle_info({:DOWN,_,:process,pid,_}, state) do
     # clean up any subscriptions
-    state = handle_cast( {:graph_unsubscribe, :all, pid}, state )
-    {:noreply, state}
+    handle_cast( {:graph_unsubscribe, :all, pid}, state )
   end
 
 
