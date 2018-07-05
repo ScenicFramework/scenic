@@ -263,11 +263,74 @@ defmodule Scenic.ViewPort.TablesTest do
   #============================================================================
   # handle_info :DOWN
 
-  test "handle_info :DOWN removes graphs from a crashed scene"
 
-  test "handle_info :DOWN unsubscribes listeners to a crashed scene"
+  test "handle_info :DOWN removes graphs from a normal shutdown scene" do
+    # set up the scene
+    scene_ref = make_ref()
+    registration = {self(), nil, nil}
+    :ets.insert(@ets_scenes_table, {scene_ref, registration})
 
-  test "handle_info :DOWN subscriber is unsubscribed"
+    # set up the graph
+    graph_key = {:graph, make_ref(), 123}
+    Tables.insert_graph( graph_key, self(), @graph, [1, 2])
+    assert Tables.list_graphs() == [graph_key]
+
+    # process a fake a DOWN message
+    Tables.handle_info( {:DOWN, make_ref(), :process, self(), :shutdown}, :state )
+
+    assert Tables.list_graphs() == []
+  end
+
+  test "handle_info :DOWN sends subscribers a delete_graph message" do
+    # set up the scene
+    {:ok, scene} = Agent.start( fn -> 1 + 1 end )
+    scene_ref = make_ref()
+    registration = {scene, nil, nil}
+    :ets.insert(@ets_scenes_table, {scene_ref, registration})
+
+    # set up the graph
+    graph_key = {:graph, scene_ref, 123}
+    Tables.insert_graph( graph_key, scene, @graph, [1, 2])
+    assert Tables.list_graphs() == [graph_key]
+
+    # subscribe to the graph
+    Tables.handle_cast( {:graph_subscribe, graph_key, self()}, :state )
+
+    # process a fake a DOWN message
+    Tables.handle_info( {:DOWN, make_ref(), :process, scene, :shutdown}, :state )
+
+    # we should have gotten the delete graph messages
+    assert_received( {:"$gen_cast", {:delete_graph, graph_key}} )
+
+    Agent.stop(scene)
+  end
+
+  test "handle_info :DOWN deletes subscribers to a normal shutdown scenes graphs" do
+    # set up the scene
+    {:ok, scene} = Agent.start( fn -> 1 + 1 end )
+    scene_ref = make_ref()
+    registration = {scene, nil, nil}
+    :ets.insert(@ets_scenes_table, {scene_ref, registration})
+
+    # set up the graph
+    graph_key = {:graph, scene_ref, 123}
+    Tables.insert_graph( graph_key, scene, @graph, [1, 2])
+    assert Tables.list_graphs() == [graph_key]
+
+    # subscribe to the graph
+    Tables.handle_cast( {:graph_subscribe, graph_key, self()}, :state )
+
+    # process a fake a DOWN message
+    Tables.handle_info( {:DOWN, make_ref(), :process, scene, :shutdown}, :state )
+
+    # inspect the subs table to make sure it is empty
+    assert :ets.lookup(@ets_subs_table, graph_key) == []
+
+    Agent.stop(scene)
+  end
+
+
+
 
   #============================================================================
   # handle_cast( {:register, scene_ref, registration}, state )

@@ -11,7 +11,7 @@
 defmodule Scenic.ViewPort.Tables do
   use GenServer
 
- # import IEx
+ import IEx
 
   # ets table names
   @ets_subs_table       :_scenic_subs_table_
@@ -186,11 +186,12 @@ defmodule Scenic.ViewPort.Tables do
     pid
     |> list_graphs_for_scene_pid()
     |> Enum.each( fn(graph_key) ->
-      # tell the subscribers the key is going away
       list_subscribers(graph_key)
       |> Enum.each( fn(sub) ->
+        # tell the subscribers the key is going away
         GenServer.cast(sub, {:delete_graph, graph_key} )
-        unsubscribe(graph_key, sub )
+        # unsubscribe any listeners
+        :ets.match_delete(@ets_subs_table, {graph_key, :"_"})
       end)
 
       # delete the entry
