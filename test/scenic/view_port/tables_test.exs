@@ -329,7 +329,28 @@ defmodule Scenic.ViewPort.TablesTest do
     Agent.stop(scene)
   end
 
-  test "handle_info :DOWN of a subscriber cleans up its subscription"
+  test "handle_info :DOWN of a subscriber cleans up its subscription" do
+    # set up the graph
+    graph_key = {:graph, :scene_ref, 123}
+    Tables.insert_graph( graph_key, self(), @graph, [1, 2])
+    assert Tables.list_graphs() == [graph_key]
+
+    # set up the subscriber
+    {:ok, subscriber} = Agent.start( fn -> 1 + 1 end )
+    Tables.handle_cast( {:graph_subscribe, graph_key, subscriber}, :state )
+    assert :ets.lookup(@ets_subs_table, graph_key) == []
+
+    # process a fake a DOWN message
+    Tables.handle_info( {:DOWN, make_ref(), :process, subscriber, :shutdown}, :state )
+
+    # inspect the subs table to make sure it is empty
+    assert :ets.lookup(@ets_subs_table, graph_key) == []
+
+    # the graph should still be OK
+    assert Tables.get_graph(graph_key) == {:ok, @graph}
+
+    Agent.stop(subscriber)
+  end
 
 
 
