@@ -42,6 +42,10 @@ defmodule Scenic.Mixfile do
     [
       {:scenic_math, git: "git@github.com:boydm/scenic_math.git"},
       # {:mox, "~> 0.3.2"}
+
+      # Docs dependencies
+      {:ex_doc, ">= 0.0.0", only: [:dev, :docs]},
+      {:inch_ex, ">= 0.0.0", only: :docs}
     ]
   end
 end
