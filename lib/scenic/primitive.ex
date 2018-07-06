@@ -66,6 +66,7 @@ defmodule Scenic.Primitive do
         Graph.add(graph, __MODULE__, data, opts )
       end
 
+      @doc false
       def verify!( data ) do
         case verify(data) do
           {:ok, data} -> data
@@ -75,6 +76,7 @@ defmodule Scenic.Primitive do
 
       # make sure only understood style types are carried on a primitive
       # group is the exception. It overrides this function
+      @doc false
       def filter_styles( styles ) when is_map(styles) do
         Enum.reduce(valid_styles(), %{}, fn(k, acc)->
           case Map.get(styles, k) do
@@ -86,20 +88,24 @@ defmodule Scenic.Primitive do
 
       # the default behaviour is to do nothing
       # this is the case for groups, lines, and polygons
+      @doc false
       def expand( data ), do: data
 
 
       # the default is false for contains_point?. Primitive types
       # are effectively un-clickable unless this is overridden.
       # point must already be transformed into local coordinates
+      @doc false
       def contains_point?( _, _), do: false
 
       # unless otherwise defined, the default pin is {0,0}
+      @doc false
       def default_pin(_), do: {0,0}
 
       # simple defaults that can be overridden
       def get( %Primitive{data: data} ),  do: data
       def put( p, data ),                 do: Primitive.do_put( p, data )
+      @doc false
       def normalize( data ),              do: data
 
       #--------------------------------------------------------

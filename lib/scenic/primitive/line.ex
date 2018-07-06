@@ -10,7 +10,7 @@ defmodule Scenic.Primitive.Line do
 
 #  import IEx
 
-  @styles   [:hidden, :stroke]
+  @styles   [:hidden, :stroke, :cap]
 
   #============================================================================
   # data verification and serialization

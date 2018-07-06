@@ -159,11 +159,11 @@ defmodule Scenic.Scene do
 
   You choose the behavior by returning either
 
-    {:continue, msg, state}
+      {:continue, msg, state}
 
   or
 
-    {:stop, state}
+      {:stop, state}
 
   Parameters passed in to `filter_event/3` are the event itself, a
   reference to the originating scene (which you can to communicate
