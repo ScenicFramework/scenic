@@ -9,6 +9,11 @@ defmodule Scenic.Mixfile do
       config_path: "config/config.exs",
       deps_path: "deps",
       elixir: "~> 1.6",
+
+      name: "Scenic",
+      source_url: "https://github.com/boydm/scenic",
+      homepage_url: "http://kry10.com",
+
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
       deps: deps(),
