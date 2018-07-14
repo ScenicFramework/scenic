@@ -34,8 +34,8 @@ defmodule Scenic.Component.Button do
     "Position the button with a transform\r\n" <>
     "The message will be sent to you in a click event when the button is used.\r\n" <>
     "Options can be {:width, width} {:height, height}, {:radius, raidus},\r\n" <>
-    "{:color, color}, and {:align, alignment}\r\n" <>
-    "The color can be wone of the following presets:\r\n" <>
+    "{:type, type}, and {:align, alignment}\r\n" <>
+    "The type can be one of the following presets:\r\n" <>
     ":primary, :secondary, :success, :danger, :warning, :info, :light, :dark, :text\r\n" <>
     "Or a custom color set of {text_color, button_color, pressed_color}\r\n" <>
     "Example: button({\"Something\", :message, width: 28, type: :danger}, translate: {90,0})" <>

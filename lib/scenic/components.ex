@@ -169,8 +169,8 @@ defmodule Scenic.Components do
 
   Buttons honor the following list of options.
 
-  * `:color` - This sets the color scheme of the button. This can be one of
-  pre-defined button color schemes `:primary, :secondary, :success, :danger,
+  * `:type` - This sets the color scheme of the button. This can be one of
+  pre-defined button schemes `:primary, :secondary, :success, :danger,
   :warning, :info, :light, :dark, :text` or it can be a completly custom
   scheme defined like this: `{text_color, button_color, pressed_color}`.
   * `:width` - pass in a number to set the width of the button.
@@ -198,7 +198,7 @@ defmodule Scenic.Components do
   the options list below for more details.
 
       graph
-      |> button( {"Example", :example, color: :warning}, translate: {20, 20} )
+      |> button( {"Example", :example, type: :warning}, translate: {20, 20} )
 
 
   """
