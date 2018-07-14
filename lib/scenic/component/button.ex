@@ -78,7 +78,7 @@ defmodule Scenic.Component.Button do
       :center ->
         Graph.build( font: font, font_size: font_size )
         |> rrect( {width, height, radius}, fill: button_color, id: :btn )
-        |> text( text, fill: text_color, translate: {width/2,(height*0.7), text_align: :center} )
+        |> text( text, fill: text_color, translate: {width/2,(height*0.7)}, text_align: :center )
 
       :left ->
         Graph.build( font: font, font_size: font_size )
