@@ -83,7 +83,7 @@ defmodule Scenic.Components do
   send it up to the host scene that references it. (Components can be
   nested many layers deep)
 
-  To do this, the host scene should implement the `filter_event` callback.
+  To do this, the **host scene** should implement the `filter_event` callback.
 
   examples:
 
@@ -138,7 +138,7 @@ defmodule Scenic.Components do
 
   #--------------------------------------------------------
   @doc """
-  Add an button to a graph
+  Add a button to a graph
 
   A button is a small scene that is pretty much just some text
   drawn over a rounded rectangle. The button scene contains logic to detect
@@ -155,7 +155,7 @@ defmodule Scenic.Components do
 
   ### Messages
 
-  If button press was successful, it then sends an event message to the host
+  If a button press is successful, it sends an event message to the host
   scene in the form of:
 
       {:click, button_message}
@@ -170,9 +170,9 @@ defmodule Scenic.Components do
   Buttons honor the following list of options.
 
   * `:type` - This sets the color scheme of the button. This can be one of
-  pre-defined button schemes `:primary, :secondary, :success, :danger,
-  :warning, :info, :light, :dark, :text` or it can be a completly custom
-  scheme defined like this: `{text_color, button_color, pressed_color}`.
+  pre-defined button schemes `:primary`, `:secondary`, `:success`, `:danger`,
+  `:warning`, `:info`, `:light`, `:dark`, `:text` or it can be a completly custom
+  scheme like this: `{text_color, button_color, pressed_color}`.
   * `:width` - pass in a number to set the width of the button.
   * `:height` - pass in a number to set the height of the button.
   * `:radius` - pass in a number to set the radius of the button's rounded rectangle.
@@ -195,7 +195,7 @@ defmodule Scenic.Components do
       |> button( {"Example", :example}, translate: {20, 20} )
 
   This example makes the same button, but colors it as a warning button. See
-  the options list below for more details.
+  the options list above for more details.
 
       graph
       |> button( {"Example", :example, type: :warning}, translate: {20, 20} )
