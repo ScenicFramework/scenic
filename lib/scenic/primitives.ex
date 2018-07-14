@@ -4,7 +4,7 @@
 #
 
 # convenience functions for adding basic primitives to a graph.
-# this module should be updated as new primitves area dded
+# this module should be updated as new primitves are added
 
 defmodule Scenic.Primitives do
   alias Scenic.Primitive

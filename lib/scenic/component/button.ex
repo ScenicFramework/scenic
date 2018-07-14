@@ -22,8 +22,10 @@ defmodule Scenic.Component.Button do
   @default_width      80
   @default_height     30
   @default_radius     3
+
   @default_font       :roboto
   @default_font_size  20
+  @default_alignment  :center
 
 #  #--------------------------------------------------------
   def info() do
@@ -31,11 +33,14 @@ defmodule Scenic.Component.Button do
     "#{IO.ANSI.red()}Button data must be: {text, message, opts}#{IO.ANSI.default_color()}\r\n" <>
     "Position the button with a transform\r\n" <>
     "The message will be sent to you in a click event when the button is used.\r\n" <>
-    "Options can be {:width, width} {:height, height}, {:radius, raidus}, and {:color, color}\r\n" <>
-    "The color can be wone of the following presets:\r\n"
+    "Options can be {:width, width} {:height, height}, {:radius, raidus},\r\n" <>
+    "{:color, color}, and {:align, alignment}\r\n" <>
+    "The color can be wone of the following presets:\r\n" <>
     ":primary, :secondary, :success, :danger, :warning, :info, :light, :dark, :text\r\n" <>
     "Or a custom color set of {text_color, button_color, pressed_color}\r\n" <>
-    "Example: button({\"Something\", :message, width: 28, type: :danger}, translate: {90,0})"
+    "Example: button({\"Something\", :message, width: 28, type: :danger}, translate: {90,0})" <>
+    "The alignment sets how the text is positioned within the button. It can be one\r\n" <>
+    " of :left, :right, :center. The default is :center."
   end
 
   #--------------------------------------------------------
@@ -62,20 +67,36 @@ defmodule Scenic.Component.Button do
     width = opts[:width] || opts[:w] || @default_width
     height = opts[:height] || opts[:h] || @default_height
     radius = opts[:radius] || opts[:r] || @default_radius
+    alignment = opts[:align] || opts[:a] || @default_alignment
 
     # get style args
     font = opts[:font] || @default_font
     font_size = opts[:font_size] || @default_font_size
 
-    graph = Graph.build( font: font, font_size: font_size )
-    |> rrect( {width, height, radius}, fill: button_color, id: :btn )
-    |> text( text, fill: text_color, translate: {8,(height*0.7)} )
+
+    graph = case alignment do
+      :center ->
+        Graph.build( font: font, font_size: font_size )
+        |> rrect( {width, height, radius}, fill: button_color, id: :btn )
+        |> text( text, fill: text_color, translate: {width/2,(height*0.7), text_align: :center} )
+
+      :left ->
+        Graph.build( font: font, font_size: font_size )
+        |> rrect( {width, height, radius}, fill: button_color, id: :btn )
+        |> text( text, fill: text_color, translate: {8,(height*0.7)}, text_align: :left )
+
+      :right ->
+        Graph.build( font: font, font_size: font_size )
+        |> rrect( {width, height, radius}, fill: button_color, id: :btn )
+        |> text( text, fill: text_color, translate: {width - 8,(height*0.7)}, text_align: :right )
+    end
 
     state = %{
       graph: graph,
       colors: colors,
       pressed: false,
       contained: false,
+      align: alignment,
       msg: msg
     }
 
