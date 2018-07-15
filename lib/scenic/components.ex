@@ -147,21 +147,21 @@ defmodule Scenic.Components do
 
   Data:
 
-      {text_for_button, button_id, options \\\\ []}
+      {text, id, options \\\\ []}
 
-  The options term is... optional. You can also pass in:
-
-      {text_for_button, button_id}
+  * `text` must be a bitstring
+  * `id` can be any term you want. It will be passed back to you during event messages.
+  * `options` should be a list of options (see below). It is not required.
 
   ### Messages
 
   If a button press is successful, it sends an event message to the host
   scene in the form of:
 
-      {:click, button_id}
+      {:click, id}
 
-  Where the button message is the term you specified when you created
-  the button. The message doesn't need to be an atom. It can be any
+  Where the button id is the term you specified when you created
+  the button. The id doesn't need to be an atom. It can be any
   term you want to send. Even something complicated.
 
 
@@ -208,35 +208,196 @@ defmodule Scenic.Components do
     add_to_graph( g, Component.Button, data, opts )
   end
 
-  # def button( %Primitive{module: Primitive.Arc} = p, data, opts ) do
-  #   modify( p, data, opts )
-  # end
+  #--------------------------------------------------------
+  @doc """
+  Add a checkbox to a graph
+
+  Data:
+
+      {text, id, checked?, options \\\\ []}
+
+  * `text` must be a bitstring
+  * `id` can be any term you want. It will be passed back to you during event messages.
+  * `checked?` must be a boolean and indicates if the checkbox is set.
+  * `options` should be a list of options (see below). It is not required
 
 
+  ### Messages
 
-  # #--------------------------------------------------------
-  # @doc """
-  # Update the options of a primitie without changing it's data.
+  When the state of the checkbox, it sends an event message to the host
+  scene in the form of:
 
-  # This is not used during graph creation. Only when modifying it later.
+      {:value_changed, checkbox_id, checked?}
 
-  # All the primitie-specific helpers require you to specify the
-  # data for the primitive. If you only want to modify a transform
-  # or add a style, then use update_opts.
+  Where the checkbox id is the term you specified when you created
+  the button. The id doesn't need to be an atom. It can be any
+  term you want to send. Even something complicated.
 
-  # Example:
 
-  #     Graph.modify(graph, :rect, fn(p) ->
-  #       update_opts(p, rotate: 0.5)
-  #     end)
+  ### Options
 
-  #     # or, more compactly...
+  Buttons honor the following list of options.
 
-  #     Graph.modify(graph, :rect, &update_opts(&1, rotate: 0.5) )
+  * `:type` - This sets the color scheme of the button. This can be one of
+  pre-defined button schemes `:light`, `:dark`, or it can be a completly custom
+  scheme like this: `{text_color, box_background, border_color, pressed_color, checkmark_color}`.
 
-  # """
+  ### Styles
 
-  # def update_opts( p, opts ), do: Primitive.update_opts( p, opts )
+  Buttons honor the following styles
+  
+  * `:hidden` - If true the button is rendered. If false, it is skipped. The default
+    is true.
+
+  ### Examples
+
+  The following example creates a checkbox and positions it on the screen.
+
+      graph
+      |> checkbox( {"Example", :example_id, true}, translate: {20, 20} )
+
+  """
+  def checkbox( graph_or_primitive, data, opts \\ [] )
+
+  def checkbox( %Graph{} = g, data, opts ) do
+    add_to_graph( g, Component.Input.Checkbox, data, opts )
+  end
+
+
+  #--------------------------------------------------------
+  @doc """
+  Add a radio group to a graph
+
+  Data:
+
+      {items, group_id}
+
+  * `items` must be a list of radio button data. See below.
+  * `id` can be any term you want. It will be passed back to you during event messages.
+
+  The `items` term must be a list of RadioButton init data.
+
+  Radio button data:
+
+      {text, button_id, checked? \\\\ false, options \\\\ []}
+
+  * `text` must be a bitstring
+  * `button_id` can be any term you want. It will be passed back to you as the group's value.
+  * `checked?` must be a boolean and indicates if the button is selected. `checked?` is not
+  required and will default to `false` if not supplied.
+  * `options` should be a list of options (see below). It is not required
+
+
+  ### Messages
+
+  When the state of the radio group changes, it sends an event message to the host
+  scene in the form of:
+
+      {:value_changed, group_id, button_id}
+
+  Where the `group_id` is the term you specified when you created
+  the radio group and the `button_id` is the id of the button that is now selected
+
+
+  ### Options
+
+  Buttons honor the following list of options.
+
+  * `:type` - This sets the color scheme of the button. This can be one of
+  pre-defined button schemes `:light`, `:dark`, or it can be a completly custom
+  scheme like this: `{text_color, box_background, border_color, pressed_color, checkmark_color}`.
+
+  ### Styles
+
+  Buttons honor the following styles
+  
+  * `:hidden` - If true the button is rendered. If false, it is skipped. The default
+    is true.
+
+  ### Examples
+
+  The following example creates a radio group and positions it on the screen.
+
+      graph
+      |> radio_group({[
+          {"Radio A", :radio_a},
+          {"Radio B", :radio_b, true},
+          {"Radio C", :radio_c},
+        ], :id },
+        translate: {20, 20} )
+
+  """
+  def radio_group( graph_or_primitive, data, opts \\ [] )
+
+  def radio_group( %Graph{} = g, data, opts ) do
+    add_to_graph( g, Component.Input.RadioGroup, data, opts )
+  end
+
+
+  #--------------------------------------------------------
+  @doc """
+  Add a slider to a graph
+
+  Data:
+
+      { extents, initial_value, id, opts \\\\ [] }
+
+  * `extents` gives the range of values. It can take several forms...
+    * `{min,max}` If min and max are integers, then the slider value will be an integer.
+    * `{min,max}` If min and max are floats, then the slider value will be an float.
+    * `[a, b, c]` A list of terms. The value will be one of the terms
+  * `initial_value` Sets the intial value (and position) of the slider. It must make
+  sense with the extents you passed in.
+  * `id` can be any term you want. It will be passed back to you during event messages.
+  * `options` should be a list of options (see below). It is not required
+
+  ### Messages
+
+  When the state of the slider changes, it sends an event message to the host
+  scene in the form of:
+
+      {:value_changed, id, value}
+
+
+  ### Options
+
+  Sliders honor the following list of options.
+
+  * `:type` - This sets the color scheme of the button. This can be one of
+  pre-defined button schemes `:light`, `:dark`, or it can be a completly custom
+  scheme like this: `{line_color, thumb_color}`.
+
+  ### Styles
+
+  Sliders honor the following styles
+  
+  * `:hidden` - If true the button is rendered. If false, it is skipped. The default
+    is true.
+
+  ### Examples
+
+  The following example creates a numeric sliderand positions it on the screen.
+
+      graph
+      |> Component.Input.Slider.add_to_graph( {{0,100}, 0, :num_slider}, translate: {20,20} )
+
+  The following example creates a list slider and positions it on the screen.
+
+      graph
+      |> Component.Input.Slider.add_to_graph( {[
+          :white,
+          :cornflower_blue,
+          :green,
+          :chartreuse
+        ], :cornflower_blue, :list_slider}, translate: {20,20} )
+
+  """
+  def slider( graph_or_primitive, data, opts \\ [] )
+
+  def slider( %Graph{} = g, data, opts ) do
+    add_to_graph( g, Component.Input.Slider, data, opts )
+  end
+
 
   #============================================================================
   # generic workhorse versions
