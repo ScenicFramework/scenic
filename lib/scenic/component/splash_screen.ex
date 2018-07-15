@@ -4,7 +4,7 @@ defmodule Scenic.SplashScreen do
   alias Scenic.Graph
   # alias Scenic.Primitive
   alias Scenic.ViewPort
-  alias Scenic.Utilities.Draw.Color
+  # alias Scenic.Utilities.Draw.Color
   import Scenic.Primitives, only: [{:text, 3}]
 #  import IEx
 

@@ -42,6 +42,7 @@ defmodule Scenic.Component.Button do
     "Example: button({\"Something\", :id, width: 28, type: :danger}, translate: {90,0})" <>
     "The :align option sets how the text is positioned within the button. It can be one\r\n" <>
     " of :left, :right, :center. The default is :center." <>
+    "\r\n" <>
     IO.ANSI.default_color()
   end
 

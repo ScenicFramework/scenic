@@ -7,18 +7,8 @@ defmodule Scenic.Component.Input.Checkbox do
   alias Scenic.Utilities.Draw.Color
   import Scenic.Primitives
 
- import IEx
+ # import IEx
 
-
-#  @default_width      80
-#  @default_height     32
-#  @default_radius     6
-#  @default_type       6
-
-#  @blue_color         :steel_blue
-#  @text_color         :white
-
-  @valid_colors [:light, :dark]
 
   # type is {text_color, box_background, border_color, pressed_color, checkmark_color}
   # nil for text_color means to use whatever is inherited
@@ -29,7 +19,6 @@ defmodule Scenic.Component.Input.Checkbox do
 
   @default_font       :roboto
   @default_font_size  20
-  @default_alignment  :center
 
 
 #  #--------------------------------------------------------
@@ -46,6 +35,7 @@ defmodule Scenic.Component.Input.Checkbox do
     "Examples:\r\n"<>
     "checkbox({\"Something\", :id, true}, translate: {90,0})" <>
     "checkbox({\"Something\", :id, true, type: :light}, translate: {90,0})" <>
+    "\r\n" <>
     IO.ANSI.default_color()
   end
 

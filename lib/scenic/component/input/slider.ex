@@ -2,7 +2,6 @@ defmodule Scenic.Component.Input.Slider do
   use Scenic.Component, has_children: false
 
   alias Scenic.Graph
-  alias Scenic.Primitive
   alias Scenic.ViewPort
   alias Scenic.Utilities.Draw.Color
   import Scenic.Primitives, only: [{:rect, 3}, {:line, 3}, {:rrect, 3}, {:update_opts,2}]
@@ -26,22 +25,31 @@ defmodule Scenic.Component.Input.Slider do
   def info() do
     "#{IO.ANSI.red()}Slider data must be: {extents, initial, id, opts \\\\ []}" <>
     IO.ANSI.yellow() <>
+    "\r\n" <>
     IO.ANSI.default_color()
   end
 
 
 
   #--------------------------------------------------------
-  def verify( {ext, inital, id} ), do: verify( {ext, inital, id, []} )
-  def verify( {ext, inital, _id, opts} = data ) when is_list(opts) do
+  def verify( {ext, initial, id} ), do: verify( {ext, initial, id, []} )
+  def verify( {ext, initial, _id, opts} = data ) when is_list(opts) do
     opts
-    |> Enum.all?( &verify_option(&1) )
+    |> Enum.all?( &verify_option(&1) ) && verify_initial(ext, initial)
     |> case do
       true -> {:ok, data}
       _ -> :invalid_data
     end
   end
   def verify( _ ), do: :invalid_data
+
+  #--------------------------------------------------------
+  defp verify_initial({min,max}, init) when is_integer(min) and is_integer(max) and
+  is_integer(init) and init >= min and init <= max, do: true
+  defp verify_initial({min,max}, init) when is_float(min) and is_float(max) and
+  is_number(init) and init >= min and init <= max, do: true
+  defp verify_initial( list_ext, init ) when is_list(list_ext), do: Enum.member?(list_ext, init)
+  defp verify_initial( _, _ ), do: false
 
   #--------------------------------------------------------
   defp verify_option( {:type, :light} ), do: true
@@ -59,7 +67,7 @@ defmodule Scenic.Component.Input.Slider do
 
   #--------------------------------------------------------
   def init( {extents, value, id}, args ), do: init( {extents, value, id, []}, args )
-  def init( {extents, value, id, opts}, args ) do
+  def init( {extents, value, id, opts}, _args ) do
     colors = case opts[:type] do
       {_,_} = colors -> colors
       type -> Map.get(@colors, type) || Map.get(@colors, :dark)

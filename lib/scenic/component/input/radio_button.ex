@@ -7,7 +7,7 @@ defmodule Scenic.Component.Input.RadioButton do
   alias Scenic.Utilities.Draw.Color
   import Scenic.Primitives, only: [{:rect, 3}, {:circle, 3}, {:text, 3}]
 
-  import IEx
+  # import IEx
 
 
 #  @default_width      80
@@ -32,6 +32,7 @@ defmodule Scenic.Component.Input.RadioButton do
 #    "#{IO.ANSI.red()}RadioButton must be initialized with" <>
 #    "{text, message, value, opts}#{IO.ANSI.default_color()}\r\n"
     "help goes here" <>
+    "\r\n" <>
     IO.ANSI.default_color()
   end
 
