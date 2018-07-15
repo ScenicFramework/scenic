@@ -30,7 +30,8 @@ defmodule Scenic.Component.Button do
 
 #  #--------------------------------------------------------
   def info() do
-    "#{IO.ANSI.red()}Button data must be: {text, id, opts}#{IO.ANSI.yellow()}\r\n" <>
+    "#{IO.ANSI.red()}Button data must be: {text, id, opts}\r\n" <>
+    IO.ANSI.yellow() <>
     "Position the button by adding a transform\r\n" <>
     "The id will be sent to you in a click event when the button is used.\r\n" <>
     "Options can be {:width, width} {:height, height}, {:radius, raidus},\r\n" <>
@@ -40,7 +41,8 @@ defmodule Scenic.Component.Button do
     "Or a custom color set of {text_color, button_color, pressed_color}\r\n" <>
     "Example: button({\"Something\", :id, width: 28, type: :danger}, translate: {90,0})" <>
     "The :align option sets how the text is positioned within the button. It can be one\r\n" <>
-    " of :left, :right, :center. The default is :center.#{IO.ANSI.default_color()}"
+    " of :left, :right, :center. The default is :center." <>
+    IO.ANSI.default_color()
   end
 
 

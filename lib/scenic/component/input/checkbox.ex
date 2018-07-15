@@ -34,8 +34,8 @@ defmodule Scenic.Component.Input.Checkbox do
 
 #  #--------------------------------------------------------
   def info() do
-    "#{IO.ANSI.red()}Checkbox data must be: " <>
-    "{text, id, checked?, opts}#{IO.ANSI.yellow()}\r\n" <>
+    "#{IO.ANSI.red()}Checkbox data must be:  {text, id, checked?, opts}\r\n" <>
+    IO.ANSI.yellow() <>
     "Position the checkbox by adding a transform\r\n" <>
     "The id will be sent to you in a :value_changed event when the checkbox is used.\r\n" <>
     "The only option for now is {:type, type}\r\n" <>
@@ -45,7 +45,8 @@ defmodule Scenic.Component.Input.Checkbox do
     "The default is :dark.\r\n"<>
     "Examples:\r\n"<>
     "checkbox({\"Something\", :id, true}, translate: {90,0})" <>
-    "checkbox({\"Something\", :id, true, type: :light}, translate: {90,0})"
+    "checkbox({\"Something\", :id, true, type: :light}, translate: {90,0})" <>
+    IO.ANSI.default_color()
   end
 
   #--------------------------------------------------------

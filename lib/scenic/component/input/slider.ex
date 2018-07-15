@@ -24,7 +24,9 @@ defmodule Scenic.Component.Input.Slider do
 
 #  #--------------------------------------------------------
   def info() do
-    "#{IO.ANSI.red()}Slider data must be: {extents, initial, id, opts \\\\ []}#{IO.ANSI.default_color()}\r\n"
+    "#{IO.ANSI.red()}Slider data must be: {extents, initial, id, opts \\\\ []}" <>
+    IO.ANSI.yellow() <>
+    IO.ANSI.default_color()
   end
 
 
