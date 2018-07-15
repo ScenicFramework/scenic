@@ -9,9 +9,15 @@ defmodule Scenic.Component do
 
 
   @callback add_to_graph(map, any, list) :: map
+  @callback verify( any ) :: any
   @callback info() :: String.t
 
 #  import IEx
+
+  #===========================================================================
+  defmodule Error do
+    defexception [ message: nil, error: nil, data: nil ]
+  end
 
   #===========================================================================
   defmacro __using__(opts) do
@@ -28,12 +34,25 @@ defmodule Scenic.Component do
 
       def add_to_graph(graph, data \\ nil, opts \\ [])
       def add_to_graph(%Scenic.Graph{} = graph, data, opts) do
-        unless valid?(data), do: raise info()
+        IO.inspect data
+        verify!(data)
         Primitive.SceneRef.add_to_graph(graph, {__MODULE__, data}, opts)
       end
 
-      def valid?(nil),              do: true
-      def info(),                   do: "#{inspect(__MODULE__)} invalid add_to_graph data."
+      # def valid?(nil),              do: true
+      def verify(nil),              do: {:ok, nil}
+      def info() do
+        "#{inspect(__MODULE__)} invalid add_to_graph data"
+      end
+
+      @doc false
+      def verify!( data ) do
+        case verify(data) do
+          {:ok, data} -> data
+          err -> raise Error, message: info(), error: err, data: data
+        end
+      end
+
 
 #      def start_child_scene( parent_scene, ref, args, with_children \\ false ) do
 #        IO.puts "in component start_child_scene, with_children: #{with_children}"
@@ -45,7 +64,7 @@ defmodule Scenic.Component do
       #--------------------------------------------------------
       defoverridable [
         add_to_graph:         3,
-        valid?:               1,
+        # valid?:               1,
         info:                 0,
 #        start_child_scene:  4
 #        normalize:        1

@@ -4,6 +4,7 @@ defmodule Scenic.Component.Input.Slider do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.ViewPort
+  alias Scenic.Utilities.Draw.Color
   import Scenic.Primitives, only: [{:rect, 3}, {:line, 3}, {:rrect, 3}, {:update_opts,2}]
 
 
@@ -11,28 +12,65 @@ defmodule Scenic.Component.Input.Slider do
   @mid_height         trunc(@height / 2)
   @radius             5
   @btn_size           14
-
-  @slider_color       :antique_white
-#  @hit_target_color   :clear
-  @line_color         :cornflower_blue
   @line_width         4
+
+  @default_width      300
+
+  # type is {line_color, thumb_color}
+  @colors %{
+    light:    {:cornflower_blue, :black},
+    dark:     {:cornflower_blue, :antique_white},
+  }
 
 #  #--------------------------------------------------------
   def info() do
-    "#{IO.ANSI.red()}Slider must be initialized with {extents, initial, width, id}#{IO.ANSI.default_color()}\r\n"
+    "#{IO.ANSI.red()}Slider data must be: {extents, initial, id, opts \\\\ []}#{IO.ANSI.default_color()}\r\n"
   end
 
-  #--------------------------------------------------------
-  def valid?( {_ext, _init, _width, _id} ), do: true
-  def valid?( _d ), do: false
 
 
   #--------------------------------------------------------
-  def init( {extents, value, width, id}, _ ) do
+  def verify( {ext, inital, id} ), do: verify( {ext, inital, id, []} )
+  def verify( {ext, inital, _id, opts} = data ) when is_list(opts) do
+    opts
+    |> Enum.all?( &verify_option(&1) )
+    |> case do
+      true -> {:ok, data}
+      _ -> :invalid_data
+    end
+  end
+  def verify( _ ), do: :invalid_data
+
+  #--------------------------------------------------------
+  defp verify_option( {:type, :light} ), do: true
+  defp verify_option( {:type, :dark} ), do: true
+  defp verify_option( {:type, {line_color, thumb_color}} ) do
+    Color.verify( line_color ) &&
+    Color.verify( thumb_color )
+  end
+  defp verify_option( _ ), do: false
+
+  #--------------------------------------------------------
+  # def valid?( {_ext, _init, _width, _id} ), do: true
+  # def valid?( _d ), do: false
+
+
+  #--------------------------------------------------------
+  def init( {extents, value, id}, args ), do: init( {extents, value, id, []}, args )
+  def init( {extents, value, id, opts}, args ) do
+    colors = case opts[:type] do
+      {_,_} = colors -> colors
+      type -> Map.get(@colors, type) || Map.get(@colors, :dark)
+    end
+    {line_color, thumb_color} = colors
+
+    width = opts[:width] || opts[:w] || @default_width
+
+
     graph = Graph.build()
       |> rect( {width, @height}, fill: :clear )
-      |> line( {{0,@mid_height},{width,@mid_height}}, stroke: {@line_width, @line_color} )
-      |> rrect( {@btn_size, @btn_size, @radius}, fill: @slider_color, id: :thumb, t: {0,1} )
+      |> line( {{0,@mid_height},{width,@mid_height}}, stroke: {@line_width, line_color} )
+      |> rrect( {@btn_size, @btn_size, @radius}, fill: thumb_color, id: :thumb, t: {0,1} )
       |> update_slider_position( value, extents, width )
 
     state = %{

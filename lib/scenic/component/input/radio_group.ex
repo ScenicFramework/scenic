@@ -5,6 +5,7 @@ defmodule Scenic.Component.Input.RadioGroup do
   alias Scenic.Scene
   # alias Scenic.Primitive
   alias Scenic.Component.Input.RadioButton
+  alias Scenic.Utilities.Draw.Color
   import Scenic.Primitives, only: [{:group, 2}]
 #  import IEx
 
@@ -12,13 +13,36 @@ defmodule Scenic.Component.Input.RadioGroup do
 
 #  #--------------------------------------------------------
   def info() do
-#    "#{IO.ANSI.red()}RadioGroup must be initialized with" <>
-#    "{text, message, value, opts}#{IO.ANSI.default_color()}\r\n"
-    "help goes here"
+    "#{IO.ANSI.red()}RadioGroup data must be: {items, id}\r\n" <>
+    "Position the radio group by adding a transform\r\n" <>
+    "The message will be sent to you in a :value_changed event when the state" <>
+    "of the radio buttons changes.\r\n" <>
+    "Each item in the items list must be a valid init data for a radio button.\r\n" <>
+    "Info for a radio button is below...\r\n" <>
+    "\r\n" <>
+    RadioButton.info()
   end
 
   #--------------------------------------------------------
-  def valid?( _items ), do: true
+  def verify( {items, _msg} = data) when is_list(items) do
+    items
+    |> Enum.all?( fn(item) ->
+      case RadioButton.verify( item ) do
+        {:ok, _} -> true
+        _ -> false
+      end
+    end)
+    |> case do
+      true -> {:ok, data}
+      _ -> :invalid_data
+    end
+
+    {:ok, data}
+  end
+  def verify( _ ), do: :invalid_data
+
+  #--------------------------------------------------------
+  # def valid?( _items ), do: true
 
   #--------------------------------------------------------
   def init( {items, id}, _ ) when is_list(items) do
@@ -48,7 +72,6 @@ defmodule Scenic.Component.Input.RadioGroup do
       id: id
     }
 
-#IO.puts "RadioGroup.init"
     push_graph( graph )
 
     {:ok, state}
@@ -62,12 +85,12 @@ defmodule Scenic.Component.Input.RadioGroup do
 
   #============================================================================
 
-  def filter_event( {:click, msg}, _from, %{id: id} = state ) do
+  def filter_event( {:click, btn_id}, _from, %{id: id} = state ) do
 
-    Scene.cast_to_refs( nil, {:set_to_msg, msg} )
+    Scene.cast_to_refs( nil, {:set_to_msg, btn_id} )
     
-    send_event({:value_changed, id, msg})
-    {:stop, %{state | value: msg}}
+    send_event({:value_changed, id, btn_id})
+    {:stop, %{state | value: btn_id}}
   end
 
   def filter_event( msg, _from,  state ) do

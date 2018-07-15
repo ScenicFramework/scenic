@@ -4,6 +4,7 @@ defmodule Scenic.Component.Input.RadioButton do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.ViewPort
+  alias Scenic.Utilities.Draw.Color
   import Scenic.Primitives, only: [{:rect, 3}, {:circle, 3}, {:text, 3}]
 #  import IEx
 
@@ -22,7 +23,6 @@ defmodule Scenic.Component.Input.RadioButton do
   # nil for text_color means to use whatever is inherited
   @colors %{
     light:    {:black, :white, :grey, {215, 215, 215}, :cornflower_blue},
-#    dark:     {:white, :black, :grey, {40,40,40}, :cornflower_blue},
     dark:     {:white, :black, :grey, {40,40,40}, {0x00,0x71,0xBC}},
   }
 
@@ -34,21 +34,60 @@ defmodule Scenic.Component.Input.RadioButton do
   end
 
   #--------------------------------------------------------
-  def valid?( {text, msg, value} ), do: valid?( {text, msg, value, []} )
-  def valid?( {text, msg, value, opts} ) when is_atom(opts), do: valid?( {text, msg, value, [opts]} )
-
-  def valid?( {text, _msg, value, opts} ) when is_bitstring(text) and is_boolean(value)
-  and is_list(opts), do: true
-  def valid?( _ ), do: false
+  def verify( data ) do
+    try do
+      {_, _, _, opts} = normalize( data )
+      opts
+      |> Enum.all?( &verify_option(&1) )
+      |> case do
+        true -> {:ok, data}
+        _ -> :invalid_data
+      end
+    rescue
+      _ -> false
+    end
+  end
 
 
   #--------------------------------------------------------
-  def init( {text, msg}, i_opts ), do: init( {text, msg, false, []}, i_opts )
-  def init( {text, msg, value}, i_opts ), do: init( {text, msg, value, []}, i_opts )
-  def init( {text, msg, value, opt}, i_opts ) when is_atom(opt) do
-    init( {text, msg, value, [opt]}, i_opts )
+  defp verify_option( {:type, :light} ), do: true
+  defp verify_option( {:type, :dark} ), do: true
+  defp verify_option( {:type, {text_color, box_background, border_color,
+  pressed_color, checkmark_color}} ) do
+    Color.verify( text_color ) &&
+    Color.verify( box_background ) &&
+    Color.verify( border_color ) &&
+    Color.verify( pressed_color ) &&
+    Color.verify( checkmark_color )
   end
-  def init( {text, msg, value, opts}, _ ) when is_list(opts) do
+
+  defp verify_option( _ ), do: false
+
+
+  #--------------------------------------------------------
+  defp normalize( data )
+
+  defp normalize( {text, id} ), do: normalize( {text, id, false, []} )
+
+  defp normalize( {text, id, checked?} ) when is_boolean(checked?) do
+    normalize( {text, id, checked?, []} )
+  end
+
+  defp normalize( {text, id, opts} ) when is_list(opts) do
+    normalize( {text, id, false, opts} )
+  end
+
+  defp normalize( {text, _id, checked?, opts} = data) when is_bitstring(text) and
+  is_boolean(checked?) and is_list(opts) do
+    data
+  end
+
+
+  #--------------------------------------------------------
+  def init( data, _args ) do
+    # normalize the incoming data
+    {text, id, checked?, opts} = normalize( data )
+
     # get the color
     color_opt = Enum.find(opts, &Enum.member?(@valid_colors, &1) ) || :dark
 
@@ -60,7 +99,7 @@ defmodule Scenic.Component.Input.RadioButton do
       graph
       |> rect({140, 16}, fill: :clear, translate: {-2,-2})
       |> circle(8, fill: box_background, stroke: {2, border_color}, id: :box, t: {6,6})
-      |> circle(5, fill: checkmark_color, id: :chx, hidden: !value, t: {6,6})
+      |> circle(5, fill: checkmark_color, id: :chx, hidden: !checked?, t: {6,6})
     end, translate: {0, -11})
     |> text(text, fill: text_color, translate: {20,0})
 
@@ -69,11 +108,10 @@ defmodule Scenic.Component.Input.RadioButton do
       colors: colors,
       pressed: false,
       contained: false,
-      checked: value,
-      msg: msg
+      checked: checked?,
+      id: id
     }
 
-#IO.puts "RadioButton.init"
     push_graph( graph )
 
     {:ok, state}
@@ -87,8 +125,8 @@ defmodule Scenic.Component.Input.RadioButton do
   end
 
   #--------------------------------------------------------
-  def handle_cast({:set_to_msg, set_msg}, %{msg: msg} = state) do
-    state = Map.put( state, :checked, set_msg == msg )
+  def handle_cast({:set_to_msg, set_id}, %{id: id} = state) do
+    state = Map.put( state, :checked, set_id == id )
     graph = update_graph(state)
     {:noreply, %{state | graph: graph}}
   end
@@ -121,14 +159,14 @@ defmodule Scenic.Component.Input.RadioButton do
 
   #--------------------------------------------------------
   def handle_input( {:cursor_button, {:left, :release, _, _}}, context,
-  %{contained: contained, msg: msg, pressed: pressed} = state ) do
+  %{contained: contained, id: id, pressed: pressed} = state ) do
     state = Map.put(state, :pressed, false)
 
     ViewPort.release_input( context, [:cursor_button, :cursor_pos])
 
     # only do the action if the cursor is still contained in the target
     if pressed && contained do
-      send_event({:click, msg})
+      send_event({:click, id})
     end
 
     graph = update_graph(state)

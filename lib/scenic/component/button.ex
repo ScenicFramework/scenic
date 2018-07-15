@@ -4,6 +4,7 @@ defmodule Scenic.Component.Button do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.ViewPort
+  alias Scenic.Utilities.Draw.Color
   import Scenic.Primitives, only: [{:rrect, 3}, {:text, 3}]
 
   # type is {text_color, button_color, pressed_color}
@@ -29,30 +30,67 @@ defmodule Scenic.Component.Button do
 
 #  #--------------------------------------------------------
   def info() do
-#    "#{IO.ANSI.red()}Button must be initialized with {{x,y}, text, message, opts}#{IO.ANSI.default_color()}\r\n" <>
-    "#{IO.ANSI.red()}Button data must be: {text, message, opts}#{IO.ANSI.default_color()}\r\n" <>
-    "Position the button with a transform\r\n" <>
-    "The message will be sent to you in a click event when the button is used.\r\n" <>
+    "#{IO.ANSI.red()}Button data must be: {text, id, opts}#{IO.ANSI.yellow()}\r\n" <>
+    "Position the button by adding a transform\r\n" <>
+    "The id will be sent to you in a click event when the button is used.\r\n" <>
     "Options can be {:width, width} {:height, height}, {:radius, raidus},\r\n" <>
     "{:type, type}, and {:align, alignment}\r\n" <>
     "The type can be one of the following presets:\r\n" <>
     ":primary, :secondary, :success, :danger, :warning, :info, :light, :dark, :text\r\n" <>
     "Or a custom color set of {text_color, button_color, pressed_color}\r\n" <>
-    "Example: button({\"Something\", :message, width: 28, type: :danger}, translate: {90,0})" <>
-    "The alignment sets how the text is positioned within the button. It can be one\r\n" <>
-    " of :left, :right, :center. The default is :center."
+    "Example: button({\"Something\", :id, width: 28, type: :danger}, translate: {90,0})" <>
+    "The :align option sets how the text is positioned within the button. It can be one\r\n" <>
+    " of :left, :right, :center. The default is :center.#{IO.ANSI.default_color()}"
   end
 
-  #--------------------------------------------------------
-  def valid?( {text, msg} ), do: valid?( {text, msg, []} )
-  def valid?( {text, _msg, opts} ) when is_atom(opts), do: valid?( {text, [opts]} )
-
-  def valid?( {text, _msg, opts} ) when is_bitstring(text) and is_list(opts), do: true
-  def valid?( _ ), do: false
 
   #--------------------------------------------------------
-  def init( {text, msg}, args ), do: init( {text, msg, []}, args )
-  def init( {text, msg, opts}, _args ) when is_list(opts) do
+  def verify( {text, id} ), do: verify( {text, id, []} )
+  def verify( {text, _id, opts} = data ) when is_bitstring(text) and is_list(opts) do
+    opts
+    |> Enum.all?( &verify_option(&1) )
+    |> case do
+      true -> {:ok, data}
+      _ -> :invalid_data
+    end
+  end
+  def verify( _ ), do: :invalid_data
+
+  #--------------------------------------------------------
+  defp verify_option( {:w, width} ), do: verify_option( {:width, width} )
+  defp verify_option( {:width, width} ) when is_number(width), do: true
+
+  defp verify_option( {:h, height} ), do: verify_option( {:height, height} )
+  defp verify_option( {:height, height} ) when is_number(height), do: true
+
+  defp verify_option( {:r, radius} ), do: verify_option( {:radius, radius} )
+  defp verify_option( {:radius, radius} ) when is_number(radius), do: true
+
+  defp verify_option( {:type, :primary} ), do: true
+  defp verify_option( {:type, :secondary} ), do: true
+  defp verify_option( {:type, :danger} ), do: true
+  defp verify_option( {:type, :warning} ), do: true
+  defp verify_option( {:type, :info} ), do: true
+  defp verify_option( {:type, :light} ), do: true
+  defp verify_option( {:type, :dark} ), do: true
+  defp verify_option( {:type, :text} ), do: true
+  defp verify_option( {:type, {text_color, button_color, pressed_color}} ) do
+    Color.verify( text_color ) &&
+    Color.verify( button_color ) &&
+    Color.verify( pressed_color )
+  end
+
+  defp verify_option( {:a, align} ), do: verify_option( {:align, align} )
+  defp verify_option( {:align, :left} ), do: true
+  defp verify_option( {:align, :right} ), do: true
+  defp verify_option( {:align, :center} ), do: true
+
+  defp verify_option( _ ), do: false
+
+
+  #--------------------------------------------------------
+  def init( {text, id}, args ), do: init( {text, id, []}, args )
+  def init( {text, id, opts}, _args ) when is_list(opts) do
 
     # the button-specific color scheme
     colors = case opts[:type] do
@@ -97,7 +135,7 @@ defmodule Scenic.Component.Button do
       pressed: false,
       contained: false,
       align: alignment,
-      msg: msg
+      id: id
     }
 
     push_graph( graph )
@@ -141,7 +179,7 @@ defmodule Scenic.Component.Button do
 
   #--------------------------------------------------------
   def handle_input( {:cursor_button, {:left, :release, _, _}},
-  context, %{pressed: pressed, contained: contained, msg: msg} = state ) do
+  context, %{pressed: pressed, contained: contained, id: id} = state ) do
 # IO.puts( "handle_input :cursor_button :release")
     state = Map.put(state, :pressed, false)
     update_color(state)
@@ -149,7 +187,7 @@ defmodule Scenic.Component.Button do
     ViewPort.release_input( context, [:cursor_button, :cursor_pos] )
 
     if pressed && contained do
-      send_event({:click, msg})
+      send_event({:click, id})
     end
 
     {:noreply, state}

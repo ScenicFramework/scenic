@@ -4,9 +4,10 @@ defmodule Scenic.Component.Input.Checkbox do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.ViewPort
-  import Scenic.Primitives, only: [{:group, 3}, {:rect, 3}, {:rrect, 3},
-                                {:text, 3}, {:path, 3}]
-#  import IEx
+  alias Scenic.Utilities.Draw.Color
+  import Scenic.Primitives
+
+ import IEx
 
 
 #  @default_width      80
@@ -26,33 +27,71 @@ defmodule Scenic.Component.Input.Checkbox do
     dark:     {:white, :black, :grey, {40,40,40}, :cornflower_blue},
   }
 
+  @default_font       :roboto
+  @default_font_size  20
+  @default_alignment  :center
+
+
 #  #--------------------------------------------------------
   def info() do
-    "#{IO.ANSI.red()}Checkbox must be initialized with {text, message, opts}#{IO.ANSI.default_color()}\r\n"
+    "#{IO.ANSI.red()}Checkbox data must be: " <>
+    "{text, id, checked?, opts}#{IO.ANSI.yellow()}\r\n" <>
+    "Position the checkbox by adding a transform\r\n" <>
+    "The id will be sent to you in a :value_changed event when the checkbox is used.\r\n" <>
+    "The only option for now is {:type, type}\r\n" <>
+    "The type can be one of the following presets: :dark or :light.\r\n" <>
+    "Or a custom color set of: \r\n" <>
+    "{text_color, box_background, border_color, pressed_color, checkmark_color}\r\n" <>
+    "The default is :dark.\r\n"<>
+    "Examples:\r\n"<>
+    "checkbox({\"Something\", :id, true}, translate: {90,0})" <>
+    "checkbox({\"Something\", :id, true, type: :light}, translate: {90,0})"
   end
 
   #--------------------------------------------------------
-  def valid?( {text, msg, value} ), do: valid?( {text, msg, value, []} )
-  def valid?( {text, msg, value, opts} ) when is_atom(opts), do: valid?( {text, msg, value, [opts]} )
+  def verify( {text, id, checked} ), do: verify( {text, id, checked, []} )
+  def verify( {text, _id, checked, opts} = data ) when is_bitstring(text) and
+  is_boolean(checked) and is_list(opts) do
+    opts
+    |> Enum.all?( &verify_option(&1) )
+    |> case do
+      true -> {:ok, data}
+      _ -> :invalid_data
+    end
+  end
+  def verify( _ ), do: :invalid_data
 
-  def valid?( {text, _msg, value, opts} ) when is_bitstring(text) and is_boolean(value)
-  and is_list(opts), do: true
-  def valid?( _ ), do: false
+  #--------------------------------------------------------
+  defp verify_option( {:type, :light} ), do: true
+  defp verify_option( {:type, :dark} ), do: true
+  defp verify_option( {:type, {text_color, box_background, border_color,
+  pressed_color, checkmark_color}} ) do
+    Color.verify( text_color ) &&
+    Color.verify( box_background ) &&
+    Color.verify( border_color ) &&
+    Color.verify( pressed_color ) &&
+    Color.verify( checkmark_color )
+  end
+
+  defp verify_option( _ ), do: false
 
 
   #--------------------------------------------------------
-  def init( {text, msg, value}, i_opts ), do: init( {text, msg, value, []}, i_opts )
-  def init( {text, msg, value, opt}, i_opts ) when is_atom(opt) do
-      init( {text, msg, value, [opt]}, i_opts )
+  def init( {text, id, checked?}, i_opts ), do: init( {text, id, checked?, []}, i_opts )
+  def init( {text, id, checked?, opt}, i_opts ) when is_atom(opt) do
+      init( {text, id, checked?, [opt]}, i_opts )
     end
-  def init( {text, msg, value, opts}, _ ) when is_list(opts) do
-    # get the color
-    color_opt = Enum.find(opts, &Enum.member?(@valid_colors, &1) ) || :dark
+  def init( {text, id, checked?, opts}, _ ) when is_list(opts) do
 
-    colors = @colors[color_opt]
+    # the color scheme
+    colors = case opts[:type] do
+      {_,_,_,_,_} = colors -> colors
+      type -> Map.get(@colors, type) || Map.get(@colors, :dark)
+    end
     {text_color, box_background, border_color, _, checkmark_color} = colors
 
-    graph = Graph.build( font: :roboto, font_size: 16 )
+
+    graph = Graph.build( font: @default_font, font_size: @default_font_size )
     |> group(fn(graph) ->
       graph
       |> rect({140, 16}, fill: :clear, translate: {-2,-2})
@@ -70,7 +109,7 @@ defmodule Scenic.Component.Input.Checkbox do
             {:line_to, 5, 10},
             {:line_to, 10,1}
           ], stroke: {2, checkmark_color}, join: :round)
-      end, id: :chx, hidden: !value)
+      end, id: :chx, hidden: !checked?)
     end, translate: {0, -11})
     |> text(text, fill: text_color, translate: {20,0} )
 
@@ -79,8 +118,8 @@ defmodule Scenic.Component.Input.Checkbox do
       colors: colors,
       pressed: false,
       contained: false,
-      checked: value,
-      msg: msg
+      checked: checked?,
+      id: id
     }
 
 #IO.puts "Checkbox.init"
@@ -117,7 +156,7 @@ defmodule Scenic.Component.Input.Checkbox do
 
   #--------------------------------------------------------
   def handle_input( {:cursor_button, {:left, :release, _, _}}, context,
-  %{contained: contained, msg: msg, pressed: pressed, checked: checked} = state ) do
+  %{contained: contained, id: id, pressed: pressed, checked: checked} = state ) do
     state = Map.put(state, :pressed, false)
 
     ViewPort.release_input( context, [:cursor_button, :cursor_pos])
@@ -126,7 +165,7 @@ defmodule Scenic.Component.Input.Checkbox do
     state = case pressed && contained do
       true ->
         checked = !checked
-        send_event({:value_changed, msg, checked})
+        send_event({:value_changed, id, checked})
         Map.put(state, :checked, checked)
 
       false ->

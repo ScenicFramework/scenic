@@ -46,7 +46,7 @@ defmodule Scenic.Primitive do
 
   #===========================================================================
   defmodule Error do
-    defexception [ message: nil, error: nil ]
+    defexception [ message: nil, error: nil, data: nil ]
   end
 
 
@@ -70,7 +70,7 @@ defmodule Scenic.Primitive do
       def verify!( data ) do
         case verify(data) do
           {:ok, data} -> data
-          err -> raise Error, message: info(), error: err
+          err -> raise Error, message: info(), error: err, data: data
         end
       end
 

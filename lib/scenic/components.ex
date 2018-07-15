@@ -76,7 +76,7 @@ defmodule Scenic.Components do
 
   For example, when a button scene decides that it has been "clicked",
   the generic button component doesn't know how to do anything with that
-  information. So it sends a `{:click, button_message}` to the host scene
+  information. So it sends a `{:click, button_id}` to the host scene
   that referenced it.
 
   That scene can intercept the message, act on it, transform it, and/or
@@ -87,11 +87,11 @@ defmodule Scenic.Components do
 
   examples:
 
-        def filter_event( {:click, :example}, _, state ) do
+        def filter_event( {:click, :example_id}, _, state ) do
           {:stop, state }
         end
 
-        def filter_event( {:click, :example}, _, state ) do
+        def filter_event( {:click, :example_id}, _, state ) do
           {:continue, {:click, :transformed}, state }
         end
 
@@ -147,18 +147,18 @@ defmodule Scenic.Components do
 
   Data:
 
-      {text_for_button, button_message, options \\\\ []}
+      {text_for_button, button_id, options \\\\ []}
 
   The options term is... optional. You can also pass in:
 
-      {text_for_button, button_message}
+      {text_for_button, button_id}
 
   ### Messages
 
   If a button press is successful, it sends an event message to the host
   scene in the form of:
 
-      {:click, button_message}
+      {:click, button_id}
 
   Where the button message is the term you specified when you created
   the button. The message doesn't need to be an atom. It can be any
@@ -192,13 +192,13 @@ defmodule Scenic.Components do
   The following example creates a simple button and positions it on the screen.
 
       graph
-      |> button( {"Example", :example}, translate: {20, 20} )
+      |> button( {"Example", :example_id}, translate: {20, 20} )
 
-  This example makes the same button, but colors it as a warning button. See
+  The next example makes the same button as before, but colors it as a warning button. See
   the options list above for more details.
 
       graph
-      |> button( {"Example", :example, type: :warning}, translate: {20, 20} )
+      |> button( {"Example", :example_id, type: :warning}, translate: {20, 20} )
 
 
   """
