@@ -147,7 +147,7 @@ defmodule Scenic.Components do
 
   Data:
 
-      {text, id, options \\\\ []}
+      {text, button_id, options \\\\ []}
 
   * `text` must be a bitstring
   * `id` can be any term you want. It will be passed back to you during event messages.
@@ -158,11 +158,7 @@ defmodule Scenic.Components do
   If a button press is successful, it sends an event message to the host
   scene in the form of:
 
-      {:click, id}
-
-  Where the button id is the term you specified when you created
-  the button. The id doesn't need to be an atom. It can be any
-  term you want to send. Even something complicated.
+      {:click, button_id}
 
 
   ### Options
@@ -172,7 +168,10 @@ defmodule Scenic.Components do
   * `:type` - This sets the color scheme of the button. This can be one of
   pre-defined button schemes `:primary`, `:secondary`, `:success`, `:danger`,
   `:warning`, `:info`, `:light`, `:dark`, `:text` or it can be a completly custom
-  scheme like this: `{text_color, button_color, pressed_color}`.
+  scheme like this:
+
+      {text_color, button_color, pressed_color}
+
   * `:width` - pass in a number to set the width of the button.
   * `:height` - pass in a number to set the height of the button.
   * `:radius` - pass in a number to set the radius of the button's rounded rectangle.
@@ -192,17 +191,17 @@ defmodule Scenic.Components do
   The following example creates a simple button and positions it on the screen.
 
       graph
-      |> button( {"Example", :example_id}, translate: {20, 20} )
+      |> button( {"Example", :button_id}, translate: {20, 20} )
 
   The next example makes the same button as before, but colors it as a warning button. See
   the options list above for more details.
 
       graph
-      |> button( {"Example", :example_id, type: :warning}, translate: {20, 20} )
+      |> button( {"Example", :button_id, type: :warning}, translate: {20, 20} )
 
 
   """
-  def button( graph_or_primitive, data, opts \\ [] )
+  def button( graph, data, opts \\ [] )
 
   def button( %Graph{} = g, data, opts ) do
     add_to_graph( g, Component.Button, data, opts )
@@ -229,18 +228,15 @@ defmodule Scenic.Components do
 
       {:value_changed, checkbox_id, checked?}
 
-  Where the checkbox id is the term you specified when you created
-  the button. The id doesn't need to be an atom. It can be any
-  term you want to send. Even something complicated.
-
-
   ### Options
 
-  Buttons honor the following list of options.
+  Checkboxes honor the following list of options.
 
   * `:type` - This sets the color scheme of the button. This can be one of
   pre-defined button schemes `:light`, `:dark`, or it can be a completly custom
-  scheme like this: `{text_color, box_background, border_color, pressed_color, checkmark_color}`.
+  scheme like this:
+
+      {text_color, background_color, border_color, pressed_color, checkmark_color}
 
   ### Styles
 
@@ -254,13 +250,79 @@ defmodule Scenic.Components do
   The following example creates a checkbox and positions it on the screen.
 
       graph
-      |> checkbox( {"Example", :example_id, true}, translate: {20, 20} )
+      |> checkbox( {"Example", :checkbox_id, true}, translate: {20, 20} )
 
   """
-  def checkbox( graph_or_primitive, data, opts \\ [] )
+  def checkbox( graph, data, opts \\ [] )
 
   def checkbox( %Graph{} = g, data, opts ) do
     add_to_graph( g, Component.Input.Checkbox, data, opts )
+  end
+
+
+  #--------------------------------------------------------
+  @doc """
+  Add a dropdown to a graph
+
+  Data:
+
+      {items, initial_item, id, options \\\\ []}
+
+  * `items` must be a list of items, each of which is: {text, id}. See below...
+  * `initial_item` is the id of the initial selected item. It can be any term you want.
+  * `id` can be any term you want. It will be passed back to you during event messages.
+  * `options` should be a list of options (see below). It is not required
+
+  Item data:
+    
+      {text, id}
+
+  * `text` is a string that will be shown in the dropdown.
+  * `id` can be any term you want. It will identify the item that is currently selected
+  in the dropdown and will be passed back to you during event messages.
+
+
+  ### Messages
+
+  When the state of the checkbox, it sends an event message to the host
+  scene in the form of:
+
+      {:value_changed, dropdown_id, selected_item_id}
+
+
+  ### Options
+
+  Dropdowns honor the following list of options.
+
+  * `:type` - This sets the color scheme of the button. This can be one of
+  pre-defined button schemes `:light`, `:dark`, or it can be a completly custom
+  scheme like this:
+
+      {text_color, background_color, pressed_color, border_color, carat_color, hover_color}
+
+  ### Styles
+
+  Buttons honor the following styles
+  
+  * `:hidden` - If true the button is rendered. If false, it is skipped. The default
+    is true.
+
+  ### Examples
+
+  The following example creates a dropdown and positions it on the screen.
+
+      graph
+      |> dropdown({[
+        {"Dashboard", :dashboard},
+        {"Controls", :controls},
+        {"Primitives", :primitives},
+      ], :controls, :dropdown_id }, translate: {20, 20} )
+
+  """
+  def dropdown( graph, data, opts \\ [] )
+
+  def dropdown( %Graph{} = g, data, opts ) do
+    add_to_graph( g, Component.Input.Dropdown, data, opts )
   end
 
 
@@ -270,9 +332,9 @@ defmodule Scenic.Components do
 
   Data:
 
-      {items, group_id}
+      {radio_buttons, group_id}
 
-  * `items` must be a list of radio button data. See below.
+  * `radio_buttons` must be a list of radio button data. See below.
   * `id` can be any term you want. It will be passed back to you during event messages.
 
   The `items` term must be a list of RadioButton init data.
@@ -294,9 +356,6 @@ defmodule Scenic.Components do
   scene in the form of:
 
       {:value_changed, group_id, button_id}
-
-  Where the `group_id` is the term you specified when you created
-  the radio group and the `button_id` is the id of the button that is now selected
 
 
   ### Options
@@ -323,11 +382,11 @@ defmodule Scenic.Components do
           {"Radio A", :radio_a},
           {"Radio B", :radio_b, true},
           {"Radio C", :radio_c},
-        ], :id },
+        ], :radio_group_id },
         translate: {20, 20} )
 
   """
-  def radio_group( graph_or_primitive, data, opts \\ [] )
+  def radio_group( graph, data, opts \\ [] )
 
   def radio_group( %Graph{} = g, data, opts ) do
     add_to_graph( g, Component.Input.RadioGroup, data, opts )
@@ -389,10 +448,10 @@ defmodule Scenic.Components do
           :cornflower_blue,
           :green,
           :chartreuse
-        ], :cornflower_blue, :list_slider}, translate: {20,20} )
+        ], :cornflower_blue, :slider_id}, translate: {20,20} )
 
   """
-  def slider( graph_or_primitive, data, opts \\ [] )
+  def slider( graph, data, opts \\ [] )
 
   def slider( %Graph{} = g, data, opts ) do
     add_to_graph( g, Component.Input.Slider, data, opts )
