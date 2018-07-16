@@ -8,23 +8,20 @@ defmodule Scenic.Component.Input.Dropdown do
 
   alias Scenic.Graph
   alias Scenic.ViewPort
-  alias Scenic.Utilities.Draw.Color
   import Scenic.Primitives
 
-  import IEx
+  # import IEx
 
   @default_width          160
   @default_height         30
-  @default_radius         3
 
   @default_font           :roboto
   @default_font_size      20
-  @default_alignment      :center
 
   @drop_click_window_ms   400
 
 
-  # type is {text_color, background_color, pressed_color, border_color, carat_color, hover_color, hover_text}
+  # type is {text_color, background_color, pressed_color, border_color, carat_color, hover_color}
   @colors %{
     light:    {:black, :white, {215, 215, 215}, :grey, :black, :cornflower_blue},
     dark:     {:white, :black, {40,40,40}, :grey, :white, :cornflower_blue},
@@ -49,8 +46,8 @@ defmodule Scenic.Component.Input.Dropdown do
 
 
   #--------------------------------------------------------
-  def verify( {items, initial, id} = d ), do: verify( {items, initial, id, []} )
-  def verify( {items, initial, _id, opts} = data ) when is_list(items) and is_list(opts) do
+  def verify( {items, initial, id} ), do: verify( {items, initial, id, []} )
+  def verify( {items, _initial, _id, opts} = data ) when is_list(items) and is_list(opts) do
     {:ok, data}
     # opts
     # |> Enum.all?( &verify_option(&1) ) && verify_initial(ext, initial)
@@ -94,7 +91,7 @@ defmodule Scenic.Component.Input.Dropdown do
 
     width = opts[:width] || opts[:w] || @default_width
     height = opts[:height] || opts[:h] || @default_height
-    alignment = opts[:align] || opts[:a] || @default_alignment
+    # alignment = opts[:align] || opts[:a] || @default_alignment
 
     # get style args
     font = opts[:font] || @default_font
@@ -213,13 +210,12 @@ defmodule Scenic.Component.Input.Dropdown do
     graph = update_highlighting(graph, items, selected_id, nil, colors)
     |> push_graph
 
-    {:noreply, %{state | hover_id: nil}}
+    {:noreply, %{state | hover_id: nil, graph: graph}}
   end
 
   #--------------------------------------------------------
   def handle_input( {:cursor_button, {:left, :press, _, _}},
-  %{id: context_id} = context,
-  %{down: true} = state ) do
+  context, %{down: true} = state ) do
     # capture input
     ViewPort.capture_input( context, [:cursor_button, :cursor_pos])
     {:noreply, state}
