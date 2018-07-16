@@ -130,7 +130,7 @@ defmodule Scenic.ViewPort.Input do
   defp do_handle_captured_input( {:cursor_enter, point}, context,
   %{max_depth: max_depth} = state ) do
     {uid, id, point} = find_by_captured_point( point, context, max_depth )
-
+|>IO.inspect()
     Scene.cast(context.graph_key,
       {
         :input,
@@ -173,7 +173,7 @@ defmodule Scenic.ViewPort.Input do
 
       {uid, id, point} ->
         # get the graph key, so we know what scene to send the event to
-        state = send_enter_message( uid, context.graph_key, state )
+        state = send_enter_message( uid, id, context.graph_key, state )
         Scene.cast(context.graph_key,
           {
             :input,
@@ -299,7 +299,7 @@ defmodule Scenic.ViewPort.Input do
 
       {point, {uid, id, graph_key}, _} ->
         # get the graph key, so we know what graph_key to send the event to
-        state = send_enter_message( uid, graph_key, state )
+        state = send_enter_message( uid, id, graph_key, state )
         Scene.cast( graph_key,
           {
             :input,
@@ -356,7 +356,7 @@ defmodule Scenic.ViewPort.Input do
     %{state | hover_primitve: nil}
   end
 
-  defp send_enter_message( uid, graph_key, %{hover_primitve: hover_primitve} = state ) do
+  defp send_enter_message( uid, id, graph_key, %{hover_primitve: hover_primitve} = state ) do
     # first, send the previous hover_primitve an exit message
     state = case hover_primitve do
       nil ->
@@ -380,7 +380,7 @@ defmodule Scenic.ViewPort.Input do
           {
             :input,
             {:cursor_enter, uid},
-            Context.build(%{viewport: self(), uid: uid, graph_key: graph_key})
+            Context.build(%{viewport: self(), uid: uid, id: id, graph_key: graph_key})
           })
         %{state | hover_primitve: {uid, graph_key}}
 
