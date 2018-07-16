@@ -8,6 +8,7 @@ defmodule Scenic.Component.Input.Dropdown do
 
   alias Scenic.Graph
   alias Scenic.ViewPort
+  alias Scenic.Utilities.Draw.Color
   import Scenic.Primitives
 
   # import IEx
@@ -35,7 +36,7 @@ defmodule Scenic.Component.Input.Dropdown do
 
   @rad        :math.pi() / 2
 
-#  #--------------------------------------------------------
+  #--------------------------------------------------------
   def info() do
     "#{IO.ANSI.red()}Dropdown data must be: {items, initial, id, opts \\\\ []}" <>
     IO.ANSI.yellow() <>
@@ -43,41 +44,36 @@ defmodule Scenic.Component.Input.Dropdown do
     IO.ANSI.default_color()
   end
 
-
-
   #--------------------------------------------------------
   def verify( {items, initial, id} ), do: verify( {items, initial, id, []} )
-  def verify( {items, _initial, _id, opts} = data ) when is_list(items) and is_list(opts) do
-    {:ok, data}
-    # opts
-    # |> Enum.all?( &verify_option(&1) ) && verify_initial(ext, initial)
-    # |> case do
-    #   true -> {:ok, data}
-    #   _ -> :invalid_data
-    # end
+  def verify( {items, initial, _id, opts} = data ) when is_list(items) and is_list(opts) do
+    Enum.all?( opts, &verify_option(&1) ) &&
+    Enum.all?( items, &verify_item(&1) ) &&
+    Enum.find_value(items, false, fn({_,id})-> id == initial end)
+    |> case do
+      true -> {:ok, data}
+      _ -> :invalid_data
+    end
   end
   def verify( _ ), do: :invalid_data
 
   #--------------------------------------------------------
-  # defp verify_initial({min,max}, init) when is_integer(min) and is_integer(max) and
-  # is_integer(init) and init >= min and init <= max, do: true
-  # defp verify_initial({min,max}, init) when is_float(min) and is_float(max) and
-  # is_number(init) and init >= min and init <= max, do: true
-  # defp verify_initial( list_ext, init ) when is_list(list_ext), do: Enum.member?(list_ext, init)
-  # defp verify_initial( _, _ ), do: false
-
-  # #--------------------------------------------------------
-  # defp verify_option( {:type, :light} ), do: true
-  # defp verify_option( {:type, :dark} ), do: true
-  # defp verify_option( {:type, {line_color, thumb_color}} ) do
-  #   Color.verify( line_color ) &&
-  #   Color.verify( thumb_color )
-  # end
-  # defp verify_option( _ ), do: false
+  defp verify_item( {text, _} ) when is_bitstring(text), do: true
+  defp verify_item( _ ), do: false
 
   #--------------------------------------------------------
-  # def valid?( {_ext, _init, _width, _id} ), do: true
-  # def valid?( _d ), do: false
+  defp verify_option( {:type, :light} ), do: true
+  defp verify_option( {:type, :dark} ), do: true
+  defp verify_option( {:type,
+  {text_color, background_color, pressed_color, border_color, carat_color, hover_color}} ) do
+    Color.verify( text_color ) &&
+    Color.verify( background_color ) &&
+    Color.verify( pressed_color ) &&
+    Color.verify( border_color ) &&
+    Color.verify( carat_color ) &&
+    Color.verify( hover_color )
+  end
+  defp verify_option( _ ), do: false
 
 
   #--------------------------------------------------------
