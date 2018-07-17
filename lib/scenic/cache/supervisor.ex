@@ -11,6 +11,7 @@
 #  and font management, so you are probably best off using this supervisor...
 
 defmodule Scenic.Cache.Supervisor do
+  @moduledoc false
   use Supervisor
   alias Scenic.Cache
 

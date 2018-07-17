@@ -6,6 +6,7 @@
 # Supervisor for non-dynamic scenes
 
 defmodule Scenic.Scene.Supervisor do
+  @moduledoc false
   use Supervisor
 
   def child_spec({scene_module, args, opts}) do

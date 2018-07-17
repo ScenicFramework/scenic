@@ -4,6 +4,7 @@
 #
 
 defmodule Scenic.ViewPort.Supervisor do
+  @moduledoc false
   use Supervisor
   alias Scenic.ViewPort
 

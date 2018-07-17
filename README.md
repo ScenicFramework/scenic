@@ -1,5 +1,11 @@
 # Scenic
 
+Scenic is:
+
+  1. Cool
+  2. Harder to write than I thought it would be
+
+
 ## Core Scenic Library
 
 

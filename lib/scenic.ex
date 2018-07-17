@@ -1,4 +1,13 @@
 defmodule Scenic do
+
+
+  @moduledoc """
+  Welcom to Scenic.
+
+  It does stuff
+
+  """
+
 #  use Application
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html

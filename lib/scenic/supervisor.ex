@@ -6,6 +6,7 @@
 # one supervisor to bring up the main scenic servers
 
 defmodule Scenic.Supervisor do
+  @moduledoc false
   use Supervisor
 
   @viewports :scenic_dyn_viewports

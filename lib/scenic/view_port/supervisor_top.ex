@@ -7,6 +7,7 @@
 # supervisor to hold it together.
 
 defmodule Scenic.ViewPort.SupervisorTop do
+  @moduledoc false
   use Supervisor
   alias Scenic.ViewPort
 
