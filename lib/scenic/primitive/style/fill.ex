@@ -5,7 +5,7 @@
 
 defmodule Scenic.Primitive.Style.Fill do
   use Scenic.Primitive.Style
-  alias Scenic.Utilities
+  alias Scenic.Primitive.Style.Paint
 
   #============================================================================
   # data verification and serialization
@@ -30,7 +30,7 @@ defmodule Scenic.Primitive.Style.Fill do
   #--------------------------------------------------------
 
   def normalize( paint ) do
-    Utilities.Draw.Paint.normalize(paint)
+    Paint.normalize(paint)
   end
 
 end

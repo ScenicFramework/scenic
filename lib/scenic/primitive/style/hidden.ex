@@ -4,13 +4,7 @@
 #
 
 defmodule Scenic.Primitive.Style.Hidden do
-  use Scenic.Primitive.Style, type_code: 0x0010
-#  alias Scenic.Primitive.Style
-
-#  @dflag            Style.dflag()
-#  @type_code        0x0010
-
-
+  use Scenic.Primitive.Style
 
   #============================================================================
   # data verification and serialization

@@ -8,7 +8,7 @@ defmodule Scenic.Component.Input.Dropdown do
 
   alias Scenic.Graph
   alias Scenic.ViewPort
-  alias Scenic.Utilities.Draw.Color
+  alias Scenic.Primitive.Style.Paint.Color
   import Scenic.Primitives
 
   # import IEx

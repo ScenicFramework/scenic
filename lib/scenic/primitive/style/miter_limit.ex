@@ -5,10 +5,6 @@
 
 defmodule Scenic.Primitive.Style.MiterLimit do
   use Scenic.Primitive.Style
-#  alias Scenic.Primitive.Style
-
-#  @dflag            Style.dflag()
-#  @type_code        0x0020
 
 
   #============================================================================

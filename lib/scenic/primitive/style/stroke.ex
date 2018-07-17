@@ -5,7 +5,7 @@
 
 defmodule Scenic.Primitive.Style.Stroke do
   use Scenic.Primitive.Style
-  alias Scenic.Utilities
+  alias Scenic.Primitive.Style.Paint
 
   #============================================================================
   # data verification and serialization
@@ -34,10 +34,7 @@ defmodule Scenic.Primitive.Style.Stroke do
   #--------------------------------------------------------
 
   def normalize( {width, paint} ) when is_number(width) and width >= 0 do
-    {
-      width,
-      Utilities.Draw.Paint.normalize(paint)
-    }
+    { width, Paint.normalize(paint) }
   end
 
 end

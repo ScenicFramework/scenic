@@ -3,7 +3,7 @@ defmodule Scenic.Component.Input.Slider do
 
   alias Scenic.Graph
   alias Scenic.ViewPort
-  alias Scenic.Utilities.Draw.Color
+  alias Scenic.Primitive.Style.Paint.Color
   import Scenic.Primitives, only: [{:rect, 3}, {:line, 3}, {:rrect, 3}, {:update_opts,2}]
 
 

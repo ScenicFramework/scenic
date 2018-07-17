@@ -3,8 +3,8 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Utilities.Draw.LinearGradient do
-  alias Scenic.Utilities.Draw.Color
+defmodule Scenic.Primitive.Style.Paint.LinearGradient do
+  alias Scenic.Primitive.Style.Paint.Color
 
   #--------------------------------------------------------
   def normalize( {sx, sy, ex, ey, color_start, color_end} ) when

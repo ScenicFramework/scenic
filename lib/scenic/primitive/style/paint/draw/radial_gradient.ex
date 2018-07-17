@@ -3,8 +3,8 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Utilities.Draw.RadialGradient do
-  alias Scenic.Utilities.Draw.Color
+defmodule Scenic.Primitive.Style.Paint.RadialGradient do
+  alias Scenic.Primitive.Style.Paint.Color
   
   #--------------------------------------------------------
   def normalize( {cx, cy, inner_radius, outer_radius, color_start, color_end} ) when

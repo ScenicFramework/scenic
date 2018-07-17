@@ -3,8 +3,8 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Utilities.Draw.BoxGradient do
-  alias Scenic.Utilities.Draw.Color
+defmodule Scenic.Primitive.Style.Paint.BoxGradient do
+  alias Scenic.Primitive.Style.Paint.Color
 
   #--------------------------------------------------------
   def normalize( {x, y, w, h, radius, feather, color_start, color_end} ) when

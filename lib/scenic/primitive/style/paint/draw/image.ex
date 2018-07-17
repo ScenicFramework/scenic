@@ -3,7 +3,7 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Utilities.Draw.Image do
+defmodule Scenic.Primitive.Style.Paint.Image do
 
   #--------------------------------------------------------
   def normalize( image ) when is_bitstring(image) do

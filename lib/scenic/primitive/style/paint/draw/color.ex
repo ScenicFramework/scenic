@@ -3,7 +3,7 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Utilities.Draw.Color do
+defmodule Scenic.Primitive.Style.Paint.Color do
 
 
   #============================================================================

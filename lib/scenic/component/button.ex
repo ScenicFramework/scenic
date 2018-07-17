@@ -4,7 +4,7 @@ defmodule Scenic.Component.Button do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.ViewPort
-  alias Scenic.Utilities.Draw.Color
+  alias Scenic.Primitive.Style.Paint.Color
   import Scenic.Primitives, only: [{:rrect, 3}, {:text, 3}]
 
   # type is {text_color, button_color, pressed_color}
