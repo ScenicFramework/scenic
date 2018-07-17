@@ -8,6 +8,7 @@
 
 
 defmodule Scenic.ViewPort.Input do
+  @moduledoc false
   alias Scenic.Scene
 #  alias Scenic.Utilities
 #  alias Scenic.Graph

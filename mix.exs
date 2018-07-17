@@ -18,7 +18,7 @@ defmodule Scenic.Mixfile do
       start_permanent: Mix.env == :prod,
       deps: deps(),
       docs: [
-        # extras: ["README.md"],
+        extras: doc_pages(),
         main: "Scenic",
         groups_for_modules: groups_for_modules(),
         # source_ref: "v#{@version}",
@@ -62,6 +62,17 @@ defmodule Scenic.Mixfile do
     ]
   end
 
+
+  defp doc_pages do
+    [
+      "pages/overview.md",
+      "pages/getting_started.md",
+      "pages/overview_scene.md",
+      "pages/overview_graph.md",
+      "pages/overview_viewport.md",
+      "pages/overview_driver.md"
+    ]
+  end
 
   defp groups_for_modules do
     # Ungrouped Modules
@@ -120,6 +131,14 @@ defmodule Scenic.Mixfile do
         Scenic.Primitive.Style.TextAlign,
         Scenic.Primitive.Style.TextHeight,
       ],
+      "Style.Paint": [
+        Scenic.Primitive.Style.Paint,
+        Scenic.Primitive.Style.Paint.Color,
+        Scenic.Primitive.Style.Paint.Image,
+        Scenic.Primitive.Style.Paint.BoxGradient,
+        Scenic.Primitive.Style.Paint.LinearGradient,
+        Scenic.Primitive.Style.Paint.RadialGradient,
+      ],
       Transforms: [
         Scenic.Primitive.Transform,
         Scenic.Primitive.Transform.Matrix,
@@ -134,12 +153,14 @@ defmodule Scenic.Mixfile do
       ],
       ViewPort: [
         Scenic.ViewPort.Config,
-        Scenic.ViewPort.Driver,
-        Scenic.ViewPort.Driver.Config,
-        Scenic.ViewPort.Driver.Info,
-        Scenic.ViewPort.Input,
+        # Scenic.ViewPort.Input,
         Scenic.ViewPort.Input.Context,
         Scenic.ViewPort.Tables
+      ],
+      Drivers: [
+        Scenic.ViewPort.Driver,
+        Scenic.ViewPort.Driver.Config,
+        Scenic.ViewPort.Driver.Info
       ],
       Cache: [
         Scenic.Cache,

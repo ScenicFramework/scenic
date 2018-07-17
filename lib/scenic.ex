@@ -2,27 +2,13 @@ defmodule Scenic do
 
 
   @moduledoc """
-  Welcom to Scenic.
+  Welcome to Scenic.
 
-  It does stuff
+  * [Getting Started](getting_started.html)
+  * [Overview of a Scene](overview_scene.html)
+  * [Overview of a ViewPort](overview_viewport.html)
+  * [Overview of a Driver](overview_driver.html)
 
   """
-
-#  use Application
-
-  # See http://elixir-lang.org/docs/stable/elixir/Application.html
-  # for more information on OTP Applications
-#  def start(_type, _args) do
-#    config_data = Application.get_env(:scenic, Scenic)
-#
-#    driver = config_data[:driver]
-#    view_ports = view_ports(config_data)
-#
-#    driver.start_link(view_ports)
-#  end
-#
-#  #============================================================================
-#  # helper functions
-#
 
 end
