@@ -632,7 +632,7 @@ defmodule Scenic.GraphTest do
     {graph, parent_uid} = Graph.insert_at(graph, -1, @empty_group)
 
     # give the parent graph a single input request
-    graph = Graph.request_input(graph, [:key, :char])
+    # graph = Graph.request_input(graph, [:key, :char])
 
     #check that the setup is ok
     assert Graph.count(graph) == 2
@@ -648,7 +648,7 @@ defmodule Scenic.GraphTest do
     {graph_t, _} =      Graph.insert_at(graph_t, -1, @empty_group)
 
     # add a request for input
-    graph_t = Graph.request_input(graph_t, [:key, :cursor_down])
+    # graph_t = Graph.request_input(graph_t, [:key, :cursor_down])
 
     #check that the setup is ok
     assert Graph.count(graph_t, -1) == 5
@@ -680,7 +680,7 @@ defmodule Scenic.GraphTest do
     assert Primitive.get_parent_uid( Graph.get(merged, t_uid) ) == parent_uid
 
     # make sure the template's input request was merged in without duplicates
-    assert Map.get(merged, :input) == [:key, :char, :cursor_down]
+    # assert Map.get(merged, :input) == [:key, :char, :cursor_down]
   end
 
 
@@ -700,8 +700,8 @@ defmodule Scenic.GraphTest do
     # confirm result
     p = Graph.get(graph, uid)
     assert Primitive.get_transforms( p ) == %{pin: {1, 2}, rotate: 0.2}
-    assert Graph.get_delta_scripts(graph) ==
-      [{1, [{:put, {:transforms, :rotate}, 0.2}, {:put, {:transforms, :pin}, {1, 2}}]}]
+    # assert Graph.get_delta_scripts(graph) ==
+    #   [{1, [{:put, {:transforms, :rotate}, 0.2}, {:put, {:transforms, :pin}, {1, 2}}]}]
   end
 
   test "modify transforms a single passed-in primitive" do
@@ -721,8 +721,8 @@ defmodule Scenic.GraphTest do
     # confirm result
     p = Graph.get(graph, uid)
     assert Primitive.get_transforms( p ) == %{pin: {1, 2}, rotate: 0.2}
-    assert Graph.get_delta_scripts(graph) ==
-      [{1, [{:put, {:transforms, :rotate}, 0.2}, {:put, {:transforms, :pin}, {1, 2}}]}]
+    # assert Graph.get_delta_scripts(graph) ==
+    #   [{1, [{:put, {:transforms, :rotate}, 0.2}, {:put, {:transforms, :pin}, {1, 2}}]}]
   end
 
   test "modify transforms a single primitive by developer id" do
@@ -749,9 +749,9 @@ defmodule Scenic.GraphTest do
     assert Map.get( Graph.get(graph, uid_2), :transforms ) == nil
     assert Map.get( Graph.get(graph, uid_3), :transforms ) == @transform
 
-    deltas = Graph.get_delta_scripts(graph)
-    assert Enum.find(deltas, fn({k,_})-> k == uid_1 end)
-    assert Enum.find(deltas, fn({k,_})-> k == uid_3 end)
+    # deltas = Graph.get_delta_scripts(graph)
+    # assert Enum.find(deltas, fn({k,_})-> k == uid_1 end)
+    # assert Enum.find(deltas, fn({k,_})-> k == uid_3 end)
   end
 
   test "modify works on a list of uids" do
@@ -774,9 +774,9 @@ defmodule Scenic.GraphTest do
     assert Map.get( Graph.get(graph, uid_2), :transforms ) == nil
     assert Map.get( Graph.get(graph, uid_3), :transforms ) == @transform
 
-    deltas = Graph.get_delta_scripts(graph)
-    assert Enum.find(deltas, fn({k,_})-> k == uid_1 end)
-    assert Enum.find(deltas, fn({k,_})-> k == uid_3 end)
+    # deltas = Graph.get_delta_scripts(graph)
+    # assert Enum.find(deltas, fn({k,_})-> k == uid_1 end)
+    # assert Enum.find(deltas, fn({k,_})-> k == uid_3 end)
   end
 
   test "modify modifies transforms" do
@@ -829,12 +829,12 @@ defmodule Scenic.GraphTest do
     assert Map.get( Graph.get_id!(graph, :inner_line), :transforms ) == @transform
 
     # confirm update list
-    deltas = Graph.get_delta_scripts(graph)
-    assert Enum.count(deltas) == 2
-    uid = Primitive.get_uid(Graph.get_id!(graph, :outer_line))
-    assert Enum.find(deltas, fn({k,_})-> k == uid end)
-    uid = Primitive.get_uid(Graph.get_id!(graph, :inner_line))
-    assert Enum.find(deltas, fn({k,_})-> k == uid end)
+    # deltas = Graph.get_delta_scripts(graph)
+    # assert Enum.count(deltas) == 2
+    # uid = Primitive.get_uid(Graph.get_id!(graph, :outer_line))
+    # assert Enum.find(deltas, fn({k,_})-> k == uid end)
+    # uid = Primitive.get_uid(Graph.get_id!(graph, :inner_line))
+    # assert Enum.find(deltas, fn({k,_})-> k == uid end)
   end
 
   test "find_modify modifies only the found primitives with a criteria list" do
@@ -857,10 +857,10 @@ defmodule Scenic.GraphTest do
     assert Map.get( Graph.get_id!(graph, :inner_line), :transforms ) == nil
 
     # confirm update deltas
-    deltas = Graph.get_delta_scripts(graph)
-    assert Enum.count(deltas) == 1
-    uid = Primitive.get_uid(Graph.get_id!(graph, :outer_line))
-    assert Enum.find(deltas, fn({k,_})-> k == uid end)
+    # deltas = Graph.get_delta_scripts(graph)
+    # assert Enum.count(deltas) == 1
+    # uid = Primitive.get_uid(Graph.get_id!(graph, :outer_line))
+    # assert Enum.find(deltas, fn({k,_})-> k == uid end)
   end
 
   test "find_modify modifies only the found primitives under start_uid" do
@@ -883,11 +883,11 @@ defmodule Scenic.GraphTest do
     assert Map.get( Graph.get_id!(graph, :inner_text), :transforms ) == nil
     assert Map.get( Graph.get_id!(graph, :inner_line), :transforms ) == @transform
 
-    # confirm update deltas
-    deltas = Graph.get_delta_scripts(graph)
-    assert Enum.count(deltas) == 1
-    uid = Primitive.get_uid(Graph.get_id!(graph, :inner_line))
-    assert Enum.find(deltas, fn({k,_})-> k == uid end)
+    # # confirm update deltas
+    # deltas = Graph.get_delta_scripts(graph)
+    # assert Enum.count(deltas) == 1
+    # uid = Primitive.get_uid(Graph.get_id!(graph, :inner_line))
+    # assert Enum.find(deltas, fn({k,_})-> k == uid end)
   end
 
 

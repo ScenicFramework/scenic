@@ -33,10 +33,7 @@ defmodule Scenic.Graph do
   @default_max_depth      128
 
 
-  defstruct primitive_map: %{}, id_map: %{}, next_uid: 1, add_to: 0,
-    dyn_refs: %{}, raw_refs: %{}, deltas: %{},
-    focus: nil, input: []#, recurring_actions: []
-    
+  defstruct primitive_map: %{}, id_map: %{}, next_uid: 1, add_to: 0    
 
 
   #===========================================================================
@@ -97,7 +94,7 @@ defmodule Scenic.Graph do
 
     graph = %Graph{
       primitive_map:  %{ @root_uid => root },
-      focus:          nil
+      # focus:          nil
     }
     # |> calculate_transforms( 0 )
 
@@ -606,7 +603,7 @@ defmodule Scenic.Graph do
             p_modified = Map.put(p_modified, :styles, styles)
 
             graph
-            |> put_delta_base( uid, p_original )
+            # |> put_delta_base( uid, p_original )
             |> put( uid, p_modified )
 
             # update the transforms. This means recalc the local_tx and recursivly update the inverse_tx
@@ -923,35 +920,35 @@ defmodule Scenic.Graph do
   # it records the deltas of change for primitives. the idea is to send the minimal
   # amount of information to the view_port (whose rendere may be remote).
 
-  defp put_delta_base(graph, uid, primitive)
-  defp put_delta_base(%Graph{deltas: deltas} = graph, uid, primitive) do
-    Map.get(deltas, uid)
-    |> case do
-      nil ->
-        # no baseline saved for this primitive. save it.
-        primitive
-        |> ( &Map.put(deltas, uid, &1) ).()
-        |> ( &Map.put(graph, :deltas, &1) ).()
+  # defp put_delta_base(graph, uid, primitive)
+  # defp put_delta_base(%Graph{deltas: deltas} = graph, uid, primitive) do
+  #   Map.get(deltas, uid)
+  #   |> case do
+  #     nil ->
+  #       # no baseline saved for this primitive. save it.
+  #       primitive
+  #       |> ( &Map.put(deltas, uid, &1) ).()
+  #       |> ( &Map.put(graph, :deltas, &1) ).()
 
-      _   ->
-        # already saved, do nothing
-        graph
-    end
-  end
+  #     _   ->
+  #       # already saved, do nothing
+  #       graph
+  #   end
+  # end
 
-  def reset_deltas(graph)
-  def reset_deltas( %Graph{} = g ),       do: Map.put(g, :deltas, %{})
+  # def reset_deltas(graph)
+  # def reset_deltas( %Graph{} = g ),       do: Map.put(g, :deltas, %{})
 
-  def get_delta_scripts( graph )
-  def get_delta_scripts( %Graph{primitive_map: p_map, deltas: deltas} ) do
-    Enum.reduce(deltas, [], fn({uid,p_original}, acc)->
-      case Map.get(p_map, uid) do
-        nil -> acc
-        p_modified ->
-          [ {uid, Primitive.delta_script(p_original, p_modified)} | acc ]
-      end
-    end)
-  end
+  # def get_delta_scripts( graph )
+  # def get_delta_scripts( %Graph{primitive_map: p_map, deltas: deltas} ) do
+  #   Enum.reduce(deltas, [], fn({uid,p_original}, acc)->
+  #     case Map.get(p_map, uid) do
+  #       nil -> acc
+  #       p_modified ->
+  #         [ {uid, Primitive.delta_script(p_original, p_modified)} | acc ]
+  #     end
+  #   end)
+  # end
 
 
   #============================================================================
@@ -1082,15 +1079,15 @@ defmodule Scenic.Graph do
 
 
   #--------------------------------------------------------
-  def request_input(graph, input)
-  def request_input(graph, []), do: graph
-  def request_input(graph, input) when is_atom(input), do: request_input(graph, [input])
-  def request_input(%Graph{input: old_input} = graph, new_input) when is_list(new_input) do
-    input = [new_input | old_input]
-    |> List.flatten()
-    |> Enum.uniq()
-    Map.put(graph, :input, input)
-  end
+  # def request_input(graph, input)
+  # def request_input(graph, []), do: graph
+  # def request_input(graph, input) when is_atom(input), do: request_input(graph, [input])
+  # def request_input(%Graph{input: old_input} = graph, new_input) when is_list(new_input) do
+  #   input = [new_input | old_input]
+  #   |> List.flatten()
+  #   |> Enum.uniq()
+  #   Map.put(graph, :input, input)
+  # end
 
 
   #--------------------------------------------------------
