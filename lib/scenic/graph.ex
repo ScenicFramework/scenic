@@ -35,7 +35,7 @@ defmodule Scenic.Graph do
 
   defstruct primitive_map: %{}, id_map: %{}, next_uid: 1, add_to: 0,
     dyn_refs: %{}, raw_refs: %{}, deltas: %{},
-    recurring_actions: [], focus: nil, input: []
+    focus: nil, input: []#, recurring_actions: []
     
 
 
@@ -773,149 +773,149 @@ defmodule Scenic.Graph do
 
 
 
-  #============================================================================
-  # send an event to the primitives for handling
+  # #============================================================================
+  # # send an event to the primitives for handling
   
-  def filter_input(graph, event, uid )
-  def filter_input(graph, event, nil),  do: {:continue, event, graph}
-  def filter_input(graph, event, -1),   do: {:continue, event, graph}
+  # def filter_input(graph, event, uid )
+  # def filter_input(graph, event, nil),  do: {:continue, event, graph}
+  # def filter_input(graph, event, -1),   do: {:continue, event, graph}
 
-  def filter_input(graph, event, uid) do
-    do_filter_input( event, get(graph, uid), graph )
-  end
+  # def filter_input(graph, event, uid) do
+  #   do_filter_input( event, get(graph, uid), graph )
+  # end
 
-  defp do_filter_input(event, nil, graph), do: {:continue, event, graph}
-  defp do_filter_input(event, primitive, graph) do
-    filter =  Primitive.get_event_filter(primitive)
+  # defp do_filter_input(event, nil, graph), do: {:continue, event, graph}
+  # defp do_filter_input(event, primitive, graph) do
+  #   filter =  Primitive.get_event_filter(primitive)
 
-    case send_event_to_filter(event, primitive, graph, filter) do
-      {:stop, graph} ->   {:stop, graph}
-      {:continue, event, graph} ->
-        parent = primitive
-          |> Primitive.get_parent_uid()
-          |> ( &get(graph, &1) ).()
-        do_filter_input(event, parent, graph)
-    end
-  end
+  #   case send_event_to_filter(event, primitive, graph, filter) do
+  #     {:stop, graph} ->   {:stop, graph}
+  #     {:continue, event, graph} ->
+  #       parent = primitive
+  #         |> Primitive.get_parent_uid()
+  #         |> ( &get(graph, &1) ).()
+  #       do_filter_input(event, parent, graph)
+  #   end
+  # end
 
-  defp send_event_to_filter( event, primitive, graph, handler )
-  defp send_event_to_filter( event, _, graph, nil ), do: {:continue, event, graph}
-  defp send_event_to_filter( event, primitive, graph, {module, action} ) do
-    Kernel.apply(module, action, [event, primitive, graph])
-  end
-  defp send_event_to_filter( event, primitive, graph, handler ) when is_function(handler, 3) do
-    handler.(event, primitive, graph)
-  end
-
-
-  #============================================================================
-  # graph level shortcut for setting a handler on a primitive
-
-  def put_event_filter(graph, uid, handler)
-
-  def put_event_filter(graph, uid, handler) when is_integer(uid) do
-    # don't use modify here as it does not invalidate the draw parameters.
-    graph
-    |> get( uid )
-    |> Primitive.put_event_filter( handler )
-    |> ( &put(graph, uid, &1) ).()
-  end
-
-  def put_event_filter(graph, id, handler) when (is_atom(id) or is_bitstring(id)) do
-    graph
-    |> resolve_id( id )
-    |> Enum.reduce( graph, fn(uid, acc) ->
-      put_event_filter(acc, uid, handler)
-    end)
-  end
+  # defp send_event_to_filter( event, primitive, graph, handler )
+  # defp send_event_to_filter( event, _, graph, nil ), do: {:continue, event, graph}
+  # defp send_event_to_filter( event, primitive, graph, {module, action} ) do
+  #   Kernel.apply(module, action, [event, primitive, graph])
+  # end
+  # defp send_event_to_filter( event, primitive, graph, handler ) when is_function(handler, 3) do
+  #   handler.(event, primitive, graph)
+  # end
 
 
-  #============================================================================
-  # support for recurring actions
-  # recurring_actions: [{ref, call, data}]
+  # #============================================================================
+  # # graph level shortcut for setting a handler on a primitive
 
-  #--------------------------------------------------------
-  def schedule_recurring_action(graph, args, callback_or_module)
-  def schedule_recurring_action(%Graph{} = graph, args, callback) when is_function(callback, 4) do
-    do_schedule_recurring_action(graph, args, callback)
-  end
-  def schedule_recurring_action(%Graph{} = graph, args, module) when is_atom(module) do
-    do_schedule_recurring_action(graph, args, module)
-  end
-  def schedule_recurring_action(%Graph{} = graph, args, module, action) when is_atom(module) and is_atom(action) do
-    do_schedule_recurring_action(graph, args, {module, action})
-  end
-  def schedule_recurring_action!(graph, args, callback_or_module) do
-    {:ok, graph, _} = schedule_recurring_action(graph, args, callback_or_module)
-    graph
-  end
-  def schedule_recurring_action!(graph, args, mod, action) do
-    {:ok, graph, _} = schedule_recurring_action(graph, args, mod, action)
-    graph
-  end
-  defp do_schedule_recurring_action(%Graph{recurring_actions: actions} = graph, args, action) do
-    ref = make_action_ref(actions)
-    {
-      :ok,
-      Map.put(graph, :recurring_actions, [ {ref, action, args, nil} | actions ]),
-      {:recurring_action_reference, ref}
-    }    
-  end
+  # def put_event_filter(graph, uid, handler)
 
-  # doesn't need to be a globally unique reference from make_ref. Just something that is unique
-  # to this list of actions. If there is a collision, increase length by 1, which should sort it
-  # can't use make_ref as this is done at compile time
-  defp make_action_ref(actions, ref_length \\ 4) do
-    ref = :crypto.strong_rand_bytes(ref_length)
-      |> Base.encode64(padding: false)
-      |> binary_part(0, ref_length)
+  # def put_event_filter(graph, uid, handler) when is_integer(uid) do
+  #   # don't use modify here as it does not invalidate the draw parameters.
+  #   graph
+  #   |> get( uid )
+  #   |> Primitive.put_event_filter( handler )
+  #   |> ( &put(graph, uid, &1) ).()
+  # end
 
-    # if it isn't unique, try again
-    case Enum.find(actions, false, fn({r,_,_,_})-> r == ref end) do
-      false -> ref
-      _ -> make_action_ref(actions, ref_length + 1 )
-    end
-  end
+  # def put_event_filter(graph, id, handler) when (is_atom(id) or is_bitstring(id)) do
+  #   graph
+  #   |> resolve_id( id )
+  #   |> Enum.reduce( graph, fn(uid, acc) ->
+  #     put_event_filter(acc, uid, handler)
+  #   end)
+  # end
 
-  #--------------------------------------------------------
-  def cancel_recurring_action(%Graph{recurring_actions: actions} = graph, {:recurring_action_reference, reference}) do
-    Enum.reject(actions, fn({ref,_,_,_})-> ref == reference end)
-    |> ( &Map.put(graph, :recurring_actions, &1) ).()
-  end
 
-  #--------------------------------------------------------
-  def tick_recurring_actions(%Graph{recurring_actions: actions} = graph) do
-    # calculate the time
-    current_time = :os.system_time(:milli_seconds)
+  # #============================================================================
+  # # support for recurring actions
+  # # recurring_actions: [{ref, call, data}]
 
-    {actions, graph} = Scenic.Utilities.Enum.filter_map_reduce(actions, graph, fn({ref, action, args, start_time}, g_acc)->
-      {elapsed_time, start_time} = case start_time do
-        nil -> {0, current_time}
-        start_time -> {current_time - start_time, start_time}
-      end
+  # #--------------------------------------------------------
+  # def schedule_recurring_action(graph, args, callback_or_module)
+  # def schedule_recurring_action(%Graph{} = graph, args, callback) when is_function(callback, 4) do
+  #   do_schedule_recurring_action(graph, args, callback)
+  # end
+  # def schedule_recurring_action(%Graph{} = graph, args, module) when is_atom(module) do
+  #   do_schedule_recurring_action(graph, args, module)
+  # end
+  # def schedule_recurring_action(%Graph{} = graph, args, module, action) when is_atom(module) and is_atom(action) do
+  #   do_schedule_recurring_action(graph, args, {module, action})
+  # end
+  # def schedule_recurring_action!(graph, args, callback_or_module) do
+  #   {:ok, graph, _} = schedule_recurring_action(graph, args, callback_or_module)
+  #   graph
+  # end
+  # def schedule_recurring_action!(graph, args, mod, action) do
+  #   {:ok, graph, _} = schedule_recurring_action(graph, args, mod, action)
+  #   graph
+  # end
+  # defp do_schedule_recurring_action(%Graph{recurring_actions: actions} = graph, args, action) do
+  #   ref = make_action_ref(actions)
+  #   {
+  #     :ok,
+  #     Map.put(graph, :recurring_actions, [ {ref, action, args, nil} | actions ]),
+  #     {:recurring_action_reference, ref}
+  #   }    
+  # end
 
-      case call_recurring_action(:step, g_acc, elapsed_time, action, args) do
-        {:continue, %Graph{} = graph_out, args_out} -> {true, {ref, action, args_out, start_time}, graph_out }
-        {:stop, %Graph{} = graph_out} ->               {false, graph_out}
-      end
-    end)
+  # # doesn't need to be a globally unique reference from make_ref. Just something that is unique
+  # # to this list of actions. If there is a collision, increase length by 1, which should sort it
+  # # can't use make_ref as this is done at compile time
+  # defp make_action_ref(actions, ref_length \\ 4) do
+  #   ref = :crypto.strong_rand_bytes(ref_length)
+  #     |> Base.encode64(padding: false)
+  #     |> binary_part(0, ref_length)
 
-    # still need to put the filter_mapped actions back into the graph and save the time
-    graph
-    |> Map.put( :recurring_actions, actions )
-  end
+  #   # if it isn't unique, try again
+  #   case Enum.find(actions, false, fn({r,_,_,_})-> r == ref end) do
+  #     false -> ref
+  #     _ -> make_action_ref(actions, ref_length + 1 )
+  #   end
+  # end
 
-  #--------------------------------------------------------
-  defp call_recurring_action(msg, graph, elapsed_time, callback, data)
-  defp call_recurring_action(msg, graph, elapsed_time, callback, data) when is_function(callback, 4) do
-    callback.(msg, graph, elapsed_time, data)
-  end
-  defp call_recurring_action(msg, graph, elapsed_time, module, data) when is_atom(module) do
-    module.tick(msg, graph, elapsed_time, data)
-  end
-  defp call_recurring_action(msg, graph, elapsed_time, {module, action}, data) do
-    Kernel.apply(module, action, [msg, graph, elapsed_time, data])
-  end
+  # #--------------------------------------------------------
+  # def cancel_recurring_action(%Graph{recurring_actions: actions} = graph, {:recurring_action_reference, reference}) do
+  #   Enum.reject(actions, fn({ref,_,_,_})-> ref == reference end)
+  #   |> ( &Map.put(graph, :recurring_actions, &1) ).()
+  # end
+
+  # #--------------------------------------------------------
+  # def tick_recurring_actions(%Graph{recurring_actions: actions} = graph) do
+  #   # calculate the time
+  #   current_time = :os.system_time(:milli_seconds)
+
+  #   {actions, graph} = Scenic.Utilities.Enum.filter_map_reduce(actions, graph, fn({ref, action, args, start_time}, g_acc)->
+  #     {elapsed_time, start_time} = case start_time do
+  #       nil -> {0, current_time}
+  #       start_time -> {current_time - start_time, start_time}
+  #     end
+
+  #     case call_recurring_action(:step, g_acc, elapsed_time, action, args) do
+  #       {:continue, %Graph{} = graph_out, args_out} -> {true, {ref, action, args_out, start_time}, graph_out }
+  #       {:stop, %Graph{} = graph_out} ->               {false, graph_out}
+  #     end
+  #   end)
+
+  #   # still need to put the filter_mapped actions back into the graph and save the time
+  #   graph
+  #   |> Map.put( :recurring_actions, actions )
+  # end
+
+  # #--------------------------------------------------------
+  # defp call_recurring_action(msg, graph, elapsed_time, callback, data)
+  # defp call_recurring_action(msg, graph, elapsed_time, callback, data) when is_function(callback, 4) do
+  #   callback.(msg, graph, elapsed_time, data)
+  # end
+  # defp call_recurring_action(msg, graph, elapsed_time, module, data) when is_atom(module) do
+  #   module.tick(msg, graph, elapsed_time, data)
+  # end
+  # defp call_recurring_action(msg, graph, elapsed_time, {module, action}, data) do
+  #   Kernel.apply(module, action, [msg, graph, elapsed_time, data])
+  # end
 
 
   #============================================================================

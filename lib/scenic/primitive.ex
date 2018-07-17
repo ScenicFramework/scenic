@@ -218,22 +218,9 @@ defmodule Scenic.Primitive do
     end
   end
 
-  # defp prep_state_opt( state )
-  # defp prep_state_opt( state ),                 do: state
-
-  # defp prep_event_filter_opt( event_handler )
-  # defp prep_event_filter_opt( nil ),            do: nil
-  # defp prep_event_filter_opt( {mod,act} )       when is_atom(mod) and is_atom(act), do: {mod,act}
-  # defp prep_event_filter_opt( handler )         when is_function(handler, 4), do: handler
-  # defp prep_event_filter_opt( _ ) do
-  #   raise Error, message: "event_handler option must be a function or {module, action}"
-  # end
-
 
   #============================================================================
   # type / module
-
-#  def type_code(primitive),           do: get_module(primitive).type_code()
 
   def get_module( primitive )
   def get_module( %Primitive{module: mod} ) when is_atom(mod), do: mod
@@ -316,33 +303,33 @@ defmodule Scenic.Primitive do
     |> ( &Map.put(p, :tags, &1) ).()
   end
 
-  #============================================================================
-  # event_filter
-  # the event handler to use. must be an atom/module
-  # I'm allowing the styles to not be present on the primitive, which is why
-  # I'm not parsing it out in the function match
+  # #============================================================================
+  # # event_filter
+  # # the event handler to use. must be an atom/module
+  # # I'm allowing the styles to not be present on the primitive, which is why
+  # # I'm not parsing it out in the function match
 
-  def get_event_filter( primitive )
-  def get_event_filter(%Primitive{} = p) do
-    Map.get(p, :event_filter)
-  end
+  # def get_event_filter( primitive )
+  # def get_event_filter(%Primitive{} = p) do
+  #   Map.get(p, :event_filter)
+  # end
 
-  def put_event_filter(primitive, event_handler)
-  def put_event_filter(%Primitive{} = p, nil) do
-    Map.delete(p, :event_filter)
-  end
-  def put_event_filter(%Primitive{} = p, evtf) when is_function(evtf, 3) do
-    Map.put(p, :event_filter, evtf)
-  end
-  def put_event_filter(%Primitive{} = p, {module, action})  when is_atom(module) and is_atom(action) do
-    Map.put(p, :event_filter, {module, action})
-  end
+  # def put_event_filter(primitive, event_handler)
+  # def put_event_filter(%Primitive{} = p, nil) do
+  #   Map.delete(p, :event_filter)
+  # end
+  # def put_event_filter(%Primitive{} = p, evtf) when is_function(evtf, 3) do
+  #   Map.put(p, :event_filter, evtf)
+  # end
+  # def put_event_filter(%Primitive{} = p, {module, action})  when is_atom(module) and is_atom(action) do
+  #   Map.put(p, :event_filter, {module, action})
+  # end
 
-  #--------------------------------------------------------
-  # same as setting put_event_filter to nil
-  def delete_event_filter( %Primitive{} = p ) do
-    Map.delete(p, :event_filter)
-  end
+  # #--------------------------------------------------------
+  # # same as setting put_event_filter to nil
+  # def delete_event_filter( %Primitive{} = p ) do
+  #   Map.delete(p, :event_filter)
+  # end
 
 
   #============================================================================

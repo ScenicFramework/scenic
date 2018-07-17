@@ -31,10 +31,10 @@ defmodule Scenic.GraphTest do
   @graph_empty            Graph.build()
 
 
-  @filter_graph Graph.build()
-    |> Primitive.Group.add_to_graph( fn(g) ->
-      Rectangle.add_to_graph( g, {100, 200}, id: :rect )
-    end, id: "group")
+  # @filter_graph Graph.build()
+  #   |> Primitive.Group.add_to_graph( fn(g) ->
+  #     Rectangle.add_to_graph( g, {100, 200}, id: :rect )
+  #   end, id: "group")
 
 
   @graph_find       Graph.build()
@@ -1070,359 +1070,359 @@ defmodule Scenic.GraphTest do
     assert Map.get( Graph.get(graph, uid_3), :transforms )      == nil
   end
 
-  #============================================================================
-  # put_event_filter(graph, id, handler)
+  # #============================================================================
+  # # put_event_filter(graph, id, handler)
 
-  test "put_event_filter adds a function handler to the primitive indicated by id" do
-    [uid] = Graph.resolve_id(@filter_graph, :rect)
-    graph = Graph.put_event_filter(@filter_graph, :rect, fn(_a,_b,_c) -> nil end)
-    p = Graph.get(graph, uid)
-    assert is_function(Primitive.get_event_filter(p), 3)
-  end
+  # test "put_event_filter adds a function handler to the primitive indicated by id" do
+  #   [uid] = Graph.resolve_id(@filter_graph, :rect)
+  #   graph = Graph.put_event_filter(@filter_graph, :rect, fn(_a,_b,_c) -> nil end)
+  #   p = Graph.get(graph, uid)
+  #   assert is_function(Primitive.get_event_filter(p), 3)
+  # end
 
   
-  test "put_event_filter adds a function handler to the primitive indicated by uid" do
-    [uid] = Graph.resolve_id(@filter_graph, :rect)
-    graph = Graph.put_event_filter(@filter_graph, uid, fn(_a,_b,_c) -> nil end)
-    p = Graph.get(graph, uid)
-    assert is_function(Primitive.get_event_filter(p), 3)
-  end
+  # test "put_event_filter adds a function handler to the primitive indicated by uid" do
+  #   [uid] = Graph.resolve_id(@filter_graph, :rect)
+  #   graph = Graph.put_event_filter(@filter_graph, uid, fn(_a,_b,_c) -> nil end)
+  #   p = Graph.get(graph, uid)
+  #   assert is_function(Primitive.get_event_filter(p), 3)
+  # end
   
-  test "put_event_filter adds a {mod,fun} handler to the primitive indicated by id" do
-    [uid] = Graph.resolve_id(@filter_graph, :rect)
-    graph = Graph.put_event_filter(@filter_graph, :rect, { :mod, :act })
-    p = Graph.get(graph, uid)
-    assert Primitive.get_event_filter(p) == { :mod, :act }
-  end
-
-  test "put_event_filter adds a {mod,fun} handler to the primitive indicated by uid" do
-    [uid] = Graph.resolve_id(@filter_graph, :rect)
-    graph = Graph.put_event_filter(@filter_graph, uid, { :mod, :act })
-    p = Graph.get(graph, uid)
-    assert Primitive.get_event_filter(p) == { :mod, :act }
-  end
-
-  test "put_event_filter sets nil handler to the primitive indicated by id" do
-    [uid] = Graph.resolve_id(@filter_graph, :rect)
-    graph = Graph.put_event_filter(@filter_graph, :rect, { :mod, :act })
-    p = Graph.get(graph, uid)
-    assert Primitive.get_event_filter(p) == { :mod, :act }
-
-    p = Graph.put_event_filter(graph, :rect, nil)
-      |> Graph.get( uid )
-    assert Primitive.get_event_filter(p) == nil
-  end
-
-  test "put_event_filter sets nil handler to the primitive indicated by uid" do
-    [uid] = Graph.resolve_id(@filter_graph, :rect)
-    graph = Graph.put_event_filter(@filter_graph, uid, { :mod, :act })
-    p = Graph.get(graph, uid)
-    assert Primitive.get_event_filter(p) == { :mod, :act }
-
-    p = Graph.put_event_filter(graph, :rect, nil)
-      |> Graph.get( uid )
-    assert Primitive.get_event_filter(p) == nil
-  end
-
-  #============================================================================
-  # filter_input(graph, event, uid)
-
-  test "filter_input calls all the filters up the graph with :continue" do
-    [rect_uid] = Graph.resolve_id(@filter_graph, :rect)
-    [group_uid] = Graph.resolve_id(@filter_graph, "group")
-    graph = @filter_graph
-      |> Graph.put_event_filter(:rect, fn(event, primitive, graph) ->
-        # make sure the rect was passed in
-        assert Primitive.get_id(primitive) == :rect
-        assert event == :event_start
-        assert Primitive.get_uid(primitive) == rect_uid
-        # post a message to self that we can check for at the end of the test
-        Process.send( self(), :test_rect_callback, [])
-        {:continue, :event_transformed, graph}
-      end)
-      |> Graph.put_event_filter("group", fn(event, primitive, graph) ->
-        # make sure the rect was passed in
-        assert Primitive.get_id(primitive) == "group"
-        assert event == :event_transformed
-        assert Primitive.get_uid(primitive) == group_uid
-        # post a message to self that we can check for at the end of the test
-        Process.send( self(), :test_group_callback, [])
-        {:continue, event, graph}
-      end)
-
-    # send the message up the graph
-    {:continue,_,_} = Graph.filter_input( graph, :event_start, rect_uid )
-
-    # check messages here
-    assert_received( :test_rect_callback  )
-    assert_received( :test_group_callback  )
-  end
-
-  test "filter_input stops calling up the graph with :stop" do
-    [rect_uid] = Graph.resolve_id(@filter_graph, :rect)
-    [group_uid] = Graph.resolve_id(@filter_graph, "group")
-    graph = @filter_graph
-      |> Graph.put_event_filter(:rect, fn(event, primitive, graph) ->
-        # make sure the rect was passed in
-        assert Primitive.get_id(primitive) == :rect
-        assert event == :event_start
-        assert Primitive.get_uid(primitive) == rect_uid
-        # post a message to self that we can check for at the end of the test
-        Process.send( self(), :test_rect_callback, [])
-        {:stop, graph}
-      end)
-      |> Graph.put_event_filter("group", fn(event, primitive, graph) ->
-        # make sure the rect was passed in
-        assert Primitive.get_id(primitive) == "group"
-
-        assert event == :event_transformed
-        assert Primitive.get_uid(primitive) == group_uid
-        # post a message to self that we can check for at the end of the test
-        Process.send( self(), :test_group_callback, [])
-        {:continue, event, graph}
-      end)
-
-    # send the message up the graph
-    {:stop,_} = Graph.filter_input( graph, :event_start, rect_uid )
-
-    # check messages here
-    assert_received( :test_rect_callback  )
-    refute_received( :test_group_callback  )
-  end
-
-
-  def mod_action(_, _, g) do
-    Process.send( self(), :test_mod_action, [])
-    {:stop, g}
-  end
-  test "filter_input calls {mod,act} format handlers" do
-    [rect_uid] = Graph.resolve_id(@filter_graph, :rect)
-    graph = Graph.put_event_filter(@filter_graph, :rect, {__MODULE__,:mod_action})
-
-    # send the message up the graph
-    {:stop, _} = Graph.filter_input( graph, :event_start, rect_uid )
-
-    # check messages here
-    assert_received( :test_mod_action  )
-  end
-
-
-  # Graph.put_new( graph, parent, Rectangle.build({0, 0}, 100, 200, id: :rect) )
-  test "filter_input lets the filter modify the graph" do
-    [rect_uid] = Graph.resolve_id(@filter_graph, :rect)
-    graph = @filter_graph
-      |> Graph.put_event_filter(:rect, fn(_, p, graph) ->
-        # modify the graph
-        graph = Graph.modify(graph, p, fn(p) ->
-          Primitive.put(p, {301, 401})
-        end)
-
-        {:stop, graph}
-      end)
-
-    # send the message up the graph
-    {:stop, graph} = Graph.filter_input( graph, :event_start, rect_uid )
-
-    rect = Graph.get(graph, rect_uid)
-    assert Primitive.get(rect) == {301, 401}
-  end
-
-  #============================================================================
-  # schedule_recurring_action recurring action support
-
-  def step(graph, _, 123) do
-    {:continue, graph, 124}
-  end
-
-  def step(graph, _, 321) do
-    {:stop, graph}
-  end
-
-  def tick(:step, graph, _, num) do
-    case num  do
-      321 -> {:continue, graph, 322}
-      322 -> {:stop, graph}
-    end
-  end
-
-  def test_action_zero_time(_type, graph, 0, _args) do
-    {:continue, graph, :zero_time}
-  end
-
-  def test_action_continue(_type, graph, _, args) do
-    {:continue, graph, args + 20}
-  end
-
-  def test_action_stop(_type, graph, _elapsed_time, _args) do
-    {:stop, graph}
-  end
-
-  test "schedule_recurring_action adds a function callback recurring action" do
-    %Graph{recurring_actions: actions} = graph = @graph_empty
-    assert Enum.count(actions) == 0
-
-    {:ok, graph, {:recurring_action_reference, ref}} = Graph.schedule_recurring_action(graph, 123, fn(_,_,_,_)-> nil end)
-    %Graph{recurring_actions: actions} = graph
-    # note: since this action is only scheduled, and not running, the
-    # elapsed time (4th part of the tuple) is nil.
-    [{_, _, 123, nil}] = actions
-    assert Enum.count(actions) == 1
-    assert is_bitstring(ref)
-  end
-
-  test "schedule_recurring_action adds a standard module recurring action" do
-    %Graph{recurring_actions: actions} = graph = @graph_empty
-    assert Enum.count(actions) == 0
-
-    {:ok, graph, {:recurring_action_reference, ref}} = Graph.schedule_recurring_action(graph, 123, __MODULE__)
-    %Graph{recurring_actions: actions} = graph
-    [{_, __MODULE__, 123, nil}] = actions
-    assert Enum.count(actions) == 1
-    assert is_bitstring(ref)
-  end
-
-  test "schedule_recurring_action adds a mod/act recurring action" do
-    %Graph{recurring_actions: actions} = graph = @graph_empty
-    assert Enum.count(actions) == 0
-
-    {:ok, graph, {:recurring_action_reference, ref}} = Graph.schedule_recurring_action(graph, 123, __MODULE__, :test_action_continue)
-    %Graph{recurring_actions: actions} = graph
-    [{_, {__MODULE__, :test_action_continue}, 123, nil}] = actions
-    assert Enum.count(actions) == 1
-    assert is_bitstring(ref)
-  end
-
-  test "schedule_recurring_action! adds a function callback recurring action and returns just the graph" do
-    %Graph{recurring_actions: actions} = graph = @graph_empty
-    assert Enum.count(actions) == 0
-
-    %Graph{recurring_actions: actions} = Graph.schedule_recurring_action!(graph, 123, fn(_,_,_,_)-> nil end)
-    assert Enum.count(actions) == 1
-  end
-
-  test "schedule_recurring_action! adds a standard module recurring action" do
-    %Graph{recurring_actions: actions} = graph = @graph_empty
-    assert Enum.count(actions) == 0
-
-    %Graph{recurring_actions: actions} = Graph.schedule_recurring_action!(graph, 123, __MODULE__)
-    [{_, __MODULE__, 123, nil}] = actions
-    assert Enum.count(actions) == 1
-  end
-
-  test "schedule_recurring_action! adds a mod/act recurring action and returns just the graph" do
-    %Graph{recurring_actions: actions} = graph = @graph_empty
-    assert Enum.count(actions) == 0
-
-    %Graph{recurring_actions: actions} = Graph.schedule_recurring_action!(graph, 123, __MODULE__, :test_action_continue)
-    [{_, {__MODULE__, :test_action_continue}, 123, nil}] = actions
-    assert Enum.count(actions) == 1
-  end
-
-  #============================================================================
-  # cancel_recurring_action cancel and remove a recurring action from the recurring action list
-
-  test "cancel_recurring_action cancels a recurring action" do
-    {:ok, graph, ref} = Graph.schedule_recurring_action(@graph_empty, 123, __MODULE__, :test_action_continue)
-    %Graph{recurring_actions: actions} = graph
-    assert Enum.count(actions) == 1
-
-    graph = Graph.cancel_recurring_action(graph, ref)
-
-    %Graph{recurring_actions: actions} = graph
-    assert Enum.count(actions) == 0
-  end
-
-  test "cancel_recurring_action does nothing for an invalid reference" do
-    {:ok, graph, _} = Graph.schedule_recurring_action(@graph_empty, 123, __MODULE__, :test_action_continue)
-    %Graph{recurring_actions: actions} = graph
-    assert Enum.count(actions) == 1
-
-    assert Graph.cancel_recurring_action(graph, {:recurring_action_reference, make_ref()}) == graph
-  end
-
-
-  #============================================================================
-  # tick_recurring_action cancel and remove a recurring action from the recurring action list
-
-
-  test "tick_recurring_action calls a function callback - continue" do
-    graph = Graph.schedule_recurring_action!(@graph_empty, 123, fn(type,g,elapsed_time,123)->
-      assert type == :step
-      assert elapsed_time == 0
-      {:continue, g, 123 + 10}
-    end)
-    %Graph{recurring_actions: actions} = graph
-    [{_, func, 123, nil}] = actions
-    assert is_function(func, 4)
-
-    %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
-    [{_, func2, inc, elapsed}] = actions
-    assert inc >= 133
-    assert func == func2
-    assert elapsed != nil
-  end
-
-  test "tick_recurring_action calls the module callback - continue" do
-    graph = Graph.schedule_recurring_action!(@graph_empty, 321, __MODULE__)
-    %Graph{recurring_actions: actions} = graph
-    [{_, __MODULE__, 321, nil}] = actions
-
-    %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
-    [{_, __MODULE__, 322, _}] = actions
-  end
-
-  test "tick_recurring_action calls the mod/act callback - continue" do
-    graph = Graph.schedule_recurring_action!(@graph_empty, 123, __MODULE__, :test_action_continue)
-    %Graph{recurring_actions: actions} = graph
-    [{_, {__MODULE__, :test_action_continue}, 123, nil}] = actions
-
-    %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
-    [{_, {__MODULE__, :test_action_continue}, inc, elapsed}] = actions
-    assert inc >= 133
-    assert is_number(elapsed)
-  end
-
-  test "tick_recurring_action calls a function callback - stop" do
-    graph = Graph.schedule_recurring_action!(@graph_empty, 123, fn(_,g,_,_)-> {:stop, g} end)
-    %Graph{recurring_actions: actions} = graph
-    [{_, func, 123, _}] = actions
-    assert is_function(func, 4)
-
-    %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
-    assert actions == []
-  end
-
-  test "tick_recurring_action calls the module callback - stop" do
-    graph = Graph.schedule_recurring_action!(@graph_empty, 321, __MODULE__)
-    %Graph{recurring_actions: actions} = graph
-    [{_, __MODULE__, 321, _}] = actions
-
-    # Tick it once.
-    %Graph{recurring_actions: actions} = graph = Graph.tick_recurring_actions( graph )
-    [{_, __MODULE__, 322, _}] = actions
-
-    # Tick it again. The test tick function should cause a stop
-    %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
-    assert actions == []
-  end
-
-  test "tick_recurring_action calls the mod/act callback - stop" do
-    graph = Graph.schedule_recurring_action!(@graph_empty, 123, __MODULE__, :test_action_stop)
-    %Graph{recurring_actions: actions} = graph
-    [{_, {__MODULE__, :test_action_stop}, 123, _}] = actions
-
-    %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
-    assert actions == []
-  end
-
-  test "tick_recurring_action calls the callback with 0 elapsed time if the last time is nil" do
-    graph = Graph.schedule_recurring_action!(@graph_empty, 123, __MODULE__, :test_action_zero_time)
-    %Graph{recurring_actions: actions} = graph
-    [{_, {__MODULE__, :test_action_zero_time}, 123, _}] = actions
-
-    %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
-    [{_, {__MODULE__, :test_action_zero_time}, :zero_time, _}] = actions
-  end
+  # test "put_event_filter adds a {mod,fun} handler to the primitive indicated by id" do
+  #   [uid] = Graph.resolve_id(@filter_graph, :rect)
+  #   graph = Graph.put_event_filter(@filter_graph, :rect, { :mod, :act })
+  #   p = Graph.get(graph, uid)
+  #   assert Primitive.get_event_filter(p) == { :mod, :act }
+  # end
+
+  # test "put_event_filter adds a {mod,fun} handler to the primitive indicated by uid" do
+  #   [uid] = Graph.resolve_id(@filter_graph, :rect)
+  #   graph = Graph.put_event_filter(@filter_graph, uid, { :mod, :act })
+  #   p = Graph.get(graph, uid)
+  #   assert Primitive.get_event_filter(p) == { :mod, :act }
+  # end
+
+  # test "put_event_filter sets nil handler to the primitive indicated by id" do
+  #   [uid] = Graph.resolve_id(@filter_graph, :rect)
+  #   graph = Graph.put_event_filter(@filter_graph, :rect, { :mod, :act })
+  #   p = Graph.get(graph, uid)
+  #   assert Primitive.get_event_filter(p) == { :mod, :act }
+
+  #   p = Graph.put_event_filter(graph, :rect, nil)
+  #     |> Graph.get( uid )
+  #   assert Primitive.get_event_filter(p) == nil
+  # end
+
+  # test "put_event_filter sets nil handler to the primitive indicated by uid" do
+  #   [uid] = Graph.resolve_id(@filter_graph, :rect)
+  #   graph = Graph.put_event_filter(@filter_graph, uid, { :mod, :act })
+  #   p = Graph.get(graph, uid)
+  #   assert Primitive.get_event_filter(p) == { :mod, :act }
+
+  #   p = Graph.put_event_filter(graph, :rect, nil)
+  #     |> Graph.get( uid )
+  #   assert Primitive.get_event_filter(p) == nil
+  # end
+
+  # #============================================================================
+  # # filter_input(graph, event, uid)
+
+  # test "filter_input calls all the filters up the graph with :continue" do
+  #   [rect_uid] = Graph.resolve_id(@filter_graph, :rect)
+  #   [group_uid] = Graph.resolve_id(@filter_graph, "group")
+  #   graph = @filter_graph
+  #     |> Graph.put_event_filter(:rect, fn(event, primitive, graph) ->
+  #       # make sure the rect was passed in
+  #       assert Primitive.get_id(primitive) == :rect
+  #       assert event == :event_start
+  #       assert Primitive.get_uid(primitive) == rect_uid
+  #       # post a message to self that we can check for at the end of the test
+  #       Process.send( self(), :test_rect_callback, [])
+  #       {:continue, :event_transformed, graph}
+  #     end)
+  #     |> Graph.put_event_filter("group", fn(event, primitive, graph) ->
+  #       # make sure the rect was passed in
+  #       assert Primitive.get_id(primitive) == "group"
+  #       assert event == :event_transformed
+  #       assert Primitive.get_uid(primitive) == group_uid
+  #       # post a message to self that we can check for at the end of the test
+  #       Process.send( self(), :test_group_callback, [])
+  #       {:continue, event, graph}
+  #     end)
+
+  #   # send the message up the graph
+  #   {:continue,_,_} = Graph.filter_input( graph, :event_start, rect_uid )
+
+  #   # check messages here
+  #   assert_received( :test_rect_callback  )
+  #   assert_received( :test_group_callback  )
+  # end
+
+  # test "filter_input stops calling up the graph with :stop" do
+  #   [rect_uid] = Graph.resolve_id(@filter_graph, :rect)
+  #   [group_uid] = Graph.resolve_id(@filter_graph, "group")
+  #   graph = @filter_graph
+  #     |> Graph.put_event_filter(:rect, fn(event, primitive, graph) ->
+  #       # make sure the rect was passed in
+  #       assert Primitive.get_id(primitive) == :rect
+  #       assert event == :event_start
+  #       assert Primitive.get_uid(primitive) == rect_uid
+  #       # post a message to self that we can check for at the end of the test
+  #       Process.send( self(), :test_rect_callback, [])
+  #       {:stop, graph}
+  #     end)
+  #     |> Graph.put_event_filter("group", fn(event, primitive, graph) ->
+  #       # make sure the rect was passed in
+  #       assert Primitive.get_id(primitive) == "group"
+
+  #       assert event == :event_transformed
+  #       assert Primitive.get_uid(primitive) == group_uid
+  #       # post a message to self that we can check for at the end of the test
+  #       Process.send( self(), :test_group_callback, [])
+  #       {:continue, event, graph}
+  #     end)
+
+  #   # send the message up the graph
+  #   {:stop,_} = Graph.filter_input( graph, :event_start, rect_uid )
+
+  #   # check messages here
+  #   assert_received( :test_rect_callback  )
+  #   refute_received( :test_group_callback  )
+  # end
+
+
+  # def mod_action(_, _, g) do
+  #   Process.send( self(), :test_mod_action, [])
+  #   {:stop, g}
+  # end
+  # test "filter_input calls {mod,act} format handlers" do
+  #   [rect_uid] = Graph.resolve_id(@filter_graph, :rect)
+  #   graph = Graph.put_event_filter(@filter_graph, :rect, {__MODULE__,:mod_action})
+
+  #   # send the message up the graph
+  #   {:stop, _} = Graph.filter_input( graph, :event_start, rect_uid )
+
+  #   # check messages here
+  #   assert_received( :test_mod_action  )
+  # end
+
+
+  # # Graph.put_new( graph, parent, Rectangle.build({0, 0}, 100, 200, id: :rect) )
+  # test "filter_input lets the filter modify the graph" do
+  #   [rect_uid] = Graph.resolve_id(@filter_graph, :rect)
+  #   graph = @filter_graph
+  #     |> Graph.put_event_filter(:rect, fn(_, p, graph) ->
+  #       # modify the graph
+  #       graph = Graph.modify(graph, p, fn(p) ->
+  #         Primitive.put(p, {301, 401})
+  #       end)
+
+  #       {:stop, graph}
+  #     end)
+
+  #   # send the message up the graph
+  #   {:stop, graph} = Graph.filter_input( graph, :event_start, rect_uid )
+
+  #   rect = Graph.get(graph, rect_uid)
+  #   assert Primitive.get(rect) == {301, 401}
+  # end
+
+  # #============================================================================
+  # # schedule_recurring_action recurring action support
+
+  # def step(graph, _, 123) do
+  #   {:continue, graph, 124}
+  # end
+
+  # def step(graph, _, 321) do
+  #   {:stop, graph}
+  # end
+
+  # def tick(:step, graph, _, num) do
+  #   case num  do
+  #     321 -> {:continue, graph, 322}
+  #     322 -> {:stop, graph}
+  #   end
+  # end
+
+  # def test_action_zero_time(_type, graph, 0, _args) do
+  #   {:continue, graph, :zero_time}
+  # end
+
+  # def test_action_continue(_type, graph, _, args) do
+  #   {:continue, graph, args + 20}
+  # end
+
+  # def test_action_stop(_type, graph, _elapsed_time, _args) do
+  #   {:stop, graph}
+  # end
+
+  # test "schedule_recurring_action adds a function callback recurring action" do
+  #   %Graph{recurring_actions: actions} = graph = @graph_empty
+  #   assert Enum.count(actions) == 0
+
+  #   {:ok, graph, {:recurring_action_reference, ref}} = Graph.schedule_recurring_action(graph, 123, fn(_,_,_,_)-> nil end)
+  #   %Graph{recurring_actions: actions} = graph
+  #   # note: since this action is only scheduled, and not running, the
+  #   # elapsed time (4th part of the tuple) is nil.
+  #   [{_, _, 123, nil}] = actions
+  #   assert Enum.count(actions) == 1
+  #   assert is_bitstring(ref)
+  # end
+
+  # test "schedule_recurring_action adds a standard module recurring action" do
+  #   %Graph{recurring_actions: actions} = graph = @graph_empty
+  #   assert Enum.count(actions) == 0
+
+  #   {:ok, graph, {:recurring_action_reference, ref}} = Graph.schedule_recurring_action(graph, 123, __MODULE__)
+  #   %Graph{recurring_actions: actions} = graph
+  #   [{_, __MODULE__, 123, nil}] = actions
+  #   assert Enum.count(actions) == 1
+  #   assert is_bitstring(ref)
+  # end
+
+  # test "schedule_recurring_action adds a mod/act recurring action" do
+  #   %Graph{recurring_actions: actions} = graph = @graph_empty
+  #   assert Enum.count(actions) == 0
+
+  #   {:ok, graph, {:recurring_action_reference, ref}} = Graph.schedule_recurring_action(graph, 123, __MODULE__, :test_action_continue)
+  #   %Graph{recurring_actions: actions} = graph
+  #   [{_, {__MODULE__, :test_action_continue}, 123, nil}] = actions
+  #   assert Enum.count(actions) == 1
+  #   assert is_bitstring(ref)
+  # end
+
+  # test "schedule_recurring_action! adds a function callback recurring action and returns just the graph" do
+  #   %Graph{recurring_actions: actions} = graph = @graph_empty
+  #   assert Enum.count(actions) == 0
+
+  #   %Graph{recurring_actions: actions} = Graph.schedule_recurring_action!(graph, 123, fn(_,_,_,_)-> nil end)
+  #   assert Enum.count(actions) == 1
+  # end
+
+  # test "schedule_recurring_action! adds a standard module recurring action" do
+  #   %Graph{recurring_actions: actions} = graph = @graph_empty
+  #   assert Enum.count(actions) == 0
+
+  #   %Graph{recurring_actions: actions} = Graph.schedule_recurring_action!(graph, 123, __MODULE__)
+  #   [{_, __MODULE__, 123, nil}] = actions
+  #   assert Enum.count(actions) == 1
+  # end
+
+  # test "schedule_recurring_action! adds a mod/act recurring action and returns just the graph" do
+  #   %Graph{recurring_actions: actions} = graph = @graph_empty
+  #   assert Enum.count(actions) == 0
+
+  #   %Graph{recurring_actions: actions} = Graph.schedule_recurring_action!(graph, 123, __MODULE__, :test_action_continue)
+  #   [{_, {__MODULE__, :test_action_continue}, 123, nil}] = actions
+  #   assert Enum.count(actions) == 1
+  # end
+
+  # #============================================================================
+  # # cancel_recurring_action cancel and remove a recurring action from the recurring action list
+
+  # test "cancel_recurring_action cancels a recurring action" do
+  #   {:ok, graph, ref} = Graph.schedule_recurring_action(@graph_empty, 123, __MODULE__, :test_action_continue)
+  #   %Graph{recurring_actions: actions} = graph
+  #   assert Enum.count(actions) == 1
+
+  #   graph = Graph.cancel_recurring_action(graph, ref)
+
+  #   %Graph{recurring_actions: actions} = graph
+  #   assert Enum.count(actions) == 0
+  # end
+
+  # test "cancel_recurring_action does nothing for an invalid reference" do
+  #   {:ok, graph, _} = Graph.schedule_recurring_action(@graph_empty, 123, __MODULE__, :test_action_continue)
+  #   %Graph{recurring_actions: actions} = graph
+  #   assert Enum.count(actions) == 1
+
+  #   assert Graph.cancel_recurring_action(graph, {:recurring_action_reference, make_ref()}) == graph
+  # end
+
+
+  # #============================================================================
+  # # tick_recurring_action cancel and remove a recurring action from the recurring action list
+
+
+  # test "tick_recurring_action calls a function callback - continue" do
+  #   graph = Graph.schedule_recurring_action!(@graph_empty, 123, fn(type,g,elapsed_time,123)->
+  #     assert type == :step
+  #     assert elapsed_time == 0
+  #     {:continue, g, 123 + 10}
+  #   end)
+  #   %Graph{recurring_actions: actions} = graph
+  #   [{_, func, 123, nil}] = actions
+  #   assert is_function(func, 4)
+
+  #   %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
+  #   [{_, func2, inc, elapsed}] = actions
+  #   assert inc >= 133
+  #   assert func == func2
+  #   assert elapsed != nil
+  # end
+
+  # test "tick_recurring_action calls the module callback - continue" do
+  #   graph = Graph.schedule_recurring_action!(@graph_empty, 321, __MODULE__)
+  #   %Graph{recurring_actions: actions} = graph
+  #   [{_, __MODULE__, 321, nil}] = actions
+
+  #   %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
+  #   [{_, __MODULE__, 322, _}] = actions
+  # end
+
+  # test "tick_recurring_action calls the mod/act callback - continue" do
+  #   graph = Graph.schedule_recurring_action!(@graph_empty, 123, __MODULE__, :test_action_continue)
+  #   %Graph{recurring_actions: actions} = graph
+  #   [{_, {__MODULE__, :test_action_continue}, 123, nil}] = actions
+
+  #   %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
+  #   [{_, {__MODULE__, :test_action_continue}, inc, elapsed}] = actions
+  #   assert inc >= 133
+  #   assert is_number(elapsed)
+  # end
+
+  # test "tick_recurring_action calls a function callback - stop" do
+  #   graph = Graph.schedule_recurring_action!(@graph_empty, 123, fn(_,g,_,_)-> {:stop, g} end)
+  #   %Graph{recurring_actions: actions} = graph
+  #   [{_, func, 123, _}] = actions
+  #   assert is_function(func, 4)
+
+  #   %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
+  #   assert actions == []
+  # end
+
+  # test "tick_recurring_action calls the module callback - stop" do
+  #   graph = Graph.schedule_recurring_action!(@graph_empty, 321, __MODULE__)
+  #   %Graph{recurring_actions: actions} = graph
+  #   [{_, __MODULE__, 321, _}] = actions
+
+  #   # Tick it once.
+  #   %Graph{recurring_actions: actions} = graph = Graph.tick_recurring_actions( graph )
+  #   [{_, __MODULE__, 322, _}] = actions
+
+  #   # Tick it again. The test tick function should cause a stop
+  #   %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
+  #   assert actions == []
+  # end
+
+  # test "tick_recurring_action calls the mod/act callback - stop" do
+  #   graph = Graph.schedule_recurring_action!(@graph_empty, 123, __MODULE__, :test_action_stop)
+  #   %Graph{recurring_actions: actions} = graph
+  #   [{_, {__MODULE__, :test_action_stop}, 123, _}] = actions
+
+  #   %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
+  #   assert actions == []
+  # end
+
+  # test "tick_recurring_action calls the callback with 0 elapsed time if the last time is nil" do
+  #   graph = Graph.schedule_recurring_action!(@graph_empty, 123, __MODULE__, :test_action_zero_time)
+  #   %Graph{recurring_actions: actions} = graph
+  #   [{_, {__MODULE__, :test_action_zero_time}, 123, _}] = actions
+
+  #   %Graph{recurring_actions: actions} = Graph.tick_recurring_actions( graph )
+  #   [{_, {__MODULE__, :test_action_zero_time}, :zero_time, _}] = actions
+  # end
 
 
 end

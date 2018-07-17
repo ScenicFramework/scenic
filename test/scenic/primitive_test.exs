@@ -110,6 +110,13 @@ defmodule Scenic.PrimitiveTest do
     }
   end
 
+  test "build sets a non-atom id" do
+    assert Primitive.build(Group, @data, id: {:test_id, 123}) == %{
+      __struct__: Primitive, module: Group, uid: nil, parent_uid: -1, data: @data,
+      id: {:test_id, 123}
+    }
+  end
+
   test "build raises on bad tx" do
     assert_raise Primitive.Transform.FormatError, fn ->
       Primitive.build(Group, @data, rotate: :invalid)
@@ -247,34 +254,34 @@ defmodule Scenic.PrimitiveTest do
   #--------------------------------------------------------
   # the handler for input events
 
-  test "get_event_filter returns the event handler." do
-    assert Primitive.get_event_filter(@primitive) == @event_filter
-  end
+  # test "get_event_filter returns the event handler." do
+  #   assert Primitive.get_event_filter(@primitive) == @event_filter
+  # end
 
-  test "put_event_filter sets the event handler as {module,action}" do
-    p = Primitive.put_event_filter(@primitive, { :mod, :act } )
-    assert Primitive.get_event_filter(p) == { :mod, :act }
-  end
+  # test "put_event_filter sets the event handler as {module,action}" do
+  #   p = Primitive.put_event_filter(@primitive, { :mod, :act } )
+  #   assert Primitive.get_event_filter(p) == { :mod, :act }
+  # end
 
-  test "put_event_filter sets the event handler to a function" do
-    p = Primitive.put_event_filter(@primitive, fn(_a,_b,_c) -> nil end)
-    assert is_function(Primitive.get_event_filter(p), 3)
-  end
+  # test "put_event_filter sets the event handler to a function" do
+  #   p = Primitive.put_event_filter(@primitive, fn(_a,_b,_c) -> nil end)
+  #   assert is_function(Primitive.get_event_filter(p), 3)
+  # end
 
-  test "put_event_filter sets the event handler to nil" do
-    p = Primitive.put_event_filter(@primitive, { :mod, :act } )
-    assert Primitive.get_event_filter(p) == { :mod, :act }
-    p = Primitive.put_event_filter(@primitive, nil )
-    assert Primitive.get_event_filter(p) == nil
-  end
+  # test "put_event_filter sets the event handler to nil" do
+  #   p = Primitive.put_event_filter(@primitive, { :mod, :act } )
+  #   assert Primitive.get_event_filter(p) == { :mod, :act }
+  #   p = Primitive.put_event_filter(@primitive, nil )
+  #   assert Primitive.get_event_filter(p) == nil
+  # end
 
-  #--------------------------------------------------------
-  test "delete_event_filter sets the event filter to nil" do
-    p = Primitive.put_event_filter(@primitive, { :mod, :act } )
-    assert Primitive.get_event_filter(p) == { :mod, :act }
-    p = Primitive.delete_event_filter( @primitive )
-    assert Primitive.get_event_filter(p) == nil
-  end
+  # #--------------------------------------------------------
+  # test "delete_event_filter sets the event filter to nil" do
+  #   p = Primitive.put_event_filter(@primitive, { :mod, :act } )
+  #   assert Primitive.get_event_filter(p) == { :mod, :act }
+  #   p = Primitive.delete_event_filter( @primitive )
+  #   assert Primitive.get_event_filter(p) == nil
+  # end
 
   #============================================================================
   # transform field
