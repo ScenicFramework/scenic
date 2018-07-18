@@ -480,6 +480,7 @@ defmodule Scenic.Scene do
         |> Keyword.delete( :name )
     end
     {:ok, sc_state} = scene_module.init( args, init_opts )
+    # send(self(), {:delayed_init, args, init_opts})
 
     # build up the state
     state = %{
@@ -494,6 +495,7 @@ defmodule Scenic.Scene do
 
       viewport: opts[:viewport],
       scene_state: sc_state,
+      # scene_state: nil,
       scene_ref: scene_ref,
       supervisor_pid: nil,
       dynamic_children_pid: nil,
@@ -506,6 +508,12 @@ defmodule Scenic.Scene do
 
   #============================================================================
   # handle_info
+
+  def handle_info({:delayed_init, args, init_opts}, %{scene_module: scene_module} = state) do
+    {:ok, sc_state} = scene_module.init( args, init_opts )
+    {:noreply, %{state | scene_state: sc_state}}
+  end
+
 
   #--------------------------------------------------------
   # The viewport has gone down. Deactivate this scene.
