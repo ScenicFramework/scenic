@@ -19,8 +19,7 @@ defmodule Scenic.Primitive.LineTest do
 
   test "build works" do
     p = Line.build( @data )
-    assert Primitive.get_parent_uid(p) == -1
-    assert Primitive.get_module(p) == Line
+    assert p.module == Line
     assert Primitive.get(p) == @data
   end
 

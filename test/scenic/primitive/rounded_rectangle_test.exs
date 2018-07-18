@@ -19,8 +19,7 @@ defmodule Scenic.Primitive.RoundedRectangleTest do
 
   test "build works" do
     p = RoundedRectangle.build( @data )
-    assert Primitive.get_parent_uid(p) == -1
-    assert Primitive.get_module(p) == RoundedRectangle
+    assert p.module == RoundedRectangle
     assert Primitive.get(p) == @data
   end
 

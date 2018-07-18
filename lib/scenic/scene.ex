@@ -407,6 +407,7 @@ defmodule Scenic.Scene do
 #  def child_spec({ref, scene_module}), do:
 #    child_spec({ref, scene_module, nil})
 
+  @doc false
   def child_spec({scene_module, args, opts}) do
     %{
       id: make_ref(),
@@ -524,6 +525,7 @@ defmodule Scenic.Scene do
 
   #--------------------------------------------------------
   # generic handle_info. give the scene a chance to handle it
+  @doc false
   def handle_info(msg, %{scene_module: mod, scene_state: sc_state} = state) do
     {:noreply, sc_state} = mod.handle_info(msg, sc_state)
     {:noreply, %{state | scene_state: sc_state}}
@@ -537,7 +539,7 @@ defmodule Scenic.Scene do
   # The scene is gaining activation. This is done syncronously (call) as
   # we want this to complete before setting the root. This reduces
   # blinking.
-
+  @doc false
   def handle_call({:set_root, args}, from, %{
     scene_module: mod,
     scene_state: sc_state
@@ -557,7 +559,6 @@ defmodule Scenic.Scene do
   # The scene is losing activation. This is done syncronously (call) as the
   # next thing to happen might be process termination. This makes sure the
   # scene has a chance to clean itself up before it goes away.
-
   def handle_call(:lose_root, from, %{
     scene_module: mod,
     scene_state: sc_state
@@ -621,6 +622,7 @@ defmodule Scenic.Scene do
   # handle_cast
 
   #--------------------------------------------------------
+  @doc false
   def handle_cast({:set_root, args, vp}, %{
     scene_module: mod,
     scene_state: sc_state
@@ -712,7 +714,7 @@ defmodule Scenic.Scene do
 
     # reduce the incoming graph to it's minimal form
     # while simultaneously extracting the SceneRefs
-    {graph, all_keys} = Enum.reduce( graph.primitive_map, {%{}, %{}}, fn
+    {graph, all_keys} = Enum.reduce( graph.primitives, {%{}, %{}}, fn
       # named reference
       ({uid, %{module: Primitive.SceneRef, data: name} = p},
       {g, all_refs}) when is_atom(name) ->
@@ -776,7 +778,7 @@ defmodule Scenic.Scene do
     # reduce the incoming graph to it's minimal form
     # while simultaneously extracting the SceneRefs
     # this should be the only full scan when pushing a graph
-    {graph, all_keys, new_raw_refs} = Enum.reduce( graph.primitive_map, {%{}, %{}, %{}}, fn
+    {graph, all_keys, new_raw_refs} = Enum.reduce( graph.primitives, {%{}, %{}, %{}}, fn
       # named reference
       ({uid, %{module: Primitive.SceneRef, data: name} = p},
       {g, all_refs, dyn_refs}) when is_atom(name) ->

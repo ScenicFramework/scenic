@@ -17,8 +17,7 @@ defmodule Scenic.Primitive.ArcTest do
 
   test "build works" do
     p = Arc.build( @data )
-    assert Primitive.get_parent_uid(p) == -1
-    assert Primitive.get_module(p) == Arc
+    assert p.module == Arc
     assert Primitive.get(p) == @data
   end
 

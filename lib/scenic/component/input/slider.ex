@@ -6,6 +6,7 @@ defmodule Scenic.Component.Input.Slider do
   alias Scenic.Primitive.Style.Paint.Color
   import Scenic.Primitives, only: [{:rect, 3}, {:line, 3}, {:rrect, 3}, {:update_opts,2}]
 
+# import IEx
 
   @height             16
   @mid_height         trunc(@height / 2)
@@ -175,9 +176,6 @@ defmodule Scenic.Component.Input.Slider do
 
     # apply the x position
     Graph.modify(graph, :thumb, fn(p) ->
-      #Primitive.put_transform( p, :translate, {x,0} )
-      # { {_, y}, width, height, radius } = Primitive.get(p)
-      # Primitive.put(p, { {new_x, y}, width, height, radius })    
       update_opts(p, translate: {new_x, 0})
     end)
     |> push_graph()

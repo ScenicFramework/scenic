@@ -20,8 +20,7 @@ defmodule Scenic.Primitive.GroupTest do
     assert Primitive.get(p) == []
 
     p = Group.build( @data )
-    assert Primitive.get_parent_uid(p) == -1
-    assert Primitive.get_module(p) == Group
+    assert p.module == Group
     assert Primitive.get(p) == @data
   end
 

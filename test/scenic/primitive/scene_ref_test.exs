@@ -20,45 +20,39 @@ defmodule Scenic.Primitive.SceneRefTest do
 
   test "build name works" do
     p = SceneRef.build( :named_scene )
-    assert Primitive.get_parent_uid(p) == -1
-    assert Primitive.get_module(p) == SceneRef
+    assert p.module == SceneRef
     assert Primitive.get(p) == {:named_scene, nil}
   end
 
 
   test "build {name, id} works" do
     p = SceneRef.build( @data_name_id )
-    assert Primitive.get_parent_uid(p) == -1
-    assert Primitive.get_module(p) == SceneRef
+    assert p.module == SceneRef
     assert Primitive.get(p) == @data_name_id
   end
 
   test "build mod works" do
     p = SceneRef.build( @data_mod )
-    assert Primitive.get_parent_uid(p) == -1
-    assert Primitive.get_module(p) == SceneRef
+    assert p.module == SceneRef
     assert Primitive.get(p) == @data_mod
   end
 
   test "build pid works" do
     p = SceneRef.build( self() )
-    assert Primitive.get_parent_uid(p) == -1
-    assert Primitive.get_module(p) == SceneRef
+    assert p.module == SceneRef
     assert Primitive.get(p) == {self(), nil}
   end
 
   test "build {pid, ref} works" do
     p = SceneRef.build( {self(), 123} )
-    assert Primitive.get_parent_uid(p) == -1
-    assert Primitive.get_module(p) == SceneRef
+    assert p.module == SceneRef
     assert Primitive.get(p) == {self(), 123}
   end
 
   test "build graph works" do
     graph = {:graph, make_ref(), 123}
     p = SceneRef.build( graph )
-    assert Primitive.get_parent_uid(p) == -1
-    assert Primitive.get_module(p) == SceneRef
+    assert p.module == SceneRef
     assert Primitive.get(p) == graph
   end
 

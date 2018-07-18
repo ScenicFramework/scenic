@@ -20,8 +20,7 @@ defmodule Scenic.Primitive.RectangleTest do
 
   test "build works" do
     p = Rectangle.build( @data )
-    assert Primitive.get_parent_uid(p) == -1
-    assert Primitive.get_module(p) == Rectangle
+    assert p.module == Rectangle
     assert Primitive.get(p) == @data
   end
 

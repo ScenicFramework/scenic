@@ -779,7 +779,7 @@ defmodule Scenic.Primitives do
 
   """
 
-  def update_opts( p, opts ), do: Primitive.update_opts( p, opts )
+  def update_opts( p, opts ), do: Primitive.put_opts( p, opts )
 
   #============================================================================
   # generic workhorse versions
@@ -791,9 +791,7 @@ defmodule Scenic.Primitives do
 
   defp modify( %Primitive{module: mod} = p, data, opts ) do
     mod.verify!(data)
-    p
-    |> Primitive.put( data )
-    |> Primitive.update_opts( opts )
+    Primitive.put( p, data, opts )
   end
 
 

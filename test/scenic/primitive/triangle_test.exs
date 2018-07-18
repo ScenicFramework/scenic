@@ -19,8 +19,7 @@ defmodule Scenic.Primitive.TriangleTest do
 
   test "build works" do
     p = Triangle.build( @data )
-    assert Primitive.get_parent_uid(p) == -1
-    assert Primitive.get_module(p) == Triangle
+    assert p.module == Triangle
     assert Primitive.get(p) == @data
   end
 

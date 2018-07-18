@@ -20,7 +20,7 @@ defmodule Scenic.PrimitivesTest do
   #============================================================================
   test "arc adds to a graph" do
     p = Primitives.arc(@graph, {0, 1, 20}, id: :arc)
-    |> Graph.get(1)
+    |> Graph.get_id!(:arc)
     assert p.module == Scenic.Primitive.Arc
     assert p.data == {0, 1, 20}
     assert p.id == :arc
@@ -28,7 +28,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "arc modifies primitive data" do
     p = Primitives.arc(@graph, {0, 1, 20}, id: :arc)
-    |> Graph.get(1)
+    |> Graph.get_id!(:arc)
     |> Primitives.arc({0, 1.5, 200}, id: :modified)
     assert p.data == {0, 1.5, 200}
     assert p.id == :modified
@@ -37,7 +37,7 @@ defmodule Scenic.PrimitivesTest do
   #============================================================================
   test "circle adds to a graph" do
     p = Primitives.circle(@graph, 20, id: :circle)
-    |> Graph.get(1)
+    |> Graph.get_id!(:circle)
     assert p.module == Scenic.Primitive.Circle
     assert p.data == 20
     assert p.id == :circle
@@ -45,7 +45,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "circle modifies primitive with simple data" do
     p = Primitives.circle(@graph, 20, id: :circle)
-    |> Graph.get(1)
+    |> Graph.get_id!(:circle)
     |> Primitives.circle(40, id: :modified)
     assert p.data == 40
     assert p.id == :modified
@@ -55,7 +55,7 @@ defmodule Scenic.PrimitivesTest do
   #============================================================================
   test "ellipse adds to a graph" do
     p = Primitives.ellipse(@graph, {20,30}, id: :ellipse)
-    |> Graph.get(1)
+    |> Graph.get_id!(:ellipse)
     assert p.module == Scenic.Primitive.Ellipse
     assert p.data == {20, 30}
     assert p.id == :ellipse
@@ -63,7 +63,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "ellipse modifies primitive with simple data" do
     p = Primitives.ellipse(@graph, {20,30}, id: :ellipse)
-    |> Graph.get(1)
+    |> Graph.get_id!(:ellipse)
     |> Primitives.ellipse({40,50}, id: :modified)
     assert p.data == {40, 50}
     assert p.id == :modified
@@ -73,7 +73,7 @@ defmodule Scenic.PrimitivesTest do
   #============================================================================
   test "group adds to a graph" do
     p = Primitives.group(@graph, fn(g) -> g end, id: :group)
-    |> Graph.get(1)
+    |> Graph.get_id!(:group)
     assert p.module == Scenic.Primitive.Group
     assert Enum.count(p.data) == 0
     assert p.id == :group
@@ -81,7 +81,7 @@ defmodule Scenic.PrimitivesTest do
 
   # test "group modifies primitive" do
   #   p = Primitives.group(@graph, fn(g) -> g end, id: :group)
-  #   |> Graph.get(1)
+  #   |> Graph.get_id!(1)
   #   |> Primitives.group(fn(g) ->
   #     Primitives.ellipse(g, {20,30})
   #   end, id: :modified)
@@ -94,7 +94,7 @@ defmodule Scenic.PrimitivesTest do
   #============================================================================
   test "line adds to a graph" do
     p = Primitives.line(@graph, {{0,0}, {10, 100}}, id: :line)
-    |> Graph.get(1)
+    |> Graph.get_id!(:line)
     assert p.module == Scenic.Primitive.Line
     assert p.data == {{0, 0}, {10, 100}}
     assert p.id == :line
@@ -102,7 +102,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "line modifies primitive with full data" do
     p = Primitives.line(@graph, {{0,0}, {10, 100}}, id: :line)
-    |> Graph.get(1)
+    |> Graph.get_id!(:line)
     |> Primitives.line({{10,20}, {100, 200}}, id: :modified)
     assert p.data == {{10,20}, {100, 200}}
     assert p.id == :modified
@@ -113,7 +113,7 @@ defmodule Scenic.PrimitivesTest do
   test "path adds empty list to the graph" do
     actions = []
     p = Primitives.path( @graph, actions, id: :path )
-    |> Graph.get(1)
+    |> Graph.get_id!(:path)
     assert p.module == Scenic.Primitive.Path
     assert p.data == actions
     assert p.id == :path
@@ -126,7 +126,7 @@ defmodule Scenic.PrimitivesTest do
       {:line_to, 3, 5},
     ]
     p = Primitives.path( @graph, actions, id: :path )
-    |> Graph.get(1)
+    |> Graph.get_id!(:path)
     assert p.module == Scenic.Primitive.Path
     assert p.data == actions
     assert p.id == :path
@@ -139,7 +139,7 @@ defmodule Scenic.PrimitivesTest do
       {:line_to, 3, 5}
     ]
     p = Primitives.path( @graph, actions, id: :path )
-    |> Graph.get(1)
+    |> Graph.get_id!(:path)
 
     actions2 = [
       :begin,
@@ -156,7 +156,7 @@ defmodule Scenic.PrimitivesTest do
   #============================================================================
   test "quad adds to a graph" do
     p = Primitives.quad(@graph, {{1,2}, {3,4}, {3, 10}, {2, 8}}, id: :quad)
-    |> Graph.get(1)
+    |> Graph.get_id!(:quad)
     assert p.module == Scenic.Primitive.Quad
     assert p.data == {{1,2}, {3,4}, {3, 10}, {2, 8}}
     assert p.id == :quad
@@ -164,7 +164,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "quad modifies primitive with full data" do
     p = Primitives.quad(@graph, {{1,2}, {3,4}, {3, 10}, {2, 8}}, id: :quad)
-    |> Graph.get(1)
+    |> Graph.get_id!(:quad)
     |> Primitives.quad({{10,20}, {30,40}, {30, 100}, {20, 80}}, id: :modified)
     assert p.data == {{10,20}, {30,40}, {30, 100}, {20, 80}}
     assert p.id == :modified
@@ -174,7 +174,7 @@ defmodule Scenic.PrimitivesTest do
   #============================================================================
   test "rect adds to a graph" do
     p = Primitives.rect(@graph, {200, 100}, id: :rect)
-    |> Graph.get(1)
+    |> Graph.get_id!(:rect)
     assert p.module == Scenic.Primitive.Rectangle
     assert p.data == {200, 100}
     assert p.id == :rect
@@ -182,7 +182,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "rect modifies primitive" do
     p = Primitives.rect(@graph, {200, 100}, id: :rect)
-    |> Graph.get(1)
+    |> Graph.get_id!(:rect)
     |> Primitives.rect({20, 10}, id: :modified)
     assert p.data == {20, 10}
     assert p.id == :modified
@@ -191,7 +191,7 @@ defmodule Scenic.PrimitivesTest do
   #============================================================================
   test "rectangle adds to a graph" do
     p = Primitives.rectangle(@graph, {200, 100}, id: :rectangle)
-    |> Graph.get(1)
+    |> Graph.get_id!(:rectangle)
     assert p.module == Scenic.Primitive.Rectangle
     assert p.data == {200, 100}
     assert p.id == :rectangle
@@ -199,7 +199,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "rectangle modifies primitive" do
     p = Primitives.rectangle(@graph, {200, 100}, id: :rectangle)
-    |> Graph.get(1)
+    |> Graph.get_id!(:rectangle)
     |> Primitives.rectangle({20, 10}, id: :modified)
     assert p.data == {20, 10}
     assert p.id == :modified
@@ -208,7 +208,7 @@ defmodule Scenic.PrimitivesTest do
   #============================================================================
   test "rrect adds to a graph" do
     p = Primitives.rrect(@graph, {200, 100, 5}, id: :rrect)
-    |> Graph.get(1)
+    |> Graph.get_id!(:rrect)
     assert p.module == Scenic.Primitive.RoundedRectangle
     assert p.data == {200, 100, 5}
     assert p.id == :rrect
@@ -216,7 +216,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "rrect modifies primitive" do
     p = Primitives.rrect(@graph, {200, 100, 5}, id: :rrect)
-    |> Graph.get(1)
+    |> Graph.get_id!(:rrect)
     |> Primitives.rrect({20, 10, 2}, id: :modified)
     assert p.data == {20, 10, 2}
     assert p.id == :modified
@@ -225,7 +225,7 @@ defmodule Scenic.PrimitivesTest do
   #============================================================================
   test "rounded_rectangle adds to a graph" do
     p = Primitives.rounded_rectangle(@graph, {200, 100, 5}, id: :rounded_rectangle)
-    |> Graph.get(1)
+    |> Graph.get_id!(:rounded_rectangle)
     assert p.module == Scenic.Primitive.RoundedRectangle
     assert p.data == {200, 100, 5}
     assert p.id == :rounded_rectangle
@@ -234,7 +234,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "rounded_rectangle modifies primitive" do
     p = Primitives.rounded_rectangle(@graph, {200, 100, 5}, id: :rounded_rectangle)
-    |> Graph.get(1)
+    |> Graph.get_id!(:rounded_rectangle)
     |> Primitives.rounded_rectangle({20, 10, 2}, id: :modified)
     assert p.data == {20, 10, 2}
     assert p.id == :modified
@@ -244,7 +244,7 @@ defmodule Scenic.PrimitivesTest do
   test "scene_ref adds graph key reference to a graph" do
     key = {:graph, make_ref(), 123}
     p = Primitives.scene_ref(@graph, key, id: :ref)
-    |> Graph.get(1)
+    |> Graph.get_id!(:ref)
     assert p.module == Scenic.Primitive.SceneRef
     assert p.data == key
     assert p.id == :ref
@@ -252,7 +252,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "scene_ref adds named scene reference to a graph" do
     p = Primitives.scene_ref(@graph, :scene_name, id: :ref)
-    |> Graph.get(1)
+    |> Graph.get_id!(:ref)
     assert p.module == Scenic.Primitive.SceneRef
     assert p.data == {:scene_name, nil}
     assert p.id == :ref
@@ -260,7 +260,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "scene_ref adds pid scene reference to a graph" do
     p = Primitives.scene_ref(@graph, self(), id: :ref)
-    |> Graph.get(1)
+    |> Graph.get_id!(:ref)
     assert p.module == Scenic.Primitive.SceneRef
     assert p.data == {self(), nil}
     assert p.id == :ref
@@ -268,7 +268,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "scene_ref adds named scene with id reference to a graph" do
     p = Primitives.scene_ref(@graph, {:scene_name, 123}, id: :ref)
-    |> Graph.get(1)
+    |> Graph.get_id!(:ref)
     assert p.module == Scenic.Primitive.SceneRef
     assert p.data == {:scene_name, 123}
     assert p.id == :ref
@@ -276,7 +276,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "scene_ref adds pid with id reference to a graph" do
     p = Primitives.scene_ref(@graph, {self(), 123}, id: :ref)
-    |> Graph.get(1)
+    |> Graph.get_id!(:ref)
     assert p.module == Scenic.Primitive.SceneRef
     assert p.data == {self(), 123}
     assert p.id == :ref
@@ -284,7 +284,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "scene_ref adds dynamic reference to a graph" do
     p = Primitives.scene_ref(@graph, {{:mod, "abc"}, 123}, id: :ref)
-    |> Graph.get(1)
+    |> Graph.get_id!(:ref)
     assert p.module == Scenic.Primitive.SceneRef
     assert p.data == {{:mod, "abc"}, 123}
     assert p.id == :ref
@@ -292,7 +292,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "scene_ref modifies primitive" do
     p = Primitives.scene_ref(@graph, {{:mod, "abc"}, 123}, id: :ref)
-    |> Graph.get(1)
+    |> Graph.get_id!(:ref)
     |> Primitives.scene_ref({{:new_mod, "abcd"}, 456}, id: :modified)
     assert p.data == {{:new_mod, "abcd"}, 456}
     assert p.id == :modified
@@ -302,7 +302,7 @@ defmodule Scenic.PrimitivesTest do
   #============================================================================
   test "sector adds to a graph" do
     p = Primitives.sector(@graph, {0, 1, 20}, id: :sector)
-    |> Graph.get(1)
+    |> Graph.get_id!(:sector)
     assert p.module == Scenic.Primitive.Sector
     assert p.data == {0, 1, 20}
     assert p.id == :sector
@@ -310,7 +310,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "sector modifies primitive" do
     p = Primitives.sector(@graph, {1, 1, 20}, id: :sector)
-    |> Graph.get(1)
+    |> Graph.get_id!(:sector)
     |> Primitives.sector({1, 1.5, 22}, id: :modified)
     assert p.data == {1, 1.5, 22}
     assert p.id == :modified
@@ -320,7 +320,7 @@ defmodule Scenic.PrimitivesTest do
   #============================================================================
   test "text adds default to a graph" do
     p = Primitives.text(@graph, "test text", id: :text)
-    |> Graph.get(1)
+    |> Graph.get_id!(:text)
     assert p.module == Scenic.Primitive.Text
     assert p.data == "test text"
     assert p.id == :text
@@ -328,7 +328,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "text modifies primitive" do
     p = Primitives.text(@graph, "Hello", id: :text)
-    |> Graph.get(1)
+    |> Graph.get_id!(:text)
     |> Primitives.text("World", id: :modified)
     assert p.data == "World"
     assert p.id == :modified
@@ -338,7 +338,7 @@ defmodule Scenic.PrimitivesTest do
   #============================================================================
   test "triangle adds to a graph" do
     p = Primitives.triangle(@graph, {{0,0}, {10, 100}, {100, 40}}, id: :triangle)
-    |> Graph.get(1)
+    |> Graph.get_id!(:triangle)
     assert p.module == Scenic.Primitive.Triangle
     assert p.data == {{0,0}, {10, 100}, {100, 40}}
     assert p.id == :triangle
@@ -346,7 +346,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "triangle modifies primitive" do
     p = Primitives.triangle(@graph, {{0,0}, {10, 100}, {100, 40}}, id: :triangle)
-    |> Graph.get(1)
+    |> Graph.get_id!(:triangle)
     |> Primitives.triangle({{1,2}, {11, 102}, {101, 42}}, id: :modified)
     assert p.data == {{1,2}, {11, 102}, {101, 42}}
     assert p.id == :modified
@@ -355,7 +355,7 @@ defmodule Scenic.PrimitivesTest do
   #============================================================================
   test "test update_opts" do
     p = Primitives.arc(@graph, {0, 1, 20}, id: :arc)
-    |> Graph.get(1)
+    |> Graph.get_id!(:arc)
     |> Primitives.update_opts(id: :modified)
     assert p.data == {0,1,20}
     assert p.id == :modified
@@ -363,7 +363,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "test update_opts is additive to existing opts" do
     p = Primitives.arc(@graph, {0, 1, 20}, id: :arc, translate: {1,2} )
-    |> Graph.get(1)
+    |> Graph.get_id!(:arc)
     |> Primitives.update_opts(rotate: 1)
     assert p.data == {0,1,20}
     assert p.id == :arc

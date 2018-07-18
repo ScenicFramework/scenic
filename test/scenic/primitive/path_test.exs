@@ -27,8 +27,7 @@ defmodule Scenic.Primitive.PathTest do
 
   test "build works" do
     p = Path.build( @data )
-    assert Primitive.get_parent_uid(p) == -1
-    assert Primitive.get_module(p) == Path
+    assert p.module == Path
     assert Primitive.get(p) == @data
   end
 

@@ -126,7 +126,7 @@ defmodule Scenic.Component.Input.Dropdown do
         {g, i + 1}
       end)
       g
-    end, translate: {0, height + 6}, id: @dropbox_id, hidden: true)
+    end, translate: {0, height + 1}, id: @dropbox_id, hidden: true)
 
 
     state = %{
@@ -241,6 +241,28 @@ defmodule Scenic.Component.Input.Dropdown do
     end
   end
 
+
+  #--------------------------------------------------------
+  # the button is realeased outside the dropdown space
+  def handle_input( {:cursor_button, {:left, :release, _, _}},
+  %{id: nil} = context,
+  %{down: true, items: items,
+  colors: colors, selected_id: selected_id} = state ) do
+
+    # release the input capture
+    ViewPort.release_input( context, [:cursor_button, :cursor_pos] )
+
+    graph = state.graph
+    # restore standard highliting
+    |> update_highlighting( items, selected_id, nil, colors)
+    # raise the dropdown
+    |> Graph.modify( @carat_id, &update_opts(&1, rotate: @rad) )
+    |> Graph.modify( @dropbox_id, &update_opts(&1, hidden: true) )
+    # push to the viewport
+    |> push_graph()
+
+    {:noreply, %{state | down: false, graph: graph}}
+  end
 
   #--------------------------------------------------------
   # the button is realeased over an item in dropdown

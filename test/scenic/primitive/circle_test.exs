@@ -17,8 +17,7 @@ defmodule Scenic.Primitive.CircleTest do
 
   test "build works" do
     p = Circle.build( @data )
-    assert Primitive.get_parent_uid(p) == -1
-    assert Primitive.get_module(p) == Circle
+    assert p.module == Circle
     assert Primitive.get(p) == @data
   end
 

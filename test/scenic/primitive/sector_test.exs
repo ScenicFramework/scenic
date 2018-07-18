@@ -20,8 +20,7 @@ defmodule Scenic.Primitive.SectorTest do
 
   test "build works" do
     p = Sector.build( @data )
-    assert Primitive.get_parent_uid(p) == -1
-    assert Primitive.get_module(p) == Sector
+    assert p.module == Sector
     assert Primitive.get(p) == @data
   end
 

@@ -22,8 +22,7 @@ defmodule Scenic.Primitive.QuadTest do
 
   test "build works" do
     p = Quad.build( @convex )
-    assert Primitive.get_parent_uid(p) == -1
-    assert Primitive.get_module(p) == Quad
+    assert p.module == Quad
     assert Primitive.get(p) == @convex
   end
 

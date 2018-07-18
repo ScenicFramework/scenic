@@ -17,8 +17,7 @@ defmodule Scenic.Primitive.EllipseTest do
 
   test "build works" do
     p = Ellipse.build( @data )
-    assert Primitive.get_parent_uid(p) == -1
-    assert Primitive.get_module(p) == Ellipse
+    assert p.module == Ellipse
     assert Primitive.get(p) == @data
   end
 
