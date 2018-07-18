@@ -223,8 +223,6 @@ defmodule Scenic.Component.Input.Dropdown do
   %{id: @button_id} = context,
   %{down: true, drop_time: drop_time, colors: colors, items: items,
   graph: graph, selected_id: selected_id} = state ) do
-    # release the input capture
-    ViewPort.release_input( context, [:cursor_button, :cursor_pos] )
 
     if :os.system_time(:milli_seconds) - drop_time <= @drop_click_window_ms do
       # we are still in the click window, leave the menu down.
@@ -236,6 +234,9 @@ defmodule Scenic.Component.Input.Dropdown do
       |> Graph.modify( @carat_id, &update_opts(&1, rotate: @rad) )
       |> Graph.modify( @dropbox_id, &update_opts(&1, hidden: true) )
       |> push_graph()
+
+      # release the input capture
+      ViewPort.release_input( context, [:cursor_button, :cursor_pos] )
 
       {:noreply, %{state | down: false, hover_id: nil, graph: graph}}
     end
