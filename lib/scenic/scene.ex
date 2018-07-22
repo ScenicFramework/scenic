@@ -316,7 +316,7 @@ defmodule Scenic.Scene do
   @callback handle_cast(any, any) :: {:noreply, any}
   @callback handle_info(any, any) :: {:noreply, any}
 
-  @callback handle_input(any, any, any) :: {:noreply, any, any}
+  @callback handle_input(any, any, any) :: {:noreply, any}
   @callback filter_event( any, any, any ) :: { :continue, any, any } | {:stop, any}
 
   @callback handle_set_root( pid, any, any ) :: {:noreply, any}
