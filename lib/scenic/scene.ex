@@ -742,7 +742,8 @@ defmodule Scenic.Scene do
       # Log an error and remove the ref from the graph
       ({_uid, %{module: Primitive.SceneRef, data: {_,_} = ref}},
       {g, all_refs}) ->
-        Logger.error "Attempting to manage dynamic reference on graph with has_children set to false. #{inspect(ref)}"
+        Logger.error "Attempting to manage dynamic reference on graph with " <>
+          "has_children set to false. #{inspect(ref)}"
         {g, all_refs}
 
       # all non-SceneRef primitives
