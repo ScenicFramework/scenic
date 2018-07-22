@@ -54,7 +54,7 @@ defmodule Scenic.Primitive.QuadTest do
   # transform helpers
 
   test "default_pin returns the averaged center of the rect" do
-    assert Quad.default_pin(@convex) == {275, 328}
+    assert Quad.default_pin(@convex) == {275.0, 327.5}
   end
 
   #============================================================================

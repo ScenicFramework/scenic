@@ -34,11 +34,4 @@ defmodule Scenic.Primitive.SceneRef do
   def valid_styles(),                               do: [:all]
   def filter_styles( styles ) when is_map(styles),  do: styles
 
-
-  #--------------------------------------------------------
-  def default_pin( data )
-  def default_pin( _ ) do
-    {0,0}
-  end
-
 end

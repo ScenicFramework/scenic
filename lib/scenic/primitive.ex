@@ -20,10 +20,10 @@ defmodule Scenic.Primitive do
   @callback info() :: bitstring
   @callback verify( any ) :: any
 
-  @callback default_pin( any ) :: {integer, integer}
+  @callback default_pin( any ) :: {float, float}
   @callback expand( any ) :: any
 
-  @callback contains_point?( any, {integer, integer} ) :: true | false
+  @callback contains_point?( any, {float, float} ) :: true | false
 
 
   @not_styles       [:module, :id,
@@ -97,7 +97,7 @@ defmodule Scenic.Primitive do
 
       # unless otherwise defined, the default pin is {0,0}
       @doc false
-      def default_pin(_), do: {0,0}
+      def default_pin(_), do: {0.0,0.0}
 
       # simple defaults that can be overridden
       def get( %Primitive{data: data} ),  do: data

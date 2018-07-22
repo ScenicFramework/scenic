@@ -48,11 +48,13 @@ defmodule Scenic.Primitive.TriangleTest do
   # transform helpers
 
   test "default_pin returns the center of the rect" do
-    assert Triangle.default_pin(@data) == {273, 200}
+    {px,py} = Triangle.default_pin(@data)
+    assert {round(px),round(py)} == {273, 200}
   end
 
   test "centroid returns the centroid of the rect" do
-    assert Triangle.centroid(@data) == {273, 200}
+    {px,py} = Triangle.centroid(@data)
+    assert {round(px),round(py)} == {273, 200}
   end
 
   #============================================================================

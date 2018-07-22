@@ -36,7 +36,7 @@ defmodule Scenic.Primitive.Rectangle do
   #--------------------------------------------------------
   def centroid(data)
   def centroid({width, height}) do
-    { width / 2, round(height / 2) }
+    { width / 2, height / 2 }
   end
 
   #--------------------------------------------------------

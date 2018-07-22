@@ -36,8 +36,8 @@ defmodule Scenic.Primitive.Triangle do
   def centroid(data)
   def centroid({{x0, y0}, {x1, y1}, {x2, y2}}) do
     {
-      round( (x0 + x1 + x2) / 3 ),
-      round( (y0 + y1 + y2) / 3 )
+      (x0 + x1 + x2) / 3,
+      (y0 + y1 + y2) / 3
     }
   end
 

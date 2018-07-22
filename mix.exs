@@ -61,7 +61,7 @@ defmodule Scenic.Mixfile do
       {:inch_ex, ">= 0.0.0", only: :docs},
 
 
-      {:dialyxir, "~> 0.5", only: :dev}
+      {:dialyxir, "~> 0.5", only: :dev, runtime: false}
     ]
   end
 

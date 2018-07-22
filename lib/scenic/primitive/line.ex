@@ -38,8 +38,8 @@ defmodule Scenic.Primitive.Line do
   def centroid(data)
   def centroid({{x0, y0}, {x1, y1}}) do
     {
-      round( (x0 + x1) / 2 ),
-      round( (y0 + y1) / 2 )
+      (x0 + x1) / 2,
+      (y0 + y1) / 2
     }
   end
 

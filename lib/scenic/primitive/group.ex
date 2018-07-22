@@ -69,10 +69,4 @@ defmodule Scenic.Primitive.Group do
     )
   end
 
-  #--------------------------------------------------------
-  # default pin for a group is just 0,0
-  def default_pin( _ ) do
-    {0,0}
-  end
-
 end
