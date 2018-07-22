@@ -58,7 +58,10 @@ defmodule Scenic.Mixfile do
 
       # Docs dependencies
       {:ex_doc, ">= 0.0.0", only: [:dev, :docs]},
-      {:inch_ex, ">= 0.0.0", only: :docs}
+      {:inch_ex, ">= 0.0.0", only: :docs},
+
+
+      {:dialyxir, "~> 0.5", only: :dev}
     ]
   end
 
