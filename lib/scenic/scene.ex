@@ -840,6 +840,12 @@ defmodule Scenic.Scene do
         # start the dynamic scene
         {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, self(), init_data, init_opts )
 
+        # tell the old scene to stop itself
+        case old_pids[uid] do
+          nil -> :ok
+          old_pid -> GenServer.cast(old_pid, {:stop, dyn_sup})
+        end
+
         # add the this dynamic child scene to tracking
         {
           Map.put(old_pids, uid, pid),
