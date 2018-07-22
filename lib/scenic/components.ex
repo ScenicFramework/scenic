@@ -8,6 +8,8 @@
 
 defmodule Scenic.Components do
   alias Scenic.Component
+  alias Scenic.Primitive
+  alias Scenic.Primitive.SceneRef
   alias Scenic.Graph
 
   # import IEx
@@ -207,6 +209,10 @@ defmodule Scenic.Components do
     add_to_graph( g, Component.Button, data, opts )
   end
 
+  def button( %Primitive{module: SceneRef} = p, data, opts ) do
+    modify( p, Component.Button, data, opts )
+  end
+
   #--------------------------------------------------------
   @doc """
   Add a checkbox to a graph
@@ -259,6 +265,9 @@ defmodule Scenic.Components do
     add_to_graph( g, Component.Input.Checkbox, data, opts )
   end
 
+  def checkbox( %Primitive{module: SceneRef} = p, data, opts ) do
+    modify( p, Component.Input.Checkbox, data, opts )
+  end
 
   #--------------------------------------------------------
   @doc """
@@ -325,6 +334,9 @@ defmodule Scenic.Components do
     add_to_graph( g, Component.Input.Dropdown, data, opts )
   end
 
+  def dropdown( %Primitive{module: SceneRef} = p, data, opts ) do
+    modify( p, Component.Input.Dropdown, data, opts )
+  end
 
   #--------------------------------------------------------
   @doc """
@@ -392,6 +404,9 @@ defmodule Scenic.Components do
     add_to_graph( g, Component.Input.RadioGroup, data, opts )
   end
 
+  def radio_group( %Primitive{module: SceneRef} = p, data, opts ) do
+    modify( p, Component.Input.RadioGroup, data, opts )
+  end
 
   #--------------------------------------------------------
   @doc """
@@ -457,6 +472,9 @@ defmodule Scenic.Components do
     add_to_graph( g, Component.Input.Slider, data, opts )
   end
 
+  def slider( %Primitive{module: SceneRef} = p, data, opts ) do
+    modify( p, Component.Input.Slider, data, opts )
+  end
 
   #============================================================================
   # generic workhorse versions
@@ -466,12 +484,11 @@ defmodule Scenic.Components do
     mod.add_to_graph(g, data, opts)
   end
 
-  # defp modify( %Primitive{module: mod} = p, data, opts ) do
-  #   mod.verify!(data)
-  #   p
-  #   |> Primitive.put( data )
-  #   |> Primitive.update_opts( opts )
-  # end
+  defp modify( %Primitive{module: SceneRef} = p, mod, data, opts ) do
+    mod.verify!(data)
+    p
+    Primitive.put( p, {mod, data}, opts )
+  end
 
 
 end
