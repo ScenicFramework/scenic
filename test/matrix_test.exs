@@ -198,60 +198,18 @@ defmodule Scenic.Math.MatrixTest do
   #--------------------------------------------------------
   # build_rotation( radians )
 
-  test "build_rotation builds a z rotation by default" do
+  test "build_rotation builds a z rotation" do
     cos = :math.cos(1.0)
     sin = :math.sin(1.0)
 
     mx = {
-        {cos, sin, 0.0, 0.0},
-        {-sin, cos, 0.0, 0.0},
+        {cos, -sin, 0.0, 0.0},
+        {sin, cos, 0.0, 0.0},
         {0.0, 0.0, 1.0, 0.0},
         {0.0, 0.0, 0.0, 1.0}
       } |> Utils.to_binary()
 
     assert Matrix.build_rotation(1.0) == mx
-  end
-
-  test "build_rotation( radians, :x ) works" do
-    cos = :math.cos(1.0)
-    sin = :math.sin(1.0)
-
-    mx = {
-        {1.0, 0.0, 0.0, 0.0},
-        {0.0, cos, sin, 0.0},
-        {0.0, -sin, cos, 0.0},
-        {0.0, 0.0, 0.0, 1.0}
-      } |> Utils.to_binary()
-
-    assert Matrix.build_rotation(1.0, :x)             == mx
-  end
-
-  test "build_rotation( radians, :y ) works" do
-    cos = :math.cos(1.0)
-    sin = :math.sin(1.0)
-
-    mx = {
-        {cos, 0.0, sin, 0.0},
-        {0.0, 1.0, 0.0, 0.0},
-        {-sin, 0.0, cos, 0.0},
-        {0.0, 0.0, 0.0, 1.0}
-      } |> Utils.to_binary()
-
-    assert Matrix.build_rotation(1.0, :y)             == mx
-  end
-
-  test "build_rotation( radians, :z ) works" do
-    cos = :math.cos(1.0)
-    sin = :math.sin(1.0)
-
-    mx = {
-        {cos, sin, 0.0, 0.0},
-        {-sin, cos, 0.0, 0.0},
-        {0.0, 0.0, 1.0, 0.0},
-        {0.0, 0.0, 0.0, 1.0}
-      } |> Utils.to_binary()
-
-    assert Matrix.build_rotation(1.0, :z)             == mx
   end
 
 
@@ -264,7 +222,7 @@ defmodule Scenic.Math.MatrixTest do
     y = 20
 
     mx_inv = Matrix.build_translation( -x, -y )
-    mx_rot = Matrix.build_rotation( r, :z )
+    mx_rot = Matrix.build_rotation( r )
     mx_bak = Matrix.build_translation( x, y )
 
     mx = Matrix.mul(mx_inv, mx_rot) |> Matrix.mul(mx_bak)
@@ -272,86 +230,32 @@ defmodule Scenic.Math.MatrixTest do
     assert Matrix.build_rotate_around(r, {x,y}) == mx
   end
 
-  test "build_rotate_around works around :x axis" do
-    r = 1.0
-    x = 10
-    y = 20
-
-    mx_inv = Matrix.build_translation( -x, -y )
-    mx_rot = Matrix.build_rotation( r, :x )
-    mx_bak = Matrix.build_translation( x, y )
-
-    mx = Matrix.mul(mx_inv, mx_rot) |> Matrix.mul(mx_bak)
-
-    assert Matrix.build_rotate_around(r, {x,y}, :x) == mx
-  end
-
-  test "build_rotate_around works around :y axis" do
-    r = 1.0
-    x = 10
-    y = 20
-
-    mx_inv = Matrix.build_translation( -x, -y )
-    mx_rot = Matrix.build_rotation( r, :y )
-    mx_bak = Matrix.build_translation( x, y )
-
-    mx = Matrix.mul(mx_inv, mx_rot) |> Matrix.mul(mx_bak)
-
-    assert Matrix.build_rotate_around(r, {x,y}, :y) == mx
-  end
-
-  test "build_rotate_around works around :z axis" do
-    r = 1.0
-    x = 10
-    y = 20
-
-    mx_inv = Matrix.build_translation( -x, -y )
-    mx_rot = Matrix.build_rotation( r, :z )
-    mx_bak = Matrix.build_translation( x, y )
-
-    mx = Matrix.mul(mx_inv, mx_rot) |> Matrix.mul(mx_bak)
-
-    assert Matrix.build_rotate_around(r, {x,y}, :z) == mx
-  end
-
-
   #============================================================================
   # act on a matrix
 
   test "rotate rotates a matrix" do
     mx_trans  = Matrix.build_translation( 123, 456 )
-    mx_rot    = Matrix.build_rotation( {:z, 1.3} )
-    assert Matrix.rotate(mx_trans, {:z, 1.3}) == Matrix.mul(mx_trans, mx_rot)
-  end
-  
-  test "rotate rotates a matrix around a default value" do
-    mx_trans  = Matrix.build_translation( 123, 456 )
     mx_rot    = Matrix.build_rotation( 1.3 )
-    assert Matrix.rotate(mx_trans, {:z, 1.3}) == Matrix.mul(mx_trans, mx_rot)
-  end
-
-  test "rotate does nothing if the value is nil" do
-    mx_trans  = Matrix.build_translation( 123, 456 )
-    assert Matrix.rotate(mx_trans, nil) == mx_trans
+    assert Matrix.rotate(mx_trans, 1.3) == Matrix.mul(mx_trans, mx_rot)
   end
 
   test "translate translates a matrix" do
     mx_trans  = Matrix.build_translation( 123, 456 )
-    mx_rot    = Matrix.build_rotation( {:y, 1.3} )
+    mx_rot    = Matrix.build_rotation( 1.3 )
     assert Matrix.translate(mx_rot, {123, 456}) == Matrix.mul(mx_rot, mx_trans)
   end
   test "translate does nothing if the value is nil" do
-    mx_rot    = Matrix.build_rotation( {:y, 1.3} )
+    mx_rot    = Matrix.build_rotation( 1.3 )
     assert Matrix.translate(mx_rot, nil) == mx_rot
   end
 
   test "scale scales a matrix" do
     mx_scale  = Matrix.build_scale( 1.2 )
-    mx_rot    = Matrix.build_rotation( {:x, 1.3} )
+    mx_rot    = Matrix.build_rotation( 1.3 )
     assert Matrix.scale(mx_rot, 1.2) == Matrix.mul(mx_rot, mx_scale)
   end
   test "scale does nothing if the value is nil" do
-    mx_rot    = Matrix.build_rotation( {:y, 1.3} )
+    mx_rot    = Matrix.build_rotation( 1.3 )
     assert Matrix.scale(mx_rot, nil) == mx_rot
   end
 
