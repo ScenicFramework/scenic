@@ -24,7 +24,8 @@ defmodule Scenic.Mixfile do
         # source_ref: "v#{@version}",
         # source_url: "https://github.com/boydm/scenic",
         # homepage_url: "http://kry10.com",
-      ]
+      ],
+      dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex]]
     ]
   end
 
