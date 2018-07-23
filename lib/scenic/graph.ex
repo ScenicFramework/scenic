@@ -116,40 +116,40 @@ defmodule Scenic.Graph do
 
   #============================================================================
   # add a pre-built primitive to an existing group in a graph
-  def add_to( graph, id, primitive )
-  def add_to( %Graph{} = graph, id, p ) when not is_integer(id) do
-    get_by_uid(graph, id)
-    |> Enum.reduce( graph, fn(uid, g) ->
-      case get_by_uid(g, uid) do
-        %Primitive{module: Group} ->
-          {graph, _uid} = insert_at({g, uid}, -1, p)
-          graph
-        _ ->
-          raise @err_msg_group
-      end
-    end)
-  end
-
+  # def add_to( graph, id, primitive )
+  
+  # def add_to( %Graph{} = graph, id, p ) when not is_integer(id) do
+  #   get_by_uid(graph, id)
+  #   |> Enum.reduce( graph, fn(uid, g) ->
+  #     case get_by_uid(g, uid) do
+  #       %Primitive{module: Group} ->
+  #         {graph, _uid} = insert_at({g, uid}, -1, p)
+  #         graph
+  #       _ ->
+  #         raise @err_msg_group
+  #     end
+  #   end)
+  # end
 
   # build and add a new primitive to an existing group in a graph
-  def add_to( graph, id, primitive_module, primitive_data, opts \\ [])
-  def add_to( %Graph{add_to: puid} = graph, id, primitive_module, primitive_data, opts) when not is_integer(id) do
-    get_id(graph, id)
-    |> Enum.reduce( graph, fn(uid, g) ->
-      case get_by_uid(graph, uid) do
-        %Primitive{module: Group} ->
-          g
-          # set the new group as the add_to target
-          |> Map.put(:add_to, uid)
-          # add the new primitive
-          |> add( primitive_module, primitive_data, opts )
-        _ ->
-          raise @err_msg_group
-      end
-    end)
-    # restore the add_to back to whatever it was before
-    |> Map.put(:add_to, puid)
-  end
+  # def add_to( graph, id, primitive_module, primitive_data, opts \\ [])
+  # def add_to( %Graph{add_to: puid} = graph, id, primitive_module, primitive_data, opts) when not is_integer(id) do
+  #   get_id(graph, id)
+  #   |> Enum.reduce( graph, fn(uid, g) ->
+  #     case get_by_uid(graph, uid) do
+  #       %Primitive{module: Group} ->
+  #         g
+  #         # set the new group as the add_to target
+  #         |> Map.put(:add_to, uid)
+  #         # add the new primitive
+  #         |> add( primitive_module, primitive_data, opts )
+  #       _ ->
+  #         raise @err_msg_group
+  #     end
+  #   end)
+  #   # restore the add_to back to whatever it was before
+  #   |> Map.put(:add_to, puid)
+  # end
 
 
   #============================================================================
@@ -429,9 +429,9 @@ defmodule Scenic.Graph do
 
   #--------------------------------------------------------
   # insert at the root - graph itself passed in
-  defp insert_at(%Graph{} = graph, index, element, opts) do
-    insert_at({graph, @root_uid}, index, element, opts)
-  end
+  # defp insert_at(%Graph{} = graph, index, element, opts) do
+  #   insert_at({graph, @root_uid}, index, element, opts)
+  # end
 
 
   #============================================================================
