@@ -6,8 +6,9 @@
 
 defmodule Scenic.ViewPort do
   use GenServer
+  alias Scenic.Math
   alias Scenic.ViewPort
-  alias Scenic.ViewPort.Input.Context
+  alias Scenic.ViewPort.Context
 
 #  import IEx
 
@@ -78,7 +79,21 @@ defmodule Scenic.ViewPort do
   weird state, so I wouldn't recommend it.
 
   """
+
+
   @viewports            :scenic_dyn_viewports
+
+  @type input ::
+  {:codepoint, {codepoint :: integer, mods :: integer}} |
+  {:key, {key :: String.t, :press | :release, mods :: integer}} |
+  {:cursor_button, {:left | :center | :right, :press | :release, mods :: integer, position :: Math.point}} |
+  {:cursor_scroll, {offset :: Math.point, position :: Math.point}} |
+  {:cursor_pos, position :: Math.point} |
+  {:viewport_enter, position :: Math.point} |
+  {:viewport_exit, position :: Math.point}
+
+  @type event :: {event :: atom, data :: any}
+
 
   #============================================================================
   # client api
@@ -160,10 +175,12 @@ defmodule Scenic.ViewPort do
   end
 
   #--------------------------------------------------------
+  @spec input(GenServer.server, input) :: :ok
   def input( viewport, input_event ) do
     GenServer.cast( viewport, {:input, input_event} )
   end
 
+  @spec input(GenServer.server, input, Scenic.ViewPort.Context.t) :: :ok
   def input( viewport, input_event, context ) do
     GenServer.cast( viewport, {:input, input_event, context} )
   end

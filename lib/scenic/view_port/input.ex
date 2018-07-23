@@ -12,6 +12,7 @@ defmodule Scenic.ViewPort.Input do
   alias Scenic.Scene
 #  alias Scenic.Utilities
 #  alias Scenic.Graph
+  alias Scenic.ViewPort.Context
   alias Scenic.ViewPort
   alias Scenic.Primitive
   alias Scenic.Math.Matrix
@@ -19,27 +20,6 @@ defmodule Scenic.ViewPort.Input do
   require Logger
 
   # import IEx
-
-  defmodule Context do
-    alias Scenic.Math.Matrix
-    alias Scenic.ViewPort.Input.Context
-
-    # note: would liek to define tx: and inverse_tx: as Matrix.identity() directly
-    # as defaults in the struct. However, this breaks when cross-compiling to
-    # opposite endian devices under Nerves. So call Context.build() when you want
-    # to create a new Context, or fill in the matrices with a runtime call
-    # to Matrix.identity yourself.
-
-    defstruct viewport: nil, graph_key: nil, tx: nil, inverse_tx: nil, uid: nil, id: nil
-
-    def build( %{} = params ) do
-      Map.merge(
-        %Context{tx: Matrix.identity(), inverse_tx: Matrix.identity()},
-        params
-      )
-    end
-  end
-
 
   #============================================================================
   # input handling

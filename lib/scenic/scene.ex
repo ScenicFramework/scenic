@@ -7,6 +7,7 @@
 defmodule Scenic.Scene do
   alias Scenic.Scene
   alias Scenic.ViewPort
+  alias Scenic.ViewPort.Context
   alias Scenic.Primitive
   alias Scenic.Utilities
 
@@ -312,11 +313,11 @@ defmodule Scenic.Scene do
   # callback definitions
 
   @callback init( any, list ) :: {:ok, any}
-  @callback handle_call(any, any, any) :: {:reply, any, any} | {:noreply, any}
-  @callback handle_cast(any, any) :: {:noreply, any}
-  @callback handle_info(any, any) :: {:noreply, any}
+  # @callback handle_call(any, any, any) :: {:reply, any, any} | {:noreply, any}
+  # @callback handle_cast(any, any) :: {:noreply, any}
+  # @callback handle_info(any, any) :: {:noreply, any}
 
-  @callback handle_input(any, any, any) :: {:noreply, any}
+  @callback handle_input(input :: any, context :: Context.t, state :: any) :: {:noreply, state :: any}
   @callback filter_event( any, any, any ) :: { :continue, any, any } | {:stop, any}
 
   @callback handle_set_root( pid, any, any ) :: {:noreply, any}
@@ -688,7 +689,7 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  def handle_cast({:input, event, %Scenic.ViewPort.Input.Context{} = context},
+  def handle_cast({:input, event, %Scenic.ViewPort.Context{} = context},
   %{scene_module: mod, scene_state: sc_state} = state) do
     {:noreply, sc_state} = mod.handle_input(event, context, sc_state )
     {:noreply, %{state | scene_state: sc_state}}

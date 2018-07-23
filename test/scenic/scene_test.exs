@@ -222,7 +222,7 @@ defmodule Scenic.SceneTest do
   end
 
   test "handle_cast :input calls the mod input handler" do
-    context = %Scenic.ViewPort.Input.Context{
+    context = %Scenic.ViewPort.Context{
       viewport: self()
     }
     event = {:cursor_enter, 1}
