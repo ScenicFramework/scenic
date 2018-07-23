@@ -279,8 +279,9 @@ defmodule Scenic.Scene do
   multiple graphs making the continuation ambiguous.
   """
 
-  def send_event( scene_pid, event_msg ) do
-    GenServer.cast(scene_pid, {:event, event_msg, self()})
+  @spec send_event( scene_server :: GenServer.server, event :: ViewPort.event ) :: :ok
+  def send_event( scene_server, event ) do
+    GenServer.cast(scene_server, {:event, event, self()})
   end
 
 
