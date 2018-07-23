@@ -239,7 +239,7 @@ defmodule Scenic.Cache.FileLoadTest do
   use ExUnit.Case, async: false
 
   alias Scenic.Cache, as: Cache
-  alias Scenic.Cache.Hash
+  # alias Scenic.Cache.Hash
 
 #  import IEx
 
@@ -359,106 +359,106 @@ defmodule Scenic.Cache.FileLoadTest do
   #============================================================================
   # load!
 
-  #--------------------------------------------------------
-  test "load!(path) accepts a path with an embedded hash and reads it" do
-    key = Cache.File.load!( @valid_hash_path )
+  # #--------------------------------------------------------
+  # test "load!(path) accepts a path with an embedded hash and reads it" do
+  #   key = Cache.File.load!( @valid_hash_path )
 
-    {:ok, data} = File.read( @valid_hash_path )
-    assert Cache.get(key) == data
-    # do it again, passing in the hash type
-    assert Cache.File.load!( @valid_hash_path, hash: :sha ) == key
-  end
+  #   {:ok, data} = File.read( @valid_hash_path )
+  #   assert Cache.get(key) == data
+  #   # do it again, passing in the hash type
+  #   assert Cache.File.load!( @valid_hash_path, hash: :sha ) == key
+  # end
 
-  test "load!(path) rejects a path with an valid file, but invalid hash" do
-    assert_raise Hash.Error, fn ->
-      Cache.File.load!( @bad_hash_path )
-    end
-  end
+  # test "load!(path) rejects a path with an valid file, but invalid hash" do
+  #   assert_raise Hash.Error, fn ->
+  #     Cache.File.load!( @bad_hash_path )
+  #   end
+  # end
 
-  test "load!(path) rejects a path with an valid file, but missing hash" do
-    assert_raise Hash.Error, fn ->
-      Cache.File.load!( @missing_hash_path )
-    end
-  end
+  # test "load!(path) rejects a path with an valid file, but missing hash" do
+  #   assert_raise Hash.Error, fn ->
+  #     Cache.File.load!( @missing_hash_path )
+  #   end
+  # end
 
-  test "load!(path) accepts other types of hash computations as an optional parameter" do
-    key = Cache.File.load!( {@valid_hash_256_path, :sha256} )
-    {:ok, data} = File.read( @valid_hash_path )
-    assert Cache.get(key) == data
-  end
+  # test "load!(path) accepts other types of hash computations as an optional parameter" do
+  #   key = Cache.File.load!( {@valid_hash_256_path, :sha256} )
+  #   {:ok, data} = File.read( @valid_hash_path )
+  #   assert Cache.get(key) == data
+  # end
 
-  test "load!(path) passes file system errors through" do
-    assert_raise File.Error, fn ->
-      Cache.File.load!( @no_such_file_path )
-    end
-  end
+  # test "load!(path) passes file system errors through" do
+  #   assert_raise File.Error, fn ->
+  #     Cache.File.load!( @no_such_file_path )
+  #   end
+  # end
 
-  test "load!(path) uses the optional initializer" do
-    key = Cache.File.load!( @valid_hash_path, init: fn(_,_)-> {:ok, :init_data} end )
-    assert Cache.get(key) == :init_data
-  end
+  # test "load!(path) uses the optional initializer" do
+  #   key = Cache.File.load!( @valid_hash_path, init: fn(_,_)-> {:ok, :init_data} end )
+  #   assert Cache.get(key) == :init_data
+  # end
 
-  #--------------------------------------------------------
-  test "load!(path, hash) accepts a path missing a hash and a valid hash passed in" do
-    key = Cache.File.load!( {@missing_hash_path, @missing_hash} )
-    {:ok, data} = File.read( @missing_hash_path )
-    assert Cache.get(key) == data
-    # do it again, passing in the hash type
-    assert Cache.File.load!( {@missing_hash_path, @missing_hash, :sha }) == key
-  end
+  # #--------------------------------------------------------
+  # test "load!(path, hash) accepts a path missing a hash and a valid hash passed in" do
+  #   key = Cache.File.load!( {@missing_hash_path, @missing_hash} )
+  #   {:ok, data} = File.read( @missing_hash_path )
+  #   assert Cache.get(key) == data
+  #   # do it again, passing in the hash type
+  #   assert Cache.File.load!( {@missing_hash_path, @missing_hash, :sha }) == key
+  # end
 
-  test "load!(path, hash) accepts a path with an embedded hash and the same path passed in" do
-    key = Cache.File.load!( {@valid_hash_path, @valid_hash} )
+  # test "load!(path, hash) accepts a path with an embedded hash and the same path passed in" do
+  #   key = Cache.File.load!( {@valid_hash_path, @valid_hash} )
 
-    {:ok, data} = File.read( @valid_hash_path )
-    assert Cache.get(key) == data
-  end
+  #   {:ok, data} = File.read( @valid_hash_path )
+  #   assert Cache.get(key) == data
+  # end
 
-  test "load!(path, hash) accepts a path with a bad hash and a valid hash passed in" do
-    key = Cache.File.load!( {@bad_hash_path, @valid_hash} )
+  # test "load!(path, hash) accepts a path with a bad hash and a valid hash passed in" do
+  #   key = Cache.File.load!( {@bad_hash_path, @valid_hash} )
 
-    {:ok, data} = File.read( @valid_hash_path )
-    assert Cache.get(key) == data
-  end
+  #   {:ok, data} = File.read( @valid_hash_path )
+  #   assert Cache.get(key) == data
+  # end
 
-  test "load!(path, hash) rejects a path missing a hash and an invalid hash passed in" do
-    assert_raise Hash.Error, fn ->
-      Cache.File.load!( {@missing_hash_path, "not_a_valid_hash"} )
-    end
-  end
+  # test "load!(path, hash) rejects a path missing a hash and an invalid hash passed in" do
+  #   assert_raise Hash.Error, fn ->
+  #     Cache.File.load!( {@missing_hash_path, "not_a_valid_hash"} )
+  #   end
+  # end
 
-  test "load!(path, hash) rejects a path with a valid a hash and an invalid hash passed in" do
-    assert_raise Hash.Error, fn ->
-      Cache.File.load!( {@valid_hash_path, "not_a_valid_hash"} )
-    end
-  end
+  # test "load!(path, hash) rejects a path with a valid a hash and an invalid hash passed in" do
+  #   assert_raise Hash.Error, fn ->
+  #     Cache.File.load!( {@valid_hash_path, "not_a_valid_hash"} )
+  #   end
+  # end
 
-  test "load!(path, hash) accepts other types of hash computations as an optional parameter" do
-    key = Cache.File.load!( {@missing_hash_path, @missing_hash_256, :sha256} )
-    {:ok, data} = File.read( @missing_hash_path )
-    assert Cache.get(key) == data
-  end
+  # test "load!(path, hash) accepts other types of hash computations as an optional parameter" do
+  #   key = Cache.File.load!( {@missing_hash_path, @missing_hash_256, :sha256} )
+  #   {:ok, data} = File.read( @missing_hash_path )
+  #   assert Cache.get(key) == data
+  # end
 
-  test "load!(path, hash) passes file system errors through" do
-    assert_raise File.Error, fn ->
-      Cache.File.load!( {@no_such_file_path, @valid_hash} )
-    end
-  end
+  # test "load!(path, hash) passes file system errors through" do
+  #   assert_raise File.Error, fn ->
+  #     Cache.File.load!( {@no_such_file_path, @valid_hash} )
+  #   end
+  # end
 
-  test "load!(path, hash) uses the optional initializer" do
-    key = Cache.File.load!( {@missing_hash_path, @missing_hash}, init: fn(_,_)-> {:ok, :init_data} end )
-    assert Cache.get(key) == :init_data
-  end
+  # test "load!(path, hash) uses the optional initializer" do
+  #   key = Cache.File.load!( {@missing_hash_path, @missing_hash}, init: fn(_,_)-> {:ok, :init_data} end )
+  #   assert Cache.get(key) == :init_data
+  # end
 
-  #--------------------------------------------------------
-  test "load!(path_list) loads multiple files into this proc's scope" do
-    file_list = [@valid_hash_path, {@missing_hash_path, @missing_hash, :sha}]
+  # #--------------------------------------------------------
+  # test "load!(path_list) loads multiple files into this proc's scope" do
+  #   file_list = [@valid_hash_path, {@missing_hash_path, @missing_hash, :sha}]
 
-    assert Cache.File.load!( file_list ) == [@valid_hash, @missing_hash]
+  #   assert Cache.File.load!( file_list ) == [@valid_hash, @missing_hash]
 
-    keys = Cache.keys( self() )
-    assert Enum.member?(keys, @valid_hash)
-    assert Enum.member?(keys, @missing_hash)
-  end
+  #   keys = Cache.keys( self() )
+  #   assert Enum.member?(keys, @valid_hash)
+  #   assert Enum.member?(keys, @missing_hash)
+  # end
 
 end

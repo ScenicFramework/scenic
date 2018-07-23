@@ -46,27 +46,27 @@ defmodule Scenic.Cache.File do
   end
 
   #--------------------------------------------------------
-  def load!( path_data, opts \\ [] )
+  # def load!( path_data, opts \\ [] )
 
-  def load!( path_list, opts ) when is_list(path_list) do
-    # if scope was set, preserve it, otherwise set to this process
-    opts = Keyword.put_new(opts, :scope, self())
-    do_parallel(path_list, fn(path_data) -> load!(path_data, opts) end)
-  end
+  # def load!( path_list, opts ) when is_list(path_list) do
+  #   # if scope was set, preserve it, otherwise set to this process
+  #   opts = Keyword.put_new(opts, :scope, self())
+  #   do_parallel(path_list, fn(path_data) -> load!(path_data, opts) end)
+  # end
 
-  def load!( path_data, opts ) do
-    {path, hash, hash_type} = Hash.path_params( path_data )
-    # try claiming the already cached file before reading it
-    case Cache.claim(hash, opts[:scope]) do
-      true -> hash
-      false ->
-        data = read!( {path, hash, hash_type}, opts )
-        case Cache.put(hash, data, opts[:scope]) do
-          {:ok, key} -> key
-          err -> raise "Failed to put item in the cache: #{inspect(err)}"
-        end
-      end
-  end
+  # def load!( path_data, opts ) do
+  #   {path, hash, hash_type} = Hash.path_params( path_data )
+  #   # try claiming the already cached file before reading it
+  #   case Cache.claim(hash, opts[:scope]) do
+  #     true -> hash
+  #     false ->
+  #       data = read!( {path, hash, hash_type}, opts )
+  #       case Cache.put(hash, data, opts[:scope]) do
+  #         {:ok, key} -> key
+  #         err -> raise "Failed to put item in the cache: #{inspect(err)}"
+  #       end
+  #     end
+  # end
 
 
   #============================================================================

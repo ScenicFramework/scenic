@@ -42,17 +42,17 @@ defmodule Scenic.Cache.Texture do
   # load! a texture file into the cache
 
   #--------------------------------------------------------
-  def load!( texture, opts \\ [] )
-  def load!( texture, opts ) when is_atom(texture) do
-    case system_texture_path(texture) do
-      {:ok, path_data} -> load!( path_data, opts )
-      _ -> raise Error, texture: texture, message: "Unknown texture: #{inspect(texture)}"
-    end
-  end
-  def load!( path_data, opts ) when is_list(opts) do
-    opts = Keyword.put_new(opts, :init, &initialize/2 )
-    Cache.File.load!(path_data, opts)
-  end
+  # def load!( texture, opts \\ [] )
+  # def load!( texture, opts ) when is_atom(texture) do
+  #   case system_texture_path(texture) do
+  #     {:ok, path_data} -> load!( path_data, opts )
+  #     _ -> raise Error, texture: texture, message: "Unknown texture: #{inspect(texture)}"
+  #   end
+  # end
+  # def load!( path_data, opts ) when is_list(opts) do
+  #   opts = Keyword.put_new(opts, :init, &initialize/2 )
+  #   Cache.File.load!(path_data, opts)
+  # end
 
 
   #============================================================================

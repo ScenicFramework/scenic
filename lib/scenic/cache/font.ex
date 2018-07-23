@@ -69,19 +69,19 @@ defmodule Scenic.Cache.Font do
   # load! a font file into the cache
 
   #--------------------------------------------------------
-  def load!( font, opts \\ [] )
-  def load!( font, opts ) when is_atom(font) do
-    case system_font(font) do
-      {:ok, {path, hash, range}} ->
-        opts = Keyword.put_new(opts, :range, range)
-        load!( {path, hash}, opts )
-      _ -> raise Error, font: font, message: "Unknown font: #{inspect(font)}"
-    end
-  end
-  def load!( path_data, opts ) when is_list(opts) do
-    opts = Keyword.put_new(opts, :init, &initialize!/2 )
-    Cache.File.load!(path_data, opts)
-  end
+  # def load!( font, opts \\ [] )
+  # def load!( font, opts ) when is_atom(font) do
+  #   case system_font(font) do
+  #     {:ok, {path, hash, range}} ->
+  #       opts = Keyword.put_new(opts, :range, range)
+  #       load!( {path, hash}, opts )
+  #     _ -> raise Error, font: font, message: "Unknown font: #{inspect(font)}"
+  #   end
+  # end
+  # def load!( path_data, opts ) when is_list(opts) do
+  #   opts = Keyword.put_new(opts, :init, &initialize/2 )
+  #   Cache.File.load!(path_data, opts)
+  # end
 
 
   #============================================================================
@@ -106,27 +106,12 @@ defmodule Scenic.Cache.Font do
     {:ok, {:font, data, range, "temp"}}
   end
 
-
-  #--------------------------------------------------------
-#  defp initialize( data, opts ) do
-#    case Native.inspect( data ) do
-#      {:ok, internal_data} ->
-#        range = case opts_ranges( opts ) do
-#          [] -> @default_range
-#          range -> range
-#        end
-#        {:ok, {:font, data, range, internal_data}}
-#      other -> other
-#    end
-#    |> IO.inspect()
-#  end
-
-  defp initialize!( data, opts ) do
-    case initialize( data, opts ) do
-      {:ok, font} -> {:ok, font}
-      _ -> raise Error, message: "Invalid font file"
-    end
-  end
+  # defp initialize!( data, opts ) do
+  #   case initialize( data, opts ) do
+  #     {:ok, font} -> {:ok, font}
+  #     _ -> raise Error, message: "Invalid font file"
+  #   end
+  # end
   
   #--------------------------------------------------------
   def opts_ranges( opts ) do
