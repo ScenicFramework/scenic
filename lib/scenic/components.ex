@@ -486,7 +486,6 @@ defmodule Scenic.Components do
 
   defp modify( %Primitive{module: SceneRef} = p, mod, data, opts ) do
     mod.verify!(data)
-    p
     Primitive.put( p, {mod, data}, opts )
   end
 

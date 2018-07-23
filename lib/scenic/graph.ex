@@ -47,7 +47,7 @@ defmodule Scenic.Graph do
 
   @err_msg_depth          "Graph too deep. Possible circular reference!"
   @err_msg_depth_option   "The :max_depth option must be a positive integer"
-  @err_msg_group          "Can only add primitives to Group nodes"
+  # @err_msg_group          "Can only add primitives to Group nodes"
   @err_msg_put            "Graph.put can only update existing items."
   @err_msg_get_id_one     "Graph.get_id_one expected to find one and only one element"
 
