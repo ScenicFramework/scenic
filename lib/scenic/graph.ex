@@ -33,6 +33,8 @@ defmodule Scenic.Graph do
   # defstruct primitives: %{}, ids: %{}, next_uid: 1, add_to: 0    
   defstruct primitives: %{}, ids: %{}, next_uid: 1, add_to: 0    
 
+  @type key :: {:graph, Scenic.Scene.ref, any}
+
 
   #===========================================================================
   # define a policy error here - not found or something like that

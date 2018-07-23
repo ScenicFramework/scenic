@@ -241,6 +241,10 @@ defmodule Scenic.Scene do
   # @viewport             :viewport
   @not_activated        :__not_activated__
 
+
+  @type ref :: reference | atom
+
+
   #============================================================================
   # client api - working with the scene
 
