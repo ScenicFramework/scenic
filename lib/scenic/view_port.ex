@@ -83,6 +83,9 @@ defmodule Scenic.ViewPort do
 
   @viewports            :scenic_dyn_viewports
 
+  @type input_class :: :codepoint | :key | :cursor_button | :cursor_scroll |
+    :cursor_pos | :viewport_exit
+
   @type input ::
   {:codepoint, {codepoint :: integer, mods :: integer}} |
   {:key, {key :: String.t, :press | :release, mods :: integer}} |
@@ -125,7 +128,7 @@ defmodule Scenic.ViewPort do
   @doc """
   query the last recorded viewport status
   """
-
+  @spec query_status( viewport :: GenServer.server ) :: {:ok, map}
   def query_status( viewport )
   def query_status( viewport ) when is_atom(viewport) or is_pid(viewport) do
     GenServer.call(viewport, :query_status)
@@ -165,6 +168,25 @@ defmodule Scenic.ViewPort do
   end
 
   #--------------------------------------------------------
+  @doc """
+  Request that a `{:set_root, ...}` message is sent to the caller.
+
+  `request_root` is primarily used by drivers and is of little use to anything
+  else.
+
+  When a driver starts up, it will need to get the root scene of the viewport,
+  which may already be up and running. By calling `request_root`, the driver
+  can request that the viewport send it a `{:set_root, ...}` message as if
+  the root scene had just changed.
+
+  ### Params:
+
+  * `viewport` The viewport to request the message from.
+  * `send_to` The driver to send the message to. If `send_to` is nil, the message
+  will be sent to the calling process.
+  """
+
+  @spec request_root(GenServer.server, nil | GenServer.server) :: :ok
   def request_root( viewport, send_to \\ nil )
   def request_root( viewport, nil ) do
     request_root( viewport, self() )
@@ -180,7 +202,7 @@ defmodule Scenic.ViewPort do
     GenServer.cast( viewport, {:input, input_event} )
   end
 
-  @spec input(GenServer.server, input, Scenic.ViewPort.Context.t) :: :ok
+  @spec input(GenServer.server, input, Context.t) :: :ok
   def input( viewport, input_event, context ) do
     GenServer.cast( viewport, {:input, input_event, context} )
   end
@@ -192,12 +214,15 @@ defmodule Scenic.ViewPort do
   This must be called by a Scene process.
   """
 
+  @spec capture_input(context :: Context.t, input_class | list(input_class)) :: :ok
+  def capture_input( context, input_types )
+  def capture_input( context, input_type ) when is_atom(input_type) do
+    capture_input( context, [input_type] )
+  end
   def capture_input( %Context{viewport: pid} = context, input_types )
   when is_list(input_types) do
     GenServer.cast( pid, {:capture_input, context, input_types} )
   end
-  def capture_input( context, input_type ) when not is_list(input_type), do:
-    capture_input( context, [input_type] )
 
 
   #--------------------------------------------------------

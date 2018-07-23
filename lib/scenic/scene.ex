@@ -284,7 +284,7 @@ defmodule Scenic.Scene do
   """
 
   @spec send_event( scene_server :: GenServer.server, event :: ViewPort.event ) :: :ok
-  def send_event( scene_server, event ) do
+  def send_event( scene_server, {evt,_} = event ) when is_atom(evt) do
     GenServer.cast(scene_server, {:event, event, self()})
   end
 
