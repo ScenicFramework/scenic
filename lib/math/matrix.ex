@@ -8,6 +8,7 @@
 # always row major
 
 defmodule Scenic.Math.Matrix do
+  alias Scenic.Math
   alias Scenic.Math.Matrix
   import :erlang, only: [{:nif_error, 1}]
 
@@ -75,7 +76,10 @@ defmodule Scenic.Math.Matrix do
   #============================================================================
   # common constants
 
+  @spec zero() :: Math.matrix
   def zero(),         do: @matrix_zero
+
+  @spec identity() :: Math.matrix
   def identity(),     do: @matrix_identity
 
 
