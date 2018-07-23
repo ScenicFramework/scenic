@@ -69,9 +69,6 @@ defmodule Scenic.Component.Input.Checkbox do
 
   #--------------------------------------------------------
   def init( {text, id, checked?}, i_opts ), do: init( {text, id, checked?, []}, i_opts )
-  def init( {text, id, checked?, opt}, i_opts ) when is_atom(opt) do
-      init( {text, id, checked?, [opt]}, i_opts )
-    end
   def init( {text, id, checked?, opts}, _ ) when is_list(opts) do
 
     # the color scheme
