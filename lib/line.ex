@@ -44,13 +44,17 @@ defmodule Scenic.Math.Line do
   def parallel({{x0, y0}, {x1, y1}} , w ) do
     nif_parallel(x0, y0, x1, y1, w)
   end
-  defp nif_parallel(_,_,_,_,_),             do: raise "Did not find nif_parallel"
+  defp nif_parallel(_,_,_,_,_) do
+    :erlang.nif_error("Did not find nif_parallel")
+  end
 
   #--------------------------------------------------------
   # find the point of intersection between two lines
   def intersection({{x0, y0}, {x1, y1}}, {{x2, y2}, {x3, y3}}) do
     nif_intersection(x0, y0, x1, y1, x2, y2, x3, y3)
   end
-  defp nif_intersection(_,_,_,_,_,_,_,_),   do: raise "Did not find nif_intersection"
+  defp nif_intersection(_,_,_,_,_,_,_,_) do
+    :erlang.nif_error("Did not find nif_intersection")
+  end
 
 end

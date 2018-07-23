@@ -51,8 +51,13 @@ defmodule ScenicMath.Mixfile do
   defp deps do
     [
       { :elixir_make, "~> 0.4" },
-      {:ex_doc, "~> 0.18.3", only: :dev, runtime: false}
       # { :benchwarmer, "~> 0.0.2", only: :dev }
+
+      # Docs dependencies
+      {:ex_doc, ">= 0.0.0", only: [:dev, :docs]},
+      {:inch_ex, ">= 0.0.0", only: :docs},
+
+      {:dialyxir, "~> 0.5", only: :dev, runtime: false}
     ]
   end
 

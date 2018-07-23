@@ -9,6 +9,7 @@
 
 defmodule Scenic.Math.Matrix do
   alias Scenic.Math.Matrix
+  import :erlang, only: [{:nif_error, 1}]
 
 #  import IEx
 
@@ -451,20 +452,20 @@ defmodule Scenic.Math.Matrix do
       << _ :: binary-size(@matrix_size)>> = b, t ) when is_float(t) do
     nif_close( a, b, t )    # in NIF
   end
-  defp nif_close(_,_,_),                do: raise "Did not find nif_close"
+  defp nif_close(_,_,_), do: nif_error("Did not find nif_close")
 
   #--------------------------------------------------------
   def add( a, b ) do
     nif_add( a, b )    # in NIF
   end
-  defp nif_add(_,_),                    do: raise "Did not find nif_add"
+  defp nif_add(_,_),      do: nif_error("Did not find nif_add")
 
 
   #--------------------------------------------------------
   def sub( a, b ) do
     nif_subtract( a, b )    # in NIF
   end
-  defp nif_subtract(_,_),               do: raise "Did not find nif_subtract"
+  defp nif_subtract(_,_), do: nif_error("Did not find nif_subtract")
 
   #--------------------------------------------------------
   # multiply a list of matrices
@@ -486,9 +487,9 @@ defmodule Scenic.Math.Matrix do
   end
 
 
-  defp nif_multiply(_,_),             do: raise "Did not find nif_multiply"
-  defp nif_multiply_scalar(_,_),      do: raise "Did not find nif_multiply_scalar"
-  defp nif_multiply_list(_),          do: raise "Did not find nif_multiply_list"
+  defp nif_multiply(_,_),         do: nif_error("Did not find nif_multiply")
+  defp nif_multiply_scalar(_,_),  do: nif_error("Did not find nif_multiply_scalar")
+  defp nif_multiply_list(_),      do: nif_error("Did not find nif_multiply_list")
 
 
   #--------------------------------------------------------
@@ -497,25 +498,25 @@ defmodule Scenic.Math.Matrix do
   def div( a, s ) when is_float(s) do
     nif_divide_scalar( a, s )    # in NIF
   end
-  defp nif_divide_scalar(_,_),        do: raise "Did not find nif_divide_scalar"
+  defp nif_divide_scalar(_,_),    do: nif_error("Did not find nif_divide_scalar")
 
   #--------------------------------------------------------
   def transpose( a ) do
     nif_transpose( a )    # in NIF
   end
-  defp nif_transpose(_),              do: raise "Did not find nif_transpose"
+  defp nif_transpose(_),          do: nif_error("Did not find nif_transpose")
 
   #--------------------------------------------------------
   def determinant( a ) do
     nif_determinant( a )    # in NIF
   end
-  defp nif_determinant(_),            do: raise "Did not find nif_determinant"
+  defp nif_determinant(_),        do: nif_error("Did not find nif_determinant")
 
   #--------------------------------------------------------
   def adjugate( a ) do
     nif_adjugate( a )    # in NIF
   end
-  defp nif_adjugate(_),               do: raise "Did not find nif_adjugate"
+  defp nif_adjugate(_),           do: nif_error("Did not find nif_adjugate")
 
   #--------------------------------------------------------
   def invert( a ) do
@@ -536,19 +537,19 @@ defmodule Scenic.Math.Matrix do
   def project_vector( a, {x, y, z} ) do
     nif_project_vector3( a, x, y, z )    # in NIF
   end
-  defp nif_project_vector2(_,_,_),    do: raise "Did not find nif_project_vector2"
-  defp nif_project_vector3(_,_,_,_),  do: raise "Did not find nif_project_vector3"
+  defp nif_project_vector2(_,_,_),    do: nif_error("Did not find nif_project_vector2")
+  defp nif_project_vector3(_,_,_,_),  do: nif_error("Did not find nif_project_vector3")
 
   #--------------------------------------------------------
   def project_vector2s( a, vector_bin ) do
     nif_project_vector2s( a, vector_bin )    # in NIF
   end
-  defp nif_project_vector2s(_,_),  do:    raise "Did not find nif_project_vector2s"
+  defp nif_project_vector2s(_,_),     do: nif_error("Did not find nif_project_vector2s")
 
   #--------------------------------------------------------
   def project_vector3s( a, vector_bin ) do
     nif_project_vector3s( a, vector_bin )    # in NIF
   end
-  defp nif_project_vector3s(_,_),  do:    raise "Did not find nif_project_vector3s"
+  defp nif_project_vector3s(_,_),     do: nif_error("Did not find nif_project_vector3s")
 
 end
