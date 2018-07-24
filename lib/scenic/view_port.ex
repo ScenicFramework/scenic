@@ -254,7 +254,7 @@ defmodule Scenic.ViewPort do
 
   #============================================================================
   # internal server api
-
+  @doc false
   def child_spec( args ) do
     %{
       id: make_ref(),
