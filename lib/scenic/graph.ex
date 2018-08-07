@@ -29,6 +29,7 @@ defmodule Scenic.Graph do
 
   @default_max_depth      128
 
+  @root_id                :_root_
 
   # defstruct primitives: %{}, ids: %{}, next_uid: 1, add_to: 0    
   defstruct primitives: %{}, ids: %{}, next_uid: 1, add_to: 0    
@@ -66,7 +67,9 @@ defmodule Scenic.Graph do
     root = Group.build( [], opts )
 
     graph = %Graph{
-      primitives:  %{ @root_uid => root }
+      primitives:  %{ @root_uid => root },
+      #pre-map the root
+      ids: %{@root_id => [0]}
     }
 
     graph = case opts[:id] do
