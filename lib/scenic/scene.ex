@@ -466,7 +466,7 @@ defmodule Scenic.Scene do
     end
 
     # some setup needs to happen after init - must be before the scene_module init
-    GenServer.cast(self(), :after_init)
+    GenServer.cast(self(), {:after_init, scene_module, args, opts})
 
     # if this scene is named... Meaning it is supervised by the app and is not a
     # dyanimic scene, then we need monitor the ViewPort. If the viewport goes
@@ -475,17 +475,17 @@ defmodule Scenic.Scene do
     # true since the viewport may recover to a different default scene than this.
     if opts[:name], do: Process.monitor( Scenic.ViewPort.Tables )
 
-    # initialize the scene itself
-    init_opts = case opts[:viewport] do
-      nil -> []
-      _vp ->
-        # remove reserved keywords from opts
-        opts
-        |> Keyword.delete( :vp_dynamic_root )
-        |> Keyword.delete( :scene_ref )
-        |> Keyword.delete( :name )
-    end
-    {:ok, sc_state} = scene_module.init( args, init_opts )
+    # # initialize the scene itself
+    # init_opts = case opts[:viewport] do
+    #   nil -> []
+    #   _vp ->
+    #     # remove reserved keywords from opts
+    #     opts
+    #     |> Keyword.delete( :vp_dynamic_root )
+    #     |> Keyword.delete( :scene_ref )
+    #     |> Keyword.delete( :name )
+    # end
+    # {:ok, sc_state} = scene_module.init( args, init_opts )
     # send(self(), {:delayed_init, args, init_opts})
 
     # build up the state
@@ -500,7 +500,7 @@ defmodule Scenic.Scene do
       scene_module: scene_module,
 
       viewport: opts[:viewport],
-      scene_state: sc_state,
+      # scene_state: sc_state,
       # scene_state: nil,
       scene_ref: scene_ref,
       supervisor_pid: nil,
@@ -647,7 +647,7 @@ defmodule Scenic.Scene do
   end
 
   #--------------------------------------------------------
-  def handle_cast( :after_init, %{
+  def handle_cast( {:after_init, scene_module, args, opts}, %{
     scene_ref: scene_ref
   } = state ) do
     # get the scene supervisors
@@ -685,10 +685,24 @@ defmodule Scenic.Scene do
       {self(), dynamic_children_pid, supervisor_pid}
     )
 
+    # initialize the scene itself
+    init_opts = case opts[:viewport] do
+      nil -> []
+      _vp ->
+        # remove reserved keywords from opts
+        opts
+        |> Keyword.delete( :vp_dynamic_root )
+        |> Keyword.delete( :scene_ref )
+        |> Keyword.delete( :name )
+    end
+    {:ok, sc_state} = scene_module.init( args, init_opts )
+
+
     state = state
 #    |> Map.put( :scene_state, sc_state)
     |> Map.put( :supervisor_pid, supervisor_pid)
     |> Map.put( :dynamic_children_pid, dynamic_children_pid)
+    |> Map.put( :scene_state, sc_state)
 
     { :noreply, state }
   end
