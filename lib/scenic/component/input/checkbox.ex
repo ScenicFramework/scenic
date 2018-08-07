@@ -10,9 +10,9 @@ defmodule Scenic.Component.Input.Checkbox do
  # import IEx
 
 
-  # type is {text_color, box_background, border_color, pressed_color, checkmark_color}
+  # theme is {text_color, box_background, border_color, pressed_color, checkmark_color}
   # nil for text_color means to use whatever is inherited
-  @colors %{
+  @themes %{
     light:    {:black, :white, :grey, {215, 215, 215}, :cornflower_blue},
     dark:     {:white, :black, :grey, {40,40,40}, :cornflower_blue},
   }
@@ -27,14 +27,14 @@ defmodule Scenic.Component.Input.Checkbox do
     IO.ANSI.yellow() <>
     "Position the checkbox by adding a transform\r\n" <>
     "The id will be sent to you in a :value_changed event when the checkbox is used.\r\n" <>
-    "The only option for now is {:type, type}\r\n" <>
+    "The only option for now is {:theme, theme}\r\n" <>
     "The type can be one of the following presets: :dark or :light.\r\n" <>
     "Or a custom color set of: \r\n" <>
     "{text_color, box_background, border_color, pressed_color, checkmark_color}\r\n" <>
     "The default is :dark.\r\n"<>
     "Examples:\r\n"<>
     "checkbox({\"Something\", :id, true}, translate: {90,0})" <>
-    "checkbox({\"Something\", :id, true, type: :light}, translate: {90,0})" <>
+    "checkbox({\"Something\", :id, true, theme: :light}, translate: {90,0})" <>
     "\r\n" <>
     IO.ANSI.default_color()
   end
@@ -53,9 +53,9 @@ defmodule Scenic.Component.Input.Checkbox do
   def verify( _ ), do: :invalid_data
 
   #--------------------------------------------------------
-  defp verify_option( {:type, :light} ), do: true
-  defp verify_option( {:type, :dark} ), do: true
-  defp verify_option( {:type, {text_color, box_background, border_color,
+  defp verify_option( {:theme, :light} ), do: true
+  defp verify_option( {:theme, :dark} ), do: true
+  defp verify_option( {:theme, {text_color, box_background, border_color,
   pressed_color, checkmark_color}} ) do
     Color.verify( text_color ) &&
     Color.verify( box_background ) &&
@@ -72,11 +72,11 @@ defmodule Scenic.Component.Input.Checkbox do
   def init( {text, id, checked?, opts}, _ ) when is_list(opts) do
 
     # the color scheme
-    colors = case opts[:type] do
-      {_,_,_,_,_} = colors -> colors
-      type -> Map.get(@colors, type) || Map.get(@colors, :dark)
+    theme = case opts[:theme] do
+      {_,_,_,_,_} = theme -> theme
+      type -> Map.get(@themes, type) || Map.get(@themes, :dark)
     end
-    {text_color, box_background, border_color, _, checkmark_color} = colors
+    {text_color, box_background, border_color, _, checkmark_color} = theme
 
 
     graph = Graph.build( font: @default_font, font_size: @default_font_size )
@@ -103,7 +103,7 @@ defmodule Scenic.Component.Input.Checkbox do
 
     state = %{
       graph: graph,
-      colors: colors,
+      colors: theme,
       pressed: false,
       contained: false,
       checked: checked?,

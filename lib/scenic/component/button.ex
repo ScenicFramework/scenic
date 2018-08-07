@@ -8,7 +8,7 @@ defmodule Scenic.Component.Button do
   import Scenic.Primitives, only: [{:rrect, 3}, {:text, 3}]
 
   # type is {text_color, button_color, pressed_color}
-  @colors %{
+  @themes %{
     primary:    {:white, {72,122,252}, {58,94,201}},
     secondary:  {:white, {111,117,125}, {86,90,95}},
     success:    {:white, {99,163,74}, {74,123,56}},
@@ -36,7 +36,7 @@ defmodule Scenic.Component.Button do
     "The id will be sent to you in a click event when the button is used.\r\n" <>
     "Options can be {:width, width} {:height, height}, {:radius, raidus},\r\n" <>
     "{:type, type}, and {:align, alignment}\r\n" <>
-    "The type can be one of the following presets:\r\n" <>
+    "The theme can be one of the following presets:\r\n" <>
     ":primary, :secondary, :success, :danger, :warning, :info, :light, :dark, :text\r\n" <>
     "Or a custom color set of {text_color, button_color, pressed_color}\r\n" <>
     "Example: button({\"Something\", :id, width: 28, type: :danger}, translate: {90,0})" <>
@@ -69,15 +69,15 @@ defmodule Scenic.Component.Button do
   defp verify_option( {:r, radius} ), do: verify_option( {:radius, radius} )
   defp verify_option( {:radius, radius} ) when is_number(radius), do: true
 
-  defp verify_option( {:type, :primary} ), do: true
-  defp verify_option( {:type, :secondary} ), do: true
-  defp verify_option( {:type, :danger} ), do: true
-  defp verify_option( {:type, :warning} ), do: true
-  defp verify_option( {:type, :info} ), do: true
-  defp verify_option( {:type, :light} ), do: true
-  defp verify_option( {:type, :dark} ), do: true
-  defp verify_option( {:type, :text} ), do: true
-  defp verify_option( {:type, {text_color, button_color, pressed_color}} ) do
+  defp verify_option( {:theme, :primary} ), do: true
+  defp verify_option( {:theme, :secondary} ), do: true
+  defp verify_option( {:theme, :danger} ), do: true
+  defp verify_option( {:theme, :warning} ), do: true
+  defp verify_option( {:theme, :info} ), do: true
+  defp verify_option( {:theme, :light} ), do: true
+  defp verify_option( {:theme, :dark} ), do: true
+  defp verify_option( {:theme, :text} ), do: true
+  defp verify_option( {:theme, {text_color, button_color, pressed_color}} ) do
     Color.verify( text_color ) &&
     Color.verify( button_color ) &&
     Color.verify( pressed_color )
@@ -96,13 +96,13 @@ defmodule Scenic.Component.Button do
   def init( {text, id, opts}, _args ) when is_list(opts) do
 
     # the button-specific color scheme
-    colors = case opts[:type] do
-      {_,_,_} = colors -> colors
-      type -> Map.get(@colors, type) || Map.get(@colors, :primary)
+    theme = case opts[:theme] do
+      {_,_,_} = theme -> theme
+      type -> Map.get(@themes, type) || Map.get(@themes, :primary)
     end
 
     # get the colors
-    {text_color, button_color, _} = colors
+    {text_color, button_color, _} = theme
 
     # get button specific options
     width = opts[:width] || opts[:w] || @default_width
@@ -134,7 +134,7 @@ defmodule Scenic.Component.Button do
 
     state = %{
       graph: graph,
-      colors: colors,
+      colors: theme,
       pressed: false,
       contained: false,
       align: alignment,

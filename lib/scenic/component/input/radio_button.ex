@@ -18,11 +18,7 @@ defmodule Scenic.Component.Input.RadioButton do
 #  @blue_color         :steel_blue
 #  @text_color         :white
 
-  @valid_colors [:light, :dark]
-
-  # type is {text_color, box_background, border_color, pressed_color, checkmark_color}
-  # nil for text_color means to use whatever is inherited
-  @colors %{
+  @themes %{
     light:    {:black, :white, :grey, {215, 215, 215}, :cornflower_blue},
     dark:     {:white, :black, :grey, {40,40,40}, {0x00,0x71,0xBC}},
   }
@@ -53,9 +49,9 @@ defmodule Scenic.Component.Input.RadioButton do
 
 
   #--------------------------------------------------------
-  defp verify_option( {:type, :light} ), do: true
-  defp verify_option( {:type, :dark} ), do: true
-  defp verify_option( {:type, {text_color, box_background, border_color,
+  defp verify_option( {:theme, :light} ), do: true
+  defp verify_option( {:theme, :dark} ), do: true
+  defp verify_option( {:theme, {text_color, box_background, border_color,
   pressed_color, checkmark_color}} ) do
     Color.verify( text_color ) &&
     Color.verify( box_background ) &&
@@ -91,11 +87,12 @@ defmodule Scenic.Component.Input.RadioButton do
     # normalize the incoming data
     {text, id, checked?, opts} = normalize( data )
 
-    # get the color
-    color_opt = Enum.find(opts, &Enum.member?(@valid_colors, &1) ) || :dark
-
-    colors = @colors[color_opt]
-    {text_color, box_background, border_color, _, checkmark_color} = colors
+    # get the theme
+    theme = case opts[:theme] do
+      {_,_,_,_,_} = theme -> theme
+      type -> Map.get(@themes, type) || Map.get(@themes, :dark)
+    end
+    {text_color, box_background, border_color, _, checkmark_color} = theme
 
     graph = Graph.build( font: :roboto, font_size: 16 )
     |> Primitive.Group.add_to_graph(fn(graph) ->
@@ -108,7 +105,7 @@ defmodule Scenic.Component.Input.RadioButton do
 
     state = %{
       graph: graph,
-      colors: colors,
+      colors: theme,
       pressed: false,
       contained: false,
       checked: checked?,

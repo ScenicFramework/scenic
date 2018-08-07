@@ -22,8 +22,8 @@ defmodule Scenic.Component.Input.Dropdown do
   @drop_click_window_ms   400
 
 
-  # type is {text_color, background_color, pressed_color, border_color, carat_color, hover_color}
-  @colors %{
+  # theme is {text_color, background_color, pressed_color, border_color, carat_color, hover_color}
+  @themes %{
     light:    {:black, :white, {215, 215, 215}, :grey, :black, :cornflower_blue},
     dark:     {:white, :black, {40,40,40}, :grey, :white, :cornflower_blue},
   }
@@ -62,9 +62,9 @@ defmodule Scenic.Component.Input.Dropdown do
   defp verify_item( _ ), do: false
 
   #--------------------------------------------------------
-  defp verify_option( {:type, :light} ), do: true
-  defp verify_option( {:type, :dark} ), do: true
-  defp verify_option( {:type,
+  defp verify_option( {:theme, :light} ), do: true
+  defp verify_option( {:theme, :dark} ), do: true
+  defp verify_option( {:theme,
   {text_color, background_color, pressed_color, border_color, carat_color, hover_color}} ) do
     Color.verify( text_color ) &&
     Color.verify( background_color ) &&
@@ -79,11 +79,11 @@ defmodule Scenic.Component.Input.Dropdown do
   #--------------------------------------------------------
   def init( {items, initial_id, id}, args ), do: init( {items, initial_id, id, []}, args )
   def init( {items, initial_id, id, opts}, _args ) do
-    colors = case opts[:type] do
-      {_,_,_,_,_,_} = colors -> colors
-      type -> Map.get(@colors, type) || Map.get(@colors, :dark)
+    theme = case opts[:theme] do
+      {_,_,_,_,_,_} = theme -> theme
+      type -> Map.get(@themes, type) || Map.get(@themes, :dark)
     end
-    {text_color, background_color, pressed_color, border_color, carat_color,_} = colors
+    {text_color, background_color, pressed_color, border_color, carat_color,_} = theme
 
     width = opts[:width] || opts[:w] || @default_width
     height = opts[:height] || opts[:h] || @default_height
@@ -132,7 +132,7 @@ defmodule Scenic.Component.Input.Dropdown do
     state = %{
       graph: graph,
       selected_id: initial_id,
-      colors: colors,
+      colors: theme,
       id: id,
       down: false,
       hover_id: nil,

@@ -16,21 +16,22 @@ defmodule Scenic.Component.Input.Slider do
 
   @default_width      300
 
-  # type is {line_color, thumb_color}
-  @colors %{
+  # theme is {line_color, thumb_color}
+  @themes %{
     light:    {:cornflower_blue, :black},
     dark:     {:cornflower_blue, :antique_white},
   }
 
-#  #--------------------------------------------------------
+  #============================================================================
+  # setup
+
+  #--------------------------------------------------------
   def info() do
     "#{IO.ANSI.red()}Slider data must be: {extents, initial, id, opts \\\\ []}" <>
     IO.ANSI.yellow() <>
     "\r\n" <>
     IO.ANSI.default_color()
   end
-
-
 
   #--------------------------------------------------------
   def verify( {ext, initial, id} ), do: verify( {ext, initial, id, []} )
@@ -69,14 +70,13 @@ defmodule Scenic.Component.Input.Slider do
   #--------------------------------------------------------
   def init( {extents, value, id}, args ), do: init( {extents, value, id, []}, args )
   def init( {extents, value, id, opts}, _args ) do
-    colors = case opts[:type] do
-      {_,_} = colors -> colors
-      type -> Map.get(@colors, type) || Map.get(@colors, :dark)
+    theme = case opts[:theme] do
+      {_,_} = theme -> theme
+      type -> Map.get(@themes, type) || Map.get(@themes, :dark)
     end
-    {line_color, thumb_color} = colors
+    {line_color, thumb_color} = theme
 
     width = opts[:width] || opts[:w] || @default_width
-
 
     graph = Graph.build()
       |> rect( {width, @height}, fill: :clear )
@@ -97,6 +97,8 @@ defmodule Scenic.Component.Input.Slider do
 
     {:ok, state}
   end
+
+  #============================================================================
 
   #--------------------------------------------------------
   def handle_input( {:cursor_button, {:left, :press, _, {x,_}}}, context, state ) do
