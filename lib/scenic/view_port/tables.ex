@@ -124,14 +124,14 @@ defmodule Scenic.ViewPort.Tables do
   #--------------------------------------------------------
   # return a list of all the graph keys
   def list_graphs() do
-    :ets.match(@ets_graphs_table, {:"$1", :"_", :"_", :"_"})
+    :ets.match(@ets_graphs_table, {:"$1", :_, :_, :_})
     |> List.flatten()
   end
 
   #--------------------------------------------------------
   # return a list of all the graph keys that have been pushed by a scene
   def list_graphs_for_scene( scene ) when is_atom(scene) or is_reference(scene) do
-    :ets.match(@ets_graphs_table, {{:graph, scene, :"$1"}, :"_", :"_", :"_"})
+    :ets.match(@ets_graphs_table, {{:graph, scene, :"$1"}, :_, :_, :_})
     |> List.flatten()
     |> Enum.map( fn(sub_id) -> {:graph, scene, sub_id} end)
   end
@@ -198,7 +198,7 @@ defmodule Scenic.ViewPort.Tables do
         # tell the subscribers the key is going away
         GenServer.cast(sub, {:delete_graph, graph_key} )
         # unsubscribe any listeners
-        :ets.match_delete(@ets_subs_table, {graph_key, :"_"})
+        :ets.match_delete(@ets_subs_table, {graph_key, :_})
       end)
 
       # delete the entry
@@ -241,7 +241,7 @@ defmodule Scenic.ViewPort.Tables do
 
   #--------------------------------------------------------
   def handle_cast( {:graph_unsubscribe, :all, pid}, state ) do
-    :ets.match_delete(@ets_subs_table, {:"_", pid})
+    :ets.match_delete(@ets_subs_table, {:_, pid})
     demonitor_subscriber(pid, :all, state)
     {:noreply, state}
   end
@@ -267,7 +267,7 @@ defmodule Scenic.ViewPort.Tables do
 
   #--------------------------------------------------------
   defp pid_to_scene( pid ) do
-    case :ets.match(@ets_scenes_table, {:"$1", {pid,:"_",:"_"}}) do
+    case :ets.match(@ets_scenes_table, {:"$1", {pid,:_,:_}}) do
       [[scene_ref]] -> {:ok, scene_ref}
       _ -> {:error, :not_found}
     end
@@ -277,7 +277,7 @@ defmodule Scenic.ViewPort.Tables do
   #--------------------------------------------------------
   # return a list of all the graph keys that have been pushed by a scene
   defp list_graphs_for_scene_pid( pid ) do
-    :ets.match(@ets_graphs_table, {:"$1", pid, :"_", :"_"})
+    :ets.match(@ets_graphs_table, {:"$1", pid, :_, :_})
     |> List.flatten()
   end
 
