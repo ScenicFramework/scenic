@@ -80,7 +80,8 @@ defmodule Scenic.ViewPort.Tables do
   end
 
   #--------------------------------------------------------
-  def get_graph( {:graph,scene,_} = graph_key ) when is_atom(scene) or is_reference(scene) do
+  def get_graph( {:graph,scene,_} = graph_key )
+  when is_atom(scene) or is_reference(scene) do
     case :ets.lookup(@ets_graphs_table, graph_key) do
       [] -> nil
       [{_, _, graph, _}] -> {:ok, graph}
@@ -89,7 +90,8 @@ defmodule Scenic.ViewPort.Tables do
   def get_graph( _ ), do: {:error, :invalid_graph_key}
 
   #--------------------------------------------------------
-  def delete_graph( {:graph,scene,_} = graph_key ) when is_atom(scene) or is_reference(scene) do
+  def delete_graph( {:graph,scene,_} = graph_key )
+  when is_atom(scene) or is_reference(scene) do
     :ets.delete(@ets_graphs_table, graph_key)
     list_subscribers(graph_key)
     |> Enum.each( fn(subscriber) ->
@@ -103,7 +105,8 @@ defmodule Scenic.ViewPort.Tables do
 
 
   #--------------------------------------------------------
-  def get_refs( {:graph,scene,_} = graph_key ) when is_atom(scene) or is_reference(scene) do
+  def get_refs( {:graph,scene,_} = graph_key )
+  when is_atom(scene) or is_reference(scene) do
     case :ets.lookup(@ets_graphs_table, graph_key) do
       [] -> nil
       [{_, _, _, refs}] -> {:ok, refs}
@@ -112,7 +115,8 @@ defmodule Scenic.ViewPort.Tables do
   def get_refs( _ ), do: {:error, :invalid_graph_key}
 
   #--------------------------------------------------------
-  def get_graph_refs( {:graph,scene,_} = graph_key ) when is_atom(scene) or is_reference(scene) do
+  def get_graph_refs( {:graph,scene,_} = graph_key )
+  when is_atom(scene) or is_reference(scene) do
     case :ets.lookup(@ets_graphs_table, graph_key) do
       [] -> nil
       [{_, _, graph, refs}] -> {:ok, graph, refs}
@@ -171,7 +175,9 @@ defmodule Scenic.ViewPort.Tables do
 
     # set up the initial state
     state = %{
-      graph_table_id: :ets.new(@ets_graphs_table, [:named_table, :public, {:read_concurrency, true}]),
+      graph_table_id: :ets.new(@ets_graphs_table,
+        [:named_table, :public, {:read_concurrency, true}]
+      ),
       scene_table_id: :ets.new(@ets_scenes_table, [:named_table]),
       subs_table_id: :ets.new(@ets_subs_table, [:named_table, :bag]),
       sub_monitors: %{}

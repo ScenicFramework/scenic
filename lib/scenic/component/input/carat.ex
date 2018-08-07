@@ -43,7 +43,6 @@ defmodule Scenic.Component.Input.Carat do
 
   #--------------------------------------------------------
   def init( {height, color}, _args ) do
-IO.puts "------ init carat"
     # build the graph, initially not showing
     graph = Graph.build()
     |> line(
