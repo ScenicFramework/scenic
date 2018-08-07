@@ -32,9 +32,6 @@ defmodule Scenic.Component.Input.TextField do
   @default_width          @char_width * 24
   @default_height         @default_font_size * 1.5
 
-  @hint_color             :grey
-  @text_color             :white
-
   @input_capture          [:cursor_button, :cursor_pos, :codepoint, :key]
 
   @password_char          '*'
@@ -433,7 +430,6 @@ defmodule Scenic.Component.Input.TextField do
     graph: graph,
     value: value,
     index: index,
-    hint: hint,
     type: type,
     id: id
   } = state ) do
@@ -473,7 +469,6 @@ defmodule Scenic.Component.Input.TextField do
     graph: graph,
     value: value,
     index: index,
-    hint: hint,
     type: type,
     id: id
   } = state ) do
@@ -537,7 +532,6 @@ defmodule Scenic.Component.Input.TextField do
     graph: graph,
     value: value,
     index: index,
-    hint: hint,
     type: type,
     id: id
   } = state) do
