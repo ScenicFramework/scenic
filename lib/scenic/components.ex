@@ -20,7 +20,7 @@ defmodule Scenic.Components do
 
 
   In general, each helper function is of the form
-      def name_of_component( graph, data, opts \\\\ [] )
+      def name_of_component( graph, data, options \\\\ [] )
 
   Unlike primitives, components are scenes in themselves. Each component
   is is run by a GenServer and adding a basic component does two things.
@@ -167,7 +167,7 @@ defmodule Scenic.Components do
 
   Buttons honor the following list of options.
 
-  * `:type` - This sets the color scheme of the button. This can be one of
+  * `:theme` - This sets the color scheme of the button. This can be one of
   pre-defined button schemes `:primary`, `:secondary`, `:success`, `:danger`,
   `:warning`, `:info`, `:light`, `:dark`, `:text` or it can be a completly custom
   scheme like this:
@@ -203,14 +203,14 @@ defmodule Scenic.Components do
 
 
   """
-  def button( graph, data, opts \\ [] )
+  def button( graph, data, options \\ [] )
 
-  def button( %Graph{} = g, data, opts ) do
-    add_to_graph( g, Component.Button, data, opts )
+  def button( %Graph{} = g, data, options ) do
+    add_to_graph( g, Component.Button, data, options )
   end
 
-  def button( %Primitive{module: SceneRef} = p, data, opts ) do
-    modify( p, Component.Button, data, opts )
+  def button( %Primitive{module: SceneRef} = p, data, options ) do
+    modify( p, Component.Button, data, options )
   end
 
   #--------------------------------------------------------
@@ -238,7 +238,7 @@ defmodule Scenic.Components do
 
   Checkboxes honor the following list of options.
 
-  * `:type` - This sets the color scheme of the button. This can be one of
+  * `:theme` - This sets the color scheme of the button. This can be one of
   pre-defined button schemes `:light`, `:dark`, or it can be a completly custom
   scheme like this:
 
@@ -259,14 +259,14 @@ defmodule Scenic.Components do
       |> checkbox( {"Example", :checkbox_id, true}, translate: {20, 20} )
 
   """
-  def checkbox( graph, data, opts \\ [] )
+  def checkbox( graph, data, options \\ [] )
 
-  def checkbox( %Graph{} = g, data, opts ) do
-    add_to_graph( g, Component.Input.Checkbox, data, opts )
+  def checkbox( %Graph{} = g, data, options ) do
+    add_to_graph( g, Component.Input.Checkbox, data, options )
   end
 
-  def checkbox( %Primitive{module: SceneRef} = p, data, opts ) do
-    modify( p, Component.Input.Checkbox, data, opts )
+  def checkbox( %Primitive{module: SceneRef} = p, data, options ) do
+    modify( p, Component.Input.Checkbox, data, options )
   end
 
   #--------------------------------------------------------
@@ -303,7 +303,7 @@ defmodule Scenic.Components do
 
   Dropdowns honor the following list of options.
 
-  * `:type` - This sets the color scheme of the button. This can be one of
+  * `:theme` - This sets the color scheme of the button. This can be one of
   pre-defined button schemes `:light`, `:dark`, or it can be a completly custom
   scheme like this:
 
@@ -328,14 +328,14 @@ defmodule Scenic.Components do
       ], :controls, :dropdown_id }, translate: {20, 20} )
 
   """
-  def dropdown( graph, data, opts \\ [] )
+  def dropdown( graph, data, options \\ [] )
 
-  def dropdown( %Graph{} = g, data, opts ) do
-    add_to_graph( g, Component.Input.Dropdown, data, opts )
+  def dropdown( %Graph{} = g, data, options ) do
+    add_to_graph( g, Component.Input.Dropdown, data, options )
   end
 
-  def dropdown( %Primitive{module: SceneRef} = p, data, opts ) do
-    modify( p, Component.Input.Dropdown, data, opts )
+  def dropdown( %Primitive{module: SceneRef} = p, data, options ) do
+    modify( p, Component.Input.Dropdown, data, options )
   end
 
   #--------------------------------------------------------
@@ -374,7 +374,7 @@ defmodule Scenic.Components do
 
   Buttons honor the following list of options.
 
-  * `:type` - This sets the color scheme of the button. This can be one of
+  * `:theme` - This sets the color scheme of the button. This can be one of
   pre-defined button schemes `:light`, `:dark`, or it can be a completly custom
   scheme like this: `{text_color, box_background, border_color, pressed_color, checkmark_color}`.
 
@@ -398,14 +398,14 @@ defmodule Scenic.Components do
         translate: {20, 20} )
 
   """
-  def radio_group( graph, data, opts \\ [] )
+  def radio_group( graph, data, options \\ [] )
 
-  def radio_group( %Graph{} = g, data, opts ) do
-    add_to_graph( g, Component.Input.RadioGroup, data, opts )
+  def radio_group( %Graph{} = g, data, options ) do
+    add_to_graph( g, Component.Input.RadioGroup, data, options )
   end
 
-  def radio_group( %Primitive{module: SceneRef} = p, data, opts ) do
-    modify( p, Component.Input.RadioGroup, data, opts )
+  def radio_group( %Primitive{module: SceneRef} = p, data, options ) do
+    modify( p, Component.Input.RadioGroup, data, options )
   end
 
   #--------------------------------------------------------
@@ -414,7 +414,7 @@ defmodule Scenic.Components do
 
   Data:
 
-      { extents, initial_value, id, opts \\\\ [] }
+      { extents, initial_value, id, options \\\\ [] }
 
   * `extents` gives the range of values. It can take several forms...
     * `{min,max}` If min and max are integers, then the slider value will be an integer.
@@ -437,7 +437,7 @@ defmodule Scenic.Components do
 
   Sliders honor the following list of options.
 
-  * `:type` - This sets the color scheme of the button. This can be one of
+  * `:theme` - This sets the color scheme of the button. This can be one of
   pre-defined button schemes `:light`, `:dark`, or it can be a completly custom
   scheme like this: `{line_color, thumb_color}`.
 
@@ -458,7 +458,7 @@ defmodule Scenic.Components do
   The following example creates a list slider and positions it on the screen.
 
       graph
-      |> Component.Input.Slider.add_to_graph( {[
+      |> slider( {[
           :white,
           :cornflower_blue,
           :green,
@@ -466,27 +466,98 @@ defmodule Scenic.Components do
         ], :cornflower_blue, :slider_id}, translate: {20,20} )
 
   """
-  def slider( graph, data, opts \\ [] )
+  def slider( graph, data, options \\ [] )
 
-  def slider( %Graph{} = g, data, opts ) do
-    add_to_graph( g, Component.Input.Slider, data, opts )
+  def slider( %Graph{} = g, data, options ) do
+    add_to_graph( g, Component.Input.Slider, data, options )
   end
 
-  def slider( %Primitive{module: SceneRef} = p, data, opts ) do
-    modify( p, Component.Input.Slider, data, opts )
+  def slider( %Primitive{module: SceneRef} = p, data, options ) do
+    modify( p, Component.Input.Slider, data, options )
   end
+  #--------------------------------------------------------
+  @doc """
+  Add a text field input to a graph
+
+  Data: {initial_value, id, options \\\\ []}
+
+  * `initial_value` is the string that will be the starting value
+  * `id` can be any term you want. It will be passed back to you during event messages.
+  * `options` should be a list of options (see below). It is not required
+
+
+  ### Options
+
+  Text fields honor the following list of options.
+  
+  * `:filter` - Adding a filter option restricts which characters can be entered
+    into the text_field component. The value of filter can be one of:
+    * `:all` - Accept all characters. This is the default
+    * `:number` - Any characters from "0123456789.,"
+    * `"filter_string"` - Pass in a string containing all the characters you will accept
+    * `function/1` - Pass in an anonymous function. The single parameter will be
+      the character to be filtered. Return true or false to keep or reject it.
+  * `:hint` - A string that will be shown (greyed out) when the entered value
+    of the componenet is empty.
+  * `:type` - Can be one of the following options:
+    * `:all` - Show all characters. This is the default.
+    * `:password` - Display a string of '*' characters instead of the value.
+  * `:theme` - Choose the color scheme of the component. Can be one of:
+    * `:light` - Dark text on a light background
+    * `:dark` - Light text on a dark background. This is the default.
+    * `custom` - A custom set of colors in the form of:
+      `{text_color, background_color, border_color, focused_color}`
+  * `:width` - set the width of the control.
+
+
+  ### Messages
+
+  When the text in the field changes, it sends an event message to the host
+  scene in the form of:
+
+      {:value_changed, id, value}
+
+
+  ### Styles
+
+  Text fields honor the following styles
+  
+  * `:hidden` - If true the button is rendered. If false, it is skipped. The default
+    is true.
+
+  ### Examples
+
+      graph
+      |> text_field( {"Sample Text", :text_id}, translate: {20,20} )
+
+      graph
+      |> text_field(
+        {"", :pass_id, [type: :password, hint: "Enter password"]},
+        translate: {20,20}
+      )
+  """
+  def text_field( graph, data, options \\ [] )
+
+  def text_field( %Graph{} = g, data, options ) do
+    add_to_graph( g, Component.Input.TextField, data, options )
+  end
+
+  def text_field( %Primitive{module: SceneRef} = p, data, options ) do
+    modify( p, Component.Input.TextField, data, options )
+  end
+
 
   #============================================================================
   # generic workhorse versions
 
-  defp add_to_graph( %Graph{} = g, mod, data, opts ) do
+  defp add_to_graph( %Graph{} = g, mod, data, options ) do
     mod.verify!(data)
-    mod.add_to_graph(g, data, opts)
+    mod.add_to_graph(g, data, options)
   end
 
-  defp modify( %Primitive{module: SceneRef} = p, mod, data, opts ) do
+  defp modify( %Primitive{module: SceneRef} = p, mod, data, options ) do
     mod.verify!(data)
-    Primitive.put( p, {mod, data}, opts )
+    Primitive.put( p, {mod, data}, options )
   end
 
 
