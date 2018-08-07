@@ -506,7 +506,7 @@ defmodule Scenic.Components do
     * `:light` - Dark text on a light background
     * `:dark` - Light text on a dark background. This is the default.
     * `custom` - A custom set of colors in the form of:
-      `{text_color, background_color, border_color, focused_color}`
+      `{text_color, hint_color, background_color, border_color, focused_color}`
   * `:width` - set the width of the control.
 
 

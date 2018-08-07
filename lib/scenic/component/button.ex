@@ -95,13 +95,11 @@ defmodule Scenic.Component.Button do
   def init( {text, id}, args ), do: init( {text, id, []}, args )
   def init( {text, id, opts}, _args ) when is_list(opts) do
 
-    # the button-specific color scheme
+    # get the colors
     theme = case opts[:theme] do
       {_,_,_} = theme -> theme
       type -> Map.get(@themes, type) || Map.get(@themes, :primary)
     end
-
-    # get the colors
     {text_color, button_color, _} = theme
 
     # get button specific options

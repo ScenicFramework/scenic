@@ -14,8 +14,8 @@ defmodule Scenic.Component.Input.TextField do
   alias Scenic.Primitive.Style.Paint.Color
 
   import Scenic.Primitives, only: [
-    {:rect, 2}, {:rect, 3}, {:text, 3},
-    {:line, 3}, {:update_opts,2}, {:group, 3}
+    {:rect, 3}, {:text, 3},
+    {:update_opts,2}, {:group, 3}
   ]
 
   # import IEx
@@ -39,10 +39,10 @@ defmodule Scenic.Component.Input.TextField do
 
   @password_char          '*'
 
-  # theme is {text_color, background_color, border_color, focused_color}
+  # theme is {text_color, hint_color, background_color, border_color, focused_color}
   @themes %{
-    light:      {:black, :white, :black, :blue},
-    dark:       {:white, :black, :white, :blue}
+    light:      {:black, :grey, :white, :black, :blue},
+    dark:       {:white, :grey, :black, :white, :cornflower_blue}
   }
 
 
@@ -72,8 +72,9 @@ defmodule Scenic.Component.Input.TextField do
   defp verify_option( {:theme, :light} ), do: true
   defp verify_option( {:theme, :dark} ), do: true
   defp verify_option( {:theme,
-  {text_color, background_color, border_color, focused_color}} ) do
+  {text_color, hint_color, background_color, border_color, focused_color}} ) do
     Color.verify( text_color ) &&
+    Color.verify( hint_color ) &&
     Color.verify( background_color ) &&
     Color.verify( border_color ) &&
     Color.verify( focused_color )
@@ -92,6 +93,13 @@ defmodule Scenic.Component.Input.TextField do
   def init( {value, id}, args ), do: init( {value, id, []}, args )
   def init( {value, id, opts}, _args ) do
 
+    # get the colors
+    theme = case opts[:theme] do
+      {_,_,_,_,_} = theme -> theme
+      type -> Map.get(@themes, type) || Map.get(@themes, :dark)
+    end
+    {text_color, hint_color, background_color, border_color, _} = theme
+
     hint = opts[:hint] || @default_hint
     width = opts[:width] || opts[:w] || @default_width
     height = opts[:height] || opts[:h] || @default_height
@@ -104,6 +112,7 @@ defmodule Scenic.Component.Input.TextField do
 
     state = %{
       graph: nil,
+      colors: theme,
       width: width,
       height: height,
       value: value,
@@ -121,19 +130,20 @@ defmodule Scenic.Component.Input.TextField do
       font: @default_font, font_size: @default_font_size,
       scissor: {width, height}
     )
+    |> rect({width, height}, fill: background_color)
     |> group( fn(g) ->
       g
       |> text(
-        @default_hint, fill: @hint_color,
+        @default_hint, fill: hint_color,
         t: {0, @default_font_size}, id: :text
         )
-      |> Carat.add_to_graph({height, @text_color}, id: :carat)
+      |> Carat.add_to_graph({height, text_color}, id: :carat)
     end, t: {@inset_x, 0})
     |> rect(
       {width, height},
-      fill: :clear, stroke: {2, :white}, id: :border
+      fill: :clear, stroke: {2, border_color}, id: :border
       )
-    |> update_text( display, hint )
+    |> update_text( display, state )
     |> update_carat( display, index )
     |> push_graph()
 
@@ -144,11 +154,13 @@ defmodule Scenic.Component.Input.TextField do
 
   #--------------------------------------------------------
   # to be called when the value has changed
-  defp update_text( graph, "", hint ) do
-    Graph.modify( graph, :text, &text(&1, hint, fill: @hint_color) )
+  defp update_text( graph, "", %{hint: hint, colors: colors} ) do
+    {_, hint_color, _, _, _} = colors
+    Graph.modify( graph, :text, &text(&1, hint, fill: hint_color) )
   end
-  defp update_text( graph, value, _ ) do
-    Graph.modify( graph, :text, &text(&1, value, fill: @text_color) )
+  defp update_text( graph, value, %{colors: colors} ) do
+    {text_color, _, _, _, _} = colors
+    Graph.modify( graph, :text, &text(&1, value, fill: text_color) )
   end
 
   #============================================================================
@@ -165,8 +177,8 @@ defmodule Scenic.Component.Input.TextField do
 
     # double check the postition
     index = cond do
-      index < 0 -> index = 0
-      index > str_len -> index = str_len
+      index < 0 -> 0
+      index > str_len -> str_len
       true -> index
     end
 
@@ -178,16 +190,19 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   #--------------------------------------------------------
-  defp capture_focus( context, %{focused: false, graph: graph} = state ) do
+  defp capture_focus( context, %{focused: false, graph: graph, colors: colors} = state ) do
     # capture the input
     ViewPort.capture_input( context, @input_capture)
 
     # start animating the carat
     Scene.cast_to_refs( nil, :gain_focus )
 
+    {_, _, _, _, focus_color} = colors
+
     # show the carat
     graph = graph
     |> Graph.modify( :carat, &update_opts(&1, hidden: false) )
+    |> Graph.modify( :border, &update_opts(&1, stroke: {2, focus_color}) )
     |> push_graph()
 
     # record the state
@@ -197,16 +212,19 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   #--------------------------------------------------------
-  defp release_focus( context, %{focused: true, graph: graph} = state ) do
+  defp release_focus( context, %{focused: true, graph: graph, colors: colors} = state ) do
     # release the input
     ViewPort.release_input( context, @input_capture)
 
     # stop animating the carat
     Scene.cast_to_refs( nil, :lose_focus )
 
+    {_, _, _, border_color, _} = colors
+
     # hide the carat
     graph = graph
     |> Graph.modify( :carat, &update_opts(&1, hidden: true) )
+    |> Graph.modify( :border, &update_opts(&1, stroke: {2, border_color}) )
     |> push_graph()
 
     # record the state
@@ -268,7 +286,7 @@ defmodule Scenic.Component.Input.TextField do
   # unfocused click in the text field
   def handle_input(
     {:cursor_button, {:left, :press, _, _}},
-    context, %{focused: false, value: value} = state
+    context, %{focused: false} = state
   ) do
     { :noreply, capture_focus(context, state) }
   end
@@ -316,7 +334,7 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   #--------------------------------------------------------
-  def handle_input( {:key, {"left", :press, _}}, context,
+  def handle_input( {:key, {"left", :press, _}}, _context,
     %{index: index, value: value, graph: graph} = state
   ) do
     # move left. clamp to 0
@@ -336,7 +354,7 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   #--------------------------------------------------------
-  def handle_input( {:key, {"right", :press, _}}, context, 
+  def handle_input( {:key, {"right", :press, _}}, _context, 
     %{index: index, value: value, graph: graph} = state
   ) do
     # the max position for the carat
@@ -362,7 +380,7 @@ defmodule Scenic.Component.Input.TextField do
   def handle_input( {:key, {"page_up", :press, mod}}, context, state ) do
     handle_input( {:key, {"home", :press, mod}}, context, state )
   end
-  def handle_input( {:key, {"home", :press, mod}}, context,
+  def handle_input( {:key, {"home", :press, _}}, _context,
     %{index: index, value: value, graph: graph} = state
   ) do
     # move left. clamp to 0
@@ -384,7 +402,7 @@ defmodule Scenic.Component.Input.TextField do
   def handle_input( {:key, {"page_down", :press, mod}}, context, state ) do
     handle_input( {:key, {"end", :press, mod}}, context, state )
   end
-  def handle_input( {:key, {"end", :press, _}}, context,
+  def handle_input( {:key, {"end", :press, _}}, _context,
     %{index: index, value: value, graph: graph} = state
   ) do
     # the max position for the carat
@@ -408,10 +426,10 @@ defmodule Scenic.Component.Input.TextField do
 
   #--------------------------------------------------------
   # ignore backspace if at index 0
-  def handle_input( {:key, {"backspace", :press, _}}, context, %{index: 0} = state), do:
+  def handle_input( {:key, {"backspace", :press, _}}, _context, %{index: 0} = state), do:
     { :noreply, state }
   # handle backspace
-  def handle_input( {:key, {"backspace", :press, _}}, context, %{
+  def handle_input( {:key, {"backspace", :press, _}}, _context, %{
     graph: graph,
     value: value,
     index: index,
@@ -436,7 +454,7 @@ defmodule Scenic.Component.Input.TextField do
 
     # update the graph
     graph = graph
-    |> update_text( display, hint )
+    |> update_text( display, state )
     |> update_carat( display, index )
     |> push_graph()
 
@@ -451,7 +469,7 @@ defmodule Scenic.Component.Input.TextField do
 
 
   #--------------------------------------------------------
-  def handle_input( {:key, {"delete", :press, _}}, context,%{
+  def handle_input( {:key, {"delete", :press, _}}, _context,%{
     graph: graph,
     value: value,
     index: index,
@@ -473,7 +491,7 @@ defmodule Scenic.Component.Input.TextField do
 
     # update the graph (the carat doesn't move)
     graph = graph
-    |> update_text( display, hint )
+    |> update_text( display, state )
     |> push_graph()
 
     state = state
@@ -486,13 +504,13 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   #--------------------------------------------------------
-  def handle_input( {:key, {"enter", :press, _}}, context, state ) do
+  def handle_input( {:key, {"enter", :press, _}}, _context, state ) do
     IO.puts "enter"
     { :noreply, state }
   end
 
   #--------------------------------------------------------
-  def handle_input( {:key, {"escape", :press, _}}, context, state ) do
+  def handle_input( {:key, {"escape", :press, _}}, _context, state ) do
     IO.puts "escape"
     { :noreply, state }
   end
@@ -508,8 +526,8 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   #--------------------------------------------------------
-  def handle_input( msg, _context, state ) do
-    # IO.puts "TextField msg: #{inspect(msg)}"
+  def handle_input( _msg, _context, state ) do
+    # IO.puts "TextField msg: #{inspect(_msg)}"
     {:noreply, state }
   end
 
@@ -539,7 +557,7 @@ defmodule Scenic.Component.Input.TextField do
 
     # update the graph
     graph = graph
-    |> update_text( display, hint )
+    |> update_text( display, state )
     |> update_carat( display, index )
     |> push_graph()
 
