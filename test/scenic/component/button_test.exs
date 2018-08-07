@@ -13,7 +13,7 @@ defmodule Scenic.Component.ButtonTest do
   @data         {"Button", :id}
   @data_opts    {
                   "Button", :id, [width: 100, height: 100, radius: 2,
-                  align: :right, type: :warning]
+                  align: :right, theme: :warning]
                 }
 
   #============================================================================

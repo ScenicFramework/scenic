@@ -60,13 +60,13 @@ defmodule Scenic.GraphTest do
 
   test "build builds accepts an id for the root node " do
     graph = Graph.build(id: :test_root)
-    assert graph.ids == %{test_root: [0]}
+    assert graph.ids == %{test_root: [0], _root_: [0]}
   end
 
   test "new graphs start with id :root pointing to uid 0" do
     graph = Graph.build()
     assert Graph.count(graph) == 1
-    assert graph.ids == %{}
+    assert graph.ids == %{_root_: [0]}
   end
 
   test "build accepts and uses a builder callback" do

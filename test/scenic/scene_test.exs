@@ -107,11 +107,6 @@ defmodule Scenic.SceneTest do
     # verify the process dictionary
     assert Process.get(:parent_pid) == nil
   end
-
-  test "init sends self :after_init" do
-    Scene.init( {__MODULE__, [1,2,3], [name: :scene_name]} )
-    assert_receive( {:"$gen_cast", :after_init} )
-  end
   
   test "init call mod.init and returns first round of state" do
     self = self()
@@ -125,7 +120,7 @@ defmodule Scenic.SceneTest do
 
       scene_module: __MODULE__,
 
-      scene_state: :init_state,
+      # scene_state: :init_state,
       scene_ref: :scene_name,
       supervisor_pid: nil,
       dynamic_children_pid: nil,

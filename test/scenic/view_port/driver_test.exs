@@ -10,8 +10,7 @@ defmodule Scenic.ViewPort.DriverTest do
   doctest Scenic
   alias Scenic.ViewPort.Driver
 
-#  import IEx
-
+  # import IEx
 
   #============================================================================
   # faux module callbacks...
@@ -54,13 +53,9 @@ defmodule Scenic.ViewPort.DriverTest do
   test "child_spec uses the scene module and id - no args" do
     self = self()
     %{
-      id:       id,
-      start:    {Driver, :start_link, [{^self, :config}]},
-      type:     :worker,
-      restart:  :permanent,
-      shutdown: 500
+      id:       Scenic.ViewPort.Driver,
+      start:    {Driver, :start_link, [{^self, :config}]}
     } = Driver.child_spec({self, :config})
-    assert is_reference(id)
   end
 
   #============================================================================
