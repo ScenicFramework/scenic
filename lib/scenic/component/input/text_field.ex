@@ -317,7 +317,7 @@ defmodule Scenic.Component.Input.TextField do
     {:cursor_button, {:left, :press, _, _}},
     context, %{focused: true} = state
   ) do
-    { :noreply, release_focus(context, state) }
+    { :continue, release_focus(context, state) }
   end
 
 

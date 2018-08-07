@@ -6,7 +6,7 @@
 
 defmodule Scenic.ViewPort do
   use GenServer
-  alias Scenic.Math
+  # alias Scenic.Math
   alias Scenic.ViewPort
   alias Scenic.ViewPort.Context
 
@@ -83,17 +83,14 @@ defmodule Scenic.ViewPort do
 
   @viewports            :scenic_dyn_viewports
 
-  @type input_class :: :codepoint | :key | :cursor_button | :cursor_scroll |
-    :cursor_pos | :viewport_exit
-
-  @type input ::
-  {:codepoint, {codepoint :: integer, mods :: integer}} |
-  {:key, {key :: String.t, :press | :release, mods :: integer}} |
-  {:cursor_button, {:left | :center | :right, :press | :release, mods :: integer, position :: Math.point}} |
-  {:cursor_scroll, {offset :: Math.point, position :: Math.point}} |
-  {:cursor_pos, position :: Math.point} |
-  {:viewport_enter, position :: Math.point} |
-  {:viewport_exit, position :: Math.point}
+  # @type input ::
+  # {:codepoint, {codepoint :: integer, mods :: integer}} |
+  # {:key, {key :: String.t, :press | :release, mods :: integer}} |
+  # {:cursor_button, {:left | :center | :right, :press | :release, mods :: integer, position :: Math.point}} |
+  # {:cursor_scroll, {offset :: Math.point, position :: Math.point}} |
+  # {:cursor_pos, position :: Math.point} |
+  # {:viewport_enter, position :: Math.point} |
+  # {:viewport_exit, position :: Math.point}
 
   @type event :: {event :: atom, data :: any}
 
@@ -197,12 +194,12 @@ defmodule Scenic.ViewPort do
   end
 
   #--------------------------------------------------------
-  @spec input(GenServer.server, input) :: :ok
+  @spec input(GenServer.server, Viewport.Input.t) :: :ok
   def input( viewport, input_event ) do
     GenServer.cast( viewport, {:input, input_event} )
   end
 
-  @spec input(GenServer.server, input, Context.t) :: :ok
+  @spec input(GenServer.server, Viewport.Input.t, Context.t) :: :ok
   def input( viewport, input_event, context ) do
     GenServer.cast( viewport, {:input, input_event, context} )
   end
@@ -214,7 +211,7 @@ defmodule Scenic.ViewPort do
   This must be called by a Scene process.
   """
 
-  @spec capture_input(context :: Context.t, input_class | list(input_class)) :: :ok
+  @spec capture_input(context :: Context.t, Viewport.Input.class | list(Viewport.Input.class)) :: :ok
   def capture_input( context, input_types )
   def capture_input( context, input_type ) when is_atom(input_type) do
     capture_input( context, [input_type] )

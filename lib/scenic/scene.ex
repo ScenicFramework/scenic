@@ -707,12 +707,31 @@ defmodule Scenic.Scene do
     { :noreply, state }
   end
 
+  # #--------------------------------------------------------
+  # def handle_cast({:input, event, %Scenic.ViewPort.Context{} = context},
+  # %{scene_module: mod, scene_state: sc_state} = state) do
+  #   {:noreply, sc_state} = mod.handle_input(event, context, sc_state )
+  #   {:noreply, %{state | scene_state: sc_state}}
+  # end
+
+
   #--------------------------------------------------------
-  def handle_cast({:input, event, %Scenic.ViewPort.Context{} = context},
+  def handle_cast(
+  {:input, event, %Scenic.ViewPort.Context{viewport: vp, raw_input: raw_input} = context},
   %{scene_module: mod, scene_state: sc_state} = state) do
-    {:noreply, sc_state} = mod.handle_input(event, context, sc_state )
+
+    sc_state = case mod.handle_input(event, context, sc_state ) do
+      {:noreply, sc_state} -> sc_state
+      {:stop, sc_state} -> sc_state
+      {:continue, sc_state} ->
+        GenServer.cast(vp, {:continue_input, raw_input})
+        sc_state
+    end
+
     {:noreply, %{state | scene_state: sc_state}}
   end
+
+
 
   #--------------------------------------------------------
   def handle_cast({:event, event, from_pid},  %{

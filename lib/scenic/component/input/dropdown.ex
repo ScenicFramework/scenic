@@ -210,11 +210,26 @@ defmodule Scenic.Component.Input.Dropdown do
   end
 
   #--------------------------------------------------------
-  def handle_input( {:cursor_button, {:left, :press, _, _}},
-  context, %{down: true} = state ) do
-    # capture input
-    ViewPort.capture_input( context, [:cursor_button, :cursor_pos])
-    {:noreply, state}
+  # the mouse is pressed outside of the dropdown when it is down.
+  # immediately close the dropdown and allow the event to continue
+  def handle_input(
+    {:cursor_button, {:left, :press, _, _}},
+    %{id: nil} = context,
+    %{down: true, items: items, colors: colors, selected_id: selected_id} = state
+  ) do
+    # release the input capture
+    ViewPort.release_input( context, [:cursor_button, :cursor_pos] )
+
+    graph = state.graph
+    # restore standard highliting
+    |> update_highlighting( items, selected_id, nil, colors)
+    # raise the dropdown
+    |> Graph.modify( @carat_id, &update_opts(&1, rotate: @rad) )
+    |> Graph.modify( @dropbox_id, &update_opts(&1, hidden: true) )
+    # push to the viewport
+    |> push_graph()
+
+    {:continue, %{state | down: false, graph: graph}}
   end
 
   #--------------------------------------------------------
@@ -242,9 +257,8 @@ defmodule Scenic.Component.Input.Dropdown do
     end
   end
 
-
   #--------------------------------------------------------
-  # the button is realeased outside the dropdown space
+  # the button is released outside the dropdown space
   def handle_input( {:cursor_button, {:left, :release, _, _}},
   %{id: nil} = context,
   %{down: true, items: items,
