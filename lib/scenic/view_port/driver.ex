@@ -13,7 +13,7 @@ defmodule Scenic.ViewPort.Driver do
   use GenServer
   alias Scenic.ViewPort
 
-#  import IEx
+ # import IEx
 
   #============================================================================
   # callback definitions
@@ -56,13 +56,13 @@ defmodule Scenic.ViewPort.Driver do
       def handle_cast(msg, state),        do: { :noreply, state }
       def handle_info(msg, state),        do: { :noreply, state }
 
-      def child_spec({name, config}) do
+      def child_spec({root_sup, config}) do
         %{
-          id: name,
-          start: {ViewPort.Driver, :start_link, [{__MODULE__, name, config}]},
+          id: make_ref(),
+          start: {ViewPort.Driver, :start_link, [{root_sup, config}]},
+          type: :worker,
           restart: :permanent,
-          shutdown: 5000,
-          type: :worker
+          shutdown: 5000
         }
       end
 
@@ -83,15 +83,15 @@ defmodule Scenic.ViewPort.Driver do
   # Driver initialization
 
 
-    def child_spec({root_sup, config}) do
-    %{
-      id: make_ref(),
-      start: {__MODULE__, :start_link, [{root_sup, config}]},
-      type: :worker,
-      restart: :permanent,
-      shutdown: 500
-    }
-  end
+  # def child_spec({root_sup, config}) do
+  #   %{
+  #     id: make_ref(),
+  #     start: {__MODULE__, :start_link, [{root_sup, config}]},
+  #     type: :worker,
+  #     restart: :permanent,
+  #     shutdown: 500
+  #   }
+  # end
 
 
   #--------------------------------------------------------
@@ -124,16 +124,20 @@ defmodule Scenic.ViewPort.Driver do
   #============================================================================
   # handle_cast
 
-  #--------------------------------------------------------
-  # finish init
-  def handle_cast({:after_init, vp_supervisor, config}, _) do
-    # find the viewport this driver belongs to
-    viewport_pid = vp_supervisor
+  defp find_viewport( vp_supervisor ) do
+    vp_supervisor
     |> Supervisor.which_children()
     |> Enum.find_value( fn
       {_, pid, :worker, [Scenic.ViewPort]} -> pid
       _ -> false
-    end)    
+    end)
+  end
+
+  #--------------------------------------------------------
+  # finish init
+  def handle_cast({:after_init, vp_supervisor, config}, _) do
+    # find the viewport this driver belongs to
+    viewport_pid = find_viewport( vp_supervisor )
 
     # let the driver module initialize itself
     module = config.module

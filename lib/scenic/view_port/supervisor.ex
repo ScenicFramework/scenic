@@ -37,7 +37,7 @@ defmodule Scenic.ViewPort.Supervisor do
 
     # finish the init
     build_children(drivers, config)
-    |> Supervisor.init( strategy: :one_for_one )
+    |> Supervisor.init( strategy: :rest_for_one )
   end
 
   def build_children([], config) do
