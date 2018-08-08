@@ -384,6 +384,18 @@ defmodule Scenic.Scene do
       defp scene_ref(), do: Process.get( :scene_ref )
 
 
+      # child spec that really starts up scene, with this module as an option
+      def child_spec({args, opts}) when is_list(opts) do
+        %{
+          id: make_ref(),
+          start: {Scenic.Scene, :start_link, [__MODULE__, args, opts]},
+          type: :worker,
+          restart: :permanent,
+          shutdown: 500
+        }
+      end
+
+
       #--------------------------------------------------------
      # add local shortcuts to things like get/put graph and modify element
      # do not add a put element. keep it at modify to stay atomic

@@ -20,7 +20,7 @@ defmodule Scenic.Primitive.SceneRef do
   end
 
   #--------------------------------------------------------
-  def verify( name ) when is_atom(name), do: {:ok, {name, nil}}
+  def verify( name ) when is_atom(name), do: {:ok, name}
   def verify( {name, id} ) when is_atom(name), do: {:ok, {name, id}}
   def verify( pid ) when is_pid(pid), do: {:ok, {pid, nil}}
   def verify( {pid, id} ) when is_pid(pid), do: {:ok, {pid, id}}

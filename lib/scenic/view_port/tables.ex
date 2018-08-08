@@ -47,6 +47,8 @@ defmodule Scenic.ViewPort.Tables do
   def get_scene_pid( scene_or_graph_key ) do
     with {:ok, {pid,_,_}} <- get_scene_registration( scene_or_graph_key ) do
       {:ok, pid}
+    else
+      _ -> {:error, :not_found}
     end
   end
 
@@ -66,12 +68,12 @@ defmodule Scenic.ViewPort.Tables do
   def insert_graph( graph_key, scene, graph, refs) when is_atom(scene) do
     case Process.whereis( scene ) do
       nil -> {:error, :invalid_scene}
-      pid -> insert_graph( pid, graph_key, graph, refs)
+      pid -> insert_graph( graph_key, pid, graph, refs)
     end
   end
 
-  def insert_graph( graph_key, scene_pid, graph, refs) when is_pid(scene_pid) do
-    :ets.insert(@ets_graphs_table, {graph_key, scene_pid, graph, refs})
+  def insert_graph( graph_key, scene, graph, refs) when is_pid(scene) do
+    :ets.insert(@ets_graphs_table, {graph_key, scene, graph, refs})
 
     # let any subscribing listeners know the graph was updated
     graph_key
