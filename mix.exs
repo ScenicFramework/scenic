@@ -4,7 +4,7 @@ defmodule ScenicMath.Mixfile do
   def project do
     [
       app: :scenic_math,
-      version: "0.1.0",
+      version: "0.7.0",
       package: package(),
       # build_path: "_build",
       # deps_path: "deps",
