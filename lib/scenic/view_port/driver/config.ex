@@ -2,7 +2,7 @@
 #  Created by Boyd Multerer April 2018.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
-# helper module for configuring Viewports during startup
+# helper module for configuring ViewPorts during startup
 
 defmodule Scenic.ViewPort.Driver.Config do
   alias Scenic.ViewPort.Driver.Config

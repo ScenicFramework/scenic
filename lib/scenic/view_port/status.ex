@@ -13,7 +13,7 @@ defmodule Scenic.ViewPort.Status do
     root_scene_pid: nil, size: nil
 
   @type t :: %Status{
-    drivers:          Map.t,
+    drivers:          map,
     root_config:      {scene_module :: atom, args :: any} | scene_name :: atom,
     root_graph:       {:graph, reference, any},
     root_scene_pid:   pid,

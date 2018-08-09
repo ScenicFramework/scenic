@@ -7,6 +7,7 @@
 defmodule Scenic.ViewPort.Config do
   alias Scenic.ViewPort.Driver
   alias Scenic.ViewPort.Config
+  alias Scenic.Math
 
   # import IEx
 
@@ -19,6 +20,27 @@ defmodule Scenic.ViewPort.Config do
   # describe the struct. Name nil and opts as an empty list are good defaults
   defstruct name: nil, default_scene: nil, default_scene_activation: nil,
     drivers: [], max_depth: @max_depth, size: nil
+
+
+  @type t :: %Config{
+    name:                       atom,
+    default_scene:              name :: atom | {module :: atom, any},
+    default_scene_activation:   any,
+    drivers:                    list,
+    max_depth:                  pos_integer,
+    size:                       Math.point
+  }
+
+
+  # @type t :: %Status{
+  #   drivers:          Map.t,
+  #   root_config:      {scene_module :: atom, args :: any} | scene_name :: atom,
+  #   root_graph:       {:graph, reference, any},
+  #   root_scene_pid:   pid,
+  #   size:             Math.point
+  # }
+
+
 
   #--------------------------------------------------------
   def valid?( %Config{
@@ -95,15 +117,15 @@ defmodule Scenic.ViewPort.Config do
   end
     
   def valid!( %Config{default_scene: nil} ) do
-    raise "Viewport Config requires a default_scene"
+    raise "ViewPort Config requires a default_scene"
   end
 
   def valid!( %Config{name: name} ) when not is_atom(name) do
-    raise "Viewport Config name must be an atom"
+    raise "ViewPort Config name must be an atom"
   end
   
   def valid!( %Config{default_scene: nil} ) do
-    raise "Viewport Config requires a default_scene"
+    raise "ViewPort Config requires a default_scene"
   end
 
   def valid!( %{} = config ) do

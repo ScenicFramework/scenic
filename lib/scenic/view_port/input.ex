@@ -17,6 +17,7 @@ defmodule Scenic.ViewPort.Input do
   alias Scenic.ViewPort.Context
   alias Scenic.ViewPort
   alias Scenic.Primitive
+  alias Scenic.Math
   alias Scenic.Math.Matrix
 
   require Logger

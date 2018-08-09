@@ -6,7 +6,7 @@
 
 defmodule Scenic.ViewPort do
   use GenServer
-  # alias Scenic.Math
+  alias Scenic.Math
   alias Scenic.ViewPort
   alias Scenic.ViewPort.Context
 
@@ -205,7 +205,7 @@ defmodule Scenic.ViewPort do
   #--------------------------------------------------------
   @spec input(
     viewport :: GenServer.server,
-    input :: Viewport.Input.t
+    input :: ViewPort.Input.t
   ) :: :ok
   def input( viewport, input_event ) do
     GenServer.cast( viewport, {:input, input_event} )
@@ -213,7 +213,7 @@ defmodule Scenic.ViewPort do
 
   @spec input(
     viewport :: GenServer.server,
-    input :: Viewport.Input.t,
+    input :: ViewPort.Input.t,
     context :: Context.t
   ) :: :ok
   def input( viewport, input_event, context ) do
@@ -236,7 +236,7 @@ defmodule Scenic.ViewPort do
 
   @spec capture_input(
     context :: Context.t,
-    input_class :: Viewport.Input.class | list(Viewport.Input.class)
+    input_class :: ViewPort.Input.class | list(ViewPort.Input.class)
   ) :: :ok
   def capture_input( context, input_types )
   def capture_input( context, input_type ) when is_atom(input_type) do
