@@ -16,11 +16,11 @@ defmodule Scenic.ViewPort.Driver.Supervisor do
     Supervisor.start_link(__MODULE__, args)
   end
 
-  def init( {root_sup, drivers} ) do
+  def init( {root_sup, size, drivers} ) do
     drivers
     |> Enum.map( fn(driver_config) ->
       driver = driver_config[:module]
-      {driver, {root_sup, driver_config}}
+      {driver, {root_sup, size, driver_config}}
     end)
     |> Supervisor.init( strategy: :one_for_one )
   end

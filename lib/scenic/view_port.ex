@@ -103,6 +103,7 @@ defmodule Scenic.ViewPort do
   @doc """
   Start a new viewport
   """
+  @spec stop( config :: ViewPort.Config.t ) :: {:ok, pid}
   def start( %ViewPort.Config{} = config ) do
     # start the viewport's supervision tree
     {:ok, sup_pid} = DynamicSupervisor.start_child( @viewports,
@@ -113,7 +114,7 @@ defmodule Scenic.ViewPort do
     viewport_pid = sup_pid
     |> Supervisor.which_children()
     |> Enum.find_value( fn
-      {_, pid, :worker, [Scenic.ViewPort]} -> pid
+      {_, pid, :worker, [ViewPort]} -> pid
       _ -> false
     end) 
 
@@ -125,10 +126,10 @@ defmodule Scenic.ViewPort do
   @doc """
   query the last recorded viewport status
   """
-  @spec query_status( viewport :: GenServer.server ) :: {:ok, map}
-  def query_status( viewport )
-  def query_status( viewport ) when is_atom(viewport) or is_pid(viewport) do
-    GenServer.call(viewport, :query_status)
+  @spec info( viewport :: GenServer.server ) :: {:ok, ViewPort.Status.t}
+  def info( viewport )
+  def info( viewport ) when is_atom(viewport) or is_pid(viewport) do
+    GenServer.call(viewport, :query_info)
   end
 
 
@@ -136,7 +137,7 @@ defmodule Scenic.ViewPort do
   @doc """
   Stop a running viewport
   """
-
+  @spec stop(viewport :: GenServer.server) :: :ok
   def stop( viewport )
 
   def stop( viewport ) when is_atom(viewport) and not is_nil(viewport) do
@@ -152,6 +153,11 @@ defmodule Scenic.ViewPort do
   @doc """
   Set a the root scene/graph of the ViewPort.
   """
+  @spec set_root(
+    viewport :: GenServer.server,
+    scene :: atom | {atom, any},
+    args :: any
+  ) :: :ok
   def set_root( viewport, scene, args \\ nil )
 
   def set_root( viewport, scene, args ) when
@@ -183,7 +189,10 @@ defmodule Scenic.ViewPort do
   will be sent to the calling process.
   """
 
-  @spec request_root(GenServer.server, nil | GenServer.server) :: :ok
+  @spec request_root(
+    viewport :: GenServer.server,
+    send_to :: nil | GenServer.server
+  ) :: :ok
   def request_root( viewport, send_to \\ nil )
   def request_root( viewport, nil ) do
     request_root( viewport, self() )
@@ -194,15 +203,29 @@ defmodule Scenic.ViewPort do
   end
 
   #--------------------------------------------------------
-  @spec input(GenServer.server, Viewport.Input.t) :: :ok
+  @spec input(
+    viewport :: GenServer.server,
+    input :: Viewport.Input.t
+  ) :: :ok
   def input( viewport, input_event ) do
     GenServer.cast( viewport, {:input, input_event} )
   end
 
-  @spec input(GenServer.server, Viewport.Input.t, Context.t) :: :ok
+  @spec input(
+    viewport :: GenServer.server,
+    input :: Viewport.Input.t,
+    context :: Context.t
+  ) :: :ok
   def input( viewport, input_event, context ) do
     GenServer.cast( viewport, {:input, input_event, context} )
   end
+
+  #--------------------------------------------------------
+  @spec reshape(viewport :: GenServer.server, size :: Math.point) :: :ok
+  def reshape( viewport, size ) do
+    GenServer.cast( viewport, {:reshape, size} )
+  end
+
 
   #--------------------------------------------------------
   @doc """
@@ -211,7 +234,10 @@ defmodule Scenic.ViewPort do
   This must be called by a Scene process.
   """
 
-  @spec capture_input(context :: Context.t, Viewport.Input.class | list(Viewport.Input.class)) :: :ok
+  @spec capture_input(
+    context :: Context.t,
+    input_class :: Viewport.Input.class | list(Viewport.Input.class)
+  ) :: :ok
   def capture_input( context, input_types )
   def capture_input( context, input_type ) when is_atom(input_type) do
     capture_input( context, [input_type] )
@@ -308,21 +334,22 @@ defmodule Scenic.ViewPort do
 
   #--------------------------------------------------------
   # query the status of the viewport
-  def handle_call( :query_status, _, %{
+  def handle_call( :query_info, _, %{
       driver_registry: driver_registry,
       root_config: root_config,
       root_scene_pid: root_scene_pid,
-      root_graph_key: root_graph_key
+      root_graph_key: root_graph_key,
+      size: size
   } = state ) do
-    status = %{
-      root_pid: root_scene_pid,
+    status = %ViewPort.Status{
+      root_scene_pid: root_scene_pid,
       root_config: root_config,
       root_graph: root_graph_key,
-      drivers: driver_registry
+      drivers: driver_registry,
+      size: size
     }
     { :reply, {:ok, status}, state }
   end
-
 
   #============================================================================
   # handle_cast
@@ -340,6 +367,7 @@ defmodule Scenic.ViewPort do
 
     # set up the initial state
     state = %{
+      size: config.size,
       root_graph_key: nil,
       root_scene_pid: nil,
       dynamic_root_pid: nil,

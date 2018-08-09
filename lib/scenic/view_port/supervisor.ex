@@ -50,7 +50,7 @@ defmodule Scenic.ViewPort.Supervisor do
   def build_children(drivers, config) do
     [
       {ViewPort, {self(), config}},
-      {ViewPort.Driver.Supervisor, {self(), drivers}},
+      {ViewPort.Driver.Supervisor, {self(), config.size, drivers}},
       {DynamicSupervisor, strategy: :one_for_one}
     ]
   end

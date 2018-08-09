@@ -2,7 +2,7 @@
 #  Created by Boyd Multerer on July 23, 2018.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
-# Seperate Context out into it's own file
+# Seperate Context out into its own file
 
 
 defmodule Scenic.ViewPort.Context do

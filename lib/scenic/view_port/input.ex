@@ -6,6 +6,8 @@
 
 # The main helpers and organizers for input
 
+# resizing is temporarily not supported
+
 
 defmodule Scenic.ViewPort.Input do
   @moduledoc false
@@ -28,10 +30,12 @@ defmodule Scenic.ViewPort.Input do
   {:cursor_scroll, {offset :: Math.point, position :: Math.point}} |
   {:cursor_pos, position :: Math.point} |
   {:viewport_enter, position :: Math.point} |
-  {:viewport_exit, position :: Math.point}
+  {:viewport_exit, position :: Math.point} #|
+  # {:viewport_reshape, size :: Math.point}
 
   @type class ::
-    :codepoint | :key | :cursor_button | :cursor_scroll | :cursor_pos | :viewport_enter | :viewport_exit
+    :codepoint | :key | :cursor_button | :cursor_scroll | :cursor_pos |
+    :viewport_enter | :viewport_exit #| :viewport_reshape
 
 
   #============================================================================
@@ -57,6 +61,27 @@ defmodule Scenic.ViewPort.Input do
     {:noreply, %{state | input_captures: captures}}
   end
 
+  #============================================================================
+  # reshape
+
+  # the viewport_reshape control input is a special case that needs to be
+  # handled outside the normal input system.
+  # This affects the size of the drivers, the viewport and more
+
+  # #--------------------------------------------------------
+  # # do nothing if the size isn't actually changing
+  # def handle_cast( {:input, {:viewport_reshape, new_size}}, %{size: old_size} = state ) 
+  # when new_size == old_size do
+  #   {:noreply, state}
+  # end
+
+  # #--------------------------------------------------------
+  # # the size is changing
+  # def handle_cast( {:input, {:viewport_reshape, new_size}}, state )  do
+
+  #   # set the new size into the viewport on the way out
+  #   {:noreply, %{state | size: new_size}}
+  # end
 
   #============================================================================
   # input handling
