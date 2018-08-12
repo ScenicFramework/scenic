@@ -18,6 +18,8 @@ defmodule Scenic.Component.Input.RadioButton do
 #  @blue_color         :steel_blue
 #  @text_color         :white
 
+
+  # {text_color, box_background, border_color, pressed_color, checkmark_color}
   @themes %{
     light:    {:black, :white, :grey, {215, 215, 215}, :cornflower_blue},
     dark:     {:white, :black, :grey, {40,40,40}, {0x00,0x71,0xBC}},
@@ -132,14 +134,14 @@ defmodule Scenic.Component.Input.RadioButton do
   end
 
   #--------------------------------------------------------
-  def handle_input( {:cursor_enter, _uid}, _, state ) do
+  def handle_input( {:cursor_enter, _uid}, _, %{pressed: true} = state ) do
     state = Map.put(state, :contained, true)
     graph = update_graph(state)
     {:noreply, %{state | graph: graph}}
   end
 
   #--------------------------------------------------------
-  def handle_input( {:cursor_exit, _uid}, _, state ) do
+  def handle_input( {:cursor_exit, _uid}, _, %{pressed: true} = state ) do
     state = Map.put(state, :contained, false)
     graph = update_graph(state)
     {:noreply, %{state | graph: graph}}

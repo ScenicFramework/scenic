@@ -117,14 +117,14 @@ defmodule Scenic.Component.Input.Checkbox do
   end
 
   #--------------------------------------------------------
-  def handle_input( {:cursor_enter, _uid}, _, state ) do
+  def handle_input( {:cursor_enter, _uid}, _, %{pressed: true} = state ) do
     state = Map.put(state, :contained, true)
     graph = update_graph(state)
     {:noreply, %{state | graph: graph}}
   end
 
   #--------------------------------------------------------
-  def handle_input( {:cursor_exit, _uid}, _, state ) do
+  def handle_input( {:cursor_exit, _uid}, _, %{pressed: true} = state ) do
     state = Map.put(state, :contained, false)
     graph = update_graph(state)
     {:noreply, %{state | graph: graph}}
@@ -184,9 +184,9 @@ defmodule Scenic.Component.Input.Checkbox do
   } ) do
     graph = case pressed && contained do
       true ->
-        Graph.modify( graph, :box, &Primitive.put_style(&1, :color, pressed_color) )
+        Graph.modify( graph, :box, &Primitive.put_style(&1, :fill, pressed_color) )
       false ->
-        Graph.modify( graph, :box, &Primitive.put_style(&1, :color, box_background) )
+        Graph.modify( graph, :box, &Primitive.put_style(&1, :fill, box_background) )
     end
     case checked do
       true ->
