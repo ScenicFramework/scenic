@@ -59,14 +59,6 @@ defmodule Scenic.ViewPort.DriverTest do
   end
 
   #============================================================================
-  # child_spec
-  test "init sends self :after_init" do
-    self = self()
-    Driver.init( {self, :config} )
-    assert_receive( {:"$gen_cast", {:after_init, ^self, :config}})
-  end
-
-  #============================================================================
   # handle_info
   
   test "handle_info sends unhandles messages to the module" do

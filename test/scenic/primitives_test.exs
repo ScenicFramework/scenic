@@ -254,7 +254,7 @@ defmodule Scenic.PrimitivesTest do
     p = Primitives.scene_ref(@graph, :scene_name, id: :ref)
     |> Graph.get_id!(:ref)
     assert p.module == Scenic.Primitive.SceneRef
-    assert p.data == {:scene_name, nil}
+    assert p.data == :scene_name
     assert p.id == :ref
   end
 

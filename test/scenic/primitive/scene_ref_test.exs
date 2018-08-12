@@ -21,7 +21,7 @@ defmodule Scenic.Primitive.SceneRefTest do
   test "build name works" do
     p = SceneRef.build( :named_scene )
     assert p.module == SceneRef
-    assert Primitive.get(p) == {:named_scene, nil}
+    assert Primitive.get(p) == :named_scene
   end
 
 
@@ -61,7 +61,7 @@ defmodule Scenic.Primitive.SceneRefTest do
   # verify
 
   test "verify passes valid data" do
-    assert SceneRef.verify( :named_scene ) == {:ok, {:named_scene, nil}}
+    assert SceneRef.verify( :named_scene ) == {:ok, :named_scene}
     assert SceneRef.verify( @data_name_id ) == {:ok, @data_name_id}
     assert SceneRef.verify( @data_mod ) == {:ok, @data_mod}
     assert SceneRef.verify( {self(), 123} ) == {:ok, {self(), 123}}
