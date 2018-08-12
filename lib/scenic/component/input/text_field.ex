@@ -38,8 +38,8 @@ defmodule Scenic.Component.Input.TextField do
 
   # theme is {text_color, hint_color, background_color, border_color, focused_color}
   @themes %{
-    light:      {:black, :grey, :white, :black, :blue},
-    dark:       {:white, :grey, :black, :white, :cornflower_blue}
+    light:      {:black, :grey, :white, :dark_grey, :blue},
+    dark:       {:white, :grey, :black, :light_grey, :cornflower_blue}
   }
 
 
