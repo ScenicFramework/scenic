@@ -13,8 +13,8 @@ defmodule Scenic.Component.Input.Checkbox do
   # theme is {text_color, box_background, border_color, pressed_color, checkmark_color}
   # nil for text_color means to use whatever is inherited
   @themes %{
-    light:    {:black, :white, :grey, {215, 215, 215}, :cornflower_blue},
-    dark:     {:white, :black, :grey, {40,40,40}, :cornflower_blue},
+    light:    {:black, :white, :dark_grey, {215, 215, 215}, :cornflower_blue},
+    dark:     {:white, :black, :light_grey, {40,40,40}, :cornflower_blue},
   }
 
   @default_font       :roboto

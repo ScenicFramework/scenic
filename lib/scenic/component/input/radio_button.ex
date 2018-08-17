@@ -21,9 +21,10 @@ defmodule Scenic.Component.Input.RadioButton do
 
   # {text_color, box_background, border_color, pressed_color, checkmark_color}
   @themes %{
-    light:    {:black, :white, :grey, {215, 215, 215}, :cornflower_blue},
-    dark:     {:white, :black, :grey, {40,40,40}, {0x00,0x71,0xBC}},
+    light:    {:black, :white, :dark_grey, {215, 215, 215}, :cornflower_blue},
+    dark:     {:white, :black, :light_grey, {40,40,40}, {0x00,0x71,0xBC}},
   }
+
 
 #  #--------------------------------------------------------
   def info() do

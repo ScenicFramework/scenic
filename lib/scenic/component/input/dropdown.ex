@@ -24,9 +24,11 @@ defmodule Scenic.Component.Input.Dropdown do
 
   # theme is {text_color, background_color, pressed_color, border_color, carat_color, hover_color}
   @themes %{
-    light:    {:black, :white, {215, 215, 215}, :grey, :black, :cornflower_blue},
-    dark:     {:white, :black, {40,40,40}, :grey, :white, :cornflower_blue},
+    light:    {:black, :white, {215, 215, 215}, :dark_grey, :black, :cornflower_blue},
+    dark:     {:white, :black, {40,40,40}, :light_grey, :white, :cornflower_blue},
   }
+
+
 
   @carat      {{0,0}, {12, 0}, {6, 6}}
   @text_id    :__dropbox_text__
