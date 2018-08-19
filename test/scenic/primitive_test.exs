@@ -65,7 +65,7 @@ defmodule Scenic.PrimitiveTest do
 
   test "basic primitive build works" do
     assert Primitive.build(Group, @data) == %{
-      __struct__: Primitive, module: Group, data: @data
+      __struct__: Primitive, module: Group, data: @data, parent_uid: -1
     }
   end
 
@@ -79,7 +79,7 @@ defmodule Scenic.PrimitiveTest do
   test "build adds transform options" do
     assert Primitive.build(Group, @data, pin: {10,11}, rotate: 0.1) == %{
       __struct__: Primitive, module: Group, data: @data,
-      transforms: @transforms
+      transforms: @transforms, parent_uid: -1
     }
   end
 
@@ -87,7 +87,7 @@ defmodule Scenic.PrimitiveTest do
   test "build adds the style opts" do
     assert Primitive.build(Group, @data, fill: :yellow, stroke: {10, :green}) == %{
       __struct__: Primitive, module: Group, data: @data,
-      styles: @styles
+      styles: @styles, parent_uid: -1
     }
   end
 
@@ -101,14 +101,14 @@ defmodule Scenic.PrimitiveTest do
   test "build sets the optional id" do
     assert Primitive.build(Group, @data, id: :test_id) == %{
       __struct__: Primitive, module: Group, data: @data,
-      id: :test_id
+      id: :test_id, parent_uid: -1
     }
   end
 
   test "build sets a non-atom id" do
     assert Primitive.build(Group, @data, id: {:test_id, 123}) == %{
       __struct__: Primitive, module: Group, data: @data,
-      id: {:test_id, 123}
+      id: {:test_id, 123}, parent_uid: -1
     }
   end
 
