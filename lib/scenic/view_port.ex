@@ -10,7 +10,7 @@ defmodule Scenic.ViewPort do
   alias Scenic.ViewPort
   alias Scenic.ViewPort.Context
 
-#  import IEx
+ import IEx
 
   @moduledoc """
 
@@ -365,6 +365,14 @@ defmodule Scenic.ViewPort do
       _ -> false
     end) 
 
+    # get the on_close flag or function
+    on_close = case config.on_close do
+      nil -> :stop_system
+      :stop_system -> :stop_system
+      :stop_viewport -> :stop_viewport
+      func when is_function(func, 1) -> func
+    end
+
     # set up the initial state
     state = %{
       size: config.size,
@@ -381,7 +389,9 @@ defmodule Scenic.ViewPort do
       supervisor: vp_supervisor,
       dynamic_supervisor: dyn_sup_pid,
 
-      max_depth: config.max_depth
+      max_depth: config.max_depth,
+
+      on_close: on_close
     }
 
     # set the initial scene as the root
@@ -527,6 +537,35 @@ defmodule Scenic.ViewPort do
   #--------------------------------------------------------
   def handle_cast( {:driver_register, %ViewPort.Driver.Info{pid: pid} = driver}, state) do
     {:noreply, put_in(state, [:driver_registry, pid], driver)}
+  end
+
+
+  #--------------------------------------------------------
+  def handle_cast(:user_close, %{on_close: on_close} = state) do
+    case on_close do
+      :stop_viewport ->
+        case DynamicSupervisor.terminate_child( @viewports, self() ) do
+          :ok -> :ok
+          {:error, :not_found} -> Process.exit(self(), :shutdown)
+        end
+      func when is_function(func, 1) ->
+        func.(self())
+      :stop_system -> System.stop(0)
+    end
+    {:noreply, state}
+  end
+
+
+  #--------------------------------------------------------
+  def handle_cast(:user_close, state) do
+    case DynamicSupervisor.terminate_child( @viewports, self() ) do
+      :ok -> :ok
+      {:error, :not_found} ->
+        # Process.exit(self(), :normal)
+        # exit(:shutdown)
+        System.stop(0)
+    end
+    {:noreply, state}
   end
 
 

@@ -26,7 +26,7 @@ defmodule Scenic.Primitive do
   @callback contains_point?( any, {float, float} ) :: true | false
 
 
-  @not_styles       [:module, :id,
+  @not_styles       [:module, :id, :puid,
     :builder, :data, :styles, :transforms, :pin, :rotate, :matrix,
     :scale, :translate]
 

@@ -19,7 +19,7 @@ defmodule Scenic.ViewPort.Config do
 
   # describe the struct. Name nil and opts as an empty list are good defaults
   defstruct name: nil, default_scene: nil, default_scene_activation: nil,
-    drivers: [], max_depth: @max_depth, size: nil
+    drivers: [], max_depth: @max_depth, size: nil, on_close: nil
 
 
   @type t :: %Config{
@@ -28,7 +28,8 @@ defmodule Scenic.ViewPort.Config do
     default_scene_activation:   any,
     drivers:                    list,
     max_depth:                  pos_integer,
-    size:                       Math.point
+    size:                       Math.point,
+    on_close:                   :stop_viewport | :stop_system | function
   }
 
 
