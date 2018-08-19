@@ -166,14 +166,6 @@ defmodule Scenic.Components do
   ### Options
 
   Buttons honor the following list of options.
-
-  * `:theme` - This sets the color scheme of the button. This can be one of
-  pre-defined button schemes `:primary`, `:secondary`, `:success`, `:danger`,
-  `:warning`, `:info`, `:light`, `:dark`, `:text` or it can be a completly custom
-  scheme like this:
-
-      {text_color, button_color, pressed_color}
-
   * `:width` - pass in a number to set the width of the button.
   * `:height` - pass in a number to set the height of the button.
   * `:radius` - pass in a number to set the radius of the button's rounded rectangle.
@@ -187,6 +179,18 @@ defmodule Scenic.Components do
   
   * `:hidden` - If true the button is rendered. If false, it is skipped. The default
     is true.
+  * `:theme` - The color set used to draw. See below. The default is `:primary`
+
+  ## Theme
+
+  Buttons work well with the follwing predefined themes:
+  `:primary`, `:secondary`, `:success`, `:danger`, `:warning`, `:info`, `:text`, `:light`, `:dark`
+
+  To pass in a custom theme, supply a map with at least the following entries:
+
+  * `:text` - the color of the text in the button
+  * `:background` - the normal background of the button
+  * `:active` - the background while the button is pressed
 
   ### Examples
 
@@ -199,7 +203,7 @@ defmodule Scenic.Components do
   the options list above for more details.
 
       graph
-      |> button( {"Example", :button_id, type: :warning}, translate: {20, 20} )
+      |> button( {"Example", :button_id}, translate: {20, 20}, theme: :warning )
 
 
   """
@@ -238,11 +242,7 @@ defmodule Scenic.Components do
 
   Checkboxes honor the following list of options.
 
-  * `:theme` - This sets the color scheme of the button. This can be one of
-  pre-defined button schemes `:light`, `:dark`, or it can be a completly custom
-  scheme like this:
 
-      {text_color, background_color, border_color, pressed_color, checkmark_color}
 
   ### Styles
 
@@ -250,6 +250,21 @@ defmodule Scenic.Components do
   
   * `:hidden` - If true the button is rendered. If false, it is skipped. The default
     is true.
+  * `:theme` - The color set used to draw. See below. The default is `:dark`
+
+  ## Theme
+
+  Checkboxes work well with the follwing predefined themes:
+  `:light`, `:dark`
+
+  To pass in a custom theme, supply a map with at least the following entries:
+
+  * `:text` - the color of the text in the button
+  * `:background` - the background of the box
+  * `:border` - the border of the box
+  * `:active` - the border of the box while the button is pressed
+  * `:thumb` - the color of the checkmark itself
+
 
   ### Examples
 
@@ -303,11 +318,6 @@ defmodule Scenic.Components do
 
   Dropdowns honor the following list of options.
 
-  * `:theme` - This sets the color scheme of the button. This can be one of
-  pre-defined button schemes `:light`, `:dark`, or it can be a completly custom
-  scheme like this:
-
-      {text_color, background_color, pressed_color, border_color, carat_color, hover_color}
 
   ### Styles
 
@@ -315,6 +325,20 @@ defmodule Scenic.Components do
   
   * `:hidden` - If true the button is rendered. If false, it is skipped. The default
     is true.
+  * `:theme` - The color set used to draw. See below. The default is `:dark`
+
+  ## Theme
+
+  Dropdowns work well with the follwing predefined themes:
+  `:light`, `:dark`
+
+  To pass in a custom theme, supply a map with at least the following entries:
+
+  * `:text` - the color of the text
+  * `:background` - the background of the component
+  * `:border` - the border of the component
+  * `:active` - the background of selecte item in the dropdown list
+  * `:thumb` - the color of the item being hovered over
 
   ### Examples
 
@@ -372,7 +396,7 @@ defmodule Scenic.Components do
 
   ### Options
 
-  Buttons honor the following list of options.
+  Radio Buttons honor the following list of options.
 
   * `:theme` - This sets the color scheme of the button. This can be one of
   pre-defined button schemes `:light`, `:dark`, or it can be a completly custom
@@ -380,10 +404,24 @@ defmodule Scenic.Components do
 
   ### Styles
 
-  Buttons honor the following styles
+  Radio Buttons honor the following styles
   
   * `:hidden` - If true the button is rendered. If false, it is skipped. The default
     is true.
+  * `:theme` - The color set used to draw. See below. The default is `:dark`
+
+  ## Theme
+
+  Dropdowns work well with the follwing predefined themes:
+  `:light`, `:dark`
+
+  To pass in a custom theme, supply a map with at least the following entries:
+
+  * `:text` - the color of the text
+  * `:background` - the background of the component
+  * `:border` - the border of the component
+  * `:active` - the background of the circle while the button is pressed
+  * `:thumb` - the color of inner selected-mark
 
   ### Examples
 
@@ -437,9 +475,7 @@ defmodule Scenic.Components do
 
   Sliders honor the following list of options.
 
-  * `:theme` - This sets the color scheme of the button. This can be one of
-  pre-defined button schemes `:light`, `:dark`, or it can be a completly custom
-  scheme like this: `{line_color, thumb_color}`.
+
 
   ### Styles
 
@@ -447,6 +483,17 @@ defmodule Scenic.Components do
   
   * `:hidden` - If true the button is rendered. If false, it is skipped. The default
     is true.
+  * `:theme` - The color set used to draw. See below. The default is `:dark`
+
+  ## Theme
+
+  Sliders work well with the follwing predefined themes:
+  `:light`, `:dark`
+
+  To pass in a custom theme, supply a map with at least the following entries:
+
+  * `:border` - the color of the slider line
+  * `:thumb` - the color of slider thumb
 
   ### Examples
 
@@ -502,11 +549,6 @@ defmodule Scenic.Components do
   * `:type` - Can be one of the following options:
     * `:all` - Show all characters. This is the default.
     * `:password` - Display a string of '*' characters instead of the value.
-  * `:theme` - Choose the color scheme of the component. Can be one of:
-    * `:light` - Dark text on a light background
-    * `:dark` - Light text on a dark background. This is the default.
-    * `custom` - A custom set of colors in the form of:
-      `{text_color, hint_color, background_color, border_color, focused_color}`
   * `:width` - set the width of the control.
 
 
@@ -524,6 +566,19 @@ defmodule Scenic.Components do
   
   * `:hidden` - If true the button is rendered. If false, it is skipped. The default
     is true.
+  * `:theme` - The color set used to draw. See below. The default is `:dark`
+
+  ## Theme
+
+  Dropdowns work well with the follwing predefined themes:
+  `:light`, `:dark`
+
+  To pass in a custom theme, supply a map with at least the following entries:
+
+  * `:text` - the color of the text
+  * `:background` - the background of the component
+  * `:border` - the border of the component
+  * `:focus` - the border while the component has focus
 
   ### Examples
 
