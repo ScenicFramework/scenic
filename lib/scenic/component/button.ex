@@ -5,20 +5,23 @@ defmodule Scenic.Component.Button do
   alias Scenic.Primitive
   alias Scenic.ViewPort
   alias Scenic.Primitive.Style.Paint.Color
+  alias Scenic.Primitive.Style.Theme
   import Scenic.Primitives, only: [{:rrect, 3}, {:text, 3}]
 
+  import IEx
+
   # type is {text_color, button_color, pressed_color}
-  @themes %{
-    primary:    {:white, {72,122,252}, {58,94,201}},
-    secondary:  {:white, {111,117,125}, {86,90,95}},
-    success:    {:white, {99,163,74}, {74,123,56}},
-    danger:     {:white, {191,72,71}, {164,54,51}},
-    warning:    {:black, {239,196,42}, {197,160,31}},
-    info:       {:white, {94,159,183}, {70,119,138}},
-    light:      {:black, {248,249,250}, {220,224,229}},
-    dark:       {:white, {54,58,64}, {31,33,36}},
-    text:       {{72,122,252}, :clear, :clear}
-  }
+  # @themes %{
+  #   primary:    {:white, {72,122,252}, {58,94,201}},
+  #   secondary:  {:white, {111,117,125}, {86,90,95}},
+  #   success:    {:white, {99,163,74}, {74,123,56}},
+  #   danger:     {:white, {191,72,71}, {164,54,51}},
+  #   warning:    {:black, {239,196,42}, {197,160,31}},
+  #   info:       {:white, {94,159,183}, {70,119,138}},
+  #   light:      {:black, {248,249,250}, {220,224,229}},
+  #   dark:       {:white, {54,58,64}, {31,33,36}},
+  #   text:       {{72,122,252}, :clear, :clear}
+  # }
 
   @default_width      80
   @default_height     30
@@ -28,7 +31,7 @@ defmodule Scenic.Component.Button do
   @default_font_size  20
   @default_alignment  :center
 
-#  #--------------------------------------------------------
+  #--------------------------------------------------------
   def info() do
     "#{IO.ANSI.red()}Button data must be: {text, id, opts}\r\n" <>
     IO.ANSI.yellow() <>
@@ -93,14 +96,11 @@ defmodule Scenic.Component.Button do
 
   #--------------------------------------------------------
   def init( {text, id}, args ), do: init( {text, id, []}, args )
-  def init( {text, id, opts}, _args ) when is_list(opts) do
+  def init( {text, id, opts}, args ) when is_list(opts) do
 
-    # get the colors
-    theme = case opts[:theme] do
-      {_,_,_} = theme -> theme
-      type -> Map.get(@themes, type) || Map.get(@themes, :primary)
-    end
-    {text_color, button_color, _} = theme
+    # theme is passed in as an inherited style
+    theme = (args[:styles][:theme] || Theme.preset(:primary))
+    |> Theme.normalize()
 
     # get button specific options
     width = opts[:width] || opts[:w] || @default_width
@@ -116,23 +116,23 @@ defmodule Scenic.Component.Button do
     graph = case alignment do
       :center ->
         Graph.build( font: font, font_size: font_size )
-        |> rrect( {width, height, radius}, fill: button_color, id: :btn )
-        |> text( text, fill: text_color, translate: {width/2,(height*0.7)}, text_align: :center )
+        |> rrect( {width, height, radius}, fill: theme.background, id: :btn )
+        |> text( text, fill: theme.text, translate: {width/2,(height*0.7)}, text_align: :center )
 
       :left ->
         Graph.build( font: font, font_size: font_size )
-        |> rrect( {width, height, radius}, fill: button_color, id: :btn )
-        |> text( text, fill: text_color, translate: {8,(height*0.7)}, text_align: :left )
+        |> rrect( {width, height, radius}, fill: theme.background, id: :btn )
+        |> text( text, fill: theme.text, translate: {8,(height*0.7)}, text_align: :left )
 
       :right ->
         Graph.build( font: font, font_size: font_size )
-        |> rrect( {width, height, radius}, fill: button_color, id: :btn )
-        |> text( text, fill: text_color, translate: {width - 8,(height*0.7)}, text_align: :right )
+        |> rrect( {width, height, radius}, fill: theme.background, id: :btn )
+        |> text( text, fill: theme.text, translate: {width - 8,(height*0.7)}, text_align: :right )
     end
 
     state = %{
       graph: graph,
-      colors: theme,
+      theme: theme,
       pressed: false,
       contained: false,
       align: alignment,
@@ -203,37 +203,37 @@ defmodule Scenic.Component.Button do
   #============================================================================
   # internal utilities
 
-  defp update_color( %{ graph: graph, colors: {_,color,_},
+  defp update_color( %{ graph: graph, theme: theme,
   pressed: false, contained: false} ) do
     Graph.modify(graph, :btn, fn(p)->
       p
-      |> Primitive.put_style(:fill, color)
+      |> Primitive.put_style(:fill, theme.background)
     end)
     |> push_graph()
   end
 
-  defp update_color( %{ graph: graph, colors: {_,color,_},
+  defp update_color( %{ graph: graph, theme: theme,
   pressed: false, contained: true} ) do
     Graph.modify(graph, :btn, fn(p)->
       p
-      |> Primitive.put_style(:fill, color)
+      |> Primitive.put_style(:fill, theme.background)
     end)
     |> push_graph()
   end
 
-  defp update_color( %{ graph: graph, colors: {_,color,_},
+  defp update_color( %{ graph: graph, theme: theme,
   pressed: true, contained: false} ) do
     Graph.modify(graph, :btn, fn(p)->
       p
-      |> Primitive.put_style(:fill, color)
+      |> Primitive.put_style(:fill, theme.background)
     end)
     |> push_graph()
   end
 
-  defp update_color( %{ graph: graph, colors: {_,_,color},
+  defp update_color( %{ graph: graph, theme: theme,
   pressed: true, contained: true} ) do
     Graph.modify(graph, :btn, fn(p)->
-      Primitive.put_style(p, :fill, color)
+      Primitive.put_style(p, :fill, theme.active)
     end)
     |> push_graph()
   end

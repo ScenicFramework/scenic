@@ -4,23 +4,24 @@ defmodule Scenic.Component.Input.Slider do
   alias Scenic.Graph
   alias Scenic.ViewPort
   alias Scenic.Primitive.Style.Paint.Color
+  alias Scenic.Primitive.Style.Theme
   import Scenic.Primitives, only: [{:rect, 3}, {:line, 3}, {:rrect, 3}, {:update_opts,2}]
 
 # import IEx
 
-  @height             16
+  @height             18
   @mid_height         trunc(@height / 2)
   @radius             5
-  @btn_size           14
+  @btn_size           16
   @line_width         4
 
   @default_width      300
 
   # theme is {line_color, thumb_color}
-  @themes %{
-    light:    {:cornflower_blue, :black},
-    dark:     {:cornflower_blue, :antique_white},
-  }
+  # @themes %{
+  #   light:    {:cornflower_blue, :black},
+  #   dark:     {:cornflower_blue, :antique_white},
+  # }
 
   #============================================================================
   # setup
@@ -69,19 +70,29 @@ defmodule Scenic.Component.Input.Slider do
 
   #--------------------------------------------------------
   def init( {extents, value, id}, args ), do: init( {extents, value, id, []}, args )
-  def init( {extents, value, id, opts}, _args ) do
-    theme = case opts[:theme] do
-      {_,_} = theme -> theme
-      type -> Map.get(@themes, type) || Map.get(@themes, :dark)
-    end
-    {line_color, thumb_color} = theme
+  def init( {extents, value, id, opts}, args ) do
+    # theme = case opts[:theme] do
+    #   {_,_} = theme -> theme
+    #   type -> Map.get(@themes, type) || Map.get(@themes, :dark)
+    # end
+    # {line_color, thumb_color} = theme
+
+    # theme = case opts[:theme] do
+    #   theme when is_atom(theme) -> Theme.preset(theme) || Theme.preset(:dark)
+    #   theme when is_map(theme) -> theme
+    # end
+
+    # theme is passed in as an inherited style
+    theme = (args[:styles][:theme] || Theme.preset(:dark))
+    |> Theme.normalize()
+
 
     width = opts[:width] || opts[:w] || @default_width
 
     graph = Graph.build()
-      |> rect( {width, @height}, fill: :clear )
-      |> line( {{0,@mid_height},{width,@mid_height}}, stroke: {@line_width, line_color} )
-      |> rrect( {@btn_size, @btn_size, @radius}, fill: thumb_color, id: :thumb, t: {0,1} )
+      |> rect( {width, @height}, fill: :clear, t: {0,-1} )
+      |> line( {{0,@mid_height},{width,@mid_height}}, stroke: {@line_width, theme.border} )
+      |> rrect( {@btn_size, @btn_size, @radius}, fill: theme.thumb, id: :thumb, t: {0,1} )
       |> update_slider_position( value, extents, width )
 
     state = %{

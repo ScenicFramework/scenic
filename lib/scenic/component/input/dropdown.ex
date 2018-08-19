@@ -9,6 +9,7 @@ defmodule Scenic.Component.Input.Dropdown do
   alias Scenic.Graph
   alias Scenic.ViewPort
   alias Scenic.Primitive.Style.Paint.Color
+  alias Scenic.Primitive.Style.Theme
   import Scenic.Primitives
 
   # import IEx
@@ -20,14 +21,6 @@ defmodule Scenic.Component.Input.Dropdown do
   @default_font_size      20
 
   @drop_click_window_ms   400
-
-
-  # theme is {text_color, background_color, pressed_color, border_color, carat_color, hover_color}
-  @themes %{
-    light:    {:black, :white, {215, 215, 215}, :dark_grey, :black, :cornflower_blue},
-    dark:     {:white, :black, {40,40,40}, :light_grey, :white, :cornflower_blue},
-  }
-
 
 
   @carat      {{0,0}, {12, 0}, {6, 6}}
@@ -80,12 +73,11 @@ defmodule Scenic.Component.Input.Dropdown do
 
   #--------------------------------------------------------
   def init( {items, initial_id, id}, args ), do: init( {items, initial_id, id, []}, args )
-  def init( {items, initial_id, id, opts}, _args ) do
-    theme = case opts[:theme] do
-      {_,_,_,_,_,_} = theme -> theme
-      type -> Map.get(@themes, type) || Map.get(@themes, :dark)
-    end
-    {text_color, background_color, pressed_color, border_color, carat_color,_} = theme
+  def init( {items, initial_id, id, opts}, args ) do
+
+    # theme is passed in as an inherited style
+    theme = (args[:styles][:theme] || Theme.preset(:dark))
+    |> Theme.normalize()
 
     width = opts[:width] || opts[:w] || @default_width
     height = opts[:height] || opts[:h] || @default_height
@@ -106,9 +98,9 @@ defmodule Scenic.Component.Input.Dropdown do
     drop_height = item_count * height
 
     graph = Graph.build( font: font, font_size: font_size )
-    |> rect( {width, height}, fill: background_color, stroke: {2, border_color} )
-    |> text( initial_text, fill: text_color, translate: {8,(height*0.7)}, text_align: :left, id: @text_id )
-    |> triangle( @carat, fill: carat_color, translate: {width - 18,(height*0.5)},
+    |> rect( {width, height}, fill: theme.background, stroke: {2, theme.border} )
+    |> text( initial_text, fill: theme.text, translate: {8,(height*0.7)}, text_align: :left, id: @text_id )
+    |> triangle( @carat, fill: theme.text, translate: {width - 18,(height*0.5)},
       pin: {6,0}, rotate: @rad, id: @carat_id )
 
     # an invisible rect for hit-test purposes
@@ -116,14 +108,14 @@ defmodule Scenic.Component.Input.Dropdown do
 
     # the drop box itself
     |> group(fn(g) ->
-      g = rect(g, {width, drop_height}, fill: background_color, stroke: {2, border_color})
+      g = rect(g, {width, drop_height}, fill: theme.background, stroke: {2, theme.border})
       {g,_} = Enum.reduce(items,{g,0}, fn({text,id},{g,i}) ->
         g = group(g, fn(g)->
           case id == initial_id do
-            true -> rect( g, {width, height}, fill: pressed_color, id: id )
-            false -> rect( g, {width, height}, fill: background_color, id: id )
+            true -> rect( g, {width, height}, fill: theme.active, id: id )
+            false -> rect( g, {width, height}, fill: theme.background, id: id )
           end
-          |> text( text, fill: text_color, text_align: :left, translate: {8,height * 0.7} )
+          |> text( text, fill: theme.text, text_align: :left, translate: {8,height * 0.7} )
         end, translate: {0,height * i})
         {g, i + 1}
       end)
@@ -134,7 +126,7 @@ defmodule Scenic.Component.Input.Dropdown do
     state = %{
       graph: graph,
       selected_id: initial_id,
-      colors: theme,
+      theme: theme,
       id: id,
       down: false,
       hover_id: nil,
@@ -191,10 +183,10 @@ defmodule Scenic.Component.Input.Dropdown do
   #--------------------------------------------------------
   def handle_input( {:cursor_enter, _uid}, %{id: id},
   %{down: true, items: items, graph: graph,
-  selected_id: selected_id, colors: colors} = state ) do
+  selected_id: selected_id, theme: theme} = state ) do
 
     # set the appropriate hilighting for each of the items
-    graph = update_highlighting(graph, items, selected_id, id, colors)
+    graph = update_highlighting(graph, items, selected_id, id, theme)
     |> push_graph
 
     {:noreply, %{state | hover_id: id, graph: graph}}
@@ -202,10 +194,10 @@ defmodule Scenic.Component.Input.Dropdown do
 
   #--------------------------------------------------------
   def handle_input( {:cursor_exit, _uid}, _context,
-  %{down: true, items: items, graph: graph, selected_id: selected_id, colors: colors} = state ) do
+  %{down: true, items: items, graph: graph, selected_id: selected_id, theme: theme} = state ) do
 
     # set the appropriate hilighting for each of the items
-    graph = update_highlighting(graph, items, selected_id, nil, colors)
+    graph = update_highlighting(graph, items, selected_id, nil, theme)
     |> push_graph
 
     {:noreply, %{state | hover_id: nil, graph: graph}}
@@ -217,14 +209,14 @@ defmodule Scenic.Component.Input.Dropdown do
   def handle_input(
     {:cursor_button, {:left, :press, _, _}},
     %{id: nil} = context,
-    %{down: true, items: items, colors: colors, selected_id: selected_id} = state
+    %{down: true, items: items, theme: theme, selected_id: selected_id} = state
   ) do
     # release the input capture
     ViewPort.release_input( context, [:cursor_button, :cursor_pos] )
 
     graph = state.graph
     # restore standard highliting
-    |> update_highlighting( items, selected_id, nil, colors)
+    |> update_highlighting( items, selected_id, nil, theme)
     # raise the dropdown
     |> Graph.modify( @carat_id, &update_opts(&1, rotate: @rad) )
     |> Graph.modify( @dropbox_id, &update_opts(&1, hidden: true) )
@@ -238,7 +230,7 @@ defmodule Scenic.Component.Input.Dropdown do
   # clicking the button when down, raises it back up without doing anything else
   def handle_input( {:cursor_button, {:left, :release, _, _}},
   %{id: @button_id} = context,
-  %{down: true, drop_time: drop_time, colors: colors, items: items,
+  %{down: true, drop_time: drop_time, theme: theme, items: items,
   graph: graph, selected_id: selected_id} = state ) do
 
     if :os.system_time(:milli_seconds) - drop_time <= @drop_click_window_ms do
@@ -247,7 +239,7 @@ defmodule Scenic.Component.Input.Dropdown do
     else
       # we are outside the window, raise it back up
       graph = graph
-      |> update_highlighting( items, selected_id, nil, colors)
+      |> update_highlighting( items, selected_id, nil, theme)
       |> Graph.modify( @carat_id, &update_opts(&1, rotate: @rad) )
       |> Graph.modify( @dropbox_id, &update_opts(&1, hidden: true) )
       |> push_graph()
@@ -264,14 +256,14 @@ defmodule Scenic.Component.Input.Dropdown do
   def handle_input( {:cursor_button, {:left, :release, _, _}},
   %{id: nil} = context,
   %{down: true, items: items,
-  colors: colors, selected_id: selected_id} = state ) do
+  theme: theme, selected_id: selected_id} = state ) do
 
     # release the input capture
     ViewPort.release_input( context, [:cursor_button, :cursor_pos] )
 
     graph = state.graph
     # restore standard highliting
-    |> update_highlighting( items, selected_id, nil, colors)
+    |> update_highlighting( items, selected_id, nil, theme)
     # raise the dropdown
     |> Graph.modify( @carat_id, &update_opts(&1, rotate: @rad) )
     |> Graph.modify( @dropbox_id, &update_opts(&1, hidden: true) )
@@ -285,7 +277,7 @@ defmodule Scenic.Component.Input.Dropdown do
   # the button is realeased over an item in dropdown
   def handle_input( {:cursor_button, {:left, :release, _, _}},
   %{id: item_id} = context,
-  %{down: true, id: id, items: items, colors: colors} = state ) do
+  %{down: true, id: id, items: items, theme: theme} = state ) do
 
     # release the input capture
     ViewPort.release_input( context, [:cursor_button, :cursor_pos] )
@@ -300,7 +292,7 @@ defmodule Scenic.Component.Input.Dropdown do
     # update the main button text
     |> Graph.modify( @text_id, &text(&1, text) )
     # restore standard highliting
-    |> update_highlighting( items, item_id, nil, colors)
+    |> update_highlighting( items, item_id, nil, theme)
     # raise the dropdown
     |> Graph.modify( @carat_id, &update_opts(&1, rotate: @rad) )
     |> Graph.modify( @dropbox_id, &update_opts(&1, hidden: true) )
@@ -323,16 +315,15 @@ defmodule Scenic.Component.Input.Dropdown do
   #============================================================================
   # internal
 
-  defp update_highlighting(graph, items, selected_id, hover_id, colors) do
-    {_, background_color, pressed_color, _, _, hover_color} = colors
+  defp update_highlighting(graph, items, selected_id, hover_id, theme) do
     # set the appropriate hilighting for each of the items
     Enum.reduce(items, graph, fn
       {_, ^hover_id}, g ->           # this is the item the user is hovering over
-        Graph.modify( g, hover_id, &update_opts(&1, fill: hover_color))
+        Graph.modify( g, hover_id, &update_opts(&1, fill: theme.thumb))
       {_, ^selected_id}, g ->  # this is the currently selected item
-        Graph.modify( g, selected_id, &update_opts(&1, fill: pressed_color))
+        Graph.modify( g, selected_id, &update_opts(&1, fill: theme.active))
       {_, regular_id}, g ->    # not selected, not hovered over
-        Graph.modify( g, regular_id, &update_opts(&1, fill: background_color))
+        Graph.modify( g, regular_id, &update_opts(&1, fill: theme.background))
     end)
   end
 

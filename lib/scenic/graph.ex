@@ -306,9 +306,9 @@ defmodule Scenic.Graph do
     uid = next_uid = graph.next_uid
 
     # prepare the primitive
-    # primitive = p
+    primitive = primitive
     # |> Map.put(:uid, uid)
-    # |> Map.put(:parent_uid, parent_uid)
+    |> Map.put(:parent_uid, parent_uid)
 
     # add the element to the primitives map, setting parent_uid into place
     primitives = Map.put(primitives, uid, primitive)
@@ -591,6 +591,18 @@ defmodule Scenic.Graph do
 
   def minimal( %Graph{primitives: p_map} ) do
     Enum.map(p_map, fn({k,p})-> { k, Primitive.minimal(p) } end)
+  end
+
+  def style_stack(%Graph{primitives: p_map} = graph, uid) when is_integer(uid) do
+    # get the target primitive
+    case p_map[uid] do
+      nil -> %{}
+      %{parent_uid: -1} = p -> Primitive.get_styles(p)
+      %{parent_uid: puid} = p ->
+        # merge the local styles into the parent styles
+        style_stack(graph, puid)
+        |> Map.merge( Primitive.get_styles(p) )
+    end
   end
 
 end

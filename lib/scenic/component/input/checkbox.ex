@@ -5,6 +5,7 @@ defmodule Scenic.Component.Input.Checkbox do
   alias Scenic.Primitive
   alias Scenic.ViewPort
   alias Scenic.Primitive.Style.Paint.Color
+  alias Scenic.Primitive.Style.Theme
   import Scenic.Primitives
 
  # import IEx
@@ -12,10 +13,10 @@ defmodule Scenic.Component.Input.Checkbox do
 
   # theme is {text_color, box_background, border_color, pressed_color, checkmark_color}
   # nil for text_color means to use whatever is inherited
-  @themes %{
-    light:    {:black, :white, :dark_grey, {215, 215, 215}, :cornflower_blue},
-    dark:     {:white, :black, :light_grey, {40,40,40}, :cornflower_blue},
-  }
+  # @themes %{
+  #   light:    {:black, :white, :dark_grey, {215, 215, 215}, :cornflower_blue},
+  #   dark:     {:white, :black, :light_grey, {40,40,40}, :cornflower_blue},
+  # }
 
   @default_font       :roboto
   @default_font_size  20
@@ -69,14 +70,11 @@ defmodule Scenic.Component.Input.Checkbox do
 
   #--------------------------------------------------------
   def init( {text, id, checked?}, i_opts ), do: init( {text, id, checked?, []}, i_opts )
-  def init( {text, id, checked?, opts}, _ ) when is_list(opts) do
+  def init( {text, id, checked?, opts}, args ) when is_list(opts) do
 
-    # the color scheme
-    theme = case opts[:theme] do
-      {_,_,_,_,_} = theme -> theme
-      type -> Map.get(@themes, type) || Map.get(@themes, :dark)
-    end
-    {text_color, box_background, border_color, _, checkmark_color} = theme
+    # theme is passed in as an inherited style
+    theme = (args[:styles][:theme] || Theme.preset(:dark))
+    |> Theme.normalize()
 
 
     graph = Graph.build( font: @default_font, font_size: @default_font_size )
@@ -84,8 +82,8 @@ defmodule Scenic.Component.Input.Checkbox do
       graph
       |> rect({140, 16}, fill: :clear, translate: {-2,-2})
       |> rrect({16, 16, 3},
-        fill: box_background,
-        stroke: {2, border_color},
+        fill: theme.background,
+        stroke: {2, theme.border},
         id: :box,
         translate: {-2,-2}
       )
@@ -96,14 +94,14 @@ defmodule Scenic.Component.Input.Checkbox do
             {:move_to, 1, 7},
             {:line_to, 5, 10},
             {:line_to, 10,1}
-          ], stroke: {2, checkmark_color}, join: :round)
+          ], stroke: {2, theme.thumb}, join: :round)
       end, id: :chx, hidden: !checked?)
     end, translate: {0, -11})
-    |> text(text, fill: text_color, translate: {20,0} )
+    |> text(text, fill: theme.text, translate: {20,0} )
 
     state = %{
       graph: graph,
-      colors: theme,
+      theme: theme,
       pressed: false,
       contained: false,
       checked: checked?,
@@ -177,16 +175,16 @@ defmodule Scenic.Component.Input.Checkbox do
 
   defp update_graph( %{
     graph: graph,
-    colors: {_, box_background, _, pressed_color, _},
+    theme: theme,
     pressed: pressed,
     contained: contained,
     checked: checked
   } ) do
     graph = case pressed && contained do
       true ->
-        Graph.modify( graph, :box, &Primitive.put_style(&1, :fill, pressed_color) )
+        Graph.modify( graph, :box, &Primitive.put_style(&1, :fill, theme.active) )
       false ->
-        Graph.modify( graph, :box, &Primitive.put_style(&1, :fill, box_background) )
+        Graph.modify( graph, :box, &Primitive.put_style(&1, :fill, theme.background) )
     end
     case checked do
       true ->

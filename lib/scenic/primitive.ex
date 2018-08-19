@@ -26,7 +26,7 @@ defmodule Scenic.Primitive do
   @callback contains_point?( any, {float, float} ) :: true | false
 
 
-  @not_styles       [:module, :id, :puid,
+  @not_styles       [:module, :id, :parent_uid,
     :builder, :data, :styles, :transforms, :pin, :rotate, :matrix,
     :scale, :translate]
 
@@ -37,7 +37,8 @@ defmodule Scenic.Primitive do
 
   # note: the following fields are all optional on a primitive.
   # :id, :tags, :event_filter, :state, :styles, :transforms
-  defstruct module: nil, data: nil,
+  # puid is managed automatically by the owning graph
+  defstruct module: nil, data: nil, parent_uid: -1,
     id: nil, styles: %{}, transforms: %{}
 
 
@@ -134,8 +135,7 @@ defmodule Scenic.Primitive do
       __struct__:   __MODULE__,       # per Jose. Declaring stuct this way saves memory
       module:       module,
       data:         data,
-      # uid:          nil,
-      # parent_uid:   -1
+      parent_uid:   -1
     }
     |> apply_options( opts )
   end
@@ -159,21 +159,20 @@ defmodule Scenic.Primitive do
   end
 
   defp apply_style_options( p, opts ) do
-    # extract the styles from the opts
-    styles = Enum.reject(opts, fn({k,_}) -> Enum.member?(@not_styles, k) end)
-    |> Enum.into( %{} )
-
-    # verify the transforms
-    Enum.each(styles, fn{k,v} -> Style.verify!( k, v ) end)
-
-    # return the verified transforms
-    Map.get(p, :styles, %{})
-    |> Map.merge( styles )
+    # Scan the options list. Merge in each style as they are found
+    Enum.reduce(opts, Map.get(p, :styles, %{}), fn
+      {:styles, styles}, s when is_map(styles) -> Map.merge(s, styles)
+      {k,v}, s ->
+        case Enum.member?(@not_styles, k) do
+          true -> s   # skip
+          false ->
+            Style.verify!( k, v )
+            Map.put(s, k, v)
+        end
+    end)
     |> case do
-      s when s == %{} ->
-        p
-      styles ->
-        Map.put(p, :styles, styles)
+      s when s == %{} -> p
+      styles -> Map.put(p, :styles, styles)
     end
   end
 
@@ -186,21 +185,20 @@ defmodule Scenic.Primitive do
       opt -> opt
     end)
 
-    # extract the transforms from the opts
-    txs = Enum.filter(opts, fn({k,_}) -> Enum.member?(@transform_types, k) end)
-    |> Enum.into( %{} )
-
-    # verify the transforms
-    Enum.each(txs, fn{k,v} -> Transform.verify!( k, v ) end)
-
-    # return the verified transforms
-    Map.get(p, :transforms, %{})
-    |> Map.merge( txs )
+    # Scan the options list. Merge in each style as they are found
+    Enum.reduce(opts, Map.get(p, :transforms, %{}), fn
+      {:transforms, txs}, t when is_map(txs) -> Map.merge(t, txs)
+      {k,v}, t ->
+        case Enum.member?(@transform_types, k) do
+          true ->
+            Transform.verify!( k, v )
+            Map.put(t, k, v)
+          false -> t
+        end
+    end)
     |> case do
-      t when t == %{} ->
-        p
-      txs ->
-        Map.put(p, :transforms, txs)
+      t when t == %{} -> p
+      txs -> Map.put(p, :transforms, txs)
     end
   end
 

@@ -12,6 +12,7 @@ defmodule Scenic.Component.Input.TextField do
   alias Scenic.ViewPort
   alias Scenic.Component.Input.Carat
   alias Scenic.Primitive.Style.Paint.Color
+  alias Scenic.Primitive.Style.Theme
 
   import Scenic.Primitives, only: [
     {:rect, 3}, {:text, 3},
@@ -37,10 +38,12 @@ defmodule Scenic.Component.Input.TextField do
   @password_char          '*'
 
   # theme is {text_color, hint_color, background_color, border_color, focused_color}
-  @themes %{
-    light:      {:black, :grey, :white, :dark_grey, :blue},
-    dark:       {:white, :grey, :black, :light_grey, :cornflower_blue}
-  }
+  # @themes %{
+  #   light:      {:black, :grey, :white, :dark_grey, :blue},
+  #   dark:       {:white, :grey, :black, :light_grey, :cornflower_blue}
+  # }
+
+  @hint_color           :grey
 
 
   #--------------------------------------------------------
@@ -88,14 +91,26 @@ defmodule Scenic.Component.Input.TextField do
 
   #--------------------------------------------------------
   def init( {value, id}, args ), do: init( {value, id, []}, args )
-  def init( {value, id, opts}, _args ) do
+  def init( {value, id, opts}, args ) do
 
     # get the colors
-    theme = case opts[:theme] do
-      {_,_,_,_,_} = theme -> theme
-      type -> Map.get(@themes, type) || Map.get(@themes, :dark)
-    end
-    {text_color, hint_color, background_color, border_color, _} = theme
+    # theme = case opts[:theme] do
+    #   {_,_,_,_,_} = theme -> theme
+    #   type -> Map.get(@themes, type) || Map.get(@themes, :dark)
+    # end
+    # {text_color, hint_color, background_color, border_color, _} = theme
+
+    # theme = case opts[:theme] do
+    #   theme when is_atom(theme) -> Theme.preset(theme) || Theme.preset(:dark)
+    #   theme when is_map(theme) -> theme
+    # end
+
+    # theme is passed in as an inherited style
+    theme = (args[:styles][:theme] || Theme.preset(:dark))
+    |> Theme.normalize()
+
+
+
 
     hint = opts[:hint] || @default_hint
     width = opts[:width] || opts[:w] || @default_width
@@ -109,7 +124,7 @@ defmodule Scenic.Component.Input.TextField do
 
     state = %{
       graph: nil,
-      colors: theme,
+      theme: theme,
       width: width,
       height: height,
       value: value,
@@ -127,18 +142,18 @@ defmodule Scenic.Component.Input.TextField do
       font: @default_font, font_size: @default_font_size,
       scissor: {width, height}
     )
-    |> rect({width, height}, fill: background_color)
+    |> rect({width, height}, fill: theme.background)
     |> group( fn(g) ->
       g
       |> text(
-        @default_hint, fill: hint_color,
+        @default_hint, fill: @hint_color,
         t: {0, @default_font_size}, id: :text
         )
-      |> Carat.add_to_graph({height, text_color}, id: :carat)
+      |> Carat.add_to_graph({height, theme.text}, id: :carat)
     end, t: {@inset_x, 0})
     |> rect(
       {width, height},
-      fill: :clear, stroke: {2, border_color}, id: :border
+      fill: :clear, stroke: {2, theme.border}, id: :border
       )
     |> update_text( display, state )
     |> update_carat( display, index )
@@ -151,13 +166,11 @@ defmodule Scenic.Component.Input.TextField do
 
   #--------------------------------------------------------
   # to be called when the value has changed
-  defp update_text( graph, "", %{hint: hint, colors: colors} ) do
-    {_, hint_color, _, _, _} = colors
-    Graph.modify( graph, :text, &text(&1, hint, fill: hint_color) )
+  defp update_text( graph, "", %{hint: hint} ) do
+    Graph.modify( graph, :text, &text(&1, hint, fill: @hint_color) )
   end
-  defp update_text( graph, value, %{colors: colors} ) do
-    {text_color, _, _, _, _} = colors
-    Graph.modify( graph, :text, &text(&1, value, fill: text_color) )
+  defp update_text( graph, value, %{theme: theme} ) do
+    Graph.modify( graph, :text, &text(&1, value, fill: theme.text) )
   end
 
   #============================================================================
@@ -187,19 +200,17 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   #--------------------------------------------------------
-  defp capture_focus( context, %{focused: false, graph: graph, colors: colors} = state ) do
+  defp capture_focus( context, %{focused: false, graph: graph, theme: theme} = state ) do
     # capture the input
     ViewPort.capture_input( context, @input_capture)
 
     # start animating the carat
     Scene.cast_to_refs( nil, :gain_focus )
 
-    {_, _, _, _, focus_color} = colors
-
     # show the carat
     graph = graph
     |> Graph.modify( :carat, &update_opts(&1, hidden: false) )
-    |> Graph.modify( :border, &update_opts(&1, stroke: {2, focus_color}) )
+    |> Graph.modify( :border, &update_opts(&1, stroke: {2, theme.focus}) )
     |> push_graph()
 
     # record the state
@@ -209,19 +220,17 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   #--------------------------------------------------------
-  defp release_focus( context, %{focused: true, graph: graph, colors: colors} = state ) do
+  defp release_focus( context, %{focused: true, graph: graph, theme: theme} = state ) do
     # release the input
     ViewPort.release_input( context, @input_capture)
 
     # stop animating the carat
     Scene.cast_to_refs( nil, :lose_focus )
 
-    {_, _, _, border_color, _} = colors
-
     # hide the carat
     graph = graph
     |> Graph.modify( :carat, &update_opts(&1, hidden: true) )
-    |> Graph.modify( :border, &update_opts(&1, stroke: {2, border_color}) )
+    |> Graph.modify( :border, &update_opts(&1, stroke: {2, theme.border}) )
     |> push_graph()
 
     # record the state

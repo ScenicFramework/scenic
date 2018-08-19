@@ -5,25 +5,10 @@ defmodule Scenic.Component.Input.RadioButton do
   alias Scenic.Primitive
   alias Scenic.ViewPort
   alias Scenic.Primitive.Style.Paint.Color
+  alias Scenic.Primitive.Style.Theme
   import Scenic.Primitives, only: [{:rect, 3}, {:circle, 3}, {:text, 3}]
 
   # import IEx
-
-
-#  @default_width      80
-#  @default_height     32
-#  @default_radius     6
-#  @default_type       6
-
-#  @blue_color         :steel_blue
-#  @text_color         :white
-
-
-  # {text_color, box_background, border_color, pressed_color, checkmark_color}
-  @themes %{
-    light:    {:black, :white, :dark_grey, {215, 215, 215}, :cornflower_blue},
-    dark:     {:white, :black, :light_grey, {40,40,40}, {0x00,0x71,0xBC}},
-  }
 
 
 #  #--------------------------------------------------------
@@ -86,29 +71,27 @@ defmodule Scenic.Component.Input.RadioButton do
 
 
   #--------------------------------------------------------
-  def init( data, _args ) do
+  def init( data, args ) do
     # normalize the incoming data
     {text, id, checked?, opts} = normalize( data )
 
-    # get the theme
-    theme = case opts[:theme] do
-      {_,_,_,_,_} = theme -> theme
-      type -> Map.get(@themes, type) || Map.get(@themes, :dark)
-    end
-    {text_color, box_background, border_color, _, checkmark_color} = theme
+    # theme is passed in as an inherited style
+    theme = (args[:styles][:theme] || Theme.preset(:dark))
+    |> Theme.normalize()
+
 
     graph = Graph.build( font: :roboto, font_size: 16 )
     |> Primitive.Group.add_to_graph(fn(graph) ->
       graph
       |> rect({140, 16}, fill: :clear, translate: {-2,-2})
-      |> circle(8, fill: box_background, stroke: {2, border_color}, id: :box, t: {6,6})
-      |> circle(5, fill: checkmark_color, id: :chx, hidden: !checked?, t: {6,6})
+      |> circle(8, fill: theme.background, stroke: {2, theme.border}, id: :box, t: {6,6})
+      |> circle(5, fill: theme.thumb, id: :chx, hidden: !checked?, t: {6,6})
     end, translate: {0, -11})
-    |> text(text, fill: text_color, translate: {20,0})
+    |> text(text, fill: theme.text, translate: {20,0})
 
     state = %{
       graph: graph,
-      colors: theme,
+      theme: theme,
       pressed: false,
       contained: false,
       checked: checked?,
@@ -189,16 +172,16 @@ defmodule Scenic.Component.Input.RadioButton do
 
   defp update_graph( %{
     graph: graph,
-    colors: {_, box_background, _, pressed_color, _},
+    theme: theme,
     pressed: pressed,
     contained: contained,
     checked: checked
   } ) do
     graph = case pressed && contained do
       true ->
-        Graph.modify( graph, :box, &Primitive.put_style(&1, :fill, pressed_color) )
+        Graph.modify( graph, :box, &Primitive.put_style(&1, :fill, theme.active) )
       false ->
-        Graph.modify( graph, :box, &Primitive.put_style(&1, :fill, box_background) )
+        Graph.modify( graph, :box, &Primitive.put_style(&1, :fill, theme.background) )
     end
     case checked do
       true ->

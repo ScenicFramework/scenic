@@ -5,6 +5,7 @@
 # Taking the learnings from several previous versions.
 
 defmodule Scenic.Scene do
+  alias Scenic.Graph
   alias Scenic.Scene
   alias Scenic.ViewPort
   alias Scenic.ViewPort.Context
@@ -13,7 +14,7 @@ defmodule Scenic.Scene do
 
   require Logger
 
-  # import IEx
+  import IEx
 
   @moduledoc """
   
@@ -243,6 +244,9 @@ defmodule Scenic.Scene do
 
 
   @type ref :: reference | atom
+
+  @root_id              :_root_
+
 
 
   #============================================================================
@@ -802,7 +806,6 @@ defmodule Scenic.Scene do
         {Map.put( g, uid, Primitive.minimal(p) ), all_refs}
     end)
 
-
     # insert the proper graph keys back into the graph to finish normalizing
     # it for the drivers. Yes, the driver could do this from the all_keys term
     # that is also being written into the ets table, but it gets done all the
@@ -827,7 +830,7 @@ defmodule Scenic.Scene do
   #--------------------------------------------------------
   # push a graph to the ets table and manage embedded dynamic child scenes
   # to the reader: You have no idea how difficult this was to get right.
-  def handle_cast({:push_graph, graph, sub_id, true},  %{
+  def handle_cast({:push_graph, raw_graph, sub_id, true},  %{
     scene_ref: scene_ref,
     raw_scene_refs: raw_scene_refs,
     dyn_scene_pids: dyn_scene_pids,
@@ -835,10 +838,15 @@ defmodule Scenic.Scene do
     dynamic_children_pid: dyn_sup,
     viewport: viewport
   } = state ) do
+
+    # get the root styles as a cheat for now
+    root_styles = Graph.get_id!(raw_graph, @root_id)
+    |> Primitive.get_styles()
+
     # reduce the incoming graph to it's minimal form
     # while simultaneously extracting the SceneRefs
     # this should be the only full scan when pushing a graph
-    {graph, all_keys, new_raw_refs} = Enum.reduce( graph.primitives, {%{}, %{}, %{}}, fn
+    {graph, all_keys, new_raw_refs} = Enum.reduce( raw_graph.primitives, {%{}, %{}, %{}}, fn
       # named reference
       ({uid, %{module: Primitive.SceneRef, data: name} = p},
       {g, all_refs, dyn_refs}) when is_atom(name) ->
@@ -882,7 +890,7 @@ defmodule Scenic.Scene do
           raise "You have set a dynamic SceneRef on a graph in a scene where has_children is false"
         end
 
-        styles = Map.get(graph[uid], :styles, %{})
+        styles = Graph.style_stack(raw_graph, uid)
 
         init_opts = case viewport do
           nil -> [styles: styles]

@@ -29,7 +29,9 @@ defmodule Scenic.Primitive.Style do
     :text_align =>                        Style.TextAlign,
     :text_height =>                       Style.TextHeight,
 
-    :scissor =>                           Style.Scissor
+    :scissor =>                           Style.Scissor,
+
+    :theme =>                             Style.Theme
   }
 
   @primitive_styles   [
@@ -37,7 +39,7 @@ defmodule Scenic.Primitive.Style do
     :texture_wrap, :texture_filter,
     :fill, :stroke, :join, :cap, :miter_limit,
     :font, :font_blur, :font_size, :text_align, :text_height,
-    :scissor
+    :scissor, :theme
   ]
 
   @callback info() :: bitstring

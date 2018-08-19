@@ -45,16 +45,16 @@ defmodule Scenic.Component.Input.RadioGroup do
   # def valid?( _items ), do: true
 
   #--------------------------------------------------------
-  def init( {items, id}, _ ) when is_list(items) do
+  def init( {items, id}, args ) when is_list(items) do
     graph = Graph.build(font: :roboto, font_size: 16)
     |> group(fn(graph) ->
       {graph, _} = Enum.reduce(items, {graph, 0}, fn
         {t,m}, {g, voffset} ->
-          g = RadioButton.add_to_graph(g, {t, m, false}, translate: {0,voffset} )
+          g = RadioButton.add_to_graph(g, {t, m, false}, translate: {0,voffset}, styles: args[:styles] )
           {g, voffset + @line_height}
 
         {t,m,v}, {g, voffset} ->
-          g = RadioButton.add_to_graph(g, {t, m, v}, translate: {0,voffset} )
+          g = RadioButton.add_to_graph(g, {t, m, v}, translate: {0,voffset}, styles: args[:styles] )
           {g, voffset + @line_height}
       end)
       graph
