@@ -94,14 +94,16 @@ defmodule Scenic.ViewPort.Tables do
   #--------------------------------------------------------
   def delete_graph( {:graph,scene,_} = graph_key )
   when is_atom(scene) or is_reference(scene) do
-    :ets.delete(@ets_graphs_table, graph_key)
     list_subscribers(graph_key)
     |> Enum.each( fn(subscriber) ->
-      # tell the subscriber the graph went away
+      # tell the subscribers the graph went away
       GenServer.cast(subscriber, {:delete_graph, graph_key})
-      # delete the subscription
-      :ets.match_delete(@ets_subs_table, {graph_key, subscriber})
+      # delete the subscription - must be done from Table process
+      GenServer.cast( @name, {:graph_unsubscribe, graph_key, subscriber} )
+      # :ets.match_delete(@ets_subs_table, {graph_key, subscriber})
     end)
+    :ets.delete(@ets_graphs_table, graph_key)
+    :ok
   end
   def delete_graph( _ ), do: {:error, :invalid_graph_key}
 

@@ -73,7 +73,7 @@ defmodule Scenic.Component.Input.RadioButton do
   #--------------------------------------------------------
   def init( data, args ) do
     # normalize the incoming data
-    {text, id, checked?, opts} = normalize( data )
+    {text, id, checked?, _opts} = normalize( data )
 
     # theme is passed in as an inherited style
     theme = (args[:styles][:theme] || Theme.preset(:dark))

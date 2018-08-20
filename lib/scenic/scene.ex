@@ -14,7 +14,7 @@ defmodule Scenic.Scene do
 
   require Logger
 
-  import IEx
+  # import IEx
 
   @moduledoc """
   
@@ -244,9 +244,6 @@ defmodule Scenic.Scene do
 
 
   @type ref :: reference | atom
-
-  @root_id              :_root_
-
 
 
   #============================================================================
@@ -838,10 +835,6 @@ defmodule Scenic.Scene do
     dynamic_children_pid: dyn_sup,
     viewport: viewport
   } = state ) do
-
-    # get the root styles as a cheat for now
-    root_styles = Graph.get_id!(raw_graph, @root_id)
-    |> Primitive.get_styles()
 
     # reduce the incoming graph to it's minimal form
     # while simultaneously extracting the SceneRefs

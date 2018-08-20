@@ -8,20 +8,7 @@ defmodule Scenic.Component.Button do
   alias Scenic.Primitive.Style.Theme
   import Scenic.Primitives, only: [{:rrect, 3}, {:text, 3}]
 
-  import IEx
-
-  # type is {text_color, button_color, pressed_color}
-  # @themes %{
-  #   primary:    {:white, {72,122,252}, {58,94,201}},
-  #   secondary:  {:white, {111,117,125}, {86,90,95}},
-  #   success:    {:white, {99,163,74}, {74,123,56}},
-  #   danger:     {:white, {191,72,71}, {164,54,51}},
-  #   warning:    {:black, {239,196,42}, {197,160,31}},
-  #   info:       {:white, {94,159,183}, {70,119,138}},
-  #   light:      {:black, {248,249,250}, {220,224,229}},
-  #   dark:       {:white, {54,58,64}, {31,33,36}},
-  #   text:       {{72,122,252}, :clear, :clear}
-  # }
+  # import IEx
 
   @default_width      80
   @default_height     30

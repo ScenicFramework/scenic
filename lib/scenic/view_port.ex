@@ -10,7 +10,7 @@ defmodule Scenic.ViewPort do
   alias Scenic.ViewPort
   alias Scenic.ViewPort.Context
 
- import IEx
+ # import IEx
 
   @moduledoc """
 
