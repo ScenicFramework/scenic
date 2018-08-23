@@ -24,7 +24,6 @@ defmodule Scenic.ViewPort.Tables do
   #============================================================================
   # external client api
 
-
   #--------------------------------------------------------
   # helpers so that other modules can get the name graphs during compile time
 
