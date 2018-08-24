@@ -279,7 +279,7 @@ defmodule Mix.Tasks.Scenic.New do
       |> text("Hi", font: :roboto, font_size: 200, translate: {20, 300}, id: :speed)
 
       # numeric slider
-      |> slider( {{0,@max_speed}, 0, :speed_slider},
+      |> slider( {{0,100}, 0, :speed_slider},
         id: :num_slider, translate: {20,200} )
 
 
