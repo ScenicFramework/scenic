@@ -451,7 +451,7 @@ defmodule Scenic.ViewPort do
     graph_key = {:graph, scene_ref, nil}
 
     # let the scene know it is the new root
-    # GenServer.call(scene_pid, {:set_root, args})
+    GenServer.call(scene_pid, {:set_root, args})
 
     # tell the drivers about the new root
     driver_cast( self(), {:set_root, graph_key} )
@@ -459,7 +459,7 @@ defmodule Scenic.ViewPort do
     # clean up the old root graph. Can be done async so long as
     # terminating the dynamic scene (if set) is after deactivation
     Task.start( fn ->
-      # if old_root_scene, do: GenServer.call(old_root_scene, :lose_root)
+      if old_root_scene, do: GenServer.call(old_root_scene, :lose_root)
       if old_dynamic_root_scene do
         GenServer.cast(old_dynamic_root_scene, {:stop, dyn_sup})
       end
