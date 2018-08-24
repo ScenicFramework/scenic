@@ -55,17 +55,17 @@ defmodule Mix.Tasks.Scenic.New do
     create_file("mix.exs", mix_exs_template(assigns))
     create_file("Makefile", makefile_template(assigns))
 
-    create_directory("static")
-
     create_directory("config")
     create_file("config/config.exs", config_template(assigns))
 
     create_directory("lib")
     create_file("lib/#{app}.ex", lib_template(assigns))
 
-    # if opts[:sup] do
-    #   create_file("lib/#{app}/application.ex", lib_app_template(assigns))
-    # end
+    create_directory("static")
+
+    create_directory("lib/scenes")
+    create_file("lib/scenes/example.ex", scene_template(assigns))
+
 
     # create_directory("test")
     # create_file("test/test_helper.exs", test_helper_template(assigns))
@@ -142,7 +142,6 @@ defmodule Mix.Tasks.Scenic.New do
   # Ignore scripts marked as secret - usually passwords and such in config files
   *.secret.exs
   *.secrets.exs
-
   """)
 
   #--------------------------------------------------------
@@ -156,25 +155,31 @@ defmodule Mix.Tasks.Scenic.New do
         version: "0.1.0",
         elixir: "~> <%= @elixir_version %>",
         start_permanent: Mix.env() == :prod,
+        compilers: [:elixir_make] ++ Mix.compilers,
+        make_env: %{"MIX_ENV" => to_string(Mix.env)},
+        make_clean: ["clean"],
         deps: deps()
       ]
     end
 
     # Run "mix help compile.app" to learn about applications.
     def application do
-      []
+      [
+        mod: {<%= @mod %>, []},
+        extra_applications: []
+      ]
     end
 
     # Run "mix help deps" to learn about dependencies.
     defp deps do
       [
         {:elixir_make, "~> 0.4"},
-        {:scenic, "~> <%= @scenic_version %>"},
-        {:scenic_driver_glfw, "~> <%= @scenic_version %>"},
+        # {:scenic, "~> <%= @scenic_version %>"},
+        # {:scenic_driver_glfw, "~> <%= @scenic_version %>"},
 
         # the ssh versions
-        # { :scenic, git: "git@github.com:boydm/scenic.git" },
-        # { :scenic_driver_glfw, git: "git@github.com:boydm/scenic_driver_glfw.git"},
+        { :scenic, git: "git@github.com:boydm/scenic.git" },
+        { :scenic_driver_glfw, git: "git@github.com:boydm/scenic_driver_glfw.git"},
 
 
         # {:dep_from_hexpm, "~> 0.3.0"},
@@ -186,19 +191,18 @@ defmodule Mix.Tasks.Scenic.New do
 
   #--------------------------------------------------------
   embed_template(:makefile, """
-  # makefile copies files from static into priv during build
   .PHONY: all clean
 
   all: priv static
 
   priv:
-    mkdir -p priv
+  \tmkdir -p priv
 
   static: priv/
-    ln -fs ../static priv/
+  \tln -fs ../static priv/
 
   clean:
-    $(RM) -r priv
+  \t$(RM) -r priv
   """)
 
   #--------------------------------------------------------
@@ -255,10 +259,43 @@ defmodule Mix.Tasks.Scenic.New do
     end
 
   end
-
-
   """)
 
+
+  #--------------------------------------------------------
+  embed_template(:scene, """
+  defmodule <%= @mod %>.Scene.Example do
+    @moduledoc \"""
+    Sample scene.
+    \"""
+
+    use Scenic.Scene
+    alias Scenic.Graph
+    import Scenic.Primitives
+    import Scenic.Components
+
+
+    @graph Graph.build()
+      |> text("Hi", font: :roboto, font_size: 200, translate: {20, 300}, id: :speed)
+
+      # numeric slider
+      |> slider( {{0,@max_speed}, 0, :speed_slider},
+        id: :num_slider, translate: {20,200} )
+
+
+    #============================================================================
+    # setup
+
+    #--------------------------------------------------------
+    def init( _, _ ) do
+      push_graph(@graph)
+      {:ok, @graph}
+    end
+
+
+
+  end
+  """)
 
 
 
