@@ -3,8 +3,7 @@ defmodule Mix.Tasks.Scenic.New do
 
   import Mix.Generator
 
-  import IEx
-
+  # import IEx
 
   @switches [
     app: :string,
@@ -41,7 +40,7 @@ defmodule Mix.Tasks.Scenic.New do
 
 
   #--------------------------------------------------------
-  defp generate(app, mod, path, opts) do
+  defp generate(app, mod, _path, _opts) do
     assigns = [
       app: app,
       mod: mod,
@@ -60,11 +59,16 @@ defmodule Mix.Tasks.Scenic.New do
 
     create_directory("lib")
     create_file("lib/#{app}.ex", lib_template(assigns))
+    create_file("lib/static_supervisor.ex", static_supervisor_template(assigns))
 
     create_directory("static")
 
     create_directory("lib/scenes")
-    create_file("lib/scenes/example.ex", scene_template(assigns))
+    create_file("lib/scenes/first.ex", first_scene_template(assigns))
+    create_file("lib/scenes/second.ex", second_scene_template(assigns))
+
+    create_directory("lib/components")
+    create_file("lib/components/nav.ex", nav_template(assigns))
 
 
     # create_directory("test")
@@ -177,9 +181,14 @@ defmodule Mix.Tasks.Scenic.New do
         # {:scenic, "~> <%= @scenic_version %>"},
         # {:scenic_driver_glfw, "~> <%= @scenic_version %>"},
 
+        # this clock is optional. It is. included as an example of a set
+        # of components wrapped up in their own Hex package
+        # {:scenic_clock, ">= 0.0.0"},
+
         # the ssh versions
         { :scenic, git: "git@github.com:boydm/scenic.git" },
         { :scenic_driver_glfw, git: "git@github.com:boydm/scenic_driver_glfw.git"},
+        { :scenic_clock, git: "git@github.com:boydm/scenic_clock.git"},
 
 
         # {:dep_from_hexpm, "~> 0.3.0"},
@@ -216,7 +225,7 @@ defmodule Mix.Tasks.Scenic.New do
   config :<%= @app %>, :viewport, %{
         name: :main_viewport,
         size: {700, 600},
-        default_scene: {<%= @mod %>.Scene.Example, nil},
+        default_scene: {<%= @mod %>.Scene.First, nil},
         drivers: [
           %{
             module: Scenic.Driver.Glfw,
@@ -254,6 +263,7 @@ defmodule Mix.Tasks.Scenic.New do
       opts = [strategy: :one_for_one, name: ScenicExample]
       children = [
         supervisor(Scenic, [viewports: [viewport_config]]),
+        supervisor(<%= @mod %>.StaticSupervisor, []),
       ]
       Supervisor.start_link(children, opts)
     end
@@ -263,41 +273,133 @@ defmodule Mix.Tasks.Scenic.New do
 
 
   #--------------------------------------------------------
-  embed_template(:scene, """
-  defmodule <%= @mod %>.Scene.Example do
+  embed_template(:first_scene, """
+  defmodule <%= @mod %>.Scene.First do
     @moduledoc \"""
     Sample scene.
     \"""
 
     use Scenic.Scene
+    alias <%= @mod %>.Component.Nav
     alias Scenic.Graph
     import Scenic.Primitives
-    import Scenic.Components
-
 
     @graph Graph.build()
-      |> text("Hi", font: :roboto, font_size: 200, translate: {20, 300}, id: :speed)
+      |> text("First Scene", font: :roboto, font_size: 60, translate: {20, 120})
+      |> Nav.add_to_graph(__MODULE__)
 
-      # numeric slider
-      |> slider( {{0,100}, 0, :speed_slider},
-        id: :num_slider, translate: {20,200} )
-
-
-    #============================================================================
-    # setup
-
-    #--------------------------------------------------------
     def init( _, _ ) do
       push_graph(@graph)
       {:ok, @graph}
     end
 
+  end
+  """)
 
+  #--------------------------------------------------------
+  embed_template(:second_scene, """
+  defmodule <%= @mod %>.Scene.Second do
+    @moduledoc \"""
+    Sample scene.
+    \"""
+
+    use Scenic.Scene
+    alias <%= @mod %>.Component.Nav
+    alias Scenic.Graph
+    import Scenic.Primitives
+
+    @graph Graph.build()
+      |> text("Second Scene", font: :roboto, font_size: 60, translate: {20, 120})
+      |> Nav.add_to_graph(__MODULE__)
+
+    def init( _, _ ) do
+      push_graph(@graph)
+      {:ok, @graph}
+    end
+
+  end
+  """)
+
+  #--------------------------------------------------------
+  embed_template(:nav, """
+  defmodule <%= @mod %>.Component.Nav do
+    @moduledoc \"""
+    Sample componentized nav bar.
+    \"""
+
+    use Scenic.Component
+    alias Scenic.Graph
+    alias Scenic.ViewPort
+
+    import Scenic.Primitives, only: [{:text, 3}, {:scene_ref, 3}]
+    import Scenic.Components, only: [{:dropdown, 3}]
+
+    #--------------------------------------------------------
+    def verify( scene ) when is_atom(scene), do: {:ok, scene}
+    def verify( {scene,_} = data ) when is_atom(scene), do: {:ok, data}
+    def verify( _ ), do: :invalid_data
+
+    #--------------------------------------------------------
+    def init( current_scene, opts ) do
+
+      # get the viewport width to position the clock
+      vp = opts[:viewport]
+      {:ok, %ViewPort.Status{size: {width,_}}} = ViewPort.info(vp)
+
+      graph = Graph.build(font_size: 20)
+      |> text("Scene:", translate: {14, 40}, align: :right)
+      |> dropdown({[
+          {"First Scene", <%= @mod %>.Scene.First},
+          {"Second Scene", <%= @mod %>.Scene.Second},
+        ], current_scene, :nav}, translate: {70, 20})
+
+      # the clock is statically supervised as an example on how to do that.
+      # You could also use it dynamically
+      |> scene_ref(:clock, translate: {width - 20, 10})
+
+      |> push_graph()
+
+      {:ok, %{graph: graph, viewport: opts[:viewport]}}
+    end
+
+    #--------------------------------------------------------
+    def filter_event( {:value_changed, :nav, scene}, _, %{viewport: vp} = state )
+    when is_atom(scene) do
+       Scenic.ViewPort.set_root( vp, {scene, nil} )
+      {:stop, state }
+    end
+
+    #--------------------------------------------------------
+    def filter_event( {:value_changed, :nav, scene}, _, %{viewport: vp} = state ) do
+       Scenic.ViewPort.set_root( vp, scene )
+      {:stop, state }
+    end
 
   end
   """)
 
 
+  #--------------------------------------------------------
+  embed_template(:static_supervisor, """
+  defmodule <%= @mod %>.StaticSupervisor do
+    use Supervisor
+
+    @name     :static_scenes
+
+    def start_link() do
+      Supervisor.start_link(__MODULE__, :ok, name: @name)
+    end
+
+    def init(:ok) do
+      children = [
+        {Scenic.Clock.Digital, {[], [name: :clock]}},
+        # {Scenic.Clock.Analog, {[size: 40], [name: :clock]}}
+      ]
+
+      Supervisor.init(children, strategy: :one_for_one)
+    end
+  end
+  """)
 
 
 
