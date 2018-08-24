@@ -2,7 +2,7 @@
 
 Scenic is a client application and UI framework\* written directly on the Elixir/Erlang/OTP stack. With it you can build applications that operate identically across all supported operating systems, including MacOS, Ubuntu, Nerves and more.
 
-\* Framework. Library. Whatever. It is opinionated on how UI should be built in a functional and highly available world. Other parts of the application are still up to you.
+\* Framework. Library. Whatever. Scenic is opinionated on how UI should be built in a functional and highly available world. Other parts of the application are still up to you.
 
 ## Goals
 (Not necessarily in order)
@@ -47,7 +47,7 @@ Scenic is definitely not a browser and has nothing to do with HTML. However, its
 
 The following terms include HTML analogies as appropriate…
 
-## Terms (with analogies):
+## Terms and Definitions
 
 * **Scene**: Scenes are sort of like a web page. Each scene is a GenServer process that contains state and business logic to handle user input. As the device navigates to different screens, it is moving between scenes.
 
@@ -65,12 +65,14 @@ The following terms include HTML analogies as appropriate…
 
 * **Driver**: Drivers know nothing about scenes, but are able to render Graphs to a specific device. That could be a graphics chip, or the network… Drivers also collect raw user input and route it back up to the ViewPort.
 
-* **User Input**: There is a fix set of user input types (mouse, keyboard, touch, etc…) that drivers generate and hand up to the ViewPort. The ViewPort in turn sends the input as a message to the appropriate Scene. Scene’s handle raw user input via the ‘handle_input/3’ callback.
+* **User Input**: There is a fix set of user input types (mouse, keyboard, touch, etc…) that drivers generate and hand up to the ViewPort. The ViewPort in turn sends the input as a message to the appropriate Scene. Scene’s handle raw user input via the `handle_input/3` callback.
 
-* **Event**: In response to user input (or timers or any other message), a component can generate an event message that it sends up to it’s parent scene. Unlike raw user input, if the parent doesn’t handle it, it is passed up again to that component’s parent until it reaches the root scene. Scenes handle events that are bubbling up the chain via the ‘filter_event/3’ callback. The ViewPort takes care of sending events to the correct parent. This is analogous to event bubbling on a web page.
+* **Event**: In response to user input (or timers or any other message), a component can generate an event message that it sends up to it’s parent scene. Unlike raw user input, if the parent doesn’t handle it, it is passed up again to that component’s parent until it reaches the root scene. Scenes handle events that are bubbling up the chain via the `filter_event/3` callback. The ViewPort takes care of sending events to the correct parent. This is analogous to event bubbling on a web page.
 
+# What’s next
 
+If you are new to Scenic, you should read and follow the exercise in [Getting Started](getting_started.html).
 
-# Positions, rotation, scale and more
+If you want to dig deeper into the lifecycle of a Scene, then read the [Scene Overview](overview_scene.html).
 
-
+The other overview pages give a tour of the larger aspects of Scenic.
