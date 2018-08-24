@@ -69,7 +69,7 @@ defmodule Scenic.Mixfile do
 
   defp doc_pages do
     [
-      "pages/overview.md",
+      "pages/overview_general.md",
       "pages/getting_started.md",
       "pages/overview_scene.md",
       "pages/overview_graph.md",
