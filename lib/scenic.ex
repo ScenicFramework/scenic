@@ -7,13 +7,19 @@ defmodule Scenic do
 
   ## Helpful Guides
 
-    * [Scenic Overview](overview_general.html)
-    * [Getting Started](getting_started.html)
-    * [Structure of a Scene](scene_structure.html)
-    * [Lifecycle of a Scene](scene_lifecycle.html)
-    * [Overview of a ViewPort](overview_viewport.html)
-    * [Overview of a Driver](overview_driver.html)
-    * [Mix Tasks](mix_tasks.html)
+  * [General Overview](overview_general.html)
+  * [Getting Started](getting_started.html)
+  * [Mix Tasks](mix_tasks.html)
+  ---
+  * [Structure of a Scene](scene_structure.html)
+  * [Lifecycle of a Scene](scene_lifecycle.html)
+  ---
+  * [Graph Overview](overview_graph.html)
+  * [Primitives](overview_primitives.html)
+  * [Standard Components](standard_components.html)
+  ---
+  * [Overview of a ViewPort](overview_viewport.html)
+  * [Overview of a Driver](overview_driver.html)
 
   If you are new to scenic, then you should read the [Scenic Overview](overview_general.html),
   [Getting Started](getting_started.html), and [Mix Tasks](mix_tasks.html) guides first.
@@ -30,7 +36,7 @@ defmodule Scenic do
       config :my_application, :viewport, %{
             name: :main_viewport,
             size: {700, 600},
-            default_scene: {<%= @mod %>.Scene.First, nil},
+            default_scene: {MyApplication.Scene.Example, nil},
             drivers: [
               %{
                 module: Scenic.Driver.Glfw,
