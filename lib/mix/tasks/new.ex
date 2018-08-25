@@ -3,7 +3,7 @@ defmodule Mix.Tasks.Scenic.New do
 
   import Mix.Generator
 
-  # import IEx
+  import IEx
 
   @switches [
     app: :string,
@@ -32,15 +32,17 @@ defmodule Mix.Tasks.Scenic.New do
           File.mkdir_p!(path)
         end
 
+        scenic_path = File.cwd!()
+
         File.cd!(path, fn ->
-          generate(app, mod, path, opts)
+          generate(app, mod, scenic_path, path, opts)
         end)
     end
   end
 
 
   #--------------------------------------------------------
-  defp generate(app, mod, _path, _opts) do
+  defp generate(app, mod, scenic_path, _path, _opts) do
     assigns = [
       app: app,
       mod: mod,
@@ -62,6 +64,8 @@ defmodule Mix.Tasks.Scenic.New do
     create_file("lib/static_supervisor.ex", static_supervisor_template(assigns))
 
     create_directory("static")
+    parrot = scenic_path <> "/pages/static/parrot.jpg"
+    create_file("static/images/parrot.jpg.5fbXhl8WrxaEDmtXUz_4wHYgKHM", File.read!(parrot))
 
     create_directory("lib/scenes")
     create_file("lib/scenes/first.ex", first_scene_template(assigns))
@@ -284,11 +288,21 @@ defmodule Mix.Tasks.Scenic.New do
     alias Scenic.Graph
     import Scenic.Primitives
 
+    @parrot       "/static/images/parrot.jpg.5fbXhl8WrxaEDmtXUz_4wHYgKHM"
+    @parrot_hash  "5fbXhl8WrxaEDmtXUz_4wHYgKHM"
+
     @graph Graph.build()
       |> text("First Scene", font: :roboto, font_size: 60, translate: {20, 120})
+      |> rect({100, 200}, fill: {:image, @parrot_hash}, translate: {20, 180})
       |> Nav.add_to_graph(__MODULE__)
 
     def init( _, _ ) do
+
+      # load the dog texture into the cache
+      :code.priv_dir(:<%= @app %>)
+      |> Path.join( @parrot )
+      |> Scenic.Cache.Texture.load()
+
       push_graph(@graph)
       {:ok, @graph}
     end
