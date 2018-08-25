@@ -146,41 +146,6 @@ defmodule Scenic.SceneTest do
 
   #============================================================================
   # handle_call
-  
-  test "handle_call :set_root calls set_root on module" do
-    vp = self()
-    {:reply, resp, new_state} = assert Scene.handle_call(
-      {:set_root, :args}, vp, %{
-      scene_module: __MODULE__,
-      scene_state: :scene_state,
-      activation: nil
-    })
-    assert resp == :ok
-    assert new_state.scene_state == :set_root_state
-    assert new_state.activation == :args
-
-    assert_receive( {:"$gen_cast",
-      {:test_set_root, ^vp, :args, :scene_state}
-    } )
-  end
-
-  test "handle_call :lose_root sends lose_root to the module" do
-    vp = self()
-
-    {:reply, resp, new_state} = assert Scene.handle_call(
-      :lose_root, vp, %{
-      scene_module: __MODULE__,
-      scene_state: :scene_state,
-      activation: :args
-    })
-    assert resp == :ok
-    assert new_state.scene_state == :lose_root_state
-    assert new_state.activation == @not_activated
-
-    assert_receive( {:"$gen_cast",
-      {:test_lose_root, ^vp, :scene_state}
-    } )
-  end
 
   test "handle_call sends unhandled messages to mod" do
     self = self()
@@ -199,22 +164,6 @@ defmodule Scenic.SceneTest do
 
   #============================================================================
   # handle_cast
-
-  test "handle_cast :set_root calls the mod set root handler" do
-    vp = self()
-    {:noreply, new_state} = assert Scene.handle_cast(
-      {:set_root, :args, vp}, %{
-      scene_module: __MODULE__,
-      scene_state: :scene_state,
-      activation: nil
-    })
-    assert new_state.scene_state == :set_root_state
-    assert new_state.activation == :args
-
-    assert_receive( {:"$gen_cast",
-      {:test_set_root, ^vp, :args, :scene_state}
-    } )
-  end
 
   test "handle_cast :input calls the mod input handler" do
     context = %Scenic.ViewPort.Context{
