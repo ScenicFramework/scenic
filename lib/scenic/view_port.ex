@@ -416,7 +416,6 @@ defmodule Scenic.ViewPort do
 
   #--------------------------------------------------------
   def handle_cast( {:set_root, scene, args}, %{
-    root_scene_pid: old_root_scene,
     dynamic_root_pid: old_dynamic_root_scene,
     dynamic_supervisor: dyn_sup
   } = state ) do

@@ -3,7 +3,7 @@ defmodule Mix.Tasks.Scenic.New do
 
   import Mix.Generator
 
-  import IEx
+  # import IEx
 
   @switches [
     app: :string,
