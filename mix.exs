@@ -18,7 +18,7 @@ defmodule Scenic.Mixfile do
       start_permanent: Mix.env == :prod,
       deps: deps(),
       docs: [
-        extras: doc_pages(),
+        extras: doc_guides(),
         main: "Scenic",
         groups_for_modules: groups_for_modules(),
         # source_ref: "v#{@version}",
@@ -67,14 +67,16 @@ defmodule Scenic.Mixfile do
   end
 
 
-  defp doc_pages do
+  defp doc_guides do
     [
-      "pages/overview_general.md",
-      "pages/getting_started.md",
-      "pages/overview_scene.md",
-      "pages/overview_graph.md",
-      "pages/overview_viewport.md",
-      "pages/overview_driver.md"
+      "guides/overview_general.md",
+      "guides/getting_started.md",
+      "guides/mix_tasks.md",
+      "guides/scene_structure.md",
+      "guides/scene_lifecycle.md",
+      "guides/overview_graph.md",
+      "guides/overview_viewport.md",
+      "guides/overview_driver.md"
     ]
   end
 
@@ -101,7 +103,9 @@ defmodule Scenic.Mixfile do
         Scenic.Component.Input.Dropdown,
         Scenic.Component.Input.RadioButton,
         Scenic.Component.Input.RadioGroup,
-        Scenic.Component.Input.Slider
+        Scenic.Component.Input.Slider,
+        Scenic.Component.Input.TextField,
+        Scenic.Component.Input.Carat,
       ],
       Primitives: [
         Scenic.Primitive,
@@ -134,6 +138,7 @@ defmodule Scenic.Mixfile do
         Scenic.Primitive.Style.Stroke,
         Scenic.Primitive.Style.TextAlign,
         Scenic.Primitive.Style.TextHeight,
+        Scenic.Primitive.Style.Theme,
       ],
       "Style.Paint": [
         Scenic.Primitive.Style.Paint,
@@ -158,7 +163,7 @@ defmodule Scenic.Mixfile do
       ViewPort: [
         Scenic.ViewPort.Config,
         # Scenic.ViewPort.Input,
-        Scenic.ViewPort.Input.Context,
+        Scenic.ViewPort.Context,
         Scenic.ViewPort.Tables
       ],
       Drivers: [

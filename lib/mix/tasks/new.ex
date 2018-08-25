@@ -64,7 +64,7 @@ defmodule Mix.Tasks.Scenic.New do
     create_file("lib/static_supervisor.ex", static_supervisor_template(assigns))
 
     create_directory("static")
-    parrot = scenic_path <> "/pages/static/parrot.jpg"
+    parrot = scenic_path <> "/guides/static/parrot.jpg"
     create_file("static/images/parrot.jpg.5fbXhl8WrxaEDmtXUz_4wHYgKHM", File.read!(parrot))
 
     create_directory("lib/scenes")
@@ -261,15 +261,14 @@ defmodule Mix.Tasks.Scenic.New do
       import Supervisor.Spec, warn: false
 
       # load the viewport configuration from config
-      viewport_config = Application.get_env(:<%= @app %>, :viewport)
+      main_viewport_config = Application.get_env(:<%= @app %>, :viewport)
 
       # start the application with the viewport
-      opts = [strategy: :one_for_one, name: ScenicExample]
       children = [
-        supervisor(Scenic, [viewports: [viewport_config]]),
+        supervisor(Scenic, [viewports: [main_viewport_config]]),
         supervisor(<%= @mod %>.StaticSupervisor, []),
       ]
-      Supervisor.start_link(children, opts)
+      Supervisor.start_link(children, strategy: :one_for_one)
     end
 
   end

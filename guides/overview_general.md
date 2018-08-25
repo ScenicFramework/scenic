@@ -5,9 +5,11 @@ Scenic is a client application framework written directly on the Elixir/Erlang/O
 ## Helpful Guides
 
   * [Getting Started](getting_started.html)
-  * [Overview of a Scene](overview_scene.html)
+  * [Structure of a Scene](scene_structure.html)
+  * [Lifecycle of a Scene](scene_lifecycle.html)
   * [Overview of a ViewPort](overview_viewport.html)
   * [Overview of a Driver](overview_driver.html)
+  * [Mix Tasks](mix_tasks.html)
 
 
 ## Goals
@@ -69,4 +71,4 @@ Term | Definition
 
 If you are new to Scenic, you should read and follow the exercise in [Getting Started](getting_started.html).
 
-If you want to dig deeper into the lifecycle of a Scene, then read the [Scene Overview](overview_scene.html).
+If you want to dig deeper into the structure of a Scene, then read the [Scene Overview](overview_scene.html).
