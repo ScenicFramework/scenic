@@ -3,20 +3,6 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-
-# internal class to support a Scene's graph structure
-# see Scenic.Primative to build and use elements themselves
-
-# the graph comes in several parts
-
-# { primitives, ids, uid_tracker, style_map, get_update_list }
-
-# The primitives is the collection of all primitive elements in the graph.
-# primiative uids in the primitives are integers
-
-# The ids maps atom developer-friendly ids to the actual numeric ids in the primitives
-
-
 defmodule Scenic.Graph do
   alias Scenic.Graph
   alias Scenic.Primitive
@@ -619,14 +605,6 @@ defmodule Scenic.Graph do
   end
 
   #============================================================================
-  # get the primitive map as a list of minimal primitives - used to send the actual
-  # drawable primitives to the viewport
-  @doc false
-  @spec minimal( graph :: Graph.t ) :: list
-  def minimal( %Graph{primitives: p_map} ) do
-    Enum.map(p_map, fn({k,p})-> { k, Primitive.minimal(p) } end)
-  end
-
   @doc false
   @spec style_stack( graph :: Graph.t, uid :: integer ) :: map
   def style_stack(%Graph{primitives: p_map} = graph, uid) when is_integer(uid) do
