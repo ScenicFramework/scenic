@@ -79,17 +79,20 @@ defmodule Mix.Tasks.Scenic.New do
     # create_file("test/test_helper.exs", test_helper_template(assigns))
     # create_file("test/#{app}_test.exs", test_template(assigns))
 
-    # """
+    """
 
-    # Your Mix project was created successfully.
-    # You can use "mix" to compile it, test it, and more:
+    Your Scenic project was created successfully.
 
-    #     #{cd_path(path)}mix test
+    Next:
+      cd into your app directory and run "mix deps.get"
 
-    # Run "mix help" for more commands.
-    # """
+    Then:
+      Run "mix scenic.run" (in the app directory) to start your app
+      Run "iex -S mix" (in the app directory) to debug your app
+
+    """
     # |> String.trim_trailing()
-    # |> Mix.shell().info()
+    |> Mix.shell().info()
   end
 
   #--------------------------------------------------------
