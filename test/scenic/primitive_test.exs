@@ -217,6 +217,10 @@ defmodule Scenic.PrimitiveTest do
     assert Map.get(p, :transforms) == nil
   end
 
+  test "delete_transform removes a transform" do
+    assert Primitive.delete_transform(@primitive, :pin )
+    |> Primitive.get_transforms() == %{rotate: 0.1}
+  end
 
   #============================================================================
   # style field
@@ -262,8 +266,8 @@ defmodule Scenic.PrimitiveTest do
     assert Primitive.get_styles(p) == new_styles
   end
 
-  test "drop_style removes a style in the style list" do
-    assert Primitive.drop_style(@primitive, :fill )
+  test "delete_style removes a style in the style list" do
+    assert Primitive.delete_style(@primitive, :fill )
     |> Primitive.get_styles() == %{stroke: {10, :green}}
   end
 

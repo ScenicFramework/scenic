@@ -138,6 +138,7 @@ defmodule Scenic.Primitive do
   # build a new primitive
   # in general, default the various lists and the assign map to nil to save space
   # assume most elements do not hvae these items set.
+  @spec build( module :: atom, data :: any, opts :: list ) :: Primitive.t
   def build( module, data, opts \\ [] ) do
     # first build the map with the non-optional fields
     %{
@@ -239,17 +240,20 @@ defmodule Scenic.Primitive do
   # I'm allowing the styles to not be present on the primitive, which is why
   # I'm not parsing it out in the function match
 
+  @spec get_styles( primitive :: Primitive.t ) :: map
   def get_styles( primitive )
   def get_styles( %Primitive{} = p ) do
     Map.get(p, :styles, %{})
   end
 
-  def get_primitive_styles( primitive )
-  def get_primitive_styles( %Primitive{} = p ) do
-    Map.get(p, :styles, %{})
-    |> Style.primitives()
-  end
 
+  # def get_primitive_styles( primitive )
+  # def get_primitive_styles( %Primitive{} = p ) do
+  #   Map.get(p, :styles, %{})
+  #   |> Style.primitives()
+  # end
+
+  @spec put_styles( primitive :: Primitive.t, styles :: map ) :: Primitive.t
   def put_styles( primitve, styles )
   def put_styles( %Primitive{} = p, nil ), do: Map.delete(p, :styles)
   def put_styles( %Primitive{} = p, s ) when s == %{}, do: Map.delete(p, :styles)
@@ -257,14 +261,16 @@ defmodule Scenic.Primitive do
     Map.put(p, :styles, styles)
   end
 
+  @spec get_style( primitive :: Primitive.t, type :: atom, default :: any ) :: any
   def get_style(primitive, type, default \\ nil)
-  def get_style(%Primitive{} = p, type, default) do
+  def get_style(%Primitive{} = p, type, default) when is_atom(type) do
     Map.get(p, :styles, %{})
     |> Map.get(type, default)
   end
 
   # the public facing put_style gives the primitive module a chance to filter the styles
   # do_put_style does the actual work
+  @spec put_style( primitive :: Primitive.t, type :: atom, data :: any ) :: Primitive.t
   def put_style(%Primitive{} = p, type, nil) when is_atom(type) do
     Map.get(p, :styles, %{})
     |> Map.delete(type)
@@ -281,8 +287,9 @@ defmodule Scenic.Primitive do
     end)
   end
 
-  def drop_style(primitive, type)
-  def drop_style(%Primitive{} = p, type) when is_atom(type) do
+  @spec delete_style( primitive :: Primitive.t, type :: atom ) :: Primitive.t
+  def delete_style(primitive, type)
+  def delete_style(%Primitive{} = p, type) when is_atom(type) do
     Map.get(p, :styles, %{})
     |> Map.delete( type )
     |> ( &put_styles(p, &1) ).()
@@ -294,11 +301,13 @@ defmodule Scenic.Primitive do
   # I'm allowing the transforms to not be present on the primitive, which is why
   # I'm not parsing it out in the function match
 
+  @spec get_transforms( primitive :: Primitive.t ) :: map
   def get_transforms( primitive )
   def get_transforms( %Primitive{} = p ) do
     Map.get(p, :transforms, %{})
   end
 
+  @spec put_transforms( primitive :: Primitive.t, transforms :: map ) :: Primitive.t
   def put_transforms( primitve, transforms )
   def put_transforms( %Primitive{} = p, nil ), do: Map.delete(p, :transforms)
   def put_transforms( %Primitive{} = p, t ) when t == %{}, do: Map.delete(p, :transforms)
@@ -306,14 +315,16 @@ defmodule Scenic.Primitive do
     Map.put(p, :transforms, txs)
   end
 
+  @spec get_transform( primitive :: Primitive.t, type :: atom, default :: any ) :: any
   def get_transform(primitive, tx_type, default \\ nil)
-  def get_transform(%Primitive{} = p, tx_type, default) do
+  def get_transform(%Primitive{} = p, tx_type, default) when is_atom(tx_type) do
     Map.get(p, :transforms, %{})
     |> Map.get(tx_type, default)
   end
 
   # the public facing put_style gives the primitive module a chance to filter the styles
   # do_put_style does the actual work
+  @spec put_transform( primitive :: Primitive.t, type :: atom, transform :: any ) :: Primitive.t
   def put_transform(%Primitive{} = p, tx_type, nil) when is_atom(tx_type) do
     Map.get(p, :transforms, %{})
     |> Map.delete(tx_type)
@@ -330,8 +341,9 @@ defmodule Scenic.Primitive do
     end)
   end
 
-  def drop_transform(primitive, tx_type)
-  def drop_transform(%Primitive{} = p, tx_type) when is_atom(tx_type) do
+  @spec delete_transform( primitive :: Primitive.t, type :: atom ) :: Primitive.t
+  def delete_transform(primitive, tx_type)
+  def delete_transform(%Primitive{} = p, tx_type) when is_atom(tx_type) do
     Map.get(p, :transforms, %{})
     |> Map.delete( tx_type )
     |> ( &put_transforms(p, &1) ).()
@@ -340,18 +352,20 @@ defmodule Scenic.Primitive do
 
   #============================================================================
   # primitive-specific data
-
+  @spec get( primitive :: Primitive.t ) :: any
   def get( primitive )
   def get( %Primitive{module: mod} = p ) do
     # give the primitive a chance to own the get
     mod.get(p)
   end
 
+  @spec put_opts( primitive :: Primitive.t, opts :: list ) :: Primitive.t
   def put_opts( primitive, opts )
   def put_opts( %Primitive{} = p, opts ) when is_list(opts) do
     apply_options( p, opts )
   end
 
+  @spec put( primitive :: Primitive.t, data :: any, opts :: list ) :: Primitive.t
   def put( primitive, data, opts \\ [] )
   def put( %Primitive{module: mod} = p, data, opts ) do
     # give the primitive a chance to own the put
@@ -370,6 +384,7 @@ defmodule Scenic.Primitive do
   # reduce a primitive to its minimal form
   #--------------------------------------------------------
   @doc false
+  @spec minimal( primitive :: Primitive.t ) :: map
   def minimal( %Primitive{module: mod, data: data} = p ) do     #parent_uid: puid
       min_p = %{
         data:       {mod, data},
@@ -417,26 +432,10 @@ defmodule Scenic.Primitive do
   end
 
 
-
-
-
-  #============================================================================
-  # NOTE: KEEP THIS AROUND until I'm sure remote doesn't need it
-
-  # the change script is for internal use between the graph and the view_port system
-  # it records the deltas of change for primitives. the idea is to send the minimal
-  # amount of information to the view_port (whose renderer may be remote).
-  @doc false
-  # def delta_script( p_original, p_modified )
-  # def delta_script( p_o, p_m ) do
-  #   p_o = minimal(p_o)
-  #   p_m = minimal(p_m)
-  #   Utilities.Map.difference(p_o, p_m)
-  # end
-
-
-  def contains_point?( %Primitive{module: mod, data: data}, pt) do
-    mod.contains_point?(data, pt)
+  #--------------------------------------------------------
+  @spec contains_point?( primitive :: Primitive.t, point :: Math.point ) :: map
+  def contains_point?( %Primitive{module: mod, data: data}, point) do
+    mod.contains_point?(data, point)
   end
 end
 
