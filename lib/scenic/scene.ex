@@ -320,7 +320,8 @@ defmodule Scenic.Scene do
   #============================================================================
   # callback definitions
 
-  @callback init( any, list ) :: {:ok, any}
+  @callback init( args :: any, inherited_styles :: map, viewport :: GenServer.server ) ::
+    {:ok, any}
   @callback handle_input(input :: any, context :: Context.t, state :: any) ::
     {:noreply, state :: any}
   @callback filter_event( any, any, any ) :: { :continue, any, any } | {:stop, any}
@@ -337,10 +338,8 @@ defmodule Scenic.Scene do
 
       #--------------------------------------------------------
       # Here so that the scene can override if desired
-      def init(_, _),                                 do: {:ok, nil}
-      # def handle_set_root( _vp, _args, state ),       do: {:noreply, state}
-      # def handle_lose_root( _vp, state ),             do: {:noreply, state}
- 
+      # def init(_, _, _),                            do: {:ok, nil}
+
       def handle_call(_msg, _from, state),            do: {:reply, :err_not_handled, state}
       def handle_cast(_msg, state),                   do: {:noreply, state}
       def handle_info(_msg, state),                   do: {:noreply, state}
@@ -367,13 +366,13 @@ defmodule Scenic.Scene do
         end
       end
 
-      defp push_graph( graph, sub_id \\ nil ) do
+      defp push_graph( graph ) do
         has_children = case unquote(using_opts)[:has_children] do
           false -> false
           _ -> true
         end
 
-        GenServer.cast( self(), {:push_graph, graph, sub_id, has_children} )
+        GenServer.cast( self(), {:push_graph, graph, nil, has_children} )
         # return the graph so this can be pipelined
         graph
       end
@@ -399,7 +398,7 @@ defmodule Scenic.Scene do
      # do not add a put element. keep it at modify to stay atomic
       #--------------------------------------------------------
       defoverridable [
-        init:                   2,
+        # init:                   3,
 
         handle_call:            3,
         handle_cast:            2,
@@ -483,19 +482,6 @@ defmodule Scenic.Scene do
     # true since the viewport may recover to a different default scene than this.
     if opts[:name], do: Process.monitor( Scenic.ViewPort.Tables )
 
-    # # initialize the scene itself
-    # init_opts = case opts[:viewport] do
-    #   nil -> []
-    #   _vp ->
-    #     # remove reserved keywords from opts
-    #     opts
-    #     |> Keyword.delete( :vp_dynamic_root )
-    #     |> Keyword.delete( :scene_ref )
-    #     |> Keyword.delete( :name )
-    # end
-    # {:ok, sc_state} = scene_module.init( args, init_opts )
-    # send(self(), {:delayed_init, args, init_opts})
-
     # build up the state
     state = %{
       raw_scene_refs: %{},      
@@ -528,23 +514,6 @@ defmodule Scenic.Scene do
     {:noreply, %{state | scene_state: sc_state}}
   end
 
-
-  #--------------------------------------------------------
-  # The viewport has gone down. Deactivate this scene.
-  # Note: the viewport is only monitored by this scene if it is a named scene.
-  # dynamic scenes rely on their parent (or the viewport supervisor itself)
-  # to take care of this for them.
-  # def handle_info({:DOWN, _monitor_ref, :process, pid, _reason}, state) do
-  #   state = case Process.whereis(@viewport) do
-  #     ^pid ->
-  #       { :reply, :ok, state } = handle_call( :deactivate, pid,  state )
-  #       state
-  #     _ ->
-  #       state
-  #   end
-  #   {:noreply, state}
-  # end
-
   #--------------------------------------------------------
   # generic handle_info. give the scene a chance to handle it
   @doc false
@@ -557,82 +526,6 @@ defmodule Scenic.Scene do
   #============================================================================
   # handle_call
 
-  # #--------------------------------------------------------
-  # # The scene is gaining activation. This is done syncronously (call) as
-  # # we want this to complete before setting the root. This reduces
-  # # blinking.
-  # @doc false
-  # def handle_call({:set_root, args}, from, %{
-  #   scene_module: mod,
-  #   scene_state: sc_state
-  # } = state) do
-  #   vp = case from do
-  #     {pid, _} when is_pid(pid) -> pid
-  #     pid when is_pid(pid) -> pid
-  #   end
-
-  #   # tell the scene it is being activated
-  #   {:noreply, sc_state} = mod.handle_set_root( vp, args, sc_state )
-  #   { :reply, :ok, %{state | scene_state: sc_state, activation: args} }
-  # end
-
- 
-  # #--------------------------------------------------------
-  # # The scene is losing activation. This is done syncronously (call) as the
-  # # next thing to happen might be process termination. This makes sure the
-  # # scene has a chance to clean itself up before it goes away.
-  # def handle_call(:lose_root, from, %{
-  #   scene_module: mod,
-  #   scene_state: sc_state
-  # } = state) do
-  #   vp = case from do
-  #     {pid, _} when is_pid(pid) -> pid
-  #     pid when is_pid(pid) -> pid
-  #   end
-
-  #   # tell the scene it is being deactivated
-  #   {:noreply, sc_state} = mod.handle_lose_root( vp, sc_state )
-  #   { :reply, :ok, %{state | scene_state: sc_state, activation: @not_activated} }
-  # end
-
-
-
-  #--------------------------------------------------------
-#  def handle_call({:activate, args}, _, %{
-#    scene_module: mod,
-#    scene_state: sc_state,
-#    dynamic_children_pid: nil
-#  } = state) do
-#IO.puts "activating childless scene"
-#    # tell the scene it is being deactivated
-#    {:noreply, sc_state} = mod.handle_activation( args, sc_state )
-#    { :reply, :ok, %{state | scene_state: sc_state, activation: args} }
-#  end
-#
-#  def handle_call({:activate, args}, _, %{
-#    scene_module: mod,
-#    scene_state: sc_state,
-#    dynamic_children_pid: dyn_sub
-#  } = state) do
-#IO.puts "start activate call"
-#
-#    # activate the dynamic children
-##    call_children(dyn_sub, {:activate, args})
-#    cast_children(dyn_sub, {:activate, args})
-#
-#
-#    # tell the scene it is being deactivated
-#    {:noreply, sc_state} = mod.handle_activation( args, sc_state )
-#
-#IO.puts "end activate call"
-#    { :reply, :ok, %{state | scene_state: sc_state, activation: args} }
-#  end
-#
-#  def handle_call({:activate, args}, _, state ) do
-#    pry()
-#  end
-
-
   #--------------------------------------------------------
   # generic handle_call. give the scene a chance to handle it
   def handle_call(msg, from, %{scene_module: mod, scene_state: sc_state} = state) do
@@ -642,17 +535,6 @@ defmodule Scenic.Scene do
 
   #============================================================================
   # handle_cast
-
-  # #--------------------------------------------------------
-  # @doc false
-  # def handle_cast({:set_root, args, vp}, %{
-  #   scene_module: mod,
-  #   scene_state: sc_state
-  # } = state) do
-  #   # tell the scene it is being activated
-  #   {:noreply, sc_state} = mod.handle_set_root( vp, args, sc_state )
-  #   { :noreply, %{state | scene_state: sc_state, activation: args} }
-  # end
 
   #--------------------------------------------------------
   def handle_cast( {:after_init, scene_module, args, opts}, %{
@@ -693,18 +575,7 @@ defmodule Scenic.Scene do
       {self(), dynamic_children_pid, supervisor_pid}
     )
 
-    # initialize the scene itself
-    init_opts = case opts[:viewport] do
-      nil -> []
-      _vp ->
-        # remove reserved keywords from opts
-        opts
-        |> Keyword.delete( :vp_dynamic_root )
-        |> Keyword.delete( :scene_ref )
-        |> Keyword.delete( :name )
-    end
-    {:ok, sc_state} = scene_module.init( args, init_opts )
-
+    {:ok, sc_state} = scene_module.init( args, opts[:styles] || %{}, opts[:viewport] )
 
     state = state
 #    |> Map.put( :scene_state, sc_state)
@@ -714,13 +585,6 @@ defmodule Scenic.Scene do
 
     { :noreply, state }
   end
-
-  # #--------------------------------------------------------
-  # def handle_cast({:input, event, %Scenic.ViewPort.Context{} = context},
-  # %{scene_module: mod, scene_state: sc_state} = state) do
-  #   {:noreply, sc_state} = mod.handle_input(event, context, sc_state )
-  #   {:noreply, %{state | scene_state: sc_state}}
-  # end
 
 
   #--------------------------------------------------------
@@ -824,9 +688,13 @@ defmodule Scenic.Scene do
   # to the reader: You have no idea how difficult this was to get right.
   def handle_cast({:push_graph, raw_graph, sub_id, true},  %{
     scene_ref: scene_ref,
-    raw_scene_refs: raw_scene_refs,
-    dyn_scene_pids: dyn_scene_pids,
-    dyn_scene_keys: dyn_scene_keys,
+    # raw_scene_refs: raw_scene_refs,
+    # dyn_scene_pids: dyn_scene_pids,
+    # dyn_scene_keys: dyn_scene_keys,
+    raw_scene_refs: old_raw_refs,
+    dyn_scene_pids: old_dyn_pids,
+    dyn_scene_keys: old_dyn_keys,
+
     dynamic_children_pid: dyn_sup,
     viewport: viewport
   } = state ) do
@@ -863,9 +731,9 @@ defmodule Scenic.Scene do
     end)
 
     # get the old refs
-    old_raw_refs =  Map.get( raw_scene_refs, sub_id, %{} )
-    old_dyn_pids =  Map.get( dyn_scene_pids, sub_id, %{} )
-    old_dyn_keys =  Map.get( dyn_scene_keys, sub_id, %{} )
+    # old_raw_refs =  Map.get( raw_scene_refs, sub_id, %{} )
+    # old_dyn_pids =  Map.get( dyn_scene_pids, sub_id, %{} )
+    # old_dyn_keys =  Map.get( dyn_scene_keys, sub_id, %{} )
 
     # get the difference script between the raw and new dynamic refs
     raw_diff = Utilities.Map.difference( old_raw_refs, new_raw_refs )
@@ -936,9 +804,12 @@ defmodule Scenic.Scene do
 
     # store the refs for next time
     state = state
-    |> put_in( [:raw_scene_refs, sub_id], new_raw_refs )
-    |> put_in( [:dyn_scene_pids, sub_id], new_dyn_pids )
-    |> put_in( [:dyn_scene_keys, sub_id], new_dyn_keys )
+    # |> put_in( [:raw_scene_refs, sub_id], new_raw_refs )
+    # |> put_in( [:dyn_scene_pids, sub_id], new_dyn_pids )
+    # |> put_in( [:dyn_scene_keys, sub_id], new_dyn_keys )
+    |> Map.put( :raw_scene_refs, new_raw_refs )
+    |> Map.put( :dyn_scene_pids, new_dyn_pids )
+    |> Map.put( :dyn_scene_keys, new_dyn_keys )
 
     { :noreply, state }
   end
@@ -1010,25 +881,3 @@ defmodule Scenic.Scene do
   end
 
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

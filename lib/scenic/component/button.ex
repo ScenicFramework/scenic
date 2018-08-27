@@ -82,11 +82,12 @@ defmodule Scenic.Component.Button do
 
 
   #--------------------------------------------------------
-  def init( {text, id}, args ), do: init( {text, id, []}, args )
-  def init( {text, id, opts}, args ) when is_list(opts) do
+  def init( {text, id}, styles, viewport ), do:
+    init( {text, id, []}, styles, viewport )
+  def init( {text, id, opts}, styles, _viewport ) when is_list(opts) do
 
     # theme is passed in as an inherited style
-    theme = (args[:styles][:theme] || Theme.preset(:primary))
+    theme = (styles[:theme] || Theme.preset(:primary))
     |> Theme.normalize()
 
     # get button specific options

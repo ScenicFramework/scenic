@@ -69,11 +69,12 @@ defmodule Scenic.Component.Input.Checkbox do
 
 
   #--------------------------------------------------------
-  def init( {text, id, checked?}, i_opts ), do: init( {text, id, checked?, []}, i_opts )
-  def init( {text, id, checked?, opts}, args ) when is_list(opts) do
+  def init( {text, id, checked?}, styles, viewport ), do:
+    init( {text, id, checked?, []}, styles, viewport )
+  def init( {text, id, checked?, opts}, styles, _viewport ) when is_list(opts) do
 
     # theme is passed in as an inherited style
-    theme = (args[:styles][:theme] || Theme.preset(:dark))
+    theme = (styles[:theme] || Theme.preset(:dark))
     |> Theme.normalize()
 
 

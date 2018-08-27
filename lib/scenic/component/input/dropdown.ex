@@ -72,11 +72,12 @@ defmodule Scenic.Component.Input.Dropdown do
 
 
   #--------------------------------------------------------
-  def init( {items, initial_id, id}, args ), do: init( {items, initial_id, id, []}, args )
-  def init( {items, initial_id, id, opts}, args ) do
+  def init( {items, initial_id, id}, styles, viewport ), do:
+    init( {items, initial_id, id, []}, styles, viewport )
+  def init( {items, initial_id, id, opts}, styles, _viewport ) do
 
     # theme is passed in as an inherited style
-    theme = (args[:styles][:theme] || Theme.preset(:dark))
+    theme = (styles[:theme] || Theme.preset(:dark))
     |> Theme.normalize()
 
     width = opts[:width] || opts[:w] || @default_width

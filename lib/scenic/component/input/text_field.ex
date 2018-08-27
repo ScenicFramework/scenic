@@ -90,26 +90,13 @@ defmodule Scenic.Component.Input.TextField do
 
 
   #--------------------------------------------------------
-  def init( {value, id}, args ), do: init( {value, id, []}, args )
-  def init( {value, id, opts}, args ) do
-
-    # get the colors
-    # theme = case opts[:theme] do
-    #   {_,_,_,_,_} = theme -> theme
-    #   type -> Map.get(@themes, type) || Map.get(@themes, :dark)
-    # end
-    # {text_color, hint_color, background_color, border_color, _} = theme
-
-    # theme = case opts[:theme] do
-    #   theme when is_atom(theme) -> Theme.preset(theme) || Theme.preset(:dark)
-    #   theme when is_map(theme) -> theme
-    # end
+  def init( {value, id}, styles, viewport ), do:
+    init( {value, id, []}, styles, viewport )
+  def init( {value, id, opts}, styles, _viewport ) do
 
     # theme is passed in as an inherited style
-    theme = (args[:styles][:theme] || Theme.preset(:dark))
+    theme = (styles[:theme] || Theme.preset(:dark))
     |> Theme.normalize()
-
-
 
 
     hint = opts[:hint] || @default_hint

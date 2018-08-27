@@ -69,23 +69,13 @@ defmodule Scenic.Component.Input.Slider do
 
 
   #--------------------------------------------------------
-  def init( {extents, value, id}, args ), do: init( {extents, value, id, []}, args )
-  def init( {extents, value, id, opts}, args ) do
-    # theme = case opts[:theme] do
-    #   {_,_} = theme -> theme
-    #   type -> Map.get(@themes, type) || Map.get(@themes, :dark)
-    # end
-    # {line_color, thumb_color} = theme
-
-    # theme = case opts[:theme] do
-    #   theme when is_atom(theme) -> Theme.preset(theme) || Theme.preset(:dark)
-    #   theme when is_map(theme) -> theme
-    # end
+  def init( {extents, value, id}, styles, viewport ), do:
+    init( {extents, value, id, []}, styles, viewport )
+  def init( {extents, value, id, opts}, styles, _viewport ) do
 
     # theme is passed in as an inherited style
-    theme = (args[:styles][:theme] || Theme.preset(:dark))
+    theme = (styles[:theme] || Theme.preset(:dark))
     |> Theme.normalize()
-
 
     width = opts[:width] || opts[:w] || @default_width
 

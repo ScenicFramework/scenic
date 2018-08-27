@@ -177,8 +177,8 @@ defmodule Scenic.Components do
 
   Buttons honor the following styles
   
-  * `:hidden` - If true the button is rendered. If false, it is skipped. The default
-    is true.
+  * `:hidden` - If `false` the component is rendered. If `true`, it is skipped. The default
+    is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:primary`
 
   ## Theme
@@ -248,8 +248,8 @@ defmodule Scenic.Components do
 
   Buttons honor the following styles
   
-  * `:hidden` - If true the button is rendered. If false, it is skipped. The default
-    is true.
+  * `:hidden` - If `false` the component is rendered. If `true`, it is skipped. The default
+    is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:dark`
 
   ## Theme
@@ -323,8 +323,8 @@ defmodule Scenic.Components do
 
   Buttons honor the following styles
   
-  * `:hidden` - If true the button is rendered. If false, it is skipped. The default
-    is true.
+  * `:hidden` - If `false` the component is rendered. If `true`, it is skipped. The default
+    is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:dark`
 
   ## Theme
@@ -406,8 +406,8 @@ defmodule Scenic.Components do
 
   Radio Buttons honor the following styles
   
-  * `:hidden` - If true the button is rendered. If false, it is skipped. The default
-    is true.
+  * `:hidden` - If `false` the component is rendered. If `true`, it is skipped. The default
+    is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:dark`
 
   ## Theme
@@ -481,8 +481,8 @@ defmodule Scenic.Components do
 
   Sliders honor the following styles
   
-  * `:hidden` - If true the button is rendered. If false, it is skipped. The default
-    is true.
+  * `:hidden` - If `false` the component is rendered. If `true`, it is skipped. The default
+    is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:dark`
 
   ## Theme
@@ -564,8 +564,8 @@ defmodule Scenic.Components do
 
   Text fields honor the following styles
   
-  * `:hidden` - If true the button is rendered. If false, it is skipped. The default
-    is true.
+  * `:hidden` - If `false` the component is rendered. If `true`, it is skipped. The default
+    is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:dark`
 
   ## Theme
