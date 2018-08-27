@@ -12,7 +12,7 @@ defmodule Scenic.Primitive do
 
   # import IEx
 
-  @callback add_to_graph(map, any, list) :: map
+  @callback add_to_graph(map, any, opts :: keyword) :: map
 
   @callback valid_styles() :: list
   @callback filter_styles( map ) :: map
@@ -138,7 +138,7 @@ defmodule Scenic.Primitive do
   # build a new primitive
   # in general, default the various lists and the assign map to nil to save space
   # assume most elements do not hvae these items set.
-  @spec build( module :: atom, data :: any, opts :: list ) :: Primitive.t
+  @spec build( module :: atom, data :: any, opts :: keyword ) :: Primitive.t
   def build( module, data, opts \\ [] ) do
     # first build the map with the non-optional fields
     %{
@@ -359,7 +359,7 @@ defmodule Scenic.Primitive do
     mod.get(p)
   end
 
-  @spec put_opts( primitive :: Primitive.t, opts :: list ) :: Primitive.t
+  @spec put_opts( primitive :: Primitive.t, opts :: keyword ) :: Primitive.t
   def put_opts( primitive, opts )
   def put_opts( %Primitive{} = p, opts ) when is_list(opts) do
     apply_options( p, opts )

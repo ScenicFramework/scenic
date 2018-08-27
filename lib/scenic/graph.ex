@@ -72,7 +72,7 @@ defmodule Scenic.Graph do
 
   #============================================================================
   # build a new graph, starting with the given element
-  @spec build( opts :: list ) :: Graph.t
+  @spec build( opts :: keyword ) :: Graph.t
   def build( opts \\ [] ) do
     root = Group.build( [], opts )
 
@@ -109,6 +109,7 @@ defmodule Scenic.Graph do
   end
 
   # build and add new primitives
+  @spec add( graph :: Graph.t, module :: atom, data :: any, opts :: keyword ) :: Graph.t
   def add( graph, primitive_module, primitive_data, opts \\ [])
 
   def add( %Graph{add_to: puid} = g, Group, builder, opts) when is_function(builder, 1) do
