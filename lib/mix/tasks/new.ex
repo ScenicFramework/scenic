@@ -296,7 +296,7 @@ defmodule Mix.Tasks.Scenic.New do
       |> rect({100, 200}, fill: {:image, @parrot_hash}, translate: {20, 180})
       |> Nav.add_to_graph(__MODULE__)
 
-    def init( _, _ ) do
+    def init( _, _styles, _viewport ) do
 
       # load the dog texture into the cache
       :code.priv_dir(:<%= @app %>)
@@ -326,7 +326,7 @@ defmodule Mix.Tasks.Scenic.New do
       |> text("Second Scene", font: :roboto, font_size: 60, translate: {20, 120})
       |> Nav.add_to_graph(__MODULE__)
 
-    def init( _, _ ) do
+    def init( _, _styles, _viewport ) do
       push_graph(@graph)
       {:ok, @graph}
     end
@@ -336,7 +336,7 @@ defmodule Mix.Tasks.Scenic.New do
 
   #--------------------------------------------------------
   embed_template(:nav, """
-  defmodule <%= @mod %>.Component.Nav do
+  defmodule Temp.Component.Nav do
     @moduledoc \"""
     Sample componentized nav bar.
     \"""
@@ -355,24 +355,21 @@ defmodule Mix.Tasks.Scenic.New do
     def verify( _ ), do: :invalid_data
 
     #--------------------------------------------------------
-    def init( current_scene, opts ) do
+    def init( current_scene, _styles, viewport ) do
 
       # get the viewport width to position the clock
-      vp = opts[:viewport]
-      {:ok, %ViewPort.Status{size: {width,_}}} = ViewPort.info(vp)
+      {:ok, %ViewPort.Status{size: {width,_}}} = ViewPort.info(viewport)
 
       graph = Graph.build(font_size: 20)
       |> text("Scene:", translate: {14, 40}, align: :right)
       |> dropdown({[
-          {"First Scene", <%= @mod %>.Scene.First},
-          {"Second Scene", <%= @mod %>.Scene.Second},
+          {"First Scene", Temp.Scene.First},
+          {"Second Scene", Temp.Scene.Second},
         ], current_scene, :nav}, translate: {70, 20})
-
-      |> digital_clock( translate: {width - 20, 10} )
-
+      |> digital_clock( text_align: :right, translate: {width - 20, 40} )
       |> push_graph()
 
-      {:ok, %{graph: graph, viewport: opts[:viewport]}}
+      {:ok, %{graph: graph, viewport: viewport}}
     end
 
     #--------------------------------------------------------
