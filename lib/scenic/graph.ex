@@ -67,10 +67,12 @@ defmodule Scenic.Graph do
   # access to the raw graph fields
   # concentrate all knowledge of the internal structure of the graph tuple here
 
-  def get_root(%Graph{} = graph),                 do: graph.primitives[@root_uid]
+  @spec get_root( graph :: Graph.t ) :: Primitive.t
+  def get_root(%Graph{} = graph), do: graph.primitives[@root_uid]
 
   #============================================================================
   # build a new graph, starting with the given element
+  @spec build( opts :: list ) :: Graph.t
   def build( opts \\ [] ) do
     root = Group.build( [], opts )
 
@@ -99,6 +101,7 @@ defmodule Scenic.Graph do
 
   #============================================================================
   # add a pre-built primitive
+  @spec add( graph :: Graph.t, primitive :: Primitive.t ) :: Graph.t
   def add( graph, primitive )
   def add( %Graph{add_to: puid} = g, %Primitive{} = p ) do
     {graph, _uid} = insert_at({g, puid}, -1, p)
@@ -129,6 +132,7 @@ defmodule Scenic.Graph do
 
   #============================================================================
   # delete a primitive/s from a graph
+  @spec delete( graph :: Graph.t, id :: any ) :: Graph.t
   def delete( %Graph{primitives: primitives, ids: ids} = graph, id ) do
 
     # resolve the id into a list of uids
@@ -259,29 +263,15 @@ defmodule Scenic.Graph do
   #============================================================================
   #--------------------------------------------------------
   # count all the nodes in a graph.
+  @spec count( graph :: Graph.t ) :: integer
   def count(graph)
   def count(%Graph{} = graph) do
     do_reduce(graph, 0, 0, fn(_, acc) -> acc + 1 end)
   end
 
-  # count all the nodes in a graph. Count traverses the tree as it
-  # counts the total number of valid nodes. Note that this might be different
-  # than the number of nodes in the graph map if there is some garbage.
-  def count(graph, id)
-
-  #--------------------------------------------------------
-  # shortcut for everything in the entire primitive map
-  def count(%Graph{primitives: primitives}, -1) do
-    Enum.count( primitives )
-  end
-
-  #--------------------------------------------------------
-  # count all the nodes in a graph starting at uid. Count traverses the tree as it
-  # counts the total number of valid nodes. This might be different
-  # than the number of nodes in the graph map
-
   #--------------------------------------------------------
   # count the nodes associated with an id.
+  @spec count( graph :: Graph.t, id :: any ) :: integer
   def count(graph, id)
   def count(%Graph{ids: ids}, id) do
     ids
@@ -306,6 +296,7 @@ defmodule Scenic.Graph do
 
   #============================================================================
   # get a list of primitives by id
+  @spec get( graph :: Graph.t, id :: any ) :: list(Primitive.t)
   def get(%Graph{} = graph, id) do
     graph
     |> resolve_id( id )
@@ -315,6 +306,7 @@ defmodule Scenic.Graph do
 
   #--------------------------------------------------------
   # get a single primitive by id. Raise error if it finds any count other than one
+  @spec get!( graph :: Graph.t, id :: any ) :: Primitive.t
   def get!(%Graph{} = graph, id) do
     case resolve_id(graph, id) do
       [uid] ->  get_by_uid( graph, uid )
@@ -512,6 +504,7 @@ defmodule Scenic.Graph do
   end
 
 
+  @spec modify( graph :: Graph.t, id :: any, action :: function ) :: Graph.t
   def modify( graph, id, action )
 
   # pass in an atom based id, and it will transform all mapped uids
@@ -523,12 +516,14 @@ defmodule Scenic.Graph do
 
   #============================================================================
   # map a graph via traversal from the root node
+  @spec map( graph :: Graph.t, action :: function ) :: Graph.t
   def map(graph, action) when is_function(action, 1) do
     do_map(graph, @root_uid, action)
   end
 
   #============================================================================
   # map a graph, but only those elements mapped to the id
+  @spec map( graph :: Graph.t, id :: any, action :: function ) :: Graph.t
   def map(graph, id, action) when is_function(action, 1) do
     # resolve the id into a list of uids
     uids = resolve_id(graph, id)
@@ -576,12 +571,14 @@ defmodule Scenic.Graph do
 
   #============================================================================
   # reduce a graph via traversal from the root node
+  @spec reduce( graph :: Graph.t, acc :: any, action :: function ) :: any
   def reduce(%Graph{} = graph, acc, action) when is_function(action, 2) do
     do_reduce(graph, @root_uid, acc, action)
   end
 
   #============================================================================
   # reduce a graph, but only for nodes mapped to the given id
+  @spec reduce( graph :: Graph.t, id :: any, acc :: any, action :: function ) :: any
   def reduce(graph, id, acc, action) when is_function(action, 2) do
     # resolve the id into a list of uids
     uids = resolve_id(graph, id)
@@ -623,11 +620,14 @@ defmodule Scenic.Graph do
   #============================================================================
   # get the primitive map as a list of minimal primitives - used to send the actual
   # drawable primitives to the viewport
-
+  @doc false
+  @spec minimal( graph :: Graph.t ) :: list
   def minimal( %Graph{primitives: p_map} ) do
     Enum.map(p_map, fn({k,p})-> { k, Primitive.minimal(p) } end)
   end
 
+  @doc false
+  @spec style_stack( graph :: Graph.t, uid :: integer ) :: map
   def style_stack(%Graph{primitives: p_map} = graph, uid) when is_integer(uid) do
     # get the target primitive
     case p_map[uid] do

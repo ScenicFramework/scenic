@@ -433,7 +433,7 @@ defmodule Scenic.Primitive do
 
 
   #--------------------------------------------------------
-  @spec contains_point?( primitive :: Primitive.t, point :: Math.point ) :: map
+  @spec contains_point?( primitive :: Primitive.t, point :: Scenic.Math.point ) :: map
   def contains_point?( %Primitive{module: mod, data: data}, point) do
     mod.contains_point?(data, point)
   end
