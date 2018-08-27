@@ -41,6 +41,15 @@ defmodule Scenic.Primitive do
   defstruct module: nil, data: nil, parent_uid: -1,
     id: nil, styles: %{}, transforms: %{}
 
+  @type t :: %Primitive{
+    module: atom,
+    data: any,
+    parent_uid: integer,
+    id: any,
+    styles: map,
+    transforms: map
+  }
+
 
   #===========================================================================
   defmodule Error do

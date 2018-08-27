@@ -42,7 +42,6 @@ defmodule Scenic.GraphTest do
     |> Line.add_to_graph( {{30,30}, {300, 300}}, id: :line )
 
 
-
   #============================================================================
   # access to the basics. These concentrate knowledge of the internal format
   # into just a few functions
@@ -96,74 +95,61 @@ defmodule Scenic.GraphTest do
 
 
   #============================================================================
-  # map_id_to_uid(graph, id, uid)
+  # get - retrieve a primitive (or primtives) from a graph given an id
 
-  # test "map_id_to_uid creates a new uid map for an id" do
-  #   graph = Graph.map_id_to_uid(@graph_empty, :test_id, 1)
-  #   assert graph.ids == %{ test_id: [1] }
-  # end
+  test "get gets a primitive" do
+    [%Primitive{module: Primitive.Line}] = Graph.get(@graph_find, :outer_line)
+  end
 
-  # test "map_id_to_uid adds a new uid to an existing id map" do
-  #   graph = Graph.map_id_to_uid(@graph_empty, :test_id, 1)
-  #     |> Graph.map_id_to_uid(:test_id, 2)
-  #   assert graph.ids == %{ test_id: [2, 1] }
-  # end
+  test "get gets multiple mapped primitives" do
+    [%Primitive{module: Primitive.Line}, %Primitive{module: Primitive.Line}] =
+      Graph.get(@graph_ordered, :line)
+  end
 
-  # test "map_id_to_uid keeps the list uniq" do
-  #   graph = Graph.map_id_to_uid(@graph_empty, :test_id, 1)
-  #     |> Graph.map_id_to_uid(:test_id, 1)
-  #     |> Graph.map_id_to_uid(:test_id, 2)
-  #     |> Graph.map_id_to_uid(:test_id, 2)
-  #     |> Graph.map_id_to_uid(:test_id, 1)
-  #   assert graph.ids == %{ test_id: [1,2]}
-  # end
+  test "get! gets a primitive" do
+    %Primitive{module: Primitive.Line} = Graph.get!(@graph_find, :outer_line)
+  end
+
+  test "get! raises if multiple mapped primitives" do
+    assert_raise Scenic.Graph.Error, fn ->
+      Graph.get!(@graph_ordered, :line)
+    end
+  end
 
 
+ 
   #============================================================================
-  # unmap_id_to_uid(graph, id, uid)
-  # test "unmap_id_to_uid removes a uid map" do
-  #   graph = Graph.map_id_to_uid(@graph_empty, :test_id, 1)
-  #     |> Graph.map_id_to_uid(:test_id, 2)
-  #     |> Graph.map_id_to_uid(:test_id, 3)
-  #     |> Graph.unmap_id_to_uid(:test_id, 2)
-  #   assert graph.ids == %{ test_id: [3, 1] }
-  # end
+  # delete - removes nodes from the graph
+  # can't just compare the expected graph as the add_to housekeeping will be off
 
-  # test "unmap_id_to_uid does nothing if id is nil" do
-  #   graph = Graph.map_id_to_uid(@graph_empty, :test_id, 1)
-  #     |> Graph.map_id_to_uid(:test_id, 2)
-  #     |> Graph.map_id_to_uid(:test_id, 3)
-  #     |> Graph.unmap_id_to_uid(nil, 2)
-  #   assert graph.ids == %{ test_id: [3, 2, 1] }
-  # end
+  test "delete removes a primitive" do
+    [uid] = @graph_find.ids[:outer_line]
+    refute @graph_find.primitives[uid] == nil
+    deleted = Graph.delete(@graph_find, :outer_line)
+    assert deleted.primitives[uid] == nil
+  end
 
-  # test "unmap_id_to_uid does nothing if id is not mapped" do
-  #   graph = Graph.map_id_to_uid(@graph_empty, :test_id, 1)
-  #     |> Graph.map_id_to_uid(:test_id, 2)
-  #     |> Graph.map_id_to_uid(:test_id, 3)
-  #     |> Graph.unmap_id_to_uid(:banana, 1)
-  #   assert graph.ids == %{ test_id: [3, 2, 1] }
-  # end
+  test "delete removes a unmaps the id" do
+    refute Graph.get(@graph_find, :outer_line) == []
+    deleted = Graph.delete(@graph_find, :outer_line)
+    assert Graph.get(deleted, :outer_line) == []
+    assert deleted.ids[:outer_line] == nil
+  end
 
-  # test "unmap_id_to_uid does nothing if uid is not in id map" do
-  #   graph = Graph.map_id_to_uid(@graph_empty, :test_id, 1)
-  #     |> Graph.map_id_to_uid(:test_id, 2)
-  #     |> Graph.map_id_to_uid(:test_id, 3)
-  #     |> Graph.unmap_id_to_uid(:test_id, 123)
-  #   assert graph.ids == %{ test_id: [3, 2, 1] }
-  # end
+  test "delete removes a removes the reference from the parent" do
+    [uid] = @graph_find.ids[:outer_line]
+    # get the parent uid
+    %{parent_uid: puid} = Graph.get!(@graph_find, :outer_line)
+    # confirm the parent reference
+    assert Enum.member?(@graph_find.primitives[puid].data, uid)
 
+    # delete
+    deleted = Graph.delete(@graph_find, :outer_line)
 
-  #============================================================================
-  # resolve_id
+    # confirm the parent reference is cleared
+    refute Enum.member?(deleted.primitives[puid].data, uid)
+  end
 
-  # test "resolve_id returns multiple uids in a list for a given id" do
-  #   assert Graph.resolve_id(@graph_ordered, :line) == [3, 1]
-  # end
-
-  # test "resolve_id returns an empty list  for a missing id" do
-  #   assert Graph.resolve_id(@graph_ordered, :missing) == []
-  # end
 
   #============================================================================
   # count - all nodes
@@ -190,28 +176,28 @@ defmodule Scenic.GraphTest do
   end
 
   #============================================================================
-  # get_id by developer id
+  # get by developer id
   test "get gets an element by id" do
     [uid] = @graph_find.ids[:outer_text]
-    p = Graph.get_id(@graph_find, :outer_text)
+    p = Graph.get(@graph_find, :outer_text)
     assert [@graph_find.primitives[uid]] == p
   end
 
   test "get gets multiple elements by id" do
     [first_uid, second_uid] = @graph_ordered.ids[:line]
 
-    gotten = Graph.get_id(@graph_ordered, :line)
+    gotten = Graph.get(@graph_ordered, :line)
 
     assert Enum.member?(gotten, @graph_ordered.primitives[first_uid])
     assert Enum.member?(gotten, @graph_ordered.primitives[second_uid])
   end
 
   #============================================================================
-  # get_id
+  # get
   # returns a list of objects with the given id
-  test "get_id returns a list of primitives with the given id" do
+  test "get returns a list of primitives with the given id" do
     [first_uid, second_uid] = @graph_ordered.ids[:line]
-    [first, second] = Graph.get_id(@graph_ordered, :line)
+    [first, second] = Graph.get(@graph_ordered, :line)
 
     assert @graph_ordered.primitives[first_uid] == first
     assert @graph_ordered.primitives[second_uid] == second
@@ -219,22 +205,22 @@ defmodule Scenic.GraphTest do
 
 
   #============================================================================
-  # get_id! returns a single object indicated by id
+  # get! returns a single object indicated by id
 
-  test "get_id! returns a single primitive matching the id" do
-    text = Graph.get_id!(@graph_ordered, :text)
+  test "get! returns a single primitive matching the id" do
+    text = Graph.get!(@graph_ordered, :text)
     assert text.module == Text
   end
 
-  test "get_id! raises if it doesn't fine any prmitives" do
+  test "get! raises if it doesn't fine any prmitives" do
     assert_raise Graph.Error, fn ->
-      Graph.get_id!(@graph_ordered, :missing)
+      Graph.get!(@graph_ordered, :missing)
     end
   end
 
-  test "get_id! raises if finds more than one primitive" do
+  test "get! raises if finds more than one primitive" do
     assert_raise Graph.Error, fn ->
-      Graph.get_id!(@graph_ordered, :line)
+      Graph.get!(@graph_ordered, :line)
     end
   end
 
@@ -453,7 +439,7 @@ defmodule Scenic.GraphTest do
 
   test "modify transforms a single primitive by developer id" do
     # confirm setup
-    assert Map.get( Graph.get_id!(@graph_find, :inner_text), :transforms ) == nil
+    assert Map.get( Graph.get!(@graph_find, :inner_text), :transforms ) == nil
 
     # modify the element by assigning a transform to it
     graph = Graph.modify(@graph_find, :inner_text, fn(p)->
@@ -461,7 +447,7 @@ defmodule Scenic.GraphTest do
     end)
 
     # confirm result
-    assert Map.get( Graph.get_id!(graph, :inner_text), :transforms ) == @transform
+    assert Map.get( Graph.get!(graph, :inner_text), :transforms ) == @transform
   end
 
   test "modify transforms a multiple primitives by developer id" do

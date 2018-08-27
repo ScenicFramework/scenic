@@ -34,6 +34,14 @@ defmodule Scenic.Graph do
   # defstruct primitives: %{}, ids: %{}, next_uid: 1, add_to: 0    
   defstruct primitives: %{}, ids: %{}, next_uid: 1, add_to: 0    
 
+
+  @type t :: %Graph{
+    primitives: map,
+    ids: map,
+    next_uid: pos_integer,
+    add_to: pos_integer
+  }
+
   @type key :: {:graph, Scenic.Scene.ref, any}
 
 
@@ -52,7 +60,7 @@ defmodule Scenic.Graph do
   @err_msg_depth_option   "The :max_depth option must be a positive integer"
   # @err_msg_group          "Can only add primitives to Group nodes"
   @err_msg_put            "Graph.put can only update existing items."
-  @err_msg_get_id_one     "Graph.get_id_one expected to find one and only one element"
+  @err_msg_get_id_one     "Graph.get! expected to find one and only one element"
 
 
   #============================================================================
@@ -117,6 +125,37 @@ defmodule Scenic.Graph do
     p = mod.build(data, opts)
     {graph, _uid} = insert_at({g, puid}, -1, p, opts)
     graph
+  end
+
+  #============================================================================
+  # delete a primitive/s from a graph
+  def delete( %Graph{primitives: primitives, ids: ids} = graph, id ) do
+
+    # resolve the id into a list of uids
+    uids = Map.get(ids, id, [])
+
+    # delete each uid
+    primitives = Enum.reduce(uids, primitives, fn(uid, prims) ->
+      # get the uid of the parent group
+      %Primitive{parent_uid: puid} = prims[uid]
+
+      # remove the reference from the parent
+      prims = case prims[puid] do
+        -1 -> prims           # no parent
+        %Primitive{module: Group, data: children} = p->
+          children = Enum.reject(children, fn(cuid) -> cuid == uid end)
+          Map.put(prims, puid, %{p | data: children})
+      end
+
+      # delete the primitive itself
+      Map.delete(prims, uid)
+    end)
+
+    # delete the ids
+    ids = Map.delete(ids, id)
+
+    # reassemble the graph
+    %{graph | primitives: primitives, ids: ids}
   end
 
   #============================================================================
@@ -265,12 +304,9 @@ defmodule Scenic.Graph do
     Map.fetch!(primitives, uid)
   end
 
-
-
-
   #============================================================================
-  # get a list of elements by id
-  def get_id(graph, id) do
+  # get a list of primitives by id
+  def get(%Graph{} = graph, id) do
     graph
     |> resolve_id( id )
     |> Enum.reduce([], fn(uid,acc)-> [get_by_uid(graph, uid) | acc] end)
@@ -278,14 +314,13 @@ defmodule Scenic.Graph do
   end
 
   #--------------------------------------------------------
-  # get a single element by id. Raise error if it finds any count other than one
-  def get_id!(graph, id) do
+  # get a single primitive by id. Raise error if it finds any count other than one
+  def get!(%Graph{} = graph, id) do
     case resolve_id(graph, id) do
       [uid] ->  get_by_uid( graph, uid )
       _ ->      raise Error, message: @err_msg_get_id_one
     end
   end
-
 
   #============================================================================
   # insert an element into the graph under the given parent
