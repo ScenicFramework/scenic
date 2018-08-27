@@ -61,11 +61,10 @@ defmodule Mix.Tasks.Scenic.New do
 
     create_directory("lib")
     create_file("lib/#{app}.ex", lib_template(assigns))
-    create_file("lib/static_supervisor.ex", static_supervisor_template(assigns))
 
     create_directory("static")
-    parrot = scenic_path <> "/guides/static/parrot.jpg"
-    create_file("static/images/parrot.jpg.5fbXhl8WrxaEDmtXUz_4wHYgKHM", File.read!(parrot))
+    parrot = scenic_path <> "/guides/static/scenic_parrot.png"
+    create_file("static/images/parrot.jpg.sQoeVCEh0_rzjnsAJgdRlXcObfU", File.read!(parrot))
 
     create_directory("lib/scenes")
     create_file("lib/scenes/first.ex", first_scene_template(assigns))
@@ -269,7 +268,6 @@ defmodule Mix.Tasks.Scenic.New do
       # start the application with the viewport
       children = [
         supervisor(Scenic, [viewports: [main_viewport_config]]),
-        supervisor(<%= @mod %>.StaticSupervisor, []),
       ]
       Supervisor.start_link(children, strategy: :one_for_one)
     end
@@ -290,8 +288,8 @@ defmodule Mix.Tasks.Scenic.New do
     alias Scenic.Graph
     import Scenic.Primitives
 
-    @parrot       "/static/images/parrot.jpg.5fbXhl8WrxaEDmtXUz_4wHYgKHM"
-    @parrot_hash  "5fbXhl8WrxaEDmtXUz_4wHYgKHM"
+    @parrot       "/static/images/parrot.jpg.sQoeVCEh0_rzjnsAJgdRlXcObfU"
+    @parrot_hash  "sQoeVCEh0_rzjnsAJgdRlXcObfU"
 
     @graph Graph.build()
       |> text("First Scene", font: :roboto, font_size: 60, translate: {20, 120})
@@ -349,6 +347,7 @@ defmodule Mix.Tasks.Scenic.New do
 
     import Scenic.Primitives, only: [{:text, 3}, {:scene_ref, 3}]
     import Scenic.Components, only: [{:dropdown, 3}]
+    import Scenic.Clock.Components
 
     #--------------------------------------------------------
     def verify( scene ) when is_atom(scene), do: {:ok, scene}
@@ -369,9 +368,7 @@ defmodule Mix.Tasks.Scenic.New do
           {"Second Scene", <%= @mod %>.Scene.Second},
         ], current_scene, :nav}, translate: {70, 20})
 
-      # the clock is statically supervised as an example on how to do that.
-      # You could also use it dynamically
-      |> scene_ref(:clock, translate: {width - 20, 10})
+      |> digital_clock( translate: {width - 20, 10} )
 
       |> push_graph()
 
@@ -393,44 +390,6 @@ defmodule Mix.Tasks.Scenic.New do
 
   end
   """)
-
-
-  #--------------------------------------------------------
-  embed_template(:static_supervisor, """
-  defmodule <%= @mod %>.StaticSupervisor do
-    use Supervisor
-
-    @name     :static_scenes
-
-    def start_link() do
-      Supervisor.start_link(__MODULE__, :ok, name: @name)
-    end
-
-    def init(:ok) do
-      children = [
-        {Scenic.Clock.Digital, {[], [name: :clock]}},
-        # {Scenic.Clock.Analog, {[size: 40], [name: :clock]}}
-      ]
-
-      Supervisor.init(children, strategy: :one_for_one)
-    end
-  end
-  """)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
