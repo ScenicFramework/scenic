@@ -688,9 +688,6 @@ defmodule Scenic.Scene do
   # to the reader: You have no idea how difficult this was to get right.
   def handle_cast({:push_graph, raw_graph, sub_id, true},  %{
     scene_ref: scene_ref,
-    # raw_scene_refs: raw_scene_refs,
-    # dyn_scene_pids: dyn_scene_pids,
-    # dyn_scene_keys: dyn_scene_keys,
     raw_scene_refs: old_raw_refs,
     dyn_scene_pids: old_dyn_pids,
     dyn_scene_keys: old_dyn_keys,
@@ -729,11 +726,6 @@ defmodule Scenic.Scene do
       ({uid, p}, {g, all_refs, dyn_refs}) ->
         {Map.put( g, uid, Primitive.minimal(p) ), all_refs, dyn_refs}
     end)
-
-    # get the old refs
-    # old_raw_refs =  Map.get( raw_scene_refs, sub_id, %{} )
-    # old_dyn_pids =  Map.get( dyn_scene_pids, sub_id, %{} )
-    # old_dyn_keys =  Map.get( dyn_scene_keys, sub_id, %{} )
 
     # get the difference script between the raw and new dynamic refs
     raw_diff = Utilities.Map.difference( old_raw_refs, new_raw_refs )
@@ -804,9 +796,6 @@ defmodule Scenic.Scene do
 
     # store the refs for next time
     state = state
-    # |> put_in( [:raw_scene_refs, sub_id], new_raw_refs )
-    # |> put_in( [:dyn_scene_pids, sub_id], new_dyn_pids )
-    # |> put_in( [:dyn_scene_keys, sub_id], new_dyn_keys )
     |> Map.put( :raw_scene_refs, new_raw_refs )
     |> Map.put( :dyn_scene_pids, new_dyn_pids )
     |> Map.put( :dyn_scene_keys, new_dyn_keys )
