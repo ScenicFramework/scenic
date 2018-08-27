@@ -40,7 +40,7 @@ defmodule Scenic.Component.ButtonTest do
   # init
 
   test "init works with simple data" do
-    {:ok, state} = Button.init(@data, nil)
+    {:ok, state} = Button.init(@data, %{}, nil)
     %Scenic.Graph{} = state.graph
     assert is_map(state.theme)
     assert state.pressed == false
@@ -49,7 +49,7 @@ defmodule Scenic.Component.ButtonTest do
   end
 
   test "init works with complex data" do
-    {:ok, state} = Button.init(@data_opts, nil)
+    {:ok, state} = Button.init(@data_opts, %{}, nil)
     %Scenic.Graph{} = state.graph
     assert is_map(state.theme)
     assert state.pressed == false
