@@ -5,11 +5,11 @@
 
 # simple functions to load a file, following the hashing rules
 
-defmodule Scenic.Cache.File do
+defmodule Scenic.Cache.Term do
   alias Scenic.Cache
   alias Scenic.Cache.Hash
 
- import IEx
+#  import IEx
 
   #--------------------------------------------------------
   def load( path, hash, opts \\ [] )
@@ -19,12 +19,15 @@ defmodule Scenic.Cache.File do
   # hashes. Is also slower becase it has to load the file and compute the hash
   # to use as a key even it is is already loaded into the cache.
   def load( path, :insecure, opts ) do
-    with {:ok, data} <- read( path, :insecure, opts ) do
+    with {:ok, data} <- Cache.File.read( path, :insecure, opts ) do
       hash = Hash.compute( data, opts[:hash] || :sha )
       case Cache.claim(hash, opts[:scope]) do
         true -> {:ok, hash}
         false ->
-          Cache.put(hash, data, opts[:scope])
+          case do_read_term( data, opts ) do
+            {:ok, term} -> Cache.put(hash, term, opts[:scope])
+            err -> err
+          end
       end
     else
       err -> err
@@ -56,7 +59,7 @@ defmodule Scenic.Cache.File do
   # to use as a key even it is is already loaded into the cache.
   def read( path, :insecure, opts ) do
     with {:ok, data} <- File.read( path ) do
-      do_unzip( data, opts )
+      do_read_term( data, opts )
     else
       err -> err
     end
@@ -65,7 +68,7 @@ defmodule Scenic.Cache.File do
   def read( path, hash, opts ) do
     with {:ok, data} <- File.read(path),
     {:ok, data} <- Hash.verify( data, hash, opts[:hash] || :sha ) do
-      do_unzip( data, opts )
+      do_read_term( data, opts )
     else
       err -> err
     end
@@ -75,47 +78,16 @@ defmodule Scenic.Cache.File do
   #--------------------------------------------------------
   # unzip the data if the unzip option is true. Otherwise just returns
   #the data unchanged.
-  defp do_unzip( data, opts ) do
-    case opts[:decompress] do
-      true ->
-        case :zlib.gunzip(data) do
-          bin when is_binary(bin) -> {:ok, bin}
-          err -> {:error, :gunzip}
-        end
-      _ ->
-        # not decompressing
-        {:ok, data}
+  defp do_read_term( data, opts ) do
+    opts = case opts[:safe] do
+      false -> []
+      _ -> [:safe]
+    end
+    try do
+      {:ok, :erlang.binary_to_term( data, opts )}
+    rescue
+      _ -> {:error, :invalid_term}
     end
   end
   
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

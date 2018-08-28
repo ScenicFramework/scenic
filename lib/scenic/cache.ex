@@ -22,6 +22,8 @@ defmodule Scenic.Cache do
   @cache_claim        :cache_claim
   @cache_release      :cache_release
 
+  @default_release_delay  400
+
 
   # the format for an element in the cache is
   # {key, ref_count, data}
@@ -95,11 +97,22 @@ defmodule Scenic.Cache do
   #--------------------------------------------------------
   # return true if the deref was successful
   # return false if it wasn't ref'd in the first place
-  def release( key, scope \\ nil )
-  def release( key, nil ),                        do: do_release( self(), key )
-  def release( key, :global ),                    do: do_release( :global, key )
-  def release( key, name ) when is_atom(name),    do: do_release( Process.whereis( name ), key )
-  def release( key, pid ) when is_pid(pid),       do: do_release( pid, key )
+  def release( key, opts \\ [] )
+  def release( key, opts) do
+    scope = case opts[:scope] do
+      nil -> self()
+      :global -> :global
+      name when is_atom(name) -> Process.whereis( name )
+      pid when is_pid(pid) -> pid
+    end
+
+    delay = case opts[:delay] do
+      delay when is_integer(delay) and delay >= 0 -> delay
+      nil -> @default_release_delay
+    end
+
+    delayed_release( scope, key, delay )
+  end
 
   #--------------------------------------------------------
   def status( key, scope \\ nil )
@@ -151,7 +164,14 @@ defmodule Scenic.Cache do
   def handle_info({:DOWN, _, :process, scope_pid, _}, state) do
     # a scope process we are monitoring just went down. Clean up after it.
     do_keys( scope_pid )
-    |> Enum.each( &do_release(scope_pid, &1) )
+    |> Enum.each( &delayed_release(scope_pid, &1, @default_release_delay) )
+    {:noreply, state}
+  end
+
+
+  #--------------------------------------------------------
+  def handle_info({:delayed_release, key, scope}, state) do
+    do_release(scope, key)
     {:noreply, state}
   end
 
@@ -200,6 +220,13 @@ defmodule Scenic.Cache do
             true
         end
     end
+  end
+
+  #--------------------------------------------------------
+  defp delayed_release( scope, key, delay )
+  defp delayed_release( scope, key, 0 ), do: do_release(scope, key)
+  defp delayed_release( scope, key, delay ) when is_integer(delay) and delay > 0 do
+    Process.send_after(@name, {:delayed_release, key, scope}, delay)
   end
 
   #--------------------------------------------------------

@@ -183,7 +183,7 @@ defmodule Scenic.CacheTest do
     assert :ets.lookup(@cache_table, "test_key")  == [{"test_key", 1, "data"}]
     assert :ets.lookup(@scope_table, self())      == [{self(), "test_key", self()}]
 
-    assert Cache.release( "test_key" )
+    assert Cache.release( "test_key", delay: 0 )
 
     assert :ets.lookup(@cache_table, "test_key")  == []
     assert :ets.lookup(@scope_table, self())      == []
@@ -196,7 +196,7 @@ defmodule Scenic.CacheTest do
     assert :ets.lookup(@scope_table, :global)     == [{:global, "test_key", self()}]
     assert :ets.lookup(@scope_table, self())      == [{self(), "test_key", self()}]
 
-    assert Cache.release( "test_key" )
+    assert Cache.release( "test_key", delay: 0 )
 
     assert :ets.lookup(@cache_table, "test_key")  == [{"test_key", 1, "data"}]
     assert :ets.lookup(@scope_table, :global)     == [{:global, "test_key", self()}]
@@ -211,7 +211,7 @@ defmodule Scenic.CacheTest do
     assert :ets.lookup(@scope_table, :global)     == [{:global, "test_key", self()}]
     assert :ets.lookup(@scope_table, self())      == [{self(), "test_key", self()}]
 
-    assert Cache.release( "test_key", :global )
+    assert Cache.release( "test_key", scope: :global, delay: 0 )
 
     assert :ets.lookup(@cache_table, "test_key")  == [{"test_key", 1, "data"}]
     assert :ets.lookup(@scope_table, :global)     == []
@@ -225,7 +225,7 @@ defmodule Scenic.CacheTest do
     assert :ets.lookup(@scope_table, agent)       == [{agent, "test_key", self()}]
     assert :ets.lookup(@scope_table, self())      == [{self(), "test_key", self()}]
 
-    assert Cache.release( "test_key", @agent_name )
+    assert Cache.release( "test_key", scope: @agent_name, delay: 0 )
 
     assert :ets.lookup(@cache_table, "test_key")  == [{"test_key", 1, "data"}]
     assert :ets.lookup(@scope_table, agent)       == []
@@ -239,7 +239,7 @@ defmodule Scenic.CacheTest do
     assert :ets.lookup(@scope_table, agent)       == [{agent, "test_key", self()}]
     assert :ets.lookup(@scope_table, self())      == [{self(), "test_key", self()}]
 
-    assert Cache.release( "test_key", agent )
+    assert Cache.release( "test_key", scope: agent, delay: 0 )
 
     assert :ets.lookup(@cache_table, "test_key")  == [{"test_key", 1, "data"}]
     assert :ets.lookup(@scope_table, agent)       == []
@@ -247,8 +247,9 @@ defmodule Scenic.CacheTest do
   end
 
   test "release returns false if the key does not exist" do
-    refute Cache.release( "test_key" )
+    refute Cache.release( "test_key", delay: 0 )
   end
+
 
   #============================================================================
   # status
@@ -364,9 +365,7 @@ defmodule Scenic.CacheTest do
     {:noreply, :test_state} = Cache.handle_info({:DOWN, make_ref(), :process, agent, :normal}, :test_state)
 
     assert Cache.keys()       == ["test_key_0"]
-    assert Cache.keys(agent)  == []
     assert Cache.get("test_key_0") == "data_0"
-    assert Cache.get("test_key_1") == nil
   end
 
 end
