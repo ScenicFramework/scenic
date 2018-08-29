@@ -26,20 +26,12 @@ defmodule Scenic.Component do
 
       use Scenic.Scene, unquote(opts)
 
-#      def build(data \\ nil, opts \\ [])
-#      def build(data, opts) do
-#        Component = verify!( data )
-#        Primitive.build(__MODULE__, data, opts)
-#      end
-
       def add_to_graph(graph, data \\ nil, opts \\ [])
       def add_to_graph(%Scenic.Graph{} = graph, data, opts) do
         verify!(data)
         Primitive.SceneRef.add_to_graph(graph, {__MODULE__, data}, opts)
       end
 
-      # def valid?(nil),              do: true
-      def verify(nil),              do: {:ok, nil}
       def info() do
         "#{inspect(__MODULE__)} invalid add_to_graph data"
       end
@@ -52,27 +44,13 @@ defmodule Scenic.Component do
         end
       end
 
-
-#      def start_child_scene( parent_scene, ref, args, with_children \\ false ) do
-#        IO.puts "in component start_child_scene, with_children: #{with_children}"
-#        Scenic.Component.start_child_scene( parent_scene, ref, __MODULE__, args, with_children )
-#      end
-
-#      def normalize( data ),              do: data
-
       #--------------------------------------------------------
       defoverridable [
         add_to_graph:         3,
-        # valid?:               1,
-        info:                 0,
-#        start_child_scene:  4
-#        normalize:        1
+        info:                 0
       ]
     end # quote
   end # defmacro
 
-#  def start_child_scene( parent_scene, ref, mod, args, with_children ) do
-#    Scenic.Scene.start_child_scene( parent_scene, ref, mod, args, with_children )
-#  end
 
 end
