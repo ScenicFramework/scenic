@@ -320,8 +320,9 @@ defmodule Scenic.Scene do
   #============================================================================
   # callback definitions
 
-  @callback init( args :: any, inherited_styles :: map, viewport :: GenServer.server ) ::
-    {:ok, any}
+  # @callback init( args :: any, inherited_styles :: map, viewport :: GenServer.server ) ::
+  #   {:ok, any}
+  @callback init( args :: any, otps :: list ) :: {:ok, any}
   @callback handle_input(input :: any, context :: Context.t, state :: any) ::
     {:noreply, state :: any}
   @callback filter_event( any, any, any ) :: { :continue, any, any } | {:stop, any}
@@ -398,8 +399,6 @@ defmodule Scenic.Scene do
      # do not add a put element. keep it at modify to stay atomic
       #--------------------------------------------------------
       defoverridable [
-        # init:                   3,
-
         handle_call:            3,
         handle_cast:            2,
         handle_info:            2,
@@ -575,7 +574,8 @@ defmodule Scenic.Scene do
       {self(), dynamic_children_pid, supervisor_pid}
     )
 
-    {:ok, sc_state} = scene_module.init( args, opts[:styles] || %{}, opts[:viewport] )
+    # {:ok, sc_state} = scene_module.init( args, opts[:styles] || %{}, opts[:viewport] )
+    {:ok, sc_state} = scene_module.init( args, opts )
 
     state = state
 #    |> Map.put( :scene_state, sc_state)
@@ -740,9 +740,11 @@ defmodule Scenic.Scene do
 
         styles = Graph.style_stack(raw_graph, uid)
 
+        # prepare the startup options to send to the new scene
+        id = Map.get(raw_graph.primitives[uid], :id)
         init_opts = case viewport do
-          nil -> [styles: styles]
-          vp -> [viewport: vp, styles: styles]
+          nil -> [styles: styles, id: id]
+          vp -> [viewport: vp, styles: styles, id: id]
         end
 
         # start the dynamic scene

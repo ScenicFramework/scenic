@@ -3,7 +3,6 @@ defmodule Scenic.Component.Input.Slider do
 
   alias Scenic.Graph
   alias Scenic.ViewPort
-  alias Scenic.Primitive.Style.Paint.Color
   alias Scenic.Primitive.Style.Theme
   import Scenic.Primitives, only: [{:rect, 3}, {:line, 3}, {:rrect, 3}, {:update_opts,2}]
 
@@ -17,28 +16,20 @@ defmodule Scenic.Component.Input.Slider do
 
   @default_width      300
 
-  # theme is {line_color, thumb_color}
-  # @themes %{
-  #   light:    {:cornflower_blue, :black},
-  #   dark:     {:cornflower_blue, :antique_white},
-  # }
-
   #============================================================================
   # setup
 
   #--------------------------------------------------------
   def info() do
-    "#{IO.ANSI.red()}Slider data must be: {extents, initial, id, opts \\\\ []}" <>
+    "#{IO.ANSI.red()}Slider data must be: {extents, initial}" <>
     IO.ANSI.yellow() <>
     "\r\n" <>
     IO.ANSI.default_color()
   end
 
   #--------------------------------------------------------
-  def verify( {ext, initial, id} ), do: verify( {ext, initial, id, []} )
-  def verify( {ext, initial, _id, opts} = data ) when is_list(opts) do
-    opts
-    |> Enum.all?( &verify_option(&1) ) && verify_initial(ext, initial)
+  def verify( {ext, initial} = data ) do
+    verify_initial(ext, initial)
     |> case do
       true -> {:ok, data}
       _ -> :invalid_data
@@ -54,30 +45,18 @@ defmodule Scenic.Component.Input.Slider do
   defp verify_initial( list_ext, init ) when is_list(list_ext), do: Enum.member?(list_ext, init)
   defp verify_initial( _, _ ), do: false
 
-  #--------------------------------------------------------
-  defp verify_option( {:type, :light} ), do: true
-  defp verify_option( {:type, :dark} ), do: true
-  defp verify_option( {:type, {line_color, thumb_color}} ) do
-    Color.verify( line_color ) &&
-    Color.verify( thumb_color )
-  end
-  defp verify_option( _ ), do: false
 
   #--------------------------------------------------------
-  # def valid?( {_ext, _init, _width, _id} ), do: true
-  # def valid?( _d ), do: false
-
-
-  #--------------------------------------------------------
-  def init( {extents, value, id}, styles, viewport ), do:
-    init( {extents, value, id, []}, styles, viewport )
-  def init( {extents, value, id, opts}, styles, _viewport ) do
+  def init( {extents, value}, opts ) do
+    id = opts[:id]
+    styles = opts[:styles]
 
     # theme is passed in as an inherited style
-    theme = (styles[:theme] || Theme.preset(:dark))
+    theme = (styles[:theme] || Theme.preset(:primary))
     |> Theme.normalize()
 
-    width = opts[:width] || opts[:w] || @default_width
+    # get button specific styles
+    width = styles[:width] || @default_width
 
     graph = Graph.build()
       |> rect( {width, @height}, fill: :clear, t: {0,-1} )

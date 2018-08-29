@@ -8,7 +8,6 @@ defmodule Scenic.Component.Input.Dropdown do
 
   alias Scenic.Graph
   alias Scenic.ViewPort
-  alias Scenic.Primitive.Style.Paint.Color
   alias Scenic.Primitive.Style.Theme
   import Scenic.Primitives
 
@@ -33,16 +32,12 @@ defmodule Scenic.Component.Input.Dropdown do
 
   #--------------------------------------------------------
   def info() do
-    "#{IO.ANSI.red()}Dropdown data must be: {items, initial, id, opts \\\\ []}" <>
-    IO.ANSI.yellow() <>
-    "\r\n" <>
+    "#{IO.ANSI.red()}Dropdown data must be: {items, initial}" <>
     IO.ANSI.default_color()
   end
 
   #--------------------------------------------------------
-  def verify( {items, initial, id} ), do: verify( {items, initial, id, []} )
-  def verify( {items, initial, _id, opts} = data ) when is_list(items) and is_list(opts) do
-    Enum.all?( opts, &verify_option(&1) ) &&
+  def verify( {items, initial} = data ) when is_list(items) do
     Enum.all?( items, &verify_item(&1) ) &&
     Enum.find_value(items, false, fn({_,id})-> id == initial end)
     |> case do
@@ -57,24 +52,9 @@ defmodule Scenic.Component.Input.Dropdown do
   defp verify_item( _ ), do: false
 
   #--------------------------------------------------------
-  defp verify_option( {:theme, :light} ), do: true
-  defp verify_option( {:theme, :dark} ), do: true
-  defp verify_option( {:theme,
-  {text_color, background_color, pressed_color, border_color, carat_color, hover_color}} ) do
-    Color.verify( text_color ) &&
-    Color.verify( background_color ) &&
-    Color.verify( pressed_color ) &&
-    Color.verify( border_color ) &&
-    Color.verify( carat_color ) &&
-    Color.verify( hover_color )
-  end
-  defp verify_option( _ ), do: false
-
-
-  #--------------------------------------------------------
-  def init( {items, initial_id, id}, styles, viewport ), do:
-    init( {items, initial_id, id, []}, styles, viewport )
-  def init( {items, initial_id, id, opts}, styles, _viewport ) do
+  def init( {items, initial_id}, opts ) do
+    id = opts[:id]
+    styles = opts[:styles]
 
     # theme is passed in as an inherited style
     theme = (styles[:theme] || Theme.preset(:dark))

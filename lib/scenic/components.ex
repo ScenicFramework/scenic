@@ -19,6 +19,9 @@ defmodule Scenic.Components do
   to a graph.
 
 
+  THESE DOCS ARE OUT OF DATE AND NEED TO BE UPDATED
+
+
   In general, each helper function is of the form
       def name_of_component( graph, data, options \\\\ [] )
 

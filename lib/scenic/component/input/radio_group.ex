@@ -3,10 +3,9 @@ defmodule Scenic.Component.Input.RadioGroup do
 
   alias Scenic.Graph
   alias Scenic.Scene
-  # alias Scenic.Primitive
   alias Scenic.Component.Input.RadioButton
-  # alias Scenic.Primitive.Style.Paint.Color
   import Scenic.Primitives, only: [{:group, 2}]
+  
 #  import IEx
 
   @line_height      22
@@ -26,7 +25,7 @@ defmodule Scenic.Component.Input.RadioGroup do
   end
 
   #--------------------------------------------------------
-  def verify( {items, _msg} = data) when is_list(items) do
+  def verify( items ) when is_list(items) do
     items
     |> Enum.all?( fn(item) ->
       case RadioButton.verify( item ) do
@@ -35,7 +34,7 @@ defmodule Scenic.Component.Input.RadioGroup do
       end
     end)
     |> case do
-      true -> {:ok, data}
+      true -> {:ok, items}
       _ -> :invalid_data
     end
   end
@@ -45,8 +44,11 @@ defmodule Scenic.Component.Input.RadioGroup do
   # def valid?( _items ), do: true
 
   #--------------------------------------------------------
-  def init( {items, id}, styles, _viewport ) when is_list(items) do
-    graph = Graph.build(font: :roboto, font_size: 16)
+  def init( items, opts ) when is_list(items) do
+    id = opts[:id]
+    styles = opts[:styles]
+
+    graph = Graph.build()
     |> group(fn(graph) ->
       {graph, _} = Enum.reduce(items, {graph, 0}, fn
         {t,m}, {g, voffset} ->

@@ -4,7 +4,6 @@ defmodule Scenic.Component.Input.RadioButton do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.ViewPort
-  alias Scenic.Primitive.Style.Paint.Color
   alias Scenic.Primitive.Style.Theme
   import Scenic.Primitives, only: [{:rect, 3}, {:circle, 3}, {:text, 3}]
 
@@ -21,64 +20,20 @@ defmodule Scenic.Component.Input.RadioButton do
   end
 
   #--------------------------------------------------------
-  def verify( data ) do
-    try do
-      {_, _, _, opts} = normalize( data )
-      opts
-      |> Enum.all?( &verify_option(&1) )
-      |> case do
-        true -> {:ok, data}
-        _ -> :invalid_data
-      end
-    rescue
-      _ -> :invalid_data
-    end
+  def verify( {text, _} ) when is_bitstring(text), do: {:ok, {text, false}}
+  def verify( {text, _, checked?} = data )
+  when is_bitstring(text) and is_boolean(checked?) do
+    {:ok, data}
   end
-
 
   #--------------------------------------------------------
-  defp verify_option( {:theme, :light} ), do: true
-  defp verify_option( {:theme, :dark} ), do: true
-  defp verify_option( {:theme, {text_color, box_background, border_color,
-  pressed_color, checkmark_color}} ) do
-    Color.verify( text_color ) &&
-    Color.verify( box_background ) &&
-    Color.verify( border_color ) &&
-    Color.verify( pressed_color ) &&
-    Color.verify( checkmark_color )
-  end
-
-  defp verify_option( _ ), do: false
-
-
-  #--------------------------------------------------------
-  defp normalize( data )
-
-  defp normalize( {text, id} ), do: normalize( {text, id, false, []} )
-
-  defp normalize( {text, id, checked?} ) when is_boolean(checked?) do
-    normalize( {text, id, checked?, []} )
-  end
-
-  defp normalize( {text, id, opts} ) when is_list(opts) do
-    normalize( {text, id, false, opts} )
-  end
-
-  defp normalize( {text, _id, checked?, opts} = data) when is_bitstring(text) and
-  is_boolean(checked?) and is_list(opts) do
-    data
-  end
-
-
-  #--------------------------------------------------------
-  def init( data, styles, _viewport ) do
-    # normalize the incoming data
-    {text, id, checked?, _opts} = normalize( data )
+  def init( {text, id}, opts ) when is_bitstring(text), do: init( {text, id, false}, opts )
+  def init( {text, id, checked?}, opts ) do
+    styles = opts[:styles]
 
     # theme is passed in as an inherited style
     theme = (styles[:theme] || Theme.preset(:dark))
     |> Theme.normalize()
-
 
     graph = Graph.build( font: :roboto, font_size: 16 )
     |> Primitive.Group.add_to_graph(fn(graph) ->

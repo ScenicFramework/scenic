@@ -42,7 +42,7 @@ defmodule Scenic.Component.Input.Carat do
   def verify( _ ), do: :invalid_data
 
   #--------------------------------------------------------
-  def init( {height, color}, _styles, _viewport ) do
+  def init( {height, color}, _opts ) do
     # build the graph, initially not showing
     graph = Graph.build()
     |> line(

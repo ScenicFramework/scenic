@@ -4,79 +4,47 @@ defmodule Scenic.Component.Input.Checkbox do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.ViewPort
-  alias Scenic.Primitive.Style.Paint.Color
   alias Scenic.Primitive.Style.Theme
   import Scenic.Primitives
 
  # import IEx
 
-
-  # theme is {text_color, box_background, border_color, pressed_color, checkmark_color}
-  # nil for text_color means to use whatever is inherited
-  # @themes %{
-  #   light:    {:black, :white, :dark_grey, {215, 215, 215}, :cornflower_blue},
-  #   dark:     {:white, :black, :light_grey, {40,40,40}, :cornflower_blue},
-  # }
-
   @default_font       :roboto
   @default_font_size  20
 
+ # @default_width     140
+ # @default_height    16
+ # @default_radius    3
 
 #  #--------------------------------------------------------
   def info() do
-    "#{IO.ANSI.red()}Checkbox data must be:  {text, id, checked?, opts}\r\n" <>
-    IO.ANSI.yellow() <>
-    "Position the checkbox by adding a transform\r\n" <>
-    "The id will be sent to you in a :value_changed event when the checkbox is used.\r\n" <>
-    "The only option for now is {:theme, theme}\r\n" <>
-    "The type can be one of the following presets: :dark or :light.\r\n" <>
-    "Or a custom color set of: \r\n" <>
-    "{text_color, box_background, border_color, pressed_color, checkmark_color}\r\n" <>
-    "The default is :dark.\r\n"<>
-    "Examples:\r\n"<>
-    "checkbox({\"Something\", :id, true}, translate: {90,0})" <>
-    "checkbox({\"Something\", :id, true, theme: :light}, translate: {90,0})" <>
-    "\r\n" <>
+    "#{IO.ANSI.red()}Checkbox data must be:  {text, checked?}\r\n" <>
     IO.ANSI.default_color()
   end
 
   #--------------------------------------------------------
-  def verify( {text, id, checked} ), do: verify( {text, id, checked, []} )
-  def verify( {text, _id, checked, opts} = data ) when is_bitstring(text) and
-  is_boolean(checked) and is_list(opts) do
-    opts
-    |> Enum.all?( &verify_option(&1) )
-    |> case do
-      true -> {:ok, data}
-      _ -> :invalid_data
-    end
+  def verify( {text, checked} = data ) when is_bitstring(text) and is_boolean(checked) do
+    {:ok, data}
   end
   def verify( _ ), do: :invalid_data
 
-  #--------------------------------------------------------
-  defp verify_option( {:theme, :light} ), do: true
-  defp verify_option( {:theme, :dark} ), do: true
-  defp verify_option( {:theme, {text_color, box_background, border_color,
-  pressed_color, checkmark_color}} ) do
-    Color.verify( text_color ) &&
-    Color.verify( box_background ) &&
-    Color.verify( border_color ) &&
-    Color.verify( pressed_color ) &&
-    Color.verify( checkmark_color )
-  end
-
-  defp verify_option( _ ), do: false
-
 
   #--------------------------------------------------------
-  def init( {text, id, checked?}, styles, viewport ), do:
-    init( {text, id, checked?, []}, styles, viewport )
-  def init( {text, id, checked?, opts}, styles, _viewport ) when is_list(opts) do
+  def init( {text, checked?}, opts ) do
+    id = opts[:id]
+    styles = opts[:styles]
 
     # theme is passed in as an inherited style
-    theme = (styles[:theme] || Theme.preset(:dark))
+    theme = (styles[:theme] || Theme.preset(:primary))
     |> Theme.normalize()
 
+    # get button specific styles
+    # width = styles[:width] || @default_width
+    # height = styles[:height] || @default_height
+    # radius = styles[:radius] || @default_radius
+    # font = styles[:component_font] || @default_font
+    # font_size = styles[:component_font_size] || @default_font_size
+    # alignment = styles[:component_align] || @default_alignment
 
     graph = Graph.build( font: @default_font, font_size: @default_font_size )
     |> group(fn(graph) ->
@@ -109,7 +77,6 @@ defmodule Scenic.Component.Input.Checkbox do
       id: id
     }
 
-#IO.puts "Checkbox.init"
     push_graph( graph )
 
     {:ok, state}
