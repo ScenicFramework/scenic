@@ -9,7 +9,7 @@ defmodule Scenic.Cache.Hash do
 
 #  import IEx
 
-  @hash_types     [ :ripemd160, :sha, :sha224, :sha256, :sha384, :sha512 ]
+  @hash_types     [ :sha, :sha224, :sha256, :sha384, :sha512, :ripemd160 ]
   @default_hash   :sha
 
   #===========================================================================
@@ -61,10 +61,12 @@ defmodule Scenic.Cache.Hash do
       |> Base.url_encode64( padding: false )
       {:ok, hash}
     rescue
-      err -> case err do
-        %{reason: reason} -> {:error, reason}
-        _ -> err      
-      end
+      err ->
+        :crypto.hash_final(hash_context)
+        case err do
+          %{reason: reason} -> {:error, reason}
+          _ -> {:error, :hash}  
+        end
     end
   end
 

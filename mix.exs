@@ -1,7 +1,7 @@
 defmodule Scenic.Mixfile do
   use Mix.Project
 
-  @version "0.6.0"
+  @version "0.7.0"
 
   def project do
     [
@@ -174,9 +174,8 @@ defmodule Scenic.Mixfile do
       Cache: [
         Scenic.Cache,
         Scenic.Cache.File,
-        Scenic.Cache.Font,
-        Scenic.Cache.Hash,
-        Scenic.Cache.Texture
+        Scenic.Cache.Term,
+        Scenic.Cache.Hash
       ],
       Utilities: [
         Scenic.Utilities.Enum,
