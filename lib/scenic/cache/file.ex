@@ -9,7 +9,7 @@ defmodule Scenic.Cache.File do
   alias Scenic.Cache
   alias Scenic.Cache.Hash
 
- import IEx
+ # import IEx
 
   #--------------------------------------------------------
   def load( path, hash, opts \\ [] )
@@ -80,7 +80,7 @@ defmodule Scenic.Cache.File do
       true ->
         case :zlib.gunzip(data) do
           bin when is_binary(bin) -> {:ok, bin}
-          err -> {:error, :gunzip}
+          _ -> {:error, :gunzip}
         end
       _ ->
         # not decompressing
