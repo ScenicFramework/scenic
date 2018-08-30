@@ -44,7 +44,7 @@ defmodule Scenic.Primitives do
 
   In each case, the second parameter is a data term that is specific
   to the primitive being acted on. See the documentation below. If you
-  pass in invalid data for the second parameter an error will be 
+  pass in invalid data for the second parameter an error will be
   thrown along with some explanation of what it expected.
 
   The third parameter is a keyword list of options that are to be
@@ -90,7 +90,7 @@ defmodule Scenic.Primitives do
   boundaries.
 
   ## Draw Order
-  
+
   Primitives will be drawn in the order you add them to the graph.
   For example, the graph below draws text on top of a filled rectangle. If the order
   of the text and rectangle were reversed, they would both still be rendered, but
@@ -126,7 +126,7 @@ defmodule Scenic.Primitives do
 
       {radius, start, finish}
 
-  If you want something that looks like a piece of pie (maybe for a 
+  If you want something that looks like a piece of pie (maybe for a
   pie chart??), then you want a Sector, not an Arc.
 
   To create an arc of an ellipse, create a normal arc, and apply
@@ -141,7 +141,7 @@ defmodule Scenic.Primitives do
   ### Styles
 
   Arcs honor the following styles
-  
+
   * `:hidden` - If true the primitive is rendered. If false, it is skipped. The default
     is true.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
@@ -184,7 +184,7 @@ defmodule Scenic.Primitives do
   ### Styles
 
   Circles honor the following styles
-  
+
   * `:hidden` - If true the primitive is rendered. If false, it is skipped. The default
     is to render the primitive if hidden is not set.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
@@ -234,7 +234,7 @@ defmodule Scenic.Primitives do
   ### Styles
 
   Ellipses honor the following styles
-  
+
   * `:hidden` - If true the outline is rendered. If false, it is skipped. The default
     is to render the primitive if hidden is not set.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
@@ -266,7 +266,7 @@ defmodule Scenic.Primitives do
 
   The Group primitive creates a new branch in the Graph's tree. The data field
   you pass in is a function callback, which allows you to add more
-  primitives inside the new group. 
+  primitives inside the new group.
 
   The single parameter to your anonymous callback is a transformed graph that
   knows to add new primitives to the right branch in the tree.
@@ -295,7 +295,7 @@ defmodule Scenic.Primitives do
   """
 
   def group( graph_or_primitive, builder, opts \\ [] )
-  
+
   def group( %Graph{} = graph, builder, opts ) when is_function(builder, 1) do
     Primitive.Group.add_to_graph(graph, builder, opts)
   end
@@ -320,7 +320,7 @@ defmodule Scenic.Primitives do
   ### Styles
 
   Lines honor the following styles
-  
+
   * `:hidden` - If true the line is rendered. If false, it is skipped. The default
     is to render the primitive if hidden is not set.
   * `:stroke` - The width and paint to draw the line with. If the stroke is not
@@ -398,7 +398,7 @@ defmodule Scenic.Primitives do
   ### Styles
 
   Quads honor the following styles
-  
+
   * `:hidden` - If true the primitive is rendered. If false, it is skipped. The default
     is to render the primitive if hidden is not set.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
@@ -460,7 +460,7 @@ defmodule Scenic.Primitives do
   ### Styles
 
   Rectangles honor the following styles
-  
+
   * `:hidden` - If true the primitive is rendered. If false, it is skipped. The default
     is to render the primitive if hidden is not set.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
@@ -522,7 +522,7 @@ defmodule Scenic.Primitives do
   ### Styles
 
   Roumnded rectangles honor the following styles
-  
+
   * `:hidden` - If true the primitive is rendered. If false, it is skipped. The default
     is to render the primitive if hidden is not set.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
@@ -557,7 +557,7 @@ defmodule Scenic.Primitives do
   you can build smaller components that you can compose into a larger image.
 
   *Typically you do not specify SceneRefs yourself.* These get added
-  for you when you add components to you graph. Examples: Buttons, 
+  for you when you add components to you graph. Examples: Buttons,
   Sliders, checkboxes, etc.
 
   Usually, the graph you reference is controlled by another scene, but
@@ -613,7 +613,7 @@ defmodule Scenic.Primitives do
   ### Styles
 
   Sectors honor the following styles
-  
+
   * `:hidden` - If true the outline is rendered. If false, it is skipped. The default
     is true.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
@@ -655,7 +655,7 @@ defmodule Scenic.Primitives do
   @doc """
   Adds text to a graph
 
-  Text pretty simple. Speicify the string you would like drawn.
+  Text is pretty simple. Specify the string you would like drawn.
 
   Data:
 
@@ -669,13 +669,13 @@ defmodule Scenic.Primitives do
   ### Styles
 
   Text honors the following styles
-  
+
   * `:hidden` - If true the primitive is rendered. If false, it is skipped.
     The default is to render the primitive if hidden is not set.
   * `:fill` - The paint to color the text with. If not specified, the default
     is :white. Note: Text can only be filled with solid colors at this time.
   * `:font` - Specifies font family to draw the text with. The built-in system
-    fonts are `:roboto`, `:roboto_mono`, and `:roboto_slab`. If not specified, the 
+    fonts are `:roboto`, `:roboto_mono`, and `:roboto_slab`. If not specified, the
     default is `:roboto`. You can also load your own font into the Scenic.Cache,
     then specify it's key for the font.
   * `:font_blur` - Draw the text with a blur effect. If you draw text with blur,
@@ -722,7 +722,7 @@ defmodule Scenic.Primitives do
   ### Styles
 
   Triangles honor the following styles
-  
+
   * `:hidden` - If true the primitive is rendered. If false, it is skipped. The default
     is to render the primitive if hidden is not set.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
@@ -796,9 +796,3 @@ defmodule Scenic.Primitives do
 
 
 end
-
-
-
-
-
-
