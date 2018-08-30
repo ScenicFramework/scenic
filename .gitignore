@@ -27,3 +27,5 @@ erl_crash.dump
 
 # ignore office temp files
 ~*.xlsx
+
+mix.lock
