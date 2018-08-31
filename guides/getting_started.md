@@ -36,7 +36,6 @@ The Scenic Archive is the home of the scenic.new mix task, which lays out a star
 Install the Scenic Archive like this
 
       mix archive.install hex scenic_new
-s
 
 ## Build the Starter App
 
