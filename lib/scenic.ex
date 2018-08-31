@@ -9,7 +9,6 @@ defmodule Scenic do
 
   * [General Overview](overview_general.html)
   * [Getting Started](getting_started.html)
-  * [Mix Tasks](mix_tasks.html)
   ---
   * [Structure of a Scene](scene_structure.html)
   * [Lifecycle of a Scene](scene_lifecycle.html)
