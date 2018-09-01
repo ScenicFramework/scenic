@@ -71,6 +71,7 @@ defmodule Scenic.Mixfile do
     [
       "guides/overview_general.md",
       "guides/getting_started.md",
+      "guides/getting_started_nerves.md",
       "guides/scene_structure.md",
       "guides/scene_lifecycle.md",
       "guides/overview_graph.md",

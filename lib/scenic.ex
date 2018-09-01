@@ -9,6 +9,7 @@ defmodule Scenic do
 
   * [General Overview](overview_general.html)
   * [Getting Started](getting_started.html)
+  * [Getting Started with Nerves](getting_started_nerves.html)
   ---
   * [Structure of a Scene](scene_structure.html)
   * [Lifecycle of a Scene](scene_lifecycle.html)
