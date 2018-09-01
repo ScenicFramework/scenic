@@ -14,8 +14,8 @@ defmodule Scenic do
   * [Lifecycle of a Scene](scene_lifecycle.html)
   ---
   * [Graph Overview](overview_graph.html)
-  * [Primitives](overview_primitives.html)
-  * [Standard Components](standard_components.html)
+  * [Primitives](Scenic.Primitives.html)
+  * [Standard Components](Scenic.Components.html)
   ---
   * [Overview of a ViewPort](overview_viewport.html)
   * [Overview of a Driver](overview_driver.html)
