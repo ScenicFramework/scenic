@@ -144,8 +144,6 @@ defmodule Scenic.SensorPubSub do
 
   #--------------------------------------------------------
   def handle_info( {:EXIT, pid, reason}, state ) do
-    IO.puts "Sensor Cache EXIT. #{inspect(reason)}"
-
     # unsubscribe everything this pid was listening to
     state = do_unsubscribe(pid, :all, state)
 
