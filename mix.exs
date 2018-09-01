@@ -76,7 +76,9 @@ defmodule Scenic.Mixfile do
       "guides/scene_lifecycle.md",
       "guides/overview_graph.md",
       "guides/overview_viewport.md",
-      "guides/overview_driver.md"
+      "guides/overview_driver.md",
+      "guides/styles_overview.md",
+      "guides/transforms_overview.md"
     ]
   end
 
