@@ -143,7 +143,7 @@ defmodule Scenic.SensorPubSub do
   # handle linked processes going down
 
   #--------------------------------------------------------
-  def handle_info( {:EXIT, pid, reason}, state ) do
+  def handle_info( {:EXIT, pid, _reason}, state ) do
     # unsubscribe everything this pid was listening to
     state = do_unsubscribe(pid, :all, state)
 
