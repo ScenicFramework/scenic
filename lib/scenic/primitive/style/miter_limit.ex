@@ -11,7 +11,11 @@ defmodule Scenic.Primitive.Style.MiterLimit do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Style :miter_limit must be an number greater than 0"
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be a number greater than 0
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+  """
 
   #--------------------------------------------------------
   # named color

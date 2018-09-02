@@ -17,10 +17,14 @@ defmodule Scenic.Component.Input.Checkbox do
  # @default_radius    3
 
 #  #--------------------------------------------------------
-  def info() do
-    "#{IO.ANSI.red()}Checkbox data must be:  {text, checked?}\r\n" <>
-    IO.ANSI.default_color()
+  def info( data ) do
+    """
+    #{IO.ANSI.red()}Checkbox data must be: {text, checked?}
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+    """
   end
+
 
   #--------------------------------------------------------
   def verify( {text, checked} = data ) when is_bitstring(text) and is_boolean(checked) do

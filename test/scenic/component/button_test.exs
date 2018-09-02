@@ -14,7 +14,7 @@ defmodule Scenic.Component.ButtonTest do
   # info
 
   test "info works" do
-    assert is_bitstring Button.info()
+    assert is_bitstring Button.info( :bad_data )
   end
 
   #============================================================================

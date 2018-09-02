@@ -10,9 +10,11 @@ defmodule Scenic.Primitive.Style.Cap do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info() do
-    ":cap must be one of :butt, :round, :square\r\n"
-  end
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be one of :butt, :round, :square
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+  """
 
   #--------------------------------------------------------
   # named color

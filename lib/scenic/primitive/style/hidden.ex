@@ -10,7 +10,11 @@ defmodule Scenic.Primitive.Style.Hidden do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Style :hidden can only be true or false"
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be either true or false
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+  """
 
   #--------------------------------------------------------
   def verify( true ),     do: true

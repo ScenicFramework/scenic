@@ -12,9 +12,11 @@ defmodule Scenic.Primitive.Style.FontBlur do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info() do
-    "Style :font_size must be a number\r\n"
-  end
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be a positive number
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+  """
 
   #--------------------------------------------------------
   def verify( blur ) do

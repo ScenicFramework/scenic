@@ -12,11 +12,11 @@ defmodule Scenic.Primitive.Style.FontSize do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info() do
-    "Style :font_size must be a number >= 26\r\n" <>
-    "Many different sizes, or large sizes consume more memory.\r\n" <>
-    "The default size is usually 14."
-  end
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be a positive number >= 6
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+  """
 
   #--------------------------------------------------------
   def verify( font ) do

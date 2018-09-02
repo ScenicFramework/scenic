@@ -10,9 +10,11 @@ defmodule Scenic.Primitive.Style.Join do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info() do
-    ":join must be one of :miter, :round, :bevel\r\n"
-  end
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be one of :miter, :round, :bevel
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+  """
 
   #--------------------------------------------------------
   # named color

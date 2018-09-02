@@ -11,6 +11,17 @@ defmodule Scenic.Primitive.Transform.Scale do
 
   #--------------------------------------------------------
   def info(), do: "Transform :scale must conform to the documentation\n"
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be either a single number or a vector
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+
+    If you supply a single number, then scale is that percentage on both the X and Y axes.
+
+    If you supply a vector {px, py}, the scale is different on the two axes.
+
+    #{IO.ANSI.default_color()}
+  """
+
 
   #--------------------------------------------------------
   def verify( percent ) do

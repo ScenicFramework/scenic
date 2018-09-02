@@ -10,7 +10,7 @@ defmodule Scenic.Component do
 
   @callback add_to_graph(map, any, list) :: map
   @callback verify( any ) :: any
-  @callback info() :: String.t
+  @callback info( data :: any ) :: String.t
 
 #  import IEx
 
@@ -32,22 +32,25 @@ defmodule Scenic.Component do
         Primitive.SceneRef.add_to_graph(graph, {__MODULE__, data}, opts)
       end
 
-      def info() do
-        "#{inspect(__MODULE__)} invalid add_to_graph data"
+      def info( data ) do
+        """
+        #{inspect(__MODULE__)} invalid add_to_graph data
+        Received: #{inspect(data)}
+        """
       end
 
       @doc false
       def verify!( data ) do
         case verify(data) do
           {:ok, data} -> data
-          err -> raise Error, message: info(), error: err, data: data
+          err -> raise Error, message: info(data), error: err, data: data
         end
       end
 
       #--------------------------------------------------------
       defoverridable [
         add_to_graph:         3,
-        info:                 0
+        info:                 1
       ]
     end # quote
   end # defmacro

@@ -10,10 +10,14 @@ defmodule Scenic.Primitive.Style.Scissor do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info() do
-    "Scissor data should be: {width, height}\r\n" <>
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be {width, height}
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+
     "The scissor region will be positioned by the transform stack"
-  end
+
+    #{IO.ANSI.default_color()}
+  """
 
   #--------------------------------------------------------
   # named color

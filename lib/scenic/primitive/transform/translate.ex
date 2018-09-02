@@ -10,7 +10,11 @@ defmodule Scenic.Primitive.Transform.Translate do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Transform :translate must be a 2d vector {x,y}\n"
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be a 2d vector: {x,y}
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+  """
 
   #--------------------------------------------------------
   def verify( percent ) do

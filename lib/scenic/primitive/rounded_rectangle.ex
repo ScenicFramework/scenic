@@ -16,10 +16,12 @@ defmodule Scenic.Primitive.RoundedRectangle do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info() do
-    "Rounded Rectangle data must be: {width, height, radius}\r\n" <>
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be: {width, height, radius}
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
     "Radius will be clamped to half of the smaller of width or height."
-  end
+    #{IO.ANSI.default_color()}
+  """
 
   #--------------------------------------------------------
   def verify( data ) do

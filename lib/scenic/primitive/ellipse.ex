@@ -17,7 +17,11 @@ defmodule Scenic.Primitive.Ellipse do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Ellipse data must be: {radius_1, radius_2}"
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be: {radius_1, radius_2}
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+  """
 
   #--------------------------------------------------------
   def verify( data ) do

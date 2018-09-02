@@ -17,7 +17,11 @@ defmodule Scenic.Primitive.Circle do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Circle data must be: radius"
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be: radius
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+  """
 
   #--------------------------------------------------------
   def verify( data ) do

@@ -18,9 +18,12 @@ defmodule Scenic.Component.Button do
   @default_alignment  :center
 
   #--------------------------------------------------------
-  def info() do
-    "#{IO.ANSI.red()}Button data must be a bitstring\r\n" <>
-    IO.ANSI.default_color()
+  def info( data ) do
+    """
+    #{IO.ANSI.red()}Button data must be a bitstring: initial_text
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+    """
   end
 
   #--------------------------------------------------------

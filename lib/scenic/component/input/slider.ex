@@ -20,11 +20,19 @@ defmodule Scenic.Component.Input.Slider do
   # setup
 
   #--------------------------------------------------------
-  def info() do
-    "#{IO.ANSI.red()}Slider data must be: {extents, initial}" <>
-    IO.ANSI.yellow() <>
-    "\r\n" <>
-    IO.ANSI.default_color()
+  def info( data ) do
+    """
+    #{IO.ANSI.red()}Slider data must be: {extents, initial_value}
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    The initial_value must make sense with the extents
+
+    Examples:
+    {{0,100}, 0}
+    {{0.0, 1.57}, 0.3}
+    {[:red, :green, :blue, :orange], :green}
+
+    #{IO.ANSI.default_color()}
+    """
   end
 
   #--------------------------------------------------------

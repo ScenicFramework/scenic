@@ -16,7 +16,11 @@ defmodule Scenic.Primitive.Line do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Line data must be two points: {{x0,y0}, {x1,y1}}"
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be two points: {{x0,y0}, {x1,y1}}
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+  """
 
 
   #--------------------------------------------------------

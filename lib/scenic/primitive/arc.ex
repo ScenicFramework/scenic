@@ -19,8 +19,11 @@ defmodule Scenic.Primitive.Arc do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Arc data must be: {radius, start, finish}\r\n" <>
-  "Add a scale transform to make it an arc along an ellipse"
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be: {radius, start, finish}
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+  """
 
 
   #--------------------------------------------------------

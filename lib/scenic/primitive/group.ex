@@ -22,7 +22,11 @@ defmodule Scenic.Primitive.Group do
 
 
   #--------------------------------------------------------
-  def info(), do: "Group data must be a list of valid uids of other elements in the graph."
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be a list of valid uids of other elements in the graph.
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+  """
 
   #--------------------------------------------------------
   def verify( ids ) when is_list(ids) do

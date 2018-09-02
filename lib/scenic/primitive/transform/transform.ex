@@ -10,7 +10,7 @@ defmodule Scenic.Primitive.Transform do
   alias Scenic.Math.Vector
   alias Scenic.Primitive.Transform
 
-  @callback info() :: bitstring
+  @callback info( data :: any ) :: bitstring
   @callback verify( any ) :: boolean
 
   #===========================================================================
@@ -37,7 +37,7 @@ defmodule Scenic.Primitive.Transform do
         case verify(data) do
           true -> data
           false ->
-            raise FormatError, message: info(), module: __MODULE__, data: data
+            raise FormatError, message: info(data), module: __MODULE__, data: data
         end
       end
 

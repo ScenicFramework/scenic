@@ -11,9 +11,11 @@ defmodule Scenic.Primitive.Style.Fill do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info() do
-    "Style :fill must be a color/image.\r\n"
-  end
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be a valid paint type
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+  """
 
   #--------------------------------------------------------
   # named color

@@ -11,13 +11,12 @@ defmodule Scenic.Primitive.SceneRef do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info() do
-    "Scene reference must be either a pid, an atom (naming a scene)\r\n" <>
-    "or a Module and initialization data. See examples:\r\n" <>
-    "SceneRef.add( graph, :some_supervised_scene )  # scene you supervise\r\n" <>
-    "SceneRef.add( graph, <pid> ) # scene you supervise\r\n" <>
-    "SceneRef.add( graph, Button, {{20,20},\"Example\"} ) # will be started for you"
-  end
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must point to a valid scene or component.
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+  """
+
 
   #--------------------------------------------------------
   def verify( name ) when is_atom(name), do: {:ok, name}

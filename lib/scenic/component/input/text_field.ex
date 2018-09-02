@@ -40,11 +40,12 @@ defmodule Scenic.Component.Input.TextField do
 
 
   #--------------------------------------------------------
-  def info() do
-    "#{IO.ANSI.red()}TextField data must be: initial_text" <>
-    IO.ANSI.yellow() <>
-    "\r\n" <>
-    IO.ANSI.default_color()
+  def info( data ) do
+    """
+    #{IO.ANSI.red()}TextField data must be a bitstring: initial_text
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+    """
   end
 
   #--------------------------------------------------------

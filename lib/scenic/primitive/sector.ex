@@ -18,8 +18,11 @@ defmodule Scenic.Primitive.Sector do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Sector must be: {radius, start, finish}\r\n" <>
-  "Add a scale transform to make it a sector of an ellipse"
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be: {radius, start_angle, end_angle}
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+  """
 
   #--------------------------------------------------------
   def verify( data ) do

@@ -16,7 +16,11 @@ defmodule Scenic.Primitive.Text do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Text data must be a bitstring: \"a_string\""
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be a bitstring
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+  """
 
   #--------------------------------------------------------
   def verify( text ) when is_bitstring(text), do: {:ok, text}

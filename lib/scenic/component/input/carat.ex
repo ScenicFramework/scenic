@@ -24,11 +24,12 @@ defmodule Scenic.Component.Input.Carat do
   # setup
 
   #--------------------------------------------------------
-  def info() do
-    "#{IO.ANSI.red()}Carat data must be: {height, color}" <>
-    IO.ANSI.yellow() <>
-    "\r\n" <>
-    IO.ANSI.default_color()
+  def info( data ) do
+    """
+    #{IO.ANSI.red()}Carat data must be: {height, color}
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+    """
   end
 
   #--------------------------------------------------------

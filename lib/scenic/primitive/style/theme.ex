@@ -60,7 +60,18 @@ defmodule Scenic.Primitive.Style.Theme do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Theme help goes here"
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must either a preset theme or a map of named colors
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+
+    The predefined themes are:
+    :dark, :light, :primary, :secondary, :success, :danger, :warning, :info, :text
+
+    If you pass in a map of colors, the common ones used in the controls are:
+    :text, :background, :border, :active, :thumb, :focus
+
+    #{IO.ANSI.default_color()}
+  """
 
   #--------------------------------------------------------
   def verify( name ) when is_atom(name), do: Map.has_key?(@themes, name)

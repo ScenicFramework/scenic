@@ -15,12 +15,15 @@ defmodule Scenic.Primitive.Style.TextAlign do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Style :text_align must be one of...\r\n" <>
-    ":left, :right, :center, # (vertically on the baseline)\r\n" <>
-    ":left_top, :right_top, :center_top,\r\n" <>
-    ":left_middle, :right_middle, :center_middle,\r\n" <>
-    ":left_bottom, :right_bottom, :center_bottom\r\n" <>
-    "The default is :left"
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be one of ...
+    :left, :right, :center, # (vertically on the baseline)
+    :left_top, :right_top, :center_top,
+    :left_middle, :right_middle, :center_middle,
+    :left_bottom, :right_bottom, :center_bottom
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+  """
 
   #--------------------------------------------------------
   def verify( align ) do

@@ -31,9 +31,12 @@ defmodule Scenic.Component.Input.Dropdown do
   @rad        :math.pi() / 2
 
   #--------------------------------------------------------
-  def info() do
-    "#{IO.ANSI.red()}Dropdown data must be: {items, initial}" <>
-    IO.ANSI.default_color()
+  def info( data ) do
+    """
+    #{IO.ANSI.red()}Dropdown data must be: {items, initial}
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+    """
   end
 
   #--------------------------------------------------------

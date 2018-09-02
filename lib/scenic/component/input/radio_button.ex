@@ -11,12 +11,12 @@ defmodule Scenic.Component.Input.RadioButton do
 
 
 #  #--------------------------------------------------------
-  def info() do
-#    "#{IO.ANSI.red()}RadioButton must be initialized with" <>
-#    "{text, message, value, opts}#{IO.ANSI.default_color()}\r\n"
-    "help goes here" <>
-    "\r\n" <>
-    IO.ANSI.default_color()
+  def info( data ) do
+    """
+    #{IO.ANSI.red()}RadioButton data must be: {text, id} or {text, id, checked?}
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+    """
   end
 
   #--------------------------------------------------------

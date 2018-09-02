@@ -42,7 +42,7 @@ defmodule Scenic.Primitive.Style do
     :scissor, :theme
   ]
 
-  @callback info() :: bitstring
+  @callback info( data :: any ) :: bitstring
   @callback verify( any ) :: boolean
 
   #===========================================================================
@@ -56,13 +56,11 @@ defmodule Scenic.Primitive.Style do
     quote do
       @behaviour Scenic.Primitive.Style
 
-      #def type_code(), do: << unquote(type_code) :: unsigned-integer-size(16)-native>>
-
       def verify!( data ) do
         case verify(data) do
           true -> data
           false ->
-            raise FormatError, message: info(), module: __MODULE__, data: data
+            raise FormatError, message: info(data), module: __MODULE__, data: data
         end
       end
 
@@ -75,11 +73,7 @@ defmodule Scenic.Primitive.Style do
     end # quote
   end # defmacro
 
-
-  # map a atom name to a style module. See @style_name_map above
-#  def name_to_style( name ) when is_atom(name), do: @style_name_map[name]
-
-#  #===========================================================================
+  #===========================================================================
   def verify( style_key, style_data ) do
     case Map.get(@style_name_map, style_key) do
       nil    -> true # don't verify non-primitives
@@ -118,7 +112,6 @@ defmodule Scenic.Primitive.Style do
         v   ->  Map.put(acc, k, normalize(k,v) )
       end
     end)
-    # style_map
   end
 
 end

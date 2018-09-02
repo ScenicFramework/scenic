@@ -16,8 +16,11 @@ defmodule Scenic.Primitive.Path do
   # data verification and serialization
 
   #--------------------------------------------------------
-  def info(), do: "Path must be a list of actions. See docs."
-
+  def info( data ), do: """
+    #{IO.ANSI.red()}#{__MODULE__} data must be a list of actions. See docs.
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    #{IO.ANSI.default_color()}
+  """
 
   #--------------------------------------------------------
   def verify( actions ) when is_list(actions) do

@@ -17,7 +17,7 @@ defmodule Scenic.Primitive do
   @callback valid_styles() :: list
   @callback filter_styles( map ) :: map
 
-  @callback info() :: bitstring
+  @callback info( data :: any ) :: bitstring
   @callback verify( any ) :: any
 
   @callback default_pin( any ) :: {float, float}
@@ -77,7 +77,7 @@ defmodule Scenic.Primitive do
       def verify!( data ) do
         case verify(data) do
           {:ok, data} -> data
-          err -> raise Error, message: info(), error: err, data: data
+          err -> raise Error, message: info(data), error: err, data: data
         end
       end
 

@@ -11,17 +11,21 @@ defmodule Scenic.Component.Input.RadioGroup do
   @line_height      22
 
 #  #--------------------------------------------------------
-  def info() do
-    "#{IO.ANSI.red()}RadioGroup data must be: {items, id}\r\n" <>
-    IO.ANSI.yellow() <>
-    "Position the radio group by adding a transform\r\n" <>
-    "The message will be sent to you in a :value_changed event when the state" <>
-    "of the radio buttons changes.\r\n" <>
-    "Each item in the items list must be a valid init data for a radio button.\r\n" <>
-    "Info for a radio button is below...\r\n" <>
-    "\r\n" <>
-    RadioButton.info() <>
-    IO.ANSI.default_color()
+  def info( data ) do
+    """
+    #{IO.ANSI.red()}RadioGroup data must be a list of items
+    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+    Each item in the list must be valid data for Scenic.Component.Input.RadioButton
+
+    Example:
+    [
+      {"Radio A", :radio_a},
+      {"Radio B", :radio_b, true},
+      {"Radio C", :radio_c, false}
+    ]
+
+    #{IO.ANSI.default_color()}
+    """
   end
 
   #--------------------------------------------------------
