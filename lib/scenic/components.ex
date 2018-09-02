@@ -15,12 +15,16 @@ defmodule Scenic.Components do
   # import IEx
 
   @moduledoc """
-  A set of helper functions to make it easy to add, or modify, components
-  to a graph.
 
+  ## About Components
 
-  THESE DOCS ARE OUT OF DATE AND NEED TO BE UPDATED
+  Components are small scenes that are referenced, and managed, by another scene.
+  They are useful for reusing bits of UI and containing the logic that runs them.
 
+  ## Helper Functions
+
+  This module contains a set of helper functions to make it easy to add, or modify,
+  the standard components in a graph.
 
   In general, each helper function is of the form
       def name_of_component( graph, data, options \\\\ [] )
@@ -34,12 +38,11 @@ defmodule Scenic.Components do
 
   This doesn't happen all at once. These helper functions simply add
   a reference to a to-be-started component to your graph. When you call
-  push_graph/1 to send this graph to be rendered, these components are
-  picked up, mapped to the host scene and started.
+  `push_graph/1` to the ViewPort then manages the lifecycle of the components.
 
   You can also supervise components yourself, but then you should add
-  the scene_ref yourself via the scene_ref/3 function, which is in the
-  Scenice.Primitives module.
+  the scene reference yourself via the `scene_ref/3` function, which is in the
+  [`Scenice.Primitives`](Scenic.Primitives.html) module.
 
   When adding components to a graph, each helper function accepts a
   graph as the first parameter and returns the transformed graph. This
@@ -47,19 +50,19 @@ defmodule Scenic.Components do
   together.
 
       @graph Graph.build()
-      |> button( {"Press Me", :btn_pressed}, id: :btn_id )
+      |> button( "Press Me", id: :sample_button )
 
   When modifying a graph, you can again use the helpers by passing
   in the component to be modified. The transformed component will
   be returned.
 
-      Graph.modify(graph, :btn_id, fn(p) ->
-        button(p, {"Continue", :btn_pressed})
+      Graph.modify(graph, :sample_button, fn(p) ->
+        button( p, "Continue" )
       end)
 
       # or, more compactly...
 
-      Graph.modify(graph, :btn_id, &button(&1, {"Continue", :btn_pressed}) )
+      Graph.modify(graph, :sample_button, &button(&1, "Continue") )
 
   In each case, the second parameter is a data term that is specific
   to the component being acted on. See the documentation below. If you
@@ -71,7 +74,7 @@ defmodule Scenic.Components do
   transforms and such.
 
       @graph Graph.build()
-      |> button( {"Press Me", :btn_pressed}, id: :btn_id, rotate: 0.4)
+      |> button( "Press Me", id: :sample_button, rotate: 0.4)
 
 
   ### Event messages
@@ -81,7 +84,7 @@ defmodule Scenic.Components do
 
   For example, when a button scene decides that it has been "clicked",
   the generic button component doesn't know how to do anything with that
-  information. So it sends a `{:click, button_id}` to the host scene
+  information. So it sends a `{:click, id}` to the host scene
   that referenced it.
 
   That scene can intercept the message, act on it, transform it, and/or
@@ -92,52 +95,16 @@ defmodule Scenic.Components do
 
   examples:
 
-        def filter_event( {:click, :example_id}, _, state ) do
+        def filter_event( {:click, :sample_button}, _, state ) do
           {:stop, state }
         end
 
-        def filter_event( {:click, :example_id}, _, state ) do
+        def filter_event( {:click, :sample_button}, _, state ) do
           {:continue, {:click, :transformed}, state }
         end
 
   Inside a filter_event callback you can modify a graph, change state,
   send messages, transform the event, stop the event, and much more.
-
-
-  ### Style options
-
-  Because components are seperate scenes, they generally do not inherit
-  the styles set by the host scene that references them. This makes sense
-  as most components should have a consistent look and feel regardless
-  of the font style or fill set by the host.
-
-  If you want to stylize a component, check the docs for that module.
-  Most of them have options allowing you to do that as appropriate.
-
-  ### Transform options
-
-  Transform options set on the host do affect any components they refernce.
-
-  These options affect the size, position and rotation of elements in the
-  graph. Any transform you can express as a 4x4 matrix of floats, you can apply
-  to any component in the graph, including groups and scene_refs.
-
-  This is done mathematically as a "stack" of transforms. As the renderer
-  traverses up and down the graph, transforms are pushed and popped from the
-  matrix stack as appropriate. Transform inheritence does cross SceneRef
-  boundaries.
-
-  ## Draw Order
-  
-  Primitives will be drawn in the order you add them to the graph.
-  For example, the graph below draws a buttonon top of a filled rectangle.
-  If the order of the text and rectangle were reversed, they would both
-  still be rendered, but the buuton would not be visible because the
-  rectangle would cover it up.
-
-      @graph Graph.build( font: {:roboto, 20} )
-      |> rect( {100, 200}, color: :blue )
-      |> button( {"Press Me", :btn_pressed})
   """
 
 
@@ -152,37 +119,37 @@ defmodule Scenic.Components do
 
   Data:
 
-      {text, button_id, options \\\\ []}
+      text
 
   * `text` must be a bitstring
-  * `id` can be any term you want. It will be passed back to you during event messages.
-  * `options` should be a list of options (see below). It is not required.
 
   ### Messages
 
   If a button press is successful, it sends an event message to the host
   scene in the form of:
 
-      {:click, button_id}
-
-
-  ### Options
-
-  Buttons honor the following list of options.
-  * `:width` - pass in a number to set the width of the button.
-  * `:height` - pass in a number to set the height of the button.
-  * `:radius` - pass in a number to set the radius of the button's rounded rectangle.
-  * `:align` - set the aligment of the text inside the button. Can be one of
-  `:left, :right, :center`. The default is `:center`.
-
+      {:click, id}
 
   ### Styles
 
-  Buttons honor the following styles
+  Buttons honor the following standard styles
   
   * `:hidden` - If `false` the component is rendered. If `true`, it is skipped. The default
     is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:primary`
+
+  ### Additional Styles
+
+  Buttons honor the following list of additional styles.
+  * `:width` - pass in a number to set the width of the button.
+  * `:height` - pass in a number to set the height of the button.
+  * `:radius` - pass in a number to set the radius of the button's rounded rectangle.
+  * `:alignment` - set the aligment of the text inside the button. Can be one of
+  `:left, :right, :center`. The default is `:center`.
+  * `:button_font_size` - the size of the font in the button
+
+  Buttons do not use the inherited `:font_size` style as the should look consistent regardless
+  of what size the surrounding text is.
 
   ## Theme
 
@@ -200,13 +167,13 @@ defmodule Scenic.Components do
   The following example creates a simple button and positions it on the screen.
 
       graph
-      |> button( {"Example", :button_id}, translate: {20, 20} )
+      |> button( "Example", id: :button_id, translate: {20, 20} )
 
   The next example makes the same button as before, but colors it as a warning button. See
   the options list above for more details.
 
       graph
-      |> button( {"Example", :button_id}, translate: {20, 20}, theme: :warning )
+      |> button( "Example", id: :button_id, translate: {20, 20}, theme: :warning )
 
 
   """
@@ -226,12 +193,10 @@ defmodule Scenic.Components do
 
   Data:
 
-      {text, id, checked?, options \\\\ []}
+      {text, checked?}
 
   * `text` must be a bitstring
-  * `id` can be any term you want. It will be passed back to you during event messages.
   * `checked?` must be a boolean and indicates if the checkbox is set.
-  * `options` should be a list of options (see below). It is not required
 
 
   ### Messages
@@ -239,17 +204,12 @@ defmodule Scenic.Components do
   When the state of the checkbox, it sends an event message to the host
   scene in the form of:
 
-      {:value_changed, checkbox_id, checked?}
-
-  ### Options
-
-  Checkboxes honor the following list of options.
-
+      {:value_changed, id, checked?}
 
 
   ### Styles
 
-  Buttons honor the following styles
+  Buttons honor the following standard styles
   
   * `:hidden` - If `false` the component is rendered. If `true`, it is skipped. The default
     is `false`.
@@ -293,19 +253,18 @@ defmodule Scenic.Components do
 
   Data:
 
-      {items, initial_item, id, options \\\\ []}
+      {items, initial_item}
 
   * `items` must be a list of items, each of which is: {text, id}. See below...
-  * `initial_item` is the id of the initial selected item. It can be any term you want.
-  * `id` can be any term you want. It will be passed back to you during event messages.
-  * `options` should be a list of options (see below). It is not required
+  * `initial_item` is the id of the initial selected item. It can be any term you want, however
+  it must be an `item_id` in the `items` list. See below.
 
-  Item data:
+  Per item data:
     
-      {text, id}
+      {text, item_id}
 
   * `text` is a string that will be shown in the dropdown.
-  * `id` can be any term you want. It will identify the item that is currently selected
+  * `item_id` can be any term you want. It will identify the item that is currently selected
   in the dropdown and will be passed back to you during event messages.
 
 
@@ -314,7 +273,7 @@ defmodule Scenic.Components do
   When the state of the checkbox, it sends an event message to the host
   scene in the form of:
 
-      {:value_changed, dropdown_id, selected_item_id}
+      {:value_changed, id, selected_item_id}
 
 
   ### Options
@@ -329,6 +288,12 @@ defmodule Scenic.Components do
   * `:hidden` - If `false` the component is rendered. If `true`, it is skipped. The default
     is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:dark`
+
+  ### Additional Styles
+
+  Buttons honor the following list of additional styles.
+  * `:width` - pass in a number to set the width of the button.
+  * `:height` - pass in a number to set the height of the button.
 
   ## Theme
 
@@ -371,22 +336,18 @@ defmodule Scenic.Components do
 
   Data:
 
-      {radio_buttons, group_id}
+      radio_buttons
 
   * `radio_buttons` must be a list of radio button data. See below.
-  * `id` can be any term you want. It will be passed back to you during event messages.
-
-  The `items` term must be a list of RadioButton init data.
 
   Radio button data:
 
-      {text, button_id, checked? \\\\ false, options \\\\ []}
+      {text, radio_id, checked? \\\\ false}
 
   * `text` must be a bitstring
   * `button_id` can be any term you want. It will be passed back to you as the group's value.
   * `checked?` must be a boolean and indicates if the button is selected. `checked?` is not
   required and will default to `false` if not supplied.
-  * `options` should be a list of options (see below). It is not required
 
 
   ### Messages
@@ -394,7 +355,7 @@ defmodule Scenic.Components do
   When the state of the radio group changes, it sends an event message to the host
   scene in the form of:
 
-      {:value_changed, group_id, button_id}
+      {:value_changed, id, radio_id}
 
 
   ### Options
@@ -455,7 +416,7 @@ defmodule Scenic.Components do
 
   Data:
 
-      { extents, initial_value, id, options \\\\ [] }
+      { extents, initial_value}
 
   * `extents` gives the range of values. It can take several forms...
     * `{min,max}` If min and max are integers, then the slider value will be an integer.
@@ -463,8 +424,6 @@ defmodule Scenic.Components do
     * `[a, b, c]` A list of terms. The value will be one of the terms
   * `initial_value` Sets the intial value (and position) of the slider. It must make
   sense with the extents you passed in.
-  * `id` can be any term you want. It will be passed back to you during event messages.
-  * `options` should be a list of options (see below). It is not required
 
   ### Messages
 
@@ -477,8 +436,6 @@ defmodule Scenic.Components do
   ### Options
 
   Sliders honor the following list of options.
-
-
 
   ### Styles
 
@@ -529,31 +486,9 @@ defmodule Scenic.Components do
   @doc """
   Add a text field input to a graph
 
-  Data: {initial_value, id, options \\\\ []}
+  Data: initial_value
 
   * `initial_value` is the string that will be the starting value
-  * `id` can be any term you want. It will be passed back to you during event messages.
-  * `options` should be a list of options (see below). It is not required
-
-
-  ### Options
-
-  Text fields honor the following list of options.
-  
-  * `:filter` - Adding a filter option restricts which characters can be entered
-    into the text_field component. The value of filter can be one of:
-    * `:all` - Accept all characters. This is the default
-    * `:number` - Any characters from "0123456789.,"
-    * `"filter_string"` - Pass in a string containing all the characters you will accept
-    * `function/1` - Pass in an anonymous function. The single parameter will be
-      the character to be filtered. Return true or false to keep or reject it.
-  * `:hint` - A string that will be shown (greyed out) when the entered value
-    of the componenet is empty.
-  * `:type` - Can be one of the following options:
-    * `:all` - Show all characters. This is the default.
-    * `:password` - Display a string of '*' characters instead of the value.
-  * `:width` - set the width of the control.
-
 
   ### Messages
 
@@ -570,6 +505,24 @@ defmodule Scenic.Components do
   * `:hidden` - If `false` the component is rendered. If `true`, it is skipped. The default
     is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:dark`
+
+  ### Additional Styles
+
+  Text fields honor the following list of additional styles.
+  
+  * `:filter` - Adding a filter option restricts which characters can be entered
+    into the text_field component. The value of filter can be one of:
+    * `:all` - Accept all characters. This is the default
+    * `:number` - Any characters from "0123456789.,"
+    * `"filter_string"` - Pass in a string containing all the characters you will accept
+    * `function/1` - Pass in an anonymous function. The single parameter will be
+      the character to be filtered. Return true or false to keep or reject it.
+  * `:hint` - A string that will be shown (greyed out) when the entered value
+    of the componenet is empty.
+  * `:type` - Can be one of the following options:
+    * `:all` - Show all characters. This is the default.
+    * `:password` - Display a string of '*' characters instead of the value.
+  * `:width` - set the width of the control.
 
   ## Theme
 
