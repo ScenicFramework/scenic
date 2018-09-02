@@ -15,8 +15,11 @@ The instructions below assume you have already installed Elixir/Erlang. If you n
 
 The easiest way to install on MacOS is to use Homebrew. Just run the following in a terminal:
 
-      brew update
-      brew install glfw3 glew pkg-config
+```bash
+brew update
+brew install glfw3 glew pkg-config
+```
+
 
 Once these components have been installed, you should be able to build the `scenic_driver_glfw` driver.
 
@@ -24,8 +27,10 @@ Once these components have been installed, you should be able to build the `scen
 
 The easiest way to install on Ubuntu is to use apt-get. Just run the following:
 
-      apt-get update
-      apt-get install pkgconf libglfw3 libglfw3-dev libglew2.0 libglew-dev
+```bash
+apt-get update
+apt-get install pkgconf libglfw3 libglfw3-dev libglew2.0 libglew-dev
+```
 
 Once these components have been installed, you should be able to build the `scenic_driver_glfw` driver.
 
@@ -35,22 +40,20 @@ The Scenic Archive is the home of the scenic.new mix task, which lays out a star
 
 Install the Scenic Archive like this
 
-      mix archive.install hex scenic_new
+```bash
+mix archive.install hex scenic_new
+```
 
 ## Build the Starter App
 
 
 First, navigate the command-line to the directory where you want to create your new Scenic app. Then run the following commands:  (change `my_app` to the name of your app...)
 
-      mix scenic.new my_app
-
-Move into the newly created directory
-
-      cd my_app
-
-Get the dependencies and run your new application.
-
-      mix do deps.get, scenic.run
+```bash
+mix scenic.new my_app
+cd my_app
+mix do deps.get, scenic.run
+```
 
 
 ## Running and Debugging
@@ -59,13 +62,17 @@ Once the app and its dependencies are set up, there are two main ways to run it.
 
 If you want to run your app under IEx so that you can debug it, simply run
 
-      iex -S mix
+```bash
+iex -S mix
+```
 
 This works just like any other Elixir application.
 
 If you want to run your app outside of iex, you should start it like this:
 
-    mix scenic.run
+```bash
+mix scenic.run
+```
 
 ## The Starter App
 
