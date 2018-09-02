@@ -78,7 +78,9 @@ defmodule Scenic.Mixfile do
       "guides/overview_viewport.md",
       "guides/overview_driver.md",
       "guides/styles_overview.md",
-      "guides/transforms_overview.md"
+      "guides/transforms_overview.md",
+      "CODE_OF_CONDUCT.md",
+      "CONTRIBUTING.md"
     ]
   end
 

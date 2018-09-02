@@ -5,23 +5,16 @@ defmodule Scenic do
   With it you can build client-side applications that operate identically across all
   supported operating systems, including MacOS, Ubuntu, Nerves/Linux, and more.
 
+  Scenic is primarily aimed at fixed screen connected devices (IoT), but can also be
+  used to build portable applications.
+
   ## Helpful Guides
 
-  * [General Overview](overview_general.html)
-  * [Getting Started](getting_started.html)
-  * [Getting Started with Nerves](getting_started_nerves.html)
-  ---
-  * [Structure of a Scene](scene_structure.html)
-  * [Lifecycle of a Scene](scene_lifecycle.html)
-  * [Standard Components](Scenic.Components.html)
-  ---
-  * [Graph Overview](overview_graph.html)
-  * [Primitives](Scenic.Primitives.html)
-  * [Styles](styles_overview.html)
-  * [Transforms](transforms_overview.html)
-  ---
-  * [Overview of a ViewPort](overview_viewport.html)
-  * [Overview of a Driver](overview_driver.html)
+  [General Overview](overview_general.html) | [**Getting Started**](getting_started.html) | [Nerves](getting_started_nerves.html)
+  [Structure of a Scene](scene_structure.html) | [Lifecycle of a Scene](scene_lifecycle.html) | [Standard Components](Scenic.Components.html)
+  [Graph Overview](overview_graph.html) | [ViewPort Overview](overview_viewport.html) | [Driver Overview](overview_driver)
+  [Primitives](Scenic.Primitives.html) | [Styles](styles_overview.html) | [Transforms](transforms_overview.html)
+  [Contributing](contributing.html) | [Code of Conduct](code_of_conduct.html.html) |
 
   If you are new to scenic, then you should read the [General Overview](overview_general.html),
   [Getting Started](getting_started.html), and [Structure of a Scene](scene_structure.html) guides first.

@@ -2,6 +2,8 @@
 
 Scenic is a client application framework written directly on the Elixir/Erlang/OTP stack. With it you can build applications that operate identically across all supported operating systems, including MacOS, Ubuntu, Nerves/Linux, and more.
 
+Scenic is primarily aimed at fixed screen connected devices (IoT), but can also be used to build portable applications.
+
 
 ## Goals
 (Not necessarily in order)
