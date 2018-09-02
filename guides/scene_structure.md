@@ -201,10 +201,11 @@ In the event that `verify/1` returns `:invalid_data`, then the `info/1` callback
         @graph Graph.build()
         |> text("", text_align: :center, translate: {100, 200}, id: :text)
 
-        def info() do
-          "#{IO.ANSI.red()}ExampleComponent data must be a bitstring\r\n" <>
-          IO.ANSI.default_color()
-        end
+        def info( data ), do: """
+          #{IO.ANSI.red()}#{__MODULE__} data must be a bitstring
+          #{IO.ANSI.yellow()}Received: #{inspect(data)}
+          #{IO.ANSI.default_color()}
+        """
 
         def verify( text ) when is_bitstring(text), do: {:ok, text}
         def verify( _ ), do: :invalid_data
