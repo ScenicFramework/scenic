@@ -72,12 +72,7 @@ defmodule Scenic.ViewPort.Tables do
   end
 
   def insert_graph( graph_key, scene, graph, refs) when is_pid(scene) do
-    :ets.insert(@ets_graphs_table, {graph_key, scene, graph, refs})
-
-    # let any subscribing listeners know the graph was updated
-    graph_key
-    |> list_subscribers()
-    |> Enum.each( &GenServer.cast(&1, {:update_graph, graph_key}) )
+    send( @name, {:insert_graph, graph_key, scene, graph, refs} )
   end
 
   #--------------------------------------------------------
@@ -179,7 +174,7 @@ defmodule Scenic.ViewPort.Tables do
     # set up the initial state
     state = %{
       graph_table_id: :ets.new(@ets_graphs_table,
-        [:named_table, :public, {:read_concurrency, true}]
+        [:named_table, {:read_concurrency, true}]
       ),
       scene_table_id: :ets.new(@ets_scenes_table, [:named_table]),
       subs_table_id: :ets.new(@ets_subs_table, [:named_table, :bag]),
@@ -226,6 +221,18 @@ defmodule Scenic.ViewPort.Tables do
   def handle_info({:DOWN,_,:process,pid,_}, state) do
     # clean up any subscriptions
     handle_cast( {:graph_unsubscribe, :all, pid}, state )
+  end
+
+
+  #--------------------------------------------------------
+  def handle_info({:insert_graph, graph_key, scene, graph, refs}, state) do
+    :ets.insert(@ets_graphs_table, {graph_key, scene, graph, refs})
+
+    # let any subscribing listeners know the graph was updated
+    graph_key
+    |> list_subscribers()
+    |> Enum.each( &GenServer.cast(&1, {:update_graph, graph_key}) )
+    {:noreply, state}
   end
 
 
