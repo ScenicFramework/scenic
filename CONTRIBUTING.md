@@ -13,10 +13,11 @@ Use the issues tracker for:
 
 Please **do not** use the issue tracker for personal support requests nor feature requests. Support requests should be sent to:
 
-* [the phoenix-talk mailing list](http://groups.google.com/group/phoenix-talk)
-* **[#elixir-lang](irc://chat.freenode.net/elixir-lang)** IRC channel on [chat.freenode.net](http://www.freenode.net/)
 
-Development issues can be discussed on [the phoenix-core mailing list](http://groups.google.com/group/phoenix-core).
+Still working on this bit...
+
+
+
 
 We do our best to keep the issue tracker tidy and organized, making it useful
 for everyone. For example, we classify open issues per perceived difficulty,
