@@ -124,11 +124,11 @@ defmodule Scenic.ViewPort.Tables do
 
   #--------------------------------------------------------
   # return a list of all the graph keys that have been pushed by a scene
-  defp list_graphs_for_scene( scene ) when is_atom(scene) or is_reference(scene) do
-    :ets.match(@ets_graphs_table, {{:graph, scene, :"$1"}, :_, :_, :_})
-    |> List.flatten()
-    |> Enum.map( fn(sub_id) -> {:graph, scene, sub_id} end)
-  end
+  # defp list_graphs_for_scene( scene ) when is_atom(scene) or is_reference(scene) do
+  #   :ets.match(@ets_graphs_table, {{:graph, scene, :"$1"}, :_, :_, :_})
+  #   |> List.flatten()
+  #   |> Enum.map( fn(sub_id) -> {:graph, scene, sub_id} end)
+  # end
 
 
   #--------------------------------------------------------
