@@ -2,11 +2,8 @@
 #  Created by Boyd Multerer on 04/13/18.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
-# Refactoring the graph and Scene ETS tables into a seperate genserver
-# whose whole purpose is to manage them. This will make future support
-# for multiple, parallel viewports much easier. Even when there are
-# multiple viewports, they would still share the same graphs table and
-# scene registrations.
+# The Tables processes is a critical piece of Scenic. It caches the graphs
+# that have been pushed by the various scenes.
 
 defmodule Scenic.ViewPort.Tables do
   use GenServer
@@ -38,11 +35,15 @@ defmodule Scenic.ViewPort.Tables do
 
 
   #--------------------------------------------------------
+  @doc false
+  # internal function. Called from within a scene's internal init processes
   def register_scene( scene_ref, {pid,_,_} = registration ) when is_pid(pid) do
     GenServer.cast(@name, {:register, scene_ref, registration})
   end
 
   #--------------------------------------------------------
+  @doc false
+  # internal function. Called from within a scene's internal init processes
   def get_scene_pid( scene_or_graph_key ) do
     with {:ok, {pid,_,_}} <- get_scene_registration( scene_or_graph_key ) do
       {:ok, pid}
@@ -52,9 +53,9 @@ defmodule Scenic.ViewPort.Tables do
   end
 
   #--------------------------------------------------------
-  def get_scene_registration( scene_or_graph_key )
-  def get_scene_registration( {:graph, scene, _} ), do: get_scene_registration( scene )
-  def get_scene_registration( scene ) when is_atom(scene) or is_reference(scene) do
+  defp get_scene_registration( scene_or_graph_key )
+  defp get_scene_registration( {:graph, scene, _} ), do: get_scene_registration( scene )
+  defp get_scene_registration( scene ) when is_atom(scene) or is_reference(scene) do
     case :ets.lookup(@ets_scenes_table, scene ) do
       [{_,registration}] -> {:ok, registration}
       [] -> {:error, :not_found}
@@ -88,16 +89,7 @@ defmodule Scenic.ViewPort.Tables do
   #--------------------------------------------------------
   def delete_graph( {:graph,scene,_} = graph_key )
   when is_atom(scene) or is_reference(scene) do
-    list_subscribers(graph_key)
-    |> Enum.each( fn(subscriber) ->
-      # tell the subscribers the graph went away
-      GenServer.cast(subscriber, {:delete_graph, graph_key})
-      # delete the subscription - must be done from Table process
-      GenServer.cast( @name, {:graph_unsubscribe, graph_key, subscriber} )
-      # :ets.match_delete(@ets_subs_table, {graph_key, subscriber})
-    end)
-    :ets.delete(@ets_graphs_table, graph_key)
-    :ok
+    send( @name, {:delete_graph, graph_key} )
   end
   def delete_graph( _ ), do: {:error, :invalid_graph_key}
 
@@ -123,16 +115,16 @@ defmodule Scenic.ViewPort.Tables do
   def get_graph_refs( _ ), do: {:error, :invalid_graph_key}
 
 
-  #--------------------------------------------------------
-  # return a list of all the graph keys
-  def list_graphs() do
-    :ets.match(@ets_graphs_table, {:"$1", :_, :_, :_})
-    |> List.flatten()
-  end
+  # #--------------------------------------------------------
+  # # return a list of all the graph keys
+  # def list_graphs() do
+  #   :ets.match(@ets_graphs_table, {:"$1", :_, :_, :_})
+  #   |> List.flatten()
+  # end
 
   #--------------------------------------------------------
   # return a list of all the graph keys that have been pushed by a scene
-  def list_graphs_for_scene( scene ) when is_atom(scene) or is_reference(scene) do
+  defp list_graphs_for_scene( scene ) when is_atom(scene) or is_reference(scene) do
     :ets.match(@ets_graphs_table, {{:graph, scene, :"$1"}, :_, :_, :_})
     |> List.flatten()
     |> Enum.map( fn(sub_id) -> {:graph, scene, sub_id} end)
@@ -150,11 +142,11 @@ defmodule Scenic.ViewPort.Tables do
     GenServer.cast( @name, {:graph_unsubscribe, graph_key, pid} )
   end
 
-  #--------------------------------------------------------
-  def list_subscriptions( pid ) when is_pid(pid) do
-    :ets.match(@ets_subs_table, {:"$1", pid})
-    |> List.flatten()
-  end
+  # #--------------------------------------------------------
+  # def list_subscriptions( pid ) when is_pid(pid) do
+  #   :ets.match(@ets_subs_table, {:"$1", pid})
+  #   |> List.flatten()
+  # end
 
   #============================================================================
   # internal server api
@@ -236,6 +228,20 @@ defmodule Scenic.ViewPort.Tables do
   end
 
 
+  #--------------------------------------------------------
+  def handle_info({:delete_graph, graph_key}, state) do
+    state = list_subscribers(graph_key)
+    |> Enum.reduce( state, fn(subscriber, s) ->
+      # tell the subscribers the graph went away
+      GenServer.cast(subscriber, {:delete_graph, graph_key})
+      # delete the subscription - must be done from Table process
+      do_graph_unsubscribe(graph_key, subscriber, s)
+    end)
+    :ets.delete(@ets_graphs_table, graph_key)
+    {:noreply, state}
+  end
+
+
 
   #============================================================================
   # handle_cast
@@ -256,17 +262,8 @@ defmodule Scenic.ViewPort.Tables do
   end
 
   #--------------------------------------------------------
-  def handle_cast( {:graph_unsubscribe, :all, pid}, state ) do
-    :ets.match_delete(@ets_subs_table, {:_, pid})
-    demonitor_subscriber(pid, :all, state)
-    {:noreply, state}
-  end
-
-  #--------------------------------------------------------
   def handle_cast( {:graph_unsubscribe, graph_key, pid}, state ) do
-    # delete all the specific subscription
-    :ets.match_delete(@ets_subs_table, {graph_key, pid})
-    demonitor_subscriber(pid, graph_key, state)
+    state = do_graph_unsubscribe(graph_key, pid, state)
     {:noreply, state}
   end
 
@@ -361,6 +358,19 @@ defmodule Scenic.ViewPort.Tables do
             put_in(state, [:sub_monitors, sub], {ref, keys})
         end
     end
+  end
+
+  #--------------------------------------------------------
+  defp do_graph_unsubscribe(:all, pid, state) do
+    # delete all the subscriptions
+    :ets.match_delete(@ets_subs_table, {:_, pid})
+    demonitor_subscriber(pid, :all, state)
+  end
+
+  defp do_graph_unsubscribe(graph_key, pid, state) do
+    # delete the specific subscription
+    :ets.match_delete(@ets_subs_table, {graph_key, pid})
+    demonitor_subscriber(pid, graph_key, state)
   end
 
 end
