@@ -204,7 +204,7 @@ defmodule Scenic.ViewPort.Input do
   %{max_depth: max_depth} = state ) do
     case find_by_captured_point( global_pos, context, max_depth ) do
       {nil, _, point} ->
-        # no uid found. let the capturing scene handle the raw positino
+        # no uid found. let the capturing scene handle the raw position
         # we already know the root scene has identity transforms
         state = send_primitive_exit_message(state)
         Scene.cast(context.graph_key,
