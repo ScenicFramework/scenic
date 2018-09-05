@@ -5,7 +5,7 @@ defmodule Scenic.Component.Button do
   alias Scenic.Primitive
   alias Scenic.ViewPort
   alias Scenic.Primitive.Style.Theme
-  import Scenic.Primitives, only: [{:rrect, 3}, {:text, 3}]
+  import Scenic.Primitives, only: [{:rrect, 3}, {:text, 3}, {:update_opts, 2}]
 
   # import IEx
 
@@ -65,6 +65,16 @@ defmodule Scenic.Component.Button do
         |> rrect( {width, height, radius}, fill: theme.background, id: :btn )
         |> text( text, fill: theme.text, translate: {width - 8,(height*0.7)}, text_align: :right )
     end
+
+    # special case the dark and light themes to show an outline
+    graph = case styles[:theme] do
+      :dark ->
+        Graph.modify(graph, :btn, &update_opts(&1, stroke: {1, theme.border}))
+      :light ->
+        Graph.modify(graph, :btn, &update_opts(&1, stroke: {1, theme.border}))
+      _ -> graph
+    end
+
 
     state = %{
       graph: graph,
