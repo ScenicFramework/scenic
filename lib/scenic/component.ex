@@ -31,6 +31,7 @@ defmodule Scenic.Component do
         Primitive.SceneRef.add_to_graph(graph, {__MODULE__, data}, opts)
       end
 
+      @doc false
       def info(data) do
         """
         #{inspect(__MODULE__)} invalid add_to_graph data

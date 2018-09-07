@@ -338,13 +338,19 @@ defmodule Scenic.Scene do
       # Here so that the scene can override if desired
       # def init(_, _, _),                            do: {:ok, nil}
 
+      @doc false
       def handle_call(_msg, _from, state), do: {:reply, :err_not_handled, state}
+      @doc false
       def handle_cast(_msg, state), do: {:noreply, state}
+      @doc false
       def handle_info(_msg, state), do: {:noreply, state}
 
+      @doc false
       def handle_input(event, _, scene_state), do: {:noreply, scene_state}
+      @doc false
       def filter_event(event, _from, scene_state), do: {:continue, event, scene_state}
 
+      @doc false
       def start_dynamic_scene(supervisor, parent, args, opts \\ []) do
         has_children =
           case unquote(using_opts)[:has_children] do
@@ -385,6 +391,7 @@ defmodule Scenic.Scene do
       defp scene_ref(), do: Process.get(:scene_ref)
 
       # child spec that really starts up scene, with this module as an option
+      @doc false
       def child_spec({args, opts}) when is_list(opts) do
         %{
           id: make_ref(),
