@@ -68,10 +68,4 @@ defmodule ScenicMath.Mixfile do
     ]
   end
 
-  defp package() do
-    [
-      name: :scenic_math,
-      maintainers: ["Boyd Multerer"]
-    ]
-  end
 end
