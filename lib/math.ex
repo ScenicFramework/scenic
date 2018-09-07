@@ -7,7 +7,6 @@ defmodule Scenic.Math do
   Documentation for Scenic.Math.
   """
 
-
   @type vector_2 :: {x :: number, y :: number}
   @type vector_3 :: {x :: number, y :: number, z :: number}
   @type vector_4 :: {x :: number, y :: number, z :: number, w :: number}
@@ -19,5 +18,4 @@ defmodule Scenic.Math do
   @type quad :: {p0 :: point, p1 :: point, p2 :: point, p3 :: point}
 
   @type matrix :: <<_::64>>
-
 end

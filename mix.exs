@@ -11,7 +11,7 @@ defmodule ScenicMath.Mixfile do
       elixir: "~> 1.6",
       description: description(),
       # build_embedded: Mix.env == :prod,
-      start_permanent: Mix.env == :prod,
+      start_permanent: Mix.env() == :prod,
       compilers: [:elixir_make | Mix.compilers()],
       make_targets: ["all"],
       make_clean: ["clean"],
@@ -25,7 +25,7 @@ defmodule ScenicMath.Mixfile do
       nil ->
         %{
           "ERL_EI_INCLUDE_DIR" => "#{:code.root_dir()}/usr/include",
-          "ERL_EI_LIBDIR" => "#{:code.root_dir()}/usr/lib",
+          "ERL_EI_LIBDIR" => "#{:code.root_dir()}/usr/lib"
         }
 
       _ ->
@@ -50,13 +50,12 @@ defmodule ScenicMath.Mixfile do
   # Dependencies can be Hex packages:
   defp deps do
     [
-      { :elixir_make, "~> 0.4" },
+      {:elixir_make, "~> 0.4"},
       # { :benchwarmer, "~> 0.0.2", only: :dev }
 
       # Docs dependencies
       {:ex_doc, ">= 0.0.0", only: [:dev, :docs]},
       {:inch_ex, ">= 0.0.0", only: :docs},
-
       {:dialyxir, "~> 0.5", only: :dev, runtime: false}
     ]
   end
