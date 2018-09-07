@@ -4,6 +4,15 @@ Please take a moment to review this document in order to make the contribution
 process easy and effective for everyone involved!
 Also make sure you read our [Code of Conduct](CODE_OF_CONDUCT.md) that outlines our commitment towards an open and welcoming environment.
 
+## Components
+
+There are many components that could be written and shared with the community. Only a few really core ones should be in the Scenic package itself. If you have ideas for components, I would love the see the community supply optional packages of them for developers to use.
+
+Each component package should have the component modles themselves, and a "Components" module that contains helper functions to make adding the new components very simple.
+
+See the code for Scenic.Components for example helper functions.
+
+
 ## Using the issue tracker
 
 Use the issues tracker for:
@@ -16,7 +25,9 @@ Please **do not** use the issue tracker for personal support requests nor featur
 
 Still working on this bit...
 
+For now, please play around with it. I would gladly accept help documenting it. 
 
+Over the coming weeks, I'll set up discussion mailing lists and whatever. Simply haven't gotten there yet.
 
 
 We do our best to keep the issue tracker tidy and organized, making it useful
