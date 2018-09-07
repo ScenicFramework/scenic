@@ -7,31 +7,30 @@ defmodule Scenic.Primitive.Style.ClearColor do
   use Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Paint.Color
 
-
-  #============================================================================
+  # ============================================================================
   # data verification and serialization
 
-  #--------------------------------------------------------
-  def info( data ), do: """
-    #{IO.ANSI.red()}#{__MODULE__} data must be a valid color
-    #{IO.ANSI.yellow()}Received: #{inspect(data)}
-    Note: the :clear_color style is only honored on the root node of the root graph. 
-    #{IO.ANSI.default_color()}
-  """
+  # --------------------------------------------------------
+  def info(data),
+    do: """
+      #{IO.ANSI.red()}#{__MODULE__} data must be a valid color
+      #{IO.ANSI.yellow()}Received: #{inspect(data)}
+      Note: the :clear_color style is only honored on the root node of the root graph. 
+      #{IO.ANSI.default_color()}
+    """
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # named color
 
-  def verify( color ) do
+  def verify(color) do
     try do
-      normalize( color )
+      normalize(color)
       true
     rescue
       _ -> false
-    end    
+    end
   end
 
-  #--------------------------------------------------------
-  def normalize( color ),  do: Color.to_rgba( color )
-
+  # --------------------------------------------------------
+  def normalize(color), do: Color.to_rgba(color)
 end

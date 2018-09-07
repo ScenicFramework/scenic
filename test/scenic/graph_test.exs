@@ -15,34 +15,36 @@ defmodule Scenic.GraphTest do
   alias Scenic.Primitive.Rectangle
   alias Scenic.Primitive.Line
 
- # import IEx
-  
-  @root_uid               0
+  # import IEx
 
-  @tx_pin                 {10,11}
-  @tx_rot                 0.1
-  @transform              %{pin: @tx_pin, rotate: @tx_rot}
+  @root_uid 0
 
+  @tx_pin {10, 11}
+  @tx_rot 0.1
+  @transform %{pin: @tx_pin, rotate: @tx_rot}
 
-  @empty_root             Group.build() #|> Primitive.put_uid(@root_uid)
-  @graph_empty            Graph.build()
+  # |> Primitive.put_uid(@root_uid)
+  @empty_root Group.build()
+  @graph_empty Graph.build()
 
-  @graph_find       Graph.build()
-    |> Text.add_to_graph( "Some sample text", id: :outer_text  )
-    |> Line.add_to_graph( {{10,10}, {100, 100}}, id: :outer_line )
-    |> Group.add_to_graph( fn(g) ->
-      g
-      |> Text.add_to_graph("inner text", id: :inner_text)
-      |> Line.add_to_graph({{10,10}, {100, 100}}, id: :inner_line)
-    end, id: :group)
+  @graph_find Graph.build()
+              |> Text.add_to_graph("Some sample text", id: :outer_text)
+              |> Line.add_to_graph({{10, 10}, {100, 100}}, id: :outer_line)
+              |> Group.add_to_graph(
+                fn g ->
+                  g
+                  |> Text.add_to_graph("inner text", id: :inner_text)
+                  |> Line.add_to_graph({{10, 10}, {100, 100}}, id: :inner_line)
+                end,
+                id: :group
+              )
 
   @graph_ordered Graph.build()
-    |> Line.add_to_graph( {{10,10}, {100, 100}}, id: :line )
-    |> Text.add_to_graph( "text", id: :text )
-    |> Line.add_to_graph( {{30,30}, {300, 300}}, id: :line )
+                 |> Line.add_to_graph({{10, 10}, {100, 100}}, id: :line)
+                 |> Text.add_to_graph("text", id: :text)
+                 |> Line.add_to_graph({{30, 30}, {300, 300}}, id: :line)
 
-
-  #============================================================================
+  # ============================================================================
   # access to the basics. These concentrate knowledge of the internal format
   # into just a few functions
 
@@ -50,8 +52,7 @@ defmodule Scenic.GraphTest do
     assert Graph.get_root(@graph_empty) == @empty_root
   end
 
-
-  #============================================================================
+  # ============================================================================
   # build
   test "build builds a new graph" do
     %Graph{} = Graph.build()
@@ -69,23 +70,27 @@ defmodule Scenic.GraphTest do
   end
 
   test "build accepts and uses a builder callback" do
-    assert Graph.build( builder: fn({graph, parent_id}) ->
-      assert graph == @graph_empty
-      assert parent_id == @root_uid
-      {graph, parent_id}
-    end) == @graph_empty
+    assert Graph.build(
+             builder: fn {graph, parent_id} ->
+               assert graph == @graph_empty
+               assert parent_id == @root_uid
+               {graph, parent_id}
+             end
+           ) == @graph_empty
   end
 
   test "build puts styles on the root node" do
-    graph = Graph.build( clear_color: :dark_slate_blue )
+    graph = Graph.build(clear_color: :dark_slate_blue)
+
     assert graph.primitives[@root_uid]
-    |> Primitive.get_styles()  == %{clear_color: :dark_slate_blue}
+           |> Primitive.get_styles() == %{clear_color: :dark_slate_blue}
   end
 
   test "build puts transforms on the root node" do
-    graph = Graph.build( rotate: 1.3 )
+    graph = Graph.build(rotate: 1.3)
+
     assert graph.primitives[@root_uid]
-    |> Primitive.get_transforms()  == %{rotate: 1.3}
+           |> Primitive.get_transforms() == %{rotate: 1.3}
   end
 
   test "build accepts the :max_depth option" do
@@ -93,8 +98,7 @@ defmodule Scenic.GraphTest do
     assert Map.get(graph, :max_depth) == 1
   end
 
-
-  #============================================================================
+  # ============================================================================
   # get - retrieve a primitive (or primtives) from a graph given an id
 
   test "get gets a primitive" do
@@ -116,9 +120,7 @@ defmodule Scenic.GraphTest do
     end
   end
 
-
- 
-  #============================================================================
+  # ============================================================================
   # delete - removes nodes from the graph
   # can't just compare the expected graph as the add_to housekeeping will be off
 
@@ -150,15 +152,14 @@ defmodule Scenic.GraphTest do
     refute Enum.member?(deleted.primitives[puid].data, uid)
   end
 
-
-  #============================================================================
+  # ============================================================================
   # count - all nodes
   test "count returns 1 if only the root node exists" do
     assert Graph.count(@graph_empty) == 1
   end
 
   test "count counts the items in the graph" do
-    assert Enum.count( @graph_find.primitives ) == 6
+    assert Enum.count(@graph_find.primitives) == 6
     assert Graph.count(@graph_find) == 6
   end
 
@@ -168,14 +169,13 @@ defmodule Scenic.GraphTest do
     assert Graph.count(@graph_ordered, :line) == 2
   end
 
-
-  #============================================================================
+  # ============================================================================
   # count from the root
   test "count by root returns the number of elements in the tree via recursion" do
     assert Graph.count(@graph_find) == 6
   end
 
-  #============================================================================
+  # ============================================================================
   # get by developer id
   test "get gets an element by id" do
     [uid] = @graph_find.ids[:outer_text]
@@ -192,7 +192,7 @@ defmodule Scenic.GraphTest do
     assert Enum.member?(gotten, @graph_ordered.primitives[second_uid])
   end
 
-  #============================================================================
+  # ============================================================================
   # get
   # returns a list of objects with the given id
   test "get returns a list of primitives with the given id" do
@@ -203,8 +203,7 @@ defmodule Scenic.GraphTest do
     assert @graph_ordered.primitives[second_uid] == second
   end
 
-
-  #============================================================================
+  # ============================================================================
   # get! returns a single object indicated by id
 
   test "get! returns a single primitive matching the id" do
@@ -224,8 +223,7 @@ defmodule Scenic.GraphTest do
     end
   end
 
-
-  #============================================================================
+  # ============================================================================
   # insert_at(graph_and_parent, index, element, opts \\ [])
   # test "insert_at inserts an element at the root with just a graph passed in and assigns a new uid - no id" do
   #   # insert - returns transformed graph and assigned uid
@@ -316,7 +314,6 @@ defmodule Scenic.GraphTest do
   #   assert graph.ids == %{}
   # end
 
-
   # test "insert_at inserts an element into a nested node indicated by the parent uid" do
   #   {graph, parent_uid} = Graph.insert_at(@graph_empty, -1, @empty_group)
 
@@ -353,7 +350,6 @@ defmodule Scenic.GraphTest do
   #   p = graph.primitives[parent_uid]
   #   # assert Primitive.get_parent_uid(p) == 0
   #   assert Primitive.get_module(p) == Group
-
 
   #   # insert the div - returns transformed graph and assigned uid
   #   empty_group = Primitive.put_id(@empty_group, :test_id)
@@ -433,227 +429,202 @@ defmodule Scenic.GraphTest do
   #   # assert Map.get(merged, :input) == [:key, :char, :cursor_down]
   # end
 
-
-  #============================================================================
+  # ============================================================================
   # def modify( graph, uid, action )
 
   test "modify transforms a single primitive by developer id" do
     # confirm setup
-    assert Map.get( Graph.get!(@graph_find, :inner_text), :transforms ) == nil
+    assert Map.get(Graph.get!(@graph_find, :inner_text), :transforms) == nil
 
     # modify the element by assigning a transform to it
-    graph = Graph.modify(@graph_find, :inner_text, fn(p)->
-      Primitive.put_transforms( p, @transform )
-    end)
+    graph =
+      Graph.modify(@graph_find, :inner_text, fn p ->
+        Primitive.put_transforms(p, @transform)
+      end)
 
     # confirm result
-    assert Map.get( Graph.get!(graph, :inner_text), :transforms ) == @transform
+    assert Map.get(Graph.get!(graph, :inner_text), :transforms) == @transform
   end
 
   test "modify transforms a multiple primitives by developer id" do
-    graph = Graph.build()
-    |> Text.add_to_graph( "Some text", id: :text  )
-    |> Text.add_to_graph( "More text", id: :text)
+    graph =
+      Graph.build()
+      |> Text.add_to_graph("Some text", id: :text)
+      |> Text.add_to_graph("More text", id: :text)
 
     [uid_0, uid_1] = graph.ids[:text]
 
     # confirm setup
-    assert Map.get( graph.primitives[uid_0], :transforms ) == nil
-    assert Map.get( graph.primitives[uid_1], :transforms ) == nil
+    assert Map.get(graph.primitives[uid_0], :transforms) == nil
+    assert Map.get(graph.primitives[uid_1], :transforms) == nil
 
     # modify the element by assigning a transform to it
-    graph = Graph.modify(graph, :text, fn(p)->
-      Primitive.put_transforms( p, @transform )
-    end)
+    graph =
+      Graph.modify(graph, :text, fn p ->
+        Primitive.put_transforms(p, @transform)
+      end)
 
     # confirm result
-    assert Map.get( graph.primitives[uid_0], :transforms ) == @transform
-    assert Map.get( graph.primitives[uid_1], :transforms ) == @transform
+    assert Map.get(graph.primitives[uid_0], :transforms) == @transform
+    assert Map.get(graph.primitives[uid_1], :transforms) == @transform
   end
 
   test "modify modifies transforms" do
-    graph = Graph.build( rotate: 1.1 )
-    |> Rectangle.add_to_graph({100, 200}, id: :rect, translate: {10,11})
+    graph =
+      Graph.build(rotate: 1.1)
+      |> Rectangle.add_to_graph({100, 200}, id: :rect, translate: {10, 11})
+
     [uid] = graph.ids[:rect]
 
-    graph = Graph.modify(graph, :rect, fn(p)->
-      Primitive.put_transform(p, :rotate, 2.0)
-    end)
+    graph =
+      Graph.modify(graph, :rect, fn p ->
+        Primitive.put_transform(p, :rotate, 2.0)
+      end)
 
     rect = graph.primitives[uid]
-    assert Primitive.get_transforms(rect) == %{translate: {10,11}, rotate: 2.0}
+    assert Primitive.get_transforms(rect) == %{translate: {10, 11}, rotate: 2.0}
   end
 
   test "modify modifies styles" do
-    graph = Graph.build( rotate: 1.1 )
-    |> Rectangle.add_to_graph({100, 200}, id: :rect, fill: :red)
+    graph =
+      Graph.build(rotate: 1.1)
+      |> Rectangle.add_to_graph({100, 200}, id: :rect, fill: :red)
+
     [uid] = graph.ids[:rect]
 
-    graph = Graph.modify(graph, :rect, fn(p)->
-      Primitive.put_style(p, :stroke, {10, :blue})
-    end)
+    graph =
+      Graph.modify(graph, :rect, fn p ->
+        Primitive.put_style(p, :stroke, {10, :blue})
+      end)
 
     rect = graph.primitives[uid]
     assert Primitive.get_styles(rect) == %{fill: :red, stroke: {10, :blue}}
   end
 
-  #============================================================================
+  # ============================================================================
   # reduce(graph, acc, action) - whole tree
 
   test "reduce recurses over entire tree" do
-    assert Graph.reduce(@graph_find, 0, fn(_, acc) ->
-      acc + 1
-    end) == 6
+    assert Graph.reduce(@graph_find, 0, fn _, acc ->
+             acc + 1
+           end) == 6
   end
 
   # reduce(graph, id, acc, action) - just mapped to id
   test "reduce reduces just nodes mapped to a mapped id" do
-    graph = Graph.build()
-    |> Text.add_to_graph( "Some text", id: :text  )
-    |> Text.add_to_graph( "More text", id: :text  )
-    |> Text.add_to_graph( "Other text", id: :other_text  )
+    graph =
+      Graph.build()
+      |> Text.add_to_graph("Some text", id: :text)
+      |> Text.add_to_graph("More text", id: :text)
+      |> Text.add_to_graph("Other text", id: :other_text)
 
-    assert Graph.reduce(graph, :text, 0, fn(_, acc)->
-      acc + 1
-    end) == 2
+    assert Graph.reduce(graph, :text, 0, fn _, acc ->
+             acc + 1
+           end) == 2
 
-    assert Graph.reduce(graph, :other_text, 0, fn(_, acc)->
-      acc + 1
-    end) == 1 
+    assert Graph.reduce(graph, :other_text, 0, fn _, acc ->
+             acc + 1
+           end) == 1
   end
-
 
   test "reduce honors max_depth" do
     graph = Map.put(@graph_find, :max_depth, 1)
-        
+
     assert_raise Graph.Error, fn ->
-      Graph.reduce(graph, 0, fn(_, acc)-> acc + 1 end)
+      Graph.reduce(graph, 0, fn _, acc -> acc + 1 end)
     end
   end
 
   test "reduce honors max_depth default - with circular graph" do
     # set up a very simple circular graph
     graph = Graph.build()
-    root = graph.primitives[@root_uid]
-    |> Map.put(:data, [0])
 
-    primitives = graph.primitives
-    |> Map.put(@root_uid, root)
+    root =
+      graph.primitives[@root_uid]
+      |> Map.put(:data, [0])
+
+    primitives =
+      graph.primitives
+      |> Map.put(@root_uid, root)
+
     graph = Map.put(graph, :primitives, primitives)
 
     assert_raise Graph.Error, fn ->
-      Graph.reduce(graph, 0, fn(_, acc)-> acc + 1 end)
+      Graph.reduce(graph, 0, fn _, acc -> acc + 1 end)
     end
   end
 
-
-  #============================================================================
+  # ============================================================================
   # map(graph, action) - whole tree
   test "map recurses over entire tree" do
     # confirm setup
-    assert Graph.reduce(@graph_find, true, fn(p,f) ->
-      f && Map.get(p, :transforms) == nil
-    end)
+    assert Graph.reduce(@graph_find, true, fn p, f ->
+             f && Map.get(p, :transforms) == nil
+           end)
 
-    graph = Graph.map(@graph_find, fn(p) ->
-      Primitive.put_transforms( p, @transform )
-    end)
+    graph =
+      Graph.map(@graph_find, fn p ->
+        Primitive.put_transforms(p, @transform)
+      end)
 
     # confirm result
-    assert Graph.reduce(graph, true, fn(p,f) ->
-      f && Map.get(p, :transforms) == @transform
-    end)
+    assert Graph.reduce(graph, true, fn p, f ->
+             f && Map.get(p, :transforms) == @transform
+           end)
   end
 
   test "map honors max_depth" do
     graph = Map.put(@graph_find, :max_depth, 1)
-        
+
     assert_raise Graph.Error, fn ->
-      Graph.map(graph, fn(p)-> p end)
+      Graph.map(graph, fn p -> p end)
     end
   end
 
   test "map honors max_depth default - with circular graph" do
     # set up a very simple circular graph
     graph = Graph.build()
-    root = graph.primitives[@root_uid]
-    |> Map.put(:data, [0])
-    primitives = graph.primitives
-    |> Map.put(@root_uid, root)
+
+    root =
+      graph.primitives[@root_uid]
+      |> Map.put(:data, [0])
+
+    primitives =
+      graph.primitives
+      |> Map.put(@root_uid, root)
+
     graph = Map.put(graph, :primitives, primitives)
-    
+
     assert_raise Graph.Error, fn ->
-      Graph.map(graph, fn(p)-> p end)
+      Graph.map(graph, fn p -> p end)
     end
   end
 
-  #============================================================================
+  # ============================================================================
   # map_id(graph, id, action) - just mapped to id
   test "map_id only maps nodes with a mapped id" do
-    graph = Graph.build()
-    |> Text.add_to_graph( "Some text", id: :text  )
-    |> Text.add_to_graph( "More text", id: :text  )
-    |> Text.add_to_graph( "Other text", id: :other_text  )
+    graph =
+      Graph.build()
+      |> Text.add_to_graph("Some text", id: :text)
+      |> Text.add_to_graph("More text", id: :text)
+      |> Text.add_to_graph("Other text", id: :other_text)
 
     [t0, t1] = graph.ids[:text]
     [other] = graph.ids[:other_text]
 
     # confirm setup
-    assert Map.get( graph.primitives[t0], :transforms )     == nil
-    assert Map.get( graph.primitives[t1], :transforms )     == nil
-    assert Map.get( graph.primitives[other], :transforms )  == nil
+    assert Map.get(graph.primitives[t0], :transforms) == nil
+    assert Map.get(graph.primitives[t1], :transforms) == nil
+    assert Map.get(graph.primitives[other], :transforms) == nil
 
-    graph = Graph.map(graph, :text, fn(p) ->
-      Primitive.put_transforms( p, @transform )
-    end)
+    graph =
+      Graph.map(graph, :text, fn p ->
+        Primitive.put_transforms(p, @transform)
+      end)
 
     # confirm result
-    assert Map.get( graph.primitives[t0], :transforms )     == @transform
-    assert Map.get( graph.primitives[t1], :transforms )     == @transform
-    assert Map.get( graph.primitives[other], :transforms )  == nil
+    assert Map.get(graph.primitives[t0], :transforms) == @transform
+    assert Map.get(graph.primitives[t1], :transforms) == @transform
+    assert Map.get(graph.primitives[other], :transforms) == nil
   end
-
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

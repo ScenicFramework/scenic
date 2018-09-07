@@ -13,31 +13,27 @@ defmodule Scenic.ViewPort.SupervisorTop do
 
   # import IEx
 
-  #============================================================================
+  # ============================================================================
   # setup the viewport supervisor
 
-  def start_link( viewports ) do
+  def start_link(viewports) do
     Supervisor.start_link(__MODULE__, viewports)
   end
 
-  def init( viewports ) do
+  def init(viewports) do
     viewports
-    |> Enum.map( fn(vp_config) ->
+    |> Enum.map(fn vp_config ->
       ViewPort.Config.valid!(vp_config)
       {ViewPort.Supervisor, vp_config}
     end)
-    |> Supervisor.init( strategy: :one_for_one )
+    |> Supervisor.init(strategy: :one_for_one)
   end
-
 end
-
-
-
 
 #      Supervisor.child_spec({Registry, keys: :unique, name: :viewport_registry},  id: :viewport_registry),
 #      Supervisor.child_spec({Registry, keys: :duplicate, name: :driver_registry}, id: :driver_registry),
-  #    {DynamicSupervisor, name: @dynamic_supervisor, strategy: :one_for_one},
-  #    {Scenic.ViewPort, args},
+#    {DynamicSupervisor, name: @dynamic_supervisor, strategy: :one_for_one},
+#    {Scenic.ViewPort, args},
 #      supervisor(ViewPort.Driver.Supervisor, []),
 #      {DynamicSupervisor, name: @dynamic_drivers, strategy: :one_for_one},
 #      Supervisor.child_spec({Registry, keys: :duplicate, name: :input_registry},  id: :input_registry),

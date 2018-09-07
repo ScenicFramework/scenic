@@ -10,7 +10,7 @@ defmodule Scenic.ViewPort do
   alias Scenic.ViewPort
   alias Scenic.ViewPort.Context
 
- # import IEx
+  # import IEx
 
   @moduledoc """
 
@@ -80,8 +80,7 @@ defmodule Scenic.ViewPort do
 
   """
 
-
-  @viewports            :scenic_dyn_viewports
+  @viewports :scenic_dyn_viewports
 
   # @type input ::
   # {:codepoint, {codepoint :: integer, mods :: integer}} |
@@ -94,83 +93,83 @@ defmodule Scenic.ViewPort do
 
   @type event :: {event :: atom, data :: any}
 
-
-  #============================================================================
+  # ============================================================================
   # client api
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Start a new viewport
   """
-  @spec stop( config :: ViewPort.Config.t ) :: {:ok, pid}
-  def start( %ViewPort.Config{} = config ) do
+  @spec stop(config :: ViewPort.Config.t()) :: {:ok, pid}
+  def start(%ViewPort.Config{} = config) do
     # start the viewport's supervision tree
-    {:ok, sup_pid} = DynamicSupervisor.start_child( @viewports,
-      {ViewPort.Supervisor, config}
-    )
+    {:ok, sup_pid} =
+      DynamicSupervisor.start_child(
+        @viewports,
+        {ViewPort.Supervisor, config}
+      )
 
     # we want to return the pid of the viewport itself
-    viewport_pid = sup_pid
-    |> Supervisor.which_children()
-    |> Enum.find_value( fn
-      {_, pid, :worker, [ViewPort]} -> pid
-      _ -> false
-    end) 
+    viewport_pid =
+      sup_pid
+      |> Supervisor.which_children()
+      |> Enum.find_value(fn
+        {_, pid, :worker, [ViewPort]} -> pid
+        _ -> false
+      end)
 
     # return the pid to the viewport itself
     {:ok, viewport_pid}
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   query the last recorded viewport status
   """
-  @spec info( viewport :: GenServer.server ) :: {:ok, ViewPort.Status.t}
-  def info( viewport )
-  def info( viewport ) when is_atom(viewport) or is_pid(viewport) do
+  @spec info(viewport :: GenServer.server()) :: {:ok, ViewPort.Status.t()}
+  def info(viewport)
+
+  def info(viewport) when is_atom(viewport) or is_pid(viewport) do
     GenServer.call(viewport, :query_info)
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Stop a running viewport
   """
-  @spec stop(viewport :: GenServer.server) :: :ok
-  def stop( viewport )
+  @spec stop(viewport :: GenServer.server()) :: :ok
+  def stop(viewport)
 
-  def stop( viewport ) when is_atom(viewport) and not is_nil(viewport) do
-    Process.whereis( viewport ) |> stop()
+  def stop(viewport) when is_atom(viewport) and not is_nil(viewport) do
+    Process.whereis(viewport) |> stop()
   end
 
-  def stop( viewport ) when is_pid(viewport) do
-    DynamicSupervisor.terminate_child( @viewports, viewport )
+  def stop(viewport) when is_pid(viewport) do
+    DynamicSupervisor.terminate_child(@viewports, viewport)
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Set a the root scene/graph of the ViewPort.
   """
   @spec set_root(
-    viewport :: GenServer.server,
-    scene :: atom | {atom, any},
-    args :: any
-  ) :: :ok
-  def set_root( viewport, scene, args \\ nil )
+          viewport :: GenServer.server(),
+          scene :: atom | {atom, any},
+          args :: any
+        ) :: :ok
+  def set_root(viewport, scene, args \\ nil)
 
-  def set_root( viewport, scene, args ) when
-  (is_pid(viewport) or is_atom(viewport)) and is_atom(scene) do
-    GenServer.cast( viewport, {:set_root, scene, args} )
+  def set_root(viewport, scene, args)
+      when (is_pid(viewport) or is_atom(viewport)) and is_atom(scene) do
+    GenServer.cast(viewport, {:set_root, scene, args})
   end
 
-  def set_root( viewport, {mod, init_data}, args ) when
-  (is_pid(viewport) or is_atom(viewport)) and is_atom(mod) do
-    GenServer.cast( viewport, {:set_root, {mod, init_data}, args} )
+  def set_root(viewport, {mod, init_data}, args)
+      when (is_pid(viewport) or is_atom(viewport)) and is_atom(mod) do
+    GenServer.cast(viewport, {:set_root, {mod, init_data}, args})
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Request that a `{:set_root, ...}` message is sent to the caller.
 
@@ -190,44 +189,45 @@ defmodule Scenic.ViewPort do
   """
 
   @spec request_root(
-    viewport :: GenServer.server,
-    send_to :: nil | GenServer.server
-  ) :: :ok
-  def request_root( viewport, send_to \\ nil )
-  def request_root( viewport, nil ) do
-    request_root( viewport, self() )
-  end
-  def request_root( viewport, to ) when
-  (is_pid(viewport) or is_atom(viewport)) and (is_pid(to) or is_atom(to)) do
-    GenServer.cast( viewport, {:request_root, to} )
+          viewport :: GenServer.server(),
+          send_to :: nil | GenServer.server()
+        ) :: :ok
+  def request_root(viewport, send_to \\ nil)
+
+  def request_root(viewport, nil) do
+    request_root(viewport, self())
   end
 
-  #--------------------------------------------------------
+  def request_root(viewport, to)
+      when (is_pid(viewport) or is_atom(viewport)) and (is_pid(to) or is_atom(to)) do
+    GenServer.cast(viewport, {:request_root, to})
+  end
+
+  # --------------------------------------------------------
   @spec input(
-    viewport :: GenServer.server,
-    input :: ViewPort.Input.t
-  ) :: :ok
-  def input( viewport, input_event ) do
-    GenServer.cast( viewport, {:input, input_event} )
+          viewport :: GenServer.server(),
+          input :: ViewPort.Input.t()
+        ) :: :ok
+  def input(viewport, input_event) do
+    GenServer.cast(viewport, {:input, input_event})
   end
 
   @spec input(
-    viewport :: GenServer.server,
-    input :: ViewPort.Input.t,
-    context :: Context.t
-  ) :: :ok
-  def input( viewport, input_event, context ) do
-    GenServer.cast( viewport, {:input, input_event, context} )
+          viewport :: GenServer.server(),
+          input :: ViewPort.Input.t(),
+          context :: Context.t()
+        ) :: :ok
+  def input(viewport, input_event, context) do
+    GenServer.cast(viewport, {:input, input_event, context})
   end
 
-  #--------------------------------------------------------
-  @spec reshape(viewport :: GenServer.server, size :: Math.point) :: :ok
-  def reshape( viewport, size ) do
-    GenServer.cast( viewport, {:reshape, size} )
+  # --------------------------------------------------------
+  @spec reshape(viewport :: GenServer.server(), size :: Math.point()) :: :ok
+  def reshape(viewport, size) do
+    GenServer.cast(viewport, {:reshape, size})
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Capture one or more types of input.
 
@@ -235,50 +235,51 @@ defmodule Scenic.ViewPort do
   """
 
   @spec capture_input(
-    context :: Context.t,
-    input_class :: ViewPort.Input.class | list(ViewPort.Input.class)
-  ) :: :ok
-  def capture_input( context, input_types )
-  def capture_input( context, input_type ) when is_atom(input_type) do
-    capture_input( context, [input_type] )
-  end
-  def capture_input( %Context{viewport: pid} = context, input_types )
-  when is_list(input_types) do
-    GenServer.cast( pid, {:capture_input, context, input_types} )
+          context :: Context.t(),
+          input_class :: ViewPort.Input.class() | list(ViewPort.Input.class())
+        ) :: :ok
+  def capture_input(context, input_types)
+
+  def capture_input(context, input_type) when is_atom(input_type) do
+    capture_input(context, [input_type])
   end
 
+  def capture_input(%Context{viewport: pid} = context, input_types)
+      when is_list(input_types) do
+    GenServer.cast(pid, {:capture_input, context, input_types})
+  end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   release an input capture.
 
   This is intended be called by a Scene process, but doesn't need to be.
   """
-  def release_input( context_or_viewport, input_types )
+  def release_input(context_or_viewport, input_types)
 
-  def release_input( %Context{viewport: pid}, input_types ) do
-    release_input( pid, input_types )
+  def release_input(%Context{viewport: pid}, input_types) do
+    release_input(pid, input_types)
   end
-  def release_input( vp, types ) when (is_pid(vp) or is_atom(vp)) and is_list(types) do
-    GenServer.cast( vp, {:release_input, types} )
+
+  def release_input(vp, types) when (is_pid(vp) or is_atom(vp)) and is_list(types) do
+    GenServer.cast(vp, {:release_input, types})
   end
-  def release_input( vp, input_type ) when not is_list(input_type), do:
-    release_input( vp, [input_type] )
 
+  def release_input(vp, input_type) when not is_list(input_type),
+    do: release_input(vp, [input_type])
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Cast a message to all active drivers listening to a viewport.
   """
-  def driver_cast( viewport, msg ) do
+  def driver_cast(viewport, msg) do
     GenServer.cast(viewport, {:driver_cast, msg})
   end
 
-
-  #============================================================================
+  # ============================================================================
   # internal server api
   @doc false
-  def child_spec( args ) do
+  def child_spec(args) do
     %{
       id: make_ref(),
       start: {__MODULE__, :start_link, [args]},
@@ -288,7 +289,7 @@ defmodule Scenic.ViewPort do
     }
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc false
   def start_link({_, config} = args) do
     case config.name do
@@ -297,50 +298,56 @@ defmodule Scenic.ViewPort do
     end
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc false
-  def init( {vp_sup, config} ) do
-    GenServer.cast( self(), {:after_init, vp_sup, config} )
+  def init({vp_sup, config}) do
+    GenServer.cast(self(), {:after_init, vp_sup, config})
     {:ok, nil}
   end
 
-  #============================================================================
+  # ============================================================================
   # handle_info
 
   # when a scene goes down, clean it up
-#  def handle_info({:DOWN, _monitor_ref, :process, pid, reason}, state) do
-#    {:noreply, state}
-#  end
+  #  def handle_info({:DOWN, _monitor_ref, :process, pid, reason}, state) do
+  #    {:noreply, state}
+  #  end
 
-
-  #============================================================================
+  # ============================================================================
   # handle_call
 
-
-  #--------------------------------------------------------
-  def handle_call( {:start_driver, config}, _, %{
-    supervisor: vp_supervisor,
-    dynamic_supervisor: dyn_sup
-  } = state ) do
+  # --------------------------------------------------------
+  def handle_call(
+        {:start_driver, config},
+        _,
+        %{
+          supervisor: vp_supervisor,
+          dynamic_supervisor: dyn_sup
+        } = state
+      ) do
     {
       :reply,
-      DynamicSupervisor.start_child( dyn_sup,
+      DynamicSupervisor.start_child(
+        dyn_sup,
         {Scenic.ViewPort.Driver, {vp_supervisor, config}}
       ),
       state
     }
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # query the status of the viewport
-  def handle_call( :query_info, _, %{
-      driver_registry: driver_registry,
-      root_config: root_config,
-      root_scene_pid: root_scene_pid,
-      root_graph_key: root_graph_key,
-      size: size
-  } = state ) do
+  def handle_call(
+        :query_info,
+        _,
+        %{
+          driver_registry: driver_registry,
+          root_config: root_config,
+          root_scene_pid: root_scene_pid,
+          root_graph_key: root_graph_key,
+          size: size
+        } = state
+      ) do
     status = %ViewPort.Status{
       root_scene_pid: root_scene_pid,
       root_config: root_config,
@@ -348,30 +355,31 @@ defmodule Scenic.ViewPort do
       drivers: driver_registry,
       size: size
     }
-    { :reply, {:ok, status}, state }
+
+    {:reply, {:ok, status}, state}
   end
 
-  #============================================================================
+  # ============================================================================
   # handle_cast
 
-
-  def handle_cast( {:after_init, vp_supervisor, config}, _ ) do
-    
+  def handle_cast({:after_init, vp_supervisor, config}, _) do
     # find the viewport and associated pids this driver belongs to
-    dyn_sup_pid = vp_supervisor
-    |> Supervisor.which_children()
-    |> Enum.find_value( fn
-      {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
-      _ -> false
-    end) 
+    dyn_sup_pid =
+      vp_supervisor
+      |> Supervisor.which_children()
+      |> Enum.find_value(fn
+        {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
+        _ -> false
+      end)
 
     # get the on_close flag or function
-    on_close = case config.on_close do
-      nil -> :stop_system
-      :stop_system -> :stop_system
-      :stop_viewport -> :stop_viewport
-      func when is_function(func, 1) -> func
-    end
+    on_close =
+      case config.on_close do
+        nil -> :stop_system
+        :stop_system -> :stop_system
+        :stop_viewport -> :stop_viewport
+        func when is_function(func, 1) -> func
+      end
 
     # set up the initial state
     state = %{
@@ -380,23 +388,21 @@ defmodule Scenic.ViewPort do
       root_scene_pid: nil,
       dynamic_root_pid: nil,
       root_config: nil,
-
       input_captures: %{},
       hover_primitve: nil,
-
       drivers: [],
       driver_registry: %{},
       supervisor: vp_supervisor,
       dynamic_supervisor: dyn_sup_pid,
-
       max_depth: config.max_depth,
-
       on_close: on_close
     }
 
     # set the initial scene as the root
     case config.default_scene do
-      nil -> :ok
+      nil ->
+        :ok
+
       scene ->
         GenServer.cast(
           self(),
@@ -407,208 +413,233 @@ defmodule Scenic.ViewPort do
     {:noreply, state}
   end
 
-
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # def handle_cast( {:init_pids, sup_pid, ds_pid}, state ) do
   #   {:noreply, %{state | immediate_supervisor: sup_pid, dynamic_supervisor: ds_pid}}
   # end
 
-  #--------------------------------------------------------
-  def handle_cast( {:set_root, scene, args}, %{
-    dynamic_root_pid: old_dynamic_root_scene,
-    dynamic_supervisor: dyn_sup
-  } = state ) do
-
+  # --------------------------------------------------------
+  def handle_cast(
+        {:set_root, scene, args},
+        %{
+          dynamic_root_pid: old_dynamic_root_scene,
+          dynamic_supervisor: dyn_sup
+        } = state
+      ) do
     # prep state, which is mostly about resetting input
-    state = state
-    |> Map.put( :hover_primitve, nil )
-    |> Map.put( :input_captures, %{} )
+    state =
+      state
+      |> Map.put(:hover_primitve, nil)
+      |> Map.put(:input_captures, %{})
 
     # fetch the dynamic supervisor
-    dyn_sup = case dyn_sup do
-      nil -> find_dyn_supervisor()
-      dyn_sup -> dyn_sup
-    end
+    dyn_sup =
+      case dyn_sup do
+        nil -> find_dyn_supervisor()
+        dyn_sup -> dyn_sup
+      end
 
     # if the scene being set is dynamic, start it up
-    {scene_pid, scene_ref, dynamic_scene} = case scene do
-      # dynamic scene
-      {mod, init_data} ->
-        # start the dynamic scene
-        {:ok, pid, ref} = mod.start_dynamic_scene(
-          dyn_sup, nil, init_data,
-          vp_dynamic_root: self(), viewport: self()
-        )
-        {pid, ref, pid}
+    {scene_pid, scene_ref, dynamic_scene} =
+      case scene do
+        # dynamic scene
+        {mod, init_data} ->
+          # start the dynamic scene
+          {:ok, pid, ref} =
+            mod.start_dynamic_scene(
+              dyn_sup,
+              nil,
+              init_data,
+              vp_dynamic_root: self(),
+              viewport: self()
+            )
 
-      # app supervised scene - mark dynamic root as nil
-      scene when is_atom(scene) ->
-        {scene, scene, nil}
-    end
+          {pid, ref, pid}
+
+        # app supervised scene - mark dynamic root as nil
+        scene when is_atom(scene) ->
+          {scene, scene, nil}
+      end
 
     graph_key = {:graph, scene_ref, nil}
 
     # tell the drivers about the new root
-    driver_cast( self(), {:set_root, graph_key} )
+    driver_cast(self(), {:set_root, graph_key})
 
     # clean up the old root graph. Can be done async so long as
     # terminating the dynamic scene (if set) is after deactivation
-    Task.start( fn ->
+    Task.start(fn ->
       if old_dynamic_root_scene do
         GenServer.cast(old_dynamic_root_scene, {:stop, dyn_sup})
       end
     end)
 
-    state = state
-    |> Map.put( :root_graph_key, graph_key )
-    |> Map.put( :root_scene_pid, scene_pid )
-    |> Map.put( :dynamic_root_pid, dynamic_scene )
-    |> Map.put( :root_config, {scene, args} )
+    state =
+      state
+      |> Map.put(:root_graph_key, graph_key)
+      |> Map.put(:root_scene_pid, scene_pid)
+      |> Map.put(:dynamic_root_pid, dynamic_scene)
+      |> Map.put(:root_config, {scene, args})
 
-    { :noreply, state }
-  end
-
-  #--------------------------------------------------------
-  def handle_cast( {:dyn_root_up, scene_ref, scene_pid}, %{
-    root_graph_key: {:graph, root_scene_ref, _}
-  } = state ) when (root_scene_ref == scene_ref) do
-    { :noreply, %{state | root_scene_pid: scene_pid, dynamic_root_pid: scene_pid} }
-  end
-
-  def handle_cast( {:dyn_root_up, _, }, state ) do
-    # ignore stale root_up messages
-    { :noreply, state }
-  end
-
-  #==================================================================
-  # casts about drivers
-
-
-  #--------------------------------------------------------
-  def handle_cast( {:stop_driver, driver_pid}, %{
-    drivers: drivers,
-    dynamic_supervisor: dyn_sup
-  } = state ) do
-    DynamicSupervisor.terminate_child( dyn_sup, driver_pid )
-    drivers = Enum.reject(drivers, fn(pid) -> pid == driver_pid end)
-    {:noreply, %{state | drivers: drivers}}
-  end
-
-
-  #--------------------------------------------------------
-  def handle_cast( {:driver_cast, msg}, %{drivers: drivers} = state ) do
-    # relay the graph_key to all listening drivers
-    do_driver_cast( drivers, msg )
     {:noreply, state}
   end
-  
-  #--------------------------------------------------------
-  def handle_cast( {:driver_ready, driver_pid}, %{
-    drivers: drivers,
-    root_graph_key: root_key
-  } = state ) do
-    drivers = [ driver_pid | drivers ] |> Enum.uniq()
-    GenServer.cast( driver_pid, {:set_root, root_key} )
+
+  # --------------------------------------------------------
+  def handle_cast(
+        {:dyn_root_up, scene_ref, scene_pid},
+        %{
+          root_graph_key: {:graph, root_scene_ref, _}
+        } = state
+      )
+      when root_scene_ref == scene_ref do
+    {:noreply, %{state | root_scene_pid: scene_pid, dynamic_root_pid: scene_pid}}
+  end
+
+  def handle_cast({:dyn_root_up, _}, state) do
+    # ignore stale root_up messages
+    {:noreply, state}
+  end
+
+  # ==================================================================
+  # casts about drivers
+
+  # --------------------------------------------------------
+  def handle_cast(
+        {:stop_driver, driver_pid},
+        %{
+          drivers: drivers,
+          dynamic_supervisor: dyn_sup
+        } = state
+      ) do
+    DynamicSupervisor.terminate_child(dyn_sup, driver_pid)
+    drivers = Enum.reject(drivers, fn pid -> pid == driver_pid end)
     {:noreply, %{state | drivers: drivers}}
   end
-  
-  #--------------------------------------------------------
-  def handle_cast( {:driver_stopped, driver_pid}, %{
-    drivers: drivers,
-    driver_registry: registry
-  } = state ) do
-    drivers = Enum.reject(drivers, fn(d)-> d == driver_pid end)
+
+  # --------------------------------------------------------
+  def handle_cast({:driver_cast, msg}, %{drivers: drivers} = state) do
+    # relay the graph_key to all listening drivers
+    do_driver_cast(drivers, msg)
+    {:noreply, state}
+  end
+
+  # --------------------------------------------------------
+  def handle_cast(
+        {:driver_ready, driver_pid},
+        %{
+          drivers: drivers,
+          root_graph_key: root_key
+        } = state
+      ) do
+    drivers = [driver_pid | drivers] |> Enum.uniq()
+    GenServer.cast(driver_pid, {:set_root, root_key})
+    {:noreply, %{state | drivers: drivers}}
+  end
+
+  # --------------------------------------------------------
+  def handle_cast(
+        {:driver_stopped, driver_pid},
+        %{
+          drivers: drivers,
+          driver_registry: registry
+        } = state
+      ) do
+    drivers = Enum.reject(drivers, fn d -> d == driver_pid end)
     registry = Map.delete(registry, driver_pid)
     {:noreply, %{state | drivers: drivers, driver_registry: registry}}
   end
-  
-  #--------------------------------------------------------
-  def handle_cast( {:request_root, to_pid}, %{root_graph_key: root_key} = state ) do
-    GenServer.cast( to_pid, {:set_root, root_key} )
+
+  # --------------------------------------------------------
+  def handle_cast({:request_root, to_pid}, %{root_graph_key: root_key} = state) do
+    GenServer.cast(to_pid, {:set_root, root_key})
     {:noreply, state}
   end
 
-  #--------------------------------------------------------
-  def handle_cast( {:driver_register, %ViewPort.Driver.Info{pid: pid} = driver}, state) do
+  # --------------------------------------------------------
+  def handle_cast({:driver_register, %ViewPort.Driver.Info{pid: pid} = driver}, state) do
     {:noreply, put_in(state, [:driver_registry, pid], driver)}
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   def handle_cast(:user_close, %{on_close: on_close} = state) do
     case on_close do
       :stop_viewport ->
-        case DynamicSupervisor.terminate_child( @viewports, self() ) do
+        case DynamicSupervisor.terminate_child(@viewports, self()) do
           :ok -> :ok
           {:error, :not_found} -> Process.exit(self(), :shutdown)
         end
+
       func when is_function(func, 1) ->
         func.(self())
-      :stop_system -> System.stop(0)
+
+      :stop_system ->
+        System.stop(0)
     end
+
     {:noreply, state}
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   def handle_cast(:user_close, state) do
-    case DynamicSupervisor.terminate_child( @viewports, self() ) do
-      :ok -> :ok
+    case DynamicSupervisor.terminate_child(@viewports, self()) do
+      :ok ->
+        :ok
+
       {:error, :not_found} ->
         # Process.exit(self(), :normal)
         # exit(:shutdown)
         System.stop(0)
     end
+
     {:noreply, state}
   end
 
-
-  #==================================================================
+  # ==================================================================
   # management casts from scenes
-  
-  #--------------------------------------------------------
+
+  # --------------------------------------------------------
   # ignore input until a scene has been set
-  def handle_cast( msg, state ) do
-    ViewPort.Input.handle_cast( msg, state )
+  def handle_cast(msg, state) do
+    ViewPort.Input.handle_cast(msg, state)
   end
 
-
-  #============================================================================
+  # ============================================================================
   # internal utilities
 
-  defp do_driver_cast( driver_pids, msg ) do
-    Enum.each(driver_pids, &GenServer.cast(&1, msg) )
+  defp do_driver_cast(driver_pids, msg) do
+    Enum.each(driver_pids, &GenServer.cast(&1, msg))
   end
 
   defp find_dyn_supervisor() do
     # get the scene supervisors
-    [supervisor_pid | _] = self()
-    |> Process.info()
-    |> get_in([:dictionary, :"$ancestors"])
+    [supervisor_pid | _] =
+      self()
+      |> Process.info()
+      |> get_in([:dictionary, :"$ancestors"])
 
     # make sure it is a pid and not a name
-    supervisor_pid = case supervisor_pid do
-      name when is_atom(name) -> Process.whereis(name)
-      pid when is_pid(pid) -> pid
-    end
+    supervisor_pid =
+      case supervisor_pid do
+        name when is_atom(name) -> Process.whereis(name)
+        pid when is_pid(pid) -> pid
+      end
 
     case Process.info(supervisor_pid) do
-      nil -> nil
+      nil ->
+        nil
+
       info ->
-        case get_in( info, [:dictionary, :"$initial_call"] ) do
+        case get_in(info, [:dictionary, :"$initial_call"]) do
           {:supervisor, Scenic.ViewPort.Supervisor, _} ->
-            Supervisor.which_children( supervisor_pid )
-            |> Enum.find_value( fn 
+            Supervisor.which_children(supervisor_pid)
+            |> Enum.find_value(fn
               {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
               _other -> nil
             end)
-          _other -> nil
+
+          _other ->
+            nil
         end
     end
   end
-
 end
-
-
-

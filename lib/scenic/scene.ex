@@ -17,7 +17,7 @@ defmodule Scenic.Scene do
   # import IEx
 
   @moduledoc """
-  
+
   ## Overview
 
   Scenes are the core of the UI model.
@@ -34,7 +34,7 @@ defmodule Scenic.Scene do
   Before saying anything else I want to emphasize that the rest of your
   application, meaning device control logic, sensor reading / writing,
   services, whatever, does not need to have anything to do with Scenes.
-  
+
   In many cases I recommend treating those as seperate GenServers in their
   own supervision trees that you maintain. Then your Scenes would query or send
   information to/from them via cast or call messages.
@@ -238,17 +238,13 @@ defmodule Scenic.Scene do
 
   """
 
-
   # @viewport             :viewport
-  @not_activated        :__not_activated__
-
+  @not_activated :__not_activated__
 
   @type ref :: reference | atom
 
-
-  #============================================================================
+  # ============================================================================
   # client api - working with the scene
-
 
   @doc """
   send a filterable event to a scene.
@@ -284,103 +280,109 @@ defmodule Scenic.Scene do
   multiple graphs making the continuation ambiguous.
   """
 
-  @spec send_event( scene_server :: GenServer.server, event :: ViewPort.event ) :: :ok
-  def send_event( scene_server, {evt,_} = event ) when is_atom(evt) do
+  @spec send_event(scene_server :: GenServer.server(), event :: ViewPort.event()) :: :ok
+  def send_event(scene_server, {evt, _} = event) when is_atom(evt) do
     GenServer.cast(scene_server, {:event, event, self()})
   end
 
-
-  #--------------------------------------------------------
-  def cast( scene_or_graph_key, msg ) do
+  # --------------------------------------------------------
+  def cast(scene_or_graph_key, msg) do
     with {:ok, pid} <- ViewPort.Tables.get_scene_pid(scene_or_graph_key) do
-      GenServer.cast( pid, msg )
+      GenServer.cast(pid, msg)
     end
   end
 
+  # --------------------------------------------------------
+  def cast_to_refs(graph_key_or_id, msg)
 
-  #--------------------------------------------------------
-  def cast_to_refs( graph_key_or_id, msg )
-
-  def cast_to_refs( {:graph, _, _} = graph_key, msg ) do
-    with {:ok, refs} <- ViewPort.Tables.get_refs( graph_key ) do
-      Enum.each(refs, fn({_,key})-> cast( key, msg ) end)
+  def cast_to_refs({:graph, _, _} = graph_key, msg) do
+    with {:ok, refs} <- ViewPort.Tables.get_refs(graph_key) do
+      Enum.each(refs, fn {_, key} -> cast(key, msg) end)
     end
   end
 
-  def cast_to_refs( sub_id, msg ) do
-    scene_ref = case Process.get(:scene_ref) do
-      nil ->
-        "cast_to_refs requires a full graph_key or must be called within a scene"
-        |> raise()
-      scene_ref -> scene_ref
-    end
-    cast_to_refs( {:graph, scene_ref, sub_id}, msg )
+  def cast_to_refs(sub_id, msg) do
+    scene_ref =
+      case Process.get(:scene_ref) do
+        nil ->
+          "cast_to_refs requires a full graph_key or must be called within a scene"
+          |> raise()
+
+        scene_ref ->
+          scene_ref
+      end
+
+    cast_to_refs({:graph, scene_ref, sub_id}, msg)
   end
 
-  #============================================================================
+  # ============================================================================
   # callback definitions
 
   # @callback init( args :: any, inherited_styles :: map, viewport :: GenServer.server ) ::
   #   {:ok, any}
-  @callback init( args :: any, otps :: list ) :: {:ok, any}
-  @callback handle_input(input :: any, context :: Context.t, state :: any) ::
-    {:noreply, state :: any}
-  @callback filter_event( any, any, any ) :: { :continue, any, any } | {:stop, any}
+  @callback init(args :: any, otps :: list) :: {:ok, any}
+  @callback handle_input(input :: any, context :: Context.t(), state :: any) ::
+              {:noreply, state :: any}
+  @callback filter_event(any, any, any) :: {:continue, any, any} | {:stop, any}
 
-
-  #============================================================================
+  # ============================================================================
   # using macro
 
-  #===========================================================================
+  # ===========================================================================
   # the using macro for scenes adopting this behavioiur
   defmacro __using__(using_opts \\ []) do
     quote do
       @behaviour Scenic.Scene
 
-      #--------------------------------------------------------
+      # --------------------------------------------------------
       # Here so that the scene can override if desired
       # def init(_, _, _),                            do: {:ok, nil}
 
-      def handle_call(_msg, _from, state),            do: {:reply, :err_not_handled, state}
-      def handle_cast(_msg, state),                   do: {:noreply, state}
-      def handle_info(_msg, state),                   do: {:noreply, state}
+      def handle_call(_msg, _from, state), do: {:reply, :err_not_handled, state}
+      def handle_cast(_msg, state), do: {:noreply, state}
+      def handle_info(_msg, state), do: {:noreply, state}
 
-      def handle_input( event, _, scene_state ),      do: {:noreply, scene_state}
-      def filter_event( event, _from, scene_state ),  do: {:continue, event, scene_state}
+      def handle_input(event, _, scene_state), do: {:noreply, scene_state}
+      def filter_event(event, _from, scene_state), do: {:continue, event, scene_state}
 
-      def start_dynamic_scene( supervisor, parent, args, opts \\ [] ) do
-        has_children = case unquote(using_opts)[:has_children] do
-          false -> false
-          _ -> true
-        end
+      def start_dynamic_scene(supervisor, parent, args, opts \\ []) do
+        has_children =
+          case unquote(using_opts)[:has_children] do
+            false -> false
+            _ -> true
+          end
 
         Scenic.Scene.start_dynamic_scene(
-          supervisor, parent, __MODULE__,
-          args, opts, has_children
+          supervisor,
+          parent,
+          __MODULE__,
+          args,
+          opts,
+          has_children
         )
       end
 
-      defp send_event( event_msg ) do
+      defp send_event(event_msg) do
         case Process.get(:parent_pid) do
           nil -> {:error, :no_parent}
           pid -> GenServer.cast(pid, {:event, event_msg, self()})
         end
       end
 
-      defp push_graph( graph ) do
-        has_children = case unquote(using_opts)[:has_children] do
-          false -> false
-          _ -> true
-        end
+      defp push_graph(graph) do
+        has_children =
+          case unquote(using_opts)[:has_children] do
+            false -> false
+            _ -> true
+          end
 
-        GenServer.cast( self(), {:push_graph, graph, nil, has_children} )
+        GenServer.cast(self(), {:push_graph, graph, nil, has_children})
         # return the graph so this can be pipelined
         graph
       end
 
       # return the local scene process's scene_ref
-      defp scene_ref(), do: Process.get( :scene_ref )
-
+      defp scene_ref(), do: Process.get(:scene_ref)
 
       # child spec that really starts up scene, with this module as an option
       def child_spec({args, opts}) when is_list(opts) do
@@ -393,31 +395,28 @@ defmodule Scenic.Scene do
         }
       end
 
+      # --------------------------------------------------------
+      # add local shortcuts to things like get/put graph and modify element
+      # do not add a put element. keep it at modify to stay atomic
+      # --------------------------------------------------------
+      defoverridable handle_call: 3,
+                     handle_cast: 2,
+                     handle_info: 2,
+                     handle_input: 3,
+                     filter_event: 3,
+                     start_dynamic_scene: 3
+    end
 
-      #--------------------------------------------------------
-     # add local shortcuts to things like get/put graph and modify element
-     # do not add a put element. keep it at modify to stay atomic
-      #--------------------------------------------------------
-      defoverridable [
-        handle_call:            3,
-        handle_cast:            2,
-        handle_info:            2,
+    # quote
+  end
 
-        handle_input:           3,
-        filter_event:           3,
+  # defmacro
 
-        start_dynamic_scene:    3
-      ]
-
-    end # quote
-  end # defmacro
-
-
-  #===========================================================================
+  # ===========================================================================
   # calls for setting up a scene inside of a supervisor
 
-#  def child_spec({ref, scene_module}), do:
-#    child_spec({ref, scene_module, nil})
+  #  def child_spec({ref, scene_module}), do:
+  #    child_spec({ref, scene_module, nil})
 
   @doc false
   def child_spec({scene_module, args, opts}) do
@@ -430,23 +429,24 @@ defmodule Scenic.Scene do
     }
   end
 
-
-  #============================================================================
+  # ============================================================================
   # internal server api
   @doc false
   def start_link(scene_module, args, opts \\ []) do
     init_data = {scene_module, args, opts}
+
     case opts[:name] do
       nil ->
         GenServer.start_link(__MODULE__, init_data)
+
       name ->
         GenServer.start_link(__MODULE__, init_data, name: name)
-    end    
+    end
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc false
-  def init( {scene_module, args, opts} ) do
+  def init({scene_module, args, opts}) do
     scene_ref = opts[:scene_ref] || opts[:name]
     Process.put(:scene_ref, scene_ref)
 
@@ -455,21 +455,26 @@ defmodule Scenic.Scene do
     # The scene_ref is the same, but the pid has changed. This lets the vp know which
     # is the correct pid to use when it is cleaned up later.
     case opts[:vp_dynamic_root] do
-      nil -> nil
+      nil ->
+        nil
+
       viewport ->
         GenServer.cast(viewport, {:dyn_root_up, scene_ref, self()})
     end
 
     # interpret the options
-    parent_pid = case opts[:parent] do
-      nil -> nil
-      parent_pid ->
-        # stash the parent pid away in the process dictionary. This
-        # is for fast lookup during the injected send_event/1 in the
-        # client module
-        Process.put(:parent_pid, parent_pid)
-        parent_pid
-    end
+    parent_pid =
+      case opts[:parent] do
+        nil ->
+          nil
+
+        parent_pid ->
+          # stash the parent pid away in the process dictionary. This
+          # is for fast lookup during the injected send_event/1 in the
+          # client module
+          Process.put(:parent_pid, parent_pid)
+          parent_pid
+      end
 
     # some setup needs to happen after init - must be before the scene_module init
     GenServer.cast(self(), {:after_init, scene_module, args, opts})
@@ -479,19 +484,16 @@ defmodule Scenic.Scene do
     # down while this scene is activated, the scene will need to be able to
     # deactivate itself while the viewport is recovering. This is especially
     # true since the viewport may recover to a different default scene than this.
-    if opts[:name], do: Process.monitor( Scenic.ViewPort.Tables )
+    if opts[:name], do: Process.monitor(Scenic.ViewPort.Tables)
 
     # build up the state
     state = %{
-      raw_scene_refs: %{},      
+      raw_scene_refs: %{},
       dyn_scene_pids: %{},
       dyn_scene_keys: %{},
-
       parent_pid: parent_pid,
       children: %{},
-
       scene_module: scene_module,
-
       viewport: opts[:viewport],
       # scene_state: sc_state,
       # scene_state: nil,
@@ -504,16 +506,15 @@ defmodule Scenic.Scene do
     {:ok, state}
   end
 
-
-  #============================================================================
+  # ============================================================================
   # handle_info
 
   def handle_info({:delayed_init, args, init_opts}, %{scene_module: scene_module} = state) do
-    {:ok, sc_state} = scene_module.init( args, init_opts )
+    {:ok, sc_state} = scene_module.init(args, init_opts)
     {:noreply, %{state | scene_state: sc_state}}
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # generic handle_info. give the scene a chance to handle it
   @doc false
   def handle_info(msg, %{scene_module: mod, scene_state: sc_state} = state) do
@@ -521,52 +522,61 @@ defmodule Scenic.Scene do
     {:noreply, %{state | scene_state: sc_state}}
   end
 
-
-  #============================================================================
+  # ============================================================================
   # handle_call
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # generic handle_call. give the scene a chance to handle it
   def handle_call(msg, from, %{scene_module: mod, scene_state: sc_state} = state) do
     {:reply, reply, sc_state} = mod.handle_call(msg, from, sc_state)
     {:reply, reply, %{state | scene_state: sc_state}}
   end
 
-  #============================================================================
+  # ============================================================================
   # handle_cast
 
-  #--------------------------------------------------------
-  def handle_cast( {:after_init, scene_module, args, opts}, %{
-    scene_ref: scene_ref
-  } = state ) do
+  # --------------------------------------------------------
+  def handle_cast(
+        {:after_init, scene_module, args, opts},
+        %{
+          scene_ref: scene_ref
+        } = state
+      ) do
     # get the scene supervisors
-    [supervisor_pid | _] = self()
-    |> Process.info()
-    |> get_in([:dictionary, :"$ancestors"])
+    [supervisor_pid | _] =
+      self()
+      |> Process.info()
+      |> get_in([:dictionary, :"$ancestors"])
 
     # make sure it is a pid and not a name
-    supervisor_pid = case supervisor_pid do
-      name when is_atom(name) -> Process.whereis(name)
-      pid when is_pid(pid) -> pid
-    end
+    supervisor_pid =
+      case supervisor_pid do
+        name when is_atom(name) -> Process.whereis(name)
+        pid when is_pid(pid) -> pid
+      end
 
     # make sure this is a Scene.Supervisor, not something else
-    {supervisor_pid, dynamic_children_pid} = case Process.info(supervisor_pid) do
-      nil -> {nil, nil}
-      info ->
-        case get_in( info, [:dictionary, :"$initial_call"] ) do
-          {:supervisor, Scene.Supervisor, _} ->
-            dynamic_children_pid = Supervisor.which_children( supervisor_pid )
-            |> Enum.find_value( fn 
-              {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
-              _ -> nil
-            end)
-            {supervisor_pid, dynamic_children_pid}
+    {supervisor_pid, dynamic_children_pid} =
+      case Process.info(supervisor_pid) do
+        nil ->
+          {nil, nil}
 
-          _ ->
-            {nil, nil}
-        end
-    end
+        info ->
+          case get_in(info, [:dictionary, :"$initial_call"]) do
+            {:supervisor, Scene.Supervisor, _} ->
+              dynamic_children_pid =
+                Supervisor.which_children(supervisor_pid)
+                |> Enum.find_value(fn
+                  {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
+                  _ -> nil
+                end)
+
+              {supervisor_pid, dynamic_children_pid}
+
+            _ ->
+              {nil, nil}
+          end
+      end
 
     # register the scene in the scenes ets table
     Scenic.ViewPort.Tables.register_scene(
@@ -575,92 +585,101 @@ defmodule Scenic.Scene do
     )
 
     # {:ok, sc_state} = scene_module.init( args, opts[:styles] || %{}, opts[:viewport] )
-    {:ok, sc_state} = scene_module.init( args, opts )
+    {:ok, sc_state} = scene_module.init(args, opts)
 
-    state = state
-#    |> Map.put( :scene_state, sc_state)
-    |> Map.put( :supervisor_pid, supervisor_pid)
-    |> Map.put( :dynamic_children_pid, dynamic_children_pid)
-    |> Map.put( :scene_state, sc_state)
+    state =
+      state
+      #    |> Map.put( :scene_state, sc_state)
+      |> Map.put(:supervisor_pid, supervisor_pid)
+      |> Map.put(:dynamic_children_pid, dynamic_children_pid)
+      |> Map.put(:scene_state, sc_state)
 
-    { :noreply, state }
+    {:noreply, state}
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   def handle_cast(
-  {:input, event, %Scenic.ViewPort.Context{viewport: vp, raw_input: raw_input} = context},
-  %{scene_module: mod, scene_state: sc_state} = state) do
+        {:input, event, %Scenic.ViewPort.Context{viewport: vp, raw_input: raw_input} = context},
+        %{scene_module: mod, scene_state: sc_state} = state
+      ) do
+    sc_state =
+      case mod.handle_input(event, context, sc_state) do
+        {:noreply, sc_state} ->
+          sc_state
 
-    sc_state = case mod.handle_input(event, context, sc_state ) do
-      {:noreply, sc_state} -> sc_state
-      {:stop, sc_state} -> sc_state
-      {:continue, sc_state} ->
-        GenServer.cast(vp, {:continue_input, raw_input})
-        sc_state
-    end
+        {:stop, sc_state} ->
+          sc_state
+
+        {:continue, sc_state} ->
+          GenServer.cast(vp, {:continue_input, raw_input})
+          sc_state
+      end
 
     {:noreply, %{state | scene_state: sc_state}}
   end
 
+  # --------------------------------------------------------
+  def handle_cast(
+        {:event, event, from_pid},
+        %{
+          parent_pid: parent_pid,
+          scene_module: mod,
+          scene_state: sc_state
+        } = state
+      ) do
+    sc_state =
+      case mod.filter_event(event, from_pid, sc_state) do
+        {:continue, event, sc_state} ->
+          GenServer.cast(parent_pid, {:event, event, from_pid})
+          sc_state
 
+        {:stop, sc_state} ->
+          sc_state
+      end
 
-  #--------------------------------------------------------
-  def handle_cast({:event, event, from_pid},  %{
-    parent_pid: parent_pid,
-    scene_module: mod,
-    scene_state: sc_state
-  } = state) do
-    sc_state = case mod.filter_event(event, from_pid, sc_state ) do
-      { :continue, event, sc_state } ->
-        GenServer.cast(parent_pid, {:event, event, from_pid})
-        sc_state
-
-      {:stop, sc_state} ->
-        sc_state
-    end
-    
     {:noreply, %{state | scene_state: sc_state}}
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # not set up for dynamic children. Take the fast path
-  def handle_cast({:push_graph, graph, sub_id, false},  %{
-    scene_ref: scene_ref
-  } = state ) do
+  def handle_cast(
+        {:push_graph, graph, sub_id, false},
+        %{
+          scene_ref: scene_ref
+        } = state
+      ) do
     graph_key = {:graph, scene_ref, sub_id}
 
     # reduce the incoming graph to it's minimal form
     # while simultaneously extracting the SceneRefs
-    {graph, all_keys} = Enum.reduce( graph.primitives, {%{}, %{}}, fn
-      # named reference
-      ({uid, %{module: Primitive.SceneRef, data: name} = p},
-      {g, all_refs}) when is_atom(name) ->
-        g = Map.put( g, uid, Primitive.minimal(p) )
-        all_refs = Map.put( all_refs, uid, {:graph, name, nil} )
-        {g, all_refs}
+    {graph, all_keys} =
+      Enum.reduce(graph.primitives, {%{}, %{}}, fn
+        # named reference
+        {uid, %{module: Primitive.SceneRef, data: name} = p}, {g, all_refs} when is_atom(name) ->
+          g = Map.put(g, uid, Primitive.minimal(p))
+          all_refs = Map.put(all_refs, uid, {:graph, name, nil})
+          {g, all_refs}
 
-      # explicit reference
-      ({uid, %{module: Primitive.SceneRef, data: {:graph,_,_} = ref} = p},
-      {g, all_refs}) ->
-        g = Map.put( g, uid, Primitive.minimal(p) )
-        all_refs = Map.put( all_refs, uid, ref )
-        {g, all_refs}
+        # explicit reference
+        {uid, %{module: Primitive.SceneRef, data: {:graph, _, _} = ref} = p}, {g, all_refs} ->
+          g = Map.put(g, uid, Primitive.minimal(p))
+          all_refs = Map.put(all_refs, uid, ref)
+          {g, all_refs}
 
+        # dynamic reference
+        # Log an error and remove the ref from the graph
+        {_uid, %{module: Primitive.SceneRef, data: {_, _} = ref}}, {g, all_refs} ->
+          Logger.error(
+            "Attempting to manage dynamic reference on graph with " <>
+              "has_children set to false. #{inspect(ref)}"
+          )
 
-      # dynamic reference
-      # Log an error and remove the ref from the graph
-      ({_uid, %{module: Primitive.SceneRef, data: {_,_} = ref}},
-      {g, all_refs}) ->
-        Logger.error "Attempting to manage dynamic reference on graph with " <>
-          "has_children set to false. #{inspect(ref)}"
-        {g, all_refs}
+          {g, all_refs}
 
-      # all non-SceneRef primitives
-      ({uid, p}, {g, all_refs}) ->
-        {Map.put( g, uid, Primitive.minimal(p) ), all_refs}
-    end)
+        # all non-SceneRef primitives
+        {uid, p}, {g, all_refs} ->
+          {Map.put(g, uid, Primitive.minimal(p)), all_refs}
+      end)
 
     # insert the proper graph keys back into the graph to finish normalizing
     # it for the drivers. Yes, the driver could do this from the all_keys term
@@ -670,114 +689,120 @@ defmodule Scenic.Scene do
     # otherwise the drivers would need to do a full graph scan in order to prep
     # whatever translators they need. Again, the info has already been
     # calculated here, so just pass it along without throwing it out.
-    graph = Enum.reduce(all_keys, graph, fn({uid, key}, g)->
-      put_in(g, [uid, :data], {Scenic.Primitive.SceneRef, key})
-    end)
+    graph =
+      Enum.reduce(all_keys, graph, fn {uid, key}, g ->
+        put_in(g, [uid, :data], {Scenic.Primitive.SceneRef, key})
+      end)
 
     # write the graph into the ets table
-    ViewPort.Tables.insert_graph( graph_key, self(), graph, all_keys)
+    ViewPort.Tables.insert_graph(graph_key, self(), graph, all_keys)
 
     # write the graph into the ets table
-    ViewPort.Tables.insert_graph( graph_key, self(), graph, all_keys)
+    ViewPort.Tables.insert_graph(graph_key, self(), graph, all_keys)
 
-    { :noreply, state }
+    {:noreply, state}
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # push a graph to the ets table and manage embedded dynamic child scenes
   # to the reader: You have no idea how difficult this was to get right.
-  def handle_cast({:push_graph, raw_graph, sub_id, true},  %{
-    scene_ref: scene_ref,
-    raw_scene_refs: old_raw_refs,
-    dyn_scene_pids: old_dyn_pids,
-    dyn_scene_keys: old_dyn_keys,
-
-    dynamic_children_pid: dyn_sup,
-    viewport: viewport
-  } = state ) do
-
+  def handle_cast(
+        {:push_graph, raw_graph, sub_id, true},
+        %{
+          scene_ref: scene_ref,
+          raw_scene_refs: old_raw_refs,
+          dyn_scene_pids: old_dyn_pids,
+          dyn_scene_keys: old_dyn_keys,
+          dynamic_children_pid: dyn_sup,
+          viewport: viewport
+        } = state
+      ) do
     # reduce the incoming graph to it's minimal form
     # while simultaneously extracting the SceneRefs
     # this should be the only full scan when pushing a graph
-    {graph, all_keys, new_raw_refs} = Enum.reduce( raw_graph.primitives, {%{}, %{}, %{}}, fn
-      # named reference
-      ({uid, %{module: Primitive.SceneRef, data: name} = p},
-      {g, all_refs, dyn_refs}) when is_atom(name) ->
-        g = Map.put( g, uid, Primitive.minimal(p) )
-        all_refs = Map.put( all_refs, uid, {:graph, name, nil} )
-        {g, all_refs, dyn_refs}
+    {graph, all_keys, new_raw_refs} =
+      Enum.reduce(raw_graph.primitives, {%{}, %{}, %{}}, fn
+        # named reference
+        {uid, %{module: Primitive.SceneRef, data: name} = p}, {g, all_refs, dyn_refs}
+        when is_atom(name) ->
+          g = Map.put(g, uid, Primitive.minimal(p))
+          all_refs = Map.put(all_refs, uid, {:graph, name, nil})
+          {g, all_refs, dyn_refs}
 
-      # explicit reference
-      ({uid, %{module: Primitive.SceneRef, data: {:graph,_,_} = ref} = p},
-      {g, all_refs, dyn_refs}) ->
-        g = Map.put( g, uid, Primitive.minimal(p) )
-        all_refs = Map.put( all_refs, uid, ref )
-        {g, all_refs, dyn_refs}
+        # explicit reference
+        {uid, %{module: Primitive.SceneRef, data: {:graph, _, _} = ref} = p},
+        {g, all_refs, dyn_refs} ->
+          g = Map.put(g, uid, Primitive.minimal(p))
+          all_refs = Map.put(all_refs, uid, ref)
+          {g, all_refs, dyn_refs}
 
-      # dynamic reference
-      # don't add to all_refs yet. Will add after it is started (or not)
-      ({uid, %{module: Primitive.SceneRef, data: {_,_} = ref} = p},
-      {g, all_refs, dyn_refs}) ->
-        g = Map.put( g, uid, Primitive.minimal(p) )
-        dyn_refs = Map.put( dyn_refs, uid, ref )
-        {g, all_refs, dyn_refs}
+        # dynamic reference
+        # don't add to all_refs yet. Will add after it is started (or not)
+        {uid, %{module: Primitive.SceneRef, data: {_, _} = ref} = p}, {g, all_refs, dyn_refs} ->
+          g = Map.put(g, uid, Primitive.minimal(p))
+          dyn_refs = Map.put(dyn_refs, uid, ref)
+          {g, all_refs, dyn_refs}
 
-      # all non-SceneRef primitives
-      ({uid, p}, {g, all_refs, dyn_refs}) ->
-        {Map.put( g, uid, Primitive.minimal(p) ), all_refs, dyn_refs}
-    end)
+        # all non-SceneRef primitives
+        {uid, p}, {g, all_refs, dyn_refs} ->
+          {Map.put(g, uid, Primitive.minimal(p)), all_refs, dyn_refs}
+      end)
 
     # get the difference script between the raw and new dynamic refs
-    raw_diff = Utilities.Map.difference( old_raw_refs, new_raw_refs )
+    raw_diff = Utilities.Map.difference(old_raw_refs, new_raw_refs)
 
     # Use the difference script to determine what to start or stop.
-    {new_dyn_pids, new_dyn_keys} = Enum.reduce(raw_diff, {old_dyn_pids, old_dyn_keys}, fn
-      {:put, uid, {mod, init_data}}, {old_pids, old_keys} ->  # start this dynamic scene
+    {new_dyn_pids, new_dyn_keys} =
+      Enum.reduce(raw_diff, {old_dyn_pids, old_dyn_keys}, fn
+        # start this dynamic scene
+        {:put, uid, {mod, init_data}}, {old_pids, old_keys} ->
+          unless dyn_sup do
+            raise "You have set a dynamic SceneRef on a graph in a scene where has_children is false"
+          end
 
-        unless dyn_sup do
-          raise "You have set a dynamic SceneRef on a graph in a scene where has_children is false"
-        end
+          styles = Graph.style_stack(raw_graph, uid)
 
-        styles = Graph.style_stack(raw_graph, uid)
+          # prepare the startup options to send to the new scene
+          id = Map.get(raw_graph.primitives[uid], :id)
 
-        # prepare the startup options to send to the new scene
-        id = Map.get(raw_graph.primitives[uid], :id)
-        init_opts = case viewport do
-          nil -> [styles: styles, id: id]
-          vp -> [viewport: vp, styles: styles, id: id]
-        end
+          init_opts =
+            case viewport do
+              nil -> [styles: styles, id: id]
+              vp -> [viewport: vp, styles: styles, id: id]
+            end
 
-        # start the dynamic scene
-        {:ok, pid, ref} = mod.start_dynamic_scene( dyn_sup, self(), init_data, init_opts )
+          # start the dynamic scene
+          {:ok, pid, ref} = mod.start_dynamic_scene(dyn_sup, self(), init_data, init_opts)
 
-        # tell the old scene to stop itself
-        case old_pids[uid] do
-          nil -> :ok
-          old_pid -> GenServer.cast(old_pid, {:stop, dyn_sup})
-        end
+          # tell the old scene to stop itself
+          case old_pids[uid] do
+            nil -> :ok
+            old_pid -> GenServer.cast(old_pid, {:stop, dyn_sup})
+          end
 
-        # add the this dynamic child scene to tracking
-        {
-          Map.put(old_pids, uid, pid),
-          Map.put(old_keys, uid, {:graph, ref, nil})
-        }
+          # add the this dynamic child scene to tracking
+          {
+            Map.put(old_pids, uid, pid),
+            Map.put(old_keys, uid, {:graph, ref, nil})
+          }
 
-      {:del, uid}, {old_pids, old_keys} ->  # stop this dynaic scene
-        # get the old dynamic graph reference
-        pid = old_pids[uid]
+        # stop this dynaic scene
+        {:del, uid}, {old_pids, old_keys} ->
+          # get the old dynamic graph reference
+          pid = old_pids[uid]
 
-        # send the optional deactivate message and terminate. ok to be async
-        Task.start fn ->
-          GenServer.call(pid, :deactivate)
-          GenServer.cast(pid, {:stop, dyn_sup})
-        end
+          # send the optional deactivate message and terminate. ok to be async
+          Task.start(fn ->
+            GenServer.call(pid, :deactivate)
+            GenServer.cast(pid, {:stop, dyn_sup})
+          end)
 
-        # remove old pid and key
-        {Map.delete(old_pids, uid), Map.delete(old_keys, uid)}
-    end)
+          # remove old pid and key
+          {Map.delete(old_pids, uid), Map.delete(old_keys, uid)}
+      end)
 
     # merge all_refs with the managed dyanmic keys
-    all_keys = Map.merge( all_keys, new_dyn_keys )
+    all_keys = Map.merge(all_keys, new_dyn_keys)
 
     graph_key = {:graph, scene_ref, sub_id}
 
@@ -789,86 +814,94 @@ defmodule Scenic.Scene do
     # otherwise the drivers would need to do a full graph scan in order to prep
     # whatever translators they need. Again, the info has already been
     # calculated here, so just pass it along without throwing it out.
-    graph = Enum.reduce(all_keys, graph, fn({uid, key}, g)->
-      put_in(g, [uid, :data], {Scenic.Primitive.SceneRef, key})
-    end)
+    graph =
+      Enum.reduce(all_keys, graph, fn {uid, key}, g ->
+        put_in(g, [uid, :data], {Scenic.Primitive.SceneRef, key})
+      end)
 
     # write the graph into the ets table
-    ViewPort.Tables.insert_graph( graph_key, self(), graph, all_keys)
+    ViewPort.Tables.insert_graph(graph_key, self(), graph, all_keys)
 
     # store the refs for next time
-    state = state
-    |> Map.put( :raw_scene_refs, new_raw_refs )
-    |> Map.put( :dyn_scene_pids, new_dyn_pids )
-    |> Map.put( :dyn_scene_keys, new_dyn_keys )
+    state =
+      state
+      |> Map.put(:raw_scene_refs, new_raw_refs)
+      |> Map.put(:dyn_scene_pids, new_dyn_pids)
+      |> Map.put(:dyn_scene_keys, new_dyn_keys)
 
-    { :noreply, state }
+    {:noreply, state}
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # generic handle_cast. give the scene a chance to handle it
   def handle_cast({:stop, dyn_sup}, %{supervisor_pid: nil} = state) do
-    DynamicSupervisor.terminate_child( dyn_sup, self() )
+    DynamicSupervisor.terminate_child(dyn_sup, self())
     {:noreply, state}
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # generic handle_cast. give the scene a chance to handle it
   def handle_cast({:stop, dyn_sup}, %{supervisor_pid: supervisor_pid} = state) do
-    DynamicSupervisor.terminate_child( dyn_sup, supervisor_pid )
+    DynamicSupervisor.terminate_child(dyn_sup, supervisor_pid)
     {:noreply, state}
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # generic handle_cast. give the scene a chance to handle it
   def handle_cast(msg, %{scene_module: mod, scene_state: sc_state} = state) do
     {:noreply, sc_state} = mod.handle_cast(msg, sc_state)
     {:noreply, %{state | scene_state: sc_state}}
   end
 
-
-  #============================================================================
+  # ============================================================================
   # Scene managment
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # this a root-level dynamic scene
   @doc false
-  def start_dynamic_scene( dynamic_supervisor, parent, mod, args, opts, has_children )
-  when is_list(opts) and is_boolean(has_children) and is_atom(mod)do
+  def start_dynamic_scene(dynamic_supervisor, parent, mod, args, opts, has_children)
+      when is_list(opts) and is_boolean(has_children) and is_atom(mod) do
     ref = make_ref()
-    opts = opts
-    |> Keyword.put_new( :parent, parent)
-    |> Keyword.put_new( :scene_ref, ref)
-    do_start_child_scene( dynamic_supervisor, ref, mod, args, opts, has_children )
+
+    opts =
+      opts
+      |> Keyword.put_new(:parent, parent)
+      |> Keyword.put_new(:scene_ref, ref)
+
+    do_start_child_scene(dynamic_supervisor, ref, mod, args, opts, has_children)
   end
 
-  #--------------------------------------------------------
-  defp do_start_child_scene( dynamic_supervisor, ref, mod, args, opts, true ) do
+  # --------------------------------------------------------
+  defp do_start_child_scene(dynamic_supervisor, ref, mod, args, opts, true) do
     # start the scene supervision tree
-    {:ok, supervisor_pid} = DynamicSupervisor.start_child( dynamic_supervisor,
-      {Scenic.Scene.Supervisor, {mod, args, opts}}
-    )
+    {:ok, supervisor_pid} =
+      DynamicSupervisor.start_child(
+        dynamic_supervisor,
+        {Scenic.Scene.Supervisor, {mod, args, opts}}
+      )
 
     # we want to return the pid of the scene itself. not the supervisor
-    scene_pid = Supervisor.which_children( supervisor_pid )
-    |> Enum.find_value( fn 
-      {_, pid, :worker, [Scenic.Scene]} ->
-        pid
-      _ ->
-        nil
-    end)
+    scene_pid =
+      Supervisor.which_children(supervisor_pid)
+      |> Enum.find_value(fn
+        {_, pid, :worker, [Scenic.Scene]} ->
+          pid
+
+        _ ->
+          nil
+      end)
 
     {:ok, scene_pid, ref}
   end
 
-  #--------------------------------------------------------
-  defp do_start_child_scene( dynamic_supervisor, ref, mod, args, opts, false ) do
-    {:ok, pid} = DynamicSupervisor.start_child(
-      dynamic_supervisor,
-      {Scenic.Scene, {mod, args, opts}}
-    )
+  # --------------------------------------------------------
+  defp do_start_child_scene(dynamic_supervisor, ref, mod, args, opts, false) do
+    {:ok, pid} =
+      DynamicSupervisor.start_child(
+        dynamic_supervisor,
+        {Scenic.Scene, {mod, args, opts}}
+      )
+
     {:ok, pid, ref}
   end
-
 end

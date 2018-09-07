@@ -9,19 +9,17 @@ defmodule Scenic.Primitive.Transform.RotateTest do
 
   alias Scenic.Primitive.Transform.Rotate
 
-  #============================================================================
+  # ============================================================================
   # verify
 
   test "verify passes valid data" do
-    assert Rotate.verify( 1.0 ) == true
+    assert Rotate.verify(1.0) == true
   end
 
   test "verify fails invalid data" do
-    assert Rotate.verify( {1.1, 1.2} )            == false
-    assert Rotate.verify( {1.1, 1.2, 1.3, 1.4} )  == false
-    assert Rotate.verify( {1.1, 1.2, :banana} )   == false
-    assert Rotate.verify( :banana )               == false
+    assert Rotate.verify({1.1, 1.2}) == false
+    assert Rotate.verify({1.1, 1.2, 1.3, 1.4}) == false
+    assert Rotate.verify({1.1, 1.2, :banana}) == false
+    assert Rotate.verify(:banana) == false
   end
-
 end
-

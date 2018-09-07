@@ -10,29 +10,25 @@ defmodule Scenic.Primitive.Style.ScissorTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Scissor
 
-
-  #============================================================================
+  # ============================================================================
   # verify - various forms
 
   test "verfy works" do
-    assert Scissor.verify( {100, 200} )
+    assert Scissor.verify({100, 200})
   end
 
   test "verify rejects invalid values" do
-    refute Scissor.verify( 123 )
-    refute Scissor.verify( {10, 20, 100} )
+    refute Scissor.verify(123)
+    refute Scissor.verify({10, 20, 100})
   end
 
   test "verify! works" do
-    assert Scissor.verify!( {100, 200} )
+    assert Scissor.verify!({100, 200})
   end
 
   test "verify! raises an error" do
     assert_raise Style.FormatError, fn ->
-      Scissor.verify!( 123 )
+      Scissor.verify!(123)
     end
   end
-
 end
-
-

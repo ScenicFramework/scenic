@@ -9,21 +9,18 @@ defmodule Scenic.Primitive.Transform.TranslateTest do
 
   alias Scenic.Primitive.Transform.Translate
 
-
-  #============================================================================
+  # ============================================================================
   # verify
 
   test "verify passes valid data" do
-    assert Translate.verify( {1.0, 2.0} ) == true
+    assert Translate.verify({1.0, 2.0}) == true
   end
 
   test "verify fails invalid data" do
-    assert Translate.verify( 1.1 )                  == false
-    assert Translate.verify( {1.1} )                == false
-    assert Translate.verify( {1.1, 1.2, 1.3} ) == false
-    assert Translate.verify( {1.1, :banana} )       == false
-    assert Translate.verify( :banana )              == false
+    assert Translate.verify(1.1) == false
+    assert Translate.verify({1.1}) == false
+    assert Translate.verify({1.1, 1.2, 1.3}) == false
+    assert Translate.verify({1.1, :banana}) == false
+    assert Translate.verify(:banana) == false
   end
-
 end
-

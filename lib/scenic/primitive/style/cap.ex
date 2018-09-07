@@ -6,32 +6,32 @@
 defmodule Scenic.Primitive.Style.Cap do
   use Scenic.Primitive.Style
 
-  #============================================================================
+  # ============================================================================
   # data verification and serialization
 
-  #--------------------------------------------------------
-  def info( data ), do: """
-    #{IO.ANSI.red()}#{__MODULE__} data must be one of :butt, :round, :square
-    #{IO.ANSI.yellow()}Received: #{inspect(data)}
-    #{IO.ANSI.default_color()}
-  """
+  # --------------------------------------------------------
+  def info(data),
+    do: """
+      #{IO.ANSI.red()}#{__MODULE__} data must be one of :butt, :round, :square
+      #{IO.ANSI.yellow()}Received: #{inspect(data)}
+      #{IO.ANSI.default_color()}
+    """
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # named color
 
-  def verify( stroke ) do
+  def verify(stroke) do
     try do
-      normalize( stroke )
+      normalize(stroke)
       true
     rescue
       _ -> false
-    end    
+    end
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
 
-  def normalize( :butt ), do: :butt
-  def normalize( :round ), do: :round
-  def normalize( :square ), do: :square
-
+  def normalize(:butt), do: :butt
+  def normalize(:round), do: :round
+  def normalize(:square), do: :square
 end

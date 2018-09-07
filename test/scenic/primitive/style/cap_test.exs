@@ -10,31 +10,27 @@ defmodule Scenic.Primitive.Style.CapTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Cap
 
-
-  #============================================================================
+  # ============================================================================
   # verify - various forms
 
   test "verfy works" do
-    assert Cap.verify( :butt )
-    assert Cap.verify( :round )
-    assert Cap.verify( :square )
+    assert Cap.verify(:butt)
+    assert Cap.verify(:round)
+    assert Cap.verify(:square)
   end
 
   test "verify rejects invalid values" do
-    refute Cap.verify( "butt" )
-    refute Cap.verify( 123 )
+    refute Cap.verify("butt")
+    refute Cap.verify(123)
   end
 
   test "verify! works" do
-    assert Cap.verify!( :butt )
+    assert Cap.verify!(:butt)
   end
 
   test "verify! raises an error" do
     assert_raise Style.FormatError, fn ->
-      Cap.verify!( "butt" )
+      Cap.verify!("butt")
     end
   end
-
 end
-
-

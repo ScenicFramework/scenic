@@ -11,7 +11,7 @@ defmodule Mix.Tasks.Scenic.Run do
 
   @doc false
   def run(args) do
-    Mix.Tasks.Run.run run_args() ++ args
+    Mix.Tasks.Run.run(run_args() ++ args)
   end
 
   defp run_args do
@@ -19,6 +19,6 @@ defmodule Mix.Tasks.Scenic.Run do
   end
 
   defp iex_running? do
-    Code.ensure_loaded?(IEx) and IEx.started?
+    Code.ensure_loaded?(IEx) and IEx.started?()
   end
 end

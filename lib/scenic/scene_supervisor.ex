@@ -19,17 +19,15 @@ defmodule Scenic.Scene.Supervisor do
     }
   end
 
-
-  def start_link( {scene_module, args, opts} ) do
+  def start_link({scene_module, args, opts}) do
     Supervisor.start_link(__MODULE__, {scene_module, args, opts})
   end
 
-  def init( args ) do
+  def init(args) do
     [
       {DynamicSupervisor, strategy: :one_for_one},
-      {Scenic.Scene, args},
+      {Scenic.Scene, args}
     ]
-    |> Supervisor.init( strategy: :one_for_all )
+    |> Supervisor.init(strategy: :one_for_all)
   end
-
 end

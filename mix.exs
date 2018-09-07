@@ -11,16 +11,14 @@ defmodule Scenic.Mixfile do
       config_path: "config/config.exs",
       deps_path: "deps",
       elixir: "~> 1.6",
-
       name: "Scenic",
-
-      build_embedded: Mix.env == :prod,
-      start_permanent: Mix.env == :prod,
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
       deps: deps(),
       docs: [
         extras: doc_guides(),
         main: "Scenic",
-        groups_for_modules: groups_for_modules(),
+        groups_for_modules: groups_for_modules()
         # source_ref: "v#{@version}",
         # source_url: "https://github.com/boydm/scenic",
         # homepage_url: "http://kry10.com",
@@ -34,7 +32,7 @@ defmodule Scenic.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     [
-      #mod: {Scenic, []},
+      # mod: {Scenic, []},
       applications: [:logger]
     ]
   end
@@ -60,12 +58,9 @@ defmodule Scenic.Mixfile do
       # Docs dependencies
       {:ex_doc, ">= 0.0.0", only: [:dev, :docs]},
       {:inch_ex, ">= 0.0.0", only: :docs},
-
-
       {:dialyxir, "~> 0.5", only: :dev, runtime: false}
     ]
   end
-
 
   defp doc_guides do
     [
@@ -109,7 +104,7 @@ defmodule Scenic.Mixfile do
         Scenic.Component.Input.RadioGroup,
         Scenic.Component.Input.Slider,
         Scenic.Component.Input.TextField,
-        Scenic.Component.Input.Carat,
+        Scenic.Component.Input.Carat
       ],
       Primitives: [
         Scenic.Primitive,
@@ -142,7 +137,7 @@ defmodule Scenic.Mixfile do
         Scenic.Primitive.Style.Stroke,
         Scenic.Primitive.Style.TextAlign,
         Scenic.Primitive.Style.TextHeight,
-        Scenic.Primitive.Style.Theme,
+        Scenic.Primitive.Style.Theme
       ],
       "Style.Paint": [
         Scenic.Primitive.Style.Paint,
@@ -150,7 +145,7 @@ defmodule Scenic.Mixfile do
         Scenic.Primitive.Style.Paint.Image,
         Scenic.Primitive.Style.Paint.BoxGradient,
         Scenic.Primitive.Style.Paint.LinearGradient,
-        Scenic.Primitive.Style.Paint.RadialGradient,
+        Scenic.Primitive.Style.Paint.RadialGradient
       ],
       Transforms: [
         Scenic.Primitive.Transform,
@@ -187,5 +182,4 @@ defmodule Scenic.Mixfile do
       ]
     ]
   end
-
 end

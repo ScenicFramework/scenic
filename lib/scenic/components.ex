@@ -107,8 +107,7 @@ defmodule Scenic.Components do
   send messages, transform the event, stop the event, and much more.
   """
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Add a button to a graph
 
@@ -133,7 +132,7 @@ defmodule Scenic.Components do
   ### Styles
 
   Buttons honor the following standard styles
-  
+
   * `:hidden` - If `false` the component is rendered. If `true`, it is skipped. The default
     is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:primary`
@@ -177,17 +176,17 @@ defmodule Scenic.Components do
 
 
   """
-  def button( graph, data, options \\ [] )
+  def button(graph, data, options \\ [])
 
-  def button( %Graph{} = g, data, options ) do
-    add_to_graph( g, Component.Button, data, options )
+  def button(%Graph{} = g, data, options) do
+    add_to_graph(g, Component.Button, data, options)
   end
 
-  def button( %Primitive{module: SceneRef} = p, data, options ) do
-    modify( p, Component.Button, data, options )
+  def button(%Primitive{module: SceneRef} = p, data, options) do
+    modify(p, Component.Button, data, options)
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Add a checkbox to a graph
 
@@ -210,7 +209,7 @@ defmodule Scenic.Components do
   ### Styles
 
   Buttons honor the following standard styles
-  
+
   * `:hidden` - If `false` the component is rendered. If `true`, it is skipped. The default
     is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:dark`
@@ -237,17 +236,17 @@ defmodule Scenic.Components do
       |> checkbox( {"Example", :checkbox_id, true}, translate: {20, 20} )
 
   """
-  def checkbox( graph, data, options \\ [] )
+  def checkbox(graph, data, options \\ [])
 
-  def checkbox( %Graph{} = g, data, options ) do
-    add_to_graph( g, Component.Input.Checkbox, data, options )
+  def checkbox(%Graph{} = g, data, options) do
+    add_to_graph(g, Component.Input.Checkbox, data, options)
   end
 
-  def checkbox( %Primitive{module: SceneRef} = p, data, options ) do
-    modify( p, Component.Input.Checkbox, data, options )
+  def checkbox(%Primitive{module: SceneRef} = p, data, options) do
+    modify(p, Component.Input.Checkbox, data, options)
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Add a dropdown to a graph
 
@@ -284,7 +283,7 @@ defmodule Scenic.Components do
   ### Styles
 
   Buttons honor the following styles
-  
+
   * `:hidden` - If `false` the component is rendered. If `true`, it is skipped. The default
     is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:dark`
@@ -320,17 +319,17 @@ defmodule Scenic.Components do
       ], :controls, :dropdown_id }, translate: {20, 20} )
 
   """
-  def dropdown( graph, data, options \\ [] )
+  def dropdown(graph, data, options \\ [])
 
-  def dropdown( %Graph{} = g, data, options ) do
-    add_to_graph( g, Component.Input.Dropdown, data, options )
+  def dropdown(%Graph{} = g, data, options) do
+    add_to_graph(g, Component.Input.Dropdown, data, options)
   end
 
-  def dropdown( %Primitive{module: SceneRef} = p, data, options ) do
-    modify( p, Component.Input.Dropdown, data, options )
+  def dropdown(%Primitive{module: SceneRef} = p, data, options) do
+    modify(p, Component.Input.Dropdown, data, options)
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Add a radio group to a graph
 
@@ -369,7 +368,7 @@ defmodule Scenic.Components do
   ### Styles
 
   Radio Buttons honor the following styles
-  
+
   * `:hidden` - If `false` the component is rendered. If `true`, it is skipped. The default
     is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:dark`
@@ -400,17 +399,17 @@ defmodule Scenic.Components do
         translate: {20, 20} )
 
   """
-  def radio_group( graph, data, options \\ [] )
+  def radio_group(graph, data, options \\ [])
 
-  def radio_group( %Graph{} = g, data, options ) do
-    add_to_graph( g, Component.Input.RadioGroup, data, options )
+  def radio_group(%Graph{} = g, data, options) do
+    add_to_graph(g, Component.Input.RadioGroup, data, options)
   end
 
-  def radio_group( %Primitive{module: SceneRef} = p, data, options ) do
-    modify( p, Component.Input.RadioGroup, data, options )
+  def radio_group(%Primitive{module: SceneRef} = p, data, options) do
+    modify(p, Component.Input.RadioGroup, data, options)
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Add a slider to a graph
 
@@ -440,7 +439,7 @@ defmodule Scenic.Components do
   ### Styles
 
   Sliders honor the following styles
-  
+
   * `:hidden` - If `false` the component is rendered. If `true`, it is skipped. The default
     is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:dark`
@@ -473,16 +472,17 @@ defmodule Scenic.Components do
         ], :cornflower_blue, :slider_id}, translate: {20,20} )
 
   """
-  def slider( graph, data, options \\ [] )
+  def slider(graph, data, options \\ [])
 
-  def slider( %Graph{} = g, data, options ) do
-    add_to_graph( g, Component.Input.Slider, data, options )
+  def slider(%Graph{} = g, data, options) do
+    add_to_graph(g, Component.Input.Slider, data, options)
   end
 
-  def slider( %Primitive{module: SceneRef} = p, data, options ) do
-    modify( p, Component.Input.Slider, data, options )
+  def slider(%Primitive{module: SceneRef} = p, data, options) do
+    modify(p, Component.Input.Slider, data, options)
   end
-  #--------------------------------------------------------
+
+  # --------------------------------------------------------
   @doc """
   Add a text field input to a graph
 
@@ -501,7 +501,7 @@ defmodule Scenic.Components do
   ### Styles
 
   Text fields honor the following styles
-  
+
   * `:hidden` - If `false` the component is rendered. If `true`, it is skipped. The default
     is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:dark`
@@ -509,7 +509,7 @@ defmodule Scenic.Components do
   ### Additional Styles
 
   Text fields honor the following list of additional styles.
-  
+
   * `:filter` - Adding a filter option restricts which characters can be entered
     into the text_field component. The value of filter can be one of:
     * `:all` - Accept all characters. This is the default
@@ -547,35 +547,26 @@ defmodule Scenic.Components do
         translate: {20,20}
       )
   """
-  def text_field( graph, data, options \\ [] )
+  def text_field(graph, data, options \\ [])
 
-  def text_field( %Graph{} = g, data, options ) do
-    add_to_graph( g, Component.Input.TextField, data, options )
+  def text_field(%Graph{} = g, data, options) do
+    add_to_graph(g, Component.Input.TextField, data, options)
   end
 
-  def text_field( %Primitive{module: SceneRef} = p, data, options ) do
-    modify( p, Component.Input.TextField, data, options )
+  def text_field(%Primitive{module: SceneRef} = p, data, options) do
+    modify(p, Component.Input.TextField, data, options)
   end
 
-
-  #============================================================================
+  # ============================================================================
   # generic workhorse versions
 
-  defp add_to_graph( %Graph{} = g, mod, data, options ) do
+  defp add_to_graph(%Graph{} = g, mod, data, options) do
     mod.verify!(data)
     mod.add_to_graph(g, data, options)
   end
 
-  defp modify( %Primitive{module: SceneRef} = p, mod, data, options ) do
+  defp modify(%Primitive{module: SceneRef} = p, mod, data, options) do
     mod.verify!(data)
-    Primitive.put( p, {mod, data}, options )
+    Primitive.put(p, {mod, data}, options)
   end
-
-
 end
-
-
-
-
-
-

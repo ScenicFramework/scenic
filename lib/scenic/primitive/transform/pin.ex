@@ -6,29 +6,28 @@
 defmodule Scenic.Primitive.Transform.Pin do
   use Scenic.Primitive.Transform
 
-  #============================================================================
+  # ============================================================================
   # data verification and serialization
 
-  #--------------------------------------------------------
-  def info( data ), do: """
-    #{IO.ANSI.red()}#{__MODULE__} data must be a 2d vector: {x,y}
-    #{IO.ANSI.yellow()}Received: #{inspect(data)}
-    #{IO.ANSI.default_color()}
-  """
+  # --------------------------------------------------------
+  def info(data),
+    do: """
+      #{IO.ANSI.red()}#{__MODULE__} data must be a 2d vector: {x,y}
+      #{IO.ANSI.yellow()}Received: #{inspect(data)}
+      #{IO.ANSI.default_color()}
+    """
 
-  #--------------------------------------------------------
-  def verify( percent ) do
+  # --------------------------------------------------------
+  def verify(percent) do
     try do
-      normalize( percent )
+      normalize(percent)
       true
     rescue
       _ -> false
     end
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # normalize named stipples
-  def normalize( {x, y} ) when is_number(x) and is_number(y), do: {x, y}
-
-
+  def normalize({x, y}) when is_number(x) and is_number(y), do: {x, y}
 end

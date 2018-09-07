@@ -10,31 +10,27 @@ defmodule Scenic.Primitive.Style.JoinTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Join
 
-
-  #============================================================================
+  # ============================================================================
   # verify - various forms
 
   test "verfy works" do
-    assert Join.verify( :miter )
-    assert Join.verify( :round )
-    assert Join.verify( :bevel )
+    assert Join.verify(:miter)
+    assert Join.verify(:round)
+    assert Join.verify(:bevel)
   end
 
   test "verify rejects invalid values" do
-    refute Join.verify( "miter" )
-    refute Join.verify( 123 )
+    refute Join.verify("miter")
+    refute Join.verify(123)
   end
 
   test "verify! works" do
-    assert Join.verify!( :miter )
+    assert Join.verify!(:miter)
   end
 
   test "verify! raises an error" do
     assert_raise Style.FormatError, fn ->
-      Join.verify!( "miter" )
+      Join.verify!("miter")
     end
   end
-
 end
-
-

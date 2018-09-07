@@ -10,44 +10,41 @@ defmodule Scenic.Primitive.LineTest do
   alias Scenic.Primitive
   alias Scenic.Primitive.Line
 
+  @data {{10, 12}, {40, 80}}
 
-  @data     {{10,12}, {40, 80}}
-
-
-  #============================================================================
+  # ============================================================================
   # build / add
 
   test "build works" do
-    p = Line.build( @data )
+    p = Line.build(@data)
     assert p.module == Line
     assert Primitive.get(p) == @data
   end
 
-
-  #============================================================================
+  # ============================================================================
   # verify
 
   test "verify passes valid data" do
-    assert Line.verify( @data ) == {:ok, @data}
+    assert Line.verify(@data) == {:ok, @data}
   end
 
   test "verify fails invalid data" do
-    assert Line.verify( {{10,12}, 40, 80} )         == :invalid_data
-    assert Line.verify( {10,12, 40, 80} )           == :invalid_data
-    assert Line.verify( {10, 40, 80} )              == :invalid_data
-    assert Line.verify( {{10,12}, {40, :banana}} )  == :invalid_data
-    assert Line.verify( {{10,:banana}, {40, 80}} )  == :invalid_data
-    assert Line.verify( :banana )                   == :invalid_data
+    assert Line.verify({{10, 12}, 40, 80}) == :invalid_data
+    assert Line.verify({10, 12, 40, 80}) == :invalid_data
+    assert Line.verify({10, 40, 80}) == :invalid_data
+    assert Line.verify({{10, 12}, {40, :banana}}) == :invalid_data
+    assert Line.verify({{10, :banana}, {40, 80}}) == :invalid_data
+    assert Line.verify(:banana) == :invalid_data
   end
 
-  #============================================================================
+  # ============================================================================
   # styles
 
   test "valid_styles works" do
     assert Line.valid_styles() == [:hidden, :stroke, :cap]
   end
 
-  #============================================================================
+  # ============================================================================
   # transform helpers
 
   test "default_pin returns the center of the line" do
@@ -58,18 +55,16 @@ defmodule Scenic.Primitive.LineTest do
     assert Line.centroid(@data) == {25, 46}
   end
 
-#  test "expand makes the line longer" do
-#    assert Line.expand({{100,100},{200,100}}, 10) == {{90,100},{220,100}}
-#    assert Line.expand({{100,100},{100,200}}, 10) == {{100,90},{100,210}}
-#  end
+  #  test "expand makes the line longer" do
+  #    assert Line.expand({{100,100},{200,100}}, 10) == {{90,100},{220,100}}
+  #    assert Line.expand({{100,100},{100,200}}, 10) == {{100,90},{100,210}}
+  #  end
 
-  #============================================================================
+  # ============================================================================
   # point containment
   test "contains_point? always returns false" do
-    assert Line.contains_point?(@data, {30, 52})  == false
-    assert Line.contains_point?(@data, {10,12})   == false
-    assert Line.contains_point?(@data, {40, 80})  == false
+    assert Line.contains_point?(@data, {30, 52}) == false
+    assert Line.contains_point?(@data, {10, 12}) == false
+    assert Line.contains_point?(@data, {40, 80}) == false
   end
-
 end
-

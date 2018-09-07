@@ -45,10 +45,10 @@ defmodule Mix.Tasks.Scenic.Hash do
     hash: :string
   ]
 
-  @default_hash   "sha"
+  @default_hash "sha"
 
   @hash_types Scenic.Cache.Hash.valid_hash_types()
-  @hash_map  Enum.reduce(@hash_types, %{}, &Map.put(&2, to_string(&1), &1) )
+  @hash_map Enum.reduce(@hash_types, %{}, &Map.put(&2, to_string(&1), &1))
 
   # import IEx
 
@@ -56,83 +56,87 @@ defmodule Mix.Tasks.Scenic.Hash do
   def run(argv) do
     {opts, argv} = OptionParser.parse!(argv, strict: @switches)
 
-    with {:ok, path }<- validate_path( List.first(argv) ),
-    {:ok, hash} <- validate_hash( opts[:hash] || @default_hash ) do
-      IO.puts ""
-      IO.puts "File hash using #{inspect(hash)}"
+    with {:ok, path} <- validate_path(List.first(argv)),
+         {:ok, hash} <- validate_hash(opts[:hash] || @default_hash) do
+      IO.puts("")
+      IO.puts("File hash using #{inspect(hash)}")
+
       case File.dir?(path) do
-        true -> hash_dir( path, hash )
-        false -> hash_file( path, hash )
+        true -> hash_dir(path, hash)
+        false -> hash_file(path, hash)
       end
-      IO.puts ""
+
+      IO.puts("")
     end
   end
 
-  defp hash_dir( path, hash ) do
-    File.ls!( path )
-    |> Enum.each( fn(sub_path) ->
+  defp hash_dir(path, hash) do
+    File.ls!(path)
+    |> Enum.each(fn sub_path ->
       p = Path.join(path, sub_path)
-      unless File.dir?(p), do: hash_file( p, hash )
+      unless File.dir?(p), do: hash_file(p, hash)
     end)
   end
 
-  defp hash_file( path, hash ) do
-    IO.write path <> " -> "
-    {:ok, hash} = do_hash_file( path, hash )
-    IO.inspect( hash )
+  defp hash_file(path, hash) do
+    IO.write(path <> " -> ")
+    {:ok, hash} = do_hash_file(path, hash)
+    IO.inspect(hash)
   end
 
-
-  defp validate_path( path ) do
+  defp validate_path(path) do
     case File.exists?(path) do
-      true -> {:ok, path}
+      true ->
+        {:ok, path}
+
       false ->
-        IO.puts(
-          IO.ANSI.red() <>
-          "Invalid Path: \"#{path}\"" <>
-          IO.ANSI.default_color()
-        )
+        IO.puts(IO.ANSI.red() <> "Invalid Path: \"#{path}\"" <> IO.ANSI.default_color())
         :error
     end
   end
 
-  defp validate_hash( hash ) do
+  defp validate_hash(hash) do
     case @hash_map[hash] do
       nil ->
         IO.puts(
           IO.ANSI.red() <>
-          "Invalid hash option: \"#{hash}\"\r\n" <>
-          IO.ANSI.yellow() <>
-          "Must be one of: " <>
-          Enum.join( @hash_types, ", " ) <>
-          "\r\nIf you don't supply a --hash option it will use sha by default" <>
-          IO.ANSI.default_color()
+            "Invalid hash option: \"#{hash}\"\r\n" <>
+            IO.ANSI.yellow() <>
+            "Must be one of: " <>
+            Enum.join(@hash_types, ", ") <>
+            "\r\nIf you don't supply a --hash option it will use sha by default" <>
+            IO.ANSI.default_color()
         )
+
         :error
-      h -> {:ok, h}
+
+      h ->
+        {:ok, h}
     end
   end
 
-  defp do_hash_file( path, hash_type ) do
+  defp do_hash_file(path, hash_type) do
     # start the hash context
-    hash_context = :crypto.hash_init( hash_type )
+    hash_context = :crypto.hash_init(hash_type)
 
     # since there is no File.stream option, only File.stream!, catch the error
     try do
       # stream the file into the hash
-      hash = File.stream!(path, [], 2048)
-      |> Enum.reduce( hash_context, &:crypto.hash_update(&2, &1) )
-      |> :crypto.hash_final()
-      |> Base.url_encode64( padding: false )
+      hash =
+        File.stream!(path, [], 2048)
+        |> Enum.reduce(hash_context, &:crypto.hash_update(&2, &1))
+        |> :crypto.hash_final()
+        |> Base.url_encode64(padding: false)
+
       {:ok, hash}
     rescue
       err ->
         :crypto.hash_final(hash_context)
+
         case err do
           %{reason: reason} -> {:error, reason}
-          _ -> {:error, :hash}      
+          _ -> {:error, :hash}
         end
     end
   end
-
 end

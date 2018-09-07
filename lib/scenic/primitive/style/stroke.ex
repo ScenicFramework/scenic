@@ -7,38 +7,38 @@ defmodule Scenic.Primitive.Style.Stroke do
   use Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Paint
 
-  #============================================================================
+  # ============================================================================
   # data verification and serialization
 
-  #--------------------------------------------------------
-  def info( data ), do: """
-    #{IO.ANSI.red()}#{__MODULE__} data must be {width, paint_type}
-    #{IO.ANSI.yellow()}Received: #{inspect(data)}
+  # --------------------------------------------------------
+  def info(data),
+    do: """
+      #{IO.ANSI.red()}#{__MODULE__} data must be {width, paint_type}
+      #{IO.ANSI.yellow()}Received: #{inspect(data)}
 
-    This is very similar to the :fill style. with an added width
-    examples:
-        {12, :red}
-        {12, {:color, :red}}
+      This is very similar to the :fill style. with an added width
+      examples:
+          {12, :red}
+          {12, {:color, :red}}
 
-    #{IO.ANSI.default_color()}
-  """
+      #{IO.ANSI.default_color()}
+    """
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # named color
 
-  def verify( stroke ) do
+  def verify(stroke) do
     try do
-      normalize( stroke )
+      normalize(stroke)
       true
     rescue
       _ -> false
-    end    
+    end
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
 
-  def normalize( {width, paint} ) when is_number(width) and width >= 0 do
-    { width, Paint.normalize(paint) }
+  def normalize({width, paint}) when is_number(width) and width >= 0 do
+    {width, Paint.normalize(paint)}
   end
-
 end

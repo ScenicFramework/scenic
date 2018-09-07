@@ -58,12 +58,12 @@ defmodule Scenic do
   The Scenic module itself is a supervisor that manages all the machinery that
   makes the [Scenes](overview_scene.html), [ViewPorts](overview_viewport.html),
   and [Drivers](overview_driver.html) run.
-  
+
   In order to run any Scenic application, you will need to start the Scenic
   supervisor in your supervision tree.
 
   Load a configuration for one or more ViewPorts, then add Scenic to your root supervisor.
-  
+
       defmodule MyApplication do
 
         def start(_type, _args) do
