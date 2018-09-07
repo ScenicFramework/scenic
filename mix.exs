@@ -31,8 +31,15 @@ defmodule Scenic.Mixfile do
         licenses: ["Apache 2"],
         links: %{github: @github}
       ],
+      description: description(),
       dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex, :scenic_math]]
     ]
+  end
+
+  defp description() do
+    """
+    Scenic -- The core Scenic library
+    """
   end
 
   # Configuration for the OTP application
