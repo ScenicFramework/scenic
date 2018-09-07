@@ -253,4 +253,4 @@ With helper functions, the above graph would be re-written like this:
 
 # What to read next
 
-Next, you should read about the [lifecycle of a scene](scene_lifecycle.html). This will explain how scenes get started, when the stop, and how they relate to each other.
+Next, you should read about the [lifecycle of a scene](scene_lifecycle.md). This will explain how scenes get started, when the stop, and how they relate to each other.
