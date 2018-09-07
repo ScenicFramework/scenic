@@ -2,6 +2,7 @@ defmodule Scenic.Mixfile do
   use Mix.Project
 
   @version "0.7.0"
+  @github "https://github.com/boydm/scenic"
 
   def project do
     [
@@ -22,6 +23,13 @@ defmodule Scenic.Mixfile do
         # source_ref: "v#{@version}",
         # source_url: "https://github.com/boydm/scenic",
         # homepage_url: "http://kry10.com",
+      ],
+        package: [
+        name: :scenic,
+        contributors: ["Boyd Multerer"],
+        maintainers: ["Boyd Multerer"],
+        licenses: ["Apache 2"],
+        links: %{github: @github}
       ],
       dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex, :scenic_math]]
     ]
@@ -52,8 +60,7 @@ defmodule Scenic.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:scenic_math, git: "git@github.com:boydm/scenic_math.git"},
-      # {:mox, "~> 0.3.2"}
+      {:scenic_math, "~> #{@version}"},
 
       # Docs dependencies
       {:ex_doc, ">= 0.0.0", only: [:dev, :docs]},
