@@ -7,7 +7,6 @@ defmodule ScenicMath.Mixfile do
     [
       app: :scenic_math,
       version: "0.7.0",
-      package: package(),
       # build_path: "_build",
       # deps_path: "deps",
       elixir: "~> 1.6",
@@ -20,9 +19,10 @@ defmodule ScenicMath.Mixfile do
       make_env: make_env(),
       deps: deps(),
       package: [
+        name: :scenic_math,
         contributors: ["Boyd Multerer"],
         maintainers: ["Boyd Multerer"],
-        licenses: ["APACHE 2"],
+        licenses: ["Apache 2"],
         links: %{github: @github}
       ]
     ]
