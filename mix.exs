@@ -1,6 +1,8 @@
 defmodule ScenicMath.Mixfile do
   use Mix.Project
 
+  @github "https://github.com/boydm/scenic_math"
+
   def project do
     [
       app: :scenic_math,
@@ -16,7 +18,13 @@ defmodule ScenicMath.Mixfile do
       make_targets: ["all"],
       make_clean: ["clean"],
       make_env: make_env(),
-      deps: deps()
+      deps: deps(),
+      package: [
+        contributors: ["Boyd Multerer"],
+        maintainers: ["Boyd Multerer"],
+        licenses: ["APACHE 2"],
+        links: %{github: @github}
+      ]
     ]
   end
 
