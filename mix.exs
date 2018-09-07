@@ -43,7 +43,7 @@ defmodule ScenicMath.Mixfile do
 
   defp description() do
     """
-    ScenicMath - a NIF math support library for Scenic.
+    Scenic.Math - a NIF math support library for Scenic.
     """
   end
 

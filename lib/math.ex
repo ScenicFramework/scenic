@@ -4,7 +4,9 @@
 
 defmodule Scenic.Math do
   @moduledoc """
-  Documentation for Scenic.Math.
+  Documentation for Scenic.Math
+
+  Lots to do here
   """
 
   @type vector_2 :: {x :: number, y :: number}
