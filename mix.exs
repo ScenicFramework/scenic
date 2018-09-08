@@ -3,13 +3,12 @@ defmodule ScenicMath.Mixfile do
 
   @github "https://github.com/boydm/scenic_math"
 
-  @scenic_version "0.7.0"
-  @minor_version ".1"
+  @version "0.7.1"
 
   def project do
     [
       app: :scenic_math,
-      version: @scenic_version <> @minor_version,
+      version: @version,
       # build_path: "_build",
       # deps_path: "deps",
       elixir: "~> 1.6",
