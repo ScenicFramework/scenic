@@ -55,6 +55,18 @@ OS:
 
 <!-- What actually happened? -->
 
+#### Stack Trace
+
+<!--- Paste the stack trace --->
+
+<details>
+
+```bash
+
+```
+
+</details>
+
 ### Additional Comments
 
 <!-- Additional comments -->
