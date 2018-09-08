@@ -149,14 +149,14 @@ The starter app created by the generator above shows the basics of building a
 Scenic application. It has four scenes, two components, and a simulated sensor.
 
 Scene      | Description
----------- | ---
+---------- | -----------
 Splash     | The Splash scene is configured to run when the app is started in the `config/config.exs` file. It runs a simple animation, then transitions to the Sensor scene. It also shows how intercept basic user input to exit the scene early.
 Sensor     | The Sensor scene depicts a simulated temperature sensor. The sensor is always running and updates it's data through the `Scenic.SensorPubSub` server.
 Primitives | The Primitives scenes displays an overview of the basic primitive types and some of the styles that can be applied to them.
 Components | The Components scene shows the basic components that come with Scenic. The crash button will cause a match error that will crash the scene, showing how the supervison tree restarts the scene. It also shows how to receive events from components.
 
 Component | Description
---------- | ---
+--------- | -----------
 Nav       | The nav bar at the top of the main scenes shows how to navigate between scenes and how to construct a simple component and pass a parameter to it. Note that it references a clock, creating a nested component. The clock is positioned by dynamically querying the width of the ViewPort
 Notes     | The notes section at the bottom of each scene is very simple and also shows passing in custom data from the parent.
 
