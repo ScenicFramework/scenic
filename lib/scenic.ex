@@ -7,15 +7,16 @@ defmodule Scenic do
   In order to run any Scenic application, you will need to start the Scenic
   supervisor in your supervision tree.
 
-  Load a configuration for one or more ViewPorts, then add Scenic to your root supervisor.
+  Load a configuration for one or more ViewPorts, then add Scenic to your root
+  supervisor.
 
-      defmodule MyApplication do
+      defmodule MyApp do
 
         def start(_type, _args) do
           import Supervisor.Spec, warn: false
 
           # load the viewport configuration from config
-          main_viewport_config = Application.get_env(:my_application :viewport)
+          main_viewport_config = Application.get_env(:my_app :viewport)
 
           # start the application with the viewport
           children = [
