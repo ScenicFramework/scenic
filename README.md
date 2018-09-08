@@ -7,7 +7,7 @@ Scenic is primarily aimed at fixed screen connected devices (IoT), but can also 
 
 ## Getting Started
 
-See the [documentation for the scenic.new](https://github.com/boydm/scenic_new_archives) mix task.
+See the [documentation for the scenic.new](https://github.com/boydm/scenic_new) mix task.
 
 ## Goals
 (Not necessarily in order)
