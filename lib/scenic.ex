@@ -1,8 +1,7 @@
 defmodule Scenic do
   @moduledoc """
-
   Scenic is an application framework written directly on the Elixir/Erlang/OTP stack.
-  With it you can build client-side applications that operate identically across all
+  With it, you can build client-side applications that operate identically across all
   supported operating systems, including MacOS, Ubuntu, Nerves/Linux, and more.
 
   Scenic is primarily aimed at fixed screen connected devices (IoT), but can also be
@@ -10,11 +9,20 @@ defmodule Scenic do
 
   ## Helpful Guides
 
-  [General Overview](overview_general.html) | [**Getting Started**](getting_started.html) | [Nerves](getting_started_nerves.html)
-  [Structure of a Scene](scene_structure.html) | [Lifecycle of a Scene](scene_lifecycle.html) | [Standard Components](Scenic.Components.html)
-  [Graph Overview](overview_graph.html) | [ViewPort Overview](overview_viewport.html) | [Driver Overview](overview_driver)
-  [Primitives](Scenic.Primitives.html) | [Styles](styles_overview.html) | [Transforms](transforms_overview.html)
-  [Contributing](contributing.html) | [Code of Conduct](code_of_conduct.html.html) |
+  * [General Overview](overview_general.html)
+  * [Getting Started](getting_started.html)
+  * [Structure of a Scene](scene_structure.html)
+  * [Lifecycle of a Scene](scene_lifecycle.html)
+  * [Standard Components](Scenic.Components.html)
+  * [Graph Overview](overview_graph.html)
+  * [ViewPort Overview](overview_viewport.html)
+  * [Driver Overview](overview_driver)
+  * [Primitives](Scenic.Primitives.html)
+  * [Styles](styles_overview.html)
+  * [Transforms](transforms_overview.html)
+  * [Nerves](getting_started_nerves.html)
+  * [Contributing](contributing.html)
+  * [Code of Conduct](code_of_conduct.html.html)
 
   If you are new to scenic, then you should read the [General Overview](overview_general.html),
   [Getting Started](getting_started.html), and [Structure of a Scene](scene_structure.html) guides first.
@@ -41,7 +49,7 @@ defmodule Scenic do
             ]
           }
 
-  In the ViewPort configuration you can do things like set a name for the 
+  In the ViewPort configuration you can do things like set a name for the
   ViewPort process, its size, the default scene and start one or more drivers.
 
   See the documentation for [ViewPort Configuration](Scenic.ViewPort.Config.html)
