@@ -68,7 +68,9 @@ mix do deps.get, scenic.run
 ## Configure Scenic
 
 In order to start Scenic, you should first build a configuration for one or more
-ViewPorts. These configuration maps will be passed in to the main Scenic
+ViewPorts.
+
+These configuration maps will be passed in to the main Scenic
 supervisor. These configurations should live in your app's config.exs file.
 
     use Mix.Config
@@ -86,6 +88,30 @@ supervisor. These configurations should live in your app's config.exs file.
         }
       ]
     }
+
+Then use that config for start your supervisor with the `Scenic` supervisor.
+
+```elixir
+defmodule MyApp do
+  # ...
+
+  def start(_type, _args) do
+    import Supervisor.Spec, warn: false
+
+    # 1. Load the viewport configuration from config
+    main_viewport_config = Application.get_env(:my_app, :viewport)
+
+    # 2. Start the application with the viewport
+    children = [
+      # ...
+      supervisor(Scenic, [viewports: [main_viewport_config]]),
+    ]
+
+    Supervisor.start_link(children, strategy: :one_for_one)
+  end
+
+end
+```
 
 In the ViewPort configuration you can do things like set a name for the ViewPort
 process, its size, the default scene and start one or more drivers.
