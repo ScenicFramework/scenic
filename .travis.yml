@@ -1,0 +1,15 @@
+sudo: false
+
+language: elixir
+
+elixir:
+  - 1.6
+  - 1.7
+
+otp_release:
+  - 19.3
+  - 20.3
+  - 21.0
+
+script:
+  - mix test
