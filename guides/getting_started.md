@@ -32,6 +32,14 @@ apt-get update
 apt-get install pkgconf libglfw3 libglfw3-dev libglew2.0 libglew-dev
 ```
 
+### Installing on Fedora
+
+The easiest way to install on Fedora is to use dnf. Just run the following:
+
+```
+dnf install glfw glfw-devel pkgconf glew glew-devel
+```
+
 Once these components have been installed, you should be able to build the `scenic_driver_glfw` driver.
 
 ### Installing on Archlinux
