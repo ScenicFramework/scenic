@@ -41,13 +41,13 @@ mix task.
   simple.
 
 - **Secure:** Scenic is designed with an eye towards security. For now, the main
-  effort is to keep it simple. No browser, javascript and other complexity
+  effort is to keep it simple. No browser, javascript, and other complexity
   presenting vulnerabilities. There will be much more to say about security
   later.
 
 ## Non-Goals
 
-- **Browser:** Scenic is **not** a web browser. It is aimed at fixed screen
+- **Browser:** Scenic is **not** a web browser. It is aimed at a fixed screen
   devices and certain types of windowed apps. It knows nothing about HTML.
 
 - **3D:** Scenic is a 2D UI framework. It uses techniques from game development
