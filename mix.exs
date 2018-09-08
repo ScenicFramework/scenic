@@ -29,7 +29,7 @@ defmodule Scenic.Mixfile do
         contributors: ["Boyd Multerer"],
         maintainers: ["Boyd Multerer"],
         licenses: ["Apache 2"],
-        links: %{github: @github}
+        links: %{Github: @github}
       ],
       dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex, :scenic_math]]
     ]
