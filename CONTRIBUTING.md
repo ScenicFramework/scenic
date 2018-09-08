@@ -8,7 +8,7 @@ Also make sure you read our [Code of Conduct](CODE_OF_CONDUCT.md) that outlines 
 
 There are many components that could be written and shared with the community. Only a few really core ones should be in the Scenic package itself. If you have ideas for components, I would love the see the community supply optional packages of them for developers to use.
 
-Each component package should have the component modles themselves, and a "Components" module that contains helper functions to make adding the new components very simple.
+Each component package should have the component modules themselves, and a "Components" module that contains helper functions to make adding the new components very simple.
 
 See the code for Scenic.Components for example helper functions.
 
