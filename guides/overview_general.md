@@ -57,13 +57,19 @@ be used to build portable applications.
 
 Scenic is built as a three-layer architectural cake.
 
+### Scene Layer
+
 At the top is the **Scene Layer**, which encapsulates all application business
 logic. The developer will do most of their Scenic work in the Scene layer.
+
+### ViewPort Layer
 
 In the middle is the **ViewPort Layer**, which acts as a bridge between the
 Scenes and the Drivers. The ViewPort controls the scene lifecycle (More on that
 in [Scene Overview](overview_scene.html)), sends graphs down to the drivers, and
 routes user input up to the correct scene.
+
+### Driver layer
 
 At the bottom is the **Driver layer**, which is where knowledge of the graphics
 hardware and/or remote configuration lives. Drivers draw everything on the
@@ -89,9 +95,9 @@ to different screens, it is moving between scenes.
 
 ### Graph
 
-A Graph is a sort of like the DOM. It is a hierarchical set of data that describes
-things to draw on the screen. The Graph is immutable in the functional coding
-sense and is manipulated through transform functions.
+A Graph is a sort of like the DOM. It is a hierarchical set of data that
+describes things to draw on the screen. The Graph is immutable in the functional
+coding sense and is manipulated through transform functions.
 
 ### Primitive
 
@@ -141,9 +147,9 @@ the `handle_input/3` callback.
 In response to user input (or timers or any other message), a component can
 generate an event that it sends up to its parent scene. Unlike user input, if
 the parent doesn’t handle it, it is passed up again to that component’s parent
-until it reaches the root scene. Scenes handle events that are bubbling up to the
-chain via the `filter_event/3` callback. This is analogous to event bubbling on
-a web page.
+until it reaches the root scene. Scenes handle events that are bubbling up to
+the chain via the `filter_event/3` callback. This is analogous to event bubbling
+on a web page.
 
 ## What to read next?
 
