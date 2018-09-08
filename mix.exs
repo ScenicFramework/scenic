@@ -24,7 +24,7 @@ defmodule ScenicMath.Mixfile do
         maintainers: ["Boyd Multerer"],
         licenses: ["Apache 2"],
         links: %{github: @github},
-        files: ["Makefile", "c_src", "lib", "mix.exs", "README.md"]
+        files: ["Makefile", "c_src/*.[ch]", "lib", "mix.exs", "README.md"]
       ]
     ]
   end
