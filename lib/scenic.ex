@@ -1,41 +1,5 @@
 defmodule Scenic do
   @moduledoc """
-  ## Configure Scenic
-
-  In order to start Scenic, you should first build a configuration for one or more
-  ViewPorts. These configuration maps will be passed in to the main Scenic
-  supervisor. These configurations should live in your app's config.exs file.
-
-      use Mix.Config
-
-      # Configure the main viewport for the Scenic application
-      config :my_application, :viewport, %{
-            name: :main_viewport,
-            size: {700, 600},
-            default_scene: {MyApplication.Scene.Example, nil},
-            drivers: [
-              %{
-                module: Scenic.Driver.Glfw,
-                name: :glfw,
-                opts: [resizeable: false, title: "Example Application"],
-              }
-            ]
-          }
-
-  In the ViewPort configuration you can do things like set a name for the
-  ViewPort process, its size, the default scene and start one or more drivers.
-
-  See the documentation for [ViewPort Configuration](Scenic.ViewPort.Config.html)
-  to learn more about how to set the options on a viewport.
-
-  Note that all the drivers are in seperate Hex packages as you should choose the
-  correct one for your application. For example, the `Scenic.Driver.Glfw` driver draws
-  your scenes into a window under MacOS and Ubuntu. It should work on other
-  OS's as well, such as other flavors of Unix or Windows, but I haven't worked
-  on or tested those yet.
-
-  ## Supervise Scenic
-
   The Scenic module itself is a supervisor that manages all the machinery that
   makes the [Scenes](overview_scene.html), [ViewPorts](overview_viewport.html),
   and [Drivers](overview_driver.html) run.
