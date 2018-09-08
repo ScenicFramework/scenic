@@ -1,7 +1,7 @@
 # General Overview
 
 Scenic is a client application framework written directly on the
-Elixir/Erlang/OTP stack. With it you can build applications that operate
+Elixir/Erlang/OTP stack. With it, you can build applications that operate
 identically across all supported operating systems, including MacOS, Ubuntu,
 Nerves/Linux, and more.
 
@@ -60,9 +60,9 @@ Scenic is built as a three-layer architectural cake.
 At the top is the **Scene Layer**, which encapsulates all application business
 logic. The developer will do most of their Scenic work in the Scene layer.
 
-In the middle is the **ViewPort Layer**, which acts as bridge between the Scenes
-and the Drivers. The ViewPort controls the scene lifecycle (More on that in
-[Scene Overview](overview_scene.html)), sends graphs down to the drivers, and
+In the middle is the **ViewPort Layer**, which acts as a bridge between the
+Scenes and the Drivers. The ViewPort controls the scene lifecycle (More on that
+in [Scene Overview](overview_scene.html)), sends graphs down to the drivers, and
 routes user input up to the correct scene.
 
 At the bottom is the **Driver layer**, which is where knowledge of the graphics
@@ -83,43 +83,67 @@ The following terms include HTML analogies as appropriate…
 
 ### Scene
 
-Scenes are sort of like a web page. Each scene is a GenServer process that contains state and business logic to handle user input. As the device navigates to different screens, it is moving between scenes.
+Scenes are sort of like a web page. Each scene is a GenServer process that
+contains state and business logic to handle user input. As the device navigates
+to different screens, it is moving between scenes.
 
 ### Graph
 
-A Graph is sort of like the DOM. It is a hierarchical set of data that describes things to draw on the screen. The Graph is immutable in the functional coding sense and is manipulated through transform functions.
+A Graph is a sort of like the DOM. It is a hierarchical set of data that describes
+things to draw on the screen. The Graph is immutable in the functional coding
+sense and is manipulated through transform functions.
 
 ### Primitive
 
-Each node in a Graph is a Primitive. There is relatively small, fixed set of primitives, but they can be combined to draw pretty much any UI you need.
+Each node in a Graph is a Primitive. There is relatively small, fixed set of
+primitives, but they can be combined to draw pretty much any UI you need.
 
 ### Component
 
-A component is a Scene, with added sugar so that it can be referenced/used by other Scenes. This allows you to build libraries of reusable components and isolates logic into sensible containers. Standard controls such as Button, RadioGroup, Slider and more are written as components.
+A component is a Scene, with added sugar so that it can be referenced/used by
+other Scenes. This allows you to build libraries of reusable components and
+isolates logic into sensible containers. Standard controls such as Button,
+RadioGroup, Slider and more are written as components.
 
 ### Style
 
-Styles are sort of analogous to CSS styles. Styles are optional parameters you can add to any primitive in a graph. They are inherited down the graph.
+Styles are sort of analogous to CSS styles. Styles are optional parameters you
+can add to any primitive in a graph. They are inherited down the graph.
 
 ### Transform
 
-All positioning, rotation, scale and such is expressed by applying transform matrices to nodes in a Graph. Transforms are inherited down the graph. You will almost never interact directly with the matrices, as there are very easy helpers that manage them for you.
+All positioning, rotation, scale and such is expressed by applying transform
+matrices to nodes in a Graph. Transforms are inherited down the graph. You will
+almost never interact directly with the matrices, as there are very easy helpers
+that manage them for you.
 
 ### ViewPort
 
-A ViewPort is sort of like a tab in your browser. It manages the scene lifecycle, routes graphs to the drivers, and input back up to the scenes. If you want two windows in your app, you need to start two ViewPorts.
+A ViewPort is a sort of like a tab in your browser. It manages the scene
+lifecycle, routes graphs to the drivers, and input back up to the scenes. If you
+want two windows in your app, you need to start two ViewPorts.
 
 ### Driver
 
-Drivers know nothing about scenes, but are able to render Graphs to a specific device. That could be a graphics chip, or the network… Drivers also collect raw user input and route it back up to the ViewPort.
+Drivers know nothing about scenes but are able to render Graphs to a specific
+device. That could be a graphics chip or the network… Drivers also collect raw
+user input and route it back up to the ViewPort.
 
 ### Input
 
-There is a fixed set of user input data (mouse, keyboard, touch, etc…) that drivers generate and hand up to the ViewPort. The ViewPort in turn sends the input as a message to the appropriate Scene. Scene’s handle raw user input via the `handle_input/3` callback.
+There is a fixed set of user input data (mouse, keyboard, touch, etc…) that
+drivers generate and hand up to the ViewPort. The ViewPort, in turn, sends the
+input as a message to the appropriate Scene. Scene’s handle raw user input via
+the `handle_input/3` callback.
 
 ### Event
 
-In response to user input (or timers or any other message), a component can generate an event that it sends up to its parent scene. Unlike user input, if the parent doesn’t handle it, it is passed up again to that component’s parent until it reaches the root scene. Scenes handle events that are bubbling up the chain via the `filter_event/3` callback. This is analogous to event bubbling on a web page.
+In response to user input (or timers or any other message), a component can
+generate an event that it sends up to its parent scene. Unlike user input, if
+the parent doesn’t handle it, it is passed up again to that component’s parent
+until it reaches the root scene. Scenes handle events that are bubbling up to the
+chain via the `filter_event/3` callback. This is analogous to event bubbling on
+a web page.
 
 ## What to read next?
 
