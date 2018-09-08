@@ -1,7 +1,7 @@
 # Contributing to Scenic
 
 Please take a moment to review this document in order to make the contribution
-process easy and effective for everyone involved! Also make sure you read our
+process easy and effective for everyone involved! Also, make sure you read our
 [Code of Conduct](CODE_OF_CONDUCT.md) that outlines our commitment towards an
 open and welcoming environment.
 
@@ -12,7 +12,7 @@ Only a few really core ones should be in the Scenic package itself. If you have
 ideas for components, I would love the see the community supply optional
 packages of them for developers to use.
 
-Each component package should have the component modles themselves, and a
+Each component package should have the component models themselves, and a
 "Components" module that contains helper functions to make adding the new
 components very simple.
 
@@ -43,7 +43,7 @@ making it easier for developers to [contribute to Scenic](#pull-requests).
 ## Bug reports
 
 A bug is either a _demonstrable problem_ that is caused by the code in the
-repository, or indicate missing, unclear, or misleading documentation. Good bug
+repository or indicate missing, unclear, or misleading documentation. Good bug
 reports are extremely helpful - thank you!
 
 Guidelines for bug reports:
@@ -54,7 +54,7 @@ Guidelines for bug reports:
 2. **Check if the issue has been fixed** &mdash; try to reproduce it using the
    `master` branch in the repository.
 
-3. **Isolate and report the problem** &mdash; ideally create a reduced test
+3. **Isolate and report the problem** &mdash; ideally, create a reduced test
    case.
 
 Please try to be as detailed as possible in your report. Include information
@@ -94,7 +94,7 @@ feature. Please provide as much detail and context as possible.
 Code documentation (`@doc`, `@moduledoc`, `@typedoc`) has a special convention:
 the first paragraph is considered to be a short summary.
 
-For functions, macros and callbacks say what it will do. For example write
+For functions, macros and callbacks say what it will do. For example write,
 something like:
 
 ```elixir
@@ -104,7 +104,7 @@ Marks the given value as HTML safe.
 def safe({:safe, value}), do: {:safe, value}
 ```
 
-For modules, protocols and types say what it is. For example write something
+For modules, protocols and types say what it is. For example, write something
 like:
 
 ```elixir
@@ -116,7 +116,7 @@ defmodule MyModule.HTML do
 ```
 
 Keep in mind that the first paragraph might show up in a summary somewhere, long
-texts in the first paragraph create very ugly summaries. As a rule of thumb
+texts in the first paragraph create very ugly summaries. As a rule of thumb,
 anything longer than 80 characters is too long.
 
 Try to keep unnecessary details out of the first paragraph, it's only there to
@@ -218,14 +218,14 @@ Thank you for your contributions!
 These Guides aim to be inclusive. We use "we" and "our" instead of "you" and
 "your" to foster this sense of inclusion.
 
-Ideally there is something for everybody in each guide, from beginner to expert.
+Ideally, there is something for everybody in each guide, from beginner to expert.
 This is hard, maybe impossible. When we need to compromise, we do so on behalf
 of beginning users because expert users have more tools at their disposal to
 help themselves.
 
 The general pattern we use for presenting information is to first introduce a
 small, discreet topic, then write a small amount of code to demonstrate the
-concept, then verify that the code worked.
+concept, then verifies that the code worked.
 
 In this way, we build from small, easily digestible concepts into more complex
 ones. The shorter this cycle is, as long as the information is still clear and
