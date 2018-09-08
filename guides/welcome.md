@@ -15,6 +15,8 @@ If you are new to Scenic, then you should read the following list in order.
 * [General Overview](overview_general.html)
 * [Getting Started](getting_started.html)
 * [Structure of a Scene](scene_structure.html)
+* [Contributing](contributing.html)
+* [Code of Conduct](code_of_conduct.html)
 
 ### WIP
 
@@ -27,5 +29,3 @@ If you are new to Scenic, then you should read the following list in order.
 * [Styles](styles_overview.html)
 * [Transforms](transforms_overview.html)
 * [Nerves](getting_started_nerves.html)
-* [Contributing](contributing.html)
-* [Code of Conduct](code_of_conduct.html.html)
