@@ -1,0 +1,14 @@
+language: elixir
+sudo: required
+
+elixir:
+  - 1.7.3
+otp_release:
+  - 21.0
+
+script:
+  - make testing
+after_script:
+  - make docs
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
