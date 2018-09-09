@@ -60,7 +60,7 @@ defmodule Scenic.Scene do
   * Structure (graphs),
   * Logic (event handlers and filters)
   * Transitions to other scenes. Well... it can request the [`ViewPort`](overview_viewport.html)
-  goes to a different scene.
+  to go to a different scene.
 
   Your application is a collection of scenes that are in use at various times. There
   is only ever **one** scene showing in a [`ViewPort`](overview_viewport.html) at a given
@@ -90,8 +90,8 @@ defmodule Scenic.Scene do
   graphs can reference graphs in other scenes.
 
   On a typical screen of UI, there is one scene
-  that is the root. Each control, it it's own scene process with
-  it's own state. These child scenes can in turn contain other
+  that is the root. Each control, is its own scene process with
+  its own state. These child scenes can in turn contain other
   child scenes. This allows for strong code reuse, isolates knowledge
   and logic to just the pieces that need it, and keeps the size of any
   given graph to a reasonable size. For example, The graph
@@ -99,7 +99,7 @@ defmodule Scenic.Scene do
   how a slider works, even though they are both used in the same
   parent scene. At best, they only need to know that they
   both conform to the `Component.Input` behaviour, and can thus
-  query or set each other's value. Though it is usually
+  query or set each others value. Though it is usually
   the parent scene that does that.
 
   The application developer is responsible for building and
