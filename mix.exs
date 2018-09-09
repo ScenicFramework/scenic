@@ -1,46 +1,57 @@
 defmodule Scenic.Mixfile do
   use Mix.Project
 
+  @app_name :scenic
   @version "0.7.0"
+  @elixir_version "~> 1.6"
   @github "https://github.com/boydm/scenic"
 
   def project do
     [
-      app: :scenic,
+      app: @app_name,
       version: @version,
-      build_path: "_build",
-      config_path: "config/config.exs",
-      deps_path: "deps",
-      elixir: "~> 1.6",
-      name: "Scenic",
+      elixir: @elixir_version,
+      deps: deps(),
+
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
-      deps: deps(),
-      docs: [
-        extras: doc_guides(),
-        main: "Scenic",
-        groups_for_modules: groups_for_modules()
-        # source_ref: "v#{@version}",
-        # source_url: "https://github.com/boydm/scenic",
-        # homepage_url: "http://kry10.com",
-      ],
-      package: [
-        name: :scenic,
-        contributors: ["Boyd Multerer"],
-        maintainers: ["Boyd Multerer"],
-        licenses: ["Apache 2"],
-        links: %{github: @github}
-      ],
       dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex, :scenic_math]],
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,
         "coveralls.html": :test,
         "coveralls.json": :test
+      ],
+
+      name: "Scenic",
+      description: description(),
+      docs: [
+        extras: doc_guides(),
+        main: "welcome",
+        groups_for_modules: groups_for_modules()
+        # source_ref: "v#{@version}",
+        # source_url: "https://github.com/boydm/scenic",
+        # homepage_url: "http://kry10.com",
+      ],
+      package: [
+        name: @app_name,
+        contributors: ["Boyd Multerer"],
+        maintainers: ["Boyd Multerer"],
+        licenses: ["Apache 2"],
+        links: %{github: @github}
       ]
     ]
   end
 
+  defp description() do
+    """
+    Scenic -- The core Scenic library
+    """
+  end
+
+  # Configuration for the OTP application
+  #
+  # Type "mix help compile.app" for more information
   def application do
     [
       # mod: {Scenic, []},
@@ -63,6 +74,7 @@ defmodule Scenic.Mixfile do
 
   defp doc_guides do
     [
+      "guides/welcome.md",
       "guides/overview_general.md",
       "guides/getting_started.md",
       "guides/getting_started_nerves.md",
