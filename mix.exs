@@ -50,7 +50,7 @@ defmodule Scenic.Mixfile do
 
   defp deps do
     [
-      {:scenic_math, "~> 0.7.0"},
+      {:scenic_math, "~> 0.7"},
 
       # Tools
       {:ex_doc, ">= 0.0.0", only: [:dev]},
