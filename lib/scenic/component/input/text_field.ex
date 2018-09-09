@@ -555,13 +555,11 @@ defmodule Scenic.Component.Input.TextField do
 
   # --------------------------------------------------------
   def handle_input({:key, {"enter", :press, _}}, _context, state) do
-    IO.puts("enter")
     {:noreply, state}
   end
 
   # --------------------------------------------------------
   def handle_input({:key, {"escape", :press, _}}, _context, state) do
-    IO.puts("escape")
     {:noreply, state}
   end
 

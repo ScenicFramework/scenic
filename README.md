@@ -1,9 +1,16 @@
 # Core Scenic Library
 
+[![Build Status](https://travis-ci.org/boydm/scenic.svg?branch=master)](https://travis-ci.org/boydm/scenic)
+[![Codecov](https://codecov.io/gh/boydm/scenic/branch/master/graph/badge.svg)](https://codecov.io/gh/boydm/scenic)
+[![Inline Docs](http://inch-ci.org/github/boydm/scenic.svg)](http://inch-ci.org/github/boydm/scenic)
+
 Scenic is a client application framework written directly on the
-Elixir/Erlang/OTP stack. With it, you can build applications that operate
+Elixir/Erlang/OTP stack. With it you can build applications that operate
 identically across all supported operating systems, including MacOS, Ubuntu,
 Nerves/Linux, and more.
+
+Scenic is primarily aimed at fixed screen connected devices (IoT), but can also
+be used to build portable applications.
 
 Scenic is primarily aimed at fixed screen connected devices (IoT), but can also
 be used to build portable applications.
@@ -65,9 +72,9 @@ We appreciate any contribution to Scenic.
 However, please understand that Scenic is still fairly new and as such, we'll be
 keeping an extra-close eye on changes.
 
-Check the [Code of Conduct](.github/CODE_OF_CONDUCT.md) and
-[Contributing Guides](.github/CONTRIBUTING.md) for more information. We usually
-keep a list of features and bugs in the issue tracker.
+Check the [Code of Conduct](.github/CODE_OF_CONDUCT.md) and [Contributing
+Guides](.github/CONTRIBUTING.md) for more information. We usually keep a list of
+features and bugs in the issue tracker.
 
 The easiest way to contribute is to help fill out the documentation. Please see
 the [Contributing Guides](.github/CONTRIBUTING.md) first.

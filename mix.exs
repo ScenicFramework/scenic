@@ -1,43 +1,63 @@
 defmodule Scenic.Mixfile do
   use Mix.Project
 
+  @app_name :scenic
   @version "0.7.0"
+  @elixir_version "~> 1.6"
   @github "https://github.com/boydm/scenic"
 
   def project do
     [
-      app: :scenic,
+      app: @app_name,
       version: @version,
-      build_path: "_build",
-      config_path: "config/config.exs",
-      deps_path: "deps",
-      elixir: "~> 1.6",
-      name: "Scenic",
+      elixir: @elixir_version,
+      deps: deps(),
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
-      deps: deps(),
+      dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex, :scenic_math]],
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.html": :test,
+        "coveralls.json": :test
+      ],
+      name: "Scenic",
+      description: description(),
       docs: [
         extras: doc_guides(),
-        main: "Scenic",
+        main: "welcome",
         groups_for_modules: groups_for_modules()
         # source_ref: "v#{@version}",
         # source_url: "https://github.com/boydm/scenic",
         # homepage_url: "http://kry10.com",
       ],
-        package: [
-        name: :scenic,
+      package: [
+        name: @app_name,
         contributors: ["Boyd Multerer"],
         maintainers: ["Boyd Multerer"],
         licenses: ["Apache 2"],
         links: %{Github: @github}
       ],
-      dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex, :scenic_math]]
+      dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex, :scenic_math]],
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.html": :test,
+        "coveralls.json": :test
+      ]
     ]
+  end
+
+  defp description() do
+    """
+    Scenic -- The core Scenic library
+    """
   end
 
   # Configuration for the OTP application
   #
   # Type "mix help compile.app" for more information
+
   def application do
     [
       # mod: {Scenic, []},
@@ -45,32 +65,22 @@ defmodule Scenic.Mixfile do
     ]
   end
 
-  # Dependencies can be Hex packages:
-  #
-  #   {:mydep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:mydep, git: "https://github.com/elixir-lang/mydep.git", tag: "0.1.0"}
-  #
-  # To depend on another app inside the umbrella:
-  #
-  #   {:myapp, in_umbrella: true}
-  #
-  # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:scenic_math, "~> #{@version}"},
+      {:scenic_math, "~> 0.7"},
 
-      # Docs dependencies
-      {:ex_doc, ">= 0.0.0", only: [:dev, :docs]},
-      {:inch_ex, ">= 0.0.0", only: :docs},
+      # Tools
+      {:ex_doc, ">= 0.0.0", only: [:dev]},
+      {:credo, ">= 0.0.0", only: [:dev, :test], runtime: false},
+      {:excoveralls, ">= 0.0.0", only: :test, runtime: false},
+      {:inch_ex, ">= 0.0.0", only: :dev, runtime: false},
       {:dialyxir, "~> 0.5", only: :dev, runtime: false}
     ]
   end
 
   defp doc_guides do
     [
+      "guides/welcome.md",
       "guides/overview_general.md",
       "guides/getting_started.md",
       "guides/getting_started_nerves.md",
