@@ -41,6 +41,26 @@ apt-get install pkgconf libglfw3 libglfw3-dev libglew2.0 libglew-dev
 Once these components have been installed, you should be able to build the
 `scenic_driver_glfw` driver.
 
+### Installing on Fedora
+
+The easiest way to install on Fedora is to use dnf. Just run the following:
+
+```
+dnf install glfw glfw-devel pkgconf glew glew-devel
+```
+
+Once these components have been installed, you should be able to build the `scenic_driver_glfw` driver.
+
+### Installing on Archlinux
+
+The easiest way to install on Archlinux is to use pacman. Just run the following:
+
+```bash
+sudo pacman -S glfw-x11 glew
+```
+
+If you're using wayland, you'll probably need `glfw-wayland` instead of `glfw-x11` and `glew-wayland` instead of `glew`
+
 ## Install `scenic.new`
 
 The Scenic Archive is the home of the `scenic.new` mix task, which layout a
