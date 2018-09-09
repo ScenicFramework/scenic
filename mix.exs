@@ -12,7 +12,6 @@ defmodule Scenic.Mixfile do
       version: @version,
       elixir: @elixir_version,
       deps: deps(),
-
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex, :scenic_math]],
@@ -22,7 +21,6 @@ defmodule Scenic.Mixfile do
         "coveralls.html": :test,
         "coveralls.json": :test
       ],
-
       name: "Scenic",
       description: description(),
       docs: [
