@@ -18,7 +18,7 @@ defmodule Scenic.Mixfile do
       deps: deps(),
       docs: [
         extras: doc_guides(),
-        main: "Scenic",
+        main: "welcome",
         groups_for_modules: groups_for_modules()
         # source_ref: "v#{@version}",
         # source_url: "https://github.com/boydm/scenic",
@@ -71,6 +71,7 @@ defmodule Scenic.Mixfile do
 
   defp doc_guides do
     [
+      "guides/welcome.md",
       "guides/overview_general.md",
       "guides/getting_started.md",
       "guides/getting_started_nerves.md",
