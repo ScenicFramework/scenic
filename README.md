@@ -1,5 +1,9 @@
 # Core Scenic Library
 
+[![Build Status](https://travis-ci.org/boydm/scenic.svg?branch=master)](https://travis-ci.org/boydm/scenic)
+[![Codecov](https://codecov.io/gh/boydm/scenic/branch/master/graph/badge.svg)](https://codecov.io/gh/boydm/scenic)
+[![Inline docs](http://inch-ci.org/github/boydm/scenic.svg)](http://inch-ci.org/github/boydm/scenic)
+
 Scenic is a client application framework written directly on the Elixir/Erlang/OTP stack. With it you can build applications that operate identically across all supported operating systems, including MacOS, Ubuntu, Nerves/Linux, and more.
 
 Scenic is primarily aimed at fixed screen connected devices (IoT), but can also be used to build portable applications.

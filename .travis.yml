@@ -1,0 +1,17 @@
+language: elixir
+sudo: required
+
+elixir:
+  - 1.7
+otp_release:
+  - 21.0
+
+before_script:
+  - make pull_deps
+  - make linter
+script:
+  - make unit_test
+after_script:
+  - make docs_report
+after_success:
+  - make push_docs_report
