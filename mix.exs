@@ -1,21 +1,28 @@
 defmodule Scenic.Mixfile do
   use Mix.Project
 
+  @app_name :scenic
   @version "0.7.0"
+  @elixir_version "~> 1.6"
   @github "https://github.com/boydm/scenic"
 
   def project do
     [
-      app: :scenic,
+      app: @app_name,
       version: @version,
-      build_path: "_build",
-      config_path: "config/config.exs",
-      deps_path: "deps",
-      elixir: "~> 1.6",
-      name: "Scenic",
+      elixir: @elixir_version,
+      deps: deps(),
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
-      deps: deps(),
+      dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex, :scenic_math]],
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.html": :test,
+        "coveralls.json": :test
+      ],
+      name: "Scenic",
+      description: description(),
       docs: [
         extras: doc_guides(),
         main: "welcome",
@@ -25,13 +32,12 @@ defmodule Scenic.Mixfile do
         # homepage_url: "http://kry10.com",
       ],
       package: [
-        name: :scenic,
+        name: @app_name,
         contributors: ["Boyd Multerer"],
         maintainers: ["Boyd Multerer"],
         licenses: ["Apache 2"],
         links: %{github: @github}
       ],
-      description: description(),
       dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex, :scenic_math]],
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
@@ -61,7 +67,7 @@ defmodule Scenic.Mixfile do
 
   defp deps do
     [
-      {:scenic_math, "~> 0.7.0"},
+      {:scenic_math, "~> 0.7"},
 
       # Tools
       {:ex_doc, ">= 0.0.0", only: [:dev]},
