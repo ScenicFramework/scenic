@@ -33,7 +33,7 @@ Erlang:
 Scenic:
 
 ```text
-# mix deps
+# mix deps | grep scenic
 
 ```
 
