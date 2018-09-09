@@ -24,7 +24,7 @@ defmodule Scenic.Mixfile do
         # source_url: "https://github.com/boydm/scenic",
         # homepage_url: "http://kry10.com",
       ],
-        package: [
+      package: [
         name: :scenic,
         contributors: ["Boyd Multerer"],
         maintainers: ["Boyd Multerer"],
@@ -32,7 +32,13 @@ defmodule Scenic.Mixfile do
         links: %{github: @github}
       ],
       description: description(),
-      dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex, :scenic_math]]
+      dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex, :scenic_math]],
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.html": :test,
+        "coveralls.json": :test
+      ]
     ]
   end
 
@@ -45,6 +51,7 @@ defmodule Scenic.Mixfile do
   # Configuration for the OTP application
   #
   # Type "mix help compile.app" for more information
+
   def application do
     [
       # mod: {Scenic, []},
@@ -52,26 +59,15 @@ defmodule Scenic.Mixfile do
     ]
   end
 
-  # Dependencies can be Hex packages:
-  #
-  #   {:mydep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:mydep, git: "https://github.com/elixir-lang/mydep.git", tag: "0.1.0"}
-  #
-  # To depend on another app inside the umbrella:
-  #
-  #   {:myapp, in_umbrella: true}
-  #
-  # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:scenic_math, "~> #{@version}"},
+      {:scenic_math, "~> 0.7.0"},
 
-      # Docs dependencies
-      {:ex_doc, ">= 0.0.0", only: [:dev, :docs]},
-      {:inch_ex, ">= 0.0.0", only: :docs},
+      # Tools
+      {:ex_doc, ">= 0.0.0", only: [:dev]},
+      {:credo, ">= 0.0.0", only: [:dev, :test], runtime: false},
+      {:excoveralls, ">= 0.0.0", only: :test, runtime: false},
+      {:inch_ex, ">= 0.0.0", only: :dev, runtime: false},
       {:dialyxir, "~> 0.5", only: :dev, runtime: false}
     ]
   end
