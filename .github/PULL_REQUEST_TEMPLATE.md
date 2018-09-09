@@ -27,3 +27,11 @@ boxes that apply: -->
   not work as expected)
 - [ ] Improvement/refactoring (non-breaking change that doesn't add any feature
   but make things better)
+
+## Checklist
+
+<!--- Go over all the following points, and put an `x` in all the boxes that
+apply. -->
+
+- [ ] Check other PRs and make sure that the changes are not done yet.
+- [ ] The PR title is no longer than 64 characters.
