@@ -7,7 +7,7 @@ Scenic is primarily aimed at fixed screen connected devices (IoT), but can also 
 
 ## Getting Started
 
-See the [documentation for the scenic.new](https://github.com/boydm/scenic_new_archives) mix task.
+See the [documentation for the scenic.new](https://github.com/boydm/scenic_new) mix task.
 
 ## Goals
 (Not necessarily in order)
@@ -33,8 +33,8 @@ goal | description
 **Immediate Mode** | In graphics speak, Scenic is a retained mode system. If you need immediate mode, then Scenic isn’t for you. If you don’t know what retained and immediate modes are, then you are probably just fine. For reference: HTML is a retained mode model.
 
 ## Contributing
-We appreciate any contribution to Scenic. However, please understand that Scenic is still fairly new and as such we'll be keeping an extra-close eye on changes. Check the CODE_OF_CONDUCT.md and CONTRIBUTING.md guides for more information. We usually keep a list of features and bugs in the issue tracker.
+We appreciate any contribution to Scenic. However, please understand that Scenic is still fairly new and as such we'll be keeping an extra-close eye on changes. Check the [Code of Conduct](CODE_OF_CONDUCT.md) and [Contributing](CONTRIBUTING.md) guides for more information. We usually keep a list of features and bugs in the issue tracker.
 
-The easiest way to contriubute is to help fill out the documentation. Please see the CONTRIBUTING.md guide first.
+The easiest way to contriubute is to help fill out the documentation. Please see the [Contributing](CONTRIBUTING.md) guide first.
 
 
