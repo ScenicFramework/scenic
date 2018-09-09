@@ -14,6 +14,13 @@ You may remove sections if they aren't relevant, but please supply as much
 information as possible. Incomplete issues will be closed.
 -->
 
+### Checklist
+
+<!--- Go over all the following points, and put an `x` in all the boxes that
+apply. -->
+
+- [ ] Check other issues and make sure that it is not reported yet.
+
 ### Versions and Environment
 
 Elixir:
@@ -33,7 +40,7 @@ Erlang:
 Scenic:
 
 ```text
-# mix deps
+# mix deps | grep scenic
 
 ```
 

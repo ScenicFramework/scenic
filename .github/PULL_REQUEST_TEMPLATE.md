@@ -16,24 +16,6 @@ message -->
 <!--- Why is this change required? What problem does it solve? -->
 <!--- If it fixes an open issue, please link to the issue here. -->
 
-## How Has This Been Tested?
-
-<!--- Please describe how you tested your changes. -->
-<!--- Have you created new tests or updated existing ones? -->
-<!--- e.g. unit | visually | e2e | none -->
-
-## Markup
-
-<!--- Paste markup for testing your change --->
-
-<details>
-
-```elixir
-
-```
-
-</details>
-
 ## Types of changes
 
 <!--- What types of changes does your code introduce? Put an `x` in all the
@@ -50,14 +32,6 @@ boxes that apply: -->
 
 <!--- Go over all the following points, and put an `x` in all the boxes that
 apply. -->
-<!--- If you're unsure about any of these, don't hesitate to ask. We're here to
-help! -->
 
+- [ ] Check other PRs and make sure that the changes are not done yet.
 - [ ] The PR title is no longer than 64 characters.
-- [ ] The PR is submitted to the correct branch (`master` for bug fixes, `dev`
-  for new features and breaking changes).
-- [ ] My code follows the code style of this project.
-- [ ] My change requires a change to the documentation.
-- [ ] I have created a PR in the
-  [documentation](https://github.com/vuetifyjs/vuetifyjs.com) with the necessary
-  changes.
