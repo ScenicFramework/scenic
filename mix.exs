@@ -37,6 +37,13 @@ defmodule Scenic.Mixfile do
         maintainers: ["Boyd Multerer"],
         licenses: ["Apache 2"],
         links: %{github: @github}
+      ],
+      dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex, :scenic_math]],
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.html": :test,
+        "coveralls.json": :test
       ]
     ]
   end
@@ -50,6 +57,7 @@ defmodule Scenic.Mixfile do
   # Configuration for the OTP application
   #
   # Type "mix help compile.app" for more information
+
   def application do
     [
       # mod: {Scenic, []},
