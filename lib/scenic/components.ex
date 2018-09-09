@@ -42,7 +42,7 @@ defmodule Scenic.Components do
 
   You can also supervise components yourself, but then you should add
   the scene reference yourself via the `scene_ref/3` function, which is in the
-  [`Scenice.Primitives`](Scenic.Primitives.html) module.
+  [`Scenic.Primitives`](Scenic.Primitives.html) module.
 
   When adding components to a graph, each helper function accepts a
   graph as the first parameter and returns the transformed graph. This
@@ -152,7 +152,7 @@ defmodule Scenic.Components do
 
   ## Theme
 
-  Buttons work well with the follwing predefined themes:
+  Buttons work well with the following predefined themes:
   `:primary`, `:secondary`, `:success`, `:danger`, `:warning`, `:info`, `:text`, `:light`, `:dark`
 
   To pass in a custom theme, supply a map with at least the following entries:
@@ -216,7 +216,7 @@ defmodule Scenic.Components do
 
   ## Theme
 
-  Checkboxes work well with the follwing predefined themes:
+  Checkboxes work well with the following predefined themes:
   `:light`, `:dark`
 
   To pass in a custom theme, supply a map with at least the following entries:
@@ -296,7 +296,7 @@ defmodule Scenic.Components do
 
   ## Theme
 
-  Dropdowns work well with the follwing predefined themes:
+  Dropdowns work well with the following predefined themes:
   `:light`, `:dark`
 
   To pass in a custom theme, supply a map with at least the following entries:
@@ -375,7 +375,7 @@ defmodule Scenic.Components do
 
   ## Theme
 
-  Dropdowns work well with the follwing predefined themes:
+  Radio buttons work well with the following predefined themes:
   `:light`, `:dark`
 
   To pass in a custom theme, supply a map with at least the following entries:
@@ -446,7 +446,7 @@ defmodule Scenic.Components do
 
   ## Theme
 
-  Sliders work well with the follwing predefined themes:
+  Sliders work well with the following predefined themes:
   `:light`, `:dark`
 
   To pass in a custom theme, supply a map with at least the following entries:
@@ -526,7 +526,7 @@ defmodule Scenic.Components do
 
   ## Theme
 
-  Dropdowns work well with the follwing predefined themes:
+  Text fields work well with the following predefined themes:
   `:light`, `:dark`
 
   To pass in a custom theme, supply a map with at least the following entries:
