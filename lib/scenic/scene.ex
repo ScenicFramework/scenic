@@ -250,7 +250,7 @@ defmodule Scenic.Scene do
   send a filterable event to a scene.
 
   This is very similar in feel to casting a message to a GenServer. However,
-  This message will be handled by the Scene's `filter_event\3` function. If the 
+  This message will be handled by the Scene's `filter_event\3` function. If the
   Scene returns `{:continue, msg, state}` from `filter_event\3`, then the event
   will also be sent to the scene's parent. This will continue until the message
   reaches the root scene or some other permananently supervised scene.
@@ -302,17 +302,14 @@ defmodule Scenic.Scene do
   end
 
   def cast_to_refs(sub_id, msg) do
-    scene_ref =
-      case Process.get(:scene_ref) do
-        nil ->
-          "cast_to_refs requires a full graph_key or must be called within a scene"
-          |> raise()
+    case Process.get(:scene_ref) do
+      nil ->
+        "cast_to_refs requires a full graph_key or must be called within a scene"
+        |> raise()
 
-        scene_ref ->
-          scene_ref
-      end
-
-    cast_to_refs({:graph, scene_ref, sub_id}, msg)
+      scene_ref ->
+        cast_to_refs({:graph, scene_ref, sub_id}, msg)
+    end
   end
 
   # ============================================================================
