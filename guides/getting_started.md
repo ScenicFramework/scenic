@@ -34,8 +34,8 @@ Once these components have been installed, you should be able to build the
 The easiest way to install on Ubuntu is to use apt-get. Just run the following:
 
 ```bash
-apt-get update
-apt-get install pkgconf libglfw3 libglfw3-dev libglew2.0 libglew-dev
+sudo apt-get update
+sudo apt-get install pkgconf libglfw3 libglfw3-dev libglew-dev
 ```
 
 Once these components have been installed, you should be able to build the
