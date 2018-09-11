@@ -130,7 +130,7 @@ defmodule Scenic.Scene do
   1) You have a complex tree (perhaps a lot of text) that you want
   to animate. Rather than re-rendering the text (relatively expensive)
   every time you simply transform a rotation matrix, you could place
-  the text into it's own static sub-graph and then refer to it
+  the text into its own static sub-graph and then refer to it
   from the primary. This will save energy as you animate.
 
   2) Both the Remote and Recording clients make heavy use of sub-ids
@@ -168,7 +168,7 @@ defmodule Scenic.Scene do
 
   Events are messages that one scene generates for consumption
   by other scenes. For example, a `Component.Button` scene would
-  generate a `{:click, msg}` event that is sent to it's parent
+  generate a `{:click, msg}` event that is sent to its parent
   scene.
 
   You can generate any message you want, however, the standard
@@ -193,7 +193,7 @@ defmodule Scenic.Scene do
   this is how a text input field receives the key input. First,
   the user selects that field by clicking on it. In response
   to the cursor input, the text field captures text input (and
-  maybe transforms it's graph to show that it is selected).
+  maybe transforms its graph to show that it is selected).
 
   Captured input types are should be released when no longer
   needed so that normal operation can resume.
@@ -208,13 +208,13 @@ defmodule Scenic.Scene do
   up the tree of scenes that make up the current aggregate graph.
 
   In this way, a `Component.Button` scene can generate a`{:click, msg}`
-  event that is sent to it's parent. If the parent doesn't
+  event that is sent to its parent. If the parent doesn't
   handle it, it is sent to that scene's parent. And so on util the
   event reaches the root scene. If the root scene doesn't handle
   it either then the event is dropped.
 
   To handle events, you add `filter_event/3` functions to your scene.
-  This function handle the event, and stop it's progress backwards
+  This function handle the event, and stop its progress backwards
   up the graph. It can handle it and allow it to continue up the
   graph. Or it can transform the event and pass the transformed
   version up the graph.
@@ -232,7 +232,7 @@ defmodule Scenic.Scene do
   back to it), and your scene's state.
 
   A pattern I'm using is to handle and event at the filter and stop
-  it's progression. It also generates and sends new event to its
+  its progression. It also generates and sends new event to its
   parent. I do this instead of transforming and continuing when
   I want to change the originating scene.
 
@@ -260,7 +260,7 @@ defmodule Scenic.Scene do
 
   This private version of send_event will take care of the housekeeping of
   tracking the parent's pid. It will, in turn, call this function on the main
-  Scene module to send the event on it's way.
+  Scene module to send the event on its way.
 
       def handle_input( {:cursor_button, {:left, :release, _, _}}, _, %{msg: msg} = state ) do
         send_event( {:click, msg} )
@@ -654,7 +654,7 @@ defmodule Scenic.Scene do
       ) do
     graph_key = {:graph, scene_ref, sub_id}
 
-    # reduce the incoming graph to it's minimal form
+    # reduce the incoming graph to its minimal form
     # while simultaneously extracting the SceneRefs
     {graph, all_keys} =
       Enum.reduce(graph.primitives, {%{}, %{}}, fn
@@ -721,7 +721,7 @@ defmodule Scenic.Scene do
           viewport: viewport
         } = state
       ) do
-    # reduce the incoming graph to it's minimal form
+    # reduce the incoming graph to its minimal form
     # while simultaneously extracting the SceneRefs
     # this should be the only full scan when pushing a graph
     {graph, all_keys, new_raw_refs} =

@@ -513,7 +513,7 @@ defmodule Scenic.Primitives do
 
   ### Styles
 
-  Roumnded rectangles honor the following styles
+  Rounded rectangles honor the following styles
 
   * `:hidden` - If true the primitive is rendered. If false, it is skipped. The default
     is to render the primitive if hidden is not set.
@@ -667,7 +667,7 @@ defmodule Scenic.Primitives do
   * `:font` - Specifies font family to draw the text with. The built-in system
     fonts are `:roboto`, `:roboto_mono`, and `:roboto_slab`. If not specified, the 
     default is `:roboto`. You can also load your own font into the Scenic.Cache,
-    then specify it's key for the font.
+    then specify its key for the font.
   * `:font_blur` - Draw the text with a blur effect. If you draw text with blur,
     then draw it again without blur, slightly offset, you get a nice dropshadow
     effect. The default is to draw with no blur.
@@ -749,11 +749,11 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
-  Update the options of a primitie without changing it's data.
+  Update the options of a primitive without changing its data.
 
   This is not used during graph creation. Only when modifying it later.
 
-  All the primitie-specific helpers require you to specify the
+  All the primitive-specific helpers require you to specify the
   data for the primitive. If you only want to modify a transform
   or add a style, then use update_opts.
 
