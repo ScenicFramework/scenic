@@ -3,12 +3,39 @@
 #
 
 defmodule Scenic.Math.Matrix.Utils do
-  @default_major :row
+  @moduledoc """
+  Helper functions for working with matrices.
 
+  The matrix format for the main Scenic.Math.Matrix functions is a 64 byte binary
+  blob containing 16 4-byte floats. This is great for doing the math in code,
+  but not so great for reading or understanding the values by a human.
+
+  These functions transform more readable/writable formats into the binary blob
+  and vice versa.
+  """
+
+  alias Scenic.Math
+
+  @default_major :row
   @matrix_size 4 * 16
 
   # --------------------------------------------------------
   # binary format is column-major
+
+  @doc """
+  Convert a readable format into a binary blob.
+
+  Parameters:
+  * friendly_matrix - either a matrix tuple, or a list of floats
+  * major axis - :row or :column. Ignored for lists of floats. Defaults to #{inspect(@default_major)}.
+
+  Returns:
+  A binary matrix blob
+  """
+  @spec to_binary(quad :: Math.quad) :: classification
+
+
+
   def to_binary(matrix, major \\ @default_major)
 
   def to_binary(err, _) when is_atom(err), do: err

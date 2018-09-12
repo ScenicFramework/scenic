@@ -4,14 +4,19 @@
 
 defmodule Scenic.Math do
   @moduledoc """
-  Documentation for Scenic.Math
+  Scenic.Math is a collection of math helpers intended to support the Scenic libraries.
 
-  Lots to do here
+  The math functions are fairly straightforward. When performance is needed
+  some have been broken out into a NIF.
+
+  The NIF functions are currently written for compatibility over top speed and as such,
+  there is an opportunity to further improve them by calling out to CPU-specific vector
+  instructions in the future
   """
 
   @type vector_2 :: {x :: number, y :: number}
-  @type vector_3 :: {x :: number, y :: number, z :: number}
-  @type vector_4 :: {x :: number, y :: number, z :: number, w :: number}
+  # @type vector_3 :: {x :: number, y :: number, z :: number}
+  # @type vector_4 :: {x :: number, y :: number, z :: number, w :: number}
 
   @type point :: {x :: number, y :: number}
 
@@ -20,4 +25,19 @@ defmodule Scenic.Math do
   @type quad :: {p0 :: point, p1 :: point, p2 :: point, p3 :: point}
 
   @type matrix :: <<_::64>>
+
+  @type matrix_tuple :: {
+          {number, number, number, number},
+          {number, number, number, number},
+          {number, number, number, number},
+          {number, number, number, number}
+        }
+
+  @type matrix_list :: [
+          number, number, number, number,
+          number, number, number, number,
+          number, number, number, number,
+          number, number, number, number
+        ]
+
 end

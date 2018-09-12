@@ -3,6 +3,16 @@
 #
 
 defmodule Scenic.Math.Vector2 do
+  @moduledoc """
+  A collection of functions to work with 2D vectors.
+
+  2D vectors are always two numbers in a tuple.
+
+        {3, 4}
+        {3.5, 4.7}
+  """
+
+
   alias Scenic.Math.Vector2
   alias Scenic.Math.Matrix
 
@@ -11,55 +21,198 @@ defmodule Scenic.Math.Vector2 do
   # a vector2 is a tuple with two dimentions. {x, y}
 
   # common constants
+  @doc "A vector that points to the origin."
   def zero(), do: {0.0, 0.0}
+  @doc "A vector that points to {1,1}."
   def one(), do: {1.0, 1.0}
+  @doc "A vector that points to {1,0}."
   def unity_x(), do: {1.0, 0.0}
+  @doc "A vector that points to {0,1}."
   def unity_y(), do: {0.0, 1.0}
 
+  @doc "A vector that points straight up by 1."
   def up(), do: {0.0, 1.0}
+  @doc "A vector that points straight down by 1."
   def down(), do: {0.0, -1.0}
+  @doc "A vector that points left by 1."
   def left(), do: {-1.0, 0.0}
+  @doc "A vector that points right by 1."
   def right(), do: {1.0, 0.0}
 
   # --------------------------------------------------------
   # build from values
-  def build(x, y) when is_float(x) and is_float(y), do: {x, y}
+  # def build(x, y) when is_float(x) and is_float(y), do: {x, y}
+
+  # --------------------------------------------------------
+  @doc """
+  Truncate the values of a vector into ints.
+
+  Parameters:
+  * vector_2: the vector to be truncated
+
+  Returns:
+  The integer vector
+  """
+  @spec trunc(vector_2 :: Math.vector_2) :: Math.vector_2
+  def trunc( vector_2 )
+  def trunc({x, y}) do
+    {Kernel.trunc(x), Kernel.trunc(y)}
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Round the values of a vector into ints.
+
+  Parameters:
+  * vector_2: the vector to be rounded
+
+  Returns:
+  The integer vector
+  """
+  @spec round(vector_2 :: Math.vector_2) :: Math.vector_2
+  def round( vector_2 )
+  def round({x, y}) do
+    {Kernel.round(x), Kernel.round(y)}
+  end
+
+
+  # --------------------------------------------------------
+  @doc """
+  Invert a vector.
+
+  Parameters:
+  * vector_2: the vector to be inverted
+
+  Returns:
+  The inverted vector
+  """
+  @spec invert(vector_2 :: Math.vector_2) :: Math.vector_2
+  def invert( vector_2 )
+  def invert({x, y}), do: {-x, -y}
 
   # --------------------------------------------------------
   # add and subtract
-  def add(a, b)
+  @doc """
+  Add two vectors together.
+
+  Parameters:
+  * vector2_a: the first vector to be added
+  * vector2_b: the second vector to be added
+
+  Returns:
+  A new vector which is the result of the addition
+  """
+  @spec add(vector2_a :: Math.vector_2, vector2_b :: Math.vector_2) :: Math.vector_2
+  def add( vector2_a, vector2_b )
   def add({ax, ay}, {bx, by}), do: {ax + bx, ay + by}
 
-  def sub(a, b)
+  @doc """
+  Subtract one vector from another.
+
+  Parameters:
+  * vector2_a: the first vector
+  * vector2_b: the second vector, which will be subtracted from the first
+
+  Returns:
+  A new vector which is the result of the subtraction
+  """
+  @spec sub(vector2_a :: Math.vector_2, vector2_b :: Math.vector_2) :: Math.vector_2
+  def sub( vector2_a, vector2_b )
   def sub({ax, ay}, {bx, by}), do: {ax - bx, ay - by}
 
   # --------------------------------------------------------
-  # multiply by scalar
-  def mul(a, s)
+  @doc """
+  Multiply a vector by a scalar.
+
+  Parameters:
+  * vector2: the vector
+  * scalar: the scalar value
+
+  Returns:
+  A new vector which is the result of the multiplication
+  """
+  @spec mul(vector2 :: Math.vector_2, scalar :: number) :: Math.vector_2
+  def mul( vector2_a, vector2_b )
   def mul({ax, ay}, s) when is_number(s), do: {ax * s, ay * s}
 
   # --------------------------------------------------------
-  # divide by scalar
-  def div(a, s)
+  @doc """
+  Divide a vector by a scalar.
+
+  Parameters:
+  * vector2: the vector
+  * scalar: the scalar value
+
+  Returns:
+  A new vector which is the result of the division
+  """
+  @spec div(vector2 :: Math.vector_2, scalar :: number) :: Math.vector_2
+  def div( vector2_a, vector2_b )
   def div({ax, ay}, s) when is_number(s), do: {ax / s, ay / s}
 
   # --------------------------------------------------------
-  # dot product
-  def dot(a, b)
+  @doc """
+  Calculates the dot product of two vectors.
+
+  Parameters:
+  * vector2_a: the first vector
+  * vector2_b: the second vector
+
+  Returns:
+  A number which is the result of the dot product
+  """
+  @spec dot(vector2_a :: Math.vector_2, vector2_b :: Math.vector_2) :: number
+  def dot( vector2_a, vector2_b )
   def dot({ax, ay}, {bx, by}), do: ax * bx + ay * by
 
   # --------------------------------------------------------
   # cross product https://www.gamedev.net/topic/289972-cross-product-of-2d-vectors/
-  def cross(a, b)
+  @doc """
+  Calculates the cross product of two vectors.
+
+  Parameters:
+  * vector2_a: the first vector
+  * vector2_b: the second vector
+
+  Returns:
+  A number which is the result of the cross product
+  """
+  @spec cross(vector2_a :: Math.vector_2, vector2_b :: Math.vector_2) :: number
+  def cross( vector2_a, vector2_b )
   def cross({ax, ay}, {bx, by}), do: ax * by - ay * bx
 
   # --------------------------------------------------------
   # length
-  def length_squared(a)
+  @doc """
+  Calculates the squared length of the vector.
+
+  This is faster than calulating the length if all you want to do is
+  compare the lengths of two vectors against each other.
+
+  Parameters:
+  * vector2: the vector
+
+  Returns:
+  A number which is the square of the length
+  """
+  @spec length_squared(vector2 :: Math.vector_2) :: number
+  def length_squared(vector2)
   def length_squared({ax, ay}), do: ax * ax + ay * ay
 
-  def length(a)
-  def length({ax, ay}), do: :math.sqrt(ax * ax + ay * ay)
+  @doc """
+  Calculates the length of the vector.
+
+  This is slower than calulating the squared length.
+
+  Parameters:
+  * vector2: the vector
+
+  Returns:
+  A number which is the length
+  """
+  @spec length(vector2 :: Math.vector_2) :: number
+  def length(vector2)
+  def length(vector2), do: length_squared(vector2) |> :math.sqrt()
 
   # --------------------------------------------------------
   # distance
@@ -68,13 +221,23 @@ defmodule Scenic.Math.Vector2 do
   def distance_squared({ax, ay}, {bx, by}),
     do: (bx - ax) * (bx - ax) + (by - ay) * (by - ay)
 
-  def distance(a, b)
+  def distance(vector2_a, vector2_b)
   def distance({ax, ay}, {bx, by}), do: :math.sqrt(distance_squared({ax, ay}, {bx, by}))
 
   # --------------------------------------------------------
   # normalize
-  def normalize(a)
 
+  @doc """
+  Normalize a vector so it has the same angle, but a length of 1.
+
+  Parameters:
+  * vector2: the vector
+
+  Returns:
+  A vector with the same angle as the original, but a length of 1
+  """
+  @spec normalize(vector2 :: Math.vector_2) :: Math.vector_2
+  def normalize(vector2)
   def normalize({ax, ay}) do
     case Vector2.length({ax, ay}) do
       0.0 ->
@@ -87,8 +250,18 @@ defmodule Scenic.Math.Vector2 do
 
   # --------------------------------------------------------
   # min / max
-  def min(a, b)
+  @doc """
+  Find a new vector derived from the lowest x and y from two given vectors.
 
+  Parameters:
+  * vector2_a: the first vector
+  * vector2_b: the second vector
+
+  Returns:
+  A vector derived from the lowest x and y from two given vectors
+  """
+  @spec min(vector2_a :: Math.vector_2, vector2_b :: Math.vector_2) :: Math.vector_2
+  def min(vector2_a, vector2_b)
   def min({ax, ay}, {bx, by}) do
     x =
       cond do
@@ -105,8 +278,18 @@ defmodule Scenic.Math.Vector2 do
     {x, y}
   end
 
-  def max(a, b)
+  @doc """
+  Find a new vector derived from the highest x and y from two given vectors.
 
+  Parameters:
+  * vector2_a: the first vector
+  * vector2_b: the second vector
+
+  Returns:
+  A vector derived from the highest x and y from two given vectors
+  """
+  @spec max(vector2_a :: Math.vector_2, vector2_b :: Math.vector_2) :: Math.vector_2
+  def max(vector2_a, vector2_b)
   def max({ax, ay}, {bx, by}) do
     x =
       cond do
@@ -124,9 +307,19 @@ defmodule Scenic.Math.Vector2 do
   end
 
   # --------------------------------------------------------
-  # clamp a vector between two other vectors
-  def clamp(vector, min, max)
+  @doc """
+  Clamp a vector to the space between two other vectors.
 
+  Parameters:
+  * vector2: the vector to be clamped
+  * min: the vector defining the minimum boundary
+  * max: the vector defining the maximum boundary
+
+  Returns:
+  A vector derived from the the space between two other vectors
+  """
+  @spec clamp(vector :: Math.vector_2, min :: Math.vector_2, max :: Math.vector_2) :: Math.vector_2
+  def clamp(vector, min, max)
   def clamp({vx, vy}, {minx, miny}, {maxx, maxy}) do
     x =
       cond do
@@ -146,20 +339,61 @@ defmodule Scenic.Math.Vector2 do
   end
 
   # --------------------------------------------------------
-  def in_bounds(vector, bounds)
+  @doc """
+  Determine if a vector is in the bounds (or clamp space) between
+  two other vectors.
 
-  def in_bounds({vx, vy}, {boundsx, boundsy}),
+  Parameters:
+  * vector2: The vector to be tested
+  * bounds: A vector defining the boundary
+
+  Returns:
+  true or false
+  """
+  @spec in_bounds?(vector :: Math.vector_2, bounds :: Math.vector_2) :: Math.vector_2
+  def in_bounds?(vector, bounds)
+  def in_bounds?({vx, vy}, {boundsx, boundsy}),
     do: {vx, vy} == clamp({vx, vy}, {-boundsx, -boundsy}, {boundsx, boundsy})
 
   # --------------------------------------------------------
-  def in_bounds(vector, min_bounds, max_bounds)
+  @doc """
+  Determine if a vector is in the bounds (or clamp space) between
+  two other vectors.
 
-  def in_bounds({vx, vy}, {minx, miny}, {maxx, maxy}),
+  Parameters:
+  * vector2: The vector to be tested
+  * min: The vector defining the minimum boundary
+  * max: The vector defining the maximum boundary
+
+  Returns:
+  A vector derived from the the space between two other vectors
+  """
+  @spec in_bounds?(vector :: Math.vector_2, min :: Math.vector_2, max :: Math.vector_2) :: Math.vector_2
+  def in_bounds?(vector, min, max)
+  def in_bounds?({vx, vy}, {minx, miny}, {maxx, maxy}),
     do: {vx, vy} == clamp({vx, vy}, {minx, miny}, {maxx, maxy})
 
   # --------------------------------------------------------
-  # lerp( a, b, t )
+  @doc """
+  Calculate the lerp of two vectors.
+
+  [See This explanation for more info.](https://keithmaggio.wordpress.com/2011/02/15/math-magician-lerp-slerp-and-nlerp/)
+
+  Parameters:
+  * vector_a: The first vector
+  * vector_b: The second vector
+  * t: the "t" value (see link above). Must be between 0 and 1.
+
+  Returns:
+  A vector, which is the result of the lerp.
+  """
   # https://keithmaggio.wordpress.com/2011/02/15/math-magician-lerp-slerp-and-nlerp/
+  @spec lerp(
+    vector_a :: Math.vector_2,
+    vector_b :: Math.vector_2,
+    t :: number
+  ) :: Math.vector_2
+  def lerp(vector_a, vector_a, t)
   def lerp(a, b, t) when is_float(t) and t >= 0.0 and t <= 1.0 do
     sub(b, a)
     |> mul(t)
@@ -167,8 +401,25 @@ defmodule Scenic.Math.Vector2 do
   end
 
   # --------------------------------------------------------
-  # nlerp( a, b, t )
-  # https://keithmaggio.wordpress.com/2011/02/15/math-magician-lerp-slerp-and-nlerp/
+  @doc """
+  Calculate the nlerp (normalized lerp) of two vectors.
+
+  [See This explanation for more info.](https://keithmaggio.wordpress.com/2011/02/15/math-magician-lerp-slerp-and-nlerp/)
+
+  Parameters:
+  * vector_a: The first vector
+  * vector_b: The second vector
+  * t: the "t" value (see link above). Must be between 0 and 1.
+
+  Returns:
+  A vector, which is the result of the nlerp.
+  """
+  @spec nlerp(
+    vector_a :: Math.vector_2,
+    vector_b :: Math.vector_2,
+    t :: number
+  ) :: Math.vector_2
+  def nlerp(vector_a, vector_a, t)
   def nlerp(a, b, t) when is_float(t) and t >= 0.0 and t <= 1.0 do
     sub(b, a)
     |> mul(t)
@@ -177,11 +428,24 @@ defmodule Scenic.Math.Vector2 do
   end
 
   # --------------------------------------------------------
+  @doc """
+  Project a vector into the space defined by a matrix
+
+  Parameters:
+  * vector: The vector, or a list of vecgtors
+  * matrix: The matrix
+
+  Returns:
+  A projected vector (or list of vectors)
+  """
+  @spec project(
+    vector :: Math.vector_2 | list(Math.vector_2),
+    matrix :: Math.matrix
+  ) :: Math.vector_2 | list(Math.vector_2)
+  def project(vector_a, matrix)
   def project({x, y}, matrix) do
     Matrix.project_vector(matrix, {x, y})
   end
-
-  # --------------------------------------------------------
   def project(vectors, matrix) do
     Matrix.project_vector2s(matrix, vectors)
   end

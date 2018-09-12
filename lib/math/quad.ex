@@ -6,7 +6,24 @@
 defmodule Scenic.Math.Quad do
   alias Scenic.Math
 
+  @type classification ::
+          :concave
+          | :convex
+          | :complex
+
   # --------------------------------------------------------
+  @doc """
+  Find the classification of a given quad.
+
+  Parameters:
+  * quad - the quad to be classified
+
+  Returns:
+  On of :concave, :convex, or :complex
+  """
+  @spec classification(quad :: Math.quad) :: classification
+  def classification(quad)
+
   def classification({p0, p1, p2, p3}) do
     v0 = Math.Vector2.sub(p0, p1)
     v1 = Math.Vector2.sub(p1, p2)
