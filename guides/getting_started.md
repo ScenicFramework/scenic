@@ -29,13 +29,25 @@ brew install glfw3 glew pkg-config
 Once these components have been installed, you should be able to build the
 `scenic_driver_glfw` driver.
 
-### Installing on Ubuntu
+### Installing on Ubuntu 16
 
 The easiest way to install on Ubuntu is to use apt-get. Just run the following:
 
 ```bash
-apt-get update
-apt-get install pkgconf libglfw3 libglfw3-dev libglew2.0 libglew-dev
+sudo apt-get update
+sudo apt-get install pkgconf libglfw3 libglfw3-dev libglew1.13 libglew-dev
+```
+
+Once these components have been installed, you should be able to build the
+`scenic_driver_glfw` driver.
+
+### Installing on Ubuntu 18
+
+The easiest way to install on Ubuntu is to use apt-get. Just run the following:
+
+```bash
+sudo apt-get update
+sudo apt-get install pkgconf libglfw3 libglfw3-dev libglew2.0 libglew-dev
 ```
 
 Once these components have been installed, you should be able to build the
