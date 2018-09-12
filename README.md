@@ -12,9 +12,6 @@ Nerves/Linux, and more.
 Scenic is primarily aimed at fixed screen connected devices (IoT), but can also
 be used to build portable applications.
 
-Scenic is primarily aimed at fixed screen connected devices (IoT), but can also
-be used to build portable applications.
-
 ## Getting Started
 
 See the [documentation for the scenic.new](https://github.com/boydm/scenic_new)
