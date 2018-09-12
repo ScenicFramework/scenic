@@ -53,7 +53,7 @@ defmodule Scenic.Component.Input.Caret do
         {{0, @inset_v}, {0, height - @inset_v}},
         stroke: {@width, color},
         hidden: true,
-        id: :carat
+        id: :caret
       )
       |> push_graph()
 
@@ -72,7 +72,7 @@ defmodule Scenic.Component.Input.Caret do
     # turn on the carat
     graph =
       graph
-      |> Graph.modify(:carat, &update_opts(&1, hidden: false))
+      |> Graph.modify(:caret, &update_opts(&1, hidden: false))
       |> push_graph()
 
     # start the timer
@@ -86,7 +86,7 @@ defmodule Scenic.Component.Input.Caret do
     # hide the carat
     graph =
       graph
-      |> Graph.modify(:carat, &update_opts(&1, hidden: true))
+      |> Graph.modify(:caret, &update_opts(&1, hidden: true))
       |> push_graph()
 
     # stop the timer
@@ -106,7 +106,7 @@ defmodule Scenic.Component.Input.Caret do
     # show the carat
     graph =
       graph
-      |> Graph.modify(:carat, &update_opts(&1, hidden: false))
+      |> Graph.modify(:caret, &update_opts(&1, hidden: false))
       |> push_graph()
 
     # stop the timer
@@ -129,7 +129,7 @@ defmodule Scenic.Component.Input.Caret do
 
     graph =
       graph
-      |> Graph.modify(:carat, &update_opts(&1, hidden: hidden))
+      |> Graph.modify(:caret, &update_opts(&1, hidden: hidden))
       |> push_graph()
 
     {:noreply, %{state | graph: graph, hidden: hidden}}

@@ -18,7 +18,7 @@ defmodule Scenic.Component.Input.CaretTest do
         {{0, 4}, {0, 22 - 2}},
         stroke: {2, :red},
         hidden: true,
-        id: :carat
+        id: :caret
       )
 
   @graph_showing Graph.build()
@@ -26,7 +26,7 @@ defmodule Scenic.Component.Input.CaretTest do
         {{0, 4}, {0, 22 - 2}},
         stroke: {2, :red},
         hidden: false,
-        id: :carat
+        id: :caret
       )
 
   @state %{
