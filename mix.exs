@@ -91,8 +91,8 @@ defmodule Scenic.Mixfile do
       "guides/overview_driver.md",
       "guides/styles_overview.md",
       "guides/transforms_overview.md",
-      "CODE_OF_CONDUCT.md",
-      "CONTRIBUTING.md"
+      ".github/CODE_OF_CONDUCT.md",
+      ".github/CONTRIBUTING.md"
     ]
   end
 
