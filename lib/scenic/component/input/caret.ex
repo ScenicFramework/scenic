@@ -59,7 +59,7 @@ defmodule Scenic.Component.Input.Caret do
 
     state = %{
       graph: graph,
-      hidden: false,
+      hidden: true,
       timer: nil,
       focused: false
     }
