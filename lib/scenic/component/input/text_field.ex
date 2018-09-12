@@ -9,7 +9,7 @@ defmodule Scenic.Component.Input.TextField do
   alias Scenic.Graph
   alias Scenic.Scene
   alias Scenic.ViewPort
-  alias Scenic.Component.Input.Carat
+  alias Scenic.Component.Input.Caret
   alias Scenic.Primitive.Style.Theme
 
   import Scenic.Primitives,
@@ -131,7 +131,7 @@ defmodule Scenic.Component.Input.TextField do
             t: {0, @default_font_size},
             id: :text
           )
-          |> Carat.add_to_graph({height, theme.text}, id: :carat)
+          |> Caret.add_to_graph({height, theme.text}, id: :carat)
         end,
         t: {@inset_x, 0}
       )

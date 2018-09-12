@@ -3,7 +3,7 @@
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Component.Input.Carat do
+defmodule Scenic.Component.Input.Caret do
   use Scenic.Component, has_children: false
   alias Scenic.Graph
   alias Scenic.Primitive.Style.Paint.Color
@@ -27,7 +27,7 @@ defmodule Scenic.Component.Input.Carat do
   # --------------------------------------------------------
   def info(data) do
     """
-    #{IO.ANSI.red()}Carat data must be: {height, color}
+    #{IO.ANSI.red()}Caret data must be: {height, color}
     #{IO.ANSI.yellow()}Received: #{inspect(data)}
     #{IO.ANSI.default_color()}
     """
