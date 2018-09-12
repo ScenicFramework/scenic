@@ -233,7 +233,7 @@ defmodule Scenic.Components do
   The following example creates a checkbox and positions it on the screen.
 
       graph
-      |> checkbox( {"Example", :checkbox_id, true}, translate: {20, 20} )
+      |> checkbox( {"Example", true}, id: :checkbox_id, translate: {20, 20} )
 
   """
   def checkbox(graph, data, options \\ [])
@@ -316,7 +316,7 @@ defmodule Scenic.Components do
         {"Dashboard", :dashboard},
         {"Controls", :controls},
         {"Primitives", :primitives},
-      ], :controls, :dropdown_id }, translate: {20, 20} )
+      ], :controls}, id: :dropdown_id, translate: {20, 20} )
 
   """
   def dropdown(graph, data, options \\ [])
@@ -391,12 +391,11 @@ defmodule Scenic.Components do
   The following example creates a radio group and positions it on the screen.
 
       graph
-      |> radio_group({[
+      |> radio_group([
           {"Radio A", :radio_a},
           {"Radio B", :radio_b, true},
           {"Radio C", :radio_c},
-        ], :radio_group_id },
-        translate: {20, 20} )
+        ], id: :radio_group_id, translate: {20, 20} )
 
   """
   def radio_group(graph, data, options \\ [])
@@ -469,7 +468,7 @@ defmodule Scenic.Components do
           :cornflower_blue,
           :green,
           :chartreuse
-        ], :cornflower_blue, :slider_id}, translate: {20,20} )
+        ], :cornflower_blue}, id: :slider_id, translate: {20,20} )
 
   """
   def slider(graph, data, options \\ [])
@@ -539,12 +538,11 @@ defmodule Scenic.Components do
   ### Examples
 
       graph
-      |> text_field( {"Sample Text", :text_id}, translate: {20,20} )
+      |> text_field( "Sample Text", id: :text_id, translate: {20,20} )
 
       graph
       |> text_field(
-        {"", :pass_id, [type: :password, hint: "Enter password"]},
-        translate: {20,20}
+        "", id: :pass_id, type: :password, hint: "Enter password", translate: {20,20}
       )
   """
   def text_field(graph, data, options \\ [])
