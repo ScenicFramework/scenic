@@ -196,7 +196,7 @@ defmodule Scenic.ViewPortTest do
   # ============================================================================
   # handle_cast( {:set_scene, scene, scene_param}
 
-  test ":set_scene sets a scene by pid and tells it to set it's graph" do
+  test ":set_scene sets a scene by pid and tells it to set its graph" do
     {:ok, dynamic_supervisor} =
       DynamicSupervisor.start_link(strategy: :one_for_one, name: @dynamic_scenes)
 
@@ -300,7 +300,7 @@ defmodule Scenic.ViewPortTest do
     assert state.filter_list == []
   end
 
-  test ":set_graph tells a scene_ref to set it's graph" do
+  test ":set_graph tells a scene_ref to set its graph" do
     min_graph = %{
       0 => %{data: {Scenic.Primitive.Group, [1]}},
       1 => %{data: {Scenic.Primitive.SceneRef, {self(), :test_graph}}}
@@ -324,7 +324,7 @@ defmodule Scenic.ViewPortTest do
     assert_receive({:"$gen_cast", {:set_graph, :test_graph_1}})
   end
 
-  test ":set_graph tells a scene_ref to set it's graph - only once even if referenced twice" do
+  test ":set_graph tells a scene_ref to set its graph - only once even if referenced twice" do
     min_graph = %{
       0 => %{data: {Scenic.Primitive.Group, [1, 2]}},
       1 => %{data: {Scenic.Primitive.SceneRef, {self(), :test_graph}}},

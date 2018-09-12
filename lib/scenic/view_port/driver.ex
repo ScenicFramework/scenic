@@ -38,7 +38,7 @@ defmodule Scenic.ViewPort.Driver do
   end
 
   # --------------------------------------------------------
-  # cast stop to driver as the viewport is stored in it's state
+  # cast stop to driver as the viewport is stored in its state
   def stop(driver_pid) when is_pid(driver_pid) do
     GenServer.cast(driver_pid, :stop)
   end

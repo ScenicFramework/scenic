@@ -109,7 +109,7 @@ defmodule Scenic.ViewPort.Input do
   end
 
   # --------------------------------------------------------
-  # Input handling is enough of a beast to put move it into it's own section below
+  # Input handling is enough of a beast to put move it into its own section below
   # bottom of this file.
   def handle_cast(
         {:input, {input_type, _} = input_event},
@@ -138,7 +138,7 @@ defmodule Scenic.ViewPort.Input do
   end
 
   # --------------------------------------------------------
-  # Input handling is enough of a beast to put move it into it's own section below
+  # Input handling is enough of a beast to put move it into its own section below
   # bottom of this file.
   def handle_cast({:continue_input, input}, state) do
     do_handle_input(input, state)

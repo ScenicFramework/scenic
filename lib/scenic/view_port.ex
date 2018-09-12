@@ -18,7 +18,7 @@ defmodule Scenic.ViewPort do
 
   The job of the `ViewPort` is to coordinate the flow of information between
   the scenes and the drivers. Scene's and Drivers should not know anything
-  about each other. An app should work identically from it's point of view
+  about each other. An app should work identically from its point of view
   no matter if there is one, multiple, or no drivers currently running.
 
   Drivers are all about rendering output and collecting input from a single

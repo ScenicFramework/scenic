@@ -533,7 +533,7 @@ defmodule Scenic.Graph do
 
     # map those elements via reduction
     Enum.reduce(uids, graph, fn uid, acc ->
-      # retreive and map this node
+      # retrieve and map this node
       get_by_uid!(acc, uid)
       |> action.()
       |> (&put_by_uid(acc, uid, &1)).()
@@ -552,10 +552,10 @@ defmodule Scenic.Graph do
   defp do_map(_, _, _, 0), do: raise(Error, message: @err_msg_depth)
 
   defp do_map(graph, uid, action, depth_remaining) do
-    # retreive this node
+    # retrieve this node
     primitive = get_by_uid!(graph, uid)
 
-    # retreive and map this node
+    # retrieve and map this node
     graph =
       primitive
       |> action.()
@@ -564,7 +564,7 @@ defmodule Scenic.Graph do
     # if this is a group, map its children
     case primitive.module do
       Group ->
-        # map it's children by reducing the graph
+        # map its children by reducing the graph
         Enum.reduce(Primitive.get(primitive), graph, fn uid, acc ->
           do_map(acc, uid, action, depth_remaining - 1)
         end)
@@ -609,7 +609,7 @@ defmodule Scenic.Graph do
   defp do_reduce(_, _, _, _, 0), do: raise(Error, message: @err_msg_depth)
 
   defp do_reduce(graph, uid, acc, action, depth_remaining) when depth_remaining > 0 do
-    # retreive this node
+    # retrieve this node
     primitive = get_by_uid!(graph, uid)
 
     # if this is a group, reduce its children

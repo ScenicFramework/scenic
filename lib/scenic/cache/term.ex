@@ -15,8 +15,8 @@ defmodule Scenic.Cache.Term do
   def load(path, hash, opts \\ [])
 
   # insecure loading. Loads file blindly even it is altered
-  # don't recommend doing this in production. Better to embedd the expected
-  # hashes. Is also slower becase it has to load the file and compute the hash
+  # don't recommend doing this in production. Better to embed the expected
+  # hashes. Is also slower because it has to load the file and compute the hash
   # to use as a key even it is is already loaded into the cache.
   def load(path, :insecure, opts) do
     with {:ok, data} <- Cache.File.read(path, :insecure, opts) do
@@ -58,8 +58,8 @@ defmodule Scenic.Cache.Term do
   def read(path, hash, opts \\ [])
 
   # insecure read
-  # don't recommend doing this in production. Better to embedd the expected
-  # hashes. Is also slower becase it has to load the file and compute the hash
+  # don't recommend doing this in production. Better to embed the expected
+  # hashes. Is also slower because it has to load the file and compute the hash
   # to use as a key even it is is already loaded into the cache.
   def read(path, :insecure, opts) do
     with {:ok, data} <- File.read(path) do

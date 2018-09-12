@@ -171,7 +171,7 @@ Scenic application. It has four scenes, two components, and a simulated sensor.
 Scene      | Description
 ---------- | -----------
 Splash     | The Splash scene is configured to run when the app is started in the `config/config.exs` file. It runs a simple animation, then transitions to the Sensor scene. It also shows how intercept basic user input to exit the scene early.
-Sensor     | The Sensor scene depicts a simulated temperature sensor. The sensor is always running and updates it's data through the `Scenic.SensorPubSub` server.
+Sensor     | The Sensor scene depicts a simulated temperature sensor. The sensor is always running and updates its data through the `Scenic.SensorPubSub` server.
 Primitives | The Primitives scenes displays an overview of the basic primitive types and some of the styles that can be applied to them.
 Components | The Components scene shows the basic components that come with Scenic. The crash button will cause a match error that will crash the scene, showing how the supervison tree restarts the scene. It also shows how to receive events from components.
 
