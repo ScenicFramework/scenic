@@ -6,28 +6,31 @@
 defmodule Scenic.Primitive.Style.FontBlur do
   use Scenic.Primitive.Style
 
-# import IEx
+  # import IEx
 
-  #============================================================================
+  # ============================================================================
   # data verification and serialization
 
-  #--------------------------------------------------------
-  def info() do
-    "Style :font_size must be a number\r\n"
-  end
+  # --------------------------------------------------------
+  def info(data),
+    do: """
+      #{IO.ANSI.red()}#{__MODULE__} data must be a positive number
+      #{IO.ANSI.yellow()}Received: #{inspect(data)}
+      #{IO.ANSI.default_color()}
+    """
 
-  #--------------------------------------------------------
-  def verify( blur ) do
+  # --------------------------------------------------------
+  def verify(blur) do
     try do
-      normalize( blur )
+      normalize(blur)
       true
     rescue
       _ -> false
     end
   end
 
-  #--------------------------------------------------------
-  def normalize( blur ) when is_number(blur) and blur >= 0 do
+  # --------------------------------------------------------
+  def normalize(blur) when is_number(blur) and blur >= 0 do
     blur
   end
 end

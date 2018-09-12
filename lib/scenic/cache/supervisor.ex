@@ -15,26 +15,27 @@ defmodule Scenic.Cache.Supervisor do
   use Supervisor
   alias Scenic.Cache
 
-#  import IEx
+  #  import IEx
 
-#  @name       :scenic_cache_supervisor
+  #  @name       :scenic_cache_supervisor
 
-  @cache_registry      :scenic_cache_registry
+  @cache_registry :scenic_cache_registry
 
-  #============================================================================
+  # ============================================================================
   # setup the viewport supervisor
 
   def start_link() do
-#    Supervisor.start_link(__MODULE__, :ok, name: @name)
+    #    Supervisor.start_link(__MODULE__, :ok, name: @name)
     Supervisor.start_link(__MODULE__, :ok)
   end
 
-  def init( :ok ) do
+  def init(:ok) do
     [
       {Cache, []},
-      Supervisor.child_spec({Registry, keys: :duplicate, name: @cache_registry}, id: @cache_registry)
+      Supervisor.child_spec({Registry, keys: :duplicate, name: @cache_registry},
+        id: @cache_registry
+      )
     ]
-    |> Supervisor.init( strategy: :one_for_one )
+    |> Supervisor.init(strategy: :one_for_one)
   end
-
 end

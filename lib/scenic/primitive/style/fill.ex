@@ -7,30 +7,32 @@ defmodule Scenic.Primitive.Style.Fill do
   use Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Paint
 
-  #============================================================================
+  # ============================================================================
   # data verification and serialization
 
-  #--------------------------------------------------------
-  def info() do
-    "Style :fill must be a color/image.\r\n"
-  end
+  # --------------------------------------------------------
+  def info(data),
+    do: """
+      #{IO.ANSI.red()}#{__MODULE__} data must be a valid paint type
+      #{IO.ANSI.yellow()}Received: #{inspect(data)}
+      #{IO.ANSI.default_color()}
+    """
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # named color
 
-  def verify( paint ) do
+  def verify(paint) do
     try do
-      normalize( paint )
+      normalize(paint)
       true
     rescue
       _ -> false
-    end    
+    end
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
 
-  def normalize( paint ) do
+  def normalize(paint) do
     Paint.normalize(paint)
   end
-
 end

@@ -7,33 +7,30 @@ defmodule Scenic.Primitive.Style.ClearColor do
   use Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Paint.Color
 
-
-  #============================================================================
+  # ============================================================================
   # data verification and serialization
 
-  #--------------------------------------------------------
-  def info() do
-    "Style :clear_color only honored on the root node of a graph.\n" <>
-    "It must be qualified single color. Please see documentation for color.\n" <>
-    "Any single color can be specified\ by name, such as :red, :green, or :cornflower_blue.\n" <>
-    "All standard html colors should work.\n" <>
-    "Specify the RGB channels in a tuple, like this: {1, 2, 3}. Channels range from 0 to 255.\n" <>
-    "You can add an alpha channel like this: {:orange, 128} or {1, 2, 3, 4}.\n"
-  end
+  # --------------------------------------------------------
+  def info(data),
+    do: """
+      #{IO.ANSI.red()}#{__MODULE__} data must be a valid color
+      #{IO.ANSI.yellow()}Received: #{inspect(data)}
+      Note: the :clear_color style is only honored on the root node of the root graph. 
+      #{IO.ANSI.default_color()}
+    """
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # named color
 
-  def verify( color ) do
+  def verify(color) do
     try do
-      normalize( color )
+      normalize(color)
       true
     rescue
       _ -> false
-    end    
+    end
   end
 
-  #--------------------------------------------------------
-  def normalize( color ),  do: Color.to_rgba( color )
-
+  # --------------------------------------------------------
+  def normalize(color), do: Color.to_rgba(color)
 end

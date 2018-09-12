@@ -10,33 +10,27 @@ defmodule Scenic.Primitive.Style.HiddenTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Hidden
 
-
-  #============================================================================
+  # ============================================================================
   # verify - various forms
 
   test "verfy works for a single color" do
-    assert Hidden.verify( true )
-    assert Hidden.verify( false )
+    assert Hidden.verify(true)
+    assert Hidden.verify(false)
   end
 
   test "verify rejects anything else" do
-    refute Hidden.verify( "true" )
-    refute Hidden.verify( 1 )
-    refute Hidden.verify( 0 )
+    refute Hidden.verify("true")
+    refute Hidden.verify(1)
+    refute Hidden.verify(0)
   end
 
   test "verify! works" do
-    assert Hidden.verify!( true )
+    assert Hidden.verify!(true)
   end
 
   test "verify! raises an error" do
     assert_raise Style.FormatError, fn ->
-      Hidden.verify!( "banana" )
+      Hidden.verify!("banana")
     end
   end
-
-
-
 end
-
-

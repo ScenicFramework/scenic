@@ -6,10 +6,4 @@
 defmodule Scenic.ViewPortTest do
   use ExUnit.Case, async: false
   doctest Scenic
-  
-
-
-
-
-
 end

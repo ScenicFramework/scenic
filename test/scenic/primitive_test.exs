@@ -11,35 +11,32 @@ defmodule Scenic.PrimitiveTest do
   alias Scenic.Primitive.Group
   # alias Scenic.Math.Matrix
 
-#  import IEx
+  #  import IEx
 
   defmodule TestStyle do
     def get(_), do: :test_style_getter
   end
 
-
   # @identity     Matrix.identity()
 
+  @tx_pin {10, 11}
+  @tx_rotate 0.1
+  @transforms %{pin: @tx_pin, rotate: @tx_rotate}
 
-  @tx_pin             {10,11}
-  @tx_rotate          0.1
-  @transforms         %{pin: @tx_pin, rotate: @tx_rotate}
-
-  @styles             %{fill: :yellow, stroke: {10, :green}}
+  @styles %{fill: :yellow, stroke: {10, :green}}
 
   # @parent_uid         123
-  @type_module        Group
-  @data               [1,2,3,4,5]
-
+  @type_module Group
+  @data [1, 2, 3, 4, 5]
 
   @primitive %Primitive{
-    module:       @type_module,
+    module: @type_module,
     # uid:          nil,
     # parent_uid:   @parent_uid,
-    data:         @data,
-    id:           :test_id,
-    transforms:   @transforms,
-    styles:       @styles,
+    data: @data,
+    id: :test_id,
+    transforms: @transforms,
+    styles: @styles
   }
 
   # @primitive_2 %Primitive{
@@ -50,23 +47,26 @@ defmodule Scenic.PrimitiveTest do
   #   styles:       @styles,
   # }
 
-  @minimal_primitive   %{
-    data:       {Group, @data},
-    styles:     %{
+  @minimal_primitive %{
+    data: {Group, @data},
+    styles: %{
       fill: {:color, {255, 255, 0, 255}},
       stroke: {10, {:color, {0, 128, 0, 255}}}
-      },
+    },
     transforms: %{pin: {10, 11}, rotate: 0.1},
     id: :test_id
   }
 
-  #============================================================================
+  # ============================================================================
   # build( data, module, opts \\ [] )
 
   test "basic primitive build works" do
     assert Primitive.build(Group, @data) == %{
-      __struct__: Primitive, module: Group, data: @data
-    }
+             __struct__: Primitive,
+             module: Group,
+             data: @data,
+             parent_uid: -1
+           }
   end
 
   # test "build sets the optional tag list" do
@@ -77,18 +77,23 @@ defmodule Scenic.PrimitiveTest do
   # end
 
   test "build adds transform options" do
-    assert Primitive.build(Group, @data, pin: {10,11}, rotate: 0.1) == %{
-      __struct__: Primitive, module: Group, data: @data,
-      transforms: @transforms
-    }
+    assert Primitive.build(Group, @data, pin: {10, 11}, rotate: 0.1) == %{
+             __struct__: Primitive,
+             module: Group,
+             data: @data,
+             transforms: @transforms,
+             parent_uid: -1
+           }
   end
-
 
   test "build adds the style opts" do
     assert Primitive.build(Group, @data, fill: :yellow, stroke: {10, :green}) == %{
-      __struct__: Primitive, module: Group, data: @data,
-      styles: @styles
-    }
+             __struct__: Primitive,
+             module: Group,
+             data: @data,
+             styles: @styles,
+             parent_uid: -1
+           }
   end
 
   # test "build sets the optional state" do
@@ -100,16 +105,22 @@ defmodule Scenic.PrimitiveTest do
 
   test "build sets the optional id" do
     assert Primitive.build(Group, @data, id: :test_id) == %{
-      __struct__: Primitive, module: Group, data: @data,
-      id: :test_id
-    }
+             __struct__: Primitive,
+             module: Group,
+             data: @data,
+             id: :test_id,
+             parent_uid: -1
+           }
   end
 
   test "build sets a non-atom id" do
     assert Primitive.build(Group, @data, id: {:test_id, 123}) == %{
-      __struct__: Primitive, module: Group, data: @data,
-      id: {:test_id, 123}
-    }
+             __struct__: Primitive,
+             module: Group,
+             data: @data,
+             id: {:test_id, 123},
+             parent_uid: -1
+           }
   end
 
   test "build raises on bad tx" do
@@ -124,14 +135,14 @@ defmodule Scenic.PrimitiveTest do
     end
   end
 
-  #============================================================================
+  # ============================================================================
   # structure
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # put
 
   test "put updates a primitives data field" do
-    assert Primitive.put(@primitive, [1,2,5,6]).data == [1,2,5,6]
+    assert Primitive.put(@primitive, [1, 2, 5, 6]).data == [1, 2, 5, 6]
   end
 
   test "put rejects invalid data for a primitive" do
@@ -141,48 +152,47 @@ defmodule Scenic.PrimitiveTest do
   end
 
   test "put updates the options on a primitive" do
-    assert Primitive.put(@primitive, [1,2,5,6], fill: :blue).styles == %{
-      fill: :blue,
-      stroke: {10, :green}
-    }
+    assert Primitive.put(@primitive, [1, 2, 5, 6], fill: :blue).styles == %{
+             fill: :blue,
+             stroke: {10, :green}
+           }
   end
 
   test "put rejects invalid style" do
     assert_raise Primitive.Style.FormatError, fn ->
-      Primitive.put(@primitive, [1,2,5,6], [fill: :invalid])
+      Primitive.put(@primitive, [1, 2, 5, 6], fill: :invalid)
     end
   end
 
   test "put rejects invalid transform" do
     assert_raise Primitive.Transform.FormatError, fn ->
-      Primitive.put(@primitive, [1,2,5,6], [rotate: :invalid])
+      Primitive.put(@primitive, [1, 2, 5, 6], rotate: :invalid)
     end
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # put
 
   test "put_opts updates only the options on a primitive" do
     assert Primitive.put_opts(@primitive, fill: :blue).styles == %{
-      fill: :blue,
-      stroke: {10, :green}
-    }
+             fill: :blue,
+             stroke: {10, :green}
+           }
   end
 
   test "put_opts rejects invalid style" do
     assert_raise Primitive.Style.FormatError, fn ->
-      Primitive.put_opts(@primitive, [fill: :invalid])
+      Primitive.put_opts(@primitive, fill: :invalid)
     end
   end
 
   test "put_opts rejects invalid transform" do
     assert_raise Primitive.Transform.FormatError, fn ->
-      Primitive.put_opts(@primitive, [rotate: :invalid])
+      Primitive.put_opts(@primitive, rotate: :invalid)
     end
   end
 
-
-  #============================================================================
+  # ============================================================================
   # transform field
 
   test "get_transforms returns the transforms" do
@@ -194,22 +204,23 @@ defmodule Scenic.PrimitiveTest do
   end
 
   test "put_transform sets the transform" do
-    p = Primitive.put_transform(@primitive, :pin, {987,654})
-    assert Primitive.get_transform(p, :pin) == {987,654}
+    p = Primitive.put_transform(@primitive, :pin, {987, 654})
+    assert Primitive.get_transform(p, :pin) == {987, 654}
   end
 
   test "put_transform puts a list of transforms" do
-    p = Primitive.put_transform(@primitive, [pin: {1,2}, scale: 1.2] )
+    p = Primitive.put_transform(@primitive, pin: {1, 2}, scale: 1.2)
+
     assert Primitive.get_transforms(p) == %{
-      pin:    {1,2},
-      scale:  1.2,
-      rotate: @tx_rotate
-    }
+             pin: {1, 2},
+             scale: 1.2,
+             rotate: @tx_rotate
+           }
   end
 
   test "put_transform deletes the transform type if setting to nil" do
     p = Primitive.put_transform(@primitive, :pin, nil)
-    assert Primitive.get_transforms(p) == %{ rotate: @tx_rotate }
+    assert Primitive.get_transforms(p) == %{rotate: @tx_rotate}
   end
 
   test "put_transforms sets the transform to nil" do
@@ -217,11 +228,15 @@ defmodule Scenic.PrimitiveTest do
     assert Map.get(p, :transforms) == nil
   end
 
+  test "delete_transform removes a transform" do
+    assert Primitive.delete_transform(@primitive, :pin)
+           |> Primitive.get_transforms() == %{rotate: 0.1}
+  end
 
-  #============================================================================
+  # ============================================================================
   # style field
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # styles
 
   test "get_styles returns the transform list" do
@@ -241,37 +256,39 @@ defmodule Scenic.PrimitiveTest do
   end
 
   test "put_style adds to the style map" do
-    p = Primitive.put_style(@primitive, :font, :roboto )
+    p = Primitive.put_style(@primitive, :font, :roboto)
+
     assert Primitive.get_styles(p) == %{
-      font: :roboto,
-      fill: :yellow,
-      stroke: {10, :green}
-    }
+             font: :roboto,
+             fill: :yellow,
+             stroke: {10, :green}
+           }
   end
 
   test "put_style replaces a style in the style map" do
-    p = @primitive
-      |> Primitive.put_style( :fill, :khaki )
-      |> Primitive.put_style( :fill, :cornsilk )
+    p =
+      @primitive
+      |> Primitive.put_style(:fill, :khaki)
+      |> Primitive.put_style(:fill, :cornsilk)
+
     assert Primitive.get_styles(p) == %{fill: :cornsilk, stroke: {10, :green}}
   end
 
   test "put_style a list of styles" do
     new_styles = %{fill: :magenta, stroke: {4, :green}}
-    p = Primitive.put_style(@primitive, [fill: :magenta, stroke: {4, :green}] )
+    p = Primitive.put_style(@primitive, fill: :magenta, stroke: {4, :green})
     assert Primitive.get_styles(p) == new_styles
   end
 
-  test "drop_style removes a style in the style list" do
-    assert Primitive.drop_style(@primitive, :fill )
-    |> Primitive.get_styles() == %{stroke: {10, :green}}
+  test "delete_style removes a style in the style list" do
+    assert Primitive.delete_style(@primitive, :fill)
+           |> Primitive.get_styles() == %{stroke: {10, :green}}
   end
 
-
-  #============================================================================
+  # ============================================================================
   # data field
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # compiled primitive-specific data
 
   test "get_data returns the primitive-specific compiled data" do
@@ -279,23 +296,21 @@ defmodule Scenic.PrimitiveTest do
   end
 
   test "put_data replaces the primitive-specific compiled data" do
-    new_data = [1,2,3,4,5,6,7,8,9,10]
-    p = Primitive.put(@primitive, new_data )
+    new_data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    p = Primitive.put(@primitive, new_data)
     assert Primitive.get(p) == new_data
   end
 
-
-  #============================================================================
+  # ============================================================================
   # data for the viewport
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # minimal
   test "minimal returns the minimal version of the prmitive" do
     assert Primitive.minimal(@primitive) == @minimal_primitive
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # NOTE: KEEP THIS AROUND for now
 
   # delta_script
@@ -333,22 +348,4 @@ defmodule Scenic.PrimitiveTest do
   #   pd = Primitive.put_transform(@primitive, :translate, nil)
   #   assert Primitive.delta_script(p, pd) == [del: {:transforms, :translate}]
   # end
-
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -10,30 +10,26 @@ defmodule Scenic.Primitive.Style.FontBlurTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.FontBlur
 
-
-  #============================================================================
+  # ============================================================================
   # verify - various forms
 
   test "verfy works" do
-    assert FontBlur.verify( 10 )
-    assert FontBlur.verify( 0 )
-    assert FontBlur.verify( 255 )
+    assert FontBlur.verify(10)
+    assert FontBlur.verify(0)
+    assert FontBlur.verify(255)
   end
 
   test "verify rejects out of bounds values" do
-    refute FontBlur.verify( -1 )
+    refute FontBlur.verify(-1)
   end
 
   test "verify! works" do
-    assert FontBlur.verify!( 10 )
+    assert FontBlur.verify!(10)
   end
 
   test "verify! raises an error" do
     assert_raise Style.FormatError, fn ->
-      FontBlur.verify!( "banana" )
+      FontBlur.verify!("banana")
     end
   end
-
 end
-
-

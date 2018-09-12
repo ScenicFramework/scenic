@@ -112,8 +112,7 @@ defmodule Scenic.Primitives do
   The SceneRef follows the same style/transform inheritance as the Group.
   """
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Add an arc to a graph
 
@@ -156,18 +155,17 @@ defmodule Scenic.Primitives do
       |> arc( {100, 0, 0.4}, stroke: {4, :blue} )
 
   """
-  def arc( graph_or_primitive, data, opts \\ [] )
+  def arc(graph_or_primitive, data, opts \\ [])
 
-  def arc( %Graph{} = g, data, opts ) do
-    add_to_graph( g, Primitive.Arc, data, opts )
+  def arc(%Graph{} = g, data, opts) do
+    add_to_graph(g, Primitive.Arc, data, opts)
   end
 
-  def arc( %Primitive{module: Primitive.Arc} = p, data, opts ) do
-    modify( p, data, opts )
+  def arc(%Primitive{module: Primitive.Arc} = p, data, opts) do
+    modify(p, data, opts)
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Add a Circle to a graph
 
@@ -203,18 +201,17 @@ defmodule Scenic.Primitives do
   into an ellipse.
 
   """
-  def circle( graph_or_primitive, data, opts \\ [] )
+  def circle(graph_or_primitive, data, opts \\ [])
 
-  def circle( %Graph{} = g, data, opts ) do
-    add_to_graph( g, Primitive.Circle, data, opts )
+  def circle(%Graph{} = g, data, opts) do
+    add_to_graph(g, Primitive.Circle, data, opts)
   end
 
-  def circle( %Primitive{module: Primitive.Circle} = p, data, opts ) do
-    modify( p, data, opts )
+  def circle(%Primitive{module: Primitive.Circle} = p, data, opts) do
+    modify(p, data, opts)
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Add an Ellipse to a graph
 
@@ -250,17 +247,17 @@ defmodule Scenic.Primitives do
 
   """
 
-  def ellipse( graph_or_primitive, data, opts \\ [] )
+  def ellipse(graph_or_primitive, data, opts \\ [])
 
-  def ellipse( %Graph{} = g, data, opts ) do
-    add_to_graph( g, Primitive.Ellipse, data, opts )
+  def ellipse(%Graph{} = g, data, opts) do
+    add_to_graph(g, Primitive.Ellipse, data, opts)
   end
 
-  def ellipse( %Primitive{module: Primitive.Ellipse} = p, data, opts ) do
-    modify( p, data, opts )
+  def ellipse(%Primitive{module: Primitive.Ellipse} = p, data, opts) do
+    modify(p, data, opts)
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Create a new branch in a Graph
 
@@ -294,14 +291,12 @@ defmodule Scenic.Primitives do
   are applied to all items in that branch, including crossing scene_refs.
   """
 
-  def group( graph_or_primitive, builder, opts \\ [] )
 
   def group( %Graph{} = graph, builder, opts ) when is_function(builder, 1) do
     Primitive.Group.add_to_graph(graph, builder, opts)
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Add a line to a graph
 
@@ -334,17 +329,17 @@ defmodule Scenic.Primitives do
       |> line( {{0,0}, {100,200}}, stroke: {4, :blue}, cap: :round )
 
   """
-  def line( graph_or_primitive, data, opts \\ [] )
+  def line(graph_or_primitive, data, opts \\ [])
 
-  def line( %Graph{} = g, data, opts ) do
-    add_to_graph( g, Primitive.Line, data, opts )
+  def line(%Graph{} = g, data, opts) do
+    add_to_graph(g, Primitive.Line, data, opts)
   end
 
-  def line( %Primitive{module: Primitive.Line} = p, data, opts ) do
-    modify( p, data, opts )
+  def line(%Primitive{module: Primitive.Line} = p, data, opts) do
+    modify(p, data, opts)
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Add custom, complex shape to a graph
 
@@ -368,19 +363,17 @@ defmodule Scenic.Primitives do
       )
 
   """
-  def path( graph_or_primitive, data, opts \\ [] )
+  def path(graph_or_primitive, data, opts \\ [])
 
-  def path( %Graph{} = g, data, opts ) do
-    add_to_graph( g, Primitive.Path, data, opts )
+  def path(%Graph{} = g, data, opts) do
+    add_to_graph(g, Primitive.Path, data, opts)
   end
 
-  def path( %Primitive{module: Primitive.Path} = p, data, opts ) do
-    modify( p, data, opts )
+  def path(%Primitive{module: Primitive.Path} = p, data, opts) do
+    modify(p, data, opts)
   end
 
-
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Add a Quadrilateral (quad) to a graph
 
@@ -422,25 +415,24 @@ defmodule Scenic.Primitives do
         fill, :red, stroke: {3, :blue}, join: :round )
 
   """
-  def quad( graph_or_primitive, data, opts \\ [] )
+  def quad(graph_or_primitive, data, opts \\ [])
 
-  def quad( %Graph{} = g, data, opts ) do
-    add_to_graph( g, Primitive.Quad, data, opts )
+  def quad(%Graph{} = g, data, opts) do
+    add_to_graph(g, Primitive.Quad, data, opts)
   end
 
-  def quad( %Primitive{module: Primitive.Quad} = p, data, opts ) do
-    modify( p, data, opts )
+  def quad(%Primitive{module: Primitive.Quad} = p, data, opts) do
+    modify(p, data, opts)
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Shortcut to the `rectangle/3` function.
 
   `rect/3` is the same as calling `rectangle/3`
   """
-  def rect( graph_or_primitive, data, opts \\ [] ) do
-    rectangle( graph_or_primitive, data, opts )
+  def rect(graph_or_primitive, data, opts \\ []) do
+    rectangle(graph_or_primitive, data, opts)
   end
 
   @doc """
@@ -484,25 +476,24 @@ defmodule Scenic.Primitives do
         fill, :red, stroke: {3, :blue}, join: :round )
 
   """
-  def rectangle( graph_or_primitive, data, opts \\ [] )
+  def rectangle(graph_or_primitive, data, opts \\ [])
 
-  def rectangle( %Graph{} = g, data, opts ) do
-    add_to_graph( g, Primitive.Rectangle, data, opts )
+  def rectangle(%Graph{} = g, data, opts) do
+    add_to_graph(g, Primitive.Rectangle, data, opts)
   end
 
-  def rectangle( %Primitive{module: Primitive.Rectangle} = p, data, opts ) do
-    modify( p, data, opts )
+  def rectangle(%Primitive{module: Primitive.Rectangle} = p, data, opts) do
+    modify(p, data, opts)
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Shortcut to the `rounded_rectangle/3` function.
 
   `rrect/3` is the same as calling `rounded_rectangle/3`
   """
-  def rrect( graph_or_primitive, data, opts \\ [] ) do
-    rounded_rectangle( graph_or_primitive, data, opts )
+  def rrect(graph_or_primitive, data, opts \\ []) do
+    rounded_rectangle(graph_or_primitive, data, opts)
   end
 
   @doc """
@@ -521,7 +512,7 @@ defmodule Scenic.Primitives do
 
   ### Styles
 
-  Roumnded rectangles honor the following styles
+  Rounded rectangles honor the following styles
 
   * `:hidden` - If true the primitive is rendered. If false, it is skipped. The default
     is to render the primitive if hidden is not set.
@@ -538,18 +529,17 @@ defmodule Scenic.Primitives do
         fill, :red, stroke: {3, :blue} )
 
   """
-  def rounded_rectangle( graph_or_primitive, data, opts \\ [] )
+  def rounded_rectangle(graph_or_primitive, data, opts \\ [])
 
-  def rounded_rectangle( %Graph{} = g, data, opts ) do
-    add_to_graph( g, Primitive.RoundedRectangle, data, opts )
+  def rounded_rectangle(%Graph{} = g, data, opts) do
+    add_to_graph(g, Primitive.RoundedRectangle, data, opts)
   end
 
-  def rounded_rectangle( %Primitive{module: Primitive.RoundedRectangle} = p, data, opts ) do
-    modify( p, data, opts )
+  def rounded_rectangle(%Primitive{module: Primitive.RoundedRectangle} = p, data, opts) do
+    modify(p, data, opts)
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Reference another scene or graph from within a graph.
 
@@ -579,18 +569,17 @@ defmodule Scenic.Primitives do
   are applied to all items in that branch, including crossing scene_refs.
   """
 
-  def scene_ref( graph_or_primitive, data, opts \\ [] )
+  def scene_ref(graph_or_primitive, data, opts \\ [])
 
-  def scene_ref( %Graph{} = g, data, opts ) do
-    add_to_graph( g, Primitive.SceneRef, data, opts )
+  def scene_ref(%Graph{} = g, data, opts) do
+    add_to_graph(g, Primitive.SceneRef, data, opts)
   end
 
-  def scene_ref( %Primitive{module: Primitive.SceneRef} = p, data, opts ) do
-    modify( p, data, opts )
+  def scene_ref(%Primitive{module: Primitive.SceneRef} = p, data, opts) do
+    modify(p, data, opts)
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Add a sector to a graph
 
@@ -641,17 +630,17 @@ defmodule Scenic.Primitives do
 
   """
 
-  def sector( graph_or_primitive, data, opts \\ [] )
+  def sector(graph_or_primitive, data, opts \\ [])
 
-  def sector( %Graph{} = g, data, opts ) do
-    add_to_graph( g, Primitive.Sector, data, opts )
+  def sector(%Graph{} = g, data, opts) do
+    add_to_graph(g, Primitive.Sector, data, opts)
   end
 
-  def sector( %Primitive{module: Primitive.Sector} = p, data, opts ) do
-    modify( p, data, opts )
+  def sector(%Primitive{module: Primitive.Sector} = p, data, opts) do
+    modify(p, data, opts)
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Adds text to a graph
 
@@ -677,7 +666,7 @@ defmodule Scenic.Primitives do
   * `:font` - Specifies font family to draw the text with. The built-in system
     fonts are `:roboto`, `:roboto_mono`, and `:roboto_slab`. If not specified, the
     default is `:roboto`. You can also load your own font into the Scenic.Cache,
-    then specify it's key for the font.
+    then specify its key for the font.
   * `:font_blur` - Draw the text with a blur effect. If you draw text with blur,
     then draw it again without blur, slightly offset, you get a nice dropshadow
     effect. The default is to draw with no blur.
@@ -694,17 +683,17 @@ defmodule Scenic.Primitives do
         flont_blur: 2.0, text_align: :center )
 
   """
-  def text( graph_or_primitive, data, opts \\ [] )
+  def text(graph_or_primitive, data, opts \\ [])
 
-  def text( %Graph{} = g, data, opts ) do
-    add_to_graph( g, Primitive.Text, data, opts )
+  def text(%Graph{} = g, data, opts) do
+    add_to_graph(g, Primitive.Text, data, opts)
   end
 
-  def text( %Primitive{module: Primitive.Text} = p, data, opts ) do
-    modify( p, data, opts )
+  def text(%Primitive{module: Primitive.Text} = p, data, opts) do
+    modify(p, data, opts)
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Add a Triangle to a graph
 
@@ -747,23 +736,23 @@ defmodule Scenic.Primitives do
 
   """
 
-  def triangle( graph_or_primitive, data, opts \\ [] )
+  def triangle(graph_or_primitive, data, opts \\ [])
 
-  def triangle( %Graph{} = g, data, opts ) do
-    add_to_graph( g, Primitive.Triangle, data, opts )
+  def triangle(%Graph{} = g, data, opts) do
+    add_to_graph(g, Primitive.Triangle, data, opts)
   end
 
-  def triangle( %Primitive{module: Primitive.Triangle} = p, data, opts ) do
-    modify( p, data, opts )
+  def triangle(%Primitive{module: Primitive.Triangle} = p, data, opts) do
+    modify(p, data, opts)
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
-  Update the options of a primitie without changing it's data.
+  Update the options of a primitive without changing its data.
 
   This is not used during graph creation. Only when modifying it later.
 
-  All the primitie-specific helpers require you to specify the
+  All the primitive-specific helpers require you to specify the
   data for the primitive. If you only want to modify a transform
   or add a style, then use update_opts.
 
@@ -779,20 +768,18 @@ defmodule Scenic.Primitives do
 
   """
 
-  def update_opts( p, opts ), do: Primitive.put_opts( p, opts )
+  def update_opts(p, opts), do: Primitive.put_opts(p, opts)
 
-  #============================================================================
+  # ============================================================================
   # generic workhorse versions
 
-  defp add_to_graph( %Graph{} = g, mod, data, opts ) do
+  defp add_to_graph(%Graph{} = g, mod, data, opts) do
     mod.verify!(data)
     mod.add_to_graph(g, data, opts)
   end
 
-  defp modify( %Primitive{module: mod} = p, data, opts ) do
+  defp modify(%Primitive{module: mod} = p, data, opts) do
     mod.verify!(data)
-    Primitive.put( p, data, opts )
+    Primitive.put(p, data, opts)
   end
-
-
 end

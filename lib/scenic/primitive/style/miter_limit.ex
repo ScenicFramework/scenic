@@ -6,26 +6,29 @@
 defmodule Scenic.Primitive.Style.MiterLimit do
   use Scenic.Primitive.Style
 
-
-  #============================================================================
+  # ============================================================================
   # data verification and serialization
 
-  #--------------------------------------------------------
-  def info(), do: "Style :miter_limit must be an number greater than 0"
+  # --------------------------------------------------------
+  def info(data),
+    do: """
+      #{IO.ANSI.red()}#{__MODULE__} data must be a number greater than 0
+      #{IO.ANSI.yellow()}Received: #{inspect(data)}
+      #{IO.ANSI.default_color()}
+    """
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # named color
 
-  def verify( stroke ) do
+  def verify(stroke) do
     try do
-      normalize( stroke )
+      normalize(stroke)
       true
     rescue
       _ -> false
-    end    
+    end
   end
 
-  #--------------------------------------------------------
-  def normalize( limit ) when is_number(limit) and limit > 0, do: limit
-
+  # --------------------------------------------------------
+  def normalize(limit) when is_number(limit) and limit > 0, do: limit
 end

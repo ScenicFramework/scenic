@@ -6,25 +6,31 @@
 defmodule Scenic.Primitive.Transform.Rotate do
   use Scenic.Primitive.Transform
 
-  #============================================================================
+  # ============================================================================
   # data verification and serialization
 
-  #--------------------------------------------------------
-  def info(), do: "Transform :rotate must conform to the documentation\n"
+  # --------------------------------------------------------
+  def info(data),
+    do: """
+      #{IO.ANSI.red()}#{__MODULE__} data must be a number
+      #{IO.ANSI.yellow()}Received: #{inspect(data)}
 
-  #--------------------------------------------------------
-  def verify( angle ) do
+      The value is the amount to rotate in radians
+
+      #{IO.ANSI.default_color()}
+    """
+
+  # --------------------------------------------------------
+  def verify(angle) do
     try do
-      normalize( angle )
+      normalize(angle)
       true
     rescue
       _ -> false
     end
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # normalize named stipples
-  def normalize( a ) when is_number(a), do: a
-
-
+  def normalize(a) when is_number(a), do: a
 end

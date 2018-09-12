@@ -6,31 +6,35 @@
 defmodule Scenic.Primitive.Style.Font do
   use Scenic.Primitive.Style
 
-# import IEx
+  # import IEx
 
-  #============================================================================
+  # ============================================================================
   # data verification and serialization
 
-  #--------------------------------------------------------
-  def info() do
-    "Style :font must be a key_or_atom\r\n" <>
-    "Example: :roboto             # system font\r\n" <>
-    "Example: \"w29afwkj23ry8\"   # hash key of font in the cache\r\n"
-    "\r\n" <>
-    "The system fonts are: :roboto, :roboto_mono, :robot_slab\r\n"
-  end
+  # --------------------------------------------------------
+  def info(data),
+    do: """
+      #{IO.ANSI.red()}#{__MODULE__} data must be a cache key or an atom
+      #{IO.ANSI.yellow()}Received: #{inspect(data)}
 
-  #--------------------------------------------------------
-  def verify( font ) do
+      "Examples:
+      :roboto             # system font
+      \"w29afwkj23ry8\"   # key of font in the cache
+
+      #{IO.ANSI.default_color()}
+    """
+
+  # --------------------------------------------------------
+  def verify(font) do
     try do
-      normalize( font )
+      normalize(font)
       true
     rescue
       _ -> false
     end
   end
 
-  #--------------------------------------------------------
-  def normalize( name ) when is_atom(name),     do: name
-  def normalize( key ) when is_bitstring(key),  do: key
+  # --------------------------------------------------------
+  def normalize(name) when is_atom(name), do: name
+  def normalize(key) when is_bitstring(key), do: key
 end

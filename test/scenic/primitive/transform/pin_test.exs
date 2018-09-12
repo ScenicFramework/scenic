@@ -9,20 +9,17 @@ defmodule Scenic.Primitive.Transform.PinTest do
 
   alias Scenic.Primitive.Transform.Pin
 
-  #============================================================================
+  # ============================================================================
   # verify
 
   test "verify passes valid data" do
-    assert Pin.verify( { 1, 2 } ) == true
+    assert Pin.verify({1, 2}) == true
   end
 
   test "verify fails invalid data" do
-    assert Pin.verify( 1 )         == false
-    assert Pin.verify( {1} )       == false
-    assert Pin.verify( {1,2,3,4} ) == false
-    assert Pin.verify( :banana )   == false
+    assert Pin.verify(1) == false
+    assert Pin.verify({1}) == false
+    assert Pin.verify({1, 2, 3, 4}) == false
+    assert Pin.verify(:banana) == false
   end
-
-
 end
-

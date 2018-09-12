@@ -9,139 +9,86 @@ defmodule Scenic.Cache.File do
   alias Scenic.Cache
   alias Scenic.Cache.Hash
 
-#  import IEx
+  # import IEx
 
-  #===========================================================================
-  defmodule Error do
-    defexception [ message: "Hash check failed", err: nil ]
+  # --------------------------------------------------------
+  def load(path, hash, opts \\ [])
+
+  # insecure loading. Loads file blindly even it is altered
+  # don't recommend doing this in production. Better to embed the expected
+  # hashes. Is also slower because it has to load the file and compute the hash
+  # to use as a key even it is is already loaded into the cache.
+  def load(path, :insecure, opts) do
+    with {:ok, data} <- read(path, :insecure, opts) do
+      hash = Hash.compute(data, opts[:hash] || :sha)
+
+      case Cache.claim(hash, opts[:scope]) do
+        true ->
+          {:ok, hash}
+
+        false ->
+          Cache.put(hash, data, opts[:scope])
+      end
+    else
+      err -> err
+    end
   end
 
-  #============================================================================
-  # load a file - hash is required
-  # first this tries to claim an existing item from the cache
-  # if the item isn't there, then reads it and adds
-  # it to the cache.
-
-  #--------------------------------------------------------
-  def load( path_data, opts \\ [] )
-
-  def load( path_list, opts ) when is_list(path_list) do
-    # if scope was set, preserve it, otherwise set to this process
-    opts = Keyword.put_new(opts, :scope, self())
-    do_parallel(path_list, fn(path_data) -> load(path_data, opts) end)
-  end
-
-  def load( path_data, opts ) do
-    {path, hash, hash_type} = Hash.path_params( path_data )
-    # try claiming the already cached file before reading it
+  # preferred, more secure load. Expected hash signature is supplied
+  # also faster if the item is already loaded as then it can just skip
+  # loading the file
+  def load(path, hash, opts) do
     case Cache.claim(hash, opts[:scope]) do
-      true -> {:ok, hash}
+      true ->
+        {:ok, hash}
+
       false ->
-        # need to really load the font
-        case read( {path, hash, hash_type}, opts ) do
+        # need to read and verify the file
+        case read(path, hash, opts) do
           {:ok, data} -> Cache.put(hash, data, opts[:scope])
           err -> err
         end
-      end
+    end
   end
 
-  #--------------------------------------------------------
-  # def load!( path_data, opts \\ [] )
+  # --------------------------------------------------------
+  def read(path, hash, opts \\ [])
 
-  # def load!( path_list, opts ) when is_list(path_list) do
-  #   # if scope was set, preserve it, otherwise set to this process
-  #   opts = Keyword.put_new(opts, :scope, self())
-  #   do_parallel(path_list, fn(path_data) -> load!(path_data, opts) end)
-  # end
-
-  # def load!( path_data, opts ) do
-  #   {path, hash, hash_type} = Hash.path_params( path_data )
-  #   # try claiming the already cached file before reading it
-  #   case Cache.claim(hash, opts[:scope]) do
-  #     true -> hash
-  #     false ->
-  #       data = read!( {path, hash, hash_type}, opts )
-  #       case Cache.put(hash, data, opts[:scope]) do
-  #         {:ok, key} -> key
-  #         err -> raise "Failed to put item in the cache: #{inspect(err)}"
-  #       end
-  #     end
-  # end
-
-
-  #============================================================================
-  # read a file - hash is required
-
-  #--------------------------------------------------------
-  def read( path_data, opts \\ [] )
-
-  def read( path_list, opts ) when is_list(path_list) do
-    do_parallel(path_list, fn(path_data) ->
-      read(path_data, opts)
-    end)
+  # insecure read
+  # don't recommend doing this in production. Better to embed the expected
+  # hashes. Is also slower because it has to load the file and compute the hash
+  # to use as a key even it is is already loaded into the cache.
+  def read(path, :insecure, opts) do
+    with {:ok, data} <- File.read(path) do
+      do_unzip(data, opts)
+    else
+      err -> err
+    end
   end
 
-  def read( path_data, opts ) do
-    {path, hash, hash_type} = Hash.path_params( path_data )
-    case opts[:read] do
-      nil ->
-        with  {:ok, data} <- File.read(path),
-              {:ok, data} <- Hash.verify( data, hash, hash_type ) do
-          initialize( data, opts )
-        else
-          err -> err
+  def read(path, hash, opts) do
+    with {:ok, data} <- File.read(path),
+         {:ok, data} <- Hash.verify(data, hash, opts[:hash] || :sha) do
+      do_unzip(data, opts)
+    else
+      err -> err
+    end
+  end
+
+  # --------------------------------------------------------
+  # unzip the data if the unzip option is true. Otherwise just returns
+  # the data unchanged.
+  defp do_unzip(data, opts) do
+    case opts[:decompress] do
+      true ->
+        case :zlib.gunzip(data) do
+          bin when is_binary(bin) -> {:ok, bin}
+          _ -> {:error, :gunzip}
         end
-      read_func -> read_func.(path, hash, opts)
+
+      _ ->
+        # not decompressing
+        {:ok, data}
     end
   end
-
-  #--------------------------------------------------------
-  def read!( path_data, opts \\ [] )
-
-  def read!( path_list, opts ) when is_list(path_list) do
-    do_parallel(path_list, fn(path_data) -> read!(path_data, opts) end)
-  end
-
-  def read!( path_data, opts ) do
-    {path, hash, hash_type} = Hash.path_params( path_data )
-    case opts[:read] do
-      nil ->
-        path
-        |> File.read!()
-        |> Hash.verify!( hash, hash_type )
-        |> initialize( opts )
-        |> case do
-          {:ok, data} -> data
-          err -> raise Error, message: "Data init failed", err: err
-        end
-      read_func -> read_func.(path, hash, opts)
-    end
-  end
-
-
-  #============================================================================
-  # internal helpers
-
-  # the idea here is to let the caller supply an optional init function
-  # which initializes the already read and hash verified data
-  defp initialize( data, opts ) do
-    case opts[:init] do
-      nil  -> {:ok, data}
-      init -> init.(data, opts)
-    end
-  end
-
-  #--------------------------------------------------------
-  defp do_parallel(list, action) do
-    # spin up tasks
-    tasks = Enum.map(list, fn(item) -> 
-      Task.async( fn -> action.( item ) end)
-    end)
-
-    # wait for the async tasks to complete
-    Enum.reduce( tasks, [], fn (task, acc )-> [ Task.await(task) | acc ] end)
-    |> Enum.reverse()
-  end
-  
 end
-

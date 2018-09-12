@@ -10,21 +10,20 @@ defmodule Scenic.Primitive.GroupTest do
   alias Scenic.Primitive
   alias Scenic.Primitive.Group
 
-  @data    [1,2,3,4]
+  @data [1, 2, 3, 4]
 
-
-  #============================================================================
+  # ============================================================================
   # build / add
   test "build works" do
     p = Group.build()
     assert Primitive.get(p) == []
 
-    p = Group.build( @data )
+    p = Group.build(@data)
     assert p.module == Group
     assert Primitive.get(p) == @data
   end
 
-  #============================================================================
+  # ============================================================================
   # child management
   test "insert_at works" do
     group = Group.build()
@@ -33,19 +32,25 @@ defmodule Scenic.Primitive.GroupTest do
     g = Group.insert_at(group, -1, 1234)
     assert Primitive.get(g) == [1234]
 
-    g = Group.insert_at(group, -1, 1234)
+    g =
+      Group.insert_at(group, -1, 1234)
       |> Group.insert_at(-1, 12345)
+
     assert Primitive.get(g) == [1234, 12345]
 
-    g = Group.insert_at(group, -1, 1234)
+    g =
+      Group.insert_at(group, -1, 1234)
       |> Group.insert_at(0, 12345)
+
     assert Primitive.get(g) == [12345, 1234]
   end
 
   test "delete works" do
-    g = Group.build()
-      |> Group.insert_at( -1, 1234)
+    g =
+      Group.build()
+      |> Group.insert_at(-1, 1234)
       |> Group.insert_at(-1, 12345)
+
     assert Primitive.get(g) == [1234, 12345]
 
     g = Group.delete(g, 1234)
@@ -53,30 +58,31 @@ defmodule Scenic.Primitive.GroupTest do
   end
 
   test "increment_data adds a constant to the child ids" do
-    g = Group.build()
-      |> Group.insert_at( -1, 1234)
+    g =
+      Group.build()
+      |> Group.insert_at(-1, 1234)
       |> Group.insert_at(-1, 12345)
+
     assert Primitive.get(g) == [1234, 12345]
 
     g = Group.increment(g, 10)
     assert Primitive.get(g) == [1244, 12355]
   end
 
-
-  #============================================================================
+  # ============================================================================
   # verify
 
   test "verify passes valid data" do
-    assert Group.verify( @data ) == {:ok, @data}
+    assert Group.verify(@data) == {:ok, @data}
   end
 
   test "verify fails invalid data" do
-    assert Group.verify( 12 )                       == :invalid_data
-    assert Group.verify( [1, 2, 3, :banana] )       == :invalid_data
-    assert Group.verify( :banana )                  == :invalid_data
+    assert Group.verify(12) == :invalid_data
+    assert Group.verify([1, 2, 3, :banana]) == :invalid_data
+    assert Group.verify(:banana) == :invalid_data
   end
 
-  #============================================================================
+  # ============================================================================
   # styles
 
   test "valid_styles works" do
@@ -88,56 +94,14 @@ defmodule Scenic.Primitive.GroupTest do
       fill: :red,
       banana: :yellow
     }
-    assert Group.filter_styles( styles ) == styles
+
+    assert Group.filter_styles(styles) == styles
   end
 
-  #============================================================================
+  # ============================================================================
   # transforms
 
   test "default pin simply returns {0,0}" do
-    assert Group.default_pin(@data) == {0,0}
+    assert Group.default_pin(@data) == {0, 0}
   end
-
-
-
-
-
-
-
-
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

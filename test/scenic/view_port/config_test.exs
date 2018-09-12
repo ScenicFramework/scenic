@@ -4,119 +4,124 @@
 #
 # helper module for configuring Viewports during startup
 
-
-
 defmodule Scenic.ViewPort.ConfigTest do
   use ExUnit.Case, async: true
   alias Scenic.ViewPort.Driver
   alias Scenic.ViewPort.Config
 
-#   defstruct name: nil, default_scene: nil, default_scene_activation: nil, drivers: []
+  #   defstruct name: nil, default_scene: nil, default_scene_activation: nil, drivers: []
 
-
-
-  #============================================================================
+  # ============================================================================
   # valid?
 
   test "valid? passes just a default scene" do
-    assert Config.valid?( %Config{default_scene: :some_scene} )
-    assert Config.valid?( %Config{default_scene: {:some_mod, nil}} )
+    assert Config.valid?(%Config{default_scene: :some_scene, size: {640, 480}})
+    assert Config.valid?(%Config{default_scene: {:some_mod, nil}, size: {640, 480}})
   end
 
   test "valid? passes a default scene and a name" do
-    assert Config.valid?( %Config{default_scene: :some_scene, name: :abc} )
-    assert Config.valid?( %Config{default_scene: {:some_mod, nil}, name: :abc} )
+    assert Config.valid?(%Config{default_scene: :some_scene, name: :abc, size: {640, 480}})
+    assert Config.valid?(%Config{default_scene: {:some_mod, nil}, name: :abc, size: {640, 480}})
   end
 
   test "valid? passes a default scene, a name, and a driver" do
-    assert Config.valid?( %Config{
-      default_scene: :some_scene,
-      name: :abc,
-      drivers: [%Driver.Config{module: :some_driver}]
-    } )
+    assert Config.valid?(%Config{
+             default_scene: :some_scene,
+             name: :abc,
+             drivers: [%Driver.Config{module: :some_driver}],
+             size: {640, 480}
+           })
 
-    assert Config.valid?( %Config{
-      default_scene: {:some_mod, nil},
-      name: :abc,
-      drivers: [%Driver.Config{module: :some_driver}]
-    } )
+    assert Config.valid?(%Config{
+             default_scene: {:some_mod, nil},
+             name: :abc,
+             drivers: [%Driver.Config{module: :some_driver}],
+             size: {640, 480}
+           })
   end
 
   test "valid? fails a nil default scene" do
-    refute Config.valid?( %Config{default_scene: nil} )
+    refute Config.valid?(%Config{default_scene: nil, size: {640, 480}})
   end
 
   test "valid? fails an invalid name" do
-    refute Config.valid?( %Config{
-      default_scene: :some_scene,
-      name: "invalid name"
-    } )
+    refute Config.valid?(%Config{
+             default_scene: :some_scene,
+             name: "invalid name",
+             size: {640, 480}
+           })
   end
 
   test "valid? fails an invalid driver" do
-    refute Config.valid?( %Config{
-      default_scene: :some_scene,
-      drivers: [%Driver.Config{module: "invalid driver name"}]
-    } )
+    refute Config.valid?(%Config{
+             default_scene: :some_scene,
+             drivers: [%Driver.Config{module: "invalid driver name"}],
+             size: {640, 480}
+           })
   end
 
   test "valid? accepts a plane-jane map as would be define in config" do
-    assert Config.valid?( %{default_scene: :some_scene} )
+    assert Config.valid?(%{default_scene: :some_scene, size: {640, 480}})
   end
 
   # #============================================================================
   # # valid!
 
   test "valid! passes just a default scene" do
-    assert Config.valid!( %Config{default_scene: :some_scene} ) == :ok
-    assert Config.valid!( %Config{default_scene: {:some_mod, nil}} ) == :ok
+    assert Config.valid!(%Config{default_scene: :some_scene, size: {640, 480}}) == :ok
+    assert Config.valid!(%Config{default_scene: {:some_mod, nil}, size: {640, 480}}) == :ok
   end
 
   test "valid! passes a default scene and a name" do
-    assert Config.valid!( %Config{default_scene: :some_scene, name: :abc} ) == :ok
-    assert Config.valid!( %Config{default_scene: {:some_mod, nil}, name: :abc} ) == :ok
+    assert Config.valid!(%Config{default_scene: :some_scene, name: :abc, size: {640, 480}}) == :ok
+
+    assert Config.valid!(%Config{default_scene: {:some_mod, nil}, name: :abc, size: {640, 480}}) ==
+             :ok
   end
 
   test "valid! passes a default scene, a name, and a driver" do
-    assert Config.valid!( %Config{
-      default_scene: :some_scene,
-      name: :abc,
-      drivers: [%Driver.Config{module: :some_driver}]
-    } ) == :ok
+    assert Config.valid!(%Config{
+             default_scene: :some_scene,
+             name: :abc,
+             drivers: [%Driver.Config{module: :some_driver}],
+             size: {640, 480}
+           }) == :ok
 
-    assert Config.valid!( %Config{
-      default_scene: {:some_mod, nil},
-      name: :abc,
-      drivers: [%Driver.Config{module: :some_driver}]
-    } ) == :ok
+    assert Config.valid!(%Config{
+             default_scene: {:some_mod, nil},
+             name: :abc,
+             drivers: [%Driver.Config{module: :some_driver}],
+             size: {640, 480}
+           }) == :ok
   end
 
   test "valid! fails a nil default scene" do
     assert_raise RuntimeError, fn ->
-      Config.valid!( %Config{default_scene: nil} )
+      Config.valid!(%Config{default_scene: nil, size: {640, 480}})
     end
   end
 
   test "valid! fails an invalid name" do
     assert_raise RuntimeError, fn ->
-      Config.valid!( %Config{
+      Config.valid!(%Config{
         default_scene: :some_scene,
-        name: "invalid name"
-      } )
+        name: "invalid name",
+        size: {640, 480}
+      })
     end
   end
 
   test "valid! fails an invalid driver" do
     assert_raise RuntimeError, fn ->
-      Config.valid!( %Config{
+      Config.valid!(%Config{
         default_scene: :some_scene,
-        drivers: [%Driver.Config{module: "invalid driver name"}]
-      } )
+        drivers: [%Driver.Config{module: "invalid driver name"}],
+        size: {640, 480}
+      })
     end
   end
 
   test "valid! accepts a plane-jane map as would be define in config" do
-    assert Config.valid!( %{default_scene: :some_scene} )
+    assert Config.valid!(%{default_scene: :some_scene, size: {640, 480}})
   end
-
 end

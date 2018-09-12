@@ -2,12 +2,12 @@
 #  Created by Boyd Multerer on July 23, 2018.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
-# Seperate Context out into it's own file
-
+# Seperate Context out into its own file
 
 defmodule Scenic.ViewPort.Context do
   alias Scenic.Math
   alias Scenic.Graph
+  alias Scenic.ViewPort.Input
   alias Scenic.ViewPort.Context
 
   # note: would like to define tx: and inverse_tx: as Matrix.identity() directly
@@ -18,19 +18,26 @@ defmodule Scenic.ViewPort.Context do
 
   # @identity   Matrix.identity
 
-  defstruct viewport: nil, graph_key: nil, tx: nil, inverse_tx: nil, uid: nil, id: nil
+  defstruct viewport: nil,
+            graph_key: nil,
+            tx: nil,
+            inverse_tx: nil,
+            uid: nil,
+            id: nil,
+            raw_input: nil
 
   @type t :: %Context{
-    viewport:   GenServer.server,
-    graph_key:  Graph.key,
-    tx:         Math.matrix,
-    inverse_tx: Math.matrix,
-    uid:        pos_integer,
-    id:         any
-  }
+          viewport: GenServer.server(),
+          graph_key: Graph.key(),
+          tx: Math.matrix(),
+          inverse_tx: Math.matrix(),
+          raw_input: Input.t(),
+          uid: pos_integer,
+          id: any
+        }
 
-  @spec build( map ) :: Context.t
-  def build( %{} = params ) do
+  @spec build(map) :: Context.t()
+  def build(%{} = params) do
     Map.merge(
       %Context{tx: Math.Matrix.identity(), inverse_tx: Math.Matrix.identity()},
       params
