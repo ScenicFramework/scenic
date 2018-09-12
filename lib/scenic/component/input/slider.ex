@@ -153,7 +153,7 @@ defmodule Scenic.Component.Input.Slider do
         true -> x
       end
 
-    # calc the new value based on it's position across the slider
+    # calc the new value based on its position across the slider
     new_value = calc_value_by_percent(extents, x / width)
 
     # update the slider position

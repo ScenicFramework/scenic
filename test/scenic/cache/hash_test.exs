@@ -35,11 +35,11 @@ defmodule Scenic.Cache.HashTest do
   # ============================================================================
   # compute_file
 
-  test "compute_file loads a file and computes it's hash" do
+  test "compute_file loads a file and computes its hash" do
     assert Hash.compute_file(@missing_hash_path, :sha) == {:ok, @missing_hash}
   end
 
-  test "compute_file loads a file and computes it's hash with alternate algorithms" do
+  test "compute_file loads a file and computes its hash with alternate algorithms" do
     assert Hash.compute_file(@missing_hash_path, :sha256) == {:ok, @missing_hash_256}
   end
 
@@ -50,11 +50,11 @@ defmodule Scenic.Cache.HashTest do
   # ============================================================================
   # compute_file!
 
-  test "compute_file! loads a file and computes it's hash" do
+  test "compute_file! loads a file and computes its hash" do
     assert Hash.compute_file!(@missing_hash_path, :sha) == @missing_hash
   end
 
-  test "compute_file! loads a file and computes it's hash with alternate algorithms" do
+  test "compute_file! loads a file and computes its hash with alternate algorithms" do
     assert Hash.compute_file!(@missing_hash_path, :sha256) == @missing_hash_256
   end
 
