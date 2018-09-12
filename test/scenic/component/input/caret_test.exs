@@ -12,30 +12,28 @@ defmodule Scenic.Component.Input.CaretTest do
   alias Scenic.Graph
   import Scenic.Primitives
 
-
   @graph_hidden Graph.build()
-      |> line(
-        {{0, 4}, {0, 22 - 2}},
-        stroke: {2, :red},
-        hidden: true,
-        id: :caret
-      )
+                |> line(
+                  {{0, 4}, {0, 22 - 2}},
+                  stroke: {2, :red},
+                  hidden: true,
+                  id: :caret
+                )
 
   @graph_showing Graph.build()
-      |> line(
-        {{0, 4}, {0, 22 - 2}},
-        stroke: {2, :red},
-        hidden: false,
-        id: :caret
-      )
+                 |> line(
+                   {{0, 4}, {0, 22 - 2}},
+                   stroke: {2, :red},
+                   hidden: false,
+                   id: :caret
+                 )
 
   @state %{
-      graph: @graph_hidden,
-      hidden: true,
-      timer: nil,
-      focused: false
-    }
-
+    graph: @graph_hidden,
+    hidden: true,
+    timer: nil,
+    focused: false
+  }
 
   # ============================================================================
   # info
@@ -43,7 +41,6 @@ defmodule Scenic.Component.Input.CaretTest do
   test "info works" do
     assert is_bitstring(Caret.info(:bad_data))
   end
-
 
   # ============================================================================
   # verify
@@ -64,7 +61,6 @@ defmodule Scenic.Component.Input.CaretTest do
     assert state == @state
   end
 
-
   # ============================================================================
   # cast handlers
 
@@ -78,7 +74,7 @@ defmodule Scenic.Component.Input.CaretTest do
 
   test ":gain_focus stops the timer and hides the carat" do
     {:noreply, state} = Caret.handle_cast(:lose_focus, @state)
-    assert state.graph == @graph_hidden 
+    assert state.graph == @graph_hidden
     assert state.timer == nil
     assert state.hidden
     refute state.focused
@@ -86,9 +82,9 @@ defmodule Scenic.Component.Input.CaretTest do
 
   test ":reset_carat resets the timer and shows the carat" do
     old_timer = :timer.send_interval(1000, :blink)
-    state = %{@state | timer: old_timer, focused: true }
+    state = %{@state | timer: old_timer, focused: true}
     {:noreply, state} = Caret.handle_cast(:reset_carat, state)
-    assert state.graph == @graph_showing 
+    assert state.graph == @graph_showing
     assert state.timer != old_timer
     refute state.hidden
     assert state.focused
@@ -106,15 +102,4 @@ defmodule Scenic.Component.Input.CaretTest do
     assert state.graph == @graph_hidden
     assert state.hidden
   end
-
-
 end
-
-
-
-
-
-
-
-
-
