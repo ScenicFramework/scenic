@@ -445,9 +445,9 @@ defmodule Scenic.Math.MatrixTest do
   # ----------------------------------------------------------------------------
   # get_xyz(matrix)
   # get the xyz coordinates from the matrix
-  test "get_xyz works" do
-    assert Matrix.get_xyz(@matrix_c) == {30.0, 31.0, 32.0}
-  end
+  # test "get_xyz works" do
+  #   assert Matrix.get_xyz(@matrix_c) == {30.0, 31.0, 32.0}
+  # end
 
   # ----------------------------------------------------------------------------
   # add( a, b )
