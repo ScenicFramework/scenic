@@ -45,10 +45,10 @@ defmodule Scenic.Math.Vector2Test do
   end
 
   # ----------------------------------------------------------------------------
-  # build( x, y )
-  test "build works" do
-    assert Vector2.build(2.0, 3.0) == {2.0, 3.0}
-  end
+  # # build( x, y )
+  # test "build works" do
+  #   assert Vector2.build(2.0, 3.0) == {2.0, 3.0}
+  # end
 
   # --------------------------------------------------------
   # length
@@ -145,42 +145,42 @@ defmodule Scenic.Math.Vector2Test do
   end
 
   # ----------------------------------------------------------------------------
-  # in_bounds( vector, bounds )
-  test "in_bounds/2 returns true if the vector is within the +-bounds" do
-    assert Vector2.in_bounds({3.0, 4.0}, {5.0, 6.0}) == true
-    assert Vector2.in_bounds({-3.0, 4.0}, {5.0, 6.0}) == true
-    assert Vector2.in_bounds({3.0, -4.0}, {5.0, 6.0}) == true
-    assert Vector2.in_bounds({-3.0, -4.0}, {5.0, 6.0}) == true
+  # in_bounds?( vector, bounds )
+  test "in_bounds?/2 returns true if the vector is within the +-bounds" do
+    assert Vector2.in_bounds?({3.0, 4.0}, {5.0, 6.0}) == true
+    assert Vector2.in_bounds?({-3.0, 4.0}, {5.0, 6.0}) == true
+    assert Vector2.in_bounds?({3.0, -4.0}, {5.0, 6.0}) == true
+    assert Vector2.in_bounds?({-3.0, -4.0}, {5.0, 6.0}) == true
   end
 
-  test "in_bounds/2 returns false if vector is below -bounds" do
-    assert Vector2.in_bounds({-5.1, 4.0}, {5.0, 6.0}) == false
-    assert Vector2.in_bounds({3.0, -6.1}, {5.0, 6.0}) == false
-    assert Vector2.in_bounds({-5.1, -6.1}, {5.0, 6.0}) == false
+  test "in_bounds?/2 returns false if vector is below -bounds" do
+    assert Vector2.in_bounds?({-5.1, 4.0}, {5.0, 6.0}) == false
+    assert Vector2.in_bounds?({3.0, -6.1}, {5.0, 6.0}) == false
+    assert Vector2.in_bounds?({-5.1, -6.1}, {5.0, 6.0}) == false
   end
 
-  test "in_bounds/2 returns false if vector is above +bounds" do
-    assert Vector2.in_bounds({5.1, 4.0}, {5.0, 6.0}) == false
-    assert Vector2.in_bounds({3.0, 6.1}, {5.0, 6.0}) == false
-    assert Vector2.in_bounds({5.1, 6.1}, {5.0, 6.0}) == false
+  test "in_bounds?/2 returns false if vector is above +bounds" do
+    assert Vector2.in_bounds?({5.1, 4.0}, {5.0, 6.0}) == false
+    assert Vector2.in_bounds?({3.0, 6.1}, {5.0, 6.0}) == false
+    assert Vector2.in_bounds?({5.1, 6.1}, {5.0, 6.0}) == false
   end
 
   # ----------------------------------------------------------------------------
-  # in_bounds( vector, min_bound, max_bound )
-  test "in_bounds/3 returns true if the (positive) vector is within the min/max bounds" do
-    assert Vector2.in_bounds({3.0, 4.0}, {1.0, 2.0}, {5.0, 6.0}) == true
+  # in_bounds?( vector, min_bound, max_bound )
+  test "in_bounds?/3 returns true if the (positive) vector is within the min/max bounds" do
+    assert Vector2.in_bounds?({3.0, 4.0}, {1.0, 2.0}, {5.0, 6.0}) == true
   end
 
-  test "in_bounds/3 returns false if vector is below min_bound" do
-    assert Vector2.in_bounds({0.9, 4.0}, {1.0, 2.0}, {5.0, 6.0}) == false
-    assert Vector2.in_bounds({3.0, 1.9}, {1.0, 2.0}, {5.0, 6.0}) == false
-    assert Vector2.in_bounds({0.0, 1.9}, {1.0, 2.0}, {5.0, 6.0}) == false
+  test "in_bounds?/3 returns false if vector is below min_bound" do
+    assert Vector2.in_bounds?({0.9, 4.0}, {1.0, 2.0}, {5.0, 6.0}) == false
+    assert Vector2.in_bounds?({3.0, 1.9}, {1.0, 2.0}, {5.0, 6.0}) == false
+    assert Vector2.in_bounds?({0.0, 1.9}, {1.0, 2.0}, {5.0, 6.0}) == false
   end
 
-  test "in_bounds/3 returns false if vector is above max_bound" do
-    assert Vector2.in_bounds({5.1, 4.0}, {1.0, 2.0}, {5.0, 6.0}) == false
-    assert Vector2.in_bounds({3.0, 6.1}, {1.0, 2.0}, {5.0, 6.0}) == false
-    assert Vector2.in_bounds({5.1, 6.1}, {1.0, 2.0}, {5.0, 6.0}) == false
+  test "in_bounds?/3 returns false if vector is above max_bound" do
+    assert Vector2.in_bounds?({5.1, 4.0}, {1.0, 2.0}, {5.0, 6.0}) == false
+    assert Vector2.in_bounds?({3.0, 6.1}, {1.0, 2.0}, {5.0, 6.0}) == false
+    assert Vector2.in_bounds?({5.1, 6.1}, {1.0, 2.0}, {5.0, 6.0}) == false
   end
 
   # ----------------------------------------------------------------------------

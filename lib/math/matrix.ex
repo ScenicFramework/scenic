@@ -8,6 +8,22 @@
 # always row major
 
 defmodule Scenic.Math.Matrix do
+  @moduledoc """
+  A collection of functions to work with matrices.
+
+  All the matrix fucntions in this module work exclusively with the binary form
+  of a matrix, which is a compact binary of 16 4-byte floats.
+
+  If you would like to 
+
+
+  
+        {point_a, point_b}
+        {{x0,y0}, {x1,y1}}
+  """
+
+
+
   alias Scenic.Math
   alias Scenic.Math.Matrix
   import :erlang, only: [{:nif_error, 1}]
@@ -20,6 +36,7 @@ defmodule Scenic.Math.Matrix do
   # load the NIF
   @compile {:autoload, false}
   @on_load :load_nifs
+  @doc false
   def load_nifs do
     :ok =
       :filename.join(:code.priv_dir(@app), 'matrix')
@@ -68,10 +85,11 @@ defmodule Scenic.Math.Matrix do
 
   # ============================================================================
   # common constants
-
+  @doc "A matrix where all the values are 0"
   @spec zero() :: Math.matrix()
   def zero(), do: @matrix_zero
 
+  @doc "The identity matrix"
   @spec identity() :: Math.matrix()
   def identity(), do: @matrix_identity
 
@@ -83,93 +101,93 @@ defmodule Scenic.Math.Matrix do
 
   # --------------------------------------------------------
   # from a tupled matrix
-  def build({{v0x, v0y}, {v1x, v1y}}) do
-    build({v0x, v0y}, {v1x, v1y})
-  end
+  # def build({{v0x, v0y}, {v1x, v1y}}) do
+  #   build({v0x, v0y}, {v1x, v1y})
+  # end
 
-  def build({{v0x, v0y, v0z}, {v1x, v1y, v1z}, {v2x, v2y, v2z}}) do
-    build({v0x, v0y, v0z}, {v1x, v1y, v1z}, {v2x, v2y, v2z})
-  end
+  # def build({{v0x, v0y, v0z}, {v1x, v1y, v1z}, {v2x, v2y, v2z}}) do
+  #   build({v0x, v0y, v0z}, {v1x, v1y, v1z}, {v2x, v2y, v2z})
+  # end
 
-  def build(
-        {{v0x, v0y, v0z, v0w}, {v1x, v1y, v1z, v1w}, {v2x, v2y, v2z, v2w}, {v3x, v3y, v3z, v3w}}
-      ) do
-    build({v0x, v0y, v0z, v0w}, {v1x, v1y, v1z, v1w}, {v2x, v2y, v2z, v2w}, {v3x, v3y, v3z, v3w})
-  end
+  # def build(
+  #       {{v0x, v0y, v0z, v0w}, {v1x, v1y, v1z, v1w}, {v2x, v2y, v2z, v2w}, {v3x, v3y, v3z, v3w}}
+  #     ) do
+  #   build({v0x, v0y, v0z, v0w}, {v1x, v1y, v1z, v1w}, {v2x, v2y, v2z, v2w}, {v3x, v3y, v3z, v3w})
+  # end
 
-  # --------------------------------------------------------
-  # from a 2x2 tuple matrix
-  def build({v0x, v0y}, {v1x, v1y}) do
-    <<
-      v0x::float-size(32)-native,
-      v0y::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      v1x::float-size(32)-native,
-      v1y::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      1.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      1.0::float-size(32)-native
-    >>
-  end
+  # # --------------------------------------------------------
+  # # from a 2x2 tuple matrix
+  # def build({v0x, v0y}, {v1x, v1y}) do
+  #   <<
+  #     v0x::float-size(32)-native,
+  #     v0y::float-size(32)-native,
+  #     0.0::float-size(32)-native,
+  #     0.0::float-size(32)-native,
+  #     v1x::float-size(32)-native,
+  #     v1y::float-size(32)-native,
+  #     0.0::float-size(32)-native,
+  #     0.0::float-size(32)-native,
+  #     0.0::float-size(32)-native,
+  #     0.0::float-size(32)-native,
+  #     1.0::float-size(32)-native,
+  #     0.0::float-size(32)-native,
+  #     0.0::float-size(32)-native,
+  #     0.0::float-size(32)-native,
+  #     0.0::float-size(32)-native,
+  #     1.0::float-size(32)-native
+  #   >>
+  # end
 
-  # --------------------------------------------------------
-  # from a 3x3 matrix
-  def build({v0x, v0y, v0z}, {v1x, v1y, v1z}, {v2x, v2y, v2z}) do
-    <<
-      v0x::float-size(32)-native,
-      v0y::float-size(32)-native,
-      v0z::float-size(32)-native,
-      0.0::float-size(32)-native,
-      v1x::float-size(32)-native,
-      v1y::float-size(32)-native,
-      v1z::float-size(32)-native,
-      0.0::float-size(32)-native,
-      v2x::float-size(32)-native,
-      v2y::float-size(32)-native,
-      v2z::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      1.0::float-size(32)-native
-    >>
-  end
+  # # --------------------------------------------------------
+  # # from a 3x3 matrix
+  # def build({v0x, v0y, v0z}, {v1x, v1y, v1z}, {v2x, v2y, v2z}) do
+  #   <<
+  #     v0x::float-size(32)-native,
+  #     v0y::float-size(32)-native,
+  #     v0z::float-size(32)-native,
+  #     0.0::float-size(32)-native,
+  #     v1x::float-size(32)-native,
+  #     v1y::float-size(32)-native,
+  #     v1z::float-size(32)-native,
+  #     0.0::float-size(32)-native,
+  #     v2x::float-size(32)-native,
+  #     v2y::float-size(32)-native,
+  #     v2z::float-size(32)-native,
+  #     0.0::float-size(32)-native,
+  #     0.0::float-size(32)-native,
+  #     0.0::float-size(32)-native,
+  #     0.0::float-size(32)-native,
+  #     1.0::float-size(32)-native
+  #   >>
+  # end
 
-  # --------------------------------------------------------
-  # build a 4x4 matrix
-  def build(
-        {v0x, v0y, v0z, v0w},
-        {v1x, v1y, v1z, v1w},
-        {v2x, v2y, v2z, v2w},
-        {v3x, v3y, v3z, v3w}
-      ) do
-    <<
-      v0x::float-size(32)-native,
-      v0y::float-size(32)-native,
-      v0z::float-size(32)-native,
-      v0w::float-size(32)-native,
-      v1x::float-size(32)-native,
-      v1y::float-size(32)-native,
-      v1z::float-size(32)-native,
-      v1w::float-size(32)-native,
-      v2x::float-size(32)-native,
-      v2y::float-size(32)-native,
-      v2z::float-size(32)-native,
-      v2w::float-size(32)-native,
-      v3x::float-size(32)-native,
-      v3y::float-size(32)-native,
-      v3z::float-size(32)-native,
-      v3w::float-size(32)-native
-    >>
-  end
+  # # --------------------------------------------------------
+  # # build a 4x4 matrix
+  # def build(
+  #       {v0x, v0y, v0z, v0w},
+  #       {v1x, v1y, v1z, v1w},
+  #       {v2x, v2y, v2z, v2w},
+  #       {v3x, v3y, v3z, v3w}
+  #     ) do
+  #   <<
+  #     v0x::float-size(32)-native,
+  #     v0y::float-size(32)-native,
+  #     v0z::float-size(32)-native,
+  #     v0w::float-size(32)-native,
+  #     v1x::float-size(32)-native,
+  #     v1y::float-size(32)-native,
+  #     v1z::float-size(32)-native,
+  #     v1w::float-size(32)-native,
+  #     v2x::float-size(32)-native,
+  #     v2y::float-size(32)-native,
+  #     v2z::float-size(32)-native,
+  #     v2w::float-size(32)-native,
+  #     v3x::float-size(32)-native,
+  #     v3y::float-size(32)-native,
+  #     v3z::float-size(32)-native,
+  #     v3w::float-size(32)-native
+  #   >>
+  # end
 
   # ============================================================================
   # specific builders. each does a certain job

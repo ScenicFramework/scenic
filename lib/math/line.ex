@@ -5,6 +5,17 @@
 # Line utility functions
 
 defmodule Scenic.Math.Line do
+  @moduledoc """
+  A collection of functions to work with lines.
+
+  Lines are always two points in a tuple.
+
+        {point_a, point_b}
+        {{x0,y0}, {x1,y1}}
+  """
+
+
+
   alias Scenic.Math
 
   #  import IEx

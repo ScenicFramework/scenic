@@ -8,52 +8,52 @@ defmodule Scenic.Math.MatrixTest do
   alias Scenic.Math.Matrix
   alias Scenic.Math.Matrix.Utils
 
-  @matrix_a {
-              {3.0, 2.0, 0.0, 1.0},
-              {4.0, 0.0, 1.0, 2.0},
-              {3.0, 0.0, 2.0, 1.0},
-              {9.0, 2.0, 3.0, 1.0}
-            }
+  @matrix_a [
+              3.0, 2.0, 0.0, 1.0,
+              4.0, 0.0, 1.0, 2.0,
+              3.0, 0.0, 2.0, 1.0,
+              9.0, 2.0, 3.0, 1.0
+            ]
             |> Utils.to_binary()
 
-  @matrix_a_double {
-                     {6.0, 4.0, 0.0, 2.0},
-                     {8.0, 0.0, 2.0, 4.0},
-                     {6.0, 0.0, 4.0, 2.0},
-                     {18.0, 4.0, 6.0, 2.0}
-                   }
+  @matrix_a_double [
+                     6.0, 4.0, 0.0, 2.0,
+                     8.0, 0.0, 2.0, 4.0,
+                     6.0, 0.0, 4.0, 2.0,
+                     18.0, 4.0, 6.0, 2.0
+                   ]
                    |> Utils.to_binary()
 
-  @matrix_b {
-              {1.5, 3.0, 0.0, 1.0},
-              {4.0, 0.1, 1.0, 2.0},
-              {2.9, 0.0, 2.0, 1.0},
-              {3.0, 2.0, 4.0, 1.2}
-            }
+  @matrix_b [
+              1.5, 3.0, 0.0, 1.0,
+              4.0, 0.1, 1.0, 2.0,
+              2.9, 0.0, 2.0, 1.0,
+              3.0, 2.0, 4.0, 1.2
+            ]
             |> Utils.to_binary()
 
-  @matrix_c {
-              {0, 10, 20, 30},
-              {1, 11, 21, 31},
-              {2, 12, 22, 32},
-              {3, 13, 23, 33}
-            }
+  @matrix_c [
+              0, 10, 20, 30,
+              1, 11, 21, 31,
+              2, 12, 22, 32,
+              3, 13, 23, 33
+            ]
             |> Utils.to_binary()
 
-  @matrix_zero {
-                 {0.0, 0.0, 0.0, 0.0},
-                 {0.0, 0.0, 0.0, 0.0},
-                 {0.0, 0.0, 0.0, 0.0},
-                 {0.0, 0.0, 0.0, 0.0}
-               }
+  @matrix_zero [
+                 0.0, 0.0, 0.0, 0.0,
+                 0.0, 0.0, 0.0, 0.0,
+                 0.0, 0.0, 0.0, 0.0,
+                 0.0, 0.0, 0.0, 0.0
+               ]
                |> Utils.to_binary()
 
-  @matrix_identity {
-                     {1.0, 0.0, 0.0, 0.0},
-                     {0.0, 1.0, 0.0, 0.0},
-                     {0.0, 0.0, 1.0, 0.0},
-                     {0.0, 0.0, 0.0, 1.0}
-                   }
+  @matrix_identity [
+                     1.0, 0.0, 0.0, 0.0,
+                     0.0, 1.0, 0.0, 0.0,
+                     0.0, 0.0, 1.0, 0.0,
+                     0.0, 0.0, 0.0, 1.0
+                   ]
                    |> Utils.to_binary()
 
   # ----------------------------------------------------------------------------
@@ -73,75 +73,75 @@ defmodule Scenic.Math.MatrixTest do
 
   # --------------------------------------------------------
   # 2x2 builder
-  test "build(row0, row1) works" do
-    assert Matrix.build({0, 10}, {1, 11}) ==
-             {
-               {0.0, 10.0, 0.0, 0.0},
-               {1.0, 11.0, 0.0, 0.0},
-               {0.0, 0.0, 1.0, 0.0},
-               {0.0, 0.0, 0.0, 1.0}
-             }
-             |> Utils.to_binary()
-  end
+  # test "build(row0, row1) works" do
+  #   assert Matrix.build({0, 10}, {1, 11}) ==
+  #            {
+  #              {0.0, 10.0, 0.0, 0.0},
+  #              {1.0, 11.0, 0.0, 0.0},
+  #              {0.0, 0.0, 1.0, 0.0},
+  #              {0.0, 0.0, 0.0, 1.0}
+  #            }
+  #            |> Utils.to_binary()
+  # end
 
-  test "build({row0, row1}) works" do
-    assert Matrix.build({{0, 10}, {1, 11}}) ==
-             {
-               {0.0, 10.0, 0.0, 0.0},
-               {1.0, 11.0, 0.0, 0.0},
-               {0.0, 0.0, 1.0, 0.0},
-               {0.0, 0.0, 0.0, 1.0}
-             }
-             |> Utils.to_binary()
-  end
+  # test "build({row0, row1}) works" do
+  #   assert Matrix.build({{0, 10}, {1, 11}}) ==
+  #            {
+  #              {0.0, 10.0, 0.0, 0.0},
+  #              {1.0, 11.0, 0.0, 0.0},
+  #              {0.0, 0.0, 1.0, 0.0},
+  #              {0.0, 0.0, 0.0, 1.0}
+  #            }
+  #            |> Utils.to_binary()
+  # end
 
-  # --------------------------------------------------------
-  # 3x3 builder
-  test "build(row0, row1, row3) works" do
-    assert Matrix.build({0, 10, 20}, {1, 11, 21}, {2, 12, 22}) ==
-             {
-               {0.0, 10.0, 20.0, 0.0},
-               {1.0, 11.0, 21.0, 0.0},
-               {2.0, 12.0, 22.0, 0.0},
-               {0.0, 0.0, 0.0, 1.0}
-             }
-             |> Utils.to_binary()
-  end
+  # # --------------------------------------------------------
+  # # 3x3 builder
+  # test "build(row0, row1, row3) works" do
+  #   assert Matrix.build({0, 10, 20}, {1, 11, 21}, {2, 12, 22}) ==
+  #            {
+  #              {0.0, 10.0, 20.0, 0.0},
+  #              {1.0, 11.0, 21.0, 0.0},
+  #              {2.0, 12.0, 22.0, 0.0},
+  #              {0.0, 0.0, 0.0, 1.0}
+  #            }
+  #            |> Utils.to_binary()
+  # end
 
-  test "build({row0, row1, row3}) works" do
-    assert Matrix.build({{0, 10, 20}, {1, 11, 21}, {2, 12, 22}}) ==
-             {
-               {0.0, 10.0, 20.0, 0.0},
-               {1.0, 11.0, 21.0, 0.0},
-               {2.0, 12.0, 22.0, 0.0},
-               {0.0, 0.0, 0.0, 1.0}
-             }
-             |> Utils.to_binary()
-  end
+  # test "build({row0, row1, row3}) works" do
+  #   assert Matrix.build({{0, 10, 20}, {1, 11, 21}, {2, 12, 22}}) ==
+  #            {
+  #              {0.0, 10.0, 20.0, 0.0},
+  #              {1.0, 11.0, 21.0, 0.0},
+  #              {2.0, 12.0, 22.0, 0.0},
+  #              {0.0, 0.0, 0.0, 1.0}
+  #            }
+  #            |> Utils.to_binary()
+  # end
 
-  # --------------------------------------------------------
-  # 4x4 builder
-  test "build(row0, row1, row3, row4) works" do
-    assert Matrix.build({0, 10, 20, 30}, {1, 11, 21, 31}, {2, 12, 22, 32}, {3, 13, 23, 33}) ==
-             {
-               {0.0, 10.0, 20.0, 30.0},
-               {1.0, 11.0, 21.0, 31.0},
-               {2.0, 12.0, 22.0, 32.0},
-               {3.0, 13.0, 23.0, 33.0}
-             }
-             |> Utils.to_binary()
-  end
+  # # --------------------------------------------------------
+  # # 4x4 builder
+  # test "build(row0, row1, row3, row4) works" do
+  #   assert Matrix.build({0, 10, 20, 30}, {1, 11, 21, 31}, {2, 12, 22, 32}, {3, 13, 23, 33}) ==
+  #            {
+  #              {0.0, 10.0, 20.0, 30.0},
+  #              {1.0, 11.0, 21.0, 31.0},
+  #              {2.0, 12.0, 22.0, 32.0},
+  #              {3.0, 13.0, 23.0, 33.0}
+  #            }
+  #            |> Utils.to_binary()
+  # end
 
-  test "build({row0, row1, row3, row4}) works" do
-    assert Matrix.build({{0, 10, 20, 30}, {1, 11, 21, 31}, {2, 12, 22, 32}, {3, 13, 23, 33}}) ==
-             {
-               {0.0, 10.0, 20.0, 30.0},
-               {1.0, 11.0, 21.0, 31.0},
-               {2.0, 12.0, 22.0, 32.0},
-               {3.0, 13.0, 23.0, 33.0}
-             }
-             |> Utils.to_binary()
-  end
+  # test "build({row0, row1, row3, row4}) works" do
+  #   assert Matrix.build({{0, 10, 20, 30}, {1, 11, 21, 31}, {2, 12, 22, 32}, {3, 13, 23, 33}}) ==
+  #            {
+  #              {0.0, 10.0, 20.0, 30.0},
+  #              {1.0, 11.0, 21.0, 31.0},
+  #              {2.0, 12.0, 22.0, 32.0},
+  #              {3.0, 13.0, 23.0, 33.0}
+  #            }
+  #            |> Utils.to_binary()
+  # end
 
   # ============================================================================
   # specific build functions
@@ -150,12 +150,12 @@ defmodule Scenic.Math.MatrixTest do
   # build_translation
   test "build_translation( 2x2 ) works" do
     mx =
-      {
-        {1.0, 0.0, 0.0, 2.0},
-        {0.0, 1.0, 0.0, 3.0},
-        {0.0, 0.0, 1.0, 0.0},
-        {0.0, 0.0, 0.0, 1.0}
-      }
+      [
+        1.0, 0.0, 0.0, 2.0,
+        0.0, 1.0, 0.0, 3.0,
+        0.0, 0.0, 1.0, 0.0,
+        0.0, 0.0, 0.0, 1.0
+      ]
       |> Utils.to_binary()
 
     assert Matrix.build_translation(2.0, 3.0) == mx
@@ -164,12 +164,12 @@ defmodule Scenic.Math.MatrixTest do
 
   test "build_translation( 3x3 ) works" do
     mx =
-      {
-        {1.0, 0.0, 0.0, 2.0},
-        {0.0, 1.0, 0.0, 3.0},
-        {0.0, 0.0, 1.0, 4.0},
-        {0.0, 0.0, 0.0, 1.0}
-      }
+      [
+        1.0, 0.0, 0.0, 2.0,
+        0.0, 1.0, 0.0, 3.0,
+        0.0, 0.0, 1.0, 4.0,
+        0.0, 0.0, 0.0, 1.0
+      ]
       |> Utils.to_binary()
 
     assert Matrix.build_translation(2.0, 3.0, 4.0) == mx
@@ -180,12 +180,12 @@ defmodule Scenic.Math.MatrixTest do
   # build_scale
   test "build_scale(s) works" do
     mx =
-      {
-        {2.0, 0.0, 0.0, 0.0},
-        {0.0, 2.0, 0.0, 0.0},
-        {0.0, 0.0, 2.0, 0.0},
-        {0.0, 0.0, 0.0, 1.0}
-      }
+      [
+        2.0, 0.0, 0.0, 0.0,
+        0.0, 2.0, 0.0, 0.0,
+        0.0, 0.0, 2.0, 0.0,
+        0.0, 0.0, 0.0, 1.0
+      ]
       |> Utils.to_binary()
 
     assert Matrix.build_scale(2.0) == mx
@@ -193,12 +193,12 @@ defmodule Scenic.Math.MatrixTest do
 
   test "build_scale( x,y ) works" do
     mx =
-      {
-        {2.0, 0.0, 0.0, 0.0},
-        {0.0, 3.0, 0.0, 0.0},
-        {0.0, 0.0, 1.0, 0.0},
-        {0.0, 0.0, 0.0, 1.0}
-      }
+      [
+        2.0, 0.0, 0.0, 0.0,
+        0.0, 3.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        0.0, 0.0, 0.0, 1.0
+      ]
       |> Utils.to_binary()
 
     assert Matrix.build_scale(2.0, 3.0) == mx
@@ -207,12 +207,12 @@ defmodule Scenic.Math.MatrixTest do
 
   test "build_scale( x,y,z ) works" do
     mx =
-      {
-        {2.0, 0.0, 0.0, 0.0},
-        {0.0, 3.0, 0.0, 0.0},
-        {0.0, 0.0, 4.0, 0.0},
-        {0.0, 0.0, 0.0, 1.0}
-      }
+      [
+        2.0, 0.0, 0.0, 0.0,
+        0.0, 3.0, 0.0, 0.0,
+        0.0, 0.0, 4.0, 0.0,
+        0.0, 0.0, 0.0, 1.0
+      ]
       |> Utils.to_binary()
 
     assert Matrix.build_scale(2.0, 3.0, 4.0) == mx
@@ -227,12 +227,12 @@ defmodule Scenic.Math.MatrixTest do
     sin = :math.sin(1.0)
 
     mx =
-      {
-        {cos, -sin, 0.0, 0.0},
-        {sin, cos, 0.0, 0.0},
-        {0.0, 0.0, 1.0, 0.0},
-        {0.0, 0.0, 0.0, 1.0}
-      }
+      [
+        cos, -sin, 0.0, 0.0,
+        sin, cos, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        0.0, 0.0, 0.0, 1.0
+      ]
       |> Utils.to_binary()
 
     assert Matrix.build_rotation(1.0) == mx
@@ -455,12 +455,12 @@ defmodule Scenic.Math.MatrixTest do
     answer = Matrix.add(@matrix_a, @matrix_b)
 
     target =
-      {
-        {4.5, 5.0, 0.0, 2.0},
-        {8.0, 0.1, 2.0, 4.0},
-        {5.9, 0.0, 4.0, 2.0},
-        {12.0, 4.0, 7.0, 2.2}
-      }
+      [
+        4.5, 5.0, 0.0, 2.0,
+        8.0, 0.1, 2.0, 4.0,
+        5.9, 0.0, 4.0, 2.0,
+        12.0, 4.0, 7.0, 2.2
+      ]
       |> Utils.to_binary()
 
     assert Matrix.close?(answer, target)
@@ -490,12 +490,12 @@ defmodule Scenic.Math.MatrixTest do
     answer = Matrix.sub(@matrix_a, @matrix_b)
 
     target =
-      {
-        {1.5, -1.0, 0.0, 0.0},
-        {0.0, -0.1, 0.0, 0.0},
-        {0.1, 0.0, 0.0, 0.0},
-        {6.0, 0.0, -1.0, -0.2}
-      }
+      [
+        1.5, -1.0, 0.0, 0.0,
+        0.0, -0.1, 0.0, 0.0,
+        0.1, 0.0, 0.0, 0.0,
+        6.0, 0.0, -1.0, -0.2
+      ]
       |> Utils.to_binary()
 
     assert Matrix.close?(answer, target)
@@ -527,12 +527,12 @@ defmodule Scenic.Math.MatrixTest do
     answer = Matrix.mul(@matrix_a, @matrix_b)
 
     target =
-      {
-        {15.5, 11.2, 6.0, 8.2},
-        {14.9, 16.0, 10.0, 7.4},
-        {13.3, 11.0, 8.0, 6.2},
-        {33.2, 29.2, 12.0, 17.2}
-      }
+      [
+        15.5, 11.2, 6.0, 8.2,
+        14.9, 16.0, 10.0, 7.4,
+        13.3, 11.0, 8.0, 6.2,
+        33.2, 29.2, 12.0, 17.2
+      ]
       |> Utils.to_binary()
 
     assert Matrix.close?(answer, target)
@@ -552,12 +552,12 @@ defmodule Scenic.Math.MatrixTest do
     answer = Matrix.mul([@matrix_a, @matrix_b])
 
     target =
-      {
-        {15.5, 11.2, 6.0, 8.2},
-        {14.9, 16.0, 10.0, 7.4},
-        {13.3, 11.0, 8.0, 6.2},
-        {33.2, 29.2, 12.0, 17.2}
-      }
+      [
+        15.5, 11.2, 6.0, 8.2,
+        14.9, 16.0, 10.0, 7.4,
+        13.3, 11.0, 8.0, 6.2,
+        33.2, 29.2, 12.0, 17.2
+      ]
       |> Utils.to_binary()
 
     assert Matrix.close?(answer, target)
@@ -636,12 +636,12 @@ defmodule Scenic.Math.MatrixTest do
 
   test "determinant finds a zero" do
     m =
-      {
-        {3.0, 2.0, 0.0, 1.0},
-        {4.0, 0.0, 1.0, 2.0},
-        {0.0, 0.0, 0.0, 0.0},
-        {9.0, 2.0, 3.0, 1.0}
-      }
+      [
+        3.0, 2.0, 0.0, 1.0,
+        4.0, 0.0, 1.0, 2.0,
+        0.0, 0.0, 0.0, 0.0,
+        9.0, 2.0, 3.0, 1.0
+      ]
       |> Utils.to_binary()
 
     assert Matrix.determinant(m) == 0.0
@@ -662,12 +662,12 @@ defmodule Scenic.Math.MatrixTest do
   # see http://ncalculators.com/matrix/4x4-inverse-matrix-calculator.htm
   test "transpose works" do
     assert Matrix.transpose(@matrix_a) ==
-             {
-               {3.0, 4.0, 3.0, 9.0},
-               {2.0, 0.0, 0.0, 2.0},
-               {0.0, 1.0, 2.0, 3.0},
-               {1.0, 2.0, 1.0, 1.0}
-             }
+             [
+               3.0, 4.0, 3.0, 9.0,
+               2.0, 0.0, 0.0, 2.0,
+               0.0, 1.0, 2.0, 3.0,
+               1.0, 2.0, 1.0, 1.0
+             ]
              |> Utils.to_binary()
   end
 
@@ -686,12 +686,12 @@ defmodule Scenic.Math.MatrixTest do
   # see http://ncalculators.com/matrix/4x4-inverse-matrix-calculator.htm
   test "adjugate works" do
     assert Matrix.adjugate(@matrix_a) ==
-             {
-               {-6.0, 6.0, -12.0, 6.0},
-               {16.0, -12.0, 12.0, -4.0},
-               {4.0, -12.0, 24.0, -4.0},
-               {10.0, 6.0, 12.0, -10.0}
-             }
+             [
+               -6.0, 6.0, -12.0, 6.0,
+               16.0, -12.0, 12.0, -4.0,
+               4.0, -12.0, 24.0, -4.0,
+               10.0, 6.0, 12.0, -10.0
+             ]
              |> Utils.to_binary()
   end
 
@@ -714,12 +714,12 @@ defmodule Scenic.Math.MatrixTest do
     inverse = Matrix.invert(@matrix_a)
 
     target =
-      {
-        {-6 / 24, 6 / 24, -12 / 24, 6 / 24},
-        {16 / 24, -12 / 24, 12 / 24, -4 / 24},
-        {4 / 24, -12 / 24, 24 / 24, -4 / 24},
-        {10 / 24, 6 / 24, 12 / 24, -10 / 24}
-      }
+      [
+        -6 / 24, 6 / 24, -12 / 24, 6 / 24,
+        16 / 24, -12 / 24, 12 / 24, -4 / 24,
+        4 / 24, -12 / 24, 24 / 24, -4 / 24,
+        10 / 24, 6 / 24, 12 / 24, -10 / 24
+      ]
       |> Utils.to_binary()
 
     assert Matrix.close?(inverse, target)
@@ -727,16 +727,15 @@ defmodule Scenic.Math.MatrixTest do
 
   test "invert returns error if determinant is zero" do
     m =
-      {
-        {3.0, 2.0, 0.0, 1.0},
-        {4.0, 0.0, 1.0, 2.0},
-        {0.0, 0.0, 0.0, 0.0},
-        {9.0, 2.0, 3.0, 1.0}
-      }
+      [
+        3.0, 2.0, 0.0, 1.0,
+        4.0, 0.0, 1.0, 2.0,
+        0.0, 0.0, 0.0, 0.0,
+        9.0, 2.0, 3.0, 1.0
+      ]
       |> Utils.to_binary()
 
     assert Matrix.invert(m) == :err_zero_determinant
-    assert Matrix.invert(Utils.to_binary(m)) == :err_zero_determinant
   end
 
   test "invert checks types" do

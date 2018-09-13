@@ -26,18 +26,19 @@ defmodule Scenic.Math do
 
   @type matrix :: <<_::64>>
 
-  @type matrix_tuple :: {
-          {number, number, number, number},
-          {number, number, number, number},
-          {number, number, number, number},
-          {number, number, number, number}
-        }
+  # @type matrix_tuple :: {
+  #         {number, number, number, number},
+  #         {number, number, number, number},
+  #         {number, number, number, number},
+  #         {number, number, number, number}
+  #       }
 
-  @type matrix_list :: [
-          number, number, number, number,
-          number, number, number, number,
-          number, number, number, number,
-          number, number, number, number
-        ]
+  @type matrix_list :: list(number)
+        # [
+        #   number, number, number, number,
+        #   number, number, number, number,
+        #   number, number, number, number,
+        #   number, number, number, number
+        # ]
 
 end
