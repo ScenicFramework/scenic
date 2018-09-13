@@ -3,7 +3,7 @@ defmodule ScenicMath.Mixfile do
 
   @github "https://github.com/boydm/scenic_math"
 
-  @version "0.7.2"
+  @version "0.8.0"
 
   def project do
     [
