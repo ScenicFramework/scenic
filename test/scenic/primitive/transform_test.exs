@@ -11,7 +11,7 @@ defmodule Scenic.Primitive.TransformTest do
 
   alias Scenic.Primitive.Transform
   alias Scenic.Math.Matrix
-  alias Scenic.Math.Vector
+  alias Scenic.Math.Vector2
 
   @identity Matrix.identity()
 
@@ -44,7 +44,7 @@ defmodule Scenic.Primitive.TransformTest do
   test "calculate_local calculates the local matrix in the right order" do
     # first calc all the matrices
     mx_pin = Matrix.build_translation(@pin)
-    mx_inv_pin = Matrix.build_translation(Vector.invert(@pin))
+    mx_inv_pin = Matrix.build_translation(Vector2.invert(@pin))
     mx_rotation = Matrix.build_rotation(@rotation)
     mx_scale = Matrix.build_scale(@scale)
     mx_translation = Matrix.build_translation(@translate)
