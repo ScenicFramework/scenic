@@ -12,13 +12,10 @@ defmodule Scenic.Math.Vector2 do
         {3.5, 4.7}
   """
 
-
   alias Scenic.Math.Vector2
   alias Scenic.Math.Matrix
 
   #  import IEx
-
-  # a vector2 is a tuple with two dimentions. {x, y}
 
   # common constants
   @doc "A vector that points to the origin."
