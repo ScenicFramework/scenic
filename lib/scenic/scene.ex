@@ -702,7 +702,7 @@ defmodule Scenic.Scene do
     ViewPort.Tables.insert_graph(graph_key, self(), graph, all_keys)
 
     # write the graph into the ets table
-    ViewPort.Tables.insert_graph(graph_key, self(), graph, all_keys)
+    # ViewPort.Tables.insert_graph(graph_key, self(), graph, all_keys)
 
     {:noreply, state}
   end
