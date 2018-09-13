@@ -20,7 +20,7 @@ defmodule Scenic.Cache.Term do
   # to use as a key even it is is already loaded into the cache.
   def load(path, :insecure, opts) do
     with {:ok, data} <- Cache.File.read(path, :insecure, opts) do
-      hash = Hash.compute(data, opts[:hash] || :sha)
+      hash = Hash.binary(data, opts[:hash] || :sha)
 
       case Cache.claim(hash, opts[:scope]) do
         true ->
