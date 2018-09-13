@@ -69,8 +69,8 @@ defmodule Scenic.Mixfile do
 
   defp deps do
     [
-      {:scenic_math, "~> 0.7"},
-      # {:scenic_math, git: "git@github.com:boydm/scenic_math.git"},
+      # {:scenic_math, "~> 0.7"},
+      {:scenic_math, git: "git@github.com:boydm/scenic_math.git"},
 
       # Tools
       {:ex_doc, ">= 0.0.0", only: [:dev]},
