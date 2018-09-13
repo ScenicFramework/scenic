@@ -9,8 +9,6 @@ defmodule ScenicMath.Mixfile do
     [
       app: :scenic_math,
       version: @version,
-      # build_path: "_build",
-      # deps_path: "deps",
       elixir: "~> 1.6",
       description: description(),
       # build_embedded: Mix.env == :prod,
@@ -62,7 +60,6 @@ defmodule ScenicMath.Mixfile do
   defp deps do
     [
       {:elixir_make, "~> 0.4"},
-      # { :benchwarmer, "~> 0.0.2", only: :dev }
 
       # Docs dependencies
       {:ex_doc, ">= 0.0.0", only: [:dev, :docs]},
