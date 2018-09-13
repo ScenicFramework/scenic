@@ -68,7 +68,6 @@ defmodule Scenic.Cache.HashTest do
     assert_raise File.Error, fn -> Hash.file!(@no_such_file_path, :sha) end
   end
 
-
   # ============================================================================
   # verify
 

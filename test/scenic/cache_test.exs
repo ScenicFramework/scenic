@@ -364,7 +364,7 @@ defmodule Scenic.CacheTest do
 
   # ============================================================================
   # notifications
-  
+
   @cache_registry :scenic_cache_registry
   @cache_put :cache_put
   @cache_delete :cache_delete
@@ -372,37 +372,36 @@ defmodule Scenic.CacheTest do
   @cache_release :cache_release
 
   test "request & stop notification put" do
-    assert Registry.keys( @cache_registry, self() ) == []
-    Cache.request_notification( @cache_put )
-    assert Registry.keys( @cache_registry, self() ) == [@cache_put]
-    Cache.stop_notification( @cache_put )
-    assert Registry.keys( @cache_registry, self() ) == []
+    assert Registry.keys(@cache_registry, self()) == []
+    Cache.request_notification(@cache_put)
+    assert Registry.keys(@cache_registry, self()) == [@cache_put]
+    Cache.stop_notification(@cache_put)
+    assert Registry.keys(@cache_registry, self()) == []
   end
 
   test "request & stop notification delete" do
-    assert Registry.keys( @cache_registry, self() ) == []
-    Cache.request_notification( @cache_delete )
-    assert Registry.keys( @cache_registry, self() ) == [@cache_delete]
-    Cache.stop_notification( @cache_delete )
-    assert Registry.keys( @cache_registry, self() ) == []
+    assert Registry.keys(@cache_registry, self()) == []
+    Cache.request_notification(@cache_delete)
+    assert Registry.keys(@cache_registry, self()) == [@cache_delete]
+    Cache.stop_notification(@cache_delete)
+    assert Registry.keys(@cache_registry, self()) == []
   end
 
   test "request & stop notification claim" do
-    assert Registry.keys( @cache_registry, self() ) == []
-    Cache.request_notification( @cache_claim )
-    assert Registry.keys( @cache_registry, self() ) == [@cache_claim]
-    Cache.stop_notification( @cache_claim )
-    assert Registry.keys( @cache_registry, self() ) == []
+    assert Registry.keys(@cache_registry, self()) == []
+    Cache.request_notification(@cache_claim)
+    assert Registry.keys(@cache_registry, self()) == [@cache_claim]
+    Cache.stop_notification(@cache_claim)
+    assert Registry.keys(@cache_registry, self()) == []
   end
 
   test "request & stop notification release" do
-    assert Registry.keys( @cache_registry, self() ) == []
-    Cache.request_notification( @cache_release )
-    assert Registry.keys( @cache_registry, self() ) == [@cache_release]
-    Cache.stop_notification( @cache_release )
-    assert Registry.keys( @cache_registry, self() ) == []
+    assert Registry.keys(@cache_registry, self()) == []
+    Cache.request_notification(@cache_release)
+    assert Registry.keys(@cache_registry, self()) == [@cache_release]
+    Cache.stop_notification(@cache_release)
+    assert Registry.keys(@cache_registry, self()) == []
   end
-
 end
 
 # ==============================================================================

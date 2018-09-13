@@ -40,9 +40,11 @@ defmodule Scenic.Cache.Hash do
   end
 
   def binary!(data, hash_type) do
-    {:ok, hash} = valid_hash_type!(hash_type)
-    |> :crypto.hash(data)
-    |> Base.url_encode64(padding: false)
+    {:ok, hash} =
+      valid_hash_type!(hash_type)
+      |> :crypto.hash(data)
+      |> Base.url_encode64(padding: false)
+
     hash
   end
 
@@ -54,6 +56,7 @@ defmodule Scenic.Cache.Hash do
       valid_hash_type?(hash_type)
     )
   end
+
   def file!(path, hash_type) do
     # start the hash context
     hash_context =
