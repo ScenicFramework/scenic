@@ -7,7 +7,7 @@
 
 defmodule Scenic.Primitive.Transform do
   alias Scenic.Math.Matrix
-  alias Scenic.Math.Vector
+  alias Scenic.Math.Vector2
   alias Scenic.Primitive.Transform
 
   @callback info(data :: any) :: bitstring
@@ -95,7 +95,7 @@ defmodule Scenic.Primitive.Transform do
   defp multiply_partial(mx, :matrix, dev_mx), do: Matrix.mul(mx, dev_mx)
 
   defp multiply_partial(mx, :inv_pin, point) do
-    Matrix.translate(mx, Vector.invert(point))
+    Matrix.translate(mx, Vector2.invert(point))
   end
 
   # --------------------------------------------------------
