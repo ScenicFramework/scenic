@@ -224,8 +224,17 @@ defmodule Scenic.Math.Matrix do
   end
 
   # --------------------------------------------------------
-  # scale matrix
+  @doc """
+  Build a matrix that represents a scaling operation.
 
+  Parameters:
+  * scale: the amount to scale by. Can be either a number or a vector_2
+
+  Returns:
+  A binary matrix
+  """
+  @spec build_scale(scale :: number | Math.vector_2) :: Math.matrix
+  def build_scale( scale )
   def build_scale(s) when is_number(s), do: build_scale({s, s, s})
   def build_scale({x, y}), do: build_scale({x, y, 1.0})
   # def build_scale({x, y, z}), do: build_scale(x, y, z)
