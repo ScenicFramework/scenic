@@ -2,7 +2,7 @@ defmodule Scenic.Mixfile do
   use Mix.Project
 
   @app_name :scenic
-  @version "0.7.0"
+  @version "0.7.1"
   @elixir_version "~> 1.6"
   @github "https://github.com/boydm/scenic"
 
