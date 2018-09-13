@@ -2,7 +2,9 @@ defmodule Scenic.Mixfile do
   use Mix.Project
 
   @app_name :scenic
-  @version "0.7.1"
+
+  @version "0.8.0"
+
   @elixir_version "~> 1.6"
   @github "https://github.com/boydm/scenic"
 
@@ -67,7 +69,8 @@ defmodule Scenic.Mixfile do
 
   defp deps do
     [
-      {:scenic_math, "~> 0.7"},
+      # {:scenic_math, "~> 0.8"},
+      {:scenic_math, git: "git@github.com:boydm/scenic_math.git"},
 
       # Tools
       {:ex_doc, ">= 0.0.0", only: [:dev]},

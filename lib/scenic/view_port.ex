@@ -27,7 +27,7 @@ defmodule Scenic.ViewPort do
   logic or state encapsulated in Scenes.
 
   The goal is to isolate app data & logic from render data & logic. The
-  ViewPort is the chokepoint between them that makes sense of the flow
+  ViewPort is the choke point between them that makes sense of the flow
   of information.
 
   ## OUTPUT
@@ -51,9 +51,9 @@ defmodule Scenic.ViewPort do
   window events, etc...) Are sent to the root scene unless some other
   scene has captured that type of input (see captured input) below.
 
-  If the input event does depend on positino (cursor position, cursor
+  If the input event does depend on position (cursor position, cursor
   button presses, scrolling, etc...) then the ViewPort needs to
-  travers the hierarchical graph of graphs, to find the corrent
+  scan the hierarchical graph of graphs, to find the correct
   scene, and the item in that scene that was "hit". The ViewPort
   then sends the event to that scene, with the position projected
   into the scene's local coordinate space (via the built-up stack

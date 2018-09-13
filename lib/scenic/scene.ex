@@ -689,7 +689,7 @@ defmodule Scenic.Scene do
     # it for the drivers. Yes, the driver could do this from the all_keys term
     # that is also being written into the ets table, but it gets done all the
     # time for each reader and when consuming input, so it is better to do it
-    # once here. Note that the all_keys term is still being written becuase
+    # once here. Note that the all_keys term is still being written because
     # otherwise the drivers would need to do a full graph scan in order to prep
     # whatever translators they need. Again, the info has already been
     # calculated here, so just pass it along without throwing it out.
@@ -702,7 +702,7 @@ defmodule Scenic.Scene do
     ViewPort.Tables.insert_graph(graph_key, self(), graph, all_keys)
 
     # write the graph into the ets table
-    ViewPort.Tables.insert_graph(graph_key, self(), graph, all_keys)
+    # ViewPort.Tables.insert_graph(graph_key, self(), graph, all_keys)
 
     {:noreply, state}
   end
@@ -814,7 +814,7 @@ defmodule Scenic.Scene do
     # it for the drivers. Yes, the driver could do this from the all_keys term
     # that is also being written into the ets table, but it gets done all the
     # time for each reader and when consuming input, so it is better to do it
-    # once here. Note that the all_keys term is still being written becuase
+    # once here. Note that the all_keys term is still being written because
     # otherwise the drivers would need to do a full graph scan in order to prep
     # whatever translators they need. Again, the info has already been
     # calculated here, so just pass it along without throwing it out.

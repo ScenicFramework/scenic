@@ -33,19 +33,38 @@ defmodule Scenic.Cache.Hash do
   end
 
   # --------------------------------------------------------
-  def compute(data, hash_type) do
+  def binary(data, hash_type) do
     valid_hash_type!(hash_type)
     |> :crypto.hash(data)
     |> Base.url_encode64(padding: false)
   end
 
+  def binary!(data, hash_type) do
+    {:ok, hash} = valid_hash_type!(hash_type)
+    |> :crypto.hash(data)
+    |> Base.url_encode64(padding: false)
+    hash
+  end
+
   # --------------------------------------------------------
-  def compute_file(path, hash_type) do
+  def file(path, hash_type) do
     do_compute_file(
       path,
       hash_type,
       valid_hash_type?(hash_type)
     )
+  end
+  def file!(path, hash_type) do
+    # start the hash context
+    hash_context =
+      valid_hash_type!(hash_type)
+      |> :crypto.hash_init()
+
+    # stream the file into the hash
+    File.stream!(path, [], 2048)
+    |> Enum.reduce(hash_context, &:crypto.hash_update(&2, &1))
+    |> :crypto.hash_final()
+    |> Base.url_encode64(padding: false)
   end
 
   defp do_compute_file(_, _, false), do: {:error, :invalid_hash_type}
@@ -76,22 +95,8 @@ defmodule Scenic.Cache.Hash do
   end
 
   # --------------------------------------------------------
-  def compute_file!(path, hash_type) do
-    # start the hash context
-    hash_context =
-      valid_hash_type!(hash_type)
-      |> :crypto.hash_init()
-
-    # stream the file into the hash
-    File.stream!(path, [], 2048)
-    |> Enum.reduce(hash_context, &:crypto.hash_update(&2, &1))
-    |> :crypto.hash_final()
-    |> Base.url_encode64(padding: false)
-  end
-
-  # --------------------------------------------------------
   def verify(data, hash, hash_type) do
-    case compute(data, hash_type) == hash do
+    case binary(data, hash_type) == hash do
       true -> {:ok, data}
       false -> {:error, :hash_failure}
     end
@@ -99,7 +104,7 @@ defmodule Scenic.Cache.Hash do
 
   # --------------------------------------------------------
   def verify!(data, hash, hash_type) do
-    case compute(data, hash_type) == hash do
+    case binary(data, hash_type) == hash do
       true -> data
       false -> raise Error
     end
@@ -109,7 +114,7 @@ defmodule Scenic.Cache.Hash do
   def verify_file(path_data), do: path_params(path_data) |> do_verify_file()
 
   defp do_verify_file({path, hash, hash_type}) do
-    case compute_file(path, hash_type) do
+    case file(path, hash_type) do
       {:ok, computed_hash} ->
         case computed_hash == hash do
           true -> {:ok, hash}
@@ -125,7 +130,7 @@ defmodule Scenic.Cache.Hash do
   def verify_file!(path_data), do: path_params(path_data) |> do_verify_file!()
 
   defp do_verify_file!({path, hash, hash_type}) do
-    case compute_file!(path, hash_type) == hash do
+    case file!(path, hash_type) == hash do
       true -> hash
       false -> raise Error
     end

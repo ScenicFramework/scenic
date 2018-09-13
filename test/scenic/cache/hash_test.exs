@@ -24,50 +24,57 @@ defmodule Scenic.Cache.HashTest do
   #    hash = Cache.File.compute_file_hash( @valid_hash_path )
 
   # ============================================================================
-  # compute
+  # compute hash for binary
 
-  test "compute_hash computes a hash for some data" do
+  test "binary computes a hash for some binary data" do
     data = "some data. af98hwu4lhrliw4uhtliuhet;giojres;ihg;usdhg"
     expected_hash = :crypto.hash(:sha, data) |> Base.url_encode64(padding: false)
-    assert Hash.compute(data, :sha) == expected_hash
+    assert Hash.binary(data, :sha) == expected_hash
+  end
+
+  test "binary! computes a hash for some binary data" do
+    data = "some data. af98hwu4lhrliw4uhtliuhet;giojres;ihg;usdhg"
+    expected_hash = :crypto.hash(:sha, data) |> Base.url_encode64(padding: false)
+    assert Hash.binary(data, :sha) == expected_hash
   end
 
   # ============================================================================
   # compute_file
 
-  test "compute_file loads a file and computes its hash" do
-    assert Hash.compute_file(@missing_hash_path, :sha) == {:ok, @missing_hash}
+  test "file loads a file and computes its hash" do
+    assert Hash.file(@missing_hash_path, :sha) == {:ok, @missing_hash}
   end
 
-  test "compute_file loads a file and computes its hash with alternate algorithms" do
-    assert Hash.compute_file(@missing_hash_path, :sha256) == {:ok, @missing_hash_256}
+  test "file loads a file and computes its hash with alternate algorithms" do
+    assert Hash.file(@missing_hash_path, :sha256) == {:ok, @missing_hash_256}
   end
 
-  test "compute_file passes through file system errors" do
-    assert Hash.compute_file(@no_such_file_path, :sha) == {:error, :enoent}
+  test "file passes through file system errors" do
+    assert Hash.file(@no_such_file_path, :sha) == {:error, :enoent}
   end
 
   # ============================================================================
-  # compute_file!
+  # file!
 
-  test "compute_file! loads a file and computes its hash" do
-    assert Hash.compute_file!(@missing_hash_path, :sha) == @missing_hash
+  test "file! loads a file and computes its hash" do
+    assert Hash.file!(@missing_hash_path, :sha) == @missing_hash
   end
 
-  test "compute_file! loads a file and computes its hash with alternate algorithms" do
-    assert Hash.compute_file!(@missing_hash_path, :sha256) == @missing_hash_256
+  test "file! loads a file and computes its hash with alternate algorithms" do
+    assert Hash.file!(@missing_hash_path, :sha256) == @missing_hash_256
   end
 
-  test "compute_file! passes through file system errors" do
-    assert_raise File.Error, fn -> Hash.compute_file!(@no_such_file_path, :sha) end
+  test "file! passes through file system errors" do
+    assert_raise File.Error, fn -> Hash.file!(@no_such_file_path, :sha) end
   end
+
 
   # ============================================================================
   # verify
 
   test "verify returns {:ok, data} when the hash checks out ok" do
     data = "This is some data to hash - awleiufhoq34htuwehtljwuh5toihu"
-    expected = Hash.compute(data, :sha)
+    expected = Hash.binary(data, :sha)
     assert Hash.verify(data, expected, :sha) == {:ok, data}
   end
 
@@ -81,7 +88,7 @@ defmodule Scenic.Cache.HashTest do
 
   test "verify! returns data when the hash checks out ok" do
     data = "This is some data to hash - awleiufhoq34htuwehtljwuh5toihu"
-    expected = Hash.compute(data, :sha)
+    expected = Hash.binary(data, :sha)
     assert Hash.verify!(data, expected, :sha) == data
   end
 

@@ -361,6 +361,14 @@ defmodule Scenic.CacheTest do
     assert Cache.keys() == ["test_key_0"]
     assert Cache.get("test_key_0") == "data_0"
   end
+
+  # ============================================================================
+  # notifications
+  test "request_notification"
+  test "stop_notification"
+
+
+
 end
 
 # ==============================================================================
