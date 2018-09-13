@@ -1,11 +1,12 @@
 # Scenic.Math
 
+[![Build Status](https://travis-ci.org/boydm/scenic_math.svg?branch=master)](https://travis-ci.org/boydm/scenic_math)
+
 Math support for Scenic applications
+
 ## Installation
 
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `scenic_math` to your list of dependencies in `mix.exs`:
+Add `scenic_math` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
