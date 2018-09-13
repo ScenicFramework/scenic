@@ -444,6 +444,6 @@ defmodule Scenic.Math.Vector2 do
     Matrix.project_vector(matrix, {x, y})
   end
   def project(vectors, matrix) do
-    Matrix.project_vector2s(matrix, vectors)
+    Matrix.project_vectors(matrix, vectors)
   end
 end

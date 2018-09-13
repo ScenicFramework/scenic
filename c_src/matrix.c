@@ -683,8 +683,8 @@ static ErlNifFunc nif_funcs[] = {
   {"nif_adjugate",          1, nif_adjugate,        0},
   {"nif_project_vector2",   3, nif_project_vector2, 0},
   {"nif_project_vector2s",  2, nif_project_vector2s, 0},
-  {"nif_project_vector3",   4, nif_project_vector3, 0},
-  {"nif_project_vector3s",  2, nif_project_vector3s, 0},
+  // {"nif_project_vector3",   4, nif_project_vector3, 0},
+  // {"nif_project_vector3s",  2, nif_project_vector3s, 0},
 };
 
 ERL_NIF_INIT(Elixir.Scenic.Math.Matrix, nif_funcs, NULL, NULL, NULL, NULL)

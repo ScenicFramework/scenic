@@ -158,23 +158,23 @@ defmodule Scenic.Math.MatrixTest do
       ]
       |> Utils.to_binary()
 
-    assert Matrix.build_translation(2.0, 3.0) == mx
+    # assert Matrix.build_translation(2.0, 3.0) == mx
     assert Matrix.build_translation({2.0, 3.0}) == mx
   end
 
-  test "build_translation( 3x3 ) works" do
-    mx =
-      [
-        1.0, 0.0, 0.0, 2.0,
-        0.0, 1.0, 0.0, 3.0,
-        0.0, 0.0, 1.0, 4.0,
-        0.0, 0.0, 0.0, 1.0
-      ]
-      |> Utils.to_binary()
+  # test "build_translation( 3x3 ) works" do
+  #   mx =
+  #     [
+  #       1.0, 0.0, 0.0, 2.0,
+  #       0.0, 1.0, 0.0, 3.0,
+  #       0.0, 0.0, 1.0, 4.0,
+  #       0.0, 0.0, 0.0, 1.0
+  #     ]
+  #     |> Utils.to_binary()
 
-    assert Matrix.build_translation(2.0, 3.0, 4.0) == mx
-    assert Matrix.build_translation({2.0, 3.0, 4.0}) == mx
-  end
+  #   assert Matrix.build_translation(2.0, 3.0, 4.0) == mx
+  #   assert Matrix.build_translation({2.0, 3.0, 4.0}) == mx
+  # end
 
   # --------------------------------------------------------
   # build_scale
@@ -191,7 +191,7 @@ defmodule Scenic.Math.MatrixTest do
     assert Matrix.build_scale(2.0) == mx
   end
 
-  test "build_scale( x,y ) works" do
+  test "build_scale( point ) works" do
     mx =
       [
         2.0, 0.0, 0.0, 0.0,
@@ -201,23 +201,23 @@ defmodule Scenic.Math.MatrixTest do
       ]
       |> Utils.to_binary()
 
-    assert Matrix.build_scale(2.0, 3.0) == mx
+    # assert Matrix.build_scale(2.0, 3.0) == mx
     assert Matrix.build_scale({2.0, 3.0}) == mx
   end
 
-  test "build_scale( x,y,z ) works" do
-    mx =
-      [
-        2.0, 0.0, 0.0, 0.0,
-        0.0, 3.0, 0.0, 0.0,
-        0.0, 0.0, 4.0, 0.0,
-        0.0, 0.0, 0.0, 1.0
-      ]
-      |> Utils.to_binary()
+  # test "build_scale( x,y,z ) works" do
+  #   mx =
+  #     [
+  #       2.0, 0.0, 0.0, 0.0,
+  #       0.0, 3.0, 0.0, 0.0,
+  #       0.0, 0.0, 4.0, 0.0,
+  #       0.0, 0.0, 0.0, 1.0
+  #     ]
+  #     |> Utils.to_binary()
 
-    assert Matrix.build_scale(2.0, 3.0, 4.0) == mx
-    assert Matrix.build_scale({2.0, 3.0, 4.0}) == mx
-  end
+  #   assert Matrix.build_scale(2.0, 3.0, 4.0) == mx
+  #   assert Matrix.build_scale({2.0, 3.0, 4.0}) == mx
+  # end
 
   # --------------------------------------------------------
   # build_rotation( radians )
@@ -246,9 +246,9 @@ defmodule Scenic.Math.MatrixTest do
     x = 10
     y = 20
 
-    mx_inv = Matrix.build_translation(-x, -y)
+    mx_inv = Matrix.build_translation({-x, -y})
     mx_rot = Matrix.build_rotation(r)
-    mx_bak = Matrix.build_translation(x, y)
+    mx_bak = Matrix.build_translation({x, y})
 
     mx = Matrix.mul(mx_inv, mx_rot) |> Matrix.mul(mx_bak)
 
@@ -259,13 +259,13 @@ defmodule Scenic.Math.MatrixTest do
   # act on a matrix
 
   test "rotate rotates a matrix" do
-    mx_trans = Matrix.build_translation(123, 456)
+    mx_trans = Matrix.build_translation({123, 456})
     mx_rot = Matrix.build_rotation(1.3)
     assert Matrix.rotate(mx_trans, 1.3) == Matrix.mul(mx_trans, mx_rot)
   end
 
   test "translate translates a matrix" do
-    mx_trans = Matrix.build_translation(123, 456)
+    mx_trans = Matrix.build_translation({123, 456})
     mx_rot = Matrix.build_rotation(1.3)
     assert Matrix.translate(mx_rot, {123, 456}) == Matrix.mul(mx_rot, mx_trans)
   end
@@ -756,10 +756,10 @@ defmodule Scenic.Math.MatrixTest do
     assert Matrix.project_vector(mx, {10, 20}) == {15, 27}
   end
 
-  test "project_vector works with a vector3 tuple" do
-    mx = Matrix.build_translation({5, 7, 11})
-    assert Matrix.project_vector(mx, {10, 20, 30}) == {15, 27, 41}
-  end
+  # test "project_vector works with a vector3 tuple" do
+  #   mx = Matrix.build_translation({5, 7, 11})
+  #   assert Matrix.project_vector(mx, {10, 20, 30}) == {15, 27, 41}
+  # end
 
   test "project_vector checks types" do
     assert_raise ArgumentError, fn ->
@@ -774,9 +774,9 @@ defmodule Scenic.Math.MatrixTest do
       Matrix.project_vector(@matrix_a, {1, :not_a_scalar})
     end
 
-    assert_raise ArgumentError, fn ->
-      Matrix.project_vector(@matrix_a, {1, 2, :not_a_scalar})
-    end
+    # assert_raise ArgumentError, fn ->
+    #   Matrix.project_vector(@matrix_a, {1, 2, :not_a_scalar})
+    # end
   end
 
   # ----------------------------------------------------------------------------
@@ -791,7 +791,7 @@ defmodule Scenic.Math.MatrixTest do
       200::float-size(32)-native
     >>
 
-    assert Matrix.project_vector2s(mx, vectors_in) == <<
+    assert Matrix.project_vectors(mx, vectors_in) == <<
              15::float-size(32)-native,
              27::float-size(32)-native,
              105::float-size(32)-native,
@@ -814,62 +814,62 @@ defmodule Scenic.Math.MatrixTest do
     >>
 
     assert_raise ArgumentError, fn ->
-      Matrix.project_vector2s(:not_a_matrix, vectors_good)
+      Matrix.project_vectors(:not_a_matrix, vectors_good)
     end
 
     assert_raise ArgumentError, fn ->
-      Matrix.project_vector2s(@matrix_a, vectors_wrong_size)
+      Matrix.project_vectors(@matrix_a, vectors_wrong_size)
     end
   end
 
   # ----------------------------------------------------------------------------
   # project packed 3d vectors with a matrix
-  test "project_vector3s works with a packed vector2 binary" do
-    mx = Matrix.build_translation({5, 7, 11})
+  # test "project_vector3s works with a packed vector2 binary" do
+  #   mx = Matrix.build_translation({5, 7, 11})
 
-    vectors_in = <<
-      10::float-size(32)-native,
-      20::float-size(32)-native,
-      30::float-size(32)-native,
-      100::float-size(32)-native,
-      200::float-size(32)-native,
-      300::float-size(32)-native
-    >>
+  #   vectors_in = <<
+  #     10::float-size(32)-native,
+  #     20::float-size(32)-native,
+  #     30::float-size(32)-native,
+  #     100::float-size(32)-native,
+  #     200::float-size(32)-native,
+  #     300::float-size(32)-native
+  #   >>
 
-    assert Matrix.project_vector3s(mx, vectors_in) == <<
-             15::float-size(32)-native,
-             27::float-size(32)-native,
-             41::float-size(32)-native,
-             105::float-size(32)-native,
-             207::float-size(32)-native,
-             311::float-size(32)-native
-           >>
-  end
+  #   assert Matrix.project_vector3s(mx, vectors_in) == <<
+  #            15::float-size(32)-native,
+  #            27::float-size(32)-native,
+  #            41::float-size(32)-native,
+  #            105::float-size(32)-native,
+  #            207::float-size(32)-native,
+  #            311::float-size(32)-native
+  #          >>
+  # end
 
-  test "project_vector3 checks types" do
-    vectors_good = <<
-      10::float-size(32)-native,
-      20::float-size(32)-native,
-      30::float-size(32)-native,
-      100::float-size(32)-native,
-      200::float-size(32)-native,
-      300::float-size(32)-native
-    >>
+  # test "project_vector3 checks types" do
+  #   vectors_good = <<
+  #     10::float-size(32)-native,
+  #     20::float-size(32)-native,
+  #     30::float-size(32)-native,
+  #     100::float-size(32)-native,
+  #     200::float-size(32)-native,
+  #     300::float-size(32)-native
+  #   >>
 
-    vectors_wrong_size = <<
-      10::float-size(32)-native,
-      20::float-size(32)-native,
-      30::float-size(32)-native,
-      100::float-size(32)-native,
-      200::float-size(32)-native
-    >>
+  #   vectors_wrong_size = <<
+  #     10::float-size(32)-native,
+  #     20::float-size(32)-native,
+  #     30::float-size(32)-native,
+  #     100::float-size(32)-native,
+  #     200::float-size(32)-native
+  #   >>
 
-    assert_raise ArgumentError, fn ->
-      Matrix.project_vector3s(:not_a_matrix, vectors_good)
-    end
+  #   assert_raise ArgumentError, fn ->
+  #     Matrix.project_vector3s(:not_a_matrix, vectors_good)
+  #   end
 
-    assert_raise ArgumentError, fn ->
-      Matrix.project_vector3s(@matrix_a, vectors_wrong_size)
-    end
-  end
+  #   assert_raise ArgumentError, fn ->
+  #     Matrix.project_vector3s(@matrix_a, vectors_wrong_size)
+  #   end
+  # end
 end

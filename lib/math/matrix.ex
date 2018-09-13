@@ -14,15 +14,9 @@ defmodule Scenic.Math.Matrix do
   All the matrix fucntions in this module work exclusively with the binary form
   of a matrix, which is a compact binary of 16 4-byte floats.
 
-  If you would like to 
-
-
-  
-        {point_a, point_b}
-        {{x0,y0}, {x1,y1}}
+  If you would like to convert back and forth from the more human friendly list
+  version, then please use the functions in [Scenic.Math.Matrix.Utils](Scenic.Math.Matrix.Utils)
   """
-
-
 
   alias Scenic.Math
   alias Scenic.Math.Matrix
@@ -194,12 +188,21 @@ defmodule Scenic.Math.Matrix do
 
   # --------------------------------------------------------
   # translation matrix
+  @doc """
+  Build a matrix that represents a simple translation.
 
-  def build_translation({x, y}), do: build_translation(x, y, 0.0)
-  def build_translation({x, y, z}), do: build_translation(x, y, z)
-  def build_translation(x, y), do: build_translation(x, y, 0.0)
+  Parameters:
+  * vector_2: the vector to be rounded
 
-  def build_translation(x, y, z) do
+  Returns:
+  The integer vector
+  """
+  @spec build_translation(vector :: Math.vector_2) :: Math.matrix
+
+  def build_translation({x, y}), do: build_translation({x, y, 0.0})
+  # def build_translation({x, y, z}), do: build_translation(x, y, z)
+  # def build_translation(x, y), do: build_translation(x, y, 0.0)
+  def build_translation({x, y, z}) do
     <<
       1.0::float-size(32)-native,
       0.0::float-size(32)-native,
@@ -343,9 +346,9 @@ defmodule Scenic.Math.Matrix do
   def build_rotate_around(radians, point)
 
   def build_rotate_around(radians, {x, y}) do
-    build_translation(-x, -y)
-    |> Matrix.mul(build_rotation(radians))
-    |> Matrix.mul(build_translation(x, y))
+    build_translation({-x, -y})
+    |> Matrix.rotate(radians)
+    |> Matrix.translate({x, y})
   end
 
   # ============================================================================
@@ -353,7 +356,6 @@ defmodule Scenic.Math.Matrix do
 
   # --------------------------------------------------------
   def rotate(matrix, nil), do: matrix
-
   def rotate(matrix, amount) do
     build_rotation(amount)
     |> (&Matrix.mul(matrix, &1)).()
@@ -365,13 +367,18 @@ defmodule Scenic.Math.Matrix do
   # end
 
   # --------------------------------------------------------
-  def translate(matrix, {x, y}), do: translate(matrix, x, y)
-  def translate(matrix, {x, y, z}), do: translate(matrix, x, y, z)
   def translate(matrix, nil), do: matrix
-  def translate(matrix, x, y), do: build_translation(x, y) |> (&Matrix.mul(matrix, &1)).()
-  def translate(matrix, x, y, z), do: build_translation(x, y, z) |> (&Matrix.mul(matrix, &1)).()
+  def translate(matrix, {x, y}) do
+    build_translation({x, y})
+    |> (&Matrix.mul(matrix, &1)).()
+  end
+  # def translate(matrix, {x, y, z}), do: translate(matrix, x, y, z)
+  # def translate(matrix, nil), do: matrix
+  # def translate(matrix, x, y), do: build_translation(x, y) |> (&Matrix.mul(matrix, &1)).()
+  # def translate(matrix, x, y, z), do: build_translation(x, y, z) |> (&Matrix.mul(matrix, &1)).()
 
   # --------------------------------------------------------
+  def scale(matrix, nil), do: matrix
   def scale(matrix, {x, y}), do: scale(matrix, x, y)
   def scale(matrix, {x, y, z}), do: scale(matrix, x, y, z)
   def scale(matrix, nil), do: matrix
@@ -456,30 +463,27 @@ defmodule Scenic.Math.Matrix do
   # --------------------------------------------------------
   # test if two matrices are close. Is sometimes better than
   # testing equality as floating point errors can be a factor
-  def close?(a, b, tolerance \\ 0.000001)
+  def close?(matrix_a, matrix_b, tolerance \\ 0.000001)
 
   def close?(<<_::binary-size(@matrix_size)>> = a, <<_::binary-size(@matrix_size)>> = b, t)
       when is_float(t) do
     # in NIF
     nif_close(a, b, t)
   end
-
   defp nif_close(_, _, _), do: nif_error("Did not find nif_close")
 
   # --------------------------------------------------------
-  def add(a, b) do
+  def add(matrix_a, matrix_b) do
     # in NIF
-    nif_add(a, b)
+    nif_add(matrix_a, matrix_b)
   end
-
   defp nif_add(_, _), do: nif_error("Did not find nif_add")
 
   # --------------------------------------------------------
-  def sub(a, b) do
+  def sub(matrix_a, matrix_b) do
     # in NIF
-    nif_subtract(a, b)
+    nif_subtract(matrix_a, matrix_b)
   end
-
   defp nif_subtract(_, _), do: nif_error("Did not find nif_subtract")
 
   # --------------------------------------------------------
@@ -491,8 +495,8 @@ defmodule Scenic.Math.Matrix do
 
   # --------------------------------------------------------
   # multiply by a scalar
+  def mul(matrix, scalar)
   def mul(a, s) when is_integer(s), do: mul(a, s * 1.0)
-
   def mul(a, s) when is_float(s) do
     # in NIF
     nif_multiply_scalar(a, s)
@@ -500,91 +504,82 @@ defmodule Scenic.Math.Matrix do
 
   # --------------------------------------------------------
   # multiply two matrixes
-  def mul(a, b) do
+  def mul(matrix_a, matrix_b) do
     # in NIF
-    nif_multiply(a, b)
+    nif_multiply(matrix_a, matrix_b)
   end
-
   defp nif_multiply(_, _), do: nif_error("Did not find nif_multiply")
   defp nif_multiply_scalar(_, _), do: nif_error("Did not find nif_multiply_scalar")
   defp nif_multiply_list(_), do: nif_error("Did not find nif_multiply_list")
 
   # --------------------------------------------------------
   # divide by a scalar
+  def div(matrix, scalar)
   def div(a, s) when is_integer(s), do: Matrix.div(a, s * 1.0)
-
   def div(a, s) when is_float(s) do
     # in NIF
     nif_divide_scalar(a, s)
   end
-
   defp nif_divide_scalar(_, _), do: nif_error("Did not find nif_divide_scalar")
 
   # --------------------------------------------------------
-  def transpose(a) do
+  def transpose(matrix) do
     # in NIF
-    nif_transpose(a)
+    nif_transpose(matrix)
   end
-
   defp nif_transpose(_), do: nif_error("Did not find nif_transpose")
 
   # --------------------------------------------------------
-  def determinant(a) do
+  def determinant(matrix) do
     # in NIF
-    nif_determinant(a)
+    nif_determinant(matrix)
   end
-
   defp nif_determinant(_), do: nif_error("Did not find nif_determinant")
 
   # --------------------------------------------------------
-  def adjugate(a) do
+  def adjugate(matrix) do
     # in NIF
-    nif_adjugate(a)
+    nif_adjugate(matrix)
   end
-
   defp nif_adjugate(_), do: nif_error("Did not find nif_adjugate")
 
   # --------------------------------------------------------
-  def invert(a) do
-    case nif_determinant(a) do
+  def invert(matrix) do
+    case nif_determinant(matrix) do
       0.0 ->
         :err_zero_determinant
 
       det ->
-        a
+        matrix
         |> nif_adjugate()
         |> nif_multiply_scalar(1.0 / det)
     end
   end
 
   # --------------------------------------------------------
-  def project_vector(a, {x, y}) do
+  def project_vector(matrix, {x, y}) do
     # in NIF
-    nif_project_vector2(a, x, y)
+    nif_project_vector2(matrix, x, y)
   end
-
   # --------------------------------------------------------
-  def project_vector(a, {x, y, z}) do
-    # in NIF
-    nif_project_vector3(a, x, y, z)
-  end
-
+  # def project_vector(a, {x, y, z}) do
+  #   # in NIF
+  #   nif_project_vector3(a, x, y, z)
+  # end
   defp nif_project_vector2(_, _, _), do: nif_error("Did not find nif_project_vector2")
-  defp nif_project_vector3(_, _, _, _), do: nif_error("Did not find nif_project_vector3")
+  # defp nif_project_vector3(_, _, _, _), do: nif_error("Did not find nif_project_vector3")
 
   # --------------------------------------------------------
-  def project_vector2s(a, vector_bin) do
+  def project_vectors(a, vector_bin) do
     # in NIF
     nif_project_vector2s(a, vector_bin)
   end
-
   defp nif_project_vector2s(_, _), do: nif_error("Did not find nif_project_vector2s")
 
   # --------------------------------------------------------
-  def project_vector3s(a, vector_bin) do
-    # in NIF
-    nif_project_vector3s(a, vector_bin)
-  end
-
-  defp nif_project_vector3s(_, _), do: nif_error("Did not find nif_project_vector3s")
+  # def project_vector3s(a, vector_bin) do
+  #   # in NIF
+  #   nif_project_vector3s(a, vector_bin)
+  # end
+  # defp nif_project_vector3s(_, _), do: nif_error("Did not find nif_project_vector3s")
 end
