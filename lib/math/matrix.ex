@@ -192,13 +192,13 @@ defmodule Scenic.Math.Matrix do
   Build a matrix that represents a simple translation.
 
   Parameters:
-  * vector_2: the vector to be rounded
+  * vector_2: the vector defining how much to translate
 
   Returns:
-  The integer vector
+  A binary matrix
   """
-  @spec build_translation(vector :: Math.vector_2) :: Math.matrix
-
+  @spec build_translation(vector_2 :: Math.vector_2) :: Math.matrix
+  def build_translation( vector_2 )
   def build_translation({x, y}), do: build_translation({x, y, 0.0})
   # def build_translation({x, y, z}), do: build_translation(x, y, z)
   # def build_translation(x, y), do: build_translation(x, y, 0.0)
@@ -226,12 +226,11 @@ defmodule Scenic.Math.Matrix do
   # --------------------------------------------------------
   # scale matrix
 
-  def build_scale(s) when is_number(s), do: build_scale(s, s, s)
-  def build_scale({x, y}), do: build_scale(x, y, 1.0)
-  def build_scale({x, y, z}), do: build_scale(x, y, z)
-  def build_scale(x, y), do: build_scale(x, y, 1.0)
-
-  def build_scale(x, y, z) do
+  def build_scale(s) when is_number(s), do: build_scale({s, s, s})
+  def build_scale({x, y}), do: build_scale({x, y, 1.0})
+  # def build_scale({x, y, z}), do: build_scale(x, y, z)
+  # def build_scale(x, y), do: build_scale(x, y, 1.0)
+  def build_scale({x, y, z}) do
     <<
       x * 1.0::float-size(32)-native,
       0.0::float-size(32)-native,
@@ -379,12 +378,11 @@ defmodule Scenic.Math.Matrix do
 
   # --------------------------------------------------------
   def scale(matrix, nil), do: matrix
-  def scale(matrix, {x, y}), do: scale(matrix, x, y)
-  def scale(matrix, {x, y, z}), do: scale(matrix, x, y, z)
-  def scale(matrix, nil), do: matrix
+  # def scale(matrix, {x, y}), do: scale(matrix, {x, y})
+  # def scale(matrix, {x, y, z}), do: scale(matrix,{ x, y, z})
   def scale(matrix, s), do: build_scale(s) |> (&Matrix.mul(matrix, &1)).()
-  def scale(matrix, x, y), do: build_scale(x, y) |> (&Matrix.mul(matrix, &1)).()
-  def scale(matrix, x, y, z), do: build_scale(x, y, z) |> (&Matrix.mul(matrix, &1)).()
+  # def scale(matrix, x, y), do: build_scale(x, y) |> (&Matrix.mul(matrix, &1)).()
+  # def scale(matrix, x, y, z), do: build_scale(x, y, z) |> (&Matrix.mul(matrix, &1)).()
 
   # ============================================================================
   # get / set functions
@@ -392,7 +390,6 @@ defmodule Scenic.Math.Matrix do
   # --------------------------------------------------------
   # pure tuple version is faster, but this fits the binary version better
   def get(matrix, x, y)
-
   def get(matrix, x, y)
       when is_integer(x) and is_integer(y) and x >= 0 and y >= 0 and x < 4 and y < 4 do
     skip_size = y * 4 * 4 + x * 4
@@ -410,7 +407,6 @@ defmodule Scenic.Math.Matrix do
   # pure tuple version is faster, but this fits the binary version better
   def put(matrix, x, y, v)
   def put(matrix, x, y, v) when is_integer(v), do: put(matrix, x, y, v * 1.0)
-
   def put(matrix, x, y, v)
       when is_integer(x) and is_integer(y) and is_float(v) and x >= 0 and y >= 0 and x < 4 and
              y < 4 do
@@ -431,7 +427,6 @@ defmodule Scenic.Math.Matrix do
 
   # --------------------------------------------------------
   def get_xy(matrix)
-
   def get_xy(<<
         _::binary-size(12),
         x::float-size(32)-native,
@@ -444,7 +439,6 @@ defmodule Scenic.Math.Matrix do
 
   # --------------------------------------------------------
   def get_xyz(matrix)
-
   def get_xyz(<<
         _::binary-size(12),
         x::float-size(32)-native,
