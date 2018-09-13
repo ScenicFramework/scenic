@@ -10,7 +10,6 @@ Add `scenic_math` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:scenic_math, "~> 0.7.0"}]
+  [{:scenic_math, "~> 0.7"}]
 end
 ```
-
