@@ -23,7 +23,8 @@ defmodule Scenic.ViewPort.Config do
             drivers: [],
             max_depth: @max_depth,
             size: nil,
-            on_close: nil
+            on_close: nil,
+            opts: []
 
   @type t :: %Config{
           name: atom,
@@ -32,9 +33,9 @@ defmodule Scenic.ViewPort.Config do
           drivers: list,
           max_depth: pos_integer,
           size: Math.point(),
-          on_close: :stop_viewport | :stop_system | function
+          on_close: :stop_viewport | :stop_system | function,
+          opts: list({atom, any})
         }
-
   # @type t :: %Status{
   #   drivers:          Map.t,
   #   root_config:      {scene_module :: atom, args :: any} | scene_name :: atom,

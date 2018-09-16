@@ -8,6 +8,7 @@ defmodule Scenic.ViewPort do
   use GenServer
   alias Scenic.Math
   alias Scenic.ViewPort
+  alias Scenic.Primitive
   alias Scenic.ViewPort.Context
 
   # import IEx
@@ -91,7 +92,7 @@ defmodule Scenic.ViewPort do
   # {:viewport_enter, position :: Math.point} |
   # {:viewport_exit, position :: Math.point}
 
-  @type event :: {event :: atom, data :: any}
+  @type event :: {event :: atom, data :: any}  
 
   # ============================================================================
   # client api
@@ -362,7 +363,7 @@ defmodule Scenic.ViewPort do
   # ============================================================================
   # handle_cast
 
-  def handle_cast({:after_init, vp_supervisor, config}, _) do
+  def handle_cast({:after_init, vp_supervisor, config}, _) do    
     # find the viewport and associated pids this driver belongs to
     dyn_sup_pid =
       vp_supervisor
@@ -381,6 +382,24 @@ defmodule Scenic.ViewPort do
         func when is_function(func, 1) -> func
       end
 
+    # extract the viewport global styles. Do this by reusing tools in Primitive.
+    p = Primitive.put_opts(
+      %Primitive{module: Primitive.Group},
+      Map.get(config, :opts, [])
+    )
+    |> Primitive.minimal()
+    styles = Map.get( p, :styles, %{} )
+    transforms = Map.get( p, :transforms, %{} )
+
+    # build the master graph, which will act as the real root graph
+    # this gives us something to hang global transforms off of.
+    # the master graph starts in the minimal primitive-only form
+    master_graph_key= {:graph, make_ref(), nil}
+    master_graph = %{
+      0 => %{data: {Primitive.Group, [1]}, transforms: transforms},
+      1 => %{data: {Primitive.SceneRef, nil}}
+    }
+
     # set up the initial state
     state = %{
       size: config.size,
@@ -395,7 +414,10 @@ defmodule Scenic.ViewPort do
       supervisor: vp_supervisor,
       dynamic_supervisor: dyn_sup_pid,
       max_depth: config.max_depth,
-      on_close: on_close
+      on_close: on_close,
+      master_styles: styles,
+      master_graph: master_graph,
+      master_graph_key: master_graph_key
     }
 
     # set the initial scene as the root
@@ -423,7 +445,10 @@ defmodule Scenic.ViewPort do
         {:set_root, scene, args},
         %{
           dynamic_root_pid: old_dynamic_root_scene,
-          dynamic_supervisor: dyn_sup
+          dynamic_supervisor: dyn_sup,
+          master_styles: styles,
+          master_graph: master_graph,
+          master_graph_key: master_graph_key
         } = state
       ) do
     # prep state, which is mostly about resetting input
@@ -451,7 +476,8 @@ defmodule Scenic.ViewPort do
               nil,
               init_data,
               vp_dynamic_root: self(),
-              viewport: self()
+              viewport: self(),
+              styles: styles
             )
 
           {pid, ref, pid}
@@ -463,8 +489,18 @@ defmodule Scenic.ViewPort do
 
     graph_key = {:graph, scene_ref, nil}
 
+    # update the master graph
+    master_graph = put_in( master_graph, [1, :data], {Primitive.SceneRef, graph_key})
+    # insert the updated master graph
+    ViewPort.Tables.insert_graph(
+      master_graph_key,
+      self(),
+      master_graph,
+      %{1 => graph_key}
+    )
+
     # tell the drivers about the new root
-    driver_cast(self(), {:set_root, graph_key})
+    driver_cast(self(), {:set_root, master_graph_key})
 
     # clean up the old root graph. Can be done async so long as
     # terminating the dynamic scene (if set) is after deactivation
@@ -480,6 +516,7 @@ defmodule Scenic.ViewPort do
       |> Map.put(:root_scene_pid, scene_pid)
       |> Map.put(:dynamic_root_pid, dynamic_scene)
       |> Map.put(:root_config, {scene, args})
+      |> Map.put(:master_graph, master_graph)
 
     {:noreply, state}
   end
@@ -528,11 +565,13 @@ defmodule Scenic.ViewPort do
         {:driver_ready, driver_pid},
         %{
           drivers: drivers,
-          root_graph_key: root_key
+          # root_graph_key: root_key
+          master_graph_key: master_graph_key
         } = state
       ) do
     drivers = [driver_pid | drivers] |> Enum.uniq()
-    GenServer.cast(driver_pid, {:set_root, root_key})
+    # GenServer.cast(driver_pid, {:set_root, root_key})
+    GenServer.cast(driver_pid, {:set_root, master_graph_key})
     {:noreply, %{state | drivers: drivers}}
   end
 
@@ -550,8 +589,9 @@ defmodule Scenic.ViewPort do
   end
 
   # --------------------------------------------------------
-  def handle_cast({:request_root, to_pid}, %{root_graph_key: root_key} = state) do
-    GenServer.cast(to_pid, {:set_root, root_key})
+  # def handle_cast({:request_root, to_pid}, %{root_graph_key: root_key} = state) do
+  def handle_cast({:request_root, to_pid}, %{master_graph_key: master_key} = state) do
+    GenServer.cast(to_pid, {:set_root, master_key})
     {:noreply, state}
   end
 

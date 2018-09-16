@@ -104,7 +104,7 @@ defmodule Scenic.ViewPort.Input do
 
   # --------------------------------------------------------
   # ignore input until a graph_key has been set
-  def handle_cast({:input, _}, %{root_graph_key: nil} = state) do
+  def handle_cast({:input, _}, %{master_graph_key: nil} = state) do
     {:noreply, state}
   end
 
@@ -133,7 +133,7 @@ defmodule Scenic.ViewPort.Input do
 
   # --------------------------------------------------------
   # ignore input until a graph_key has been set
-  def handle_cast({:continue_input, _}, %{root_graph_key: nil} = state) do
+  def handle_cast({:continue_input, _}, %{master_graph_key: nil} = state) do
     {:noreply, state}
   end
 
@@ -648,7 +648,7 @@ defmodule Scenic.ViewPort.Input do
   # backwards and return the first hit we find. We could just reduct the whole
   # thing and return the last one found (that was my first try), but this is
   # more efficient as we can stop as soon as we find the first one.
-  defp find_by_screen_point({x, y}, %{root_graph_key: root_key, max_depth: depth}) do
+  defp find_by_screen_point({x, y}, %{master_graph_key: root_key, max_depth: depth}) do
     identity = {Matrix.identity(), Matrix.identity()}
 
     with {:ok, graph} <- ViewPort.Tables.get_graph(root_key) do
