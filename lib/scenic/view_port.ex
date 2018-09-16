@@ -92,7 +92,7 @@ defmodule Scenic.ViewPort do
   # {:viewport_enter, position :: Math.point} |
   # {:viewport_exit, position :: Math.point}
 
-  @type event :: {event :: atom, data :: any}  
+  @type event :: {event :: atom, data :: any}
 
   # ============================================================================
   # client api
@@ -363,7 +363,7 @@ defmodule Scenic.ViewPort do
   # ============================================================================
   # handle_cast
 
-  def handle_cast({:after_init, vp_supervisor, config}, _) do    
+  def handle_cast({:after_init, vp_supervisor, config}, _) do
     # find the viewport and associated pids this driver belongs to
     dyn_sup_pid =
       vp_supervisor
@@ -383,18 +383,21 @@ defmodule Scenic.ViewPort do
       end
 
     # extract the viewport global styles. Do this by reusing tools in Primitive.
-    p = Primitive.put_opts(
-      %Primitive{module: Primitive.Group},
-      Map.get(config, :opts, [])
-    )
-    |> Primitive.minimal()
-    styles = Map.get( p, :styles, %{} )
-    transforms = Map.get( p, :transforms, %{} )
+    p =
+      Primitive.put_opts(
+        %Primitive{module: Primitive.Group},
+        Map.get(config, :opts, [])
+      )
+      |> Primitive.minimal()
+
+    styles = Map.get(p, :styles, %{})
+    transforms = Map.get(p, :transforms, %{})
 
     # build the master graph, which will act as the real root graph
     # this gives us something to hang global transforms off of.
     # the master graph starts in the minimal primitive-only form
-    master_graph_key= {:graph, make_ref(), nil}
+    master_graph_key = {:graph, make_ref(), nil}
+
     master_graph = %{
       0 => %{data: {Primitive.Group, [1]}, transforms: transforms},
       1 => %{data: {Primitive.SceneRef, nil}}
@@ -490,7 +493,7 @@ defmodule Scenic.ViewPort do
     graph_key = {:graph, scene_ref, nil}
 
     # update the master graph
-    master_graph = put_in( master_graph, [1, :data], {Primitive.SceneRef, graph_key})
+    master_graph = put_in(master_graph, [1, :data], {Primitive.SceneRef, graph_key})
     # insert the updated master graph
     ViewPort.Tables.insert_graph(
       master_graph_key,
