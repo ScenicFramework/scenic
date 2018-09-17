@@ -101,7 +101,7 @@ defmodule Scenic.ViewPort do
   @doc """
   Start a new viewport
   """
-  @spec stop(config :: ViewPort.Config.t()) :: {:ok, pid}
+  @spec start(config :: ViewPort.Config.t()) :: {:ok, pid}
   def start(%ViewPort.Config{} = config) do
     # start the viewport's supervision tree
     {:ok, sup_pid} =
