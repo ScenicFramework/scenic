@@ -327,24 +327,27 @@ defmodule Scenic.ViewPort.Input do
   # If no scene has focus, then send the codepoint to the root scene
   defp do_handle_input(
          {:cursor_button, {button, action, mods, global_pos}} = msg,
-         %{root_graph_key: root_key} = state
+         # %{root_graph_key: root_key} = state
+         state
        ) do
     case find_by_screen_point(global_pos, state) do
       nil ->
         # no uid found. let the root scene handle the click
         # we already know the root scene has identity transforms
-        Scene.cast(
-          root_key,
-          {
-            :input,
-            msg,
-            Context.build(%{
-              viewport: self(),
-              graph_key: root_key,
-              raw_input: msg
-            })
-          }
-        )
+        # Scene.cast(
+        #   root_key,
+        #   {
+        #     :input,
+        #     msg,
+        #     Context.build(%{
+        #       viewport: self(),
+        #       graph_key: root_key,
+        #       raw_input: msg
+        #     })
+        #   }
+        # )
+        # no uid found. do nothing
+        :ok
 
       {point, {uid, id, graph_key}, {tx, inv_tx}} ->
         Scene.cast(
@@ -373,21 +376,25 @@ defmodule Scenic.ViewPort.Input do
   # If no scene has focus, then send the codepoint to the root scene
   defp do_handle_input(
          {:cursor_scroll, {offset, global_pos}} = msg,
-         %{root_graph_key: root_key} = state
+         # %{root_graph_key: root_key} = state
+         state
        ) do
     case find_by_screen_point(global_pos, state) do
       nil ->
         # no uid found. let the root scene handle the click
         # we already know the root scene has identity transforms
-        Scene.cast(
-          root_key,
-          {:input, msg,
-           Context.build(%{
-             viewport: self(),
-             graph_key: root_key,
-             raw_input: msg
-           })}
-        )
+        # Scene.cast(
+        #   root_key,
+        #   {:input, msg,
+        #    Context.build(%{
+        #      viewport: self(),
+        #      graph_key: root_key,
+        #      raw_input: msg
+        #    })}
+        # )
+        # no uid found. do nothing
+        :ok
+
 
       {point, {uid, id, graph_key}, {tx, inv_tx}} ->
         # get the graph key, so we know what scene to send the event to
@@ -416,25 +423,27 @@ defmodule Scenic.ViewPort.Input do
   # cursor_enter is only sent to the root graph_key
   defp do_handle_input(
          {:cursor_pos, global_pos} = msg,
-         %{root_graph_key: root_key} = state
+         # %{root_graph_key: root_key} = state
+         state
        ) do
     state =
       case find_by_screen_point(global_pos, state) do
         nil ->
-          # no uid found. let the root graph_key handle the event
-          # we already know the root graph_key has identity transforms
-          state = send_primitive_exit_message(state)
+          # # no uid found. let the root graph_key handle the event
+          # # we already know the root graph_key has identity transforms
+          # state = send_primitive_exit_message(state)
 
-          Scene.cast(
-            root_key,
-            {:input, msg,
-             Context.build(%{
-               viewport: self(),
-               graph_key: root_key,
-               raw_input: msg
-             })}
-          )
+          # Scene.cast(
+          #   root_key,
+          #   {:input, msg,
+          #    Context.build(%{
+          #      viewport: self(),
+          #      graph_key: root_key,
+          #      raw_input: msg
+          #    })}
+          # )
 
+          # no uid found. do nothing
           state
 
         {point, {uid, id, graph_key}, _} ->
@@ -712,18 +721,6 @@ defmodule Scenic.ViewPort.Input do
         else
           _ -> nil
         end
-
-      #        case ViewPort.Tables.get_scene_pid( ref_key ) do
-      #          {:ok, scene_pid} ->
-      #            {tx, inv_tx} = calc_transforms(p, parent_tx, parent_inv_tx)
-      #            with {:ok, graph} <- ViewPort.Tables.get_graph(ref_key) do
-      #              do_find_by_screen_point(x, y, 0, ref_key, graph,
-      #                {tx, inv_tx}, {tx, inv_tx}, depth - 1
-      #              )
-      #            end
-      #          _ ->
-      #            nil
-      #        end
 
       # This is a regular primitive, test to see if it is hit
       %{data: {mod, data}} = p ->
