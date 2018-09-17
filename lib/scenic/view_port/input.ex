@@ -395,7 +395,6 @@ defmodule Scenic.ViewPort.Input do
         # no uid found. do nothing
         :ok
 
-
       {point, {uid, id, graph_key}, {tx, inv_tx}} ->
         # get the graph key, so we know what scene to send the event to
         Scene.cast(
