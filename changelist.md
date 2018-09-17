@@ -5,6 +5,7 @@
 * Rename Scenic.Cache.Hash.compute_file/2 to Scenic.Cache.Hash.file/2
 * Add Scenic.Cache.Hash.binary!/2
 * Rename Scenic.Cache.Hash.compute_file!/2 to Scenic.Cache.Hash.file!/2
+* Add ability to put master styles and transforms in a ViewPort config.
 
 ### 0.7.0
 * First public release
