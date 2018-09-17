@@ -177,11 +177,12 @@ defmodule Scenic.Components do
 
   """
   @spec button(
-    graph :: Graph.t,
-    data :: String.t,
+    source :: Graph.t | Primitive.t,
+    title :: String.t,
     options :: list
-  ) :: Graph.t
-  def button(graph, data, options \\ [])
+  ) :: Graph.t | Primitive.t
+
+  def button(graph, title, options \\ [])
 
   def button(%Graph{} = g, data, options) do
     add_to_graph(g, Component.Button, data, options)
@@ -242,10 +243,11 @@ defmodule Scenic.Components do
 
   """
   @spec checkbox(
-    graph :: Graph.t,
+    source :: Graph.t | Primitive.t,
     data :: {String.t, boolean},
     options :: list
-  ) :: Graph.t
+  ) :: Graph.t | Primitive.t
+
   def checkbox(graph, data, options \\ [])
 
   def checkbox(%Graph{} = g, data, options) do
@@ -331,10 +333,11 @@ defmodule Scenic.Components do
 
   """
   @spec dropdown(
-    graph :: Graph.t,
+    source :: Graph.t | Primitive.t,
     data :: {list({String.t, any}), any},
     options :: list
-  ) :: Graph.t
+  ) :: Graph.t | Primitive.t
+
   def dropdown(graph, data, options \\ [])
 
   def dropdown(%Graph{} = g, data, options) do
@@ -415,10 +418,10 @@ defmodule Scenic.Components do
 
   """
   @spec radio_group(
-    graph :: Graph.t,
+    source :: Graph.t | Primitive.t,
     data :: list({String.t, any} | {String.t, any, boolean}),
     options :: list
-  ) :: Graph.t
+  ) :: Graph.t | Primitive.t
   def radio_group(graph, data, options \\ [])
 
   def radio_group(%Graph{} = g, data, options) do
@@ -493,10 +496,11 @@ defmodule Scenic.Components do
 
   """
   @spec slider(
-    graph :: Graph.t,
+    source :: Graph.t | Primitive.t,
     data :: ({{number,number},number} | list),
     options :: list
-  ) :: Graph.t
+  ) :: Graph.t | Primitive.t
+
   def slider(graph, data, options \\ [])
 
   def slider(%Graph{} = g, data, options) do
@@ -572,11 +576,11 @@ defmodule Scenic.Components do
       )
   """
   @spec text_field(
-    graph :: Graph.t,
+    source :: Graph.t | Primitive.t,
     data :: String.t,
     options :: list
-  ) :: Graph.t
-
+  ) :: Graph.t | Primitive.t
+  
   def text_field(graph, data, options \\ [])
 
   def text_field(%Graph{} = g, data, options) do

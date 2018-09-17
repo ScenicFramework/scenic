@@ -9,6 +9,7 @@
 defmodule Scenic.Primitives do
   alias Scenic.Primitive
   alias Scenic.Graph
+  alias Scenic.Math
 
   # import IEx
 
@@ -155,7 +156,13 @@ defmodule Scenic.Primitives do
       |> arc( {100, 0, 0.4}, stroke: {4, :blue} )
 
   """
-  def arc(graph_or_primitive, data, opts \\ [])
+  @spec arc(
+    source :: Graph.t | Primitive.t,
+    arc :: {radius :: number, start :: number, finish :: number},
+    options :: list
+  ) :: Graph.t | Primitive.t
+
+  def arc(graph_or_primitive, arc, opts \\ [])
 
   def arc(%Graph{} = g, data, opts) do
     add_to_graph(g, Primitive.Arc, data, opts)
@@ -201,7 +208,13 @@ defmodule Scenic.Primitives do
   into an ellipse.
 
   """
-  def circle(graph_or_primitive, data, opts \\ [])
+  @spec circle(
+    source :: Graph.t | Primitive.t,
+    radius :: number,
+    options :: list
+  ) :: Graph.t | Primitive.t
+
+  def circle(graph_or_primitive, radius, opts \\ [])
 
   def circle(%Graph{} = g, data, opts) do
     add_to_graph(g, Primitive.Circle, data, opts)
@@ -246,8 +259,13 @@ defmodule Scenic.Primitives do
       |> ellipse( {40, 60}, fill: :red, stroke: {3, :blue}, rotate: 0.4 )
 
   """
+  @spec ellipse(
+    source :: Graph.t | Primitive.t,
+    radii :: Math.vector_2(),
+    options :: list
+  ) :: Graph.t | Primitive.t
 
-  def ellipse(graph_or_primitive, data, opts \\ [])
+  def ellipse(graph_or_primitive, radii, opts \\ [])
 
   def ellipse(%Graph{} = g, data, opts) do
     add_to_graph(g, Primitive.Ellipse, data, opts)
@@ -290,6 +308,11 @@ defmodule Scenic.Primitives do
   Any transforms you apply to a group are added into the render matrix stack and
   are applied to all items in that branch, including crossing scene_refs.
   """
+  @spec group(
+    source :: Graph.t,
+    builder :: function(),
+    options :: list
+  ) :: Graph.t
 
   def group(graph_or_primitive, builder, opts \\ [])
 
@@ -330,7 +353,13 @@ defmodule Scenic.Primitives do
       |> line( {{0,0}, {100,200}}, stroke: {4, :blue}, cap: :round )
 
   """
-  def line(graph_or_primitive, data, opts \\ [])
+  @spec line(
+    source :: Graph.t | Primitive.t,
+    line :: Math.line(),
+    options :: list
+  ) :: Graph.t | Primitive.t
+
+  def line(graph_or_primitive, line, opts \\ [])
 
   def line(%Graph{} = g, data, opts) do
     add_to_graph(g, Primitive.Line, data, opts)
@@ -364,7 +393,13 @@ defmodule Scenic.Primitives do
       )
 
   """
-  def path(graph_or_primitive, data, opts \\ [])
+  @spec path(
+    source :: Graph.t | Primitive.t,
+    elements :: list,
+    options :: list
+  ) :: Graph.t | Primitive.t
+
+  def path(graph_or_primitive, elements, opts \\ [])
 
   def path(%Graph{} = g, data, opts) do
     add_to_graph(g, Primitive.Path, data, opts)
@@ -416,7 +451,13 @@ defmodule Scenic.Primitives do
         fill, :red, stroke: {3, :blue}, join: :round )
 
   """
-  def quad(graph_or_primitive, data, opts \\ [])
+  @spec quad(
+    source :: Graph.t | Primitive.t,
+    quad :: Math.quad(),
+    options :: list
+  ) :: Graph.t | Primitive.t
+
+  def quad(graph_or_primitive, quad, opts \\ [])
 
   def quad(%Graph{} = g, data, opts) do
     add_to_graph(g, Primitive.Quad, data, opts)
@@ -432,8 +473,14 @@ defmodule Scenic.Primitives do
 
   `rect/3` is the same as calling `rectangle/3`
   """
-  def rect(graph_or_primitive, data, opts \\ []) do
-    rectangle(graph_or_primitive, data, opts)
+  @spec rect(
+    source :: Graph.t | Primitive.t,
+    rect :: {width :: number, height :: number},
+    options :: list
+  ) :: Graph.t | Primitive.t
+
+  def rect(graph_or_primitive, rect, opts \\ []) do
+    rectangle(graph_or_primitive, rect, opts)
   end
 
   @doc """
@@ -477,7 +524,13 @@ defmodule Scenic.Primitives do
         fill, :red, stroke: {3, :blue}, join: :round )
 
   """
-  def rectangle(graph_or_primitive, data, opts \\ [])
+  @spec rectangle(
+    source :: Graph.t | Primitive.t,
+    rectangle :: {width :: number, height :: number},
+    options :: list
+  ) :: Graph.t | Primitive.t
+
+  def rectangle(graph_or_primitive, rectangle, opts \\ [])
 
   def rectangle(%Graph{} = g, data, opts) do
     add_to_graph(g, Primitive.Rectangle, data, opts)
@@ -493,8 +546,14 @@ defmodule Scenic.Primitives do
 
   `rrect/3` is the same as calling `rounded_rectangle/3`
   """
-  def rrect(graph_or_primitive, data, opts \\ []) do
-    rounded_rectangle(graph_or_primitive, data, opts)
+  @spec rrect(
+    source :: Graph.t | Primitive.t,
+    rrect :: {width :: number, height :: number, radius :: number},
+    options :: list
+  ) :: Graph.t | Primitive.t
+
+  def rrect(graph_or_primitive, rrect, opts \\ []) do
+    rounded_rectangle(graph_or_primitive, rrect, opts)
   end
 
   @doc """
@@ -530,7 +589,13 @@ defmodule Scenic.Primitives do
         fill, :red, stroke: {3, :blue} )
 
   """
-  def rounded_rectangle(graph_or_primitive, data, opts \\ [])
+  @spec rounded_rectangle(
+    source :: Graph.t | Primitive.t,
+    rounded_rectangle :: {width :: number, height :: number, radius :: number},
+    options :: list
+  ) :: Graph.t | Primitive.t
+
+  def rounded_rectangle(graph_or_primitive, rounded_rectangle, opts \\ [])
 
   def rounded_rectangle(%Graph{} = g, data, opts) do
     add_to_graph(g, Primitive.RoundedRectangle, data, opts)
@@ -569,8 +634,15 @@ defmodule Scenic.Primitives do
   Any transforms you apply to a group are added into the render matrix stack and
   are applied to all items in that branch, including crossing scene_refs.
   """
+  @spec scene_ref(
+    source :: Graph.t | Primitive.t,
+    ref :: ({:graph, reference, any} |
+          {module :: atom, init_data :: any} |
+          scene_name :: atom),
+    options :: list
+  ) :: Graph.t | Primitive.t
 
-  def scene_ref(graph_or_primitive, data, opts \\ [])
+  def scene_ref(graph_or_primitive, ref, opts \\ [])
 
   def scene_ref(%Graph{} = g, data, opts) do
     add_to_graph(g, Primitive.SceneRef, data, opts)
@@ -630,8 +702,13 @@ defmodule Scenic.Primitives do
       end, translate: {30, 40})
 
   """
+  @spec sector(
+    source :: Graph.t | Primitive.t,
+    sector :: {radius :: number, start :: number, finish :: number},
+    options :: list
+  ) :: Graph.t | Primitive.t
 
-  def sector(graph_or_primitive, data, opts \\ [])
+  def sector(graph_or_primitive, sector, opts \\ [])
 
   def sector(%Graph{} = g, data, opts) do
     add_to_graph(g, Primitive.Sector, data, opts)
@@ -645,7 +722,7 @@ defmodule Scenic.Primitives do
   @doc """
   Adds text to a graph
 
-  Text pretty simple. Speicify the string you would like drawn.
+  Text pretty simple. Specify the string you would like drawn.
 
   Data:
 
@@ -669,11 +746,11 @@ defmodule Scenic.Primitives do
     default is `:roboto`. You can also load your own font into the Scenic.Cache,
     then specify its key for the font.
   * `:font_blur` - Draw the text with a blur effect. If you draw text with blur,
-    then draw it again without blur, slightly offset, you get a nice dropshadow
+    then draw it again without blur, slightly offset, you get a nice drop shadow
     effect. The default is to draw with no blur.
   * `:text_align` - Specify the alignment of the text you are drawing. You will
     usually specify one of: :left, :center, or :right. You can also specify
-    vertical alignemnt. See the TextAlign docs for details.
+    vertical alignment. See the TextAlign docs for details.
   * `:text_height` - Specify the vertical spacing between rows of text.
 
 
@@ -684,7 +761,13 @@ defmodule Scenic.Primitives do
         flont_blur: 2.0, text_align: :center )
 
   """
-  def text(graph_or_primitive, data, opts \\ [])
+  @spec text(
+    source :: Graph.t | Primitive.t,
+    text :: String.t,
+    options :: list
+  ) :: Graph.t | Primitive.t
+
+  def text(graph_or_primitive, text, opts \\ [])
 
   def text(%Graph{} = g, data, opts) do
     add_to_graph(g, Primitive.Text, data, opts)
@@ -736,8 +819,13 @@ defmodule Scenic.Primitives do
         stroke: {3, :blue}, join: :round )
 
   """
+  @spec triangle(
+    source :: Graph.t | Primitive.t,
+    triangle :: Math.triangle(),
+    options :: list
+  ) :: Graph.t | Primitive.t
 
-  def triangle(graph_or_primitive, data, opts \\ [])
+  def triangle(graph_or_primitive, triangle, opts \\ [])
 
   def triangle(%Graph{} = g, data, opts) do
     add_to_graph(g, Primitive.Triangle, data, opts)
