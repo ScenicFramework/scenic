@@ -45,6 +45,7 @@ defmodule Scenic.Cache.HashTest do
 
   test "binary! raises on an invalid hash type" do
     data = "some data. af98hwu4lhrliw4uhtliuhet;giojres;ihg;usdhg"
+
     assert_raise Scenic.Cache.Hash.Error, fn ->
       Hash.binary!(data, :invalid)
     end

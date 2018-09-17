@@ -459,6 +459,7 @@ defmodule Scenic.Math.Matrix do
       build_scale(s)
     )
   end
+
   # def scale(matrix, x, y), do: build_scale(x, y) |> (&Matrix.mul(matrix, &1)).()
   # def scale(matrix, x, y, z), do: build_scale(x, y, z) |> (&Matrix.mul(matrix, &1)).()
 
@@ -506,7 +507,7 @@ defmodule Scenic.Math.Matrix do
   Returns:
   A number
   """
-  @spec put(matrix :: Math.matrix, x :: number, y :: number, v :: number) :: Math.matrix()
+  @spec put(matrix :: Math.matrix(), x :: number, y :: number, v :: number) :: Math.matrix()
   def put(matrix, x, y, v)
   def put(matrix, x, y, v) when is_integer(v), do: put(matrix, x, y, v * 1.0)
 
@@ -538,7 +539,7 @@ defmodule Scenic.Math.Matrix do
   Returns:
   A vector_2
   """
-  @spec get_xy(matrix :: Math.matrix) :: Math.vector_2()
+  @spec get_xy(matrix :: Math.matrix()) :: Math.vector_2()
   def get_xy(matrix)
 
   def get_xy(<<
@@ -669,7 +670,7 @@ defmodule Scenic.Math.Matrix do
   Returns:
   The resulting matrix
   """
-  @spec mul(matrix :: Math.matrix(), multiplier :: (number | Math.matrix())) :: Math.matrix()
+  @spec mul(matrix :: Math.matrix(), multiplier :: number | Math.matrix()) :: Math.matrix()
 
   def mul(matrix, multiplier)
   def mul(a, s) when is_integer(s), do: mul(a, s * 1.0)
