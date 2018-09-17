@@ -15,8 +15,6 @@ defmodule Scenic.Math do
   """
 
   @type vector_2 :: {x :: number, y :: number}
-  # @type vector_3 :: {x :: number, y :: number, z :: number}
-  # @type vector_4 :: {x :: number, y :: number, z :: number, w :: number}
 
   @type point :: {x :: number, y :: number}
 
