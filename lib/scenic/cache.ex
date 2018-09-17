@@ -48,36 +48,39 @@ defmodule Scenic.Cache do
   def get(key, default \\ nil)
 
   def get(key, default) do
-    try do
-      :ets.lookup_element(@cache_table, key, 3)
-    rescue
-      ArgumentError -> default
-      other -> raise other
-    end
+    :ets.lookup_element(@cache_table, key, 3)
+  rescue
+    ArgumentError ->
+      default
+
+    other ->
+      reraise(other, __STACKTRACE__)
   end
 
   # --------------------------------------------------------
   def fetch(key)
 
   def fetch(key) do
-    try do
-      {:ok, :ets.lookup_element(@cache_table, key, 3)}
-    rescue
-      ArgumentError -> {:error, :not_found}
-      other -> raise other
-    end
+    {:ok, :ets.lookup_element(@cache_table, key, 3)}
+  rescue
+    ArgumentError ->
+      {:error, :not_found}
+
+    other ->
+      reraise(other, __STACKTRACE__)
   end
 
   # --------------------------------------------------------
   def get!(key)
 
   def get!(key) do
-    try do
-      :ets.lookup_element(@cache_table, key, 3)
-    rescue
-      ArgumentError -> raise Error, message: "Key #{inspect(key)} not found."
-      other -> raise other
-    end
+    :ets.lookup_element(@cache_table, key, 3)
+  rescue
+    ArgumentError ->
+      raise Error, message: "Key #{inspect(key)} not found."
+
+    other ->
+      reraise(other, __STACKTRACE__)
   end
 
   # --------------------------------------------------------
