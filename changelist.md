@@ -11,6 +11,7 @@
   an inconsistency where sometimes the incoming point would be in local coordinate
   space and sometimes it would be global. If you want to capture that sort of input, either
   cover the space with a clear rect, or capture the input.
+* Add the `:direction` option to the `Dropdown` component so can can go either up or down.
 
 ### 0.7.0
 * First public release
