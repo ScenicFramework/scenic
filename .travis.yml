@@ -14,4 +14,4 @@ script:
 after_script:
   - make docs_report
 after_success:
-  - make push_docs_report
+  - bash <(curl -s https://codecov.io/bash)
