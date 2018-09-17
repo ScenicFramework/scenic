@@ -19,12 +19,11 @@ defmodule Scenic.Component.Input.RadioButton do
   end
 
   # --------------------------------------------------------
-  def verify({text, _}) when is_bitstring(text), do: {:ok, {text, false}}
-
-  def verify({text, _, checked?} = data)
+  def verify({text, checked?} = data)
       when is_bitstring(text) and is_boolean(checked?) do
     {:ok, data}
   end
+  def verify(_), do: :invalid_data
 
   # --------------------------------------------------------
   def init({text, id}, opts) when is_bitstring(text), do: init({text, id, false}, opts)
