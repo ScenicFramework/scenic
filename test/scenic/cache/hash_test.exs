@@ -29,13 +29,25 @@ defmodule Scenic.Cache.HashTest do
   test "binary computes a hash for some binary data" do
     data = "some data. af98hwu4lhrliw4uhtliuhet;giojres;ihg;usdhg"
     expected_hash = :crypto.hash(:sha, data) |> Base.url_encode64(padding: false)
-    assert Hash.binary(data, :sha) == expected_hash
+    assert Hash.binary(data, :sha) == {:ok, expected_hash}
+  end
+
+  test "binary rejects invalid hash types" do
+    data = "some data. af98hwu4lhrliw4uhtliuhet;giojres;ihg;usdhg"
+    assert Hash.binary(data, :invalid) == {:error, :invalid_hash_type}
   end
 
   test "binary! computes a hash for some binary data" do
     data = "some data. af98hwu4lhrliw4uhtliuhet;giojres;ihg;usdhg"
     expected_hash = :crypto.hash(:sha, data) |> Base.url_encode64(padding: false)
-    assert Hash.binary(data, :sha) == expected_hash
+    assert Hash.binary!(data, :sha) == expected_hash
+  end
+
+  test "binary! raises on an invalid hash type" do
+    data = "some data. af98hwu4lhrliw4uhtliuhet;giojres;ihg;usdhg"
+    assert_raise Scenic.Cache.Hash.Error, fn ->
+      Hash.binary!(data, :invalid)
+    end
   end
 
   # ============================================================================
@@ -73,7 +85,7 @@ defmodule Scenic.Cache.HashTest do
 
   test "verify returns {:ok, data} when the hash checks out ok" do
     data = "This is some data to hash - awleiufhoq34htuwehtljwuh5toihu"
-    expected = Hash.binary(data, :sha)
+    expected = Hash.binary!(data, :sha)
     assert Hash.verify(data, expected, :sha) == {:ok, data}
   end
 
@@ -87,7 +99,7 @@ defmodule Scenic.Cache.HashTest do
 
   test "verify! returns data when the hash checks out ok" do
     data = "This is some data to hash - awleiufhoq34htuwehtljwuh5toihu"
-    expected = Hash.binary(data, :sha)
+    expected = Hash.binary!(data, :sha)
     assert Hash.verify!(data, expected, :sha) == data
   end
 

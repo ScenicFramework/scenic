@@ -34,18 +34,16 @@ defmodule Scenic.Cache.Hash do
 
   # --------------------------------------------------------
   def binary(data, hash_type) do
-    valid_hash_type!(hash_type)
-    |> :crypto.hash(data)
-    |> Base.url_encode64(padding: false)
+    case valid_hash_type?(hash_type) do
+      true -> {:ok, :crypto.hash(hash_type, data) |> Base.url_encode64(padding: false)}
+      false -> {:error, :invalid_hash_type}
+    end
   end
 
   def binary!(data, hash_type) do
-    {:ok, hash} =
-      valid_hash_type!(hash_type)
-      |> :crypto.hash(data)
-      |> Base.url_encode64(padding: false)
-
-    hash
+    valid_hash_type!(hash_type)
+    |> :crypto.hash(data)
+    |> Base.url_encode64(padding: false)
   end
 
   # --------------------------------------------------------
@@ -99,15 +97,15 @@ defmodule Scenic.Cache.Hash do
 
   # --------------------------------------------------------
   def verify(data, hash, hash_type) do
-    case binary(data, hash_type) == hash do
-      true -> {:ok, data}
-      false -> {:error, :hash_failure}
+    case binary(data, hash_type) do
+      {:ok, ^hash} -> {:ok, data}
+      _ -> {:error, :hash_failure}
     end
   end
 
   # --------------------------------------------------------
   def verify!(data, hash, hash_type) do
-    case binary(data, hash_type) == hash do
+    case binary!(data, hash_type) == hash do
       true -> data
       false -> raise Error
     end
