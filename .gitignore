@@ -29,3 +29,7 @@ erl_crash.dump
 ~*.xlsx
 
 mix.lock
+
+# generally ignore object files
+*.o
+*.so

@@ -16,6 +16,10 @@ defmodule Scenic.Mixfile do
       deps: deps(),
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
+      compilers: [:elixir_make | Mix.compilers()],
+      make_targets: ["all"],
+      make_clean: ["clean"],
+      make_env: make_env(),
       dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex, :scenic_math]],
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
@@ -38,7 +42,15 @@ defmodule Scenic.Mixfile do
         contributors: ["Boyd Multerer"],
         maintainers: ["Boyd Multerer"],
         licenses: ["Apache 2"],
-        links: %{Github: @github}
+        links: %{Github: @github},
+        files: [
+          "Makefile",
+          "Makefile.win",
+          "c_src/*.[ch]",
+          "lib",
+          "mix.exs",
+          "README.md"
+        ]
       ],
       dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex, :scenic_math]],
       test_coverage: [tool: ExCoveralls],
@@ -50,16 +62,29 @@ defmodule Scenic.Mixfile do
     ]
   end
 
+
   defp description() do
     """
     Scenic -- The core Scenic library
     """
   end
 
+  defp make_env() do
+    case System.get_env("ERL_EI_INCLUDE_DIR") do
+      nil ->
+        %{
+          "ERL_EI_INCLUDE_DIR" => "#{:code.root_dir()}/usr/include",
+          "ERL_EI_LIBDIR" => "#{:code.root_dir()}/usr/lib"
+        }
+
+      _ ->
+        %{}
+    end
+  end
+
   # Configuration for the OTP application
   #
   # Type "mix help compile.app" for more information
-
   def application do
     [
       # mod: {Scenic, []},
@@ -69,8 +94,7 @@ defmodule Scenic.Mixfile do
 
   defp deps do
     [
-      # {:scenic_math, "~> 0.7"},
-      {:scenic_math, git: "git@github.com:boydm/scenic_math.git"},
+      {:elixir_make, "~> 0.4"},
 
       # Tools
       {:ex_doc, ">= 0.0.0", only: [:dev]},
