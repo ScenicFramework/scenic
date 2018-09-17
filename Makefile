@@ -47,9 +47,6 @@ unit_test:
 docs_report:
 	mix inch.report
 
-push_docs_report:
-	bash <(curl -s https://codecov.io/bash)
-
 priv:
 	mkdir -p priv
 
@@ -64,4 +61,4 @@ priv/matrix.so: c_src/matrix.o
 
 clean:
 	$(RM) $(NIF) src/*.o
-	
+
