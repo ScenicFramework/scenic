@@ -19,9 +19,8 @@ defmodule Scenic.Cache.Term do
   # hashes. Is also slower because it has to load the file and compute the hash
   # to use as a key even it is is already loaded into the cache.
   def load(path, :insecure, opts) do
-    with {:ok, data} <- Cache.File.read(path, :insecure, opts) do
-      hash = Hash.binary(data, opts[:hash] || :sha)
-
+    with {:ok, data} <- Cache.File.read(path, :insecure, opts),
+         {:ok, hash} <- Hash.binary(data, opts[:hash] || :sha) do
       case Cache.claim(hash, opts[:scope]) do
         true ->
           {:ok, hash}

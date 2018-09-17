@@ -12,6 +12,7 @@ defmodule Scenic.Math.Vector2 do
         {3.5, 4.7}
   """
 
+  alias Scenic.Math
   alias Scenic.Math.Vector2
   alias Scenic.Math.Matrix
 
@@ -353,7 +354,7 @@ defmodule Scenic.Math.Vector2 do
   Returns:
   true or false
   """
-  @spec in_bounds?(vector :: Math.vector_2(), bounds :: Math.vector_2()) :: Math.vector_2()
+  @spec in_bounds?(vector :: Math.vector_2(), bounds :: Math.vector_2()) :: boolean
   def in_bounds?(vector, bounds)
 
   def in_bounds?({vx, vy}, {boundsx, boundsy}),
@@ -373,7 +374,7 @@ defmodule Scenic.Math.Vector2 do
   A vector derived from the the space between two other vectors
   """
   @spec in_bounds?(vector :: Math.vector_2(), min :: Math.vector_2(), max :: Math.vector_2()) ::
-          Math.vector_2()
+          boolean
   def in_bounds?(vector, min, max)
 
   def in_bounds?({vx, vy}, {minx, miny}, {maxx, maxy}),

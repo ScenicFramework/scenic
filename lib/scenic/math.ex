@@ -15,8 +15,6 @@ defmodule Scenic.Math do
   """
 
   @type vector_2 :: {x :: number, y :: number}
-  # @type vector_3 :: {x :: number, y :: number, z :: number}
-  # @type vector_4 :: {x :: number, y :: number, z :: number, w :: number}
 
   @type point :: {x :: number, y :: number}
 
@@ -24,7 +22,7 @@ defmodule Scenic.Math do
   @type triangle :: {p0 :: point, p1 :: point, p2 :: point}
   @type quad :: {p0 :: point, p1 :: point, p2 :: point, p3 :: point}
 
-  @type matrix :: <<_::64>>
+  @type matrix :: binary()
 
   @type matrix_list :: list(number)
 end

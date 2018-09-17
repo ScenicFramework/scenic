@@ -81,10 +81,7 @@ defmodule Scenic.Cache.File do
   defp do_unzip(data, opts) do
     case opts[:decompress] do
       true ->
-        case :zlib.gunzip(data) do
-          bin when is_binary(bin) -> {:ok, bin}
-          _ -> {:error, :gunzip}
-        end
+        {:ok, :zlib.gunzip(data)}
 
       _ ->
         # not decompressing
