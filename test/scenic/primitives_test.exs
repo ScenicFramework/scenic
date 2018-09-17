@@ -86,7 +86,7 @@ defmodule Scenic.PrimitivesTest do
       |> Graph.get!(:group)
 
     assert p.module == Scenic.Primitive.Group
-    assert Enum.count(p.data) == 0
+    assert p.data == []
     assert p.id == :group
   end
 
