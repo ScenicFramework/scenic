@@ -157,10 +157,10 @@ defmodule Scenic.Primitives do
 
   """
   @spec arc(
-    source :: Graph.t | Primitive.t,
-    arc :: {radius :: number, start :: number, finish :: number},
-    options :: list
-  ) :: Graph.t | Primitive.t
+          source :: Graph.t() | Primitive.t(),
+          arc :: {radius :: number, start :: number, finish :: number},
+          options :: list
+        ) :: Graph.t() | Primitive.t()
 
   def arc(graph_or_primitive, arc, opts \\ [])
 
@@ -209,10 +209,10 @@ defmodule Scenic.Primitives do
 
   """
   @spec circle(
-    source :: Graph.t | Primitive.t,
-    radius :: number,
-    options :: list
-  ) :: Graph.t | Primitive.t
+          source :: Graph.t() | Primitive.t(),
+          radius :: number,
+          options :: list
+        ) :: Graph.t() | Primitive.t()
 
   def circle(graph_or_primitive, radius, opts \\ [])
 
@@ -260,10 +260,10 @@ defmodule Scenic.Primitives do
 
   """
   @spec ellipse(
-    source :: Graph.t | Primitive.t,
-    radii :: Math.vector_2(),
-    options :: list
-  ) :: Graph.t | Primitive.t
+          source :: Graph.t() | Primitive.t(),
+          radii :: Math.vector_2(),
+          options :: list
+        ) :: Graph.t() | Primitive.t()
 
   def ellipse(graph_or_primitive, radii, opts \\ [])
 
@@ -309,10 +309,10 @@ defmodule Scenic.Primitives do
   are applied to all items in that branch, including crossing scene_refs.
   """
   @spec group(
-    source :: Graph.t,
-    builder :: function(),
-    options :: list
-  ) :: Graph.t
+          source :: Graph.t(),
+          builder :: function(),
+          options :: list
+        ) :: Graph.t()
 
   def group(graph_or_primitive, builder, opts \\ [])
 
@@ -354,10 +354,10 @@ defmodule Scenic.Primitives do
 
   """
   @spec line(
-    source :: Graph.t | Primitive.t,
-    line :: Math.line(),
-    options :: list
-  ) :: Graph.t | Primitive.t
+          source :: Graph.t() | Primitive.t(),
+          line :: Math.line(),
+          options :: list
+        ) :: Graph.t() | Primitive.t()
 
   def line(graph_or_primitive, line, opts \\ [])
 
@@ -394,10 +394,10 @@ defmodule Scenic.Primitives do
 
   """
   @spec path(
-    source :: Graph.t | Primitive.t,
-    elements :: list,
-    options :: list
-  ) :: Graph.t | Primitive.t
+          source :: Graph.t() | Primitive.t(),
+          elements :: list,
+          options :: list
+        ) :: Graph.t() | Primitive.t()
 
   def path(graph_or_primitive, elements, opts \\ [])
 
@@ -452,10 +452,10 @@ defmodule Scenic.Primitives do
 
   """
   @spec quad(
-    source :: Graph.t | Primitive.t,
-    quad :: Math.quad(),
-    options :: list
-  ) :: Graph.t | Primitive.t
+          source :: Graph.t() | Primitive.t(),
+          quad :: Math.quad(),
+          options :: list
+        ) :: Graph.t() | Primitive.t()
 
   def quad(graph_or_primitive, quad, opts \\ [])
 
@@ -474,10 +474,10 @@ defmodule Scenic.Primitives do
   `rect/3` is the same as calling `rectangle/3`
   """
   @spec rect(
-    source :: Graph.t | Primitive.t,
-    rect :: {width :: number, height :: number},
-    options :: list
-  ) :: Graph.t | Primitive.t
+          source :: Graph.t() | Primitive.t(),
+          rect :: {width :: number, height :: number},
+          options :: list
+        ) :: Graph.t() | Primitive.t()
 
   def rect(graph_or_primitive, rect, opts \\ []) do
     rectangle(graph_or_primitive, rect, opts)
@@ -525,10 +525,10 @@ defmodule Scenic.Primitives do
 
   """
   @spec rectangle(
-    source :: Graph.t | Primitive.t,
-    rectangle :: {width :: number, height :: number},
-    options :: list
-  ) :: Graph.t | Primitive.t
+          source :: Graph.t() | Primitive.t(),
+          rectangle :: {width :: number, height :: number},
+          options :: list
+        ) :: Graph.t() | Primitive.t()
 
   def rectangle(graph_or_primitive, rectangle, opts \\ [])
 
@@ -547,10 +547,10 @@ defmodule Scenic.Primitives do
   `rrect/3` is the same as calling `rounded_rectangle/3`
   """
   @spec rrect(
-    source :: Graph.t | Primitive.t,
-    rrect :: {width :: number, height :: number, radius :: number},
-    options :: list
-  ) :: Graph.t | Primitive.t
+          source :: Graph.t() | Primitive.t(),
+          rrect :: {width :: number, height :: number, radius :: number},
+          options :: list
+        ) :: Graph.t() | Primitive.t()
 
   def rrect(graph_or_primitive, rrect, opts \\ []) do
     rounded_rectangle(graph_or_primitive, rrect, opts)
@@ -590,10 +590,10 @@ defmodule Scenic.Primitives do
 
   """
   @spec rounded_rectangle(
-    source :: Graph.t | Primitive.t,
-    rounded_rectangle :: {width :: number, height :: number, radius :: number},
-    options :: list
-  ) :: Graph.t | Primitive.t
+          source :: Graph.t() | Primitive.t(),
+          rounded_rectangle :: {width :: number, height :: number, radius :: number},
+          options :: list
+        ) :: Graph.t() | Primitive.t()
 
   def rounded_rectangle(graph_or_primitive, rounded_rectangle, opts \\ [])
 
@@ -635,12 +635,13 @@ defmodule Scenic.Primitives do
   are applied to all items in that branch, including crossing scene_refs.
   """
   @spec scene_ref(
-    source :: Graph.t | Primitive.t,
-    ref :: ({:graph, reference, any} |
-          {module :: atom, init_data :: any} |
-          scene_name :: atom),
-    options :: list
-  ) :: Graph.t | Primitive.t
+          source :: Graph.t() | Primitive.t(),
+          ref ::
+            {:graph, reference, any}
+            | {module :: atom, init_data :: any}
+            | scene_name :: atom,
+          options :: list
+        ) :: Graph.t() | Primitive.t()
 
   def scene_ref(graph_or_primitive, ref, opts \\ [])
 
@@ -703,10 +704,10 @@ defmodule Scenic.Primitives do
 
   """
   @spec sector(
-    source :: Graph.t | Primitive.t,
-    sector :: {radius :: number, start :: number, finish :: number},
-    options :: list
-  ) :: Graph.t | Primitive.t
+          source :: Graph.t() | Primitive.t(),
+          sector :: {radius :: number, start :: number, finish :: number},
+          options :: list
+        ) :: Graph.t() | Primitive.t()
 
   def sector(graph_or_primitive, sector, opts \\ [])
 
@@ -762,10 +763,10 @@ defmodule Scenic.Primitives do
 
   """
   @spec text(
-    source :: Graph.t | Primitive.t,
-    text :: String.t,
-    options :: list
-  ) :: Graph.t | Primitive.t
+          source :: Graph.t() | Primitive.t(),
+          text :: String.t(),
+          options :: list
+        ) :: Graph.t() | Primitive.t()
 
   def text(graph_or_primitive, text, opts \\ [])
 
@@ -820,10 +821,10 @@ defmodule Scenic.Primitives do
 
   """
   @spec triangle(
-    source :: Graph.t | Primitive.t,
-    triangle :: Math.triangle(),
-    options :: list
-  ) :: Graph.t | Primitive.t
+          source :: Graph.t() | Primitive.t(),
+          triangle :: Math.triangle(),
+          options :: list
+        ) :: Graph.t() | Primitive.t()
 
   def triangle(graph_or_primitive, triangle, opts \\ [])
 

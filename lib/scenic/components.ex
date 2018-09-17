@@ -177,10 +177,10 @@ defmodule Scenic.Components do
 
   """
   @spec button(
-    source :: Graph.t | Primitive.t,
-    title :: String.t,
-    options :: list
-  ) :: Graph.t | Primitive.t
+          source :: Graph.t() | Primitive.t(),
+          title :: String.t(),
+          options :: list
+        ) :: Graph.t() | Primitive.t()
 
   def button(graph, title, options \\ [])
 
@@ -243,10 +243,10 @@ defmodule Scenic.Components do
 
   """
   @spec checkbox(
-    source :: Graph.t | Primitive.t,
-    data :: {String.t, boolean},
-    options :: list
-  ) :: Graph.t | Primitive.t
+          source :: Graph.t() | Primitive.t(),
+          data :: {String.t(), boolean},
+          options :: list
+        ) :: Graph.t() | Primitive.t()
 
   def checkbox(graph, data, options \\ [])
 
@@ -333,10 +333,10 @@ defmodule Scenic.Components do
 
   """
   @spec dropdown(
-    source :: Graph.t | Primitive.t,
-    data :: {list({String.t, any}), any},
-    options :: list
-  ) :: Graph.t | Primitive.t
+          source :: Graph.t() | Primitive.t(),
+          data :: {list({String.t(), any}), any},
+          options :: list
+        ) :: Graph.t() | Primitive.t()
 
   def dropdown(graph, data, options \\ [])
 
@@ -418,10 +418,10 @@ defmodule Scenic.Components do
 
   """
   @spec radio_group(
-    source :: Graph.t | Primitive.t,
-    data :: list({String.t, any} | {String.t, any, boolean}),
-    options :: list
-  ) :: Graph.t | Primitive.t
+          source :: Graph.t() | Primitive.t(),
+          data :: list({String.t(), any} | {String.t(), any, boolean}),
+          options :: list
+        ) :: Graph.t() | Primitive.t()
   def radio_group(graph, data, options \\ [])
 
   def radio_group(%Graph{} = g, data, options) do
@@ -496,10 +496,10 @@ defmodule Scenic.Components do
 
   """
   @spec slider(
-    source :: Graph.t | Primitive.t,
-    data :: ({{number,number},number} | list),
-    options :: list
-  ) :: Graph.t | Primitive.t
+          source :: Graph.t() | Primitive.t(),
+          data :: {{number, number}, number} | list,
+          options :: list
+        ) :: Graph.t() | Primitive.t()
 
   def slider(graph, data, options \\ [])
 
@@ -576,11 +576,11 @@ defmodule Scenic.Components do
       )
   """
   @spec text_field(
-    source :: Graph.t | Primitive.t,
-    data :: String.t,
-    options :: list
-  ) :: Graph.t | Primitive.t
-  
+          source :: Graph.t() | Primitive.t(),
+          data :: String.t(),
+          options :: list
+        ) :: Graph.t() | Primitive.t()
+
   def text_field(graph, data, options \\ [])
 
   def text_field(%Graph{} = g, data, options) do
