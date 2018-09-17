@@ -62,7 +62,6 @@ defmodule Scenic.Mixfile do
     ]
   end
 
-
   defp description() do
     """
     Scenic -- The core Scenic library

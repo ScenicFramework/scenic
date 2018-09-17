@@ -14,8 +14,6 @@ defmodule Scenic.Math.Line do
         {{x0,y0}, {x1,y1}}
   """
 
-
-
   alias Scenic.Math
 
   #  import IEx
@@ -44,8 +42,9 @@ defmodule Scenic.Math.Line do
   Returns:
   A line
   """
-  @spec trunc(line :: Math.line) :: Math.line
+  @spec trunc(line :: Math.line()) :: Math.line()
   def trunc(line)
+
   def trunc({p0, p1}) do
     {
       Math.Vector2.trunc(p0),
@@ -64,8 +63,9 @@ defmodule Scenic.Math.Line do
   Returns:
   A line
   """
-  @spec round(line :: Math.line) :: Math.line
+  @spec round(line :: Math.line()) :: Math.line()
   def round(line)
+
   def round({p0, p1}) do
     {
       Math.Vector2.round(p0),
@@ -85,8 +85,9 @@ defmodule Scenic.Math.Line do
   Returns:
   A line
   """
-  @spec parallel(line :: Math.line, distance :: number) :: Math.line
+  @spec parallel(line :: Math.line(), distance :: number) :: Math.line()
   def parallel(line, distance)
+
   def parallel({{x0, y0}, {x1, y1}}, w) do
     nif_parallel(x0, y0, x1, y1, w)
   end
@@ -106,8 +107,9 @@ defmodule Scenic.Math.Line do
   Returns:
   A point
   """
-  @spec intersection(line_a :: Math.line, line_b :: Math.line) :: Math.point
+  @spec intersection(line_a :: Math.line(), line_b :: Math.line()) :: Math.point()
   def intersection(line_a, line_b)
+
   def intersection({{x0, y0}, {x1, y1}}, {{x2, y2}, {x3, y3}}) do
     nif_intersection(x0, y0, x1, y1, x2, y2, x3, y3)
   end

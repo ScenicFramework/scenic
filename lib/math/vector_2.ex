@@ -50,8 +50,9 @@ defmodule Scenic.Math.Vector2 do
   Returns:
   The integer vector
   """
-  @spec trunc(vector_2 :: Math.vector_2) :: Math.vector_2
-  def trunc( vector_2 )
+  @spec trunc(vector_2 :: Math.vector_2()) :: Math.vector_2()
+  def trunc(vector_2)
+
   def trunc({x, y}) do
     {Kernel.trunc(x), Kernel.trunc(y)}
   end
@@ -66,12 +67,12 @@ defmodule Scenic.Math.Vector2 do
   Returns:
   The integer vector
   """
-  @spec round(vector_2 :: Math.vector_2) :: Math.vector_2
-  def round( vector_2 )
+  @spec round(vector_2 :: Math.vector_2()) :: Math.vector_2()
+  def round(vector_2)
+
   def round({x, y}) do
     {Kernel.round(x), Kernel.round(y)}
   end
-
 
   # --------------------------------------------------------
   @doc """
@@ -83,8 +84,8 @@ defmodule Scenic.Math.Vector2 do
   Returns:
   The inverted vector
   """
-  @spec invert(vector_2 :: Math.vector_2) :: Math.vector_2
-  def invert( vector_2 )
+  @spec invert(vector_2 :: Math.vector_2()) :: Math.vector_2()
+  def invert(vector_2)
   def invert({x, y}), do: {-x, -y}
 
   # --------------------------------------------------------
@@ -99,8 +100,8 @@ defmodule Scenic.Math.Vector2 do
   Returns:
   A new vector which is the result of the addition
   """
-  @spec add(vector2_a :: Math.vector_2, vector2_b :: Math.vector_2) :: Math.vector_2
-  def add( vector2_a, vector2_b )
+  @spec add(vector2_a :: Math.vector_2(), vector2_b :: Math.vector_2()) :: Math.vector_2()
+  def add(vector2_a, vector2_b)
   def add({ax, ay}, {bx, by}), do: {ax + bx, ay + by}
 
   @doc """
@@ -113,8 +114,8 @@ defmodule Scenic.Math.Vector2 do
   Returns:
   A new vector which is the result of the subtraction
   """
-  @spec sub(vector2_a :: Math.vector_2, vector2_b :: Math.vector_2) :: Math.vector_2
-  def sub( vector2_a, vector2_b )
+  @spec sub(vector2_a :: Math.vector_2(), vector2_b :: Math.vector_2()) :: Math.vector_2()
+  def sub(vector2_a, vector2_b)
   def sub({ax, ay}, {bx, by}), do: {ax - bx, ay - by}
 
   # --------------------------------------------------------
@@ -128,8 +129,8 @@ defmodule Scenic.Math.Vector2 do
   Returns:
   A new vector which is the result of the multiplication
   """
-  @spec mul(vector2 :: Math.vector_2, scalar :: number) :: Math.vector_2
-  def mul( vector2_a, vector2_b )
+  @spec mul(vector2 :: Math.vector_2(), scalar :: number) :: Math.vector_2()
+  def mul(vector2_a, vector2_b)
   def mul({ax, ay}, s) when is_number(s), do: {ax * s, ay * s}
 
   # --------------------------------------------------------
@@ -143,8 +144,8 @@ defmodule Scenic.Math.Vector2 do
   Returns:
   A new vector which is the result of the division
   """
-  @spec div(vector2 :: Math.vector_2, scalar :: number) :: Math.vector_2
-  def div( vector2_a, vector2_b )
+  @spec div(vector2 :: Math.vector_2(), scalar :: number) :: Math.vector_2()
+  def div(vector2_a, vector2_b)
   def div({ax, ay}, s) when is_number(s), do: {ax / s, ay / s}
 
   # --------------------------------------------------------
@@ -158,8 +159,8 @@ defmodule Scenic.Math.Vector2 do
   Returns:
   A number which is the result of the dot product
   """
-  @spec dot(vector2_a :: Math.vector_2, vector2_b :: Math.vector_2) :: number
-  def dot( vector2_a, vector2_b )
+  @spec dot(vector2_a :: Math.vector_2(), vector2_b :: Math.vector_2()) :: number
+  def dot(vector2_a, vector2_b)
   def dot({ax, ay}, {bx, by}), do: ax * bx + ay * by
 
   # --------------------------------------------------------
@@ -174,8 +175,8 @@ defmodule Scenic.Math.Vector2 do
   Returns:
   A number which is the result of the cross product
   """
-  @spec cross(vector2_a :: Math.vector_2, vector2_b :: Math.vector_2) :: number
-  def cross( vector2_a, vector2_b )
+  @spec cross(vector2_a :: Math.vector_2(), vector2_b :: Math.vector_2()) :: number
+  def cross(vector2_a, vector2_b)
   def cross({ax, ay}, {bx, by}), do: ax * by - ay * bx
 
   # --------------------------------------------------------
@@ -192,7 +193,7 @@ defmodule Scenic.Math.Vector2 do
   Returns:
   A number which is the square of the length
   """
-  @spec length_squared(vector2 :: Math.vector_2) :: number
+  @spec length_squared(vector2 :: Math.vector_2()) :: number
   def length_squared(vector2)
   def length_squared({ax, ay}), do: ax * ax + ay * ay
 
@@ -207,7 +208,7 @@ defmodule Scenic.Math.Vector2 do
   Returns:
   A number which is the length
   """
-  @spec length(vector2 :: Math.vector_2) :: number
+  @spec length(vector2 :: Math.vector_2()) :: number
   def length(vector2)
   def length(vector2), do: length_squared(vector2) |> :math.sqrt()
 
@@ -233,8 +234,9 @@ defmodule Scenic.Math.Vector2 do
   Returns:
   A vector with the same angle as the original, but a length of 1
   """
-  @spec normalize(vector2 :: Math.vector_2) :: Math.vector_2
+  @spec normalize(vector2 :: Math.vector_2()) :: Math.vector_2()
   def normalize(vector2)
+
   def normalize({ax, ay}) do
     case Vector2.length({ax, ay}) do
       0.0 ->
@@ -257,8 +259,9 @@ defmodule Scenic.Math.Vector2 do
   Returns:
   A vector derived from the lowest x and y from two given vectors
   """
-  @spec min(vector2_a :: Math.vector_2, vector2_b :: Math.vector_2) :: Math.vector_2
+  @spec min(vector2_a :: Math.vector_2(), vector2_b :: Math.vector_2()) :: Math.vector_2()
   def min(vector2_a, vector2_b)
+
   def min({ax, ay}, {bx, by}) do
     x =
       cond do
@@ -285,8 +288,9 @@ defmodule Scenic.Math.Vector2 do
   Returns:
   A vector derived from the highest x and y from two given vectors
   """
-  @spec max(vector2_a :: Math.vector_2, vector2_b :: Math.vector_2) :: Math.vector_2
+  @spec max(vector2_a :: Math.vector_2(), vector2_b :: Math.vector_2()) :: Math.vector_2()
   def max(vector2_a, vector2_b)
+
   def max({ax, ay}, {bx, by}) do
     x =
       cond do
@@ -315,8 +319,10 @@ defmodule Scenic.Math.Vector2 do
   Returns:
   A vector derived from the the space between two other vectors
   """
-  @spec clamp(vector :: Math.vector_2, min :: Math.vector_2, max :: Math.vector_2) :: Math.vector_2
+  @spec clamp(vector :: Math.vector_2(), min :: Math.vector_2(), max :: Math.vector_2()) ::
+          Math.vector_2()
   def clamp(vector, min, max)
+
   def clamp({vx, vy}, {minx, miny}, {maxx, maxy}) do
     x =
       cond do
@@ -347,8 +353,9 @@ defmodule Scenic.Math.Vector2 do
   Returns:
   true or false
   """
-  @spec in_bounds?(vector :: Math.vector_2, bounds :: Math.vector_2) :: Math.vector_2
+  @spec in_bounds?(vector :: Math.vector_2(), bounds :: Math.vector_2()) :: Math.vector_2()
   def in_bounds?(vector, bounds)
+
   def in_bounds?({vx, vy}, {boundsx, boundsy}),
     do: {vx, vy} == clamp({vx, vy}, {-boundsx, -boundsy}, {boundsx, boundsy})
 
@@ -365,8 +372,10 @@ defmodule Scenic.Math.Vector2 do
   Returns:
   A vector derived from the the space between two other vectors
   """
-  @spec in_bounds?(vector :: Math.vector_2, min :: Math.vector_2, max :: Math.vector_2) :: Math.vector_2
+  @spec in_bounds?(vector :: Math.vector_2(), min :: Math.vector_2(), max :: Math.vector_2()) ::
+          Math.vector_2()
   def in_bounds?(vector, min, max)
+
   def in_bounds?({vx, vy}, {minx, miny}, {maxx, maxy}),
     do: {vx, vy} == clamp({vx, vy}, {minx, miny}, {maxx, maxy})
 
@@ -386,11 +395,12 @@ defmodule Scenic.Math.Vector2 do
   """
   # https://keithmaggio.wordpress.com/2011/02/15/math-magician-lerp-slerp-and-nlerp/
   @spec lerp(
-    vector_a :: Math.vector_2,
-    vector_b :: Math.vector_2,
-    t :: number
-  ) :: Math.vector_2
+          vector_a :: Math.vector_2(),
+          vector_b :: Math.vector_2(),
+          t :: number
+        ) :: Math.vector_2()
   def lerp(vector_a, vector_a, t)
+
   def lerp(a, b, t) when is_float(t) and t >= 0.0 and t <= 1.0 do
     sub(b, a)
     |> mul(t)
@@ -412,11 +422,12 @@ defmodule Scenic.Math.Vector2 do
   A vector, which is the result of the nlerp.
   """
   @spec nlerp(
-    vector_a :: Math.vector_2,
-    vector_b :: Math.vector_2,
-    t :: number
-  ) :: Math.vector_2
+          vector_a :: Math.vector_2(),
+          vector_b :: Math.vector_2(),
+          t :: number
+        ) :: Math.vector_2()
   def nlerp(vector_a, vector_a, t)
+
   def nlerp(a, b, t) when is_float(t) and t >= 0.0 and t <= 1.0 do
     sub(b, a)
     |> mul(t)
@@ -436,13 +447,15 @@ defmodule Scenic.Math.Vector2 do
   A projected vector (or list of vectors)
   """
   @spec project(
-    vector :: Math.vector_2 | list(Math.vector_2),
-    matrix :: Math.matrix
-  ) :: Math.vector_2 | list(Math.vector_2)
+          vector :: Math.vector_2() | list(Math.vector_2()),
+          matrix :: Math.matrix()
+        ) :: Math.vector_2() | list(Math.vector_2())
   def project(vector_a, matrix)
+
   def project({x, y}, matrix) do
     Matrix.project_vector(matrix, {x, y})
   end
+
   def project(vectors, matrix) do
     Matrix.project_vectors(matrix, vectors)
   end

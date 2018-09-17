@@ -7,10 +7,22 @@ defmodule Scenic.Math.Matrix.UtilsTest do
   alias Scenic.Math.Matrix.Utils
 
   @matrix_list [
-    3.0, 2.0, 0.0, 1.0,
-    4.0, 0.0, 1.0, 2.0,
-    3.0, 0.0, 2.0, 1.0,
-    9.0, 2.0, 3.0, 1.0
+    3.0,
+    2.0,
+    0.0,
+    1.0,
+    4.0,
+    0.0,
+    1.0,
+    2.0,
+    3.0,
+    0.0,
+    2.0,
+    1.0,
+    9.0,
+    2.0,
+    3.0,
+    1.0
   ]
 
   @matrix_bin <<
@@ -43,5 +55,4 @@ defmodule Scenic.Math.Matrix.UtilsTest do
   test "to_list works" do
     assert Utils.to_list(@matrix_bin) == @matrix_list
   end
-
 end

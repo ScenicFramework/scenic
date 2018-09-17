@@ -27,6 +27,4 @@ defmodule Scenic.Math do
   @type matrix :: <<_::64>>
 
   @type matrix_list :: list(number)
-
-
 end

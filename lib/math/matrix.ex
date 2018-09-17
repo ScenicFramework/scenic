@@ -197,8 +197,8 @@ defmodule Scenic.Math.Matrix do
   Returns:
   A binary matrix
   """
-  @spec build_translation(vector_2 :: Math.vector_2) :: Math.matrix
-  def build_translation( vector_2 )
+  @spec build_translation(vector_2 :: Math.vector_2()) :: Math.matrix()
+  def build_translation(vector_2)
   def build_translation({x, y}), do: build_translation({x, y, 0.0})
   # def build_translation({x, y, z}), do: build_translation(x, y, z)
   # def build_translation(x, y), do: build_translation(x, y, 0.0)
@@ -233,8 +233,8 @@ defmodule Scenic.Math.Matrix do
   Returns:
   A binary matrix
   """
-  @spec build_scale(scale :: number | Math.vector_2) :: Math.matrix
-  def build_scale( scale )
+  @spec build_scale(scale :: number | Math.vector_2()) :: Math.matrix()
+  def build_scale(scale)
   def build_scale(s) when is_number(s), do: build_scale({s, s, s})
   def build_scale({x, y}), do: build_scale({x, y, 1.0})
   # def build_scale({x, y, z}), do: build_scale(x, y, z)
@@ -281,8 +281,8 @@ defmodule Scenic.Math.Matrix do
   Returns:
   A binary matrix
   """
-  @spec build_rotation(angle :: number) :: Math.matrix
-  def build_rotation( angle )
+  @spec build_rotation(angle :: number) :: Math.matrix()
+  def build_rotation(angle)
 
   # def build_rotation( radians, :x ) do
   #   cos = :math.cos( radians )
@@ -371,8 +371,9 @@ defmodule Scenic.Math.Matrix do
   Returns:
   A binary matrix
   """
-  @spec build_rotate_around(angle :: number, pin :: Math.point) :: Math.matrix
-  def build_rotate_around( angle, pin )
+  @spec build_rotate_around(angle :: number, pin :: Math.point()) :: Math.matrix()
+  def build_rotate_around(angle, pin)
+
   def build_rotate_around(radians, {x, y}) do
     build_translation({-x, -y})
     |> Matrix.rotate(radians)
@@ -393,9 +394,10 @@ defmodule Scenic.Math.Matrix do
   Returns:
   A binary matrix
   """
-  @spec rotate(matrix :: number, pin :: Math.point | nil) :: Math.matrix
-  def rotate( matrix, angle )
+  @spec rotate(matrix :: number, pin :: Math.point() | nil) :: Math.matrix()
+  def rotate(matrix, angle)
   def rotate(matrix, nil), do: matrix
+
   def rotate(matrix, amount) do
     build_rotation(amount)
     |> (&Matrix.mul(matrix, &1)).()
@@ -417,13 +419,15 @@ defmodule Scenic.Math.Matrix do
   Returns:
   A binary matrix
   """
-  @spec translate(matrix :: number, vector_2 :: Math.vector_2 | nil) :: Math.matrix
-  def translate( matrix, vector_2 )
+  @spec translate(matrix :: number, vector_2 :: Math.vector_2() | nil) :: Math.matrix()
+  def translate(matrix, vector_2)
   def translate(matrix, nil), do: matrix
+
   def translate(matrix, {x, y}) do
     build_translation({x, y})
     |> (&Matrix.mul(matrix, &1)).()
   end
+
   # def translate(matrix, {x, y, z}), do: translate(matrix, x, y, z)
   # def translate(matrix, nil), do: matrix
   # def translate(matrix, x, y), do: build_translation(x, y) |> (&Matrix.mul(matrix, &1)).()
@@ -440,8 +444,8 @@ defmodule Scenic.Math.Matrix do
   Returns:
   A binary matrix
   """
-  @spec scale(matrix :: number, scale :: number | Math.vector_2 | nil) :: Math.matrix
-  def scale( matrix, scale )
+  @spec scale(matrix :: number, scale :: number | Math.vector_2() | nil) :: Math.matrix()
+  def scale(matrix, scale)
   def scale(matrix, nil), do: matrix
   # def scale(matrix, {x, y}), do: scale(matrix, {x, y})
   # def scale(matrix, {x, y, z}), do: scale(matrix,{ x, y, z})
@@ -466,6 +470,7 @@ defmodule Scenic.Math.Matrix do
   """
   @spec get(matrix :: number, x :: number, y :: number) :: number
   def get(matrix, x, y)
+
   def get(matrix, x, y)
       when is_integer(x) and is_integer(y) and x >= 0 and y >= 0 and x < 4 and y < 4 do
     skip_size = y * 4 * 4 + x * 4
@@ -492,9 +497,10 @@ defmodule Scenic.Math.Matrix do
   Returns:
   A number
   """
-  @spec put(matrix :: number, x :: number, y :: number, v :: number) :: Math.matrix
+  @spec put(matrix :: number, x :: number, y :: number, v :: number) :: Math.matrix()
   def put(matrix, x, y, v)
   def put(matrix, x, y, v) when is_integer(v), do: put(matrix, x, y, v * 1.0)
+
   def put(matrix, x, y, v)
       when is_integer(x) and is_integer(y) and is_float(v) and x >= 0 and y >= 0 and x < 4 and
              y < 4 do
@@ -523,8 +529,9 @@ defmodule Scenic.Math.Matrix do
   Returns:
   A vector_2
   """
-  @spec get_xy(matrix :: number) :: Math.vector_2
+  @spec get_xy(matrix :: number) :: Math.vector_2()
   def get_xy(matrix)
+
   def get_xy(<<
         _::binary-size(12),
         x::float-size(32)-native,
@@ -566,13 +573,16 @@ defmodule Scenic.Math.Matrix do
   Returns:
   A boolean
   """
-  @spec close?(matrix_a :: Math.matrix, matrix_a :: Math.matrix, tolerance :: number) :: boolean
+  @spec close?(matrix_a :: Math.matrix(), matrix_a :: Math.matrix(), tolerance :: number) ::
+          boolean
   def close?(matrix_a, matrix_b, tolerance \\ 0.000001)
+
   def close?(<<_::binary-size(@matrix_size)>> = a, <<_::binary-size(@matrix_size)>> = b, t)
       when is_float(t) do
     # in NIF
     nif_close(a, b, t)
   end
+
   defp nif_close(_, _, _), do: nif_error("Did not find nif_close")
 
   # --------------------------------------------------------
@@ -588,11 +598,12 @@ defmodule Scenic.Math.Matrix do
   Returns:
   The resulting matrix
   """
-  @spec add(matrix_a :: Math.matrix, matrix_b :: Math.matrix) :: Math.matrix
+  @spec add(matrix_a :: Math.matrix(), matrix_b :: Math.matrix()) :: Math.matrix()
   def add(matrix_a, matrix_b) do
     # in NIF
     nif_add(matrix_a, matrix_b)
   end
+
   defp nif_add(_, _), do: nif_error("Did not find nif_add")
 
   # --------------------------------------------------------
@@ -608,11 +619,12 @@ defmodule Scenic.Math.Matrix do
   Returns:
   The resulting matrix
   """
-  @spec sub(matrix_a :: Math.matrix, matrix_b :: Math.matrix) :: Math.matrix
+  @spec sub(matrix_a :: Math.matrix(), matrix_b :: Math.matrix()) :: Math.matrix()
   def sub(matrix_a, matrix_b) do
     # in NIF
     nif_subtract(matrix_a, matrix_b)
   end
+
   defp nif_subtract(_, _), do: nif_error("Did not find nif_subtract")
 
   # --------------------------------------------------------
@@ -627,8 +639,9 @@ defmodule Scenic.Math.Matrix do
   Returns:
   The resulting matrix
   """
-  @spec mul(matrix_list :: list(Math.matrix)) :: Math.matrix
+  @spec mul(matrix_list :: list(Math.matrix())) :: Math.matrix()
   def mul(matrix_list)
+
   def mul(matrix_list) when is_list(matrix_list) do
     # in NIF
     nif_multiply_list(matrix_list)
@@ -647,19 +660,22 @@ defmodule Scenic.Math.Matrix do
   Returns:
   The resulting matrix
   """
-  @spec mul(matrix :: Math.matrix, multiplier :: number | Math.matrix) :: Math.matrix
+  @spec mul(matrix :: Math.matrix(), multiplier :: number | Math.matrix()) :: Math.matrix()
 
   def mul(matrix, multiplier)
   def mul(a, s) when is_integer(s), do: mul(a, s * 1.0)
+
   def mul(a, s) when is_float(s) do
     # in NIF
     nif_multiply_scalar(a, s)
   end
+
   # multiply two matrixes
   def mul(matrix_a, matrix_b) do
     # in NIF
     nif_multiply(matrix_a, matrix_b)
   end
+
   defp nif_multiply(_, _), do: nif_error("Did not find nif_multiply")
   defp nif_multiply_scalar(_, _), do: nif_error("Did not find nif_multiply_scalar")
   defp nif_multiply_list(_), do: nif_error("Did not find nif_multiply_list")
@@ -677,13 +693,15 @@ defmodule Scenic.Math.Matrix do
   Returns:
   The resulting matrix
   """
-  @spec mul(matrix :: Math.matrix, divisor :: number) :: Math.matrix
+  @spec mul(matrix :: Math.matrix(), divisor :: number) :: Math.matrix()
   def div(matrix, scalar)
   def div(a, s) when is_integer(s), do: Matrix.div(a, s * 1.0)
+
   def div(a, s) when is_float(s) do
     # in NIF
     nif_divide_scalar(a, s)
   end
+
   defp nif_divide_scalar(_, _), do: nif_error("Did not find nif_divide_scalar")
 
   # --------------------------------------------------------
@@ -698,11 +716,12 @@ defmodule Scenic.Math.Matrix do
   Returns:
   The resulting matrix
   """
-  @spec transpose(matrix :: Math.matrix) :: Math.matrix
+  @spec transpose(matrix :: Math.matrix()) :: Math.matrix()
   def transpose(matrix) do
     # in NIF
     nif_transpose(matrix)
   end
+
   defp nif_transpose(_), do: nif_error("Did not find nif_transpose")
 
   # --------------------------------------------------------
@@ -717,11 +736,12 @@ defmodule Scenic.Math.Matrix do
   Returns:
   The resulting matrix
   """
-  @spec determinant(matrix :: Math.matrix) :: Math.matrix
+  @spec determinant(matrix :: Math.matrix()) :: Math.matrix()
   def determinant(matrix) do
     # in NIF
     nif_determinant(matrix)
   end
+
   defp nif_determinant(_), do: nif_error("Did not find nif_determinant")
 
   # --------------------------------------------------------
@@ -736,11 +756,12 @@ defmodule Scenic.Math.Matrix do
   Returns:
   The resulting matrix
   """
-  @spec adjugate(matrix :: Math.matrix) :: Math.matrix
+  @spec adjugate(matrix :: Math.matrix()) :: Math.matrix()
   def adjugate(matrix) do
     # in NIF
     nif_adjugate(matrix)
   end
+
   defp nif_adjugate(_), do: nif_error("Did not find nif_adjugate")
 
   # --------------------------------------------------------
@@ -755,7 +776,7 @@ defmodule Scenic.Math.Matrix do
   Returns:
   The resulting matrix
   """
-  @spec invert(matrix :: Math.matrix) :: Math.matrix
+  @spec invert(matrix :: Math.matrix()) :: Math.matrix()
   def invert(matrix) do
     case nif_determinant(matrix) do
       0.0 ->
@@ -781,11 +802,12 @@ defmodule Scenic.Math.Matrix do
   Returns:
   The projected vector
   """
-  @spec project_vector(matrix :: Math.matrix, vector_2 :: Math.vector_2) :: Math.vector_2
+  @spec project_vector(matrix :: Math.matrix(), vector_2 :: Math.vector_2()) :: Math.vector_2()
   def project_vector(matrix, {x, y}) do
     # in NIF
     nif_project_vector2(matrix, x, y)
   end
+
   # --------------------------------------------------------
   # def project_vector(a, {x, y, z}) do
   #   # in NIF
@@ -807,11 +829,13 @@ defmodule Scenic.Math.Matrix do
   Returns:
   A list of projected vectors
   """
-  @spec project_vector(matrix :: Math.matrix, vector_list :: list(Math.vector_2)) :: list(Math.vector_2)
+  @spec project_vector(matrix :: Math.matrix(), vector_list :: list(Math.vector_2())) ::
+          list(Math.vector_2())
   def project_vectors(a, vector_bin) do
     # in NIF
     nif_project_vector2s(a, vector_bin)
   end
+
   defp nif_project_vector2s(_, _), do: nif_error("Did not find nif_project_vector2s")
 
   # --------------------------------------------------------

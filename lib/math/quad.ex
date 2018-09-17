@@ -21,7 +21,7 @@ defmodule Scenic.Math.Quad do
   Returns:
   On of :concave, :convex, or :complex
   """
-  @spec classification(quad :: Math.quad) :: classification
+  @spec classification(quad :: Math.quad()) :: classification
   def classification(quad)
 
   def classification({p0, p1, p2, p3}) do
