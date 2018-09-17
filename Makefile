@@ -60,5 +60,5 @@ priv/matrix.so: c_src/matrix.o
 	$(CC) $^ $(ERL_LDFLAGS) $(LDFLAGS) -o $@
 
 clean:
-	$(RM) $(NIF) src/*.o
+	$(RM) $(NIF) c_src/*.o
 
