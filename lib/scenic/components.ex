@@ -293,6 +293,7 @@ defmodule Scenic.Components do
   Buttons honor the following list of additional styles.
   * `:width` - pass in a number to set the width of the button.
   * `:height` - pass in a number to set the height of the button.
+  * `:direction` - what direction should the menu drop. Can be either `:down` or `:up`. The default is `:down`.
 
   ## Theme
 
