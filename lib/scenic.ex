@@ -42,6 +42,7 @@ defmodule Scenic do
   @doc false
   def child_spec(opts) do
     %{
+      id: __MODULE__,
       start: {__MODULE__, :start_link, [opts]},
       type: :supervisor,
       restart: :permanent,
