@@ -7,6 +7,10 @@
 * Rename Scenic.Cache.Hash.compute_file!/2 to Scenic.Cache.Hash.file!/2
 * Add ability to put master styles and transforms in a ViewPort config.
 * Fold Scenic.Math into the main Scenic project
+* Cursor input is now only sent if the mouse is actually over a primitive. This solves
+  an inconsistency where sometimes the incoming point would be in local coordinate
+  space and sometimes it would be global. If you want to capture that sort of input, either
+  cover the space with a clear rect, or capture the input.
 
 ### 0.7.0
 * First public release
