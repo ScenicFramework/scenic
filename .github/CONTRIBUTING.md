@@ -83,8 +83,11 @@ causing the bug, and potential solutions (and your opinions on their merits).
 
 ## Feature requests
 
-Feature requests are welcome and should be discussed on [the phoenix-core
-mailing list](http://groups.google.com/group/phoenix-core). But take a moment to
+
+Feature requests are welcome and should be currently be discussed as an issue
+in github. This will change to either a topic in Elixir forum or a mail-list soon.
+
+Before you make a request however, pleaes take a moment to
 find out whether your idea fits with the scope and aims of the project. It's up
 to *you* to make a strong case to convince the community of the merits of this
 feature. Please provide as much detail and context as possible.
