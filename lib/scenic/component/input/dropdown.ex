@@ -90,16 +90,18 @@ defmodule Scenic.Component.Input.Dropdown do
     direction = styles[:direction] || @default_direction
 
     # calculate the where to put the drop box. Depends on the direction
-    translate_menu = case direction do
-      :down -> {0, height + 1}
-      :up -> {0, height * -item_count - 1}
-    end
+    translate_menu =
+      case direction do
+        :down -> {0, height + 1}
+        :up -> {0, height * -item_count - 1}
+      end
 
     # get the direction to rotate the caret
-    rotate_caret = case direction do
-      :down -> @rotate_down
-      :up -> -@rotate_up
-    end
+    rotate_caret =
+      case direction do
+        :down -> @rotate_down
+        :up -> -@rotate_up
+      end
 
     graph =
       Graph.build(font: font, font_size: font_size)
@@ -189,7 +191,7 @@ defmodule Scenic.Component.Input.Dropdown do
   def handle_input(
         {:cursor_button, {:left, :press, _, _}},
         %{id: @button_id} = context,
-        %{down: false, graph: graph, rotate_caret: rotate_caret } = state
+        %{down: false, graph: graph, rotate_caret: rotate_caret} = state
       ) do
     # capture input
     ViewPort.capture_input(context, [:cursor_button, :cursor_pos])
