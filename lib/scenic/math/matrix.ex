@@ -199,10 +199,10 @@ defmodule Scenic.Math.Matrix do
   """
   @spec build_translation(vector_2 :: Math.vector_2()) :: Math.matrix()
   def build_translation(vector_2)
-  def build_translation({x, y}), do: build_translation({x, y, 0.0})
+  def build_translation({x, y}), do: do_build_translation({x, y, 0.0})
   # def build_translation({x, y, z}), do: build_translation(x, y, z)
   # def build_translation(x, y), do: build_translation(x, y, 0.0)
-  def build_translation({x, y, z}) do
+  defp do_build_translation({x, y, z}) do
     <<
       1.0::float-size(32)-native,
       0.0::float-size(32)-native,
@@ -235,11 +235,11 @@ defmodule Scenic.Math.Matrix do
   """
   @spec build_scale(scale :: number | Math.vector_2()) :: Math.matrix()
   def build_scale(scale)
-  def build_scale(s) when is_number(s), do: build_scale({s, s, s})
-  def build_scale({x, y}), do: build_scale({x, y, 1.0})
+  def build_scale(s) when is_number(s), do: do_build_scale({s, s, s})
+  def build_scale({x, y}), do: do_build_scale({x, y, 1.0})
   # def build_scale({x, y, z}), do: build_scale(x, y, z)
   # def build_scale(x, y), do: build_scale(x, y, 1.0)
-  def build_scale({x, y, z}) do
+  defp do_build_scale({x, y, z}) do
     <<
       x * 1.0::float-size(32)-native,
       0.0::float-size(32)-native,
@@ -394,13 +394,15 @@ defmodule Scenic.Math.Matrix do
   Returns:
   A binary matrix
   """
-  @spec rotate(matrix :: number, pin :: Math.point() | nil) :: Math.matrix()
+  @spec rotate(matrix :: Math.matrix(), angle :: number | nil) :: Math.matrix()
   def rotate(matrix, angle)
   def rotate(matrix, nil), do: matrix
 
-  def rotate(matrix, amount) do
-    build_rotation(amount)
-    |> (&Matrix.mul(matrix, &1)).()
+  def rotate(matrix, angle) do
+    Matrix.mul(
+      matrix,
+      build_rotation(angle)
+    )
   end
 
   # def rotate( matrix, radians, axis ) when is_atom(axis) do
@@ -419,13 +421,15 @@ defmodule Scenic.Math.Matrix do
   Returns:
   A binary matrix
   """
-  @spec translate(matrix :: number, vector_2 :: Math.vector_2() | nil) :: Math.matrix()
+  @spec translate(matrix :: Math.matrix(), vector_2 :: Math.vector_2() | nil) :: Math.matrix()
   def translate(matrix, vector_2)
   def translate(matrix, nil), do: matrix
 
   def translate(matrix, {x, y}) do
-    build_translation({x, y})
-    |> (&Matrix.mul(matrix, &1)).()
+    Matrix.mul(
+      matrix,
+      build_translation({x, y})
+    )
   end
 
   # def translate(matrix, {x, y, z}), do: translate(matrix, x, y, z)
@@ -444,12 +448,17 @@ defmodule Scenic.Math.Matrix do
   Returns:
   A binary matrix
   """
-  @spec scale(matrix :: number, scale :: number | Math.vector_2() | nil) :: Math.matrix()
+  @spec scale(matrix :: Math.matrix(), scale :: number | Math.vector_2() | nil) :: Math.matrix()
   def scale(matrix, scale)
   def scale(matrix, nil), do: matrix
   # def scale(matrix, {x, y}), do: scale(matrix, {x, y})
   # def scale(matrix, {x, y, z}), do: scale(matrix,{ x, y, z})
-  def scale(matrix, s), do: build_scale(s) |> (&Matrix.mul(matrix, &1)).()
+  def scale(matrix, s) do
+    Matrix.mul(
+      matrix,
+      build_scale(s)
+    )
+  end
   # def scale(matrix, x, y), do: build_scale(x, y) |> (&Matrix.mul(matrix, &1)).()
   # def scale(matrix, x, y, z), do: build_scale(x, y, z) |> (&Matrix.mul(matrix, &1)).()
 
@@ -468,7 +477,7 @@ defmodule Scenic.Math.Matrix do
   Returns:
   A number
   """
-  @spec get(matrix :: number, x :: number, y :: number) :: number
+  @spec get(matrix :: Math.matrix(), x :: number, y :: number) :: number
   def get(matrix, x, y)
 
   def get(matrix, x, y)
@@ -497,7 +506,7 @@ defmodule Scenic.Math.Matrix do
   Returns:
   A number
   """
-  @spec put(matrix :: number, x :: number, y :: number, v :: number) :: Math.matrix()
+  @spec put(matrix :: Math.matrix, x :: number, y :: number, v :: number) :: Math.matrix()
   def put(matrix, x, y, v)
   def put(matrix, x, y, v) when is_integer(v), do: put(matrix, x, y, v * 1.0)
 
@@ -529,7 +538,7 @@ defmodule Scenic.Math.Matrix do
   Returns:
   A vector_2
   """
-  @spec get_xy(matrix :: number) :: Math.vector_2()
+  @spec get_xy(matrix :: Math.matrix) :: Math.vector_2()
   def get_xy(matrix)
 
   def get_xy(<<
@@ -660,7 +669,7 @@ defmodule Scenic.Math.Matrix do
   Returns:
   The resulting matrix
   """
-  @spec mul(matrix :: Math.matrix(), multiplier :: number | Math.matrix()) :: Math.matrix()
+  @spec mul(matrix :: Math.matrix(), multiplier :: (number | Math.matrix())) :: Math.matrix()
 
   def mul(matrix, multiplier)
   def mul(a, s) when is_integer(s), do: mul(a, s * 1.0)
@@ -693,7 +702,7 @@ defmodule Scenic.Math.Matrix do
   Returns:
   The resulting matrix
   """
-  @spec mul(matrix :: Math.matrix(), divisor :: number) :: Math.matrix()
+  @spec div(matrix :: Math.matrix(), divisor :: number) :: Math.matrix()
   def div(matrix, scalar)
   def div(a, s) when is_integer(s), do: Matrix.div(a, s * 1.0)
 
