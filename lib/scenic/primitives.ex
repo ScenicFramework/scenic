@@ -857,6 +857,10 @@ defmodule Scenic.Primitives do
       Graph.modify(graph, :rect, &update_opts(&1, rotate: 0.5) )
 
   """
+  @spec update_opts(
+          source :: Graph.t() | Primitive.t(),
+          options :: list
+        ) :: Graph.t() | Primitive.t()
 
   def update_opts(p, opts), do: Primitive.put_opts(p, opts)
 
