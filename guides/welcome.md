@@ -20,7 +20,7 @@ If you are new to Scenic, then you should read the following list in order.
 
 ### WIP
 
-* [Lifecycle of a Scene](scene_lifecycle.html)
+* [Life-cycle of a Scene](scene_lifecycle.html)
 * [Standard Components](Scenic.Components.html)
 * [Graph Overview](overview_graph.html)
 * [ViewPort Overview](overview_viewport.html)
