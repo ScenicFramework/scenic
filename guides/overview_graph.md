@@ -1,6 +1,27 @@
 # Graph Overview
 
-Give an overview of a graph here
+The most important state a Scene is responsible for is its Graph. The Graph
+defines what is to be drawn to the screen, any referenced components, and the
+overall draw order. When a Scene decides the graph is ready to be drawn to the
+screen, it pushes it to the Viewport.
+
+Graphs are made out of a handful of primitives, each of which knows how to draw
+one thing. When multiple primitives are put together, almost any standard UI can be drawn.
+
+For example, the graph below
+
+
+## Primitives
+
+## The Group
+
+## Position, rotation, scale and more
+
+## Modifying a graph
+
+## Graph Internals
+
+
 
 Coming soon
 

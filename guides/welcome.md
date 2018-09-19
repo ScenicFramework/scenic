@@ -26,6 +26,6 @@ If you are new to Scenic, then you should read the following list in order.
 * [ViewPort Overview](overview_viewport.html)
 * [Driver Overview](overview_driver.html)
 * [Primitives](Scenic.Primitives.html)
-* [Styles](styles_overview.html)
-* [Transforms](transforms_overview.html)
+* [Styles](overview_styles.html)
+* [Transforms](overview_transforms.html)
 * [Nerves](getting_started_nerves.html)

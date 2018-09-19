@@ -115,8 +115,9 @@ defmodule Scenic.Mixfile do
       "guides/overview_graph.md",
       "guides/overview_viewport.md",
       "guides/overview_driver.md",
-      "guides/styles_overview.md",
-      "guides/transforms_overview.md",
+      "guides/overview_styles.md",
+      "guides/overview_transforms.md",
+      "guides/overview_primitives.md",
       ".github/CODE_OF_CONDUCT.md",
       ".github/CONTRIBUTING.md"
     ]
