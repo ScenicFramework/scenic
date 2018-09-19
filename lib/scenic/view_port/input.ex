@@ -578,14 +578,15 @@ defmodule Scenic.ViewPort.Input do
     point = Matrix.project_vector(context.inverse_tx, point)
 
     with {:ok, graph} <- ViewPort.Tables.get_graph(context.graph_key) do
-      point = do_find_by_captured_point(
-        point,
-        0,
-        graph,
-        Matrix.identity(),
-        Matrix.identity(),
-        max_depth
-      )
+      point =
+        do_find_by_captured_point(
+          point,
+          0,
+          graph,
+          Matrix.identity(),
+          Matrix.identity(),
+          max_depth
+        )
 
       if point, do: point, else: {nil, nil, point}
     else
