@@ -17,6 +17,14 @@ defmodule Scenic.PrimitivesTest do
   # import IEx
 
   # ============================================================================
+  test "arc adds to a graph - default opts" do
+    g = Primitives.arc(@graph, {0, 1, 20})
+    p = g.primitives[1]
+
+    assert p.module == Scenic.Primitive.Arc
+    assert p.data == {0, 1, 20}
+  end
+
   test "arc adds to a graph" do
     p =
       Primitives.arc(@graph, {0, 1, 20}, id: :arc)
@@ -38,6 +46,14 @@ defmodule Scenic.PrimitivesTest do
   end
 
   # ============================================================================
+  test "circle adds to a graph - default opts" do
+    g = Primitives.circle(@graph, 20)
+    p = g.primitives[1]
+
+    assert p.module == Scenic.Primitive.Circle
+    assert p.data == 20
+  end
+
   test "circle adds to a graph" do
     p =
       Primitives.circle(@graph, 20, id: :circle)
@@ -59,6 +75,14 @@ defmodule Scenic.PrimitivesTest do
   end
 
   # ============================================================================
+  test "ellipse adds to a graph - default opts" do
+    g = Primitives.ellipse(@graph, {20, 30})
+    p = g.primitives[1]
+
+    assert p.module == Scenic.Primitive.Ellipse
+    assert p.data == {20, 30}
+  end
+
   test "ellipse adds to a graph" do
     p =
       Primitives.ellipse(@graph, {20, 30}, id: :ellipse)
@@ -80,6 +104,14 @@ defmodule Scenic.PrimitivesTest do
   end
 
   # ============================================================================
+  test "group adds to a graph - default opts" do
+    g = Primitives.group(@graph, fn g -> g end)
+    p = g.primitives[1]
+
+    assert p.module == Scenic.Primitive.Group
+    assert p.data == []
+  end
+
   test "group adds to a graph" do
     p =
       Primitives.group(@graph, fn g -> g end, id: :group)
@@ -102,6 +134,14 @@ defmodule Scenic.PrimitivesTest do
   # end
 
   # ============================================================================
+  test "line adds to a graph - default opts" do
+    g = Primitives.line(@graph, {{0, 0}, {10, 100}})
+    p = g.primitives[1]
+
+    assert p.module == Scenic.Primitive.Line
+    assert p.data == {{0, 0}, {10, 100}}
+  end
+
   test "line adds to a graph" do
     p =
       Primitives.line(@graph, {{0, 0}, {10, 100}}, id: :line)
@@ -123,6 +163,14 @@ defmodule Scenic.PrimitivesTest do
   end
 
   # ============================================================================
+  test "path adds to a graph - default opts" do
+    g = Primitives.path(@graph, [])
+    p = g.primitives[1]
+
+    assert p.module == Scenic.Primitive.Path
+    assert p.data == []
+  end
+
   test "path adds empty list to the graph" do
     actions = []
 
@@ -175,6 +223,14 @@ defmodule Scenic.PrimitivesTest do
   end
 
   # ============================================================================
+  test "quad adds to a graph - default opts" do
+    g = Primitives.quad(@graph, {{1, 2}, {3, 4}, {3, 10}, {2, 8}})
+    p = g.primitives[1]
+
+    assert p.module == Scenic.Primitive.Quad
+    assert p.data == {{1, 2}, {3, 4}, {3, 10}, {2, 8}}
+  end
+
   test "quad adds to a graph" do
     p =
       Primitives.quad(@graph, {{1, 2}, {3, 4}, {3, 10}, {2, 8}}, id: :quad)
@@ -196,6 +252,14 @@ defmodule Scenic.PrimitivesTest do
   end
 
   # ============================================================================
+  test "rect adds to a graph - default opts" do
+    g = Primitives.rect(@graph, {200, 100})
+    p = g.primitives[1]
+
+    assert p.module == Scenic.Primitive.Rectangle
+    assert p.data == {200, 100}
+  end
+
   test "rect adds to a graph" do
     p =
       Primitives.rect(@graph, {200, 100}, id: :rect)
@@ -217,6 +281,14 @@ defmodule Scenic.PrimitivesTest do
   end
 
   # ============================================================================
+  test "rectangle adds to a graph - default opts" do
+    g = Primitives.rectangle(@graph, {200, 100})
+    p = g.primitives[1]
+
+    assert p.module == Scenic.Primitive.Rectangle
+    assert p.data == {200, 100}
+  end
+
   test "rectangle adds to a graph" do
     p =
       Primitives.rectangle(@graph, {200, 100}, id: :rectangle)
@@ -238,6 +310,14 @@ defmodule Scenic.PrimitivesTest do
   end
 
   # ============================================================================
+  test "rrect adds to a graph - default opts" do
+    g = Primitives.rrect(@graph, {200, 100, 5})
+    p = g.primitives[1]
+
+    assert p.module == Scenic.Primitive.RoundedRectangle
+    assert p.data == {200, 100, 5}
+  end
+
   test "rrect adds to a graph" do
     p =
       Primitives.rrect(@graph, {200, 100, 5}, id: :rrect)
@@ -259,6 +339,14 @@ defmodule Scenic.PrimitivesTest do
   end
 
   # ============================================================================
+  test "rounded_rectangle adds to a graph - default opts" do
+    g = Primitives.rounded_rectangle(@graph, {200, 100, 5})
+    p = g.primitives[1]
+
+    assert p.module == Scenic.Primitive.RoundedRectangle
+    assert p.data == {200, 100, 5}
+  end
+
   test "rounded_rectangle adds to a graph" do
     p =
       Primitives.rounded_rectangle(@graph, {200, 100, 5}, id: :rounded_rectangle)
@@ -280,6 +368,16 @@ defmodule Scenic.PrimitivesTest do
   end
 
   # ============================================================================
+  test "scene_ref adds to a graph - default opts" do
+    key = {:graph, make_ref(), 123}
+
+    g = Primitives.scene_ref(@graph, key)
+    p = g.primitives[1]
+
+    assert p.module == Scenic.Primitive.SceneRef
+    assert p.data == key
+  end
+
   test "scene_ref adds graph key reference to a graph" do
     key = {:graph, make_ref(), 123}
 
@@ -353,6 +451,14 @@ defmodule Scenic.PrimitivesTest do
   end
 
   # ============================================================================
+  test "sector adds to a graph - default opts" do
+    g = Primitives.sector(@graph, {0, 1, 20})
+    p = g.primitives[1]
+
+    assert p.module == Scenic.Primitive.Sector
+    assert p.data == {0, 1, 20}
+  end
+
   test "sector adds to a graph" do
     p =
       Primitives.sector(@graph, {0, 1, 20}, id: :sector)
@@ -374,6 +480,14 @@ defmodule Scenic.PrimitivesTest do
   end
 
   # ============================================================================
+  test "text adds to a graph - default opts" do
+    g = Primitives.text(@graph, "test text")
+    p = g.primitives[1]
+
+    assert p.module == Scenic.Primitive.Text
+    assert p.data == "test text"
+  end
+
   test "text adds default to a graph" do
     p =
       Primitives.text(@graph, "test text", id: :text)
@@ -395,6 +509,14 @@ defmodule Scenic.PrimitivesTest do
   end
 
   # ============================================================================
+  test "triangle adds to a graph - default opts" do
+    g = Primitives.triangle(@graph, {{0, 0}, {10, 100}, {100, 40}})
+    p = g.primitives[1]
+
+    assert p.module == Scenic.Primitive.Triangle
+    assert p.data == {{0, 0}, {10, 100}, {100, 40}}
+  end
+
   test "triangle adds to a graph" do
     p =
       Primitives.triangle(@graph, {{0, 0}, {10, 100}, {100, 40}}, id: :triangle)
