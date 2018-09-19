@@ -5,8 +5,6 @@
 
 defmodule Scenic.Primitive.Line do
   use Scenic.Primitive
-  #  alias Scenic.Primitive
-  #  alias Scenic.Primitive.Style
 
   #  import IEx
 
@@ -31,6 +29,7 @@ defmodule Scenic.Primitive.Line do
   def verify(_), do: :invalid_data
 
   # ============================================================================
+  @spec valid_styles() :: [:cap | :hidden | :stroke, ...]
   def valid_styles(), do: @styles
 
   # ============================================================================

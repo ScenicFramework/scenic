@@ -6,7 +6,6 @@
 defmodule Scenic.Primitive.Group do
   use Scenic.Primitive
   alias Scenic.Primitive
-  #  alias Scenic.Graph
 
   #  import IEx
 
@@ -42,7 +41,9 @@ defmodule Scenic.Primitive.Group do
   # ============================================================================
   # filter and gather styles
 
+  @spec valid_styles() :: [:all, ...]
   def valid_styles(), do: [:all]
+
   def filter_styles(styles) when is_map(styles), do: styles
 
   # ============================================================================

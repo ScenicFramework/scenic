@@ -8,9 +8,6 @@ defmodule Scenic.Primitive.Arc do
   alias Scenic.Primitive.Sector
   alias Scenic.Primitive.Triangle
 
-  # alias Scenic.Primitive
-  #  alias Scenic.Primitive.Style
-
   @styles [:hidden, :fill, :stroke]
 
   # ============================================================================
@@ -26,20 +23,20 @@ defmodule Scenic.Primitive.Arc do
 
   # --------------------------------------------------------
   def verify(data) do
-    try do
-      normalize(data)
-      {:ok, data}
-    rescue
-      _ -> :invalid_data
-    end
+    normalize(data)
+    {:ok, data}
+  rescue
+    _ -> :invalid_data
   end
 
   # --------------------------------------------------------
+  @spec normalize({number(), number(), number()}) :: {number(), number(), number()}
   def normalize({radius, start, finish} = data)
       when is_number(start) and is_number(finish) and is_number(radius),
       do: data
 
   # ============================================================================
+  @spec valid_styles() :: [:fill | :hidden | :stroke]
   def valid_styles(), do: @styles
 
   # --------------------------------------------------------
