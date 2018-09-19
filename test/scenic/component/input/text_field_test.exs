@@ -258,12 +258,6 @@ defmodule Scenic.Component.Input.TextFieldTest do
     assert state.index == 7
     assert state.value == "Ina.comitial value"
 
-    # rejects filtered characters
-    state = %{state | filter: :number}
-    {:noreply, state} = TextField.handle_input({:codepoint, {"a", 0}}, context, state)
-    assert state.index == 7
-    assert state.value == "Ina.comitial value"
-
     # cleanup
     Process.exit(tables_pid, :shutdown)
   end
@@ -284,6 +278,70 @@ defmodule Scenic.Component.Input.TextFieldTest do
     assert state.index == 3
     assert state.value == "Inaitial value"
     assert state.display == @initial_password <> "*"
+
+    # cleanup
+    Process.exit(tables_pid, :shutdown)
+  end
+
+  test "handle_input {:codepoint filters input" do
+    self = self()
+    scene_ref = make_ref()
+    Process.put(:parent_pid, self)
+    Process.put(:scene_ref, scene_ref)
+    {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
+    context = %ViewPort.Context{viewport: self}
+
+
+    # filters to integers
+    state = %{@state | index: 2, value: "Initial value"}
+    state = %{state | filter: :integer}
+    {:noreply, state} = TextField.handle_input({:codepoint, {".", 0}}, context, state)
+    assert state.index == 2
+    assert state.value == "Initial value"
+
+    {:noreply, state} = TextField.handle_input({:codepoint, {"2", 0}}, context, state)
+    assert state.index == 3
+    assert state.value == "In2itial value"
+
+
+    # filters to floats
+    state = %{@state | index: 2, value: "Initial value"}
+    state = %{state | filter: :number}
+    {:noreply, state} = TextField.handle_input({:codepoint, {"a", 0}}, context, state)
+    assert state.index == 2
+    assert state.value == "Initial value"
+
+    {:noreply, state} = TextField.handle_input({:codepoint, {".", 0}}, context, state)
+    assert state.index == 3
+    assert state.value == "In.itial value"
+
+    {:noreply, state} = TextField.handle_input({:codepoint, {"2", 0}}, context, state)
+    assert state.index == 4
+    assert state.value == "In.2itial value"
+
+
+    # filters to char string
+    state = %{@state | index: 2, value: "Initial value"}
+    state = %{state | filter: "abcd"}
+    {:noreply, state} = TextField.handle_input({:codepoint, {"f", 0}}, context, state)
+    assert state.index == 2
+    assert state.value == "Initial value"
+
+    {:noreply, state} = TextField.handle_input({:codepoint, {"d", 0}}, context, state)
+    assert state.index == 3
+    assert state.value == "Inditial value"
+
+
+    # filters to function
+    state = %{@state | index: 2, value: "Initial value"}
+    state = %{state | filter: fn(ch) -> ch == "k" end}
+    {:noreply, state} = TextField.handle_input({:codepoint, {"f", 0}}, context, state)
+    assert state.index == 2
+    assert state.value == "Initial value"
+
+    {:noreply, state} = TextField.handle_input({:codepoint, {"k", 0}}, context, state)
+    assert state.index == 3
+    assert state.value == "Inkitial value"
 
     # cleanup
     Process.exit(tables_pid, :shutdown)
