@@ -176,7 +176,13 @@ defmodule Scenic.Components do
 
 
   """
-  def button(graph, data, options \\ [])
+  @spec button(
+          source :: Graph.t() | Primitive.t(),
+          title :: String.t(),
+          options :: list
+        ) :: Graph.t() | Primitive.t()
+
+  def button(graph, title, options \\ [])
 
   def button(%Graph{} = g, data, options) do
     add_to_graph(g, Component.Button, data, options)
@@ -236,6 +242,12 @@ defmodule Scenic.Components do
       |> checkbox( {"Example", true}, id: :checkbox_id, translate: {20, 20} )
 
   """
+  @spec checkbox(
+          source :: Graph.t() | Primitive.t(),
+          data :: {String.t(), boolean},
+          options :: list
+        ) :: Graph.t() | Primitive.t()
+
   def checkbox(graph, data, options \\ [])
 
   def checkbox(%Graph{} = g, data, options) do
@@ -320,6 +332,12 @@ defmodule Scenic.Components do
       ], :controls}, id: :dropdown_id, translate: {20, 20} )
 
   """
+  @spec dropdown(
+          source :: Graph.t() | Primitive.t(),
+          data :: {list({String.t(), any}), any},
+          options :: list
+        ) :: Graph.t() | Primitive.t()
+
   def dropdown(graph, data, options \\ [])
 
   def dropdown(%Graph{} = g, data, options) do
@@ -399,6 +417,11 @@ defmodule Scenic.Components do
         ], id: :radio_group_id, translate: {20, 20} )
 
   """
+  @spec radio_group(
+          source :: Graph.t() | Primitive.t(),
+          data :: list({String.t(), any} | {String.t(), any, boolean}),
+          options :: list
+        ) :: Graph.t() | Primitive.t()
   def radio_group(graph, data, options \\ [])
 
   def radio_group(%Graph{} = g, data, options) do
@@ -456,10 +479,10 @@ defmodule Scenic.Components do
 
   ### Examples
 
-  The following example creates a numeric sliderand positions it on the screen.
+  The following example creates a numeric slider and positions it on the screen.
 
       graph
-      |> Component.Input.Slider.add_to_graph( {{0,100}, 0, :num_slider}, translate: {20,20} )
+      |> slider( {{0,100}, 0}, id: :num_slider, translate: {20,20} )
 
   The following example creates a list slider and positions it on the screen.
 
@@ -472,6 +495,12 @@ defmodule Scenic.Components do
         ], :cornflower_blue}, id: :slider_id, translate: {20,20} )
 
   """
+  @spec slider(
+          source :: Graph.t() | Primitive.t(),
+          data :: {{number, number}, number} | list,
+          options :: list
+        ) :: Graph.t() | Primitive.t()
+
   def slider(graph, data, options \\ [])
 
   def slider(%Graph{} = g, data, options) do
@@ -546,6 +575,12 @@ defmodule Scenic.Components do
         "", id: :pass_id, type: :password, hint: "Enter password", translate: {20,20}
       )
   """
+  @spec text_field(
+          source :: Graph.t() | Primitive.t(),
+          data :: String.t(),
+          options :: list
+        ) :: Graph.t() | Primitive.t()
+
   def text_field(graph, data, options \\ [])
 
   def text_field(%Graph{} = g, data, options) do

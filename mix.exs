@@ -52,7 +52,7 @@ defmodule Scenic.Mixfile do
           "README.md"
         ]
       ],
-      dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex, :scenic_math]],
+      dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex]],
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,
