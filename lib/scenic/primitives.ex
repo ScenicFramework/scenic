@@ -858,9 +858,9 @@ defmodule Scenic.Primitives do
 
   """
   @spec update_opts(
-          source :: Graph.t() | Primitive.t(),
+          Primitive.t(),
           options :: list
-        ) :: Graph.t() | Primitive.t()
+        ) :: Primitive.t()
 
   def update_opts(p, opts), do: Primitive.put_opts(p, opts)
 
