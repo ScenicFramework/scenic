@@ -124,7 +124,7 @@ defmodule Scenic.Component.Input.CheckboxTest do
           contained: true
       })
 
-    # confirm the graph was pushed
+    # confirm the event was sent
     assert_receive({:"$gen_cast", {:event, {:value_changed, :test_id, true}, ^self}})
   end
 

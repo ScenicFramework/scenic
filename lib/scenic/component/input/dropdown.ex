@@ -11,7 +11,7 @@ defmodule Scenic.Component.Input.Dropdown do
   alias Scenic.Primitive.Style.Theme
   import Scenic.Primitives
 
-  # import IEx
+  import IEx
 
   @default_width 160
   @default_height 30
@@ -43,12 +43,12 @@ defmodule Scenic.Component.Input.Dropdown do
 
   # --------------------------------------------------------
   def verify({items, initial} = data) when is_list(items) do
-    Enum.all?(items, &verify_item(&1)) &&
-      Enum.find_value(items, false, fn {_, id} -> id == initial end)
-      |> case do
-        true -> {:ok, data}
-        _ -> :invalid_data
-      end
+    (Enum.all?(items, &verify_item(&1)) &&
+       Enum.find_value(items, false, fn {_, id} -> id == initial end))
+    |> case do
+      true -> {:ok, data}
+      _ -> :invalid_data
+    end
   end
 
   def verify(_), do: :invalid_data
@@ -269,7 +269,7 @@ defmodule Scenic.Component.Input.Dropdown do
       # push to the viewport
       |> push_graph()
 
-    {:continue, %{state | down: false, graph: graph}}
+    {:noreply, %{state | down: false, graph: graph}}
   end
 
   # --------------------------------------------------------

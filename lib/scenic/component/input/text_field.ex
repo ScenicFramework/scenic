@@ -85,7 +85,7 @@ defmodule Scenic.Component.Input.TextField do
 
     # theme is passed in as an inherited style
     theme =
-      (styles[:theme] || Theme.preset_caret(:dark))
+      (styles[:theme] || Theme.preset(:dark))
       |> Theme.normalize()
 
     # get the text_field specific styles

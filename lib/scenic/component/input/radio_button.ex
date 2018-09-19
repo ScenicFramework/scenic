@@ -67,12 +67,12 @@ defmodule Scenic.Component.Input.RadioButton do
     {:ok, state}
   end
 
-  # --------------------------------------------------------
-  def handle_cast({:set_value, new_value}, state) do
-    state = Map.put(state, :checked, new_value)
-    graph = update_graph(state)
-    {:noreply, %{state | graph: graph}}
-  end
+  # # --------------------------------------------------------
+  # def handle_cast({:set_value, new_value}, state) do
+  #   state = Map.put(state, :checked, new_value)
+  #   graph = update_graph(state)
+  #   {:noreply, %{state | graph: graph}}
+  # end
 
   # --------------------------------------------------------
   def handle_cast({:set_to_msg, set_id}, %{id: id} = state) do

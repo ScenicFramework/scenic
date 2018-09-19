@@ -67,14 +67,18 @@ defmodule Scenic.Component.Input.RadioButtonTest do
   # handle_input
 
   test "handle_input {:cursor_enter, _uid} sets contained" do
-    {:noreply, state} = RadioButton.handle_input({:cursor_enter, 1}, %{}, %{@state | pressed: true})
+    {:noreply, state} =
+      RadioButton.handle_input({:cursor_enter, 1}, %{}, %{@state | pressed: true})
+
     assert state.contained
     # confirm the graph was pushed
     assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
   end
 
   test "handle_input {:cursor_exit, _uid} clears contained" do
-    {:noreply, state} = RadioButton.handle_input({:cursor_exit, 1}, %{}, %{@state | pressed: true})
+    {:noreply, state} =
+      RadioButton.handle_input({:cursor_exit, 1}, %{}, %{@state | pressed: true})
+
     refute state.contained
     # confirm the graph was pushed
     assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
