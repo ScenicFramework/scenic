@@ -1,9 +1,9 @@
 #
-#  Created by Boyd Multerer on July 15, 2018
+#  Created by Boyd Multerer on September 18, 2018
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Component.ButtonTest do
+defmodule Scenic.Component.Input.CheckboxTest do
   use ExUnit.Case, async: true
   doctest Scenic
 
@@ -11,14 +11,14 @@ defmodule Scenic.Component.ButtonTest do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.ViewPort
-  alias Scenic.Component.Button
+  alias Scenic.Component.Input.Checkbox
 
   @state %{
     graph: Graph.build(),
     theme: Primitive.Style.Theme.preset(:primary),
     pressed: false,
     contained: false,
-    align: :center,
+    checked: false,
     id: :test_id
   }
 
@@ -26,60 +26,50 @@ defmodule Scenic.Component.ButtonTest do
   # info
 
   test "info works" do
-    assert is_bitstring(Button.info(:bad_data))
-    assert Button.info(:bad_data) =~ ":bad_data"
+    assert is_bitstring(Checkbox.info(:bad_data))
+    assert Checkbox.info(:bad_data) =~ ":bad_data"
   end
 
   # ============================================================================
   # verify
 
   test "verify passes valid data" do
-    assert Button.verify("Button") == {:ok, "Button"}
+    assert Checkbox.verify({"Title", true}) == {:ok, {"Title", true}}
+    assert Checkbox.verify({"Title", false}) == {:ok, {"Title", false}}
   end
 
   test "verify fails invalid data" do
-    assert Button.verify(:banana) == :invalid_data
+    assert Checkbox.verify(:banana) == :invalid_data
   end
 
   # ============================================================================
   # init
 
   test "init works with simple data" do
-    {:ok, state} = Button.init("Button", styles: %{}, id: :button_id)
+    {:ok, state} = Checkbox.init({"Title", false}, styles: %{}, id: :test_id)
     %Graph{} = state.graph
     assert is_map(state.theme)
     assert state.contained == false
     assert state.pressed == false
-    assert state.align == :center
-    assert state.id == :button_id
-  end
+    assert state.checked == false
+    assert state.id == :test_id
 
-  test "init works with various alignments" do
-    {:ok, state} = Button.init("Button", [])
-    %Primitive{styles: %{text_align: :center}} = Graph.get!(state.graph, :title)
-
-    {:ok, state} = Button.init("Button", styles: %{alignment: :left}, id: :button_id)
-    %Primitive{styles: %{text_align: :left}} = Graph.get!(state.graph, :title)
-
-    {:ok, state} = Button.init("Button", styles: %{alignment: :center}, id: :button_id)
-    %Primitive{styles: %{text_align: :center}} = Graph.get!(state.graph, :title)
-
-    {:ok, state} = Button.init("Button", styles: %{alignment: :right}, id: :button_id)
-    %Primitive{styles: %{text_align: :right}} = Graph.get!(state.graph, :title)
+    {:ok, state} = Checkbox.init({"Title", true}, styles: %{}, id: :test_id)
+    assert state.checked == true
   end
 
   # ============================================================================
   # handle_input
 
   test "handle_input {:cursor_enter, _uid} sets contained" do
-    {:noreply, state} = Button.handle_input({:cursor_enter, 1}, %{}, %{@state | pressed: true})
+    {:noreply, state} = Checkbox.handle_input({:cursor_enter, 1}, %{}, %{@state | pressed: true})
     assert state.contained
     # confirm the graph was pushed
     assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
   end
 
   test "handle_input {:cursor_exit, _uid} clears contained" do
-    {:noreply, state} = Button.handle_input({:cursor_exit, 1}, %{}, %{@state | pressed: true})
+    {:noreply, state} = Checkbox.handle_input({:cursor_exit, 1}, %{}, %{@state | pressed: true})
     refute state.contained
     # confirm the graph was pushed
     assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
@@ -89,7 +79,7 @@ defmodule Scenic.Component.ButtonTest do
     context = %ViewPort.Context{viewport: self()}
 
     {:noreply, state} =
-      Button.handle_input({:cursor_button, {:left, :press, nil, nil}}, context, %{
+      Checkbox.handle_input({:cursor_button, {:left, :press, nil, nil}}, context, %{
         @state
         | pressed: false,
           contained: true
@@ -107,7 +97,7 @@ defmodule Scenic.Component.ButtonTest do
     context = %ViewPort.Context{viewport: self()}
 
     {:noreply, state} =
-      Button.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
+      Checkbox.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
         @state
         | pressed: true,
           contained: true
@@ -128,19 +118,19 @@ defmodule Scenic.Component.ButtonTest do
     context = %ViewPort.Context{viewport: self()}
 
     {:noreply, _} =
-      Button.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
+      Checkbox.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
         @state
         | pressed: true,
           contained: true
       })
 
     # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:event, {:click, :test_id}, ^self}})
+    assert_receive({:"$gen_cast", {:event, {:value_changed, :test_id, true}, ^self}})
   end
 
   test "handle_input does nothing on unknown input" do
     context = %ViewPort.Context{viewport: self()}
-    {:noreply, state} = Button.handle_input(:unknown, context, @state)
+    {:noreply, state} = Checkbox.handle_input(:unknown, context, @state)
     assert state == @state
   end
 end
