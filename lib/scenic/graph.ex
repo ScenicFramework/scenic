@@ -508,7 +508,7 @@ defmodule Scenic.Graph do
     end
   end
 
-  @spec modify(graph :: Graph.t(), id :: any, action :: function) :: Graph.t()
+  @spec modify(graph :: Graph.t(), id :: any, action :: (... -> Primitive.t())) :: Graph.t()
   def modify(graph, id, action)
 
   # pass in an atom based id, and it will transform all mapped uids
