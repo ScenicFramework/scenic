@@ -66,6 +66,7 @@ defmodule Scenic.ComponentsTest do
     p =
       Components.checkbox(@graph, {"Name", false}, id: :checkbox)
       |> Graph.get!(:checkbox)
+
     assert p.data == {Scenic.Component.Input.Checkbox, {"Name", false}}
   end
 
@@ -80,7 +81,7 @@ defmodule Scenic.ComponentsTest do
   end
 
   # ============================================================================
-  @drop_data {[{"a",1},{"b",2}],2}
+  @drop_data {[{"a", 1}, {"b", 2}], 2}
 
   test "dropdown adds to a graph - default opts" do
     g = Components.dropdown(@graph, @drop_data)
@@ -101,7 +102,8 @@ defmodule Scenic.ComponentsTest do
   end
 
   test "dropdown modifies ref init data" do
-    mod_data = {[{"a",1},{"b",2}],1}
+    mod_data = {[{"a", 1}, {"b", 2}], 1}
+
     p =
       Components.dropdown(@graph, @drop_data, id: :dropdown)
       |> Graph.get!(:dropdown)
@@ -112,7 +114,7 @@ defmodule Scenic.ComponentsTest do
   end
 
   # ============================================================================
-  @radio_data [{"a",1},{"b",2,true},{"c",2,false}]
+  @radio_data [{"a", 1}, {"b", 2, true}, {"c", 2, false}]
 
   test "radio_group adds to a graph - default opts" do
     g = Components.radio_group(@graph, @radio_data)
@@ -133,7 +135,8 @@ defmodule Scenic.ComponentsTest do
   end
 
   test "radio_group modifies ref init data" do
-    mod_data = [{"a",1,true},{"b",2},{"c",2,false}]
+    mod_data = [{"a", 1, true}, {"b", 2}, {"c", 2, false}]
+
     p =
       Components.radio_group(@graph, @radio_data, id: :radio_group)
       |> Graph.get!(:radio_group)
@@ -144,8 +147,8 @@ defmodule Scenic.ComponentsTest do
   end
 
   # ============================================================================
-  @slider_int_data {{0,100}, 20}
-  @slider_float_data {{0.1,100.2}, 20.2}
+  @slider_int_data {{0, 100}, 20}
+  @slider_float_data {{0.1, 100.2}, 20.2}
   @slider_list_data {[:red, :green, :blue], :green}
 
   test "slider adds to a graph - default opts" do
@@ -168,16 +171,19 @@ defmodule Scenic.ComponentsTest do
     p =
       Components.slider(@graph, @slider_float_data, id: :slider)
       |> Graph.get!(:slider)
+
     assert p.data == {Scenic.Component.Input.Slider, @slider_float_data}
 
     p =
       Components.slider(@graph, @slider_list_data, id: :slider)
       |> Graph.get!(:slider)
+
     assert p.data == {Scenic.Component.Input.Slider, @slider_list_data}
   end
 
   test "slider modifies ref init data" do
     mod_data = {[:red, :green, :blue, :yellow], :red}
+
     p =
       Components.slider(@graph, @slider_list_data, id: :slider)
       |> Graph.get!(:slider)
@@ -215,5 +221,4 @@ defmodule Scenic.ComponentsTest do
     assert p.data == {Scenic.Component.Input.TextField, "Modified"}
     assert p.id == :modified
   end
-
 end
