@@ -5,14 +5,15 @@
 
 defmodule Scenic.Component.Input.Caret do
   use Scenic.Component, has_children: false
-  alias Scenic.Graph
-  alias Scenic.Primitive.Style.Paint.Color
 
   import Scenic.Primitives,
     only: [
       {:line, 3},
       {:update_opts, 2}
     ]
+
+  alias Scenic.Graph
+  alias Scenic.Primitive.Style.Paint.Color
 
   @width 2
   @inset_v 4
@@ -34,6 +35,7 @@ defmodule Scenic.Component.Input.Caret do
   end
 
   # --------------------------------------------------------
+  @spec verify(any()) :: :invalid_data | {:ok, {number(), any()}}
   def verify({height, color} = data)
       when is_number(height) and height > 0 do
     case Color.verify(color) do

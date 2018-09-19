@@ -25,7 +25,6 @@ defmodule Scenic.Math.Matrix do
   #  import IEx
 
   @app Mix.Project.config()[:app]
-  # @env Mix.env
 
   # load the NIF
   @compile {:autoload, false}
@@ -33,7 +32,9 @@ defmodule Scenic.Math.Matrix do
   @doc false
   def load_nifs do
     :ok =
-      :filename.join(:code.priv_dir(@app), 'matrix')
+      @app
+      |> :code.priv_dir()
+      |> :filename.join('matrix')
       |> :erlang.load_nif(0)
   end
 

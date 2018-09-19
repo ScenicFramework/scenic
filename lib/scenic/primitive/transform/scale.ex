@@ -26,16 +26,15 @@ defmodule Scenic.Primitive.Transform.Scale do
 
   # --------------------------------------------------------
   def verify(percent) do
-    try do
-      normalize(percent)
-      true
-    rescue
-      _ -> false
-    end
+    normalize(percent)
+    true
+  rescue
+    _ -> false
   end
 
   # --------------------------------------------------------
   # normalize named stipples
+  @spec normalize(number() | {number(), number()}) :: {number(), number()}
   def normalize(pct) when is_number(pct), do: {pct, pct}
   def normalize({px, py}) when is_number(px) and is_number(py), do: {px, py}
 end

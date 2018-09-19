@@ -6,9 +6,6 @@
 defmodule Scenic.Primitive.Circle do
   use Scenic.Primitive
 
-  # alias Scenic.Primitive
-  #  alias Scenic.Primitive.Style
-
   @styles [:hidden, :fill, :stroke]
 
   # ============================================================================
@@ -24,20 +21,20 @@ defmodule Scenic.Primitive.Circle do
 
   # --------------------------------------------------------
   def verify(data) do
-    try do
-      normalize(data)
-      {:ok, data}
-    rescue
-      _ -> :invalid_data
-    end
+    normalize(data)
+    {:ok, data}
+  rescue
+    _ -> :invalid_data
   end
 
   # --------------------------------------------------------
+  @spec normalize(number()) :: number()
   def normalize(radius) when is_number(radius) do
     radius
   end
 
   # ============================================================================
+  @spec valid_styles() :: [:hidden | :fill | :stroke]
   def valid_styles(), do: @styles
 
   # --------------------------------------------------------
