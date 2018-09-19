@@ -25,12 +25,10 @@ defmodule Scenic.Primitive.RoundedRectangle do
 
   # --------------------------------------------------------
   def verify(data) do
-    try do
-      normalize(data)
-      {:ok, data}
-    rescue
-      _ -> :invalid_data
-    end
+    normalize(data)
+    {:ok, data}
+  rescue
+    _ -> :invalid_data
   end
 
   # --------------------------------------------------------
@@ -61,6 +59,7 @@ defmodule Scenic.Primitive.RoundedRectangle do
   end
 
   # ============================================================================
+  @spec valid_styles() :: [:fill | :hidden | :stroke, ...]
   def valid_styles(), do: @styles
 
   # --------------------------------------------------------

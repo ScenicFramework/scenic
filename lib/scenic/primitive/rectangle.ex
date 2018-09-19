@@ -6,9 +6,6 @@
 defmodule Scenic.Primitive.Rectangle do
   use Scenic.Primitive
 
-  # alias Scenic.Primitive
-  #  alias Scenic.Primitive.Style
-
   @styles [:hidden, :fill, :stroke]
 
   # ============================================================================
@@ -30,6 +27,7 @@ defmodule Scenic.Primitive.Rectangle do
   def verify(_), do: :invalid_data
 
   # ============================================================================
+  @spec valid_styles() :: [:fill | :hidden | :stroke, ...]
   def valid_styles(), do: @styles
 
   # --------------------------------------------------------

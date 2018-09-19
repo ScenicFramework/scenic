@@ -26,10 +26,6 @@ defmodule Scenic.Primitive.Quad do
   def verify({{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}} = data)
       when is_number(x0) and is_number(y0) and is_number(x1) and is_number(y1) and is_number(x2) and
              is_number(y2) and is_number(x3) and is_number(y3) do
-    # case Math.Quad.classification(data) == :convex do
-    #   true -> {:ok, data}
-    #   false -> :invalid_data
-    # end
     {:ok, data}
   end
 
