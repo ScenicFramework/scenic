@@ -56,28 +56,6 @@ defmodule Scenic.Component.Input.TextField do
 
   def verify(_), do: :invalid_data
 
-  # #--------------------------------------------------------
-  # defp verify_option( {:w, w} ) when is_number(w) and w > 0, do: true
-  # defp verify_option( {:width, w} )when is_number(w) and w > 0, do: true
-  # defp verify_option( {:hint, hint} ) when is_bitstring(hint), do: true
-  # defp verify_option( {:theme, :light} ), do: true
-  # defp verify_option( {:theme, :dark} ), do: true
-  # defp verify_option( {:theme,
-  # {text_color, hint_color, background_color, border_color, focused_color}} ) do
-  #   Color.verify( text_color ) &&
-  #   Color.verify( hint_color ) &&
-  #   Color.verify( background_color ) &&
-  #   Color.verify( border_color ) &&
-  #   Color.verify( focused_color )
-  # end
-  # defp verify_option( {:type, :text} ), do: true
-  # defp verify_option( {:type, :password} ), do: true
-  # defp verify_option( {:filter, :number} ), do: true
-  # defp verify_option( {:filter, :integer} ), do: true
-  # defp verify_option( {:filter, filter} ) when is_bitstring(filter), do: true
-  # defp verify_option( {:filter, filter} ) when is_function(filter,1), do: true
-  # defp verify_option( _ ), do: false
-
   # --------------------------------------------------------
   def init(value, opts) do
     id = opts[:id]
@@ -603,7 +581,7 @@ defmodule Scenic.Component.Input.TextField do
     send_event({:value_changed, id, value})
 
     # advance the index
-    index = index + 1
+    index = index + String.length(char)
 
     # update the graph
     graph =

@@ -60,10 +60,8 @@ defmodule Scenic.Component.Input.RadioGroupTest do
   test "filter_event listens to clicks from buttons and handles value changes" do
     self = self()
     scene_ref = make_ref()
-
     Process.put(:parent_pid, self)
     Process.put(:scene_ref, scene_ref)
-
     {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
 
     Tables.insert_graph({:graph, scene_ref, nil}, self(), Graph.build(), %{})
