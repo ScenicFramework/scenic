@@ -64,26 +64,26 @@ defmodule Scenic.Component.Input.CaretTest do
   # ============================================================================
   # cast handlers
 
-  test ":gain_focus starts a timer and shows the carat" do
-    {:noreply, state} = Caret.handle_cast(:gain_focus, @state)
+  test ":gain_focus starts a timer and shows the caret" do
+    {:noreply, state} = Caret.handle_cast(:start_caret, @state)
     assert state.graph == @graph_showing
     assert state.timer
     refute state.hidden
     assert state.focused
   end
 
-  test ":gain_focus stops the timer and hides the carat" do
-    {:noreply, state} = Caret.handle_cast(:lose_focus, @state)
+  test ":gain_focus stops the timer and hides the caret" do
+    {:noreply, state} = Caret.handle_cast(:stop_caret, @state)
     assert state.graph == @graph_hidden
     assert state.timer == nil
     assert state.hidden
     refute state.focused
   end
 
-  test ":reset_carat resets the timer and shows the carat" do
+  test ":reset_caret resets the timer and shows the caret" do
     old_timer = :timer.send_interval(1000, :blink)
     state = %{@state | timer: old_timer, focused: true}
-    {:noreply, state} = Caret.handle_cast(:reset_carat, state)
+    {:noreply, state} = Caret.handle_cast(:reset_caret, state)
     assert state.graph == @graph_showing
     assert state.timer != old_timer
     refute state.hidden

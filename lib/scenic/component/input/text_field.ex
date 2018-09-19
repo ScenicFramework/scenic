@@ -85,7 +85,7 @@ defmodule Scenic.Component.Input.TextField do
 
     # theme is passed in as an inherited style
     theme =
-      (styles[:theme] || Theme.preset(:dark))
+      (styles[:theme] || Theme.preset_caret(:dark))
       |> Theme.normalize()
 
     # get the text_field specific styles
@@ -131,7 +131,7 @@ defmodule Scenic.Component.Input.TextField do
             t: {0, @default_font_size},
             id: :text
           )
-          |> Caret.add_to_graph({height, theme.text}, id: :carat)
+          |> Caret.add_to_graph({height, theme.text}, id: :caret)
         end,
         t: {@inset_x, 0}
       )
@@ -142,7 +142,7 @@ defmodule Scenic.Component.Input.TextField do
         id: :border
       )
       |> update_text(display, state)
-      |> update_carat(display, index)
+      |> update_caret(display, index)
       |> push_graph()
 
     {:ok, %{state | graph: graph}}
@@ -164,12 +164,12 @@ defmodule Scenic.Component.Input.TextField do
 
   # --------------------------------------------------------
   # current value string is empty. show the hint string
-  # defp update_carat( graph, state ) do
-  #   x = calc_carat_x( state )
-  #   Graph.modify( graph, :carat, &update_opts(&1, t: {x,0}) )
+  # defp update_caret( graph, state ) do
+  #   x = calc_caret_x( state )
+  #   Graph.modify( graph, :caret, &update_opts(&1, t: {x,0}) )
   # end
 
-  defp update_carat(graph, value, index) do
+  defp update_caret(graph, value, index) do
     str_len = String.length(value)
 
     # double check the postition
@@ -180,11 +180,11 @@ defmodule Scenic.Component.Input.TextField do
         true -> index
       end
 
-    # calc the carat position
+    # calc the caret position
     x = index * @char_width
 
-    # move the carat
-    Graph.modify(graph, :carat, &update_opts(&1, t: {x, 0}))
+    # move the caret
+    Graph.modify(graph, :caret, &update_opts(&1, t: {x, 0}))
   end
 
   # --------------------------------------------------------
@@ -192,13 +192,13 @@ defmodule Scenic.Component.Input.TextField do
     # capture the input
     ViewPort.capture_input(context, @input_capture)
 
-    # start animating the carat
-    Scene.cast_to_refs(nil, :gain_focus)
+    # start animating the caret
+    Scene.cast_to_refs(nil, :start_caret)
 
-    # show the carat
+    # show the caret
     graph =
       graph
-      |> Graph.modify(:carat, &update_opts(&1, hidden: false))
+      |> Graph.modify(:caret, &update_opts(&1, hidden: false))
       |> Graph.modify(:border, &update_opts(&1, stroke: {2, theme.focus}))
       |> push_graph()
 
@@ -213,13 +213,13 @@ defmodule Scenic.Component.Input.TextField do
     # release the input
     ViewPort.release_input(context, @input_capture)
 
-    # stop animating the carat
-    Scene.cast_to_refs(nil, :lose_focus)
+    # stop animating the caret
+    Scene.cast_to_refs(nil, :stop_caret)
 
-    # hide the carat
+    # hide the caret
     graph =
       graph
-      |> Graph.modify(:carat, &update_opts(&1, hidden: true))
+      |> Graph.modify(:caret, &update_opts(&1, hidden: true))
       |> Graph.modify(:border, &update_opts(&1, stroke: {2, theme.border}))
       |> push_graph()
 
@@ -306,11 +306,11 @@ defmodule Scenic.Component.Input.TextField do
           {index, graph}
 
         i ->
-          # reset the carat blinker
-          Scene.cast_to_refs(nil, :reset_carat)
-          # move the carat
+          # reset_caret the caret blinker
+          Scene.cast_to_refs(nil, :reset_caret)
+          # move the caret
           graph =
-            update_carat(graph, value, i)
+            update_caret(graph, value, i)
             |> push_graph()
 
           {i, graph}
@@ -351,13 +351,13 @@ defmodule Scenic.Component.Input.TextField do
           {0, graph}
 
         i ->
-          # reset the carat blinker
-          Scene.cast_to_refs(nil, :reset_carat)
-          # move the carat
+          # reset_caret the caret blinker
+          Scene.cast_to_refs(nil, :reset_caret)
+          # move the caret
           i = i - 1
 
           graph =
-            update_carat(graph, value, i)
+            update_caret(graph, value, i)
             |> push_graph()
 
           {i, graph}
@@ -372,7 +372,7 @@ defmodule Scenic.Component.Input.TextField do
         _context,
         %{index: index, value: value, graph: graph} = state
       ) do
-    # the max position for the carat
+    # the max position for the caret
     max_index = String.length(value)
 
     # move left. clamp to 0
@@ -382,13 +382,13 @@ defmodule Scenic.Component.Input.TextField do
           {index, graph}
 
         i ->
-          # reset the carat blinker
-          Scene.cast_to_refs(nil, :reset_carat)
-          # move the carat
+          # reset the caret blinker
+          Scene.cast_to_refs(nil, :reset_caret_caret)
+          # move the caret
           i = i + 1
 
           graph =
-            update_carat(graph, value, i)
+            update_caret(graph, value, i)
             |> push_graph()
 
           {i, graph}
@@ -414,11 +414,11 @@ defmodule Scenic.Component.Input.TextField do
           {index, graph}
 
         _ ->
-          # reset the carat blinker
-          Scene.cast_to_refs(nil, :reset_carat)
-          # move the carat
+          # reset the caret blinker
+          Scene.cast_to_refs(nil, :reset_caret)
+          # move the caret
           graph =
-            update_carat(graph, value, 0)
+            update_caret(graph, value, 0)
             |> push_graph()
 
           {0, graph}
@@ -437,7 +437,7 @@ defmodule Scenic.Component.Input.TextField do
         _context,
         %{index: index, value: value, graph: graph} = state
       ) do
-    # the max position for the carat
+    # the max position for the caret
     max_index = String.length(value)
 
     # move left. clamp to 0
@@ -447,11 +447,11 @@ defmodule Scenic.Component.Input.TextField do
           {index, graph}
 
         _ ->
-          # reset the carat blinker
-          Scene.cast_to_refs(nil, :reset_carat)
-          # move the carat
+          # reset the caret blinker
+          Scene.cast_to_refs(nil, :reset_caret)
+          # move the caret
           graph =
-            update_carat(graph, value, max_index)
+            update_caret(graph, value, max_index)
             |> push_graph()
 
           {max_index, graph}
@@ -477,8 +477,8 @@ defmodule Scenic.Component.Input.TextField do
           id: id
         } = state
       ) do
-    # reset the carat blinker
-    Scene.cast_to_refs(nil, :reset_carat)
+    # reset_caret the caret blinker
+    Scene.cast_to_refs(nil, :reset_caret)
 
     # delete the char to the left of the index
     value =
@@ -498,7 +498,7 @@ defmodule Scenic.Component.Input.TextField do
     graph =
       graph
       |> update_text(display, state)
-      |> update_carat(display, index)
+      |> update_caret(display, index)
       |> push_graph()
 
     state =
@@ -523,8 +523,8 @@ defmodule Scenic.Component.Input.TextField do
           id: id
         } = state
       ) do
-    # reset the carat blinker
-    Scene.cast_to_refs(nil, :reset_carat)
+    # reset the caret blinker
+    Scene.cast_to_refs(nil, :reset_caret)
 
     # delete the char at the index
     value =
@@ -537,7 +537,7 @@ defmodule Scenic.Component.Input.TextField do
     # send the value changed event
     send_event({:value_changed, id, value})
 
-    # update the graph (the carat doesn't move)
+    # update the graph (the caret doesn't move)
     graph =
       graph
       |> update_text(display, state)
@@ -591,8 +591,8 @@ defmodule Scenic.Component.Input.TextField do
            id: id
          } = state
        ) do
-    # reset the carat blinker
-    Scene.cast_to_refs(nil, :reset_carat)
+    # reset the caret blinker
+    Scene.cast_to_refs(nil, :reset_caret)
 
     # insert the char into the string at the index location
     {left, right} = String.split_at(value, index)
@@ -609,7 +609,7 @@ defmodule Scenic.Component.Input.TextField do
     graph =
       graph
       |> update_text(display, state)
-      |> update_carat(display, index)
+      |> update_caret(display, index)
       |> push_graph()
 
     state =
