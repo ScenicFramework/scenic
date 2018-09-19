@@ -440,13 +440,6 @@ defmodule Scenic.Component.Input.TextFieldTest do
     Process.exit(tables_pid, :shutdown)
   end
 
-
-
-
-
-
-
-
   test "handle_input does nothing on unknown input" do
     context = %ViewPort.Context{viewport: self()}
     {:noreply, state} = TextField.handle_input(:unknown, context, @state)
