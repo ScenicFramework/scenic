@@ -26,7 +26,6 @@ defmodule Scenic.Component.Input.SliderTest do
     tracking: false
   }
 
-
   # ============================================================================
   # info
 
@@ -39,25 +38,27 @@ defmodule Scenic.Component.Input.SliderTest do
   # verify
 
   test "verify passes valid data" do
-    assert Slider.verify({{0,100}, 10}) == {:ok, {{0,100}, 10} }
-    assert Slider.verify({{0.1,100.3}, 10.4}) == {:ok, {{0.1,100.3}, 10.4} }
-    assert Slider.verify({[:red, :green, :blue], :green}) == {:ok, {[:red, :green, :blue], :green} }
+    assert Slider.verify({{0, 100}, 10}) == {:ok, {{0, 100}, 10}}
+    assert Slider.verify({{0.1, 100.3}, 10.4}) == {:ok, {{0.1, 100.3}, 10.4}}
+
+    assert Slider.verify({[:red, :green, :blue], :green}) ==
+             {:ok, {[:red, :green, :blue], :green}}
   end
 
   test "verify fails invalid data" do
     assert Slider.verify(:banana) == :invalid_data
-    assert Slider.verify({{0,100}, 101}) == :invalid_data
-    assert Slider.verify({{0,100}, -1}) == :invalid_data
-    assert Slider.verify({{100,0}, 10}) == :invalid_data
+    assert Slider.verify({{0, 100}, 101}) == :invalid_data
+    assert Slider.verify({{0, 100}, -1}) == :invalid_data
+    assert Slider.verify({{100, 0}, 10}) == :invalid_data
 
-    assert Slider.verify({{0.1,100.2}, 101.0}) == :invalid_data
-    assert Slider.verify({{0.4,100.2}, 0.1}) == :invalid_data
-    assert Slider.verify({{100.2,0.4}, 10.1}) == :invalid_data
+    assert Slider.verify({{0.1, 100.2}, 101.0}) == :invalid_data
+    assert Slider.verify({{0.4, 100.2}, 0.1}) == :invalid_data
+    assert Slider.verify({{100.2, 0.4}, 10.1}) == :invalid_data
 
     # mixed integer and float
-    assert Slider.verify({{0,100.1}, 10}) == :invalid_data
-    assert Slider.verify({{0.1,100}, 10}) == :invalid_data
-    assert Slider.verify({{0,100}, 10.3}) == :invalid_data
+    assert Slider.verify({{0, 100.1}, 10}) == :invalid_data
+    assert Slider.verify({{0.1, 100}, 10}) == :invalid_data
+    assert Slider.verify({{0, 100}, 10.3}) == :invalid_data
 
     # list where initial is not in list
     assert Slider.verify({[:red, :green, :blue], :yellow}) == :invalid_data
@@ -72,7 +73,7 @@ defmodule Scenic.Component.Input.SliderTest do
     assert state.value == @initial_value
     assert state.extents == @extents
     assert state.id == :test_id
-    assert state.tracking == :false
+    assert state.tracking == false
   end
 
   # ============================================================================
@@ -88,6 +89,7 @@ defmodule Scenic.Component.Input.SliderTest do
         @state
         | tracking: false
       })
+
     assert state.tracking
     assert state.value != @state.value
 
@@ -110,6 +112,7 @@ defmodule Scenic.Component.Input.SliderTest do
         @state
         | tracking: true
       })
+
     refute state.tracking
 
     # confirm the input was released
@@ -129,6 +132,7 @@ defmodule Scenic.Component.Input.SliderTest do
         @state
         | tracking: true
       })
+
     assert state.tracking
     assert state.value != @state.value
 
@@ -138,5 +142,4 @@ defmodule Scenic.Component.Input.SliderTest do
     # confirm the value change was sent
     assert_receive({:"$gen_cast", {:event, {:value_changed, :test_id, 34}, ^self}})
   end
-
 end

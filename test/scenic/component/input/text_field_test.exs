@@ -13,8 +13,8 @@ defmodule Scenic.Component.Input.TextFieldTest do
   alias Scenic.ViewPort
   alias Scenic.Component.Input.TextField
 
-  @initial_value  "Initial value"
-  @initial_password  "*************"
+  @initial_value "Initial value"
+  @initial_password "*************"
 
   @state %{
     graph: Graph.build(),
@@ -64,7 +64,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
     assert state.type == :text
     assert state.id == :test_id
 
-    {:ok, state} = TextField.init(@initial_value, styles: %{type: :password} )
+    {:ok, state} = TextField.init(@initial_value, styles: %{type: :password})
     assert state.value == @initial_value
     assert state.display == @initial_password
     assert state.type == :password
@@ -72,8 +72,6 @@ defmodule Scenic.Component.Input.TextFieldTest do
 
   # ============================================================================
   # handle_input
-
-
 
   # ============================================================================
   # control keys
@@ -111,7 +109,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
     {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
     context = %ViewPort.Context{viewport: self}
 
-    length = String.length( @initial_value )
+    length = String.length(@initial_value)
     state = %{@state | index: length - 2}
 
     {:noreply, state} = TextField.handle_input({:key, {"right", :press, 0}}, context, state)
@@ -162,7 +160,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
     {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
     context = %ViewPort.Context{viewport: self}
 
-    length = String.length( @initial_value )
+    length = String.length(@initial_value)
 
     state = %{@state | index: 4}
     {:noreply, state} = TextField.handle_input({:key, {"end", :press, 0}}, context, state)
@@ -215,7 +213,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
     {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
     context = %ViewPort.Context{viewport: self}
 
-    length = String.length( @initial_value )
+    length = String.length(@initial_value)
     pos = length - 2
     state = %{@state | index: pos}
 
@@ -238,7 +236,6 @@ defmodule Scenic.Component.Input.TextFieldTest do
     Process.exit(tables_pid, :shutdown)
   end
 
-
   test "handle_input {:codepoint adds and moves cursor to right" do
     self = self()
     scene_ref = make_ref()
@@ -255,7 +252,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
     assert state.index == 3
     assert state.value == "Inaitial value"
     assert state.display == "Inaitial value"
-    
+
     # can also add strings
     {:noreply, state} = TextField.handle_input({:codepoint, {".com", 0}}, context, state)
     assert state.index == 7
@@ -287,31 +284,14 @@ defmodule Scenic.Component.Input.TextFieldTest do
     assert state.index == 3
     assert state.value == "Inaitial value"
     assert state.display == @initial_password <> "*"
-    
+
     # cleanup
     Process.exit(tables_pid, :shutdown)
   end
-
 
   test "handle_input does nothing on unknown input" do
     context = %ViewPort.Context{viewport: self()}
     {:noreply, state} = TextField.handle_input(:unknown, context, @state)
     assert state == @state
   end
-
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
