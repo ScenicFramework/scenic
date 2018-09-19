@@ -97,8 +97,9 @@ defmodule Scenic.Component.Input.DropdownTest do
         @state
         | down: false
       })
+
     assert state.down == true
-    assert (is_integer( state.drop_time ) && state.drop_time > 0)
+    assert is_integer(state.drop_time) && state.drop_time > 0
 
     # confirm the input was captured
     assert_receive({:"$gen_cast", {:capture_input, ^context, [:cursor_button, :cursor_pos]}})
@@ -113,8 +114,7 @@ defmodule Scenic.Component.Input.DropdownTest do
   test "handle_input {:cursor_enter, _uid} - down" do
     context = %ViewPort.Context{viewport: self(), id: 1}
 
-    {:noreply, state} =
-      Dropdown.handle_input({:cursor_enter, 1}, context, %{@state | down: true})
+    {:noreply, state} = Dropdown.handle_input({:cursor_enter, 1}, context, %{@state | down: true})
 
     assert state.hover_id == 1
 
@@ -125,8 +125,7 @@ defmodule Scenic.Component.Input.DropdownTest do
   test "handle_input {:cursor_exit, _uid} - down" do
     context = %ViewPort.Context{viewport: self(), id: 1}
 
-    {:noreply, state} =
-      Dropdown.handle_input({:cursor_exit, 1}, context, %{@state | down: true})
+    {:noreply, state} = Dropdown.handle_input({:cursor_exit, 1}, context, %{@state | down: true})
 
     assert state.hover_id == nil
 
@@ -143,6 +142,7 @@ defmodule Scenic.Component.Input.DropdownTest do
         @state
         | down: true
       })
+
     assert state.down == false
 
     # confirm the input was released
@@ -161,6 +161,7 @@ defmodule Scenic.Component.Input.DropdownTest do
         @state
         | down: true
       })
+
     assert state.down == false
 
     # confirm the input was released
@@ -178,8 +179,9 @@ defmodule Scenic.Component.Input.DropdownTest do
       Dropdown.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
         @state
         | down: true,
-        drop_time: :os.system_time(:milli_seconds)
+          drop_time: :os.system_time(:milli_seconds)
       })
+
     assert state.down == true
 
     # confirm the input was not released
@@ -197,8 +199,9 @@ defmodule Scenic.Component.Input.DropdownTest do
       Dropdown.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
         @state
         | down: true,
-        drop_time: :os.system_time(:milli_seconds)
+          drop_time: :os.system_time(:milli_seconds)
       })
+
     assert state.down == false
     assert state.selected_id == @initial_item
 
@@ -223,6 +226,7 @@ defmodule Scenic.Component.Input.DropdownTest do
         @state
         | down: true
       })
+
     assert state.down == false
     assert state.selected_id == 1
 
@@ -241,5 +245,4 @@ defmodule Scenic.Component.Input.DropdownTest do
     {:noreply, state} = Dropdown.handle_input(:unknown, context, @state)
     assert state == @state
   end
-
 end
