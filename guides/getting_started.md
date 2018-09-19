@@ -151,7 +151,7 @@ process, its size, the default scene and start one or more drivers.
 See the documentation for [ViewPort Configuration](Scenic.ViewPort.Config.html)
 to learn more about how to set the options on a viewport.
 
-Note that all the drivers are in seperate Hex packages as you should choose the
+Note that all the drivers are in separate Hex packages as you should choose the
 correct one for your application. For example, the `Scenic.Driver.Glfw` driver
 draws your scenes into a window under MacOS and Ubuntu. It should work on other
 OS's as well, such as other flavors of Unix or Windows, but I haven't worked on
@@ -185,7 +185,7 @@ Scene      | Description
 Splash     | The Splash scene is configured to run when the app is started in the `config/config.exs` file. It runs a simple animation, then transitions to the Sensor scene. It also shows how intercept basic user input to exit the scene early.
 Sensor     | The Sensor scene depicts a simulated temperature sensor. The sensor is always running and updates its data through the `Scenic.SensorPubSub` server.
 Primitives | The Primitives scenes displays an overview of the basic primitive types and some of the styles that can be applied to them.
-Components | The Components scene shows the basic components that come with Scenic. The crash button will cause a match error that will crash the scene, showing how the supervison tree restarts the scene. It also shows how to receive events from components.
+Components | The Components scene shows the basic components that come with Scenic. The crash button will cause a match error that will crash the scene, showing how the supervision tree restarts the scene. It also shows how to receive events from components.
 
 Component | Description
 --------- | -----------
