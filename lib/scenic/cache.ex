@@ -302,16 +302,14 @@ defmodule Scenic.Cache do
 
   # --------------------------------------------------------
   defp do_keys(scope) do
-    :ets.match(@scope_table, {scope, :"$2", :_})
+    @scope_table
+    |> :ets.match({scope, :"$2", :_})
     |> List.flatten()
   end
 
   # --------------------------------------------------------
   defp key_in_scope?(scope, key) do
-    case :ets.match(@scope_table, {scope, key, :_}) do
-      [] -> false
-      _ -> true
-    end
+    :ets.match(@scope_table, {scope, key, :_}) != []
   end
 
   # ============================================================================

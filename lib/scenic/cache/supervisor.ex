@@ -17,15 +17,12 @@ defmodule Scenic.Cache.Supervisor do
 
   #  import IEx
 
-  #  @name       :scenic_cache_supervisor
-
   @cache_registry :scenic_cache_registry
 
   # ============================================================================
   # setup the viewport supervisor
 
   def start_link() do
-    #    Supervisor.start_link(__MODULE__, :ok, name: @name)
     Supervisor.start_link(__MODULE__, :ok)
   end
 

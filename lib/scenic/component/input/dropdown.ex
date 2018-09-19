@@ -11,7 +11,7 @@ defmodule Scenic.Component.Input.Dropdown do
   alias Scenic.Primitive.Style.Theme
   import Scenic.Primitives
 
-  import IEx
+  # import IEx
 
   @default_width 160
   @default_height 30

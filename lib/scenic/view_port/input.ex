@@ -11,8 +11,6 @@
 defmodule Scenic.ViewPort.Input do
   @moduledoc false
   alias Scenic.Scene
-  #  alias Scenic.Utilities
-  #  alias Scenic.Graph
   alias Scenic.ViewPort.Context
   alias Scenic.ViewPort
   alias Scenic.Primitive
@@ -32,9 +30,7 @@ defmodule Scenic.ViewPort.Input do
           | {:cursor_scroll, {offset :: Math.point(), position :: Math.point()}}
           | {:cursor_pos, position :: Math.point()}
           | {:viewport_enter, position :: Math.point()}
-          # |
           | {:viewport_exit, position :: Math.point()}
-  # {:viewport_reshape, size :: Math.point}
 
   @type class ::
           :codepoint
@@ -42,7 +38,6 @@ defmodule Scenic.ViewPort.Input do
           | :cursor_button
           | :cursor_scroll
           | :cursor_pos
-          # | :viewport_reshape
           | :viewport_enter
           | :viewport_exit
 
@@ -86,7 +81,7 @@ defmodule Scenic.ViewPort.Input do
 
   # #--------------------------------------------------------
   # # do nothing if the size isn't actually changing
-  # def handle_cast( {:input, {:viewport_reshape, new_size}}, %{size: old_size} = state ) 
+  # def handle_cast( {:input, {:viewport_reshape, new_size}}, %{size: old_size} = state )
   # when new_size == old_size do
   #   {:noreply, state}
   # end
@@ -583,7 +578,7 @@ defmodule Scenic.ViewPort.Input do
     point = Matrix.project_vector(context.inverse_tx, point)
 
     with {:ok, graph} <- ViewPort.Tables.get_graph(context.graph_key) do
-      do_find_by_captured_point(
+      point = do_find_by_captured_point(
         point,
         0,
         graph,
@@ -591,10 +586,8 @@ defmodule Scenic.ViewPort.Input do
         Matrix.identity(),
         max_depth
       )
-      |> case do
-        nil -> {nil, nil, point}
-        out -> out
-      end
+
+      if point, do: point, else: {nil, nil, point}
     else
       _ -> {nil, nil, point}
     end
@@ -637,12 +630,8 @@ defmodule Scenic.ViewPort.Input do
         local_point = Matrix.project_vector(inv_tx, point)
 
         # test if the point is in the primitive
-        case mod.contains_point?(data, local_point) do
-          true ->
-            {uid, p[:id], point}
-
-          false ->
-            nil
+        if mod.contains_point?(data, local_point) do
+          {uid, p[:id], point}
         end
     end
   end
@@ -651,7 +640,7 @@ defmodule Scenic.ViewPort.Input do
   # find the indicated primitive in the graph given a point in screen coordinates.
   # to do this, we need to project the point into primitive local coordinates by
   # projecting it with the primitive's inverse final matrix.
-  # 
+  #
   # Since the last primitive drawn is always on top, we should walk the tree
   # backwards and return the first hit we find. We could just reduct the whole
   # thing and return the last one found (that was my first try), but this is
@@ -729,16 +718,12 @@ defmodule Scenic.ViewPort.Input do
         local_point = Matrix.project_vector(inv_tx, {x, y})
 
         # test if the point is in the primitive
-        case mod.contains_point?(data, local_point) do
-          true ->
-            id = p[:id]
-            # Return the point in graph coordinates. Local was good for the hit test
-            # but graph coords makes more sense for the graph_key logic
-            graph_point = Matrix.project_vector(graph_inv_tx, {x, y})
-            {graph_point, {uid, id, graph_key}, {graph_tx, graph_inv_tx}}
-
-          false ->
-            nil
+        if mod.contains_point?(data, local_point) do
+          id = p[:id]
+          # Return the point in graph coordinates. Local was good for the hit test
+          # but graph coords makes more sense for the graph_key logic
+          graph_point = Matrix.project_vector(graph_inv_tx, {x, y})
+          {graph_point, {uid, id, graph_key}, {graph_tx, graph_inv_tx}}
         end
     end
   end

@@ -17,7 +17,7 @@ defmodule Scenic.Graph do
 
   @root_id :_root_
 
-  # defstruct primitives: %{}, ids: %{}, next_uid: 1, add_to: 0    
+  # defstruct primitives: %{}, ids: %{}, next_uid: 1, add_to: 0
   defstruct primitives: %{}, ids: %{}, next_uid: 1, add_to: 0
 
   @type t :: %Graph{
@@ -74,9 +74,10 @@ defmodule Scenic.Graph do
         graph
 
       max ->
-        cond do
-          is_integer(max) && max > 0 -> Map.put(graph, :max_depth, max)
-          true -> raise Error, message: @err_msg_depth_option
+        if is_integer(max) && max > 0 do
+          Map.put(graph, :max_depth, max)
+        else
+          raise Error, message: @err_msg_depth_option
         end
     end
   end
@@ -369,8 +370,8 @@ defmodule Scenic.Graph do
   # In case I want to reintroduce templates.
   #   #--------------------------------------------------------
   #   # insert a template, which is a graph that has relative uids
-  #   # can't just merge the various maps. map the incoming graph into an id space that 
-  #   # starts with next_uid, then bump up next_uid to account for everything in the updated graph 
+  #   # can't just merge the various maps. map the incoming graph into an id space that
+  #   # starts with next_uid, then bump up next_uid to account for everything in the updated graph
   #   defp insert_at({%Graph{primitives: p_map, ids: ids, next_uid: next_uid} = graph, parent_uid},
   #       index,
   #       %Graph{primitives: t_p_map, ids: t_ids, next_uid: t_next_uid} = t_graph,

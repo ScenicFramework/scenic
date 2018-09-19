@@ -17,10 +17,13 @@ defmodule Scenic.Cache.Hash do
   end
 
   # --------------------------------------------------------
+  @spec valid_hash_types() :: [:ripemd160 | :sha | :sha224 | :sha256 | :sha384 | :sha512, ...]
   def valid_hash_types(), do: @hash_types
   # --------------------------------------------------------
+  @spec valid_hash_type?(any()) :: boolean()
   def valid_hash_type?(hash_type), do: Enum.member?(@hash_types, hash_type)
   # --------------------------------------------------------
+  @spec valid_hash_type!(any()) :: any() | no_return
   def valid_hash_type!(hash_type) do
     case Enum.member?(@hash_types, hash_type) do
       true ->
@@ -33,9 +36,10 @@ defmodule Scenic.Cache.Hash do
   end
 
   # --------------------------------------------------------
+  @spec binary(any(), any()) :: {:error, :invalid_hash_type} | {:ok, binary()}
   def binary(data, hash_type) do
     case valid_hash_type?(hash_type) do
-      true -> {:ok, :crypto.hash(hash_type, data) |> Base.url_encode64(padding: false)}
+      true -> {:ok, hash_type |> :crypto.hash(data) |> Base.url_encode64(padding: false)}
       false -> {:error, :invalid_hash_type}
     end
   end
@@ -127,7 +131,7 @@ defmodule Scenic.Cache.Hash do
     end
   end
 
-  # -------------------------------------------------------- 
+  # --------------------------------------------------------
   def verify_file!(path_data), do: path_params(path_data) |> do_verify_file!()
 
   defp do_verify_file!({path, hash, hash_type}) do
@@ -139,7 +143,8 @@ defmodule Scenic.Cache.Hash do
 
   # --------------------------------------------------------
   def from_path(path) do
-    String.split(path, ".")
+    path
+    |> String.split(".")
     |> List.last()
   end
 
