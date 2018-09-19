@@ -18,9 +18,9 @@ defmodule Scenic.Component.Input.Caret do
   @width 2
   @inset_v 4
 
-  # carat blink speed in hertz
-  @carat_hz 1.5
-  @carat_ms trunc(@carat_hz * 500)
+  # caret blink speed in hertz
+  @caret_hz 1.5
+  @caret_ms trunc(@caret_hz * 500)
 
   # ============================================================================
   # setup
@@ -70,22 +70,22 @@ defmodule Scenic.Component.Input.Caret do
   end
 
   # --------------------------------------------------------
-  def handle_cast(:gain_focus, %{graph: graph, timer: nil} = state) do
-    # turn on the carat
+  def handle_cast(:start_caret, %{graph: graph, timer: nil} = state) do
+    # turn on the caret
     graph =
       graph
       |> Graph.modify(:caret, &update_opts(&1, hidden: false))
       |> push_graph()
 
     # start the timer
-    {:ok, timer} = :timer.send_interval(@carat_ms, :blink)
+    {:ok, timer} = :timer.send_interval(@caret_ms, :blink)
 
     {:noreply, %{state | graph: graph, hidden: false, timer: timer, focused: true}}
   end
 
   # --------------------------------------------------------
-  def handle_cast(:lose_focus, %{graph: graph, timer: timer} = state) do
-    # hide the carat
+  def handle_cast(:stop_caret, %{graph: graph, timer: timer} = state) do
+    # hide the caret
     graph =
       graph
       |> Graph.modify(:caret, &update_opts(&1, hidden: true))
@@ -102,10 +102,10 @@ defmodule Scenic.Component.Input.Caret do
 
   # --------------------------------------------------------
   def handle_cast(
-        :reset_carat,
+        :reset_caret,
         %{graph: graph, timer: timer, focused: true} = state
       ) do
-    # show the carat
+    # show the caret
     graph =
       graph
       |> Graph.modify(:caret, &update_opts(&1, hidden: false))
@@ -115,7 +115,7 @@ defmodule Scenic.Component.Input.Caret do
     if timer, do: :timer.cancel(timer)
 
     # restart the timer
-    {:ok, timer} = :timer.send_interval(@carat_ms, :blink)
+    {:ok, timer} = :timer.send_interval(@caret_ms, :blink)
 
     {:noreply, %{state | graph: graph, hidden: false, timer: timer}}
   end

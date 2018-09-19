@@ -57,18 +57,30 @@ defmodule Scenic.Component.Button do
           |> text(text,
             fill: theme.text,
             translate: {width / 2, height * 0.7},
-            text_align: :center
+            text_align: :center,
+            id: :title
           )
 
         :left ->
           Graph.build(font: font, font_size: font_size)
           |> rrect({width, height, radius}, fill: theme.background, id: :btn)
-          |> text(text, fill: theme.text, translate: {8, height * 0.7}, text_align: :left)
+          |> text(
+            text,
+            fill: theme.text,
+            translate: {8, height * 0.7},
+            text_align: :left,
+            id: :title
+          )
 
         :right ->
           Graph.build(font: font, font_size: font_size)
           |> rrect({width, height, radius}, fill: theme.background, id: :btn)
-          |> text(text, fill: theme.text, translate: {width - 8, height * 0.7}, text_align: :right)
+          |> text(text,
+            fill: theme.text,
+            translate: {width - 8, height * 0.7},
+            text_align: :right,
+            id: :title
+          )
       end
 
     # special case the dark and light themes to show an outline

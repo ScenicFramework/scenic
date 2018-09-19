@@ -90,10 +90,10 @@ defmodule Scenic.Component.Input.RadioGroup do
     {:ok, state}
   end
 
-  # --------------------------------------------------------
-  def handle_cast({:set_value, new_value}, state) do
-    {:noreply, %{state | value: new_value}}
-  end
+  # # --------------------------------------------------------
+  # def handle_cast({:set_value, new_value}, state) do
+  #   {:noreply, %{state | value: new_value}}
+  # end
 
   # ============================================================================
 
