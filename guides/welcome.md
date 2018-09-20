@@ -10,22 +10,23 @@ be used to build portable applications.
 
 ## How to get started?
 
-If you are new to Scenic, then you should read the following list in order.
+If you are new to Scenic, then you should read the following guides.
 
+* [Install Dependencies](install_dependencies.html)
 * [General Overview](overview_general.html)
 * [Getting Started](getting_started.html)
 * [Structure of a Scene](overview_scene.html)
+* [Life-cycle of a Scene](scene_lifecycle.html)
+* [Graph Overview](overview_graph.html)
+* [Primitives](Scenic.Primitives.html)
+* [Standard Components](Scenic.Components.html)
+* [Styles](overview_styles.html)
+* [Transforms](overview_transforms.html)
 * [Contributing](contributing.html)
 * [Code of Conduct](code_of_conduct.html)
 
 ### WIP
 
-* [Life-cycle of a Scene](scene_lifecycle.html)
-* [Standard Components](Scenic.Components.html)
-* [Graph Overview](overview_graph.html)
 * [ViewPort Overview](overview_viewport.html)
 * [Driver Overview](overview_driver.html)
-* [Primitives](Scenic.Primitives.html)
-* [Styles](overview_styles.html)
-* [Transforms](overview_transforms.html)
 * [Nerves](getting_started_nerves.html)

@@ -57,25 +57,17 @@ be used to build portable applications.
 
 Scenic is built as a three-layer architectural cake.
 
-### Scene Layer
+### [Scene Layer](overview_scene.html)
 
-At the top is the **Scene Layer**, which encapsulates all application business
-logic. The developer will do most of their Scenic work in the Scene layer.
+At the top is the [**Scene Layer**](overview_scene.html), which encapsulates all application business logic. The developer will do most of their Scenic work in the Scene layer.
 
-### ViewPort Layer
+### [ViewPort Layer](overview_viewport.html)
 
-In the middle is the **ViewPort Layer**, which acts as a bridge between the
-Scenes and the Drivers. The ViewPort controls the scene life-cycle (More on that
-in [Scene Overview](overview_scene.html)), sends graphs down to the drivers, and
-routes user input up to the correct scene.
+In the middle is the [**ViewPort Layer**](overview_viewport.html), which acts as a bridge between the Scenes and the Drivers. The ViewPort controls the scene life-cycle (More on that in [Scene Overview](overview_scene.html)), sends graphs down to the drivers, and routes user input up to the correct scene.
 
-### Driver layer
+### [Driver layer](overview_driver.html)
 
-At the bottom is the **Driver layer**, which is where knowledge of the graphics
-hardware and/or remote configuration lives. Drivers draw everything on the
-screen and originate the raw user input. Developers can write their own drivers,
-but that will be rare if at all. Dealing with Sensors and other hardware is a
-different problem space.
+At the bottom is the [**Driver layer**](overview_driver.html), which is where knowledge of the graphics hardware and/or remote configuration lives. Drivers draw everything on the screen and originate the raw user input. Developers can write their own drivers, but that will be rare if at all. Dealing with Sensors and other hardware is a different problem space.
 
 ## Mental Model
 

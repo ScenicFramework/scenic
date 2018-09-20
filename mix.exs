@@ -107,6 +107,7 @@ defmodule Scenic.Mixfile do
   defp doc_guides do
     [
       "guides/welcome.md",
+      "guides/install_dependencies.md",
       "guides/overview_general.md",
       "guides/getting_started.md",
       "guides/getting_started_nerves.md",

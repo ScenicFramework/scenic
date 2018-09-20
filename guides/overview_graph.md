@@ -45,11 +45,11 @@ For example, in the following graph, the font and font_size styles are set at th
 
 ## Transforms
 
-The final type of primitive control is transforms. Unlike html, which uses auto-layout to position items on the screen, Scenic moves primitives around using matrix based transforms. This is common in video games and provides powerful control of your primitives.
+The final type of primitive control is transforms. Unlike html, which uses auto-layout to position items on the screen, Scenic moves primitives around using matrix transforms. This is common in video games and provides powerful control of your primitives.
 
 A [matrix](https://en.wikipedia.org/wiki/Matrix_(mathematics)) is an array of numbers that can be used to change the positions, rotations, scale and more of locations.
 
-In Scenic, you will only rarely create matrices on your own (you can if you know what you are doing!), and will instead use the very easy transform helpers.
+**Don’t worry!** You will not need to look at any matrices unless you want to get fancy. In Scenic, you will rarely (if ever) create matrices on your own (you can if you know what you are doing!), and will instead use the transform helpers.
 
 [You can read about the transform types here.](overview_transforms.html)
 
@@ -84,30 +84,11 @@ This time, we've assigned ids to both of the text primitives. This makes it easy
       @graph
       |> Graph.modify( :small_text, &text(&1, "Smaller Hello", font_size: 16))
       |> Graph.modify( :big_text, &text(&1, "Bigger Hello", font_size: 60))
+      |> push_graph()
 
-Notice that the graph is modified multiple times in a pipeline. 
-
-
-## Graph Internals
+Notice that the graph is modified multiple times in the pipeline. The `push_graph/1` function is relatively heavy when the graph references other scenes. The recommended pattern is to make multiple changes to the graph and then push once at the end.
 
 
+## What to read next?
 
-Coming soon
-
-## Positions, rotation, scale and more
-
-A major mental model difference between Scenic and everything web is how things
-are positioned on the screen. In this case, Scenic is built like a game.
-
-Scenic is aimed at fixed-screen devices and apps that control their own layout.
-On the web, there is no guarantee what size screen or window the client will
-use, so it relies on dynamic layout that is computed on the client.
-
-Scenic does not have an auto-layout engine. Instead, everything rendered on the
-screen is positioned with transform matrices, just like a game.
-
-**Don’t worry!** You will not need to look at any matrices unless you want to
-get fancy.
-
-To move something on the screen, just add one of the transform options. Like
-this
+If you are exploring Scenic, then you should read the [Primitives Overview](overview_primitives.html) next.
