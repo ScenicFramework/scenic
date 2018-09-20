@@ -221,4 +221,39 @@ defmodule Scenic.ComponentsTest do
     assert p.data == {Scenic.Component.Input.TextField, "Modified"}
     assert p.id == :modified
   end
+
+  # ============================================================================
+  test "toggle adds to a graph - default opts" do
+    g = Components.toggle(@graph, true)
+    p = g.primitives[1]
+
+    assert p.module == Primitive.SceneRef
+    assert p.data == {Scenic.Component.Input.Toggle, true}
+  end
+
+  test "toggle adds to a graph" do
+    p =
+      Components.toggle(@graph, true, id: :toggle)
+      |> Graph.get!(:toggle)
+
+    assert p.module == Primitive.SceneRef
+    assert p.data == {Scenic.Component.Input.Toggle, true}
+    assert p.id == :toggle
+
+    p =
+      Components.toggle(@graph, false, id: :toggle)
+      |> Graph.get!(:toggle)
+
+    assert p.data == {Scenic.Component.Input.Toggle, false}
+  end
+
+  test "toggle modifies ref init data" do
+    p =
+      Components.toggle(@graph, true, id: :toggle)
+      |> Graph.get!(:toggle)
+      |> Components.toggle(false, id: :modified)
+
+    assert p.data == {Scenic.Component.Input.Toggle, false}
+    assert p.id == :modified
+  end
 end
