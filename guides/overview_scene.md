@@ -1,7 +1,6 @@
 # Structure of a Scene
 
-A `Scenic.Scene` is a `GenServer` process. They create the Graphs that get drawn
-to the screen and respond to user input and other events.
+A `Scenic.Scene` is a `GenServer` process which creates and manages a [Graph](overview_graph.html) that gets drawn to the screen. Scenes also respondss to user input and other events.
 
 Scenes can reference each other, creating a logical hierarchy that lives above
 the Graphs themselves. This allows scenes to be reusable, small, and simple. A
