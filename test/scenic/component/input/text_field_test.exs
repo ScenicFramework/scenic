@@ -15,15 +15,16 @@ defmodule Scenic.Component.Input.TextFieldTest do
 
   @initial_value "Initial value"
   @initial_password "*************"
+  @hint "Hint String"
 
   @state %{
-    graph: Graph.build(),
+    graph: Graph.build() |> Scenic.Primitives.text("text", id: :text),
     theme: Primitive.Style.Theme.preset(:primary),
-    width: 100,
+    width: 200,
     height: 30,
     value: @initial_value,
     display: @initial_value,
-    hint: "hint",
+    hint: @hint,
     index: 2,
     char_width: 12,
     focused: false,
@@ -258,12 +259,6 @@ defmodule Scenic.Component.Input.TextFieldTest do
     assert state.index == 7
     assert state.value == "Ina.comitial value"
 
-    # rejects filtered characters
-    state = %{state | filter: :number}
-    {:noreply, state} = TextField.handle_input({:codepoint, {"a", 0}}, context, state)
-    assert state.index == 7
-    assert state.value == "Ina.comitial value"
-
     # cleanup
     Process.exit(tables_pid, :shutdown)
   end
@@ -284,6 +279,163 @@ defmodule Scenic.Component.Input.TextFieldTest do
     assert state.index == 3
     assert state.value == "Inaitial value"
     assert state.display == @initial_password <> "*"
+
+    # cleanup
+    Process.exit(tables_pid, :shutdown)
+  end
+
+  test "handle_input {:codepoint filters input" do
+    self = self()
+    scene_ref = make_ref()
+    Process.put(:parent_pid, self)
+    Process.put(:scene_ref, scene_ref)
+    {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
+    context = %ViewPort.Context{viewport: self}
+
+    # filters to integers
+    state = %{@state | index: 2, value: "Initial value"}
+    state = %{state | filter: :integer}
+    {:noreply, state} = TextField.handle_input({:codepoint, {".", 0}}, context, state)
+    assert state.index == 2
+    assert state.value == "Initial value"
+
+    {:noreply, state} = TextField.handle_input({:codepoint, {"2", 0}}, context, state)
+    assert state.index == 3
+    assert state.value == "In2itial value"
+
+    # filters to floats
+    state = %{@state | index: 2, value: "Initial value"}
+    state = %{state | filter: :number}
+    {:noreply, state} = TextField.handle_input({:codepoint, {"a", 0}}, context, state)
+    assert state.index == 2
+    assert state.value == "Initial value"
+
+    {:noreply, state} = TextField.handle_input({:codepoint, {".", 0}}, context, state)
+    assert state.index == 3
+    assert state.value == "In.itial value"
+
+    {:noreply, state} = TextField.handle_input({:codepoint, {"2", 0}}, context, state)
+    assert state.index == 4
+    assert state.value == "In.2itial value"
+
+    # filters to char string
+    state = %{@state | index: 2, value: "Initial value"}
+    state = %{state | filter: "abcd"}
+    {:noreply, state} = TextField.handle_input({:codepoint, {"f", 0}}, context, state)
+    assert state.index == 2
+    assert state.value == "Initial value"
+
+    {:noreply, state} = TextField.handle_input({:codepoint, {"d", 0}}, context, state)
+    assert state.index == 3
+    assert state.value == "Inditial value"
+
+    # filters to function
+    state = %{@state | index: 2, value: "Initial value"}
+    state = %{state | filter: fn ch -> ch == "k" end}
+    {:noreply, state} = TextField.handle_input({:codepoint, {"f", 0}}, context, state)
+    assert state.index == 2
+    assert state.value == "Initial value"
+
+    {:noreply, state} = TextField.handle_input({:codepoint, {"k", 0}}, context, state)
+    assert state.index == 3
+    assert state.value == "Inkitial value"
+
+    # cleanup
+    Process.exit(tables_pid, :shutdown)
+  end
+
+  test "handle_input {:key handles repeats" do
+    self = self()
+    scene_ref = make_ref()
+    Process.put(:parent_pid, self)
+    Process.put(:scene_ref, scene_ref)
+    {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
+    context = %ViewPort.Context{viewport: self}
+
+    state = %{@state | index: 4}
+
+    {:noreply, state} = TextField.handle_input({:key, {"left", :repeat, 0}}, context, state)
+    {:noreply, state} = TextField.handle_input({:key, {"left", :repeat, 0}}, context, state)
+    {:noreply, state} = TextField.handle_input({:key, {"", :repeat, 0}}, context, state)
+    # confirm the graph was pushed
+    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert state.index == 2
+    assert state.value == "Initial value"
+    assert state.display == "Initial value"
+
+    # {:noreply, state} = TextField.handle_input({:key, {"a", :repeat, 0}}, context, state)
+    # {:noreply, state} = TextField.handle_input({:key, {"a", :repeat, 0}}, context, state)
+    # # confirm the graph was pushed
+    # assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    # assert state.index == 4
+    # assert state.value == "Inaaaitial value"
+    # assert state.display == "Inaaaitial value"
+
+    # cleanup
+    Process.exit(tables_pid, :shutdown)
+  end
+
+  test "shows the hint when the value goes to an empty string" do
+    self = self()
+    scene_ref = make_ref()
+    Process.put(:parent_pid, self)
+    Process.put(:scene_ref, scene_ref)
+    {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
+    context = %ViewPort.Context{viewport: self}
+
+    state = %{@state | index: 2, value: "ab", display: "ab"}
+    {:noreply, state} = TextField.handle_input({:key, {"backspace", :repeat, 0}}, context, state)
+    {:noreply, state} = TextField.handle_input({:key, {"backspace", :repeat, 0}}, context, state)
+
+    assert state.index == 0
+    assert state.value == ""
+    assert state.display == ""
+
+    %Primitive{data: @hint} = Graph.get!(state.graph, :text)
+
+    # cleanup
+    Process.exit(tables_pid, :shutdown)
+  end
+
+  test "moves the cursor when a click happens inside the text field" do
+    self = self()
+    scene_ref = make_ref()
+    Process.put(:parent_pid, self)
+    Process.put(:scene_ref, scene_ref)
+    {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
+    context = %ViewPort.Context{viewport: self, id: :border}
+    state = %{@state | index: 2, focused: true}
+
+    {:noreply, state} =
+      TextField.handle_input(
+        {:cursor_button, {:left, :press, 0, {100, 0}}},
+        context,
+        state
+      )
+
+    assert state.index == 9
+
+    # cleanup
+    Process.exit(tables_pid, :shutdown)
+  end
+
+  test "don't move the cursor when a click happens in the current index location" do
+    self = self()
+    scene_ref = make_ref()
+    Process.put(:parent_pid, self)
+    Process.put(:scene_ref, scene_ref)
+    {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
+    context = %ViewPort.Context{viewport: self, id: :border}
+    state = %{@state | index: 2, focused: true}
+
+    {:noreply, state} =
+      TextField.handle_input(
+        {:cursor_button, {:left, :press, 0, {30, 0}}},
+        context,
+        state
+      )
+
+    assert state.index == 2
 
     # cleanup
     Process.exit(tables_pid, :shutdown)

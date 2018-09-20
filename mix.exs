@@ -107,16 +107,18 @@ defmodule Scenic.Mixfile do
   defp doc_guides do
     [
       "guides/welcome.md",
+      "guides/install_dependencies.md",
       "guides/overview_general.md",
       "guides/getting_started.md",
       "guides/getting_started_nerves.md",
-      "guides/scene_structure.md",
+      "guides/overview_scene.md",
       "guides/scene_lifecycle.md",
       "guides/overview_graph.md",
       "guides/overview_viewport.md",
       "guides/overview_driver.md",
-      "guides/styles_overview.md",
-      "guides/transforms_overview.md",
+      "guides/overview_styles.md",
+      "guides/overview_transforms.md",
+      "guides/overview_primitives.md",
       ".github/CODE_OF_CONDUCT.md",
       ".github/CONTRIBUTING.md"
     ]

@@ -25,7 +25,7 @@ be used to build portable applications.
 
 - **Remotable:** Scenic devices know how to run themselves, but can still be
   accessed remotely. Remote traffic attempts to be as small so it can be used
-  over the internet, cellular modems, Bluetooth, etc.
+  over the Internet, cellular modems, Bluetooth, etc.
 
 - **Reusable:** Collections of UI can be packaged up for reuse with, and across
   applications. I expect to see Hex packages of controls, graphs, and more
@@ -36,7 +36,7 @@ be used to build portable applications.
   simple.
 
 - **Secure:** Scenic is designed with an eye towards security. For now, the main
-  effort is to keep it simple. No browser, javascript, and other complexity
+  effort is to keep it simple. No browser, Javascript, and other complexity
   presenting vulnerabilities. There will be much more to say about security
   later.
 
@@ -57,25 +57,17 @@ be used to build portable applications.
 
 Scenic is built as a three-layer architectural cake.
 
-### Scene Layer
+### [Scene Layer](overview_scene.html)
 
-At the top is the **Scene Layer**, which encapsulates all application business
-logic. The developer will do most of their Scenic work in the Scene layer.
+At the top is the [**Scene Layer**](overview_scene.html), which encapsulates all application business logic. The developer will do most of their Scenic work in the Scene layer.
 
-### ViewPort Layer
+### [ViewPort Layer](overview_viewport.html)
 
-In the middle is the **ViewPort Layer**, which acts as a bridge between the
-Scenes and the Drivers. The ViewPort controls the scene lifecycle (More on that
-in [Scene Overview](overview_scene.html)), sends graphs down to the drivers, and
-routes user input up to the correct scene.
+In the middle is the [**ViewPort Layer**](overview_viewport.html), which acts as a bridge between the Scenes and the Drivers. The ViewPort controls the scene life-cycle (More on that in [Scene Overview](overview_scene.html)), sends graphs down to the drivers, and routes user input up to the correct scene.
 
-### Driver layer
+### [Driver layer](overview_driver.html)
 
-At the bottom is the **Driver layer**, which is where knowledge of the graphics
-hardware and/or remote configuration lives. Drivers draw everything on the
-screen and originate the raw user input. Developers can write their own drivers,
-but that will be rare if at all. Dealing with Sensors and other hardware is a
-different problem space.
+At the bottom is the [**Driver layer**](overview_driver.html), which is where knowledge of the graphics hardware and/or remote configuration lives. Drivers draw everything on the screen and originate the raw user input. Developers can write their own drivers, but that will be rare if at all. Dealing with Sensors and other hardware is a different problem space.
 
 ## Mental Model
 
@@ -126,7 +118,7 @@ that manage them for you.
 ### ViewPort
 
 A ViewPort is a sort of like a tab in your browser. It manages the scene
-lifecycle, routes graphs to the drivers, and input back up to the scenes. If you
+life-cycle, routes graphs to the drivers, and input back up to the scenes. If you
 want two windows in your app, you need to start two ViewPorts.
 
 ### Driver
