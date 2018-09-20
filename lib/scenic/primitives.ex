@@ -4,7 +4,7 @@
 #
 
 # convenience functions for adding basic primitives to a graph.
-# this module should be updated as new primitves are added
+# this module should be updated as new primitives are added
 
 defmodule Scenic.Primitives do
   alias Scenic.Primitive
@@ -22,7 +22,7 @@ defmodule Scenic.Primitives do
 
   When adding primitives to a graph, each helper function accepts a
   graph as the first parameter and returns the transformed graph. This
-  makes is very easy to buid a complex graph by piping helper functions
+  makes is very easy to build a complex graph by piping helper functions
   together.
 
       @graph Graph.build()
@@ -45,7 +45,7 @@ defmodule Scenic.Primitives do
 
   In each case, the second parameter is a data term that is specific
   to the primitive being acted on. See the documentation below. If you
-  pass in invalid data for the second parameter an error will be 
+  pass in invalid data for the second parameter an error will be
   thrown along with some explanation of what it expected.
 
   The third parameter is a keyword list of options that are to be
@@ -66,13 +66,13 @@ defmodule Scenic.Primitives do
   Graph.build( font_size: 24, then all text items in all groups will be
   rendered with a point size of 24 unless they set a different size.
 
-  Not every primtitive accepts every style. For example, it doesn't make much
+  Not every primitive accepts every style. For example, it doesn't make much
   sense to apply a font to a rectangle. If you try, the rectangle will ignore
   that value. See the documentation for each primitive for a list of what styles
   they pay attention to.
 
   Transforms that are applied to a Group are inherited by all primitives in
-  that group's branch of the tree. Note that style inheritence does not
+  that group's branch of the tree. Note that style inheritance does not
   cross SceneRef boundaries.
 
   ### Transform options
@@ -87,7 +87,7 @@ defmodule Scenic.Primitives do
 
   This is done mathematically as a "stack" of transforms. As the renderer
   traverses up and down the graph, transforms are pushed and popped from the
-  matrix stack as appropriate. Transform inheritence does cross SceneRef
+  matrix stack as appropriate. Transform inheritance does cross SceneRef
   boundaries.
 
   ## Draw Order
@@ -126,7 +126,7 @@ defmodule Scenic.Primitives do
 
       {radius, start, finish}
 
-  If you want something that looks like a piece of pie (maybe for a 
+  If you want something that looks like a piece of pie (maybe for a
   pie chart??), then you want a Sector, not an Arc.
 
   To create an arc of an ellipse, create a normal arc, and apply
@@ -146,7 +146,7 @@ defmodule Scenic.Primitives do
     is true.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
     default is to not draw anything in the interior. This is similar to specifying
-    fill: :clear, except optimzed out to do nothing.
+    fill: :clear, except optimized out to do nothing.
   * `:stroke` - Draws the outline with the specified width and paint. The default
     if not set is `{1, :white}`
 
@@ -194,7 +194,7 @@ defmodule Scenic.Primitives do
     is to render the primitive if hidden is not set.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
     default is to not draw anything in the interior. This is similar to specifying
-    fill: :clear, except optimzed out to do nothing.
+    fill: :clear, except optimized out to do nothing.
   * `:stroke` - The width and paint to draw the outline with. If the stroke is not
     specified then the default stroke is `{1, :white}`
 
@@ -249,7 +249,7 @@ defmodule Scenic.Primitives do
     is to render the primitive if hidden is not set.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
     default is to not draw anything in the interior. This is similar to specifying
-    fill: :clear, except optimzed out to do nothing.
+    fill: :clear, except optimized out to do nothing.
   * `:stroke` - The width and paint to draw the outline with. If the stroke is not
     specified then the default stroke is `{1, :white}`
 
@@ -281,7 +281,7 @@ defmodule Scenic.Primitives do
 
   The Group primitive creates a new branch in the Graph's tree. The data field
   you pass in is a function callback, which allows you to add more
-  primitives inside the new group. 
+  primitives inside the new group.
 
   The single parameter to your anonymous callback is a transformed graph that
   knows to add new primitives to the right branch in the tree.
@@ -301,7 +301,7 @@ defmodule Scenic.Primitives do
   inherited across scene_refs. (see below)
 
   The `:hidden` is particularly effective when applied to a group as it
-  causses that entire branch to be drawn, or not.
+  causes that entire branch to be drawn, or not.
 
   ### Transforms
 
@@ -432,7 +432,7 @@ defmodule Scenic.Primitives do
     is to render the primitive if hidden is not set.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
     default is to not draw anything in the interior. This is similar to specifying
-    fill: :clear, except optimzed out to do nothing.
+    fill: :clear, except optimized out to do nothing.
   * `:stroke` - The width and paint to draw the outline with. If the stroke is not
     specified then the default stroke is `{1, :white}`
   * `:join` - Specifies how the lines are joined together where they meet. Can be
@@ -505,7 +505,7 @@ defmodule Scenic.Primitives do
     is to render the primitive if hidden is not set.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
     default is to not draw anything in the interior. This is similar to specifying
-    fill: :clear, except optimzed out to do nothing.
+    fill: :clear, except optimized out to do nothing.
   * `:stroke` - The width and paint to draw the outline with. If the stroke is not
     specified then the default stroke is `{1, :white}`
   * `:join` - Specifies how the lines are joined together where they meet. Can be
@@ -578,7 +578,7 @@ defmodule Scenic.Primitives do
     is to render the primitive if hidden is not set.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
     default is to not draw anything in the interior. This is similar to specifying
-    fill: :clear, except optimzed out to do nothing.
+    fill: :clear, except optimized out to do nothing.
   * `:stroke` - The width and paint to draw the outline with. If the stroke is not
     specified then the default stroke is `{1, :white}`
 
@@ -613,7 +613,7 @@ defmodule Scenic.Primitives do
   you can build smaller components that you can compose into a larger image.
 
   *Typically you do not specify SceneRefs yourself.* These get added
-  for you when you add components to you graph. Examples: Buttons, 
+  for you when you add components to you graph. Examples: Buttons,
   Sliders, checkboxes, etc.
 
   Usually, the graph you reference is controlled by another scene, but
@@ -681,7 +681,7 @@ defmodule Scenic.Primitives do
     is true.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
     default is to not draw anything in the interior. This is similar to specifying
-    fill: :clear, except optimzed out to do nothing.
+    fill: :clear, except optimized out to do nothing.
   * `:stroke` - Draws the outline with the specified width and paint. The default
     if not set is `{1, :white}`
 
@@ -743,7 +743,7 @@ defmodule Scenic.Primitives do
   * `:fill` - The paint to color the text with. If not specified, the default
     is :white. Note: Text can only be filled with solid colors at this time.
   * `:font` - Specifies font family to draw the text with. The built-in system
-    fonts are `:roboto`, `:roboto_mono`, and `:roboto_slab`. If not specified, the 
+    fonts are `:roboto`, `:roboto_mono`, and `:roboto_slab`. If not specified, the
     default is `:roboto`. You can also load your own font into the Scenic.Cache,
     then specify its key for the font.
   * `:font_blur` - Draw the text with a blur effect. If you draw text with blur,
@@ -801,7 +801,7 @@ defmodule Scenic.Primitives do
     is to render the primitive if hidden is not set.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
     default is to not draw anything in the interior. This is similar to specifying
-    fill: :clear, except optimzed out to do nothing.
+    fill: :clear, except optimized out to do nothing.
   * `:stroke` - The width and paint to draw the outline with. If the stroke is not
     specified then the default stroke is `{1, :white}`
   * `:join` - Specifies how the lines are joined together where they meet. Can be
