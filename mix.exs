@@ -39,11 +39,12 @@ defmodule Scenic.Mixfile do
         files: [
           "Makefile",
           "Makefile.win",
-          "c_src/*.[ch]",     # only include *.c and *.h files
-          "lib/**/*.ex",      # only include *.ex files
+          # only include *.c and *.h files
+          "c_src/*.[ch]",
+          # only include *.ex files
+          "lib/**/*.ex",
           "mix.exs",
           "README.md"
-
         ]
       ],
       dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex]],
