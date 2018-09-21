@@ -20,21 +20,14 @@ defmodule Scenic.Mixfile do
       make_targets: ["all"],
       make_clean: ["clean"],
       make_env: make_env(),
-      dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex]],
-      test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: [
-        coveralls: :test,
-        "coveralls.html": :test,
-        "coveralls.json": :test
-      ],
       name: "Scenic",
       description: description(),
       docs: [
         extras: doc_guides(),
         main: "welcome",
-        groups_for_modules: groups_for_modules()
-        # source_ref: "v#{@version}",
-        # source_url: "https://github.com/boydm/scenic",
+        groups_for_modules: groups_for_modules(),
+        source_ref: "v#{@version}",
+        source_url: "https://github.com/boydm/scenic",
         # homepage_url: "http://kry10.com",
       ],
       package: [
