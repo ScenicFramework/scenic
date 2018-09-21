@@ -39,8 +39,8 @@ defmodule Scenic.Mixfile do
         files: [
           "Makefile",
           "Makefile.win",
-          "c_src/*.[ch]",
-          "lib/**/*.ex",
+          "c_src/*.[ch]",     # only include *.c and *.h files
+          "lib/**/*.ex",      # only include *.ex files
           "mix.exs",
           "README.md"
 
