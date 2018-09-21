@@ -40,9 +40,10 @@ defmodule Scenic.Mixfile do
           "Makefile",
           "Makefile.win",
           "c_src/*.[ch]",
-          "lib",
+          "lib/**/*.ex",
           "mix.exs",
           "README.md"
+
         ]
       ],
       dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex]],
