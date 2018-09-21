@@ -147,7 +147,8 @@ defmodule Scenic.Mixfile do
         Scenic.Component.Input.RadioGroup,
         Scenic.Component.Input.Slider,
         Scenic.Component.Input.TextField,
-        Scenic.Component.Input.Carat
+        Scenic.Component.Input.Caret,
+        Scenic.Component.Input.Toggle
       ],
       Primitives: [
         Scenic.Primitive,
@@ -197,6 +198,14 @@ defmodule Scenic.Mixfile do
         Scenic.Primitive.Transform.Rotate,
         Scenic.Primitive.Transform.Scale,
         Scenic.Primitive.Transform.Translate
+      ],
+      Math: [
+        Scenic.Math,
+        Scenic.Math.Line,
+        Scenic.Math.Matrix,
+        Scenic.Math.Matrix.Utils,
+        Scenic.Math.Quad,
+        Scenic.Math.Vector2
       ],
       Animations: [
         Scenic.Animation,
