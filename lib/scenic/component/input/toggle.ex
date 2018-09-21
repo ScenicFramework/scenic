@@ -16,7 +16,7 @@ defmodule Scenic.Component.Input.Toggle do
   import Scenic.Primitives
 
   @default_thumb_pressed_color :gainsboro
-  @default_thumb_radius 10
+  @default_thumb_radius 8
   @default_padding 2
   @default_border_width 2
 
