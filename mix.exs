@@ -45,7 +45,8 @@ defmodule Scenic.Mixfile do
           "lib/**/*.ex",
           "mix.exs",
           "guides/**/*.md",
-          "guides/**/*.png",
+          # don't include the bird for now
+          # "guides/**/*.png",
           "README.md"
         ]
       ],
