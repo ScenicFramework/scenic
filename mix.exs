@@ -44,6 +44,8 @@ defmodule Scenic.Mixfile do
           # only include *.ex files
           "lib/**/*.ex",
           "mix.exs",
+          "guides/**/*.md",
+          "guides/**/*.png",
           "README.md"
         ]
       ],
