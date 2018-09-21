@@ -10,24 +10,25 @@ defmodule Scenic.Math.Line do
 
   Lines are always two points in a tuple.
 
-        {point_a, point_b}
-        {{x0,y0}, {x1,y1}}
+      {point_a, point_b}
+      {{x0, y0}, {x1, y1}}
+
   """
 
   alias Scenic.Math
 
-  #  import IEx
-
   @app Mix.Project.config()[:app]
-  # @env Mix.env
 
   # load the NIF
   @compile {:autoload, false}
   @on_load :load_nifs
+
   @doc false
   def load_nifs do
     :ok =
-      :filename.join(:code.priv_dir(@app), 'line')
+      @app
+      |> :code.priv_dir()
+      |> :filename.join('line')
       |> :erlang.load_nif(0)
   end
 
@@ -37,10 +38,20 @@ defmodule Scenic.Math.Line do
   up of integers.
 
   Parameters:
-  * line - A line defined by two points. {point_a, point_b}
+
+  * `line` - A line defined by two points. `{point_a, point_b}`
 
   Returns:
+
   A line
+
+  ## Examples
+
+      iex> Scenic.Math.Line.trunc({{1.1, 1.1}, {2.0, 2.0}})
+      {{1, 1}, {2, 2}}
+      iex> Scenic.Math.Line.trunc({{-1, 1}, {-2.0, 2.0}})
+      {{-1, 1}, {-2, 2}}
+
   """
   @spec trunc(line :: Math.line()) :: Math.line()
   def trunc(line)
@@ -58,10 +69,18 @@ defmodule Scenic.Math.Line do
   up of integers.
 
   Parameters:
-  * line - A line defined by two points. {point_a, point_b}
+
+  * `line` - A line defined by two points. {point_a, point_b}
 
   Returns:
+
   A line
+
+  ## Examples
+
+      iex> Scenic.Math.Line.round({{1.5, 1.6}, {2.1, 2.56}})
+      {{2, 2}, {2, 3}}
+
   """
   @spec round(line :: Math.line()) :: Math.line()
   def round(line)
@@ -75,15 +94,22 @@ defmodule Scenic.Math.Line do
 
   # --------------------------------------------------------
   @doc """
-  Find a new line that is parallel to the given line and seperated
+  Find a new line that is parallel to the given line and separated
   by the given distance.
 
   Parameters:
-  * line - A line defined by two points. {point_a, point_b}
-  * distance - The perpendicular distance to the new line.
+
+  * `line` - A line defined by two points. `{point_a, point_b}`
+  * `distance` - The perpendicular distance to the new line.
 
   Returns:
   A line
+
+  ## Examples
+
+      iex> Scenic.Math.Line.parallel({{1, 1}, {1, 2}}, 2)
+      {{3.0, 1.0}, {3.0, 2.0}}
+
   """
   @spec parallel(line :: Math.line(), distance :: number) :: Math.line()
   def parallel(line, distance)
@@ -101,11 +127,17 @@ defmodule Scenic.Math.Line do
   Find the point of intersection between two lines.
 
   Parameters:
-  * line_a - A line defined by two points. {point_a, point_b}
-  * line_b - A line defined by two points. {point_a, point_b}
+  * `line_a` - A line defined by two points. `{point_a, point_b}`
+  * `line_b` - A line defined by two points. `{point_a, point_b}`
 
   Returns:
   A point
+
+  ## Examples
+
+    iex> Scenic.Math.Line.intersection({{1, 1}, {3, 3}}, {{3, 1}, {1, 3}})
+    {2.0, 2.0}
+
   """
   @spec intersection(line_a :: Math.line(), line_b :: Math.line()) :: Math.point()
   def intersection(line_a, line_b)
