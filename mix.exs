@@ -27,7 +27,7 @@ defmodule Scenic.Mixfile do
         main: "welcome",
         groups_for_modules: groups_for_modules(),
         source_ref: "v#{@version}",
-        source_url: "https://github.com/boydm/scenic",
+        source_url: "https://github.com/boydm/scenic"
         # homepage_url: "http://kry10.com",
       ],
       package: [
