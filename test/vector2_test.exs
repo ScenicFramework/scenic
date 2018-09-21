@@ -5,6 +5,8 @@
 defmodule Scenic.Math.Vector2Test do
   use ExUnit.Case
   doctest Scenic.Math
+  doctest Scenic.Math.Line
+  doctest Scenic.Math.Vector2
   alias Scenic.Math.Vector2
   alias Scenic.Math.Matrix
 
