@@ -198,7 +198,6 @@ defmodule Scenic.ViewPort.Input do
        ) do
     {uid, id, point} =
       find_by_captured_point(global_pos, context, max_depth)
-      |> IO.inspect()
 
     Scene.cast(
       context.graph_key,
