@@ -11,7 +11,7 @@ The instructions below assume you have already installed Elixir/Erlang. If you
 need to install Elixir/Erlang there are instructions on the [elixir-lang
 website](https://elixir-lang.org/install.html).
 
-### Installing on MacOS
+## On MacOS
 
 The easiest way to install on MacOS is to use Homebrew. Just run the following
 in a terminal:
@@ -24,7 +24,7 @@ brew install glfw3 glew pkg-config
 Once these components have been installed, you should be able to build the
 `scenic_driver_glfw` driver.
 
-### Installing on Ubuntu 16
+## On Ubuntu 16
 
 The easiest way to install on Ubuntu is to use apt-get. Just run the following:
 
@@ -36,7 +36,7 @@ sudo apt-get install pkgconf libglfw3 libglfw3-dev libglew1.13 libglew-dev
 Once these components have been installed, you should be able to build the
 `scenic_driver_glfw` driver.
 
-### Installing on Ubuntu 18
+## On Ubuntu 18
 
 The easiest way to install on Ubuntu is to use apt-get. Just run the following:
 
@@ -48,22 +48,25 @@ sudo apt-get install pkgconf libglfw3 libglfw3-dev libglew2.0 libglew-dev
 Once these components have been installed, you should be able to build the
 `scenic_driver_glfw` driver.
 
-### Installing on Fedora
+## On Fedora
 
 The easiest way to install on Fedora is to use dnf. Just run the following:
 
-```
+```bash
 dnf install glfw glfw-devel pkgconf glew glew-devel
 ```
 
-Once these components have been installed, you should be able to build the `scenic_driver_glfw` driver.
+Once these components have been installed, you should be able to build the
+`scenic_driver_glfw` driver.
 
-### Installing on Archlinux
+## On Archlinux
 
-The easiest way to install on Archlinux is to use pacman. Just run the following:
+The easiest way to install on Archlinux is to use pacman. Just run the
+following:
 
 ```bash
 sudo pacman -S glfw-x11 glew
 ```
 
-If you're using wayland, you'll probably need `glfw-wayland` instead of `glfw-x11` and `glew-wayland` instead of `glew`
+If you're using wayland, you'll probably need `glfw-wayland` instead of
+`glfw-x11` and `glew-wayland` instead of `glew`
