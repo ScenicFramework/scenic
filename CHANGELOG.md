@@ -1,9 +1,8 @@
 # Changelog
 
-### 0.8.0
+## 0.8.0
 
 * Many documentation improvements
-* Rename Scenic.Component.Input.Carat to Scenic.Component.Input.Caret. This is a breaking change.
 * Rename Scenic.Cache.Hash.compute/2 to Scenic.Cache.Hash.binary/2
 * Rename Scenic.Cache.Hash.compute_file/2 to Scenic.Cache.Hash.file/2
 * Add Scenic.Cache.Hash.binary!/2
@@ -18,6 +17,10 @@
 * Add specs to functions in components and primitives
 * Add the Toggle component. Thank you to Eric Watson. @wasnotrice
 
-### 0.7.0
+### Breaking Change
+
+* Rename Scenic.Component.Input.Carat to Scenic.Component.Input.Caret.
+
+## 0.7.0
 
 * First public release
