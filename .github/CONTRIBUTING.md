@@ -173,9 +173,9 @@ excellent pull request:
 3. Create a new topic branch (off of `master`) to contain your feature, change,
    or fix.
 
-   > **IMPORTANT**: Making changes in `master` is discouraged. You should always
-   > keep your local `master` in sync with upstream `master` and make your
-   > changes in topic branches.
+   **IMPORTANT**: Making changes in `master` is discouraged. You should always
+   keep your local `master` in sync with upstream `master` and make your
+   changes in topic branches.
 
    ```bash
    git checkout -b <topic-branch-name>
