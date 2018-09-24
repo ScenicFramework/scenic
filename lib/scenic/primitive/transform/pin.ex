@@ -10,7 +10,7 @@ defmodule Scenic.Primitive.Transform.Pin do
   # data verification and serialization
 
   # --------------------------------------------------------
-  defdelegate info(data), to: Scenic.Primitive.Transform.Translate  
+  defdelegate info(data), to: Scenic.Primitive.Transform.Translate
 
   # --------------------------------------------------------
   defdelegate verify(percent), to: Scenic.Primitive.Transform.Translate
