@@ -70,3 +70,7 @@ sudo pacman -S glfw-x11 glew
 
 If you're using wayland, you'll probably need `glfw-wayland` instead of
 `glfw-x11` and `glew-wayland` instead of `glew`
+
+## What to read next?
+
+Next, you should read about [General Overview](overview_general.html).
