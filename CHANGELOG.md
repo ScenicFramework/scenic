@@ -3,10 +3,10 @@
 ## 0.8.0
 
 * Many documentation improvements
-* Rename Scenic.Cache.Hash.compute/2 to Scenic.Cache.Hash.binary/2
-* Rename Scenic.Cache.Hash.compute_file/2 to Scenic.Cache.Hash.file/2
-* Add Scenic.Cache.Hash.binary!/2
-* Rename Scenic.Cache.Hash.compute_file!/2 to Scenic.Cache.Hash.file!/2
+* Rename `Scenic.Cache.Hash.compute/2` to `Scenic.Cache.Hash.binary/2`
+* Rename `Scenic.Cache.Hash.compute_file/2` to `Scenic.Cache.Hash.file/2`
+* Add `Scenic.Cache.Hash.binary!/2`
+* Rename `Scenic.Cache.Hash.compute_file!/2` to `Scenic.Cache.Hash.file!/2`
 * Add ability to put master styles and transforms in a ViewPort config.
 * Fold Scenic.Math into the main Scenic project
 * Cursor input is now only sent if the mouse is actually over a primitive. This solves
@@ -19,7 +19,7 @@
 
 ### Breaking Change
 
-* Rename Scenic.Component.Input.Carat to Scenic.Component.Input.Caret.
+* Rename `Scenic.Component.Input.Carat` to `Scenic.Component.Input.Caret`.
 
 ## 0.7.0
 
