@@ -7,7 +7,6 @@ defmodule Scenic.GraphTest do
   use ExUnit.Case, async: true
   doctest Scenic
 
-  # alias Scenic.Math.Matrix
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.Primitive.Group
@@ -23,7 +22,6 @@ defmodule Scenic.GraphTest do
   @tx_rot 0.1
   @transform %{pin: @tx_pin, rotate: @tx_rot}
 
-  # |> Primitive.put_uid(@root_uid)
   @empty_root Group.build()
   @graph_empty Graph.build()
 
@@ -79,11 +77,25 @@ defmodule Scenic.GraphTest do
            ) == @graph_empty
   end
 
-  test "build puts styles on the root node" do
-    graph = Graph.build(clear_color: :dark_slate_blue)
+  test "build injects default values for font and font size" do
+    graph = Graph.build()
 
     assert graph.primitives[@root_uid]
-           |> Primitive.get_styles() == %{clear_color: :dark_slate_blue}
+           |> Primitive.get_styles() == %{font: :roboto, font_size: 24}
+  end
+
+  test "build gives higher priority to user options" do
+    graph = Graph.build(font_size: 20)
+
+    assert graph.primitives[@root_uid]
+           |> Primitive.get_styles() == %{font: :roboto, font_size: 20}
+  end
+
+  test "build puts styles on the root node" do
+    color = :dark_slate_blue
+    graph = Graph.build(clear_color: color)
+
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:clear_color) == color
   end
 
   test "build puts transforms on the root node" do
@@ -363,7 +375,7 @@ defmodule Scenic.GraphTest do
   #   # check that the item's uid was updated
   #   # assert Primitive.get_uid(p) == uid
 
-  #   # check that the parent references the new element    
+  #   # check that the parent references the new element
   #   p = graph.primitives[parent_uid]
   #   assert Primitive.get(p) == [uid]
 
