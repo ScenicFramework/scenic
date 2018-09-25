@@ -29,8 +29,8 @@ defmodule Scenic.Primitive.Transform.TranslateTest do
   end
 
   test "normalize works" do
-    assert Translate.normalize({1,2}) == {1,2}
-    assert Translate.normalize({1.1,2.2}) == {1.1,2.2}
+    assert Translate.normalize({1, 2}) == {1, 2}
+    assert Translate.normalize({1.1, 2.2}) == {1.1, 2.2}
   end
 
   test "normalize raises on bad data" do

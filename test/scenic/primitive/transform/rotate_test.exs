@@ -34,5 +34,4 @@ defmodule Scenic.Primitive.Transform.RotateTest do
       assert Rotate.normalize(:banana)
     end
   end
-
 end

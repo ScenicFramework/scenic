@@ -27,7 +27,7 @@ defmodule Scenic.Primitive.QuadTest do
 
   # ============================================================================
   # verify
-  
+
   test "info works" do
     assert Quad.info(:test_data) =~ ":test_data"
   end

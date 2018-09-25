@@ -9,7 +9,6 @@ defmodule Scenic.Primitive.Transform.PinTest do
 
   alias Scenic.Primitive.Transform.Pin
 
-
   test "info works" do
     assert Pin.info(:test_data) =~ ":test_data"
   end
@@ -26,8 +25,8 @@ defmodule Scenic.Primitive.Transform.PinTest do
   end
 
   test "normalize" do
-    assert Pin.normalize({1,2}) == {1,2}
-    assert Pin.normalize({1.1,2.2}) == {1.1,2.2}
+    assert Pin.normalize({1, 2}) == {1, 2}
+    assert Pin.normalize({1.1, 2.2}) == {1.1, 2.2}
   end
 
   test "normalize raises on bad data" do

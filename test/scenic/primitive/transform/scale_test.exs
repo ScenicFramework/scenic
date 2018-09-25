@@ -27,7 +27,7 @@ defmodule Scenic.Primitive.Transform.ScaleTest do
   test "normalize" do
     assert Scale.normalize(2) == {2, 2}
     assert Scale.normalize(2.1) == {2.1, 2.1}
-    assert Scale.normalize({1.1,2.2}) == {1.1,2.2}
+    assert Scale.normalize({1.1, 2.2}) == {1.1, 2.2}
   end
 
   test "normalize raises on bad data" do
