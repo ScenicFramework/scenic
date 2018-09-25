@@ -17,6 +17,5 @@ defmodule Scenic.Primitive.Transform.Pin do
   defdelegate verify(percent), to: Scenic.Primitive.Transform.Translate
 
   # --------------------------------------------------------
-  # normalize named stipples
   defdelegate normalize(v2), to: Scenic.Primitive.Transform.Translate
 end

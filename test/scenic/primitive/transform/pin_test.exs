@@ -9,8 +9,10 @@ defmodule Scenic.Primitive.Transform.PinTest do
 
   alias Scenic.Primitive.Transform.Pin
 
-  # ============================================================================
-  # verify
+
+  test "info works" do
+    assert Pin.info(:test_data) =~ ":test_data"
+  end
 
   test "verify passes valid data" do
     assert Pin.verify({1, 2}) == true
@@ -21,5 +23,16 @@ defmodule Scenic.Primitive.Transform.PinTest do
     assert Pin.verify({1}) == false
     assert Pin.verify({1, 2, 3, 4}) == false
     assert Pin.verify(:banana) == false
+  end
+
+  test "normalize" do
+    assert Pin.normalize({1,2}) == {1,2}
+    assert Pin.normalize({1.1,2.2}) == {1.1,2.2}
+  end
+
+  test "normalize raises on bad data" do
+    assert_raise FunctionClauseError, fn ->
+      assert Pin.normalize(:banana)
+    end
   end
 end
