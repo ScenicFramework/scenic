@@ -1,4 +1,6 @@
 defmodule Scenic.Component.Button do
+  @moduledoc false
+
   use Scenic.Component, has_children: false
 
   alias Scenic.Graph

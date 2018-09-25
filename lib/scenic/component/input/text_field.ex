@@ -4,6 +4,7 @@
 #
 
 defmodule Scenic.Component.Input.TextField do
+  @moduledoc false
   use Scenic.Component, has_children: true
 
   alias Scenic.Graph
