@@ -1,4 +1,5 @@
 defmodule Scenic.Utilities.Map do
+  @moduledoc false
   #  @default_uid_length   4
 
   # ============================================================================

@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Style.Cap do
+  @moduledoc false
+
   use Scenic.Primitive.Style
 
   # ============================================================================

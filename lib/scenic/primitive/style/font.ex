@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Style.Font do
+  @moduledoc false
+
   use Scenic.Primitive.Style
 
   # import IEx

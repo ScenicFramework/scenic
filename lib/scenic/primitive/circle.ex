@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Circle do
+  @moduledoc false
+
   use Scenic.Primitive
 
   @styles [:hidden, :fill, :stroke]

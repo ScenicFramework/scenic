@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Style.Paint.Image do
+  @moduledoc false
+
   # --------------------------------------------------------
   def normalize(image) when is_bitstring(image) do
     normalize({image, 0, 0, 0, 0, 0, 0xFF})

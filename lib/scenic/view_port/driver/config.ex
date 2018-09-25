@@ -2,9 +2,12 @@
 #  Created by Boyd Multerer April 2018.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
-# helper module for configuring ViewPorts during startup
 
 defmodule Scenic.ViewPort.Driver.Config do
+  @moduledoc """
+  Helper module for configuring ViewPorts during startup
+  """
+
   alias Scenic.ViewPort.Driver.Config
 
   # describe the struct. Name nil and opts as an empty list are good defaults

@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Path do
+  @moduledoc false
+
   use Scenic.Primitive
 
   #  import IEx

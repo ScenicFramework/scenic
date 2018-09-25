@@ -5,6 +5,8 @@
 # Seperate Status out into its own file
 
 defmodule Scenic.ViewPort.Status do
+  @moduledoc false
+
   alias Scenic.ViewPort.Status
   alias Scenic.Math
 

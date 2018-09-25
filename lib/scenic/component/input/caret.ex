@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Component.Input.Caret do
+  @moduledoc false
+
   use Scenic.Component, has_children: false
 
   import Scenic.Primitives,

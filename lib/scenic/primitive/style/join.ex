@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Style.Join do
+  @moduledoc false
+
   use Scenic.Primitive.Style
 
   # ============================================================================

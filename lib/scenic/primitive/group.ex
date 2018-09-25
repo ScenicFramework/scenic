@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Group do
+  @moduledoc false
+
   use Scenic.Primitive
   alias Scenic.Primitive
 

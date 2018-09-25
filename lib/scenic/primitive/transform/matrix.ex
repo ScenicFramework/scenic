@@ -4,6 +4,7 @@
 #
 
 defmodule Scenic.Primitive.Transform.Matrix do
+  @moduledoc false
   use Scenic.Primitive.Transform
 
   @matrix_byte_size 16 * 4

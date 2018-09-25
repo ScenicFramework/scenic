@@ -3,12 +3,19 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-# each platform-specific version of scenic_platform must implement
-# a complient version of Scenic.ViewPort. There won't be any conflics
-# as by definition, there should be only one platform adapter in the
-# deps of any one build-type of a project.
-
 defmodule Scenic.ViewPort.Driver do
+  @moduledoc """
+
+  Drivers make up the bottom layer of the Scenic architectural stack. They  draw
+  everything on the screen and originate the raw user input. In general, different
+  hardware platforms will need different drivers.
+
+  Drivers deal with graphs and do not know anything about scenes. This means that
+  they are pretty generic. Drivers don't really understand that a component is a
+  separate thing either, other than the fact that it has a graph that needs to be
+  drawn.
+  """
+
   use GenServer
   alias Scenic.ViewPort
   alias Scenic.Math

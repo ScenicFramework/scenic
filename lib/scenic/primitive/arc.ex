@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Arc do
+  @moduledoc false
+
   use Scenic.Primitive
   alias Scenic.Primitive.Sector
   alias Scenic.Primitive.Triangle
