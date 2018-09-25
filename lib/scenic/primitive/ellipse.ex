@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Ellipse do
+  @moduledoc false
+
   use Scenic.Primitive
 
   @styles [:hidden, :fill, :stroke]

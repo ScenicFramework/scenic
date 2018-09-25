@@ -3,9 +3,10 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-# simple functions to load a file, following the hashing rules
-
 defmodule Scenic.Cache.Hash do
+  @moduledoc """
+  Ssimple functions to load a file, following the hashing rules
+  """
   #  import IEx
 
   @hash_types [:sha, :sha224, :sha256, :sha384, :sha512, :ripemd160]
@@ -13,6 +14,8 @@ defmodule Scenic.Cache.Hash do
 
   # ===========================================================================
   defmodule Error do
+    @moduledoc false
+
     defexception message: "Hash check failed"
   end
 

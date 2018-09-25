@@ -3,9 +3,11 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-# simple functions to load a file, following the hashing rules
-
 defmodule Scenic.Cache.Term do
+  @moduledoc """
+  Simple functions to load a file, following the hashing rules.
+  """
+
   alias Scenic.Cache
   alias Scenic.Cache.Hash
 

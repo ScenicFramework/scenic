@@ -4,12 +4,13 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-# The main helpers and organizers for input
-
-# resizing is temporarily not supported
-
 defmodule Scenic.ViewPort.Input do
-  @moduledoc false
+  @moduledoc """
+  The main helpers and organizers for input.
+
+  *Resizing is temporarily not supported.*
+  """
+
   alias Scenic.Scene
   alias Scenic.ViewPort.Context
   alias Scenic.ViewPort

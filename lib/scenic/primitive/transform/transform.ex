@@ -3,9 +3,11 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-# generic code for the transform styles. Not intended to be used directly
-
 defmodule Scenic.Primitive.Transform do
+  @moduledoc """
+  Generic code for the transform styles.
+  Not intended to be used directly
+  """
   alias Scenic.Math.Matrix
   alias Scenic.Math.Vector2
   alias Scenic.Primitive.Transform
@@ -15,6 +17,8 @@ defmodule Scenic.Primitive.Transform do
 
   # ===========================================================================
   defmodule FormatError do
+    @moduledoc false
+
     defexception message: nil, module: nil, data: nil
   end
 

@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Transform.Translate do
+  @moduledoc false
+
   use Scenic.Primitive.Transform
 
   # ============================================================================

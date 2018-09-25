@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Component.Input.Dropdown do
+  @moduledoc false
+
   use Scenic.Component, has_children: false
 
   alias Scenic.Graph

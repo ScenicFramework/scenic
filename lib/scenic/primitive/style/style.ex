@@ -3,10 +3,12 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-# the primitive style is not a primitive element in itself.
-# this is a type of styling that is applied to other primitive elements
-
 defmodule Scenic.Primitive.Style do
+  @moduledoc """
+  The primitive style is not a primitive element in itself.
+  This is a type of styling that is applied to other primitive elements.
+  """
+
   alias Scenic.Primitive.Style
 
   #  import IEx

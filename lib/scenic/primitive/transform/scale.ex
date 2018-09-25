@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Transform.Scale do
+  @moduledoc false
+
   use Scenic.Primitive.Transform
 
   # ============================================================================

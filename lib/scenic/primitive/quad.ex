@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Quad do
+  @moduledoc false
+
   use Scenic.Primitive
   alias Scenic.Math
   alias Scenic.Primitive.Triangle

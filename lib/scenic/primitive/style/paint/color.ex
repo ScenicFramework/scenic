@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Style.Paint.Color do
+  @moduledoc false
+
   # ============================================================================
   # data verification and serialization
 

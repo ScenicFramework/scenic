@@ -5,6 +5,8 @@
 # Seperate Context out into its own file
 
 defmodule Scenic.ViewPort.Context do
+  @moduledoc false
+
   alias Scenic.Math
   alias Scenic.Graph
   alias Scenic.ViewPort.Input

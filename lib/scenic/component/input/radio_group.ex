@@ -1,4 +1,5 @@
 defmodule Scenic.Component.Input.RadioGroup do
+  @moduledoc false
   use Scenic.Component, has_children: true
 
   alias Scenic.Graph

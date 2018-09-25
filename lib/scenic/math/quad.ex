@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Math.Quad do
+  @moduledoc false
+
   alias Scenic.Math
 
   @type classification ::

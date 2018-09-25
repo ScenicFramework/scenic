@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Text do
+  @moduledoc false
+
   use Scenic.Primitive
 
   @styles [:hidden, :fill, :font, :font_size, :font_blur, :text_align, :text_height]
