@@ -4,14 +4,14 @@
 
 defmodule Scenic.Math do
   @moduledoc """
-  Scenic.Math is a collection of math helpers intended to support the Scenic libraries.
+  Helper functions that support Scenic mathematical operations.
 
-  The math functions are fairly straightforward. When performance is needed
-  some have been broken out into a NIF.
+  The math functions are fairly straightforward. When performance is needed some
+  have been broken out into a NIF.
 
-  The NIF functions are currently written for compatibility over top speed and as such,
-  there is an opportunity to further improve them by calling out to CPU-specific vector
-  instructions in the future
+  The NIF functions are currently written for compatibility over top speed and
+  as such, there is an opportunity to further improve them by calling out to
+  CPU-specific vector instructions in the future.
   """
 
   @type vector_2 :: {x :: number, y :: number}

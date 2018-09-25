@@ -8,48 +8,54 @@ defmodule Scenic.Math.Vector2 do
 
   2D vectors are always two numbers in a tuple.
 
-        {3, 4}
-        {3.5, 4.7}
+      {3, 4}
+      {3.5, 4.7}
   """
 
   alias Scenic.Math
   alias Scenic.Math.Vector2
   alias Scenic.Math.Matrix
 
-  #  import IEx
-
   # common constants
   @doc "A vector that points to the origin."
   def zero(), do: {0.0, 0.0}
+
   @doc "A vector that points to {1,1}."
   def one(), do: {1.0, 1.0}
+
   @doc "A vector that points to {1,0}."
   def unity_x(), do: {1.0, 0.0}
+
   @doc "A vector that points to {0,1}."
   def unity_y(), do: {0.0, 1.0}
 
   @doc "A vector that points straight up by 1."
   def up(), do: {0.0, 1.0}
+
   @doc "A vector that points straight down by 1."
   def down(), do: {0.0, -1.0}
+
   @doc "A vector that points left by 1."
   def left(), do: {-1.0, 0.0}
+
   @doc "A vector that points right by 1."
   def right(), do: {1.0, 0.0}
 
   # --------------------------------------------------------
-  # build from values
-  # def build(x, y) when is_float(x) and is_float(y), do: {x, y}
-
-  # --------------------------------------------------------
   @doc """
-  Truncate the values of a vector into ints.
+  Truncate the values of a vector into integers.
 
   Parameters:
-  * vector_2: the vector to be truncated
+  * `vector_2` - the vector to be truncated
 
   Returns:
   The integer vector
+
+  ## Examples
+
+      iex> Scenic.Math.Vector2.trunc({1.6, 1.2})
+      {1, 1}
+
   """
   @spec trunc(vector_2 :: Math.vector_2()) :: Math.vector_2()
   def trunc(vector_2)
@@ -60,13 +66,19 @@ defmodule Scenic.Math.Vector2 do
 
   # --------------------------------------------------------
   @doc """
-  Round the values of a vector into ints.
+  Round the values of a vector to the nearest integers.
 
   Parameters:
-  * vector_2: the vector to be rounded
+  * `vector_2` - the vector to be rounded
 
   Returns:
   The integer vector
+
+  ## Examples
+
+      iex> Scenic.Math.Vector2.round({1.2, 1.56})
+      {1, 2}
+
   """
   @spec round(vector_2 :: Math.vector_2()) :: Math.vector_2()
   def round(vector_2)
@@ -80,10 +92,16 @@ defmodule Scenic.Math.Vector2 do
   Invert a vector.
 
   Parameters:
-  * vector_2: the vector to be inverted
+  * `vector_2` - the vector to be inverted
 
   Returns:
   The inverted vector
+
+  ## Examples
+
+      iex> Scenic.Math.Vector2.invert({2, 2})
+      {-2, -2}
+
   """
   @spec invert(vector_2 :: Math.vector_2()) :: Math.vector_2()
   def invert(vector_2)
@@ -95,11 +113,17 @@ defmodule Scenic.Math.Vector2 do
   Add two vectors together.
 
   Parameters:
-  * vector2_a: the first vector to be added
-  * vector2_b: the second vector to be added
+  * `vector2_a` - the first vector to be added
+  * `vector2_b` - the second vector to be added
 
   Returns:
   A new vector which is the result of the addition
+
+  ## Examples
+
+      iex> Scenic.Math.Vector2.add({1.0, 5.0}, {3.0, 3.0})
+      {4.0, 8.0}
+
   """
   @spec add(vector2_a :: Math.vector_2(), vector2_b :: Math.vector_2()) :: Math.vector_2()
   def add(vector2_a, vector2_b)
@@ -109,8 +133,8 @@ defmodule Scenic.Math.Vector2 do
   Subtract one vector from another.
 
   Parameters:
-  * vector2_a: the first vector
-  * vector2_b: the second vector, which will be subtracted from the first
+  * `vector2_a` - the first vector
+  * `vector2_b` - the second vector, which will be subtracted from the first
 
   Returns:
   A new vector which is the result of the subtraction
@@ -124,8 +148,8 @@ defmodule Scenic.Math.Vector2 do
   Multiply a vector by a scalar.
 
   Parameters:
-  * vector2: the vector
-  * scalar: the scalar value
+  * `vector2` - the vector
+  * `scalar` - the scalar value
 
   Returns:
   A new vector which is the result of the multiplication
@@ -139,8 +163,8 @@ defmodule Scenic.Math.Vector2 do
   Divide a vector by a scalar.
 
   Parameters:
-  * vector2: the vector
-  * scalar: the scalar value
+  * `vector2` - the vector
+  * `scalar` - the scalar value
 
   Returns:
   A new vector which is the result of the division
@@ -154,8 +178,8 @@ defmodule Scenic.Math.Vector2 do
   Calculates the dot product of two vectors.
 
   Parameters:
-  * vector2_a: the first vector
-  * vector2_b: the second vector
+  * `vector2_a` - the first vector
+  * `vector2_b` - the second vector
 
   Returns:
   A number which is the result of the dot product
@@ -170,8 +194,8 @@ defmodule Scenic.Math.Vector2 do
   Calculates the cross product of two vectors.
 
   Parameters:
-  * vector2_a: the first vector
-  * vector2_b: the second vector
+  * `vector2_a` - the first vector
+  * `vector2_b` - the second vector
 
   Returns:
   A number which is the result of the cross product
@@ -185,11 +209,11 @@ defmodule Scenic.Math.Vector2 do
   @doc """
   Calculates the squared length of the vector.
 
-  This is faster than calulating the length if all you want to do is
+  This is faster than calculating the length if all you want to do is
   compare the lengths of two vectors against each other.
 
   Parameters:
-  * vector2: the vector
+  * `vector2` - the vector
 
   Returns:
   A number which is the square of the length
@@ -201,17 +225,17 @@ defmodule Scenic.Math.Vector2 do
   @doc """
   Calculates the length of the vector.
 
-  This is slower than calulating the squared length.
+  This is slower than calculating the squared length.
 
   Parameters:
-  * vector2: the vector
+  * `vector2` - the vector
 
   Returns:
   A number which is the length
   """
   @spec length(vector2 :: Math.vector_2()) :: number
   def length(vector2)
-  def length(vector2), do: length_squared(vector2) |> :math.sqrt()
+  def length(vector2), do: vector2 |> length_squared() |> :math.sqrt()
 
   # --------------------------------------------------------
   # distance
@@ -230,7 +254,7 @@ defmodule Scenic.Math.Vector2 do
   Normalize a vector so it has the same angle, but a length of 1.
 
   Parameters:
-  * vector2: the vector
+  * `vector2` - the vector
 
   Returns:
   A vector with the same angle as the original, but a length of 1
@@ -251,59 +275,43 @@ defmodule Scenic.Math.Vector2 do
   # --------------------------------------------------------
   # min / max
   @doc """
-  Find a new vector derived from the lowest x and y from two given vectors.
+  Find a new vector derived from the lowest `x` and `y` from two given vectors.
 
   Parameters:
-  * vector2_a: the first vector
-  * vector2_b: the second vector
+  * `vector2_a` - the first vector
+  * `vector2_b` - the second vector
 
   Returns:
-  A vector derived from the lowest x and y from two given vectors
+  A vector derived from the lowest `x` and `y` from two given vectors
   """
   @spec min(vector2_a :: Math.vector_2(), vector2_b :: Math.vector_2()) :: Math.vector_2()
   def min(vector2_a, vector2_b)
 
   def min({ax, ay}, {bx, by}) do
-    x =
-      cond do
-        ax > bx -> bx
-        true -> ax
-      end
+    x = if ax > bx, do: bx, else: ax
 
-    y =
-      cond do
-        ay > by -> by
-        true -> ay
-      end
+    y = if ay > by, do: by, else: ay
 
     {x, y}
   end
 
   @doc """
-  Find a new vector derived from the highest x and y from two given vectors.
+  Find a new vector derived from the highest `x` and `y` from two given vectors.
 
   Parameters:
-  * vector2_a: the first vector
-  * vector2_b: the second vector
+  * `vector2_a` - the first vector
+  * `vector2_b` - the second vector
 
   Returns:
-  A vector derived from the highest x and y from two given vectors
+  A vector derived from the highest `x` and `y` from two given vectors
   """
   @spec max(vector2_a :: Math.vector_2(), vector2_b :: Math.vector_2()) :: Math.vector_2()
   def max(vector2_a, vector2_b)
 
   def max({ax, ay}, {bx, by}) do
-    x =
-      cond do
-        ax > bx -> ax
-        true -> bx
-      end
+    x = if ax > bx, do: ax, else: bx
 
-    y =
-      cond do
-        ay > by -> ay
-        true -> by
-      end
+    y = if ay > by, do: ay, else: by
 
     {x, y}
   end
@@ -313,12 +321,12 @@ defmodule Scenic.Math.Vector2 do
   Clamp a vector to the space between two other vectors.
 
   Parameters:
-  * vector2: the vector to be clamped
-  * min: the vector defining the minimum boundary
-  * max: the vector defining the maximum boundary
+  * `vector2` - the vector to be clamped
+  * `min` - the vector defining the minimum boundary
+  * `max` - the vector defining the maximum boundary
 
   Returns:
-  A vector derived from the the space between two other vectors
+  A vector derived from the space between two other vectors
   """
   @spec clamp(vector :: Math.vector_2(), min :: Math.vector_2(), max :: Math.vector_2()) ::
           Math.vector_2()
@@ -348,8 +356,8 @@ defmodule Scenic.Math.Vector2 do
   two other vectors.
 
   Parameters:
-  * vector2: The vector to be tested
-  * bounds: A vector defining the boundary
+  * `vector2` - the vector to be tested
+  * `bounds` - a vector defining the boundary
 
   Returns:
   true or false
@@ -366,12 +374,12 @@ defmodule Scenic.Math.Vector2 do
   two other vectors.
 
   Parameters:
-  * vector2: The vector to be tested
-  * min: The vector defining the minimum boundary
-  * max: The vector defining the maximum boundary
+  * `vector2` - the vector to be tested
+  * `min` - the vector defining the minimum boundary
+  * `max` - the vector defining the maximum boundary
 
   Returns:
-  A vector derived from the the space between two other vectors
+  A vector derived from the space between two other vectors
   """
   @spec in_bounds?(vector :: Math.vector_2(), min :: Math.vector_2(), max :: Math.vector_2()) ::
           boolean
@@ -387,14 +395,13 @@ defmodule Scenic.Math.Vector2 do
   [See This explanation for more info.](https://keithmaggio.wordpress.com/2011/02/15/math-magician-lerp-slerp-and-nlerp/)
 
   Parameters:
-  * vector_a: The first vector
-  * vector_b: The second vector
-  * t: the "t" value (see link above). Must be between 0 and 1.
+  * `vector_a` - the first vector
+  * `vector_b` - the second vector
+  * `t` - the "t" value (see link above). Must be between 0 and 1.
 
   Returns:
   A vector, which is the result of the lerp.
   """
-  # https://keithmaggio.wordpress.com/2011/02/15/math-magician-lerp-slerp-and-nlerp/
   @spec lerp(
           vector_a :: Math.vector_2(),
           vector_b :: Math.vector_2(),
@@ -403,7 +410,8 @@ defmodule Scenic.Math.Vector2 do
   def lerp(vector_a, vector_a, t)
 
   def lerp(a, b, t) when is_float(t) and t >= 0.0 and t <= 1.0 do
-    sub(b, a)
+    b
+    |> sub(a)
     |> mul(t)
     |> add(a)
   end
@@ -415,9 +423,9 @@ defmodule Scenic.Math.Vector2 do
   [See This explanation for more info.](https://keithmaggio.wordpress.com/2011/02/15/math-magician-lerp-slerp-and-nlerp/)
 
   Parameters:
-  * vector_a: The first vector
-  * vector_b: The second vector
-  * t: the "t" value (see link above). Must be between 0 and 1.
+  * `vector_a` - the first vector
+  * `vector_b` - the second vector
+  * `t` - the "t" value (see link above). Must be between 0 and 1.
 
   Returns:
   A vector, which is the result of the nlerp.
@@ -430,7 +438,8 @@ defmodule Scenic.Math.Vector2 do
   def nlerp(vector_a, vector_a, t)
 
   def nlerp(a, b, t) when is_float(t) and t >= 0.0 and t <= 1.0 do
-    sub(b, a)
+    b
+    |> sub(a)
     |> mul(t)
     |> add(a)
     |> normalize()
@@ -441,8 +450,8 @@ defmodule Scenic.Math.Vector2 do
   Project a vector into the space defined by a matrix
 
   Parameters:
-  * vector: The vector, or a list of vecgtors
-  * matrix: The matrix
+  * `vector` - the vector, or a list of vectors
+  * `matrix` - the matrix
 
   Returns:
   A projected vector (or list of vectors)

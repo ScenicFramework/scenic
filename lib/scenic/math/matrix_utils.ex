@@ -6,18 +6,15 @@ defmodule Scenic.Math.Matrix.Utils do
   @moduledoc """
   Helper functions for working with matrices.
 
-  The matrix format for the main Scenic.Math.Matrix functions is a 64 byte binary
-  blob containing 16 4-byte floats. This is great for doing the math in code,
-  but not so great for reading or understanding the values by a human.
+  The matrix format for the main `Scenic.Math.Matrix` functions is a 64 byte
+  binary blob containing 16 4-byte floats. This is great for doing the math in
+  code, but not so great for reading or understanding the values by a human.
 
   These functions transform more readable/writable formats into the binary blob
   and vice versa.
   """
 
   alias Scenic.Math
-
-  # @default_major :row
-  # @matrix_size 4 * 16
 
   # --------------------------------------------------------
   # binary format is column-major
@@ -26,7 +23,7 @@ defmodule Scenic.Math.Matrix.Utils do
   Convert a readable format into a binary blob.
 
   Parameters:
-  * matrix_list - a list of 16 numbers
+  * `matrix_list` - a list of 16 numbers
 
   Returns:
   A binary matrix blob
@@ -79,10 +76,10 @@ defmodule Scenic.Math.Matrix.Utils do
   Convert a binary matrix into a list of 16 numbers.
 
   Parameters:
-  * matrix - a binary matrix
+  * `matrix` - a binary matrix
 
   Returns:
-  A list of 16 nubmers
+  A list of 16 numbers
   """
   def to_list(matrix)
 
