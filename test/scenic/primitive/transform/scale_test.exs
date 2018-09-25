@@ -9,8 +9,9 @@ defmodule Scenic.Primitive.Transform.ScaleTest do
 
   alias Scenic.Primitive.Transform.Scale
 
-  # ============================================================================
-  # verify
+  test "info works" do
+    assert Scale.info(:test_data) =~ ":test_data"
+  end
 
   test "verify passes valid data" do
     assert Scale.verify(1.0) == true
@@ -21,5 +22,17 @@ defmodule Scenic.Primitive.Transform.ScaleTest do
     assert Scale.verify({1.1, 1.2, 1.3}) == false
     assert Scale.verify({1.1, :banana}) == false
     assert Scale.verify(:banana) == false
+  end
+
+  test "normalize" do
+    assert Scale.normalize(2) == {2, 2}
+    assert Scale.normalize(2.1) == {2.1, 2.1}
+    assert Scale.normalize({1.1,2.2}) == {1.1,2.2}
+  end
+
+  test "normalize raises on bad data" do
+    assert_raise FunctionClauseError, fn ->
+      assert Scale.normalize(:banana)
+    end
   end
 end
