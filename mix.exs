@@ -22,51 +22,21 @@ defmodule Scenic.Mixfile do
       make_env: make_env(),
       name: "Scenic",
       description: description(),
-      docs: [
-        extras: doc_guides(),
-        main: "welcome",
-        groups_for_modules: groups_for_modules(),
-        source_ref: "v#{@version}",
-        source_url: "https://github.com/boydm/scenic"
-        # homepage_url: "http://kry10.com",
-      ],
-      package: [
-        name: @app_name,
-        contributors: ["Boyd Multerer"],
-        maintainers: ["Boyd Multerer"],
-        licenses: ["Apache 2"],
-        links: %{Github: @github},
-        files: [
-          "Makefile",
-          "Makefile.win",
-          # only include *.c and *.h files
-          "c_src/*.[ch]",
-          # only include *.ex files
-          "lib/**/*.ex",
-          "mix.exs",
-          "guides/**/*.md",
-          # don't include the bird for now
-          # "guides/**/*.png",
-          "README.md"
-        ]
-      ],
+      docs: docs(),
+      package: package(),
       dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex]],
       test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: [
-        coveralls: :test,
-        "coveralls.html": :test,
-        "coveralls.json": :test
-      ]
+      preferred_cli_env: cli_env()
     ]
   end
 
-  defp description() do
+  defp description do
     """
     Scenic -- The core Scenic library
     """
   end
 
-  defp make_env() do
+  defp make_env do
     case System.get_env("ERL_EI_INCLUDE_DIR") do
       nil ->
         %{
@@ -79,13 +49,10 @@ defmodule Scenic.Mixfile do
     end
   end
 
-  # Configuration for the OTP application
-  #
-  # Type "mix help compile.app" for more information
   def application do
     [
       # mod: {Scenic, []},
-      applications: [:logger]
+      extra_applications: [:logger]
     ]
   end
 
@@ -94,11 +61,53 @@ defmodule Scenic.Mixfile do
       {:elixir_make, "~> 0.4"},
 
       # Tools
-      {:ex_doc, ">= 0.0.0", only: [:dev]},
+      {:ex_doc, ">= 0.0.0", only: :dev},
       {:credo, ">= 0.0.0", only: [:dev, :test], runtime: false},
       {:excoveralls, ">= 0.0.0", only: :test, runtime: false},
       {:inch_ex, github: "rrrene/inch_ex", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 0.5", only: :dev, runtime: false}
+    ]
+  end
+
+  defp cli_env do
+    [
+      coveralls: :test,
+      "coveralls.html": :test,
+      "coveralls.json": :test
+    ]
+  end
+
+  defp package do
+    [
+      name: @app_name,
+      contributors: ["Boyd Multerer"],
+      maintainers: ["Boyd Multerer"],
+      licenses: ["Apache 2"],
+      links: %{Github: @github},
+      files: [
+        "Makefile",
+        "Makefile.win",
+        # only include *.c and *.h files
+        "c_src/*.[ch]",
+        # only include *.ex files
+        "lib/**/*.ex",
+        "mix.exs",
+        "guides/**/*.md",
+        # don't include the bird for now
+        # "guides/**/*.png",
+        "README.md"
+      ]
+    ]
+  end
+
+  defp docs do
+    [
+      extras: doc_guides(),
+      main: "welcome",
+      groups_for_modules: groups_for_modules(),
+      source_ref: "v#{@version}",
+      source_url: "https://github.com/boydm/scenic"
+      # homepage_url: "http://kry10.com",
     ]
   end
 
