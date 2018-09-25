@@ -62,7 +62,7 @@ defmodule Scenic.Mixfile do
 
   defp description() do
     """
-    Scenic -- a client application framework written directly on the Elixir/Erlang/OTP stack
+    Scenic -- a client application library written directly on the Elixir/Erlang/OTP stack
     """
   end
 
