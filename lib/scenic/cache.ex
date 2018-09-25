@@ -77,7 +77,7 @@ defmodule Scenic.Cache do
     :ets.lookup_element(@cache_table, key, 3)
   rescue
     ArgumentError ->
-      raise Error, message: "Key #{inspect(key)} not found."
+      reraise(Error, [message: "Key #{inspect(key)} not found."], __STACKTRACE__)
 
     other ->
       reraise(other, __STACKTRACE__)

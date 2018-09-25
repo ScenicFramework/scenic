@@ -1,3 +1,4 @@
+# credo:disable-for-this-file Credo.Check.Design.DuplicatedCode
 #
 #  Copyright © 2017 Boyd Multerer. All rights reserved.
 #
