@@ -10,6 +10,10 @@ defmodule Scenic.Primitive.Style.FillTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Fill
 
+  test "info works" do
+    assert Fill.info(:test_data) =~ ":test_data"
+  end
+
   # ============================================================================
   # verify - various forms
 

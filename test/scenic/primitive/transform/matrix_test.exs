@@ -28,8 +28,9 @@ defmodule Scenic.Primitive.Transform.MatrixTest do
     4.3::float-size(32)-native
   >>
 
-  # ============================================================================
-  # verify
+  test "info works" do
+    assert Matrix.info(:test_data) =~ ":test_data"
+  end
 
   test "verify passes valid data" do
     assert Matrix.verify(@data) == true

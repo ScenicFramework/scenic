@@ -10,6 +10,10 @@ defmodule Scenic.Primitive.Style.FontTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Font
 
+  test "info works" do
+    assert Font.info(:test_data) =~ ":test_data"
+  end
+
   # ============================================================================
   # verify - various forms
 

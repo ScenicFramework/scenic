@@ -26,6 +26,10 @@ defmodule Scenic.Primitive.RoundedRectangleTest do
   # ============================================================================
   # verify
 
+  test "info works" do
+    assert RoundedRectangle.info(:test_data) =~ ":test_data"
+  end
+
   test "verify passes valid data" do
     assert RoundedRectangle.verify(@data) == {:ok, @data}
   end

@@ -34,6 +34,10 @@ defmodule Scenic.Primitive.PathTest do
   # ============================================================================
   # verify
 
+  test "info works" do
+    assert Path.info(:test_data) =~ ":test_data"
+  end
+
   test "verify passes valid data" do
     assert Path.verify(@data) == {:ok, @data}
   end

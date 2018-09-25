@@ -24,6 +24,10 @@ defmodule Scenic.Primitive.EllipseTest do
   # ============================================================================
   # verify
 
+  test "info works" do
+    assert Ellipse.info(:test_data) =~ ":test_data"
+  end
+
   test "verify passes valid data" do
     assert Ellipse.verify(@data) == {:ok, @data}
   end

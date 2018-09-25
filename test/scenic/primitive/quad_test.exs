@@ -28,6 +28,10 @@ defmodule Scenic.Primitive.QuadTest do
   # ============================================================================
   # verify
 
+  test "info works" do
+    assert Quad.info(:test_data) =~ ":test_data"
+  end
+
   test "verify passes valid convex" do
     assert Quad.verify(@convex) == {:ok, @convex}
   end

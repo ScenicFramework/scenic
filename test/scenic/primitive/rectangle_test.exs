@@ -26,6 +26,10 @@ defmodule Scenic.Primitive.RectangleTest do
   # ============================================================================
   # verify
 
+  test "info works" do
+    assert Rectangle.info(:test_data) =~ ":test_data"
+  end
+
   test "verify passes valid data" do
     assert Rectangle.verify(@data) == {:ok, @data}
   end

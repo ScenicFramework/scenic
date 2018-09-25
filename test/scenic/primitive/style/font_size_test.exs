@@ -10,6 +10,10 @@ defmodule Scenic.Primitive.Style.FontSizeTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.FontSize
 
+  test "info works" do
+    assert FontSize.info(:test_data) =~ ":test_data"
+  end
+
   # ============================================================================
   # verify - various forms
 

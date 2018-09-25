@@ -12,6 +12,9 @@ defmodule Scenic.Primitive.Style.CapTest do
 
   # ============================================================================
   # verify - various forms
+  test "info works" do
+    assert Cap.info(:test_data) =~ ":test_data"
+  end
 
   test "verfy works" do
     assert Cap.verify(:butt)

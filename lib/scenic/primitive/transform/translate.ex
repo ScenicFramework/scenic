@@ -28,7 +28,6 @@ defmodule Scenic.Primitive.Transform.Translate do
   end
 
   # --------------------------------------------------------
-  # normalize named stipples
   @spec normalize({number(), number()}) :: {number(), number()}
   def normalize({x, y}) when is_number(x) and is_number(y), do: {x, y}
 end

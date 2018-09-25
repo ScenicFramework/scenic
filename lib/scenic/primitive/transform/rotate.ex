@@ -30,7 +30,6 @@ defmodule Scenic.Primitive.Transform.Rotate do
   end
 
   # --------------------------------------------------------
-  # normalize named stipples
   @spec normalize(number()) :: number()
   def normalize(a) when is_number(a), do: a
 end

@@ -10,6 +10,10 @@ defmodule Scenic.Primitive.Style.MiterLimitTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.MiterLimit
 
+  test "info works" do
+    assert MiterLimit.info(:test_data) =~ ":test_data"
+  end
+
   # ============================================================================
   # verify - various forms
 

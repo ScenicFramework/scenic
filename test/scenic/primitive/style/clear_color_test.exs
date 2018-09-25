@@ -10,6 +10,10 @@ defmodule Scenic.Primitive.Style.ClearColorTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.ClearColor
 
+  test "info works" do
+    assert ClearColor.info(:test_data) =~ ":test_data"
+  end
+
   # ============================================================================
   # verify - various forms
 
