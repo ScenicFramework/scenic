@@ -639,7 +639,7 @@ defmodule Scenic.Primitives do
           ref ::
             {:graph, reference, any}
             | {module :: atom, init_data :: any}
-            | scene_name :: atom,
+            | (scene_name :: atom),
           options :: list
         ) :: Graph.t() | Primitive.t()
 
