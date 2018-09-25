@@ -55,9 +55,7 @@ defmodule Scenic.Primitive.Style.ThemeTest do
   # normalize - various forms
 
   test "normalize works" do
-    assert is_map( Theme.normalize(:primary) )
-    assert is_map( Theme.normalize(%{some_name: :red, another_name: :blue}) )
+    assert is_map(Theme.normalize(:primary))
+    assert is_map(Theme.normalize(%{some_name: :red, another_name: :blue}))
   end
-
-
 end
