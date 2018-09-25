@@ -30,10 +30,7 @@ defmodule Scenic.Primitive.Group do
 
   # --------------------------------------------------------
   def verify(ids) when is_list(ids) do
-    case Enum.all?(ids, fn id -> is_integer(id) end) do
-      true -> {:ok, ids}
-      false -> :invalid_data
-    end
+    if Enum.all?(ids, &is_integer/1), do: {:ok, ids}, else: :invalid_data
   end
 
   def verify(_), do: :invalid_data
