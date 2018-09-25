@@ -2,10 +2,13 @@
 #  Created by Boyd Multerer on 04/13/18.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
-# The Tables processes is a critical piece of Scenic. It caches the graphs
-# that have been pushed by the various scenes.
 
 defmodule Scenic.ViewPort.Tables do
+  @moduledoc """
+  The Tables processes is a critical piece of Scenic.
+  It caches the graphs that have been pushed by the various scenes.
+  """
+
   use GenServer
   alias Scenic.Utilities
 
