@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Component do
+  @moduledoc false
+
   alias Scenic.Primitive
 
   @callback add_to_graph(map, any, list) :: map
@@ -14,6 +16,8 @@ defmodule Scenic.Component do
 
   # ===========================================================================
   defmodule Error do
+    @moduledoc false
+
     defexception message: nil, error: nil, data: nil
   end
 
