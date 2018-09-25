@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Graph do
+  @moduledoc false
+
   alias Scenic.Primitive
   alias Scenic.Primitive.Group
 
