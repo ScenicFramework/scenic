@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Sector do
+  @moduledoc false
+
   use Scenic.Primitive
 
   # import IEx

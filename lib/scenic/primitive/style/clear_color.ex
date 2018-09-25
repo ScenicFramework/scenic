@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Style.ClearColor do
+  @moduledoc false
+
   use Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Paint.Color
 

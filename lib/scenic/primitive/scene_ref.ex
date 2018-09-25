@@ -4,6 +4,7 @@
 #
 
 defmodule Scenic.Primitive.SceneRef do
+  @moduledoc false
   use Scenic.Primitive
 
   # ============================================================================

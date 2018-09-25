@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Style.Paint.LinearGradient do
+  @moduledoc false
+
   alias Scenic.Primitive.Style.Paint.Color
 
   # --------------------------------------------------------

@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Style.TextHeight do
+  @moduledoc false
+
   use Scenic.Primitive.Style
   #  alias Scenic.Primitive.Style
 

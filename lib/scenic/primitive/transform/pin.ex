@@ -4,6 +4,7 @@
 #
 
 defmodule Scenic.Primitive.Transform.Pin do
+  @moduledoc false
   use Scenic.Primitive.Transform
 
   # ============================================================================

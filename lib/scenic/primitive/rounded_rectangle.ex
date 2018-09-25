@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.RoundedRectangle do
+  @moduledoc false
+
   use Scenic.Primitive
   alias Scenic.Primitive.Rectangle
 

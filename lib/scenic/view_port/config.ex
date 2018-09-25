@@ -7,6 +7,7 @@ defmodule Scenic.ViewPort.Config do
   @moduledoc """
   Helper module for configuring Drivers during startup.
   """
+
   alias Scenic.ViewPort.Driver
   alias Scenic.ViewPort.Config
   alias Scenic.Math

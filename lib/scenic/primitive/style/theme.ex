@@ -3,17 +3,17 @@
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 
-# the theme style is a way to bundle up default colors that are
-# intended to be used by dynamic components invoked by a scene
-
-# there is a set of pre-defined themes. You can also pass
-# in a map of theme values
-
-# Unlike other styles, these are a guide to the components.
-# each component gets to pick, choose, or ignore any colors
-# in a given style
-
 defmodule Scenic.Primitive.Style.Theme do
+  @moduledoc """
+  The theme style is a way to bundle up default colors that are intended to be used by dynamic components invoked by a scene.
+
+  There is a set of pre-defined themes.
+  You can also pass in a map of theme values.
+
+  Unlike other styles, these are a guide to the components.
+  Each component gets to pick, choose, or ignore any colors in a given style.
+  """
+
   use Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Paint.Color
 

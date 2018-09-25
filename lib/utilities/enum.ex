@@ -1,6 +1,6 @@
 defmodule Scenic.Utilities.Enum do
   @moduledoc false
-  
+
   # ============================================================================
   def filter_reduce(enumerable, acc, action) when is_list(enumerable) do
     {filtered, acc} = do_filter_reduce_list(enumerable, {[], acc}, action)

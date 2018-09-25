@@ -7,6 +7,7 @@ defmodule Scenic.ViewPort.Driver.Config do
   @moduledoc """
   Helper module for configuring ViewPorts during startup
   """
+
   alias Scenic.ViewPort.Driver.Config
 
   # describe the struct. Name nil and opts as an empty list are good defaults

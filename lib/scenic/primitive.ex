@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive do
+  @moduledoc false
+
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.Primitive.Style
@@ -60,6 +62,8 @@ defmodule Scenic.Primitive do
 
   # ===========================================================================
   defmodule Error do
+    @moduledoc false
+
     defexception message: nil, error: nil, data: nil
   end
 

@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Style.Paint do
+  @moduledoc false
+
   alias Scenic.Primitive.Style.Paint
 
   # ============================================================================
