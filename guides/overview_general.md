@@ -59,15 +59,24 @@ Scenic is built as a three-layer architectural cake.
 
 ### [Scene Layer](overview_scene.html)
 
-At the top is the [**Scene Layer**](overview_scene.html), which encapsulates all application business logic. The developer will do most of their Scenic work in the Scene layer.
+At the top is the [**Scene Layer**](overview_scene.html), which encapsulates all
+application business logic. The developer will do most of their Scenic work in
+the Scene layer.
 
 ### [ViewPort Layer](overview_viewport.html)
 
-In the middle is the [**ViewPort Layer**](overview_viewport.html), which acts as a bridge between the Scenes and the Drivers. The ViewPort controls the scene life-cycle (More on that in [Scene Overview](overview_scene.html)), sends graphs down to the drivers, and routes user input up to the correct scene.
+In the middle is the [**ViewPort Layer**](overview_viewport.html), which acts as
+a bridge between the Scenes and the Drivers. The ViewPort controls the scene
+life-cycle (More on that in [Scene Overview](overview_scene.html)), sends graphs
+down to the drivers, and routes user input up to the correct scene.
 
 ### [Driver layer](overview_driver.html)
 
-At the bottom is the [**Driver layer**](overview_driver.html), which is where knowledge of the graphics hardware and/or remote configuration lives. Drivers draw everything on the screen and originate the raw user input. Developers can write their own drivers, but that will be rare if at all. Dealing with Sensors and other hardware is a different problem space.
+At the bottom is the [**Driver layer**](overview_driver.html), which is where
+knowledge of the graphics hardware and/or remote configuration lives. Drivers
+draw everything on the screen and originate the raw user input. Developers can
+write their own drivers, but that will be rare if at all. Dealing with Sensors
+and other hardware is a different problem space.
 
 ## Mental Model
 
@@ -118,8 +127,8 @@ that manage them for you.
 ### ViewPort
 
 A ViewPort is a sort of like a tab in your browser. It manages the scene
-life-cycle, routes graphs to the drivers, and input back up to the scenes. If you
-want two windows in your app, you need to start two ViewPorts.
+life-cycle, routes graphs to the drivers, and input back up to the scenes. If
+you want two windows in your app, you need to start two ViewPorts.
 
 ### Driver
 
@@ -145,8 +154,6 @@ on a web page.
 
 ## What to read next?
 
-If you are new to Scenic, you should read and follow the exercise in [Getting
-Started](getting_started.html).
+If you are new to Scenic, you should read and follow the exercise in [Getting Started](getting_started.html).
 
-If you want to dig deeper into the structure of a Scene, then read the [Scene
-Overview](overview_scene.html).
+If you want to dig deeper into the structure of a Scene, then read the [Scene Overview](overview_scene.html).
