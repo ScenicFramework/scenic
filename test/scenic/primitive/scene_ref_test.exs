@@ -58,6 +58,10 @@ defmodule Scenic.Primitive.SceneRefTest do
   # ============================================================================
   # verify
 
+  test "info works" do
+    assert SceneRef.info(:test_data) =~ ":test_data"
+  end
+
   test "verify passes valid data" do
     assert SceneRef.verify(:named_scene) == {:ok, :named_scene}
     assert SceneRef.verify(@data_name_id) == {:ok, @data_name_id}

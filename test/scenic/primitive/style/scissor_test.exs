@@ -10,6 +10,10 @@ defmodule Scenic.Primitive.Style.ScissorTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Scissor
 
+  test "info works" do
+    assert Scissor.info(:test_data) =~ ":test_data"
+  end
+
   # ============================================================================
   # verify - various forms
 

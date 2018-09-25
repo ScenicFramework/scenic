@@ -23,6 +23,10 @@ defmodule Scenic.Primitive.GroupTest do
     assert Primitive.get(p) == @data
   end
 
+  test "info works" do
+    assert Group.info(:test_data) =~ ":test_data"
+  end
+
   # ============================================================================
   # child management
   test "insert_at works" do

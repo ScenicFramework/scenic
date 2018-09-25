@@ -24,6 +24,10 @@ defmodule Scenic.Primitive.TriangleTest do
   # ============================================================================
   # verify
 
+  test "info works" do
+    assert Triangle.info(:test_data) =~ ":test_data"
+  end
+
   test "verify passes valid data" do
     assert Triangle.verify(@data) == {:ok, @data}
   end

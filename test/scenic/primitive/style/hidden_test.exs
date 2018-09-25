@@ -10,6 +10,10 @@ defmodule Scenic.Primitive.Style.HiddenTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Hidden
 
+  test "info works" do
+    assert Hidden.info(:test_data) =~ ":test_data"
+  end
+
   # ============================================================================
   # verify - various forms
 

@@ -25,6 +25,10 @@ defmodule Scenic.Primitive.SectorTest do
   # ============================================================================
   # verify
 
+  test "info works" do
+    assert Sector.info(:test_data) =~ ":test_data"
+  end
+
   test "verify passes valid data" do
     assert Sector.verify(@data) == {:ok, @data}
   end

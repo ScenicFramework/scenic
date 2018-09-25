@@ -10,6 +10,10 @@ defmodule Scenic.Primitive.Style.FontBlurTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.FontBlur
 
+  test "info works" do
+    assert FontBlur.info(:test_data) =~ ":test_data"
+  end
+
   # ============================================================================
   # verify - various forms
 

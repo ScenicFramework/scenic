@@ -10,6 +10,10 @@ defmodule Scenic.Primitive.Style.TextHeightTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.TextHeight
 
+  test "info works" do
+    assert TextHeight.info(:test_data) =~ ":test_data"
+  end
+
   # ============================================================================
   # verify - various forms
 
