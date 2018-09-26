@@ -326,7 +326,7 @@ defmodule Scenic.Scene do
   # using macro
 
   # ===========================================================================
-  # the using macro for scenes adopting this behavioiur
+  # the using macro for scenes adopting this behavior
   defmacro __using__(using_opts \\ []) do
     quote do
       @behaviour Scenic.Scene
@@ -513,10 +513,10 @@ defmodule Scenic.Scene do
   # ============================================================================
   # handle_info
 
-  def handle_info({:delayed_init, args, init_opts}, %{scene_module: scene_module} = state) do
-    {:ok, sc_state} = scene_module.init(args, init_opts)
-    {:noreply, %{state | scene_state: sc_state}}
-  end
+  # def handle_info({:delayed_init, args, init_opts}, %{scene_module: scene_module} = state) do
+  #   {:ok, sc_state} = scene_module.init(args, init_opts)
+  #   {:noreply, %{state | scene_state: sc_state}}
+  # end
 
   # --------------------------------------------------------
   # generic handle_info. give the scene a chance to handle it
