@@ -8,10 +8,30 @@ defmodule Scenic.SceneTest do
   use ExUnit.Case, async: false
   doctest Scenic
   alias Scenic.Scene
+  alias Scenic.ViewPort.Tables
 
-  #  import IEx
+  import Scenic.Primitives, only: [{:scene_ref, 2}]
+
+   import IEx
 
   @not_activated :__not_activated__
+
+  setup do
+    {:ok, tables} = Tables.start_link(nil)
+    on_exit(fn -> Process.exit(tables, :normal) end)
+    %{tables: tables}
+  end
+
+  defmodule TestSceneOne do
+    use Scenic.Scene
+    def init(_,_), do: {:ok, nil}
+  end
+
+  defmodule TestSceneTwo do
+    use Scenic.Scene
+    def init(_,_), do: {:ok, nil}
+  end
+
 
   # ============================================================================
   # faux module callbacks...
@@ -49,6 +69,69 @@ defmodule Scenic.SceneTest do
   def handle_cast(msg, state) do
     GenServer.cast(self(), {:test_handle_cast, msg, state})
     {:noreply, :handle_cast_state}
+  end
+
+  # ============================================================================
+  # client api
+
+  test "send_event sends an event to a scene by pid" do
+    self = self()
+    Scene.send_event(self, {:test_event, nil})
+    assert_receive({:"$gen_cast", {:event, {:test_event, nil}, ^self}})
+  end
+
+  test "cast and cast_to_refs work" do
+    # prep the self scene
+    scene_ref_0 = make_ref()
+    graph_key = {:graph, scene_ref_0, 123}
+    registration = {self(), self(), self()}
+    Tables.register_scene(scene_ref_0, registration)
+    Process.put(:scene_ref, scene_ref_0)
+
+    # start test_scene_1
+    scene_ref_1 = make_ref()
+    {:ok, pid_scene_1} = GenServer.start(Scene, {TestSceneOne, nil, [scene_ref: scene_ref_1]})
+    # prep ref scene 2
+    scene_ref_2 = make_ref()
+    {:ok, pid_scene_2} = GenServer.start(Scene, {TestSceneOne, nil, [scene_ref: scene_ref_2]})
+
+    # insert the graph we will test later
+    graph = Scenic.Graph.build()
+    |> scene_ref( pid_scene_1 )
+    |> scene_ref( pid_scene_2 )
+    Tables.insert_graph(graph_key, self(), graph, %{1 => scene_ref_1, 2 => scene_ref_2})
+
+    # the above are async casts, so sleep to let them run
+    # is also why I'm running several different tests in this single test.
+    # setup is just to messy
+    Process.sleep(100)
+
+    # cast a message by scene_ref
+    Scene.cast(scene_ref_0, :test_msg_0)
+    assert_receive({:"$gen_cast", :test_msg_0})
+
+    # cast a message by graph_key
+    Scene.cast(graph_key, :test_msg_1)
+    assert_receive({:"$gen_cast", :test_msg_1})
+
+    # cast to the refs. Graph is explicit
+    Scene.cast_to_refs( graph_key, :test_msg_2 )
+    refute_receive({:"$gen_cast", :test_msg_2})
+
+    # cast to the refs. Graph is implicit
+    Scene.cast_to_refs( nil, :test_msg_3 )
+    refute_receive({:"$gen_cast", :test_msg_3})
+
+    # cleanup
+    Process.exit(pid_scene_1, :normal)
+    Process.exit(pid_scene_2, :normal)
+    Process.delete(:scene_ref)
+  end
+
+  test "cast_to_refs casts to self refs raises if not called from a scene" do
+    assert_raise RuntimeError, fn ->
+    Scene.cast_to_refs( nil, :test_msg )
+    end
   end
 
   # ============================================================================
@@ -132,7 +215,7 @@ defmodule Scenic.SceneTest do
   # ============================================================================
   # handle_info
 
-  test "handle_info sends unhandles messages to the module" do
+  test "handle_info sends unhandled messages to the module" do
     {:noreply, new_state} =
       assert Scene.handle_info(:abc, %{
                scene_module: __MODULE__,
@@ -162,8 +245,22 @@ defmodule Scenic.SceneTest do
     assert_receive({:"$gen_cast", {:test_handle_call, :other, ^self, :scene_state}})
   end
 
+
+
   # ============================================================================
   # handle_cast
+
+  test "handle_cast :after_init inits the scene module" do
+    scene_ref = make_ref()
+    Process.put(:"$ancestors", [self()])
+
+    {:noreply, new_state} =
+      assert Scene.handle_cast({:after_init, __MODULE__, [1,2,3], []}, %{
+        scene_ref: scene_ref
+        })
+
+    assert new_state.scene_state == :init_state
+  end
 
   test "handle_cast :input calls the mod input handler" do
     context = %Scenic.ViewPort.Context{
@@ -196,3 +293,17 @@ defmodule Scenic.SceneTest do
     assert_receive({:"$gen_cast", {:test_handle_cast, :other, :scene_state}})
   end
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+

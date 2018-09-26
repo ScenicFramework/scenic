@@ -60,7 +60,7 @@ defmodule Scenic.ViewPort.TablesTest do
     # subscribe to the graph_key
     Tables.subscribe(graph_key, self())
 
-    # udpate the graph
+    # update the graph
     Tables.insert_graph(graph_key, self(), @graph_1, [])
     # subscribed. confirm event received - also gives it time to process
     assert_receive({:"$gen_cast", {:update_graph, {:graph, ^scene_ref, 123}}})
@@ -70,7 +70,7 @@ defmodule Scenic.ViewPort.TablesTest do
     # unsubscribe to the graph_key
     Tables.unsubscribe(graph_key, self())
 
-    # confirm unsubscription
+    # confirm unsubscripted
     Tables.insert_graph(graph_key, self(), @graph, [])
     # not subscribed, so confirm no event received - also gives it time to process
     refute_receive({:"$gen_cast", {:update_graph, {:graph, ^scene_ref, 123}}})
@@ -79,7 +79,7 @@ defmodule Scenic.ViewPort.TablesTest do
     # subscribe to the graph_key again
     Tables.subscribe(graph_key, self())
 
-    # udpate the graph
+    # update the graph
     Tables.insert_graph(graph_key, self(), @graph_1, [])
     # subscribed. confirm event received - also gives it time to process
     assert_receive({:"$gen_cast", {:update_graph, {:graph, ^scene_ref, 123}}})
