@@ -22,7 +22,15 @@
         # In the latter case `**/*.{ex,exs}` will be used.
         #
         included: ["lib/"],
-        excluded: [~r"/_build/", ~r"/.github/", ~r"/c_src/", ~r"/priv/", ~r"/deps", ~r"/guides/", ~r"/deps/"]
+        excluded: [
+          ~r"/_build/",
+          ~r"/.github/",
+          ~r"/c_src/",
+          ~r"/priv/",
+          ~r"/deps",
+          ~r"/guides/",
+          ~r"/deps/"
+        ]
       },
       #
       # If you create your own checks, you must specify the source files for

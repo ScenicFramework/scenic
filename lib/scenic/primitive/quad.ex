@@ -55,12 +55,13 @@ defmodule Scenic.Primitive.Quad do
         Math.Vector2.sub(p3, p0)
       )
 
-    width = if cross < 0 do
-      -width
-    else
-      width
-    end
-    
+    width =
+      if cross < 0 do
+        -width
+      else
+        width
+      end
+
     # find the new parallel lines
     l01 = Math.Line.parallel({p0, p1}, width)
     l12 = Math.Line.parallel({p1, p2}, width)

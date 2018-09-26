@@ -135,11 +135,19 @@ defmodule Scenic.Component.Input.Dropdown do
               g =
                 group(
                   g,
+                  # credo:disable-for-next-line Credo.Check.Refactor.Nesting
                   fn g ->
-                    case id == initial_id do
-                      true -> rect(g, {width, height}, fill: theme.active, id: id)
-                      false -> rect(g, {width, height}, fill: theme.background, id: id)
-                    end
+                    rect(
+                      g,
+                      {width, height},
+                      fill:
+                        if id == initial_id do
+                          theme.active
+                        else
+                          theme.background
+                        end,
+                      id: id
+                    )
                     |> text(text,
                       fill: theme.text,
                       text_align: :left,

@@ -60,6 +60,7 @@ defmodule Scenic.Utilities.Map do
         true ->
           v1 = Map.get(map_1, k)
 
+          # credo:disable-for-next-line Credo.Check.Refactor.Nesting
           case v1 == v do
             true -> d
             false -> add_difference(d, k, v1, v, recurse)
@@ -103,7 +104,7 @@ defmodule Scenic.Utilities.Map do
       case diff do
         {:put, {k0, k1}, v} ->
           map = Map.get(acc, k0, %{})
-          
+
           if is_map(map) do
             map
           else
@@ -120,6 +121,7 @@ defmodule Scenic.Utilities.Map do
             Map.get(acc, k0, %{})
             |> apply_difference([{:del, k1}], delete_empty)
 
+          # credo:disable-for-next-line Credo.Check.Refactor.Nesting
           case delete_empty && map == %{} do
             true -> Map.delete(acc, k0)
             false -> Map.put(acc, k0, map)
