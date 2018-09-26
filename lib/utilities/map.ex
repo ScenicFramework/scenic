@@ -103,10 +103,11 @@ defmodule Scenic.Utilities.Map do
       case diff do
         {:put, {k0, k1}, v} ->
           map = Map.get(acc, k0, %{})
-
-          cond do
-            is_map(map) -> map
-            true -> %{}
+          
+          if is_map(map) do
+            map
+          else
+            %{}
           end
           |> apply_difference([{:put, k1, v}], delete_empty)
           |> (&Map.put(acc, k0, &1)).()
