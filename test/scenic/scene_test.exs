@@ -61,9 +61,16 @@ defmodule Scenic.SceneTest do
     {:reply, :handle_call_reply, :handle_call_state}
   end
 
-  def handle_input(event, context, state) do
-    GenServer.cast(self(), {:test_input, event, context, state})
-    {:noreply, :input_state}
+  def handle_input({:input_noreply, _}, _, state) do
+    {:noreply, :input_noreply_state}
+  end
+
+  def handle_input({:input_stop, _}, _, state) do
+    {:stop, :input_stop_state}
+  end
+
+  def handle_input({:input_continue, _}, _, state) do
+    {:continue, :input_continue_state}
   end
 
   def handle_cast(msg, state) do
@@ -262,12 +269,31 @@ defmodule Scenic.SceneTest do
     assert new_state.scene_state == :init_state
   end
 
-  test "handle_cast :input calls the mod input handler" do
+  # test "handle_cast :input calls the mod input handler" do
+  #   context = %Scenic.ViewPort.Context{
+  #     viewport: self()
+  #   }
+
+  #   event = {:cursor_enter, 1}
+  #   sc_state = :sc_state
+
+  #   {:noreply, new_state} =
+  #     assert Scene.handle_cast({:input, event, context}, %{
+  #              scene_module: __MODULE__,
+  #              scene_state: sc_state,
+  #              activation: nil
+  #            })
+
+  #   assert new_state.scene_state == :input_state
+  #   assert_receive({:"$gen_cast", {:test_input, ^event, ^context, ^sc_state}})
+  # end
+
+  test "handle_cast :input calls the mod input handler, which returns noreply" do
     context = %Scenic.ViewPort.Context{
       viewport: self()
     }
 
-    event = {:cursor_enter, 1}
+    event = {:input_noreply, 1}
     sc_state = :sc_state
 
     {:noreply, new_state} =
@@ -277,9 +303,58 @@ defmodule Scenic.SceneTest do
                activation: nil
              })
 
-    assert new_state.scene_state == :input_state
-    assert_receive({:"$gen_cast", {:test_input, ^event, ^context, ^sc_state}})
+    assert new_state.scene_state == :input_noreply_state
+    refute_received( {:"$gen_cast", {:continue_input, _}} )
   end
+
+  test "handle_cast :input calls the mod input handler, which returns stop" do
+    context = %Scenic.ViewPort.Context{
+      viewport: self()
+    }
+
+    event = {:input_stop, 1}
+    sc_state = :sc_state
+
+    {:noreply, new_state} =
+      assert Scene.handle_cast({:input, event, context}, %{
+               scene_module: __MODULE__,
+               scene_state: sc_state,
+               activation: nil
+             })
+
+    assert new_state.scene_state == :input_stop_state
+    refute_received( {:"$gen_cast", {:continue_input, _}} )
+  end
+
+  test "handle_cast :input calls the mod input handler, which returns continue" do
+    context = %Scenic.ViewPort.Context{
+      viewport: self(),
+      raw_input: :raw_input
+    }
+
+    event = {:input_continue, 1}
+    sc_state = :sc_state
+
+    {:noreply, new_state} =
+      assert Scene.handle_cast({:input, event, context}, %{
+               scene_module: __MODULE__,
+               scene_state: sc_state,
+               activation: nil
+             })
+
+    assert new_state.scene_state == :input_continue_state
+    assert_received( {:"$gen_cast", {:continue_input, :raw_input}} )
+  end
+
+
+
+
+
+
+
+
+
+
 
   test "handle_cast unknown calls the mod input handler" do
     {:noreply, new_state} =
