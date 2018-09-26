@@ -72,6 +72,14 @@ defmodule Scenic.SceneTest do
     {:continue, :input_continue_state}
   end
 
+  def filter_event(:stop_event, _, _state) do
+    {:stop, :filter_stop_state}
+  end
+
+  def filter_event(:continue_event, _, _state) do
+    {:continue, :continue_event, :filter_continue_state}
+  end
+
   def handle_cast(msg, state) do
     GenServer.cast(self(), {:test_handle_cast, msg, state})
     {:noreply, :handle_cast_state}
@@ -343,6 +351,32 @@ defmodule Scenic.SceneTest do
 
     assert new_state.scene_state == :input_continue_state
     assert_received({:"$gen_cast", {:continue_input, :raw_input}})
+  end
+
+  test "handle_cast :event calls the mod event filter, which returns continue" do
+    {:noreply, new_state} =
+      assert Scene.handle_cast({:event, :continue_event, self()}, %{
+               parent_pid: self(),
+               scene_module: __MODULE__,
+               scene_state: :sc_state,
+               activation: nil
+             })
+
+    assert new_state.scene_state == :filter_continue_state
+    assert_received({:"$gen_cast", {:event, :continue_event, _}})
+  end
+
+  test "handle_cast :event calls the mod event filter, which returns stop" do
+    {:noreply, new_state} =
+      assert Scene.handle_cast({:event, :stop_event, self()}, %{
+               parent_pid: self(),
+               scene_module: __MODULE__,
+               scene_state: :sc_state,
+               activation: nil
+             })
+
+    assert new_state.scene_state == :filter_stop_state
+    refute_received({:"$gen_cast", {:event, :continue_event, _}})
   end
 
   test "handle_cast unknown calls the mod input handler" do
