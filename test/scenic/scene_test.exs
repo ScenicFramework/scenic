@@ -12,7 +12,7 @@ defmodule Scenic.SceneTest do
 
   import Scenic.Primitives, only: [{:scene_ref, 2}]
 
-  import IEx
+  # import IEx
 
   @not_activated :__not_activated__
 
@@ -60,15 +60,15 @@ defmodule Scenic.SceneTest do
     {:reply, :handle_call_reply, :handle_call_state}
   end
 
-  def handle_input({:input_noreply, _}, _, state) do
+  def handle_input({:input_noreply, _}, _, _state) do
     {:noreply, :input_noreply_state}
   end
 
-  def handle_input({:input_stop, _}, _, state) do
+  def handle_input({:input_stop, _}, _, _state) do
     {:stop, :input_stop_state}
   end
 
-  def handle_input({:input_continue, _}, _, state) do
+  def handle_input({:input_continue, _}, _, _state) do
     {:continue, :input_continue_state}
   end
 
