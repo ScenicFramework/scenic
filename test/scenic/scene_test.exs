@@ -411,8 +411,10 @@ defmodule Scenic.SceneTest do
     graph =
       Graph.build()
       |> circle(100)
-      |> scene_ref(:named_scene)    # named scene
-      |> scene_ref(graph_key_1)     # explicit graph
+      # named scene
+      |> scene_ref(:named_scene)
+      # explicit graph
+      |> scene_ref(graph_key_1)
 
     {:noreply, state} =
       assert Scene.handle_cast({:push_graph, graph, 123, false}, %{
@@ -423,18 +425,17 @@ defmodule Scenic.SceneTest do
     Process.sleep(100)
 
     # get the minimal graph from the table
-    {:ok, min_graph} = Tables.get_graph( graph_key )
+    {:ok, min_graph} = Tables.get_graph(graph_key)
 
     assert min_graph[1] == %{data: {Scenic.Primitive.Circle, 100}}
     assert min_graph[2] == %{data: {SceneRef, {:graph, :named_scene, nil}}}
-    assert min_graph[3] == %{data: {SceneRef, graph_key_1 }}
+    assert min_graph[3] == %{data: {SceneRef, graph_key_1}}
 
     # should fail to push a graph with a dynamic child
     graph =
       Graph.build()
       |> circle(100)
       |> button("Should Raise")
-
 
     assert_raise Scenic.Scene.Error, fn ->
       Scene.handle_cast({:push_graph, graph, 123, false}, state)
@@ -460,31 +461,33 @@ defmodule Scenic.SceneTest do
     graph =
       Graph.build()
       |> circle(100)
-      |> scene_ref(:named_scene)    # named scene
-      |> scene_ref(graph_key_1)     # explicit graph
+      # named scene
+      |> scene_ref(:named_scene)
+      # explicit graph
+      |> scene_ref(graph_key_1)
       |> button("Button0")
       |> button("Button1", id: :stoppit)
 
     {:noreply, state} =
       assert Scene.handle_cast({:push_graph, graph, 123, true}, %{
-              scene_ref: scene_ref_0,
-              raw_scene_refs: %{},
-              dyn_scene_pids: %{},
-              dyn_scene_keys: %{},
-              dynamic_children_pid: dyn_sup,
-              viewport: self()
+               scene_ref: scene_ref_0,
+               raw_scene_refs: %{},
+               dyn_scene_pids: %{},
+               dyn_scene_keys: %{},
+               dynamic_children_pid: dyn_sup,
+               viewport: self()
              })
 
     # inserting the table is async, so wait a bit
     Process.sleep(100)
 
     # get the minimal graph from the table
-    {:ok, min_graph} = Tables.get_graph( graph_key )
+    {:ok, min_graph} = Tables.get_graph(graph_key)
 
     # assert the static stuff
     assert min_graph[1] == %{data: {Scenic.Primitive.Circle, 100}}
     assert min_graph[2] == %{data: {SceneRef, {:graph, :named_scene, nil}}}
-    assert min_graph[3] == %{data: {SceneRef, graph_key_1 }}
+    assert min_graph[3] == %{data: {SceneRef, graph_key_1}}
 
     # get the new dynamic refs
     {SceneRef, {:graph, dyn_0_ref, nil}} = get_in(min_graph, [4, :data])
@@ -496,27 +499,27 @@ defmodule Scenic.SceneTest do
 
     # Check that those pids are started under the dynamic supervisor
     children = DynamicSupervisor.which_children(dyn_sup)
-    assert Enum.member?( children, {:undefined, dyn_0_pid, :worker, [Scene]} )
-    assert Enum.member?( children, {:undefined, dyn_1_pid, :worker, [Scene]} )
+    assert Enum.member?(children, {:undefined, dyn_0_pid, :worker, [Scene]})
+    assert Enum.member?(children, {:undefined, dyn_1_pid, :worker, [Scene]})
 
     # remove a dynamic ref from the graph and add a new one
-    graph =  graph
-    |> button("button2")
-    |> Graph.delete(:stoppit)
+    graph =
+      graph
+      |> button("button2")
+      |> Graph.delete(:stoppit)
 
-    {:noreply, _} =
-      assert Scene.handle_cast({:push_graph, graph, 123, true}, state)
+    {:noreply, _} = assert Scene.handle_cast({:push_graph, graph, 123, true}, state)
 
     # inserting the table is async, so wait a bit
     Process.sleep(100)
 
     # get the minimal graph from the table
-    {:ok, min_graph} = Tables.get_graph( graph_key )
+    {:ok, min_graph} = Tables.get_graph(graph_key)
 
     # assert the static stuff
     assert min_graph[1] == %{data: {Scenic.Primitive.Circle, 100}}
     assert min_graph[2] == %{data: {SceneRef, {:graph, :named_scene, nil}}}
-    assert min_graph[3] == %{data: {SceneRef, graph_key_1 }}
+    assert min_graph[3] == %{data: {SceneRef, graph_key_1}}
 
     # get the new dynamic refs
     {SceneRef, {:graph, dyn_2_ref, nil}} = get_in(min_graph, [6, :data])
@@ -528,40 +531,11 @@ defmodule Scenic.SceneTest do
 
     # Check that those pids are started under the dynamic supervisor
     children = DynamicSupervisor.which_children(dyn_sup)
-    assert Enum.member?( children, {:undefined, dyn_0_pid, :worker, [Scene]} )
-    refute Enum.member?( children, {:undefined, dyn_1_pid, :worker, [Scene]} )
-    assert Enum.member?( children, {:undefined, dyn_2_pid, :worker, [Scene]} )
-
+    assert Enum.member?(children, {:undefined, dyn_0_pid, :worker, [Scene]})
+    refute Enum.member?(children, {:undefined, dyn_1_pid, :worker, [Scene]})
+    assert Enum.member?(children, {:undefined, dyn_2_pid, :worker, [Scene]})
 
     # cleanup
     DynamicSupervisor.stop(dyn_sup, :normal)
   end
-
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
