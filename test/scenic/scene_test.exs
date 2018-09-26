@@ -12,7 +12,7 @@ defmodule Scenic.SceneTest do
 
   import Scenic.Primitives, only: [{:scene_ref, 2}]
 
-   import IEx
+  import IEx
 
   @not_activated :__not_activated__
 
@@ -24,14 +24,13 @@ defmodule Scenic.SceneTest do
 
   defmodule TestSceneOne do
     use Scenic.Scene
-    def init(_,_), do: {:ok, nil}
+    def init(_, _), do: {:ok, nil}
   end
 
   defmodule TestSceneTwo do
     use Scenic.Scene
-    def init(_,_), do: {:ok, nil}
+    def init(_, _), do: {:ok, nil}
   end
-
 
   # ============================================================================
   # faux module callbacks...
@@ -103,9 +102,11 @@ defmodule Scenic.SceneTest do
     {:ok, pid_scene_2} = GenServer.start(Scene, {TestSceneOne, nil, [scene_ref: scene_ref_2]})
 
     # insert the graph we will test later
-    graph = Scenic.Graph.build()
-    |> scene_ref( pid_scene_1 )
-    |> scene_ref( pid_scene_2 )
+    graph =
+      Scenic.Graph.build()
+      |> scene_ref(pid_scene_1)
+      |> scene_ref(pid_scene_2)
+
     Tables.insert_graph(graph_key, self(), graph, %{1 => scene_ref_1, 2 => scene_ref_2})
 
     # the above are async casts, so sleep to let them run
@@ -122,11 +123,11 @@ defmodule Scenic.SceneTest do
     assert_receive({:"$gen_cast", :test_msg_1})
 
     # cast to the refs. Graph is explicit
-    Scene.cast_to_refs( graph_key, :test_msg_2 )
+    Scene.cast_to_refs(graph_key, :test_msg_2)
     refute_receive({:"$gen_cast", :test_msg_2})
 
     # cast to the refs. Graph is implicit
-    Scene.cast_to_refs( nil, :test_msg_3 )
+    Scene.cast_to_refs(nil, :test_msg_3)
     refute_receive({:"$gen_cast", :test_msg_3})
 
     # cleanup
@@ -137,7 +138,7 @@ defmodule Scenic.SceneTest do
 
   test "cast_to_refs casts to self refs raises if not called from a scene" do
     assert_raise RuntimeError, fn ->
-    Scene.cast_to_refs( nil, :test_msg )
+      Scene.cast_to_refs(nil, :test_msg)
     end
   end
 
@@ -252,8 +253,6 @@ defmodule Scenic.SceneTest do
     assert_receive({:"$gen_cast", {:test_handle_call, :other, ^self, :scene_state}})
   end
 
-
-
   # ============================================================================
   # handle_cast
 
@@ -262,9 +261,9 @@ defmodule Scenic.SceneTest do
     Process.put(:"$ancestors", [self()])
 
     {:noreply, new_state} =
-      assert Scene.handle_cast({:after_init, __MODULE__, [1,2,3], []}, %{
-        scene_ref: scene_ref
-        })
+      assert Scene.handle_cast({:after_init, __MODULE__, [1, 2, 3], []}, %{
+               scene_ref: scene_ref
+             })
 
     assert new_state.scene_state == :init_state
   end
@@ -304,7 +303,7 @@ defmodule Scenic.SceneTest do
              })
 
     assert new_state.scene_state == :input_noreply_state
-    refute_received( {:"$gen_cast", {:continue_input, _}} )
+    refute_received({:"$gen_cast", {:continue_input, _}})
   end
 
   test "handle_cast :input calls the mod input handler, which returns stop" do
@@ -323,7 +322,7 @@ defmodule Scenic.SceneTest do
              })
 
     assert new_state.scene_state == :input_stop_state
-    refute_received( {:"$gen_cast", {:continue_input, _}} )
+    refute_received({:"$gen_cast", {:continue_input, _}})
   end
 
   test "handle_cast :input calls the mod input handler, which returns continue" do
@@ -343,18 +342,8 @@ defmodule Scenic.SceneTest do
              })
 
     assert new_state.scene_state == :input_continue_state
-    assert_received( {:"$gen_cast", {:continue_input, :raw_input}} )
+    assert_received({:"$gen_cast", {:continue_input, :raw_input}})
   end
-
-
-
-
-
-
-
-
-
-
 
   test "handle_cast unknown calls the mod input handler" do
     {:noreply, new_state} =
@@ -368,17 +357,3 @@ defmodule Scenic.SceneTest do
     assert_receive({:"$gen_cast", {:test_handle_cast, :other, :scene_state}})
   end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
