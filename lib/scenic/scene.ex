@@ -243,6 +243,11 @@ defmodule Scenic.Scene do
 
   @type ref :: reference | atom
 
+  defmodule Error do
+    @moduledoc false
+    defexception message: nil
+  end
+
   # ============================================================================
   # client api - working with the scene
 
@@ -673,10 +678,12 @@ defmodule Scenic.Scene do
         # dynamic reference
         # Log an error and remove the ref from the graph
         {_uid, %{module: Primitive.SceneRef, data: {_, _} = ref}}, {g, all_refs} ->
-          Logger.error(
-            "Attempting to manage dynamic reference on graph with " <>
-              "has_children set to false. #{inspect(ref)}"
-          )
+          message = """
+          Attempting to manage dynamic reference on graph with "has_children set to false
+          reference: #{inspect(ref)}
+          """
+
+          raise Error, message: message
 
           {g, all_refs}
 

@@ -8,9 +8,12 @@ defmodule Scenic.SceneTest do
   use ExUnit.Case, async: false
   doctest Scenic
   alias Scenic.Scene
+  alias Scenic.Graph
+  alias Scenic.Primitive.SceneRef
   alias Scenic.ViewPort.Tables
 
-  import Scenic.Primitives, only: [{:scene_ref, 2}]
+  import Scenic.Primitives, only: [{:scene_ref, 2}, {:circle, 2}]
+  import Scenic.Components, only: [{:button, 2}, {:button, 3}]
 
   # import IEx
 
@@ -111,7 +114,7 @@ defmodule Scenic.SceneTest do
 
     # insert the graph we will test later
     graph =
-      Scenic.Graph.build()
+      Graph.build()
       |> scene_ref(pid_scene_1)
       |> scene_ref(pid_scene_2)
 
@@ -389,5 +392,150 @@ defmodule Scenic.SceneTest do
 
     assert new_state.scene_state == :handle_cast_state
     assert_receive({:"$gen_cast", {:test_handle_cast, :other, :scene_state}})
+  end
+
+  # ============================================================================
+  # handle_cast - push_graph
+
+  test "handle_case :push_graph works with no children flag set" do
+    # prep the self scene
+    scene_ref_0 = make_ref()
+    graph_key = {:graph, scene_ref_0, 123}
+    registration = {self(), self(), self()}
+    Tables.register_scene(scene_ref_0, registration)
+
+    # other graph key
+    graph_key_1 = {:graph, make_ref(), nil}
+
+    # Create a graph that has and named reference, an explicit reference, and a regular primitive
+    graph =
+      Graph.build()
+      |> circle(100)
+      # named scene
+      |> scene_ref(:named_scene)
+      # explicit graph
+      |> scene_ref(graph_key_1)
+
+    {:noreply, state} =
+      assert Scene.handle_cast({:push_graph, graph, 123, false}, %{
+               scene_ref: scene_ref_0
+             })
+
+    # inserting the table is async, so wait a bit
+    Process.sleep(100)
+
+    # get the minimal graph from the table
+    {:ok, min_graph} = Tables.get_graph(graph_key)
+
+    assert min_graph[1] == %{data: {Scenic.Primitive.Circle, 100}}
+    assert min_graph[2] == %{data: {SceneRef, {:graph, :named_scene, nil}}}
+    assert min_graph[3] == %{data: {SceneRef, graph_key_1}}
+
+    # should fail to push a graph with a dynamic child
+    graph =
+      Graph.build()
+      |> circle(100)
+      |> button("Should Raise")
+
+    assert_raise Scenic.Scene.Error, fn ->
+      Scene.handle_cast({:push_graph, graph, 123, false}, state)
+    end
+  end
+
+  test "handle_case :push_graph works with children flag set" do
+    # prep the self scene
+    scene_ref_0 = make_ref()
+    graph_key = {:graph, scene_ref_0, 123}
+    registration = {self(), self(), self()}
+    Tables.register_scene(scene_ref_0, registration)
+
+    # start up a dynamic supervisor for the children
+    {:ok, dyn_sup} = DynamicSupervisor.start_link(strategy: :one_for_one)
+
+    # other graph key
+    graph_key_1 = {:graph, make_ref(), nil}
+
+    # Create a graph that has and named reference,
+    # an explicit reference, a regular primitive,
+    # and several dynamic refs
+    graph =
+      Graph.build()
+      |> circle(100)
+      # named scene
+      |> scene_ref(:named_scene)
+      # explicit graph
+      |> scene_ref(graph_key_1)
+      |> button("Button0")
+      |> button("Button1", id: :stoppit)
+
+    {:noreply, state} =
+      assert Scene.handle_cast({:push_graph, graph, 123, true}, %{
+               scene_ref: scene_ref_0,
+               raw_scene_refs: %{},
+               dyn_scene_pids: %{},
+               dyn_scene_keys: %{},
+               dynamic_children_pid: dyn_sup,
+               viewport: self()
+             })
+
+    # inserting the table is async, so wait a bit
+    Process.sleep(100)
+
+    # get the minimal graph from the table
+    {:ok, min_graph} = Tables.get_graph(graph_key)
+
+    # assert the static stuff
+    assert min_graph[1] == %{data: {Scenic.Primitive.Circle, 100}}
+    assert min_graph[2] == %{data: {SceneRef, {:graph, :named_scene, nil}}}
+    assert min_graph[3] == %{data: {SceneRef, graph_key_1}}
+
+    # get the new dynamic refs
+    {SceneRef, {:graph, dyn_0_ref, nil}} = get_in(min_graph, [4, :data])
+    {SceneRef, {:graph, dyn_1_ref, nil}} = get_in(min_graph, [5, :data])
+
+    # retrieve the dynamic scene pids
+    {:ok, dyn_0_pid} = Tables.get_scene_pid(dyn_0_ref)
+    {:ok, dyn_1_pid} = Tables.get_scene_pid(dyn_1_ref)
+
+    # Check that those pids are started under the dynamic supervisor
+    children = DynamicSupervisor.which_children(dyn_sup)
+    assert Enum.member?(children, {:undefined, dyn_0_pid, :worker, [Scene]})
+    assert Enum.member?(children, {:undefined, dyn_1_pid, :worker, [Scene]})
+
+    # remove a dynamic ref from the graph and add a new one
+    graph =
+      graph
+      |> button("button2")
+      |> Graph.delete(:stoppit)
+
+    {:noreply, _} = assert Scene.handle_cast({:push_graph, graph, 123, true}, state)
+
+    # inserting the table is async, so wait a bit
+    Process.sleep(100)
+
+    # get the minimal graph from the table
+    {:ok, min_graph} = Tables.get_graph(graph_key)
+
+    # assert the static stuff
+    assert min_graph[1] == %{data: {Scenic.Primitive.Circle, 100}}
+    assert min_graph[2] == %{data: {SceneRef, {:graph, :named_scene, nil}}}
+    assert min_graph[3] == %{data: {SceneRef, graph_key_1}}
+
+    # get the new dynamic refs
+    {SceneRef, {:graph, dyn_2_ref, nil}} = get_in(min_graph, [6, :data])
+
+    # retrieve the dynamic scene pids
+    {:ok, _} = Tables.get_scene_pid(dyn_0_ref)
+    assert Tables.get_scene_pid(dyn_1_ref) == {:error, :not_found}
+    {:ok, dyn_2_pid} = Tables.get_scene_pid(dyn_2_ref)
+
+    # Check that those pids are started under the dynamic supervisor
+    children = DynamicSupervisor.which_children(dyn_sup)
+    assert Enum.member?(children, {:undefined, dyn_0_pid, :worker, [Scene]})
+    refute Enum.member?(children, {:undefined, dyn_1_pid, :worker, [Scene]})
+    assert Enum.member?(children, {:undefined, dyn_2_pid, :worker, [Scene]})
+
+    # cleanup
+    DynamicSupervisor.stop(dyn_sup, :normal)
   end
 end

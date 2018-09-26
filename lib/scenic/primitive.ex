@@ -63,7 +63,6 @@ defmodule Scenic.Primitive do
   # ===========================================================================
   defmodule Error do
     @moduledoc false
-
     defexception message: nil, error: nil, data: nil
   end
 

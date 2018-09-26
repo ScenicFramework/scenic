@@ -33,6 +33,7 @@ defmodule Scenic.Graph do
   # ===========================================================================
   # define a policy error here - not found or something like that
   defmodule Error do
+    @moduledoc false
     defexception message: "Graph was unable to perform the operation",
                  # expecting more appropriate messages when raising this
                  primitive: nil,
