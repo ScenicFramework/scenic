@@ -52,10 +52,12 @@ defmodule Scenic.ViewPortTest do
 
   setup do
     {:ok, tables} = Tables.start_link(nil)
+
     on_exit(fn ->
       Process.exit(tables, :normal)
       Process.sleep(2)
     end)
+
     %{tables: tables}
   end
 

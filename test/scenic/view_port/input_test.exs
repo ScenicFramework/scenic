@@ -28,6 +28,7 @@ defmodule Scenic.ViewPort.InputTest do
 
   setup do
     {:ok, tables} = Tables.start_link(nil)
+
     on_exit(fn ->
       Process.exit(tables, :normal)
       Process.sleep(2)
@@ -64,12 +65,13 @@ defmodule Scenic.ViewPort.InputTest do
     Process.sleep(10)
 
     # build a capture context for the nested graph
-    tx = Matrix.build_translation({1,1})
+    tx = Matrix.build_translation({1, 1})
     inv = Matrix.invert(tx)
+
     context = %Context{
       graph_key: graph_key1,
       tx: tx,
-      inverse_tx: inv,
+      inverse_tx: inv
     }
 
     %{
@@ -491,9 +493,12 @@ defmodule Scenic.ViewPort.InputTest do
     assert context.uid == nil
   end
 
-  test "captured cursor_button", %{graph_key: graph_key,
+  test "captured cursor_button", %{
+    graph_key: graph_key,
     graph_key1: graph_key1,
-    context: context, master_graph_key: master_graph_key} do
+    context: context,
+    master_graph_key: master_graph_key
+  } do
     # start NOT over a primitive
     {:noreply, _} =
       Input.handle_cast(
@@ -505,9 +510,11 @@ defmodule Scenic.ViewPort.InputTest do
           max_depth: 10
         }
       )
+
     assert_received(
       {:"$gen_cast", {:input, {:cursor_button, {:left, :press, 0, {0.0, 0.0}}}, context}}
     )
+
     assert context.graph_key == graph_key1
     assert context.id == nil
     assert context.uid == nil
@@ -527,14 +534,18 @@ defmodule Scenic.ViewPort.InputTest do
     assert_received(
       {:"$gen_cast", {:input, {:cursor_button, {:left, :press, 0, {49.0, 49.0}}}, context}}
     )
+
     assert context.graph_key == graph_key1
     assert context.id == :circle
     assert context.uid == 1
   end
 
-  test "captured cursor_scroll", %{graph_key: graph_key,
+  test "captured cursor_scroll", %{
+    graph_key: graph_key,
     graph_key1: graph_key1,
-    context: context, master_graph_key: master_graph_key} do
+    context: context,
+    master_graph_key: master_graph_key
+  } do
     # start NOT over a primitive
     {:noreply, _} =
       Input.handle_cast(
@@ -570,9 +581,11 @@ defmodule Scenic.ViewPort.InputTest do
     assert context.uid == 1
   end
 
-  test "captured viewport_enter", %{graph_key: graph_key,
+  test "captured viewport_enter", %{
+    graph_key: graph_key,
     graph_key1: graph_key1,
-    context: context} do
+    context: context
+  } do
     # start NOT over a primitive
     {:noreply, _} =
       Input.handle_cast(
@@ -587,9 +600,7 @@ defmodule Scenic.ViewPort.InputTest do
     assert context.graph_key == graph_key1
   end
 
-  test "captured viewport_exit", %{graph_key: graph_key,
-    graph_key1: graph_key1,
-    context: context} do
+  test "captured viewport_exit", %{graph_key: graph_key, graph_key1: graph_key1, context: context} do
     # start NOT over a primitive
     {:noreply, _} =
       Input.handle_cast(
@@ -604,9 +615,7 @@ defmodule Scenic.ViewPort.InputTest do
     assert context.graph_key == graph_key1
   end
 
-  test "captured other", %{graph_key: graph_key,
-    graph_key1: graph_key1,
-    context: context} do
+  test "captured other", %{graph_key: graph_key, graph_key1: graph_key1, context: context} do
     # start NOT over a primitive
     {:noreply, _} =
       Input.handle_cast(
@@ -640,9 +649,7 @@ defmodule Scenic.ViewPort.InputTest do
         }
       )
 
-    assert_received(
-      {:"$gen_cast", {:input, {:cursor_pos, {0.0, 0.0}}, context}}
-    )
+    assert_received({:"$gen_cast", {:input, {:cursor_pos, {0.0, 0.0}}, context}})
     assert context.graph_key == graph_key1
     assert context.id == nil
     assert context.uid == nil
@@ -667,9 +674,7 @@ defmodule Scenic.ViewPort.InputTest do
         }
       )
 
-    assert_received(
-      {:"$gen_cast", {:input, {:cursor_pos, {24.0, 24.0}}, context}}
-    )
+    assert_received({:"$gen_cast", {:input, {:cursor_pos, {24.0, 24.0}}, context}})
     assert context.graph_key == graph_key1
     assert context.id == nil
     assert context.uid == nil
@@ -694,9 +699,7 @@ defmodule Scenic.ViewPort.InputTest do
         }
       )
 
-    assert_received(
-      {:"$gen_cast", {:input, {:cursor_pos, {49.0, 49.0}}, context}}
-    )
+    assert_received({:"$gen_cast", {:input, {:cursor_pos, {49.0, 49.0}}, context}})
     refute_received({:"$gen_cast", {:input, {:cursor_exit, _}, _}})
     assert_received({:"$gen_cast", {:input, {:cursor_enter, 1}, _}})
 
@@ -724,9 +727,7 @@ defmodule Scenic.ViewPort.InputTest do
         }
       )
 
-    assert_received(
-      {:"$gen_cast", {:input, {:cursor_pos, {1.0, 1.0}}, context}}
-    )
+    assert_received({:"$gen_cast", {:input, {:cursor_pos, {1.0, 1.0}}, context}})
     assert_received({:"$gen_cast", {:input, {:cursor_exit, 1}, _}})
     refute_received({:"$gen_cast", {:input, {:cursor_enter, _}, _}})
   end
