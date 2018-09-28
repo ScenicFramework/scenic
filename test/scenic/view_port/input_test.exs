@@ -621,8 +621,113 @@ defmodule Scenic.ViewPort.InputTest do
     assert context.graph_key == graph_key1
   end
 
-  test "captured cursor_pos over nothing"
-  test "captured cursor_pos over non-captured graph"
-  test "captured cursor_pos enter primitive"
-  test "captured cursor_pos exit primitive"
+  test "captured cursor_pos over nothing", %{
+    graph_key: graph_key,
+    graph_key1: graph_key1,
+    context: context,
+    master_graph_key: master_graph_key
+  } do
+    # start NOT over a primitive
+    {:noreply, _} =
+      Input.handle_cast(
+        {:input, {:cursor_pos, {1, 1}}},
+        %{
+          master_graph_key: master_graph_key,
+          root_graph_key: graph_key,
+          input_captures: %{cursor_pos: context},
+          max_depth: 10,
+          hover_primitve: nil
+        }
+      )
+
+    assert_received(
+      {:"$gen_cast", {:input, {:cursor_pos, {0.0, 0.0}}, context}}
+    )
+    assert context.graph_key == graph_key1
+    assert context.id == nil
+    assert context.uid == nil
+  end
+
+  test "captured cursor_pos over non-captured graph", %{
+    graph_key: graph_key,
+    graph_key1: graph_key1,
+    context: context,
+    master_graph_key: master_graph_key
+  } do
+    # start NOT over a primitive
+    {:noreply, _} =
+      Input.handle_cast(
+        {:input, {:cursor_pos, {25, 25}}},
+        %{
+          master_graph_key: master_graph_key,
+          root_graph_key: graph_key,
+          input_captures: %{cursor_pos: context},
+          max_depth: 10,
+          hover_primitve: nil
+        }
+      )
+
+    assert_received(
+      {:"$gen_cast", {:input, {:cursor_pos, {24.0, 24.0}}, context}}
+    )
+    assert context.graph_key == graph_key1
+    assert context.id == nil
+    assert context.uid == nil
+  end
+
+  test "captured cursor_pos enter primitive", %{
+    graph_key: graph_key,
+    graph_key1: graph_key1,
+    context: context,
+    master_graph_key: master_graph_key
+  } do
+    # start NOT over a primitive
+    {:noreply, _} =
+      Input.handle_cast(
+        {:input, {:cursor_pos, {50, 50}}},
+        %{
+          master_graph_key: master_graph_key,
+          root_graph_key: graph_key,
+          input_captures: %{cursor_pos: context},
+          max_depth: 10,
+          hover_primitve: nil
+        }
+      )
+
+    assert_received(
+      {:"$gen_cast", {:input, {:cursor_pos, {49.0, 49.0}}, context}}
+    )
+    refute_received({:"$gen_cast", {:input, {:cursor_exit, _}, _}})
+    assert_received({:"$gen_cast", {:input, {:cursor_enter, 1}, _}})
+
+    assert context.graph_key == graph_key1
+    assert context.id == :circle
+    assert context.uid == 1
+  end
+
+  test "captured cursor_pos exit primitive", %{
+    graph_key: graph_key,
+    graph_key1: graph_key1,
+    context: context,
+    master_graph_key: master_graph_key
+  } do
+    # start NOT over a primitive
+    {:noreply, _} =
+      Input.handle_cast(
+        {:input, {:cursor_pos, {2, 2}}},
+        %{
+          master_graph_key: master_graph_key,
+          root_graph_key: graph_key,
+          input_captures: %{cursor_pos: context},
+          max_depth: 10,
+          hover_primitve: {1, graph_key1}
+        }
+      )
+
+    assert_received(
+      {:"$gen_cast", {:input, {:cursor_pos, {1.0, 1.0}}, context}}
+    )
+    assert_received({:"$gen_cast", {:input, {:cursor_exit, 1}, _}})
+    refute_received({:"$gen_cast", {:input, {:cursor_enter, _}, _}})
+  end
 end
