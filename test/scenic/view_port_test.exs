@@ -27,6 +27,14 @@ defmodule Scenic.ViewPortTest do
     def init(_, {_, _}, _), do: {:ok, :test_driver_state}
   end
 
+  defmodule TestViewPort do
+    use GenServer
+    def init(_), do: {:ok, :test_driver_state}
+    def handle_call( :query_info, _, state ) do
+      {:reply, {:ok, :test_info}, state}
+    end    
+  end
+
   @config %{
     name: :dyanmic_viewport,
     size: {700, 600},
@@ -48,6 +56,13 @@ defmodule Scenic.ViewPortTest do
     on_exit(fn -> Process.exit(tables, :normal) end)
     %{tables: tables}
   end
+
+  # ============================================================================
+  # internal test callbacks
+  def handle_call( :query_info, _, state ) do
+    {:reply, {:ok, :test_info}, state}
+  end
+
 
   # ============================================================================
   # client api
@@ -109,11 +124,94 @@ defmodule Scenic.ViewPortTest do
     DynamicSupervisor.stop(dyn_sup, :normal)
   end
 
-  test "info calls back into the viewport"
+  test "info calls back into the viewport" do
+    {:ok, pid} = GenServer.start(TestViewPort, nil)
+    {:ok, :test_info} = ViewPort.info( pid )
+    Process.exit(pid, :shutdown)
+  end
 
-  test "set_root casts named scene into the viewport"
-  test "set_root casts dynamic scene into the viewport"
+  test "set_root casts named scene into the viewport" do
+    ViewPort.set_root( self(), :named_scene_no_args )
+    assert_received( {:"$gen_cast", {:set_root, :named_scene_no_args, nil}} )
 
-  test "request root casts request root for self"
-  test "request root casts request root for other"
+    ViewPort.set_root( self(), :named_scene_yes_args, 123 )
+    assert_received( {:"$gen_cast", {:set_root, :named_scene_yes_args, 123}} )
+  end
+
+  test "set_root casts dynamic scene into the viewport" do
+    ViewPort.set_root( self(), {TestSceneOne, 456} )
+    assert_received( {:"$gen_cast", {:set_root, {TestSceneOne, 456}, nil}} )
+    ViewPort.set_root( self(), {TestSceneOne, 456}, 789 )
+    assert_received( {:"$gen_cast", {:set_root, {TestSceneOne, 456}, 789}} )
+  end
+
+  test "request root casts request root for self" do
+    self = self()
+    ViewPort.request_root( self )
+    assert_received( {:"$gen_cast", {:request_root, ^self}} )
+  end
+
+  test "request root casts request root for other" do
+    {:ok, agent} = Agent.start(fn -> 1 + 1 end)
+    ViewPort.request_root( self(), agent )
+    assert_received( {:"$gen_cast", {:request_root, ^agent}} )
+    Agent.stop(agent)
+  end
+
+  test "reshape casts request to viewport" do
+    ViewPort.reshape( self(), {12, 13} )
+    assert_received( {:"$gen_cast", {:reshape, {12, 13}}} )
+  end
+
+  test "capture_input casts request to viewport" do
+    context = %ViewPort.Context{viewport: self()}
+    ViewPort.capture_input( context, :key )
+    assert_received( {:"$gen_cast", {:capture_input, ^context, [:key]}} )
+    
+    ViewPort.capture_input( context, [:key, :codepoint] )
+    assert_received( {:"$gen_cast", {:capture_input, ^context, [:key, :codepoint]}} )
+  end
+
+  test "driver_cast casts request to viewport" do
+    ViewPort.driver_cast( self(), :msg )
+    assert_received( {:"$gen_cast", {:driver_cast, :msg}} )
+  end
+
+  # ============================================================================
+  # internal startup
+
+  test "child_spec works" do
+    spec = ViewPort.child_spec(:args)
+    assert is_reference( spec.id )
+    assert spec.start == {ViewPort, :start_link, [:args]}
+  end
+
+  test "start_link works with no name"
+  test "start_link works with name"
+
+  test "init casts to self with :delayed_init" do
+    ViewPort.init( {:vp_sup, :config} )
+    assert_received( {:"$gen_cast", {:delayed_init, :vp_sup, :config}} )
+  end
+
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
