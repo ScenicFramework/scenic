@@ -35,18 +35,18 @@ defmodule Scenic.ViewPortTest do
     end    
   end
 
+  @driver_config %{
+        module: TestDriver,
+        name: :test_driver,
+        opts: [title: "test title"]
+      }
+
   @config %{
     name: :dyanmic_viewport,
     size: {700, 600},
     opts: [font: :roboto_slab, font_size: 30, scale: 1.0],
     default_scene: {TestSceneOne, nil},
-    drivers: [
-      %{
-        module: TestDriver,
-        name: :test_driver,
-        opts: [title: "test title"]
-      }
-    ]
+    drivers: [ @driver_config ]
   }
 
   import IEx
@@ -206,6 +206,38 @@ defmodule Scenic.ViewPortTest do
 
   # ============================================================================
   # handle_call
+
+  test "handle_call :start_driver" do
+    {:ok, dyn_sup} = DynamicSupervisor.start_link(strategy: :one_for_one, name: @viewports)
+
+    {:ok, vp_pid} = ViewPort.start(%{@config | drivers: []})
+    Process.sleep(100)
+
+    # Call it the proper way
+    {:ok, driver_pid} = GenServer.call(vp_pid, {:start_driver, @driver_config})
+    assert is_pid(driver_pid)
+
+    # cleanup
+    DynamicSupervisor.stop(dyn_sup, :normal)
+  end
+
+  test "handle_call :query_info" do
+    {:reply, {:ok, info}, _} = ViewPort.handle_call(
+      :query_info,
+      :from,
+      %{
+          driver_registry: :driver_registry,
+          root_config: :root_config,
+          root_scene_pid: :root_scene_pid,
+          root_graph_key: :root_graph_key,
+          size: :size
+        })
+    assert info.drivers == :driver_registry
+    assert info.root_graph == :root_graph_key
+    assert info.root_scene_pid == :root_scene_pid
+    assert info.root_config == :root_config
+    assert info.size == :size
+  end
 
 end
 

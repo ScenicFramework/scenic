@@ -11,8 +11,6 @@ defmodule Scenic.ViewPort do
   alias Scenic.Primitive
   alias Scenic.ViewPort.Context
 
-  # import IEx
-
   @moduledoc """
 
   ## Overview
@@ -335,14 +333,15 @@ defmodule Scenic.ViewPort do
         _,
         %{
           supervisor: vp_supervisor,
-          dynamic_supervisor: dyn_sup
+          dynamic_supervisor: dyn_sup,
+          size: size
         } = state
       ) do
     {
       :reply,
       DynamicSupervisor.start_child(
         dyn_sup,
-        {Scenic.ViewPort.Driver, {vp_supervisor, config}}
+        {Scenic.ViewPort.Driver, {vp_supervisor, size, config}}
       ),
       state
     }
