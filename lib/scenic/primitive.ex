@@ -418,66 +418,61 @@ defmodule Scenic.Primitive do
   @spec minimal(primitive :: Primitive.t()) :: map
   # parent_uid: puid
   def minimal(%Primitive{module: mod, data: data} = p) do
-    min_p = %{
+    %{
       data: {mod, data}
     }
-
     # add styles, if any are set
-    min_p =
-      case Map.get(p, :styles) do
-        nil ->
-          min_p
-
-        styles ->
-          prim_styles = Style.primitives(styles)
-
-          case prim_styles == %{} do
-            true -> min_p
-            false -> Map.put(min_p, :styles, prim_styles)
-          end
-      end
-
+    |> mprim_add_styles(p)
     # add the id if set
-    min_p =
-      case Map.get(p, :id) do
-        nil -> min_p
-        id -> Map.put(min_p, :id, id)
-      end
-
+    |> mprim_add_id(p)
     # add transforms, if any are set
-    case Map.get(p, :transforms) do
-      nil ->
-        min_p
+    |> mprim_add_transforms(p)
+  end
 
-      txs ->
-        # if either rotate or scale is set, and pin is not, set pin to the default
-        txs =
-          case (Map.get(txs, :rotate) != nil || Map.get(txs, :scale) != nil) &&
-                 Map.get(txs, :pin) == nil do
-            true ->
-              pin = Map.get(p, :module).default_pin(Map.get(p, :data))
-              Map.put(txs, :pin, pin)
+  defp mprim_add_styles(min_p, %{styles: styles}) do
+    prim_styles = Style.primitives(styles)
 
-            false ->
-              txs
-          end
-
-        # normalize scale if necessary
-        txs =
-          case txs[:scale] do
-            nil ->
-              txs
-
-            pct when is_number(pct) ->
-              Map.put(txs, :scale, {pct, pct})
-
-            {_, _} ->
-              txs
-          end
-
-        Map.put(min_p, :transforms, txs)
+    case prim_styles == %{} do
+      true -> min_p
+      false -> Map.put(min_p, :styles, prim_styles)
     end
   end
+
+  defp mprim_add_styles(min_p, _), do: min_p
+
+  defp mprim_add_id(min_p, %{id: nil}), do: min_p
+  defp mprim_add_id(min_p, %{id: id}), do: Map.put(min_p, :id, id)
+  defp mprim_add_id(min_p, _), do: min_p
+
+  defp mprim_add_transforms(min_p, %Primitive{transforms: nil}), do: min_p
+
+  defp mprim_add_transforms(min_p, %Primitive{transforms: txs, module: module, data: data}) do
+    # if either rotate or scale is set, and pin is not, set pin to the default
+    txs =
+      if Map.get(txs, :pin) == nil &&
+           (Map.get(txs, :rotate) != nil || Map.get(txs, :scale) != nil) do
+        Map.put(txs, :pin, module.default_pin(data))
+      else
+        txs
+      end
+
+    # normalize scale if necessary
+    txs =
+      case txs[:scale] do
+        nil ->
+          txs
+
+        pct when is_number(pct) ->
+          Map.put(txs, :scale, {pct, pct})
+
+        {_, _} ->
+          txs
+      end
+
+    Map.put(min_p, :transforms, txs)
+  end
+
+  defp mprim_add_transforms(min_p, _), do: min_p
 
   # --------------------------------------------------------
   @spec contains_point?(primitive :: Primitive.t(), point :: Scenic.Math.point()) :: map

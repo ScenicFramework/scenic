@@ -575,6 +575,7 @@ defmodule Scenic.Scene do
             {:supervisor, Scene.Supervisor, _} ->
               dynamic_children_pid =
                 Supervisor.which_children(supervisor_pid)
+                # credo:disable-for-next-line Credo.Check.Refactor.Nesting
                 |> Enum.find_value(fn
                   {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
                   _ -> nil
