@@ -27,6 +27,7 @@ defmodule Scenic.ViewPort.InputTest do
 
 
   setup do
+    Process.sleep(2)
     {:ok, tables} = Tables.start_link(nil)
     on_exit(fn -> Process.exit(tables, :normal) end)
 
