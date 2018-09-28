@@ -12,6 +12,7 @@ defmodule Scenic.ViewPort.InputTest do
   alias Scenic.Primitive
   # alias Scenic.ViewPort
   alias Scenic.ViewPort.Input
+  alias Scenic.ViewPort.Context
   alias Scenic.ViewPort.Tables
   import Scenic.Primitives
 
@@ -27,9 +28,11 @@ defmodule Scenic.ViewPort.InputTest do
 
 
   setup do
-    Process.sleep(2)
     {:ok, tables} = Tables.start_link(nil)
-    on_exit(fn -> Process.exit(tables, :normal) end)
+    on_exit(fn ->
+      Process.exit(tables, :normal)
+      Process.sleep(2)
+    end)
 
     self = self()
     scene_ref = make_ref()
@@ -57,12 +60,16 @@ defmodule Scenic.ViewPort.InputTest do
     Tables.insert_graph(master_graph_key, self(), master_graph, %{1 => graph_key})
     Process.sleep(10)
 
+    # build a capture context for the nested graph
+    context = %Context{graph_key: graph_key1}
+
     %{
       tables: tables,
       scene_ref: scene_ref,
       graph_key: graph_key,
       graph_key1: graph_key1,
-      master_graph_key: master_graph_key
+      master_graph_key: master_graph_key,
+      context: context
     }
   end
 
@@ -101,7 +108,7 @@ defmodule Scenic.ViewPort.InputTest do
   end
 
   #============================================================================
-  # input
+  # input - normal
 
   test "input is ignored until the master_key is set" do
     {:noreply, state} = Input.handle_cast(
@@ -366,6 +373,39 @@ defmodule Scenic.ViewPort.InputTest do
       }
     )
     assert_received( {:"$gen_cast", {:input, {:other, 123}, context}} )
+  end
+
+  #============================================================================
+  # input - captured
+
+  test "captured codepoint", %{graph_key: graph_key, graph_key1: graph_key1, context: context, master_graph_key: master_graph_key} do
+    {:noreply, _} = Input.handle_cast(
+      {:input, {:codepoint, :codepoint_input}},
+      %{
+        master_graph_key: master_graph_key,
+        root_graph_key: graph_key,
+        input_captures: %{codepoint: context}
+      }
+    )
+    assert_received( {:"$gen_cast", {:input, {:codepoint, :codepoint_input}, context}} )
+    assert context.graph_key == graph_key1
+    assert context.id == nil
+    assert context.uid == nil
+  end
+
+  test "captured key", %{graph_key: graph_key, graph_key1: graph_key1, context: context, master_graph_key: master_graph_key} do
+    {:noreply, _} = Input.handle_cast(
+      {:input, {:key, :key_input}},
+      %{
+        master_graph_key: master_graph_key,
+        root_graph_key: graph_key,
+        input_captures: %{key: context}
+      }
+    )
+    assert_received( {:"$gen_cast", {:input, {:key, :key_input}, context}} )
+    assert context.graph_key == graph_key1
+    assert context.id == nil
+    assert context.uid == nil
   end
 
 end
