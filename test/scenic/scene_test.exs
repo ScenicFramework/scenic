@@ -6,7 +6,7 @@
 
 defmodule Scenic.SceneTest do
   use ExUnit.Case, async: false
-  doctest Scenic
+  doctest Scenic.Scene
   alias Scenic.Scene
   alias Scenic.Graph
   alias Scenic.Primitive.SceneRef
@@ -21,7 +21,12 @@ defmodule Scenic.SceneTest do
 
   setup do
     {:ok, tables} = Tables.start_link(nil)
-    on_exit(fn -> Process.exit(tables, :normal) end)
+
+    on_exit(fn ->
+      Process.exit(tables, :normal)
+      Process.sleep(2)
+    end)
+
     %{tables: tables}
   end
 
@@ -279,25 +284,6 @@ defmodule Scenic.SceneTest do
     assert new_state.scene_state == :init_state
   end
 
-  # test "handle_cast :input calls the mod input handler" do
-  #   context = %Scenic.ViewPort.Context{
-  #     viewport: self()
-  #   }
-
-  #   event = {:cursor_enter, 1}
-  #   sc_state = :sc_state
-
-  #   {:noreply, new_state} =
-  #     assert Scene.handle_cast({:input, event, context}, %{
-  #              scene_module: __MODULE__,
-  #              scene_state: sc_state,
-  #              activation: nil
-  #            })
-
-  #   assert new_state.scene_state == :input_state
-  #   assert_receive({:"$gen_cast", {:test_input, ^event, ^context, ^sc_state}})
-  # end
-
   test "handle_cast :input calls the mod input handler, which returns noreply" do
     context = %Scenic.ViewPort.Context{
       viewport: self()
@@ -534,6 +520,31 @@ defmodule Scenic.SceneTest do
     assert Enum.member?(children, {:undefined, dyn_0_pid, :worker, [Scene]})
     refute Enum.member?(children, {:undefined, dyn_1_pid, :worker, [Scene]})
     assert Enum.member?(children, {:undefined, dyn_2_pid, :worker, [Scene]})
+
+    # cleanup
+    DynamicSupervisor.stop(dyn_sup, :normal)
+  end
+
+  test "start a dynamic root scene" do
+    # start up a dynamic supervisor for the children
+    {:ok, dyn_sup} = DynamicSupervisor.start_link(strategy: :one_for_one)
+
+    # start the scene
+    {:ok, pid, ref} = Scene.start_dynamic_scene(dyn_sup, nil, TestSceneOne, nil, [], true)
+    assert is_reference(ref)
+
+    # get the launched supervisor
+    [{:undefined, scene_sup, :supervisor, [Scene.Supervisor]}] =
+      DynamicSupervisor.which_children(dyn_sup)
+
+    # get the scene supervisor children
+    # note that the match is pinned to ^pid
+    [
+      {_, ^pid, :worker, [Scene]},
+      {DynamicSupervisor, children_sup, :supervisor, [DynamicSupervisor]}
+    ] = Supervisor.which_children(scene_sup)
+
+    assert is_pid(children_sup)
 
     # cleanup
     DynamicSupervisor.stop(dyn_sup, :normal)

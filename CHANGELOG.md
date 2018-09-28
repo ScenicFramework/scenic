@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.0
+* Much improved testing
+* Simplify rules around user-closing a viewport
+* Fix bug where captured positional inputs were not casting the transformed location
+
 ## 0.8.0
 
 * Many documentation improvements

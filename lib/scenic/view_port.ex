@@ -11,8 +11,6 @@ defmodule Scenic.ViewPort do
   alias Scenic.Primitive
   alias Scenic.ViewPort.Context
 
-  # import IEx
-
   @moduledoc """
 
   ## Overview
@@ -101,7 +99,7 @@ defmodule Scenic.ViewPort do
   @doc """
   Start a new viewport
   """
-  @spec start(config :: ViewPort.Config.t()) :: {:ok, pid}
+  @spec start(config :: map) :: {:ok, pid}
   def start(%ViewPort.Config{} = config) do
     # start the viewport's supervision tree
     {:ok, sup_pid} =
@@ -123,15 +121,8 @@ defmodule Scenic.ViewPort do
     {:ok, viewport_pid}
   end
 
-  # --------------------------------------------------------
-  @doc """
-  query the last recorded viewport status
-  """
-  @spec info(viewport :: GenServer.server()) :: {:ok, ViewPort.Status.t()}
-  def info(viewport)
-
-  def info(viewport) when is_atom(viewport) or is_pid(viewport) do
-    GenServer.call(viewport, :query_info)
+  def start(%{} = config) do
+    start(struct(ViewPort.Config, config))
   end
 
   # --------------------------------------------------------
@@ -146,7 +137,25 @@ defmodule Scenic.ViewPort do
   end
 
   def stop(viewport) when is_pid(viewport) do
-    DynamicSupervisor.terminate_child(@viewports, viewport)
+    # dynamic viewports are actually supervised by their own supervisor.
+    # so first we have to get that, which is what we actually stop
+    [supervisor_pid | _] =
+      viewport
+      |> Process.info()
+      |> get_in([:dictionary, :"$ancestors"])
+
+    DynamicSupervisor.terminate_child(@viewports, supervisor_pid)
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  query the last recorded viewport status
+  """
+  @spec info(viewport :: GenServer.server()) :: {:ok, ViewPort.Status.t()}
+  def info(viewport)
+
+  def info(viewport) when is_atom(viewport) or is_pid(viewport) do
+    GenServer.call(viewport, :query_info)
   end
 
   # --------------------------------------------------------
@@ -302,7 +311,7 @@ defmodule Scenic.ViewPort do
   # --------------------------------------------------------
   @doc false
   def init({vp_sup, config}) do
-    GenServer.cast(self(), {:after_init, vp_sup, config})
+    GenServer.cast(self(), {:delayed_init, vp_sup, config})
     {:ok, nil}
   end
 
@@ -323,14 +332,15 @@ defmodule Scenic.ViewPort do
         _,
         %{
           supervisor: vp_supervisor,
-          dynamic_supervisor: dyn_sup
+          dynamic_supervisor: dyn_sup,
+          size: size
         } = state
       ) do
     {
       :reply,
       DynamicSupervisor.start_child(
         dyn_sup,
-        {Scenic.ViewPort.Driver, {vp_supervisor, config}}
+        {Scenic.ViewPort.Driver, {vp_supervisor, size, config}}
       ),
       state
     }
@@ -363,7 +373,7 @@ defmodule Scenic.ViewPort do
   # ============================================================================
   # handle_cast
 
-  def handle_cast({:after_init, vp_supervisor, config}, _) do
+  def handle_cast({:delayed_init, vp_supervisor, config}, _) do
     # find the viewport and associated pids this driver belongs to
     dyn_sup_pid =
       vp_supervisor
@@ -376,10 +386,15 @@ defmodule Scenic.ViewPort do
     # get the on_close flag or function
     on_close =
       case config.on_close do
-        nil -> :stop_system
-        :stop_system -> :stop_system
-        :stop_viewport -> :stop_viewport
-        func when is_function(func, 1) -> func
+        nil ->
+          :stop_system
+
+        :stop_system ->
+          :stop_system
+
+        :stop_viewport ->
+          :stop_viewport
+          # func when is_function(func, 1) -> func
       end
 
     # extract the viewport global styles. Do this by reusing tools in Primitive.
@@ -461,11 +476,11 @@ defmodule Scenic.ViewPort do
       |> Map.put(:input_captures, %{})
 
     # fetch the dynamic supervisor
-    dyn_sup =
-      case dyn_sup do
-        nil -> find_dyn_supervisor()
-        dyn_sup -> dyn_sup
-      end
+    # dyn_sup =
+    #   case dyn_sup do
+    #     nil -> find_dyn_supervisor()
+    #     dyn_sup -> dyn_sup
+    #   end
 
     # if the scene being set is dynamic, start it up
     {scene_pid, scene_ref, dynamic_scene} =
@@ -535,7 +550,7 @@ defmodule Scenic.ViewPort do
     {:noreply, %{state | root_scene_pid: scene_pid, dynamic_root_pid: scene_pid}}
   end
 
-  def handle_cast({:dyn_root_up, _}, state) do
+  def handle_cast({:dyn_root_up, _, _}, state) do
     # ignore stale root_up messages
     {:noreply, state}
   end
@@ -548,18 +563,20 @@ defmodule Scenic.ViewPort do
         {:stop_driver, driver_pid},
         %{
           drivers: drivers,
-          dynamic_supervisor: dyn_sup
+          dynamic_supervisor: dyn_sup,
+          driver_registry: registry
         } = state
       ) do
     DynamicSupervisor.terminate_child(dyn_sup, driver_pid)
     drivers = Enum.reject(drivers, fn pid -> pid == driver_pid end)
-    {:noreply, %{state | drivers: drivers}}
+    registry = Map.delete(registry, driver_pid)
+    {:noreply, %{state | drivers: drivers, driver_registry: registry}}
   end
 
   # --------------------------------------------------------
   def handle_cast({:driver_cast, msg}, %{drivers: drivers} = state) do
     # relay the graph_key to all listening drivers
-    do_driver_cast(drivers, msg)
+    Enum.each(drivers, &GenServer.cast(&1, msg))
     {:noreply, state}
   end
 
@@ -568,28 +585,26 @@ defmodule Scenic.ViewPort do
         {:driver_ready, driver_pid},
         %{
           drivers: drivers,
-          # root_graph_key: root_key
           master_graph_key: master_graph_key
         } = state
       ) do
     drivers = [driver_pid | drivers] |> Enum.uniq()
-    # GenServer.cast(driver_pid, {:set_root, root_key})
     GenServer.cast(driver_pid, {:set_root, master_graph_key})
     {:noreply, %{state | drivers: drivers}}
   end
 
   # --------------------------------------------------------
-  def handle_cast(
-        {:driver_stopped, driver_pid},
-        %{
-          drivers: drivers,
-          driver_registry: registry
-        } = state
-      ) do
-    drivers = Enum.reject(drivers, fn d -> d == driver_pid end)
-    registry = Map.delete(registry, driver_pid)
-    {:noreply, %{state | drivers: drivers, driver_registry: registry}}
-  end
+  # def handle_cast(
+  #       {:driver_stopped, driver_pid},
+  #       %{
+  #         drivers: drivers,
+  #         driver_registry: registry
+  #       } = state
+  #     ) do
+  #   drivers = Enum.reject(drivers, fn d -> d == driver_pid end)
+  #   registry = Map.delete(registry, driver_pid)
+  #   {:noreply, %{state | drivers: drivers, driver_registry: registry}}
+  # end
 
   # --------------------------------------------------------
   # def handle_cast({:request_root, to_pid}, %{root_graph_key: root_key} = state) do
@@ -604,16 +619,17 @@ defmodule Scenic.ViewPort do
   end
 
   # --------------------------------------------------------
-  def handle_cast(:user_close, %{on_close: on_close} = state) do
+  def handle_cast(:user_close, %{on_close: on_close, supervisor: vp_sup} = state) do
     case on_close do
       :stop_viewport ->
-        case DynamicSupervisor.terminate_child(@viewports, self()) do
-          :ok -> :ok
-          {:error, :not_found} -> Process.exit(self(), :shutdown)
-        end
+        DynamicSupervisor.terminate_child(@viewports, vp_sup)
 
-      func when is_function(func, 1) ->
-        func.(self())
+      #   :ok -> :ok
+      #   {:error, :not_found} -> Process.exit(vp_sup, :shutdown)
+      # end
+
+      # func when is_function(func, 1) ->
+      #   func.(self())
 
       :stop_system ->
         System.stop(0)
@@ -623,19 +639,19 @@ defmodule Scenic.ViewPort do
   end
 
   # --------------------------------------------------------
-  def handle_cast(:user_close, state) do
-    case DynamicSupervisor.terminate_child(@viewports, self()) do
-      :ok ->
-        :ok
+  # def handle_cast(:user_close, state) do
+  #   case DynamicSupervisor.terminate_child(@viewports, self()) do
+  #     :ok ->
+  #       :ok
 
-      {:error, :not_found} ->
-        # Process.exit(self(), :normal)
-        # exit(:shutdown)
-        System.stop(0)
-    end
+  #     {:error, :not_found} ->
+  #       # Process.exit(self(), :normal)
+  #       # exit(:shutdown)
+  #       System.stop(0)
+  #   end
 
-    {:noreply, state}
-  end
+  #   {:noreply, state}
+  # end
 
   # ==================================================================
   # management casts from scenes
@@ -649,41 +665,41 @@ defmodule Scenic.ViewPort do
   # ============================================================================
   # internal utilities
 
-  defp do_driver_cast(driver_pids, msg) do
-    Enum.each(driver_pids, &GenServer.cast(&1, msg))
-  end
+  # defp do_driver_cast(driver_pids, msg) do
+  #   Enum.each(driver_pids, &GenServer.cast(&1, msg))
+  # end
 
-  defp find_dyn_supervisor() do
-    # get the scene supervisors
-    [supervisor_pid | _] =
-      self()
-      |> Process.info()
-      |> get_in([:dictionary, :"$ancestors"])
+  # defp find_dyn_supervisor() do
+  #   # get the scene supervisors
+  #   [supervisor_pid | _] =
+  #     self()
+  #     |> Process.info()
+  #     |> get_in([:dictionary, :"$ancestors"])
 
-    # make sure it is a pid and not a name
-    supervisor_pid =
-      case supervisor_pid do
-        name when is_atom(name) -> Process.whereis(name)
-        pid when is_pid(pid) -> pid
-      end
+  #   # make sure it is a pid and not a name
+  #   supervisor_pid =
+  #     case supervisor_pid do
+  #       name when is_atom(name) -> Process.whereis(name)
+  #       pid when is_pid(pid) -> pid
+  #     end
 
-    case Process.info(supervisor_pid) do
-      nil ->
-        nil
+  #   case Process.info(supervisor_pid) do
+  #     nil ->
+  #       nil
 
-      info ->
-        case get_in(info, [:dictionary, :"$initial_call"]) do
-          {:supervisor, Scenic.ViewPort.Supervisor, _} ->
-            Supervisor.which_children(supervisor_pid)
-            # credo:disable-for-next-line Credo.Check.Refactor.Nesting
-            |> Enum.find_value(fn
-              {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
-              _other -> nil
-            end)
+  #     info ->
+  #       case get_in(info, [:dictionary, :"$initial_call"]) do
+  #         {:supervisor, Scenic.ViewPort.Supervisor, _} ->
+  #           Supervisor.which_children(supervisor_pid)
+  #           # credo:disable-for-next-line Credo.Check.Refactor.Nesting
+  #           |> Enum.find_value(fn
+  #             {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
+  #             _other -> nil
+  #           end)
 
-          _other ->
-            nil
-        end
-    end
-  end
+  #         _other ->
+  #           nil
+  #       end
+  #   end
+  # end
 end
