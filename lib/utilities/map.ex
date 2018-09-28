@@ -98,6 +98,7 @@ defmodule Scenic.Utilities.Map do
   end
 
   # --------------------------------------------------------
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def apply_difference(map, diff_list, delete_empty \\ false)
       when is_map(map) and is_list(diff_list) do
     Enum.reduce(diff_list, map, fn diff, acc ->
