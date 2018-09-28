@@ -51,52 +51,14 @@ defmodule Scenic.Component.Button do
     alignment = styles[:alignment] || @default_alignment
 
     # build the graph
+
     graph =
-      case alignment do
-        :center ->
-          Graph.build(font: font, font_size: font_size)
-          |> rrect({width, height, radius}, fill: theme.background, id: :btn)
-          |> text(text,
-            fill: theme.text,
-            translate: {width / 2, height * 0.7},
-            text_align: :center,
-            id: :title
-          )
-
-        :left ->
-          Graph.build(font: font, font_size: font_size)
-          |> rrect({width, height, radius}, fill: theme.background, id: :btn)
-          |> text(
-            text,
-            fill: theme.text,
-            translate: {8, height * 0.7},
-            text_align: :left,
-            id: :title
-          )
-
-        :right ->
-          Graph.build(font: font, font_size: font_size)
-          |> rrect({width, height, radius}, fill: theme.background, id: :btn)
-          |> text(text,
-            fill: theme.text,
-            translate: {width - 8, height * 0.7},
-            text_align: :right,
-            id: :title
-          )
-      end
+      Graph.build(font: font, font_size: font_size)
+      |> rrect({width, height, radius}, fill: theme.background, id: :btn)
+      |> do_aligned_text(alignment, text, theme.text, width, height)
 
     # special case the dark and light themes to show an outline
-    graph =
-      case styles[:theme] do
-        :dark ->
-          Graph.modify(graph, :btn, &update_opts(&1, stroke: {1, theme.border}))
-
-        :light ->
-          Graph.modify(graph, :btn, &update_opts(&1, stroke: {1, theme.border}))
-
-        _ ->
-          graph
-      end
+    graph = do_special_theme_outline(styles[:theme], graph, theme.border)
 
     state = %{
       graph: graph,
@@ -110,6 +72,45 @@ defmodule Scenic.Component.Button do
     push_graph(graph)
 
     {:ok, state}
+  end
+
+  defp do_aligned_text(graph, :center, text, fill, width, height) do
+    text(graph, text,
+      fill: fill,
+      translate: {width / 2, height * 0.7},
+      text_align: :center,
+      id: :title
+    )
+  end
+
+  defp do_aligned_text(graph, :left, text, fill, _width, height) do
+    text(graph, text,
+      fill: fill,
+      translate: {8, height * 0.7},
+      text_align: :left,
+      id: :title
+    )
+  end
+
+  defp do_aligned_text(graph, :right, text, fill, width, height) do
+    text(graph, text,
+      fill: fill,
+      translate: {width - 8, height * 0.7},
+      text_align: :right,
+      id: :title
+    )
+  end
+
+  defp do_special_theme_outline(:dark, graph, border) do
+    Graph.modify(graph, :btn, &update_opts(&1, stroke: {1, border}))
+  end
+
+  defp do_special_theme_outline(:light, graph, border) do
+    Graph.modify(graph, :btn, &update_opts(&1, stroke: {1, border}))
+  end
+
+  defp do_special_theme_outline(_, graph, _border) do
+    graph
   end
 
   # --------------------------------------------------------
