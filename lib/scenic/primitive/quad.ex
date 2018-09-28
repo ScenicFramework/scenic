@@ -56,9 +56,10 @@ defmodule Scenic.Primitive.Quad do
       )
 
     width =
-      cond do
-        cross < 0 -> -width
-        true -> width
+      if cross < 0 do
+        -width
+      else
+        width
       end
 
     # find the new parallel lines

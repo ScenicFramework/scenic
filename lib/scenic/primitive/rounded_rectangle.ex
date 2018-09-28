@@ -7,7 +7,6 @@ defmodule Scenic.Primitive.RoundedRectangle do
   @moduledoc false
 
   use Scenic.Primitive
-  alias Scenic.Primitive.Rectangle
 
   # import IEx
 
@@ -43,18 +42,9 @@ defmodule Scenic.Primitive.RoundedRectangle do
     radius =
       case w <= h do
         # width is smaller
-        true ->
-          case radius > w / 2 do
-            true -> w / 2
-            false -> radius
-          end
-
+        true -> min(radius, w / 2)
         # height is smaller
-        false ->
-          case radius > h / 2 do
-            true -> h / 2
-            false -> radius
-          end
+        false -> min(radius, h / 2)
       end
 
     {width, height, radius}
@@ -76,60 +66,36 @@ defmodule Scenic.Primitive.RoundedRectangle do
 
   # --------------------------------------------------------
   def contains_point?({w, h, r}, {xp, yp}) do
-    # check that it is in the bounding rectangle first
-    if Rectangle.contains_point?({w, h}, {xp, yp}) do
-      # we now know the signs are the same, so we can use abs to make things easier
-      inner_left = r
-      inner_top = r
-      inner_right = abs(w) - r
-      inner_bottom = abs(h) - r
-      xp = abs(xp)
-      yp = abs(yp)
-      point = {xp, yp}
+    # point in a rounded rectangle is the same problem as "is point within radius of the interior rectangle"
+    # note also that point is in local space for primitive (presumably centered on the centroid)
 
-      # check the rounding quadrants
-      cond do
-        # # if it is in the inner rect, then we are done
-        # Rectangle.contains_point?(
-        #   {
-        #     abs(inner_right - inner_left),
-        #     abs(inner_bottom - inner_top)
-        #   },
-        #   {abs(xp-r),abs(yp-r)}
-        # ) -> true
+    # so, somebody on SO solved a variant of the problem, so we'll adapt their work:
+    # https://gamedev.stackexchange.com/a/44496
 
-        # top left
-        xp < inner_left && yp < inner_top ->
-          inside_radius?({inner_left, inner_left}, r, point)
+    # judging from the tests, it seems like the rectangle is meant to be tested in quadrant 1
+    # and not centered about the origin as I'd originally thought
 
-        # top right
-        xp > inner_right && yp < inner_top ->
-          inside_radius?({inner_right, inner_left}, r, point)
+    if w * xp >= 0 and h * yp >= 0 do
+      # since the sign of both x and y are the same, we do our math in abs land
+      # spotted this trick from the rectangle code
+      aw = abs(w)
+      ah = abs(h)
+      ax = abs(xp)
+      ay = abs(yp)
 
-        # bottom right
-        xp > inner_right && yp > inner_bottom ->
-          inside_radius?({inner_right, inner_bottom}, r, point)
+      # get the dimensions and center of the "inner rectangle"
+      # e.g., the one without the radii at the corners
+      rw = aw - 2 * r
+      rh = ah - 2 * r
+      rx = r + rw / 2
+      ry = r + rh / 2
 
-        # bottom left
-        xp < inner_left && yp > inner_bottom ->
-          inside_radius?({inner_left, inner_bottom}, r, point)
-
-        # not in the radius areas, but in the overall rect
-        true ->
-          true
-      end
+      # calculate the distance of the point to the rectangle
+      dx = max(abs(ax - rx) - rw / 2, 0)
+      dy = max(abs(ay - ry) - rh / 2, 0)
+      dx * dx + dy * dy <= r * r
     else
-      # not in the bounding rectangle
       false
     end
-  end
-
-  defp inside_radius?({x, y}, r, {xp, yp}) do
-    # calc the squared distance from the point to the center of the arc
-    dx = xp - x
-    dy = yp - y
-    d_sqr = dx * dx + dy * dy
-    # if r squared is bigger, then it is inside the radius
-    r * r >= d_sqr
   end
 end
