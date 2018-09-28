@@ -38,6 +38,8 @@ defmodule Scenic.Primitive.Style.Paint.Color do
   # ============================================================================
   # https://www.w3schools.com/colors/colors_names.asp
 
+  defguard is_uint8(x) when is_integer(x) and x >= 0 and x <= 255
+
   def to_rgba({:transparent, _}), do: to_rgba(:transparent)
   def to_rgba(:transparent), do: {0x80, 0x80, 0x80, 0x00}
   def to_rgba({:clear, _}), do: to_rgba(:transparent)
@@ -46,8 +48,7 @@ defmodule Scenic.Primitive.Style.Paint.Color do
   def to_rgba({r, g, b}), do: {r, g, b, 0xFF}
 
   def to_rgba({r, g, b, a})
-      when is_integer(r) and r >= 0 and r <= 255 and is_integer(g) and g >= 0 and g <= 255 and
-             is_integer(b) and b >= 0 and b <= 255 and is_integer(a) and a >= 0 and a <= 255 do
+      when is_uint8(r) and is_uint8(g) and is_uint8(b) and is_uint8(a) do
     {r, g, b, a}
   end
 

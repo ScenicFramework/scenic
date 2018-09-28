@@ -60,6 +60,7 @@ defmodule Scenic.Utilities.Map do
         true ->
           v1 = Map.get(map_1, k)
 
+          # credo:disable-for-next-line Credo.Check.Refactor.Nesting
           case v1 == v do
             true -> d
             false -> add_difference(d, k, v1, v, recurse)
@@ -97,6 +98,7 @@ defmodule Scenic.Utilities.Map do
   end
 
   # --------------------------------------------------------
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def apply_difference(map, diff_list, delete_empty \\ false)
       when is_map(map) and is_list(diff_list) do
     Enum.reduce(diff_list, map, fn diff, acc ->
@@ -104,9 +106,10 @@ defmodule Scenic.Utilities.Map do
         {:put, {k0, k1}, v} ->
           map = Map.get(acc, k0, %{})
 
-          cond do
-            is_map(map) -> map
-            true -> %{}
+          if is_map(map) do
+            map
+          else
+            %{}
           end
           |> apply_difference([{:put, k1, v}], delete_empty)
           |> (&Map.put(acc, k0, &1)).()
@@ -119,6 +122,7 @@ defmodule Scenic.Utilities.Map do
             Map.get(acc, k0, %{})
             |> apply_difference([{:del, k1}], delete_empty)
 
+          # credo:disable-for-next-line Credo.Check.Refactor.Nesting
           case delete_empty && map == %{} do
             true -> Map.delete(acc, k0)
             false -> Map.put(acc, k0, map)

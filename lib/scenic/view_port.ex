@@ -664,6 +664,10 @@ defmodule Scenic.ViewPort do
 
   # ============================================================================
   # internal utilities
+  
+  # defp do_driver_cast(driver_pids, msg) do
+  #   Enum.each(driver_pids, &GenServer.cast(&1, msg))
+  # end
 
   # defp find_dyn_supervisor() do
   #   # get the scene supervisors
@@ -687,6 +691,7 @@ defmodule Scenic.ViewPort do
   #       case get_in(info, [:dictionary, :"$initial_call"]) do
   #         {:supervisor, Scenic.ViewPort.Supervisor, _} ->
   #           Supervisor.which_children(supervisor_pid)
+  #           # credo:disable-for-next-line Credo.Check.Refactor.Nesting
   #           |> Enum.find_value(fn
   #             {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
   #             _other -> nil
