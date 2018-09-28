@@ -125,7 +125,6 @@ defmodule Scenic.ViewPort do
     start(struct(ViewPort.Config, config))
   end
 
-
   # --------------------------------------------------------
   @doc """
   Stop a running viewport
@@ -387,10 +386,15 @@ defmodule Scenic.ViewPort do
     # get the on_close flag or function
     on_close =
       case config.on_close do
-        nil -> :stop_system
-        :stop_system -> :stop_system
-        :stop_viewport -> :stop_viewport
-        # func when is_function(func, 1) -> func
+        nil ->
+          :stop_system
+
+        :stop_system ->
+          :stop_system
+
+        :stop_viewport ->
+          :stop_viewport
+          # func when is_function(func, 1) -> func
       end
 
     # extract the viewport global styles. Do this by reusing tools in Primitive.
@@ -619,9 +623,10 @@ defmodule Scenic.ViewPort do
     case on_close do
       :stop_viewport ->
         DynamicSupervisor.terminate_child(@viewports, vp_sup)
-        #   :ok -> :ok
-        #   {:error, :not_found} -> Process.exit(vp_sup, :shutdown)
-        # end
+
+      #   :ok -> :ok
+      #   {:error, :not_found} -> Process.exit(vp_sup, :shutdown)
+      # end
 
       # func when is_function(func, 1) ->
       #   func.(self())

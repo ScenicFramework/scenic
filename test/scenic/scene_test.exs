@@ -525,12 +525,12 @@ defmodule Scenic.SceneTest do
     {:ok, dyn_sup} = DynamicSupervisor.start_link(strategy: :one_for_one)
 
     # start the scene
-    {:ok, pid, ref} = Scene.start_dynamic_scene(dyn_sup, nil, TestSceneOne, nil, [], true )
+    {:ok, pid, ref} = Scene.start_dynamic_scene(dyn_sup, nil, TestSceneOne, nil, [], true)
     assert is_reference(ref)
 
     # get the launched supervisor
     [{:undefined, scene_sup, :supervisor, [Scene.Supervisor]}] =
-      DynamicSupervisor.which_children( dyn_sup )
+      DynamicSupervisor.which_children(dyn_sup)
 
     # get the scene supervisor children
     # note that the match is pinned to ^pid
@@ -538,42 +538,10 @@ defmodule Scenic.SceneTest do
       {_, ^pid, :worker, [Scene]},
       {DynamicSupervisor, children_sup, :supervisor, [DynamicSupervisor]}
     ] = Supervisor.which_children(scene_sup)
+
     assert is_pid(children_sup)
 
     # cleanup
     DynamicSupervisor.stop(dyn_sup, :normal)
   end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
