@@ -291,7 +291,7 @@ defmodule Scenic.ViewPort.InputTest do
     assert context.viewport == self()
   end
 
-  test "input viewport_enter", %{graph_key: graph_key, master_graph_key: master_graph_key} do
+  test "input viewport_enter", %{graph_key: graph_key} do
     # start NOT over a primitive
     {:noreply, _} = Input.handle_cast(
       {:input, {:viewport_enter, :viewport_enter_input}},
@@ -303,7 +303,7 @@ defmodule Scenic.ViewPort.InputTest do
     assert_received( {:"$gen_cast", {:input, {:viewport_enter, :viewport_enter_input}, context}} )
   end
 
-  test "input viewport_exit", %{graph_key: graph_key, master_graph_key: master_graph_key} do
+  test "input viewport_exit", %{graph_key: graph_key} do
     # start NOT over a primitive
     {:noreply, _} = Input.handle_cast(
       {:input, {:viewport_exit, :viewport_exit_input}},
@@ -315,7 +315,7 @@ defmodule Scenic.ViewPort.InputTest do
     assert_received( {:"$gen_cast", {:input, {:viewport_exit, :viewport_exit_input}, context}} )
   end
 
-  test "input other", %{graph_key: graph_key, master_graph_key: master_graph_key} do
+  test "input other", %{graph_key: graph_key} do
     # start NOT over a primitive
     {:noreply, _} = Input.handle_cast(
       {:input, {:other, 123}},
