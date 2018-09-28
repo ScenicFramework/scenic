@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0
+* Much improved testing
+* Simplify rules around user-closing a viewport
+
 ## 0.8.0
 
 * Many documentation improvements

@@ -615,16 +615,16 @@ defmodule Scenic.ViewPort do
   end
 
   # --------------------------------------------------------
-  def handle_cast(:user_close, %{on_close: on_close} = state) do
+  def handle_cast(:user_close, %{on_close: on_close, supervisor: vp_sup} = state) do
     case on_close do
       :stop_viewport ->
-        case DynamicSupervisor.terminate_child(@viewports, self()) do
-          :ok -> :ok
-          {:error, :not_found} -> Process.exit(self(), :shutdown)
-        end
+        DynamicSupervisor.terminate_child(@viewports, vp_sup)
+        #   :ok -> :ok
+        #   {:error, :not_found} -> Process.exit(vp_sup, :shutdown)
+        # end
 
-      func when is_function(func, 1) ->
-        func.(self())
+      # func when is_function(func, 1) ->
+      #   func.(self())
 
       :stop_system ->
         System.stop(0)

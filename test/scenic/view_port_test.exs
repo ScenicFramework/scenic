@@ -49,8 +49,6 @@ defmodule Scenic.ViewPortTest do
     drivers: [ @driver_config ]
   }
 
-  import IEx
-
   setup do
     {:ok, tables} = Tables.start_link(nil)
     on_exit(fn -> Process.exit(tables, :normal) end)
@@ -439,11 +437,23 @@ defmodule Scenic.ViewPortTest do
     assert state.driver_registry[self()] == info
   end
 
-  test "handle_cast :user_close"
-  # take a look at the architecture. Maybe add a handle_close
-  # callback with a default that just shuts it down. This allows
-  # the viewport to cancel or cleanup or whatever
+  test "handle_cast :user_close - dynamic viewport" do
+    config = %{@config | on_close: :stop_viewport}
+    {:ok, dyn_sup} = DynamicSupervisor.start_link(strategy: :one_for_one, name: @viewports)
+    {:ok, vp_pid} = ViewPort.start(config)
+    refute DynamicSupervisor.which_children(dyn_sup) == []
+    Process.sleep(10)
 
+    GenServer.cast(vp_pid, :user_close)
+    Process.sleep(10)
+
+    assert DynamicSupervisor.which_children(dyn_sup) == []
+
+    # cleanup
+    DynamicSupervisor.stop(dyn_sup, :normal)
+  end
+
+  # not testing the :stop_system option as that stops the tests too
 
 end
 
