@@ -186,13 +186,26 @@ defmodule Scenic.ViewPortTest do
     assert spec.start == {ViewPort, :start_link, [:args]}
   end
 
-  test "start_link works with no name"
-  test "start_link works with name"
+  test "start_link works with no name" do
+    {:ok, pid} = ViewPort.start_link({:vp_sup, %{@config | name: nil}})
+    assert is_pid(pid)
+    Process.exit(pid, :shutdown)
+  end
+
+  test "start_link works with name" do
+    {:ok, pid} = ViewPort.start_link({:vp_sup, @config})
+    assert is_pid(pid)
+    assert Process.whereis(:dyanmic_viewport) == pid
+    Process.exit(pid, :shutdown)
+  end
 
   test "init casts to self with :delayed_init" do
     ViewPort.init( {:vp_sup, :config} )
     assert_received( {:"$gen_cast", {:delayed_init, :vp_sup, :config}} )
   end
+
+  # ============================================================================
+  # handle_call
 
 end
 
