@@ -28,7 +28,6 @@ defmodule Scenic.ViewPort.InputTest do
 
   setup do
     {:ok, tables} = Tables.start_link(nil)
-
     on_exit(fn ->
       Process.exit(tables, :normal)
       Process.sleep(2)
@@ -621,4 +620,9 @@ defmodule Scenic.ViewPort.InputTest do
     assert_received({:"$gen_cast", {:input, {:other, 123}, context}})
     assert context.graph_key == graph_key1
   end
+
+  test "captured cursor_pos over nothing"
+  test "captured cursor_pos over non-captured graph"
+  test "captured cursor_pos enter primitive"
+  test "captured cursor_pos exit primitive"
 end
