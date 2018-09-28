@@ -279,25 +279,6 @@ defmodule Scenic.SceneTest do
     assert new_state.scene_state == :init_state
   end
 
-  # test "handle_cast :input calls the mod input handler" do
-  #   context = %Scenic.ViewPort.Context{
-  #     viewport: self()
-  #   }
-
-  #   event = {:cursor_enter, 1}
-  #   sc_state = :sc_state
-
-  #   {:noreply, new_state} =
-  #     assert Scene.handle_cast({:input, event, context}, %{
-  #              scene_module: __MODULE__,
-  #              scene_state: sc_state,
-  #              activation: nil
-  #            })
-
-  #   assert new_state.scene_state == :input_state
-  #   assert_receive({:"$gen_cast", {:test_input, ^event, ^context, ^sc_state}})
-  # end
-
   test "handle_cast :input calls the mod input handler, which returns noreply" do
     context = %Scenic.ViewPort.Context{
       viewport: self()
