@@ -572,7 +572,7 @@ defmodule Scenic.ViewPort do
   # --------------------------------------------------------
   def handle_cast({:driver_cast, msg}, %{drivers: drivers} = state) do
     # relay the graph_key to all listening drivers
-    do_driver_cast(drivers, msg)
+    Enum.each(drivers, &GenServer.cast(&1, msg))
     {:noreply, state}
   end
 
@@ -659,10 +659,6 @@ defmodule Scenic.ViewPort do
 
   # ============================================================================
   # internal utilities
-
-  defp do_driver_cast(driver_pids, msg) do
-    Enum.each(driver_pids, &GenServer.cast(&1, msg))
-  end
 
   defp find_dyn_supervisor() do
     # get the scene supervisors
