@@ -546,7 +546,7 @@ defmodule Scenic.ViewPort do
     {:noreply, %{state | root_scene_pid: scene_pid, dynamic_root_pid: scene_pid}}
   end
 
-  def handle_cast({:dyn_root_up, _}, state) do
+  def handle_cast({:dyn_root_up, _, _}, state) do
     # ignore stale root_up messages
     {:noreply, state}
   end
@@ -559,12 +559,14 @@ defmodule Scenic.ViewPort do
         {:stop_driver, driver_pid},
         %{
           drivers: drivers,
-          dynamic_supervisor: dyn_sup
+          dynamic_supervisor: dyn_sup,
+          driver_registry: registry
         } = state
       ) do
     DynamicSupervisor.terminate_child(dyn_sup, driver_pid)
     drivers = Enum.reject(drivers, fn pid -> pid == driver_pid end)
-    {:noreply, %{state | drivers: drivers}}
+    registry = Map.delete(registry, driver_pid)
+    {:noreply, %{state | drivers: drivers, driver_registry: registry}}
   end
 
   # --------------------------------------------------------
@@ -579,28 +581,26 @@ defmodule Scenic.ViewPort do
         {:driver_ready, driver_pid},
         %{
           drivers: drivers,
-          # root_graph_key: root_key
           master_graph_key: master_graph_key
         } = state
       ) do
     drivers = [driver_pid | drivers] |> Enum.uniq()
-    # GenServer.cast(driver_pid, {:set_root, root_key})
     GenServer.cast(driver_pid, {:set_root, master_graph_key})
     {:noreply, %{state | drivers: drivers}}
   end
 
   # --------------------------------------------------------
-  def handle_cast(
-        {:driver_stopped, driver_pid},
-        %{
-          drivers: drivers,
-          driver_registry: registry
-        } = state
-      ) do
-    drivers = Enum.reject(drivers, fn d -> d == driver_pid end)
-    registry = Map.delete(registry, driver_pid)
-    {:noreply, %{state | drivers: drivers, driver_registry: registry}}
-  end
+  # def handle_cast(
+  #       {:driver_stopped, driver_pid},
+  #       %{
+  #         drivers: drivers,
+  #         driver_registry: registry
+  #       } = state
+  #     ) do
+  #   drivers = Enum.reject(drivers, fn d -> d == driver_pid end)
+  #   registry = Map.delete(registry, driver_pid)
+  #   {:noreply, %{state | drivers: drivers, driver_registry: registry}}
+  # end
 
   # --------------------------------------------------------
   # def handle_cast({:request_root, to_pid}, %{root_graph_key: root_key} = state) do
@@ -634,19 +634,19 @@ defmodule Scenic.ViewPort do
   end
 
   # --------------------------------------------------------
-  def handle_cast(:user_close, state) do
-    case DynamicSupervisor.terminate_child(@viewports, self()) do
-      :ok ->
-        :ok
+  # def handle_cast(:user_close, state) do
+  #   case DynamicSupervisor.terminate_child(@viewports, self()) do
+  #     :ok ->
+  #       :ok
 
-      {:error, :not_found} ->
-        # Process.exit(self(), :normal)
-        # exit(:shutdown)
-        System.stop(0)
-    end
+  #     {:error, :not_found} ->
+  #       # Process.exit(self(), :normal)
+  #       # exit(:shutdown)
+  #       System.stop(0)
+  #   end
 
-    {:noreply, state}
-  end
+  #   {:noreply, state}
+  # end
 
   # ==================================================================
   # management casts from scenes

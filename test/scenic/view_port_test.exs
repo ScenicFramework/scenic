@@ -239,7 +239,109 @@ defmodule Scenic.ViewPortTest do
     assert info.size == :size
   end
 
+  # ============================================================================
+  # handle_cast
+
+  test "handle_cast :delated_init"
+
+  test "handle_cast :set_root"
+
+  test "handle_cast :dyn_root_up" do
+    ref = make_ref()
+    {:noreply, state} = ViewPort.handle_cast(
+      { :dyn_root_up, ref, self() },
+      %{
+        root_graph_key: {:graph, ref, nil},
+        root_scene_pid: nil,
+        dynamic_root_pid: nil
+      }
+    )
+    assert state.root_scene_pid == self()
+    assert state.dynamic_root_pid == self()
+  end
+
+  test "handle_cast :dyn_root_up ignores stale messages" do
+    assert ViewPort.handle_cast({:dyn_root_up,nil,nil}, :state) == 
+      {:noreply, :state}
+  end
+
+  test "handle_cast :stop_driver stops a dynamic driver" do
+    # setup
+    {:ok, dyn_sup} = DynamicSupervisor.start_link(strategy: :one_for_one, name: @viewports)
+    {:ok, driver_pid} = DynamicSupervisor.start_child(dyn_sup, {Scenic.ViewPort.Driver, {self(), {1,2}, @driver_config}} )
+
+    # the call
+    {:noreply, state} = ViewPort.handle_cast(
+      {:stop_driver, driver_pid},
+      %{
+        drivers: [driver_pid],
+        driver_registry: %{driver_pid => 1},
+        dynamic_supervisor: dyn_sup
+      }
+    )
+    refute Enum.member?(state.drivers, driver_pid)
+    refute Map.get(state.driver_registry, driver_pid)
+    assert DynamicSupervisor.which_children(dyn_sup) == []
+
+    #cleanup
+    DynamicSupervisor.stop(dyn_sup, :normal)
+  end
+
+  test "handle_cast :driver_cast"
+
+  test "handle_cast :driver_ready" do
+    {:noreply, state} = ViewPort.handle_cast(
+      {:driver_ready, self()},
+      %{
+        drivers: [],
+        master_graph_key: :master_graph_key
+      }
+    )
+    assert state.drivers == [self()]
+    assert_received( {:"$gen_cast", {:set_root, :master_graph_key}} )
+  end
+
+  test "handle_cast :request_root" do
+    {:noreply, _} = ViewPort.handle_cast(
+      {:request_root, self()},
+      %{ master_graph_key: :master_graph_key }
+    )
+    assert_received( {:"$gen_cast", {:set_root, :master_graph_key}} )
+  end
+
+  test "handle_cast :driver_register" do
+    info = %ViewPort.Driver.Info{pid: self()}
+    {:noreply, state} = ViewPort.handle_cast(
+      {:driver_register, info},
+      %{ driver_registry: %{} }
+    )
+    assert state.driver_registry[self()] == info
+  end
+
+  test "handle_cast :user_close"
+  # take a look at the architecture. Maybe add a handle_close
+  # callback with a default that just shuts it down. This allows
+  # the viewport to cancel or cleanup or whatever
+
+
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
