@@ -664,7 +664,7 @@ defmodule Scenic.ViewPort do
 
   # ============================================================================
   # internal utilities
-  
+
   # defp do_driver_cast(driver_pids, msg) do
   #   Enum.each(driver_pids, &GenServer.cast(&1, msg))
   # end
