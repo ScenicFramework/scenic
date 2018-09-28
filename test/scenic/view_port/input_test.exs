@@ -8,6 +8,7 @@ defmodule Scenic.ViewPort.InputTest do
   use Bitwise
   doctest Scenic.ViewPort.Input
 
+  alias Scenic.Math.Matrix
   alias Scenic.Graph
   alias Scenic.Primitive
   # alias Scenic.ViewPort
@@ -64,7 +65,13 @@ defmodule Scenic.ViewPort.InputTest do
     Process.sleep(10)
 
     # build a capture context for the nested graph
-    context = %Context{graph_key: graph_key1}
+    tx = Matrix.build_translation({1,1})
+    inv = Matrix.invert(tx)
+    context = %Context{
+      graph_key: graph_key1,
+      tx: tx,
+      inverse_tx: inv,
+    }
 
     %{
       tables: tables,
@@ -483,5 +490,135 @@ defmodule Scenic.ViewPort.InputTest do
     assert context.graph_key == graph_key1
     assert context.id == nil
     assert context.uid == nil
+  end
+
+  test "captured cursor_button", %{graph_key: graph_key,
+    graph_key1: graph_key1,
+    context: context, master_graph_key: master_graph_key} do
+    # start NOT over a primitive
+    {:noreply, _} =
+      Input.handle_cast(
+        {:input, {:cursor_button, {:left, :press, 0, {1, 1}}}},
+        %{
+          master_graph_key: master_graph_key,
+          root_graph_key: graph_key,
+          input_captures: %{cursor_button: context},
+          max_depth: 10
+        }
+      )
+    assert_received(
+      {:"$gen_cast", {:input, {:cursor_button, {:left, :press, 0, {0.0, 0.0}}}, context}}
+    )
+    assert context.graph_key == graph_key1
+    assert context.id == nil
+    assert context.uid == nil
+
+    # over a primitive
+    {:noreply, _} =
+      Input.handle_cast(
+        {:input, {:cursor_button, {:left, :press, 0, {50, 50}}}},
+        %{
+          master_graph_key: master_graph_key,
+          root_graph_key: graph_key,
+          input_captures: %{cursor_button: context},
+          max_depth: 10
+        }
+      )
+
+    assert_received(
+      {:"$gen_cast", {:input, {:cursor_button, {:left, :press, 0, {49.0, 49.0}}}, context}}
+    )
+    assert context.graph_key == graph_key1
+    assert context.id == :circle
+    assert context.uid == 1
+  end
+
+  test "captured cursor_scroll", %{graph_key: graph_key,
+    graph_key1: graph_key1,
+    context: context, master_graph_key: master_graph_key} do
+    # start NOT over a primitive
+    {:noreply, _} =
+      Input.handle_cast(
+        {:input, {:cursor_scroll, {{-1, -1}, {1, 1}}}},
+        %{
+          master_graph_key: master_graph_key,
+          root_graph_key: graph_key,
+          input_captures: %{cursor_scroll: context},
+          max_depth: 10
+        }
+      )
+
+    assert_received({:"$gen_cast", {:input, {:cursor_scroll, {{-1, -1}, {0.0, 0.0}}}, context}})
+    assert context.graph_key == graph_key1
+    assert context.id == nil
+    assert context.uid == nil
+
+    # over a primitive
+    {:noreply, _} =
+      Input.handle_cast(
+        {:input, {:cursor_scroll, {{-1, -1}, {50, 50}}}},
+        %{
+          master_graph_key: master_graph_key,
+          root_graph_key: graph_key,
+          input_captures: %{cursor_scroll: context},
+          max_depth: 10
+        }
+      )
+
+    assert_received({:"$gen_cast", {:input, {:cursor_scroll, {{-1, -1}, {49.0, 49.0}}}, context}})
+    assert context.graph_key == graph_key1
+    assert context.id == :circle
+    assert context.uid == 1
+  end
+
+  test "captured viewport_enter", %{graph_key: graph_key,
+    graph_key1: graph_key1,
+    context: context} do
+    # start NOT over a primitive
+    {:noreply, _} =
+      Input.handle_cast(
+        {:input, {:viewport_enter, :viewport_enter_input}},
+        %{
+          root_graph_key: graph_key,
+          input_captures: %{viewport_enter: context}
+        }
+      )
+
+    assert_received({:"$gen_cast", {:input, {:viewport_enter, :viewport_enter_input}, context}})
+    assert context.graph_key == graph_key1
+  end
+
+  test "captured viewport_exit", %{graph_key: graph_key,
+    graph_key1: graph_key1,
+    context: context} do
+    # start NOT over a primitive
+    {:noreply, _} =
+      Input.handle_cast(
+        {:input, {:viewport_exit, :viewport_exit_input}},
+        %{
+          root_graph_key: graph_key,
+          input_captures: %{viewport_exit: context}
+        }
+      )
+
+    assert_received({:"$gen_cast", {:input, {:viewport_exit, :viewport_exit_input}, context}})
+    assert context.graph_key == graph_key1
+  end
+
+  test "captured other", %{graph_key: graph_key,
+    graph_key1: graph_key1,
+    context: context} do
+    # start NOT over a primitive
+    {:noreply, _} =
+      Input.handle_cast(
+        {:input, {:other, 123}},
+        %{
+          root_graph_key: graph_key,
+          input_captures: %{other: context}
+        }
+      )
+
+    assert_received({:"$gen_cast", {:input, {:other, 123}, context}})
+    assert context.graph_key == graph_key1
   end
 end
