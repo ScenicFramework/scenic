@@ -390,7 +390,7 @@ defmodule Scenic.ViewPort do
         nil -> :stop_system
         :stop_system -> :stop_system
         :stop_viewport -> :stop_viewport
-        func when is_function(func, 1) -> func
+        # func when is_function(func, 1) -> func
       end
 
     # extract the viewport global styles. Do this by reusing tools in Primitive.

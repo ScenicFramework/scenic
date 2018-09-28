@@ -14,7 +14,7 @@ defmodule Scenic.ViewPortTest do
 
   defmodule TestSceneOne do
     use Scenic.Scene
-    def init(_, _), do: {:ok, nil}
+    def init(_, _), do: {:ok, :test_one_state}
   end
 
   defmodule TestSceneTwo do
@@ -41,10 +41,10 @@ defmodule Scenic.ViewPortTest do
         opts: [title: "test title"]
       }
 
-  @config %{
+  @config %ViewPort.Config{
     name: :dyanmic_viewport,
     size: {700, 600},
-    opts: [font: :roboto_slab, font_size: 30, scale: 1.0],
+    opts: [font: :roboto_slab, font_size: 30, scale: 1.4],
     default_scene: {TestSceneOne, nil},
     drivers: [ @driver_config ]
   }
@@ -242,18 +242,35 @@ defmodule Scenic.ViewPortTest do
   # ============================================================================
   # handle_cast
 
-  test "handle_cast :delated_init"
+  test "handle_cast :delayed_init" do
+    {:ok, vp_sup} = ViewPort.Supervisor.start_link(@config)
 
+    {:noreply, state} = ViewPort.handle_cast({:delayed_init, vp_sup, @config}, nil)
+
+    assert state.on_close == :stop_system
+    assert state.master_styles == %{font: :roboto_slab, font_size: 30}
+    assert state.size == @config.size
+    assert state.master_graph[0][:transforms] == %{scale: {1.4,1.4}, pin: {0.0, 0.0}}
+    assert_received( {:"$gen_cast", {:set_root, {TestSceneOne, nil}, nil}} )
+
+    config = %{@config | on_close: :stop_system}
+    {:noreply, state} = ViewPort.handle_cast({:delayed_init, vp_sup, config}, nil)
+    assert state.on_close == :stop_system
+
+    config = %{@config | on_close: :stop_viewport}
+    {:noreply, state} = ViewPort.handle_cast({:delayed_init, vp_sup, config}, nil)
+    assert state.on_close == :stop_viewport
+  end
 
   test "handle_cast :set_root - sets named scene" do
-    master_graph_key = {:graph, make_ref, nil}
+    master_graph_key = {:graph, make_ref(), nil}
     master_graph = %{
       0 => %{data: {Primitive.Group, [1]}, transforms: %{}},
       1 => %{data: {Primitive.SceneRef, nil}}
     }
     {:ok, dyn_sup} = DynamicSupervisor.start_link(strategy: :one_for_one, name: @viewports)
 
-    {:noreply, state} = ViewPort.handle_cast(
+    {:noreply, _} = ViewPort.handle_cast(
       {:set_root, :named_scene, 123},
       %{
           dynamic_root_pid: nil,
@@ -277,7 +294,7 @@ defmodule Scenic.ViewPortTest do
   end
 
   test "handle_cast :set_root - sets dynamic scene" do
-    master_graph_key = {:graph, make_ref, nil}
+    master_graph_key = {:graph, make_ref(), nil}
     master_graph = %{
       0 => %{data: {Primitive.Group, [1]}, transforms: %{}},
       1 => %{data: {Primitive.SceneRef, nil}}
@@ -296,7 +313,7 @@ defmodule Scenic.ViewPortTest do
       }
     )
 
-    [new_sup] = DynamicSupervisor.which_children(dyn_sup)
+    [_] = DynamicSupervisor.which_children(dyn_sup)
     assert is_pid(state.dynamic_root_pid)
 
     {:ok, updated_master} = Tables.get_graph(master_graph_key)
@@ -311,14 +328,14 @@ defmodule Scenic.ViewPortTest do
   #set master scene
   test "handle_cast :set_root - stops old dynamic scene" do
     self = self()
-    master_graph_key = {:graph, make_ref, nil}
+    master_graph_key = {:graph, make_ref(), nil}
     master_graph = %{
       0 => %{data: {Primitive.Group, [1]}, transforms: %{}},
       1 => %{data: {Primitive.SceneRef, nil}}
     }
     {:ok, dyn_sup} = DynamicSupervisor.start_link(strategy: :one_for_one, name: @viewports)
 
-    {:noreply, state} = ViewPort.handle_cast(
+    {:noreply, _} = ViewPort.handle_cast(
       {:set_root, :named_scene, 123},
       %{
           dynamic_root_pid: self,
@@ -384,7 +401,7 @@ defmodule Scenic.ViewPortTest do
   end
 
   test "handle_cast :driver_cast" do
-    {:noreply, state} = ViewPort.handle_cast(
+    {:noreply, _} = ViewPort.handle_cast(
       {:driver_cast, :msg},
       %{
         drivers: [self()],
