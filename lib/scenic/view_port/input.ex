@@ -243,7 +243,7 @@ defmodule Scenic.ViewPort.Input do
       {nil, _, point} ->
         # no uid found. let the capturing scene handle the raw position
         # we already know the root scene has identity transforms
-        state = send_primitive_exit_message(state)
+        state = send_exit_message(state)
 
         Scene.cast(
           context.graph_key,
@@ -422,20 +422,7 @@ defmodule Scenic.ViewPort.Input do
     state =
       case find_by_screen_point(global_pos, state) do
         nil ->
-          # # no uid found. let the root graph_key handle the event
-          # # we already know the root graph_key has identity transforms
-          # state = send_primitive_exit_message(state)
-
-          # Scene.cast(
-          #   root_key,
-          #   {:input, msg,
-          #    Context.build(%{
-          #      viewport: self(),
-          #      graph_key: root_key,
-          #      raw_input: msg
-          #    })}
-          # )
-
+          send_exit_message(state)
           # no uid found. do nothing
           state
 
@@ -512,9 +499,9 @@ defmodule Scenic.ViewPort.Input do
   # ============================================================================
   # regular input helper utilties
 
-  defp send_primitive_exit_message(%{hover_primitve: nil} = state), do: state
+  defp send_exit_message(%{hover_primitve: nil} = state), do: state
 
-  defp send_primitive_exit_message(%{hover_primitve: {uid, graph_key}} = state) do
+  defp send_exit_message(%{hover_primitve: {uid, graph_key}} = state) do
     Scene.cast(
       graph_key,
       {
@@ -541,7 +528,7 @@ defmodule Scenic.ViewPort.Input do
 
         _ ->
           # do send the exit message
-          send_primitive_exit_message(state)
+          send_exit_message(state)
       end
 
     # send the new hover_primitve an enter message
