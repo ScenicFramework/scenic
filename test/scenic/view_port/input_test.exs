@@ -10,16 +10,16 @@ defmodule Scenic.ViewPort.InputTest do
 
   alias Scenic.Graph
   alias Scenic.Primitive
-  alias Scenic.ViewPort
+  # alias Scenic.ViewPort
   alias Scenic.ViewPort.Input
   alias Scenic.ViewPort.Tables
   import Scenic.Primitives
 
-   import IEx
+  # import IEx
 
   @graph Graph.build()
   |> rect({10, 10}, t: {20,20}, id: :rect)
-  |>
+  |> scene_ref( nil, id: :ref )
 
   @graph1 Graph.build()
   |> circle(10, t: {50, 50}, id: :circle)
@@ -33,7 +33,7 @@ defmodule Scenic.ViewPort.InputTest do
     self = self()
     scene_ref = make_ref()
     graph_key = {:graph, scene_ref, nil}
-    graph_key1 = {:graph, scene_ref, nil}
+    graph_key1 = {:graph, scene_ref, 1}
     master_graph_key = {:graph, make_ref(), nil}
 
     master_graph = %{
@@ -41,7 +41,7 @@ defmodule Scenic.ViewPort.InputTest do
       1 => %{data: {Primitive.SceneRef, graph_key}}
     }
 
-    graph = scene_ref(@graph, graph1_key)
+    graph = Graph.modify(@graph, :ref, &scene_ref(&1, graph_key1) )
     graph = Enum.reduce(graph.primitives, %{}, fn({k,p},g) ->
       Map.put(g, k, Primitive.minimal(p))
     end)
@@ -51,8 +51,8 @@ defmodule Scenic.ViewPort.InputTest do
 
     Tables.register_scene(scene_ref, {self, self, self})
 
-    Tables.insert_graph(graph1_key, self(), graph1, %{})
-    Tables.insert_graph(graph_key, self(), graph, %{})
+    Tables.insert_graph(graph_key1, self(), graph1, %{})
+    Tables.insert_graph(graph_key, self(), graph, %{2 => graph_key1})
     Tables.insert_graph(master_graph_key, self(), master_graph, %{1 => graph_key})
     Process.sleep(10)
 
@@ -60,6 +60,7 @@ defmodule Scenic.ViewPort.InputTest do
       tables: tables,
       scene_ref: scene_ref,
       graph_key: graph_key,
+      graph_key1: graph_key1,
       master_graph_key: master_graph_key
     }
   end
@@ -214,7 +215,7 @@ defmodule Scenic.ViewPort.InputTest do
     assert context.viewport == self()
   end
 
-  test "input cursor_pos", %{graph_key: graph_key, master_graph_key: master_graph_key} do
+  test "input cursor_pos when not over anything", %{graph_key: graph_key, master_graph_key: master_graph_key} do
     # start NOT over a primitive
     {:noreply, _} = Input.handle_cast(
       {:input, {:cursor_pos, {1,1}}},
@@ -227,7 +228,9 @@ defmodule Scenic.ViewPort.InputTest do
       }
     )
     refute_received( {:"$gen_cast", {:input, _, _}} )
+  end
 
+  test "input cursor_pos entering from nothing", %{graph_key: graph_key, master_graph_key: master_graph_key} do
     # over a primitive - entering
     {:noreply, _} = Input.handle_cast(
       {:input, {:cursor_pos, {25,25}}},
@@ -246,8 +249,10 @@ defmodule Scenic.ViewPort.InputTest do
     assert context.id == :rect
     assert context.uid == 1
     assert context.viewport == self()
+  end
 
-    # over a primitive - staying in
+  test "input cursor_pos entering nested graph", %{graph_key: graph_key, graph_key1: graph_key1, master_graph_key: master_graph_key} do
+    # over a primitive - entering
     {:noreply, _} = Input.handle_cast(
       {:input, {:cursor_pos, {50,50}}},
       %{
@@ -255,17 +260,40 @@ defmodule Scenic.ViewPort.InputTest do
         root_graph_key: graph_key,
         input_captures: %{},
         max_depth: 10,
-        hover_primitve: {2, graph_key}
+        hover_primitve: nil
+      }
+    )
+    assert_received( {:"$gen_cast", {:input, {:cursor_enter, 1}, _}} )
+    assert_received( {:"$gen_cast", {:input, {:cursor_pos, {49.0,49.0}}, context}} )
+    refute_received( {:"$gen_cast", {:input, {:cursor_exit,_}, _}} )
+    assert context.graph_key == graph_key1
+    assert context.id == :circle
+    assert context.uid == 1
+    assert context.viewport == self()
+  end
+
+  test "input cursor_pos staying within a primitive", %{graph_key: graph_key, master_graph_key: master_graph_key} do
+    # over a primitive - staying in
+    {:noreply, _} = Input.handle_cast(
+      {:input, {:cursor_pos, {26,26}}},
+      %{
+        master_graph_key: master_graph_key,
+        root_graph_key: graph_key,
+        input_captures: %{},
+        max_depth: 10,
+        hover_primitve: {1, graph_key}
       }
     )
     refute_received( {:"$gen_cast", {:input, {:cursor_enter, _}, _}} )
-    assert_received( {:"$gen_cast", {:input, {:cursor_pos, {24.0,24.0}}, context}} )
+    assert_received( {:"$gen_cast", {:input, {:cursor_pos, {25.0,25.0}}, context}} )
     refute_received( {:"$gen_cast", {:input, {:cursor_exit,_}, _}} )
-    assert context.graph_key == graph1_key
-    assert context.id == :circle
-    assert context.uid == 2
+    assert context.graph_key == graph_key
+    assert context.id == :rect
+    assert context.uid == 1
     assert context.viewport == self()
+  end
 
+  test "input cursor_pos leaving a primitive to nothing", %{graph_key: graph_key, master_graph_key: master_graph_key} do
     # not over a primitive - exiting to nothing
     {:noreply, _} = Input.handle_cast(
       {:input, {:cursor_pos, {1,1}}},
@@ -279,24 +307,26 @@ defmodule Scenic.ViewPort.InputTest do
     )
     refute_received( {:"$gen_cast", {:input, {:cursor_enter, _}, _}} )
     assert_received( {:"$gen_cast", {:input, {:cursor_exit, 1}, _}} )
-    # assert_received( {:"$gen_cast", {:input, {:cursor_pos, {24.0,24.0}}, context}} )
+    refute_received( {:"$gen_cast", {:input, {:cursor_pos, _}, _}} )
+  end
 
-    # not over a primitive - exiting to another
+  test "input cursor_pos going from one prim to another", %{graph_key: graph_key, graph_key1: graph_key1, master_graph_key: master_graph_key} do
+    # going from one primitive to another
     {:noreply, _} = Input.handle_cast(
-      {:input, {:cursor_pos, {25,25}}},
+      {:input, {:cursor_pos, {50,50}}},
       %{
         master_graph_key: master_graph_key,
         root_graph_key: graph_key,
         input_captures: %{},
         max_depth: 10,
-        hover_primitve: {2, graph_key}
+        hover_primitve: {1, graph_key}
       }
     )
+    assert_received( {:"$gen_cast", {:input, {:cursor_exit, 1}, _}} )
     assert_received( {:"$gen_cast", {:input, {:cursor_enter, 1}, _}} )
-    assert_received( {:"$gen_cast", {:input, {:cursor_exit, 2}, _}} )
-    assert_received( {:"$gen_cast", {:input, {:cursor_pos, {24.0,24.0}}, context}} )
-    assert context.graph_key == graph_key
-    assert context.id == :rect
+    assert_received( {:"$gen_cast", {:input, {:cursor_pos, {49.0,49.0}}, context}} )
+    assert context.graph_key == graph_key1
+    assert context.id == :circle
     assert context.uid == 1
     assert context.viewport == self()
   end
