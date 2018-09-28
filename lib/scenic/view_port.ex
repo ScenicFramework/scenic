@@ -472,11 +472,11 @@ defmodule Scenic.ViewPort do
       |> Map.put(:input_captures, %{})
 
     # fetch the dynamic supervisor
-    dyn_sup =
-      case dyn_sup do
-        nil -> find_dyn_supervisor()
-        dyn_sup -> dyn_sup
-      end
+    # dyn_sup =
+    #   case dyn_sup do
+    #     nil -> find_dyn_supervisor()
+    #     dyn_sup -> dyn_sup
+    #   end
 
     # if the scene being set is dynamic, start it up
     {scene_pid, scene_ref, dynamic_scene} =
@@ -660,36 +660,36 @@ defmodule Scenic.ViewPort do
   # ============================================================================
   # internal utilities
 
-  defp find_dyn_supervisor() do
-    # get the scene supervisors
-    [supervisor_pid | _] =
-      self()
-      |> Process.info()
-      |> get_in([:dictionary, :"$ancestors"])
+  # defp find_dyn_supervisor() do
+  #   # get the scene supervisors
+  #   [supervisor_pid | _] =
+  #     self()
+  #     |> Process.info()
+  #     |> get_in([:dictionary, :"$ancestors"])
 
-    # make sure it is a pid and not a name
-    supervisor_pid =
-      case supervisor_pid do
-        name when is_atom(name) -> Process.whereis(name)
-        pid when is_pid(pid) -> pid
-      end
+  #   # make sure it is a pid and not a name
+  #   supervisor_pid =
+  #     case supervisor_pid do
+  #       name when is_atom(name) -> Process.whereis(name)
+  #       pid when is_pid(pid) -> pid
+  #     end
 
-    case Process.info(supervisor_pid) do
-      nil ->
-        nil
+  #   case Process.info(supervisor_pid) do
+  #     nil ->
+  #       nil
 
-      info ->
-        case get_in(info, [:dictionary, :"$initial_call"]) do
-          {:supervisor, Scenic.ViewPort.Supervisor, _} ->
-            Supervisor.which_children(supervisor_pid)
-            |> Enum.find_value(fn
-              {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
-              _other -> nil
-            end)
+  #     info ->
+  #       case get_in(info, [:dictionary, :"$initial_call"]) do
+  #         {:supervisor, Scenic.ViewPort.Supervisor, _} ->
+  #           Supervisor.which_children(supervisor_pid)
+  #           |> Enum.find_value(fn
+  #             {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
+  #             _other -> nil
+  #           end)
 
-          _other ->
-            nil
-        end
-    end
-  end
+  #         _other ->
+  #           nil
+  #       end
+  #   end
+  # end
 end
