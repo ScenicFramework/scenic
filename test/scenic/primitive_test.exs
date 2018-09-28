@@ -38,15 +38,6 @@ defmodule Scenic.PrimitiveTest do
     transforms: @transforms,
     styles: @styles
   }
-
-  # @primitive_2 %Primitive{
-  #   module:       @type_module,
-  #   data:         @data,
-  #   id:           {:test_id, 123},
-  #   transforms:   @transforms,
-  #   styles:       @styles,
-  # }
-
   @minimal_primitive %{
     data: {Group, @data},
     styles: %{
@@ -56,6 +47,23 @@ defmodule Scenic.PrimitiveTest do
     transforms: %{pin: {10, 11}, rotate: 0.1},
     id: :test_id
   }
+
+  @boring_primitive %Primitive{
+    module: @type_module,
+    data: []
+  }
+  @minimal_boring_primitive %{
+    data: {Group, []},
+    transforms: %{}
+  }
+
+  # @primitive_2 %Primitive{
+  #   module:       @type_module,
+  #   data:         @data,
+  #   id:           {:test_id, 123},
+  #   transforms:   @transforms,
+  #   styles:       @styles,
+  # }
 
   # ============================================================================
   # build( data, module, opts \\ [] )
@@ -308,6 +316,10 @@ defmodule Scenic.PrimitiveTest do
   # minimal
   test "minimal returns the minimal version of the prmitive" do
     assert Primitive.minimal(@primitive) == @minimal_primitive
+  end
+
+  test "minimal returns the minimal version of a boring primitive" do
+    assert Primitive.minimal(@boring_primitive) == @minimal_boring_primitive
   end
 
   # --------------------------------------------------------
