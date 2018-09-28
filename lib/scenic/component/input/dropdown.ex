@@ -60,6 +60,7 @@ defmodule Scenic.Component.Input.Dropdown do
   defp verify_item(_), do: false
 
   # --------------------------------------------------------
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def init({items, initial_id}, opts) do
     id = opts[:id]
     styles = opts[:styles]
