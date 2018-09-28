@@ -455,41 +455,20 @@ defmodule Scenic.ViewPortTest do
 
   # not testing the :stop_system option as that stops the tests too
 
+  test "handle_cast other goes input" do
+    graph_key = {:graph, make_ref(), nil}
+
+    {:noreply, state} = ViewPort.handle_cast(
+      {:release_input, [:key, :codepoint]},
+      %{input_captures: %{
+        :cursor_pos => graph_key,
+        :key => graph_key,
+        :codepoint => graph_key
+      }}
+    )
+    assert state.input_captures == %{
+      :cursor_pos => graph_key
+    }
+  end
+
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
