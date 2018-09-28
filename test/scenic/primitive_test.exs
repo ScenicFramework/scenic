@@ -5,7 +5,7 @@
 
 defmodule Scenic.PrimitiveTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Group

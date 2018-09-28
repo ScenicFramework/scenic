@@ -101,7 +101,7 @@ defmodule Scenic.ViewPort do
   @doc """
   Start a new viewport
   """
-  @spec start(config :: ViewPort.Config.t()) :: {:ok, pid}
+  @spec start(config :: map) :: {:ok, pid}
   def start(%ViewPort.Config{} = config) do
     # start the viewport's supervision tree
     {:ok, sup_pid} =
@@ -123,16 +123,10 @@ defmodule Scenic.ViewPort do
     {:ok, viewport_pid}
   end
 
-  # --------------------------------------------------------
-  @doc """
-  query the last recorded viewport status
-  """
-  @spec info(viewport :: GenServer.server()) :: {:ok, ViewPort.Status.t()}
-  def info(viewport)
-
-  def info(viewport) when is_atom(viewport) or is_pid(viewport) do
-    GenServer.call(viewport, :query_info)
+  def start(%{} = config) do
+    start(struct(ViewPort.Config, config))
   end
+
 
   # --------------------------------------------------------
   @doc """
@@ -146,7 +140,25 @@ defmodule Scenic.ViewPort do
   end
 
   def stop(viewport) when is_pid(viewport) do
-    DynamicSupervisor.terminate_child(@viewports, viewport)
+    # dynamic viewports are actually supervised by their own supervisor.
+    # so first we have to get that, which is what we actually stop
+    [supervisor_pid | _] =
+      viewport
+      |> Process.info()
+      |> get_in([:dictionary, :"$ancestors"])
+
+    DynamicSupervisor.terminate_child(@viewports, supervisor_pid)
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  query the last recorded viewport status
+  """
+  @spec info(viewport :: GenServer.server()) :: {:ok, ViewPort.Status.t()}
+  def info(viewport)
+
+  def info(viewport) when is_atom(viewport) or is_pid(viewport) do
+    GenServer.call(viewport, :query_info)
   end
 
   # --------------------------------------------------------

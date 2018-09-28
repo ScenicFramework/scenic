@@ -6,7 +6,7 @@
 
 defmodule Scenic.SceneTest do
   use ExUnit.Case, async: false
-  doctest Scenic
+  doctest Scenic.Scene
   alias Scenic.Scene
   alias Scenic.Graph
   alias Scenic.Primitive.SceneRef
@@ -540,7 +540,7 @@ defmodule Scenic.SceneTest do
     ] = Supervisor.which_children(scene_sup)
     assert is_pid(children_sup)
 
-        # cleanup
+    # cleanup
     DynamicSupervisor.stop(dyn_sup, :normal)
   end
 end
