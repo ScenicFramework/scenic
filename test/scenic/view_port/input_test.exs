@@ -18,7 +18,11 @@ defmodule Scenic.ViewPort.InputTest do
    import IEx
 
   @graph Graph.build()
-  |> rect({10, 10}, t: {20, 20}, id: :rect)
+  |> rect({10, 10}, t: {20,20}, id: :rect)
+  |>
+
+  @graph1 Graph.build()
+  |> circle(10, t: {50, 50}, id: :circle)
 
 
 
@@ -29,6 +33,7 @@ defmodule Scenic.ViewPort.InputTest do
     self = self()
     scene_ref = make_ref()
     graph_key = {:graph, scene_ref, nil}
+    graph_key1 = {:graph, scene_ref, nil}
     master_graph_key = {:graph, make_ref(), nil}
 
     master_graph = %{
@@ -36,12 +41,17 @@ defmodule Scenic.ViewPort.InputTest do
       1 => %{data: {Primitive.SceneRef, graph_key}}
     }
 
-    graph = Enum.reduce(@graph.primitives, %{}, fn({k,p},g) ->
+    graph = scene_ref(@graph, graph1_key)
+    graph = Enum.reduce(graph.primitives, %{}, fn({k,p},g) ->
+      Map.put(g, k, Primitive.minimal(p))
+    end)
+    graph1 = Enum.reduce(@graph1.primitives, %{}, fn({k,p},g) ->
       Map.put(g, k, Primitive.minimal(p))
     end)
 
     Tables.register_scene(scene_ref, {self, self, self})
 
+    Tables.insert_graph(graph1_key, self(), graph1, %{})
     Tables.insert_graph(graph_key, self(), graph, %{})
     Tables.insert_graph(master_graph_key, self(), master_graph, %{1 => graph_key})
     Process.sleep(10)
@@ -239,21 +249,21 @@ defmodule Scenic.ViewPort.InputTest do
 
     # over a primitive - staying in
     {:noreply, _} = Input.handle_cast(
-      {:input, {:cursor_pos, {25,25}}},
+      {:input, {:cursor_pos, {50,50}}},
       %{
         master_graph_key: master_graph_key,
         root_graph_key: graph_key,
         input_captures: %{},
         max_depth: 10,
-        hover_primitve: {1, graph_key}
+        hover_primitve: {2, graph_key}
       }
     )
     refute_received( {:"$gen_cast", {:input, {:cursor_enter, _}, _}} )
     assert_received( {:"$gen_cast", {:input, {:cursor_pos, {24.0,24.0}}, context}} )
     refute_received( {:"$gen_cast", {:input, {:cursor_exit,_}, _}} )
-    assert context.graph_key == graph_key
-    assert context.id == :rect
-    assert context.uid == 1
+    assert context.graph_key == graph1_key
+    assert context.id == :circle
+    assert context.uid == 2
     assert context.viewport == self()
 
     # not over a primitive - exiting to nothing
