@@ -102,6 +102,36 @@ defmodule Scenic.Component.Input.SliderTest do
     assert_receive({:"$gen_cast", {:event, {:value_changed, :test_id, 34}, ^self}})
   end
 
+  test "handle_input {:cursor_button, :press, far left" do
+    self = self()
+    context = %ViewPort.Context{viewport: self}
+    Process.put(:parent_pid, self)
+
+    {:noreply, state} =
+      Slider.handle_input({:cursor_button, {:left, :press, nil, {-103, 0}}}, context, %{
+        @state
+        | tracking: false
+      })
+
+    assert state.tracking
+    assert state.value == 0
+  end
+
+  test "handle_input {:cursor_button, :press, far right" do
+    self = self()
+    context = %ViewPort.Context{viewport: self}
+    Process.put(:parent_pid, self)
+
+    {:noreply, state} =
+      Slider.handle_input({:cursor_button, {:left, :press, nil, {1003, 0}}}, context, %{
+        @state
+        | tracking: false
+      })
+
+    assert state.tracking
+    assert state.value == 100
+  end
+
   test "handle_input {:cursor_button, :release" do
     self = self()
     context = %ViewPort.Context{viewport: self}
