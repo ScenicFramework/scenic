@@ -82,19 +82,18 @@ defmodule Scenic.Primitive.QuadTest do
     assert Quad.contains_point?(@convex, {100, 520}) == false
   end
 
-
   # ============================================================================
   # expand
 
   # only works if it is square...
-  defp quad_square_area({{x0,y0}, {x1,y1}, {x2,y2}, {x3,y3}}) do
+  defp quad_square_area({{x0, y0}, {x1, _}, {_, y2}, _}) do
     w = abs(x1 - x0) * 1.0
     h = abs(y2 - y0) * 1.0
     w * h
   end
 
   test "expand clockwise works" do
-    quad = {{10,10}, {20,10}, {20,20}, {10,20}}
+    quad = {{10, 10}, {20, 10}, {20, 20}, {10, 20}}
     expanded = Quad.expand(quad, 2)
     shrunk = Quad.expand(quad, -2)
 
@@ -103,13 +102,11 @@ defmodule Scenic.Primitive.QuadTest do
   end
 
   test "expand counter-clockwise works" do
-    quad = {{10,20}, {20,20}, {20,10}, {10,10}}
+    quad = {{10, 20}, {20, 20}, {20, 10}, {10, 10}}
     expanded = Quad.expand(quad, 2)
     shrunk = Quad.expand(quad, -2)
 
     assert quad_square_area(expanded) > quad_square_area(quad)
     assert quad_square_area(shrunk) < quad_square_area(quad)
   end
-
-
 end
