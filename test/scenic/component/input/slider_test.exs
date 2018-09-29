@@ -108,8 +108,8 @@ defmodule Scenic.Component.Input.SliderTest do
     Process.put(:parent_pid, self)
 
     orig_value = 2.0
-    extents = {0.0,100.0}
-    state = %{ @state | value: orig_value, extents: extents }
+    extents = {0.0, 100.0}
+    state = %{@state | value: orig_value, extents: extents}
 
     {:noreply, state} =
       Slider.handle_input({:cursor_button, {:left, :press, nil, {103, 0}}}, context, %{
@@ -138,7 +138,7 @@ defmodule Scenic.Component.Input.SliderTest do
 
     orig_value = :yellow
     extents = [:red, :yellow, :purple, :blue, :orange]
-    state = %{ @state | value: orig_value, extents: extents }
+    state = %{@state | value: orig_value, extents: extents}
 
     {:noreply, state} =
       Slider.handle_input({:cursor_button, {:left, :press, nil, {203, 0}}}, context, %{
@@ -163,6 +163,7 @@ defmodule Scenic.Component.Input.SliderTest do
         state
         | tracking: false
       })
+
     assert_receive({:"$gen_cast", {:event, {:value_changed, :test_id, :red}, ^self}})
 
     # above max
@@ -171,6 +172,7 @@ defmodule Scenic.Component.Input.SliderTest do
         state
         | tracking: false
       })
+
     assert_receive({:"$gen_cast", {:event, {:value_changed, :test_id, :orange}, ^self}})
   end
 

@@ -732,10 +732,10 @@ defmodule Scenic.ViewPort.InputTest do
     refute_received({:"$gen_cast", {:input, {:cursor_enter, _}, _}})
   end
 
-  #============================================================================
+  # ============================================================================
   # continue input
 
-    test "continue_input codepoint", %{graph_key: graph_key, master_graph_key: master_graph_key} do
+  test "continue_input codepoint", %{graph_key: graph_key, master_graph_key: master_graph_key} do
     {:noreply, _} =
       Input.handle_cast(
         {:continue_input, {:codepoint, :codepoint_input}},
@@ -752,5 +752,4 @@ defmodule Scenic.ViewPort.InputTest do
     assert context.uid == nil
     assert context.viewport == self()
   end
-
 end
