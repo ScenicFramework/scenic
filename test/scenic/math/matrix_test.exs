@@ -384,6 +384,11 @@ defmodule Scenic.Math.MatrixTest do
     assert Matrix.rotate(mx_trans, 1.3) == Matrix.mul(mx_trans, mx_rot)
   end
 
+  test "rotate does nothing with nil" do
+    mx_trans = Matrix.build_translation({123, 456})
+    assert Matrix.rotate(mx_trans, nil) == mx_trans
+  end
+
   test "translate translates a matrix" do
     mx_trans = Matrix.build_translation({123, 456})
     mx_rot = Matrix.build_rotation(1.3)

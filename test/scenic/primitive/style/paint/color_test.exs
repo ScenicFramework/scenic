@@ -1,8 +1,12 @@
 defmodule Scenic.Primitive.Style.Paint.ColorTest do
-  @moduledoc false
   use ExUnit.Case, async: true
 
   import Scenic.Primitive.Style.Paint.Color
+
+  test "to_rgba with numbers" do
+    assert to_rgba({1, 2, 3}) == {1, 2, 3, 0xFF}
+    assert to_rgba({1, 2, 3, 4}) == {1, 2, 3, 4}
+  end
 
   test "to_rgba/1" do
     assert to_rgba({:transparent, nil}) == to_rgba(:transparent)

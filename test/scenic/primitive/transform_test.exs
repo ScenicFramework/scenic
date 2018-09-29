@@ -30,6 +30,19 @@ defmodule Scenic.Primitive.TransformTest do
   }
 
   # ============================================================================
+  # verify!
+
+  test "verify! works" do
+    assert Transform.verify!(:pin, {1, 1})
+  end
+
+  test "verify! rejects invalid transform types" do
+    assert_raise Scenic.Primitive.Transform.FormatError, fn ->
+      assert Transform.verify!(:invalid, {1, 1})
+    end
+  end
+
+  # ============================================================================
   # calculate the local matrix
 
   test "calculate_local returns nil if the transform is nil" do
