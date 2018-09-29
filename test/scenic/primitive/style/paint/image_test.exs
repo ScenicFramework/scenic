@@ -12,8 +12,6 @@ defmodule Scenic.Primitive.Style.Paint.ImageTest do
   end
 
   test "normalize works with everything set" do
-    assert Image.normalize({"hash_string", 1, 2, 3, 4, 5, 6}) ==
-      {"hash_string", 1, 2, 3, 4, 5, 6}
+    assert Image.normalize({"hash_string", 1, 2, 3, 4, 5, 6}) == {"hash_string", 1, 2, 3, 4, 5, 6}
   end
-
 end

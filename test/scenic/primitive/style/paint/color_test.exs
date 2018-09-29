@@ -4,8 +4,8 @@ defmodule Scenic.Primitive.Style.Paint.ColorTest do
   import Scenic.Primitive.Style.Paint.Color
 
   test "to_rgba with numbers" do
-    assert to_rgba({1,2,3}) == {1,2,3,0xFF}
-    assert to_rgba({1,2,3,4}) == {1,2,3,4}
+    assert to_rgba({1, 2, 3}) == {1, 2, 3, 0xFF}
+    assert to_rgba({1, 2, 3, 4}) == {1, 2, 3, 4}
   end
 
   test "to_rgba/1" do

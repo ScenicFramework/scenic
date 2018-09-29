@@ -33,12 +33,12 @@ defmodule Scenic.Primitive.TransformTest do
   # verify!
 
   test "verify! works" do
-    assert Transform.verify!(:pin, {1,1})
+    assert Transform.verify!(:pin, {1, 1})
   end
 
   test "verify! rejects invalid transform types" do
     assert_raise Scenic.Primitive.Transform.FormatError, fn ->
-      assert Transform.verify!(:invalid, {1,1})
+      assert Transform.verify!(:invalid, {1, 1})
     end
   end
 
