@@ -731,4 +731,25 @@ defmodule Scenic.ViewPort.InputTest do
     assert_received({:"$gen_cast", {:input, {:cursor_exit, 1}, _}})
     refute_received({:"$gen_cast", {:input, {:cursor_enter, _}, _}})
   end
+
+  # ============================================================================
+  # continue input
+
+  test "continue_input codepoint", %{graph_key: graph_key, master_graph_key: master_graph_key} do
+    {:noreply, _} =
+      Input.handle_cast(
+        {:continue_input, {:codepoint, :codepoint_input}},
+        %{
+          master_graph_key: master_graph_key,
+          root_graph_key: graph_key,
+          input_captures: %{}
+        }
+      )
+
+    assert_received({:"$gen_cast", {:input, {:codepoint, :codepoint_input}, context}})
+    assert context.graph_key == graph_key
+    assert context.id == nil
+    assert context.uid == nil
+    assert context.viewport == self()
+  end
 end

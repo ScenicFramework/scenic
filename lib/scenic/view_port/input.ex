@@ -192,45 +192,45 @@ defmodule Scenic.ViewPort.Input do
 
   # --------------------------------------------------------
   # cursor_enter is only sent to the root graph_key
-  defp do_handle_captured_input(
-         {:cursor_enter, global_pos} = input,
-         context,
-         %{max_depth: max_depth} = state
-       ) do
-    {uid, id, point} = find_by_captured_point(global_pos, context, max_depth)
+  # defp do_handle_captured_input(
+  #        {:cursor_enter, global_pos} = input,
+  #        context,
+  #        %{max_depth: max_depth} = state
+  #      ) do
+  #   {uid, id, point} = find_by_captured_point(global_pos, context, max_depth)
 
-    Scene.cast(
-      context.graph_key,
-      {
-        :input,
-        {:cursor_enter, point},
-        %{context | uid: uid, id: id, raw_input: input}
-      }
-    )
+  #   Scene.cast(
+  #     context.graph_key,
+  #     {
+  #       :input,
+  #       {:cursor_enter, point},
+  #       %{context | uid: uid, id: id, raw_input: input}
+  #     }
+  #   )
 
-    {:noreply, state}
-  end
+  #   {:noreply, state}
+  # end
 
-  # --------------------------------------------------------
-  # cursor_exit is only sent to the root graph_key
-  defp do_handle_captured_input(
-         {:cursor_exit, global_pos} = input,
-         context,
-         %{max_depth: max_depth} = state
-       ) do
-    {uid, id, point} = find_by_captured_point(global_pos, context, max_depth)
+  # # --------------------------------------------------------
+  # # cursor_exit is only sent to the root graph_key
+  # defp do_handle_captured_input(
+  #        {:cursor_exit, global_pos} = input,
+  #        context,
+  #        %{max_depth: max_depth} = state
+  #      ) do
+  #   {uid, id, point} = find_by_captured_point(global_pos, context, max_depth)
 
-    Scene.cast(
-      context.graph_key,
-      {
-        :input,
-        {:cursor_enter, point},
-        %{context | uid: uid, id: id, raw_input: input}
-      }
-    )
+  #   Scene.cast(
+  #     context.graph_key,
+  #     {
+  #       :input,
+  #       {:cursor_enter, point},
+  #       %{context | uid: uid, id: id, raw_input: input}
+  #     }
+  #   )
 
-    {:noreply, state}
-  end
+  #   {:noreply, state}
+  # end
 
   # --------------------------------------------------------
   # cursor_enter is only sent to the root graph_key
