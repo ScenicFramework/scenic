@@ -1,5 +1,4 @@
 defmodule Scenic.Primitive.Style.Paint.ColorTest do
-  @moduledoc false
   use ExUnit.Case, async: true
 
   import Scenic.Primitive.Style.Paint.Color
