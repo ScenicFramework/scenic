@@ -11,7 +11,7 @@ defmodule Scenic.Cache.Term do
   alias Scenic.Cache
   alias Scenic.Cache.Hash
 
-  #  import IEx
+  # import IEx
 
   # --------------------------------------------------------
   def load(path, hash, opts \\ [])
