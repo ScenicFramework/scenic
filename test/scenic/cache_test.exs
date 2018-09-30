@@ -17,16 +17,30 @@ defmodule Scenic.CacheTest do
   @agent_name :test_agent_name
 
   # --------------------------------------------------------
+  # setup do
+  #   assert :ets.info(@cache_table) == :undefined
+  #   assert :ets.info(@scope_table) == :undefined
+  #   :ets.new(@cache_table, [:set, :public, :named_table])
+  #   :ets.new(@scope_table, [:bag, :public, :named_table])
+
+  #   {:ok, agent} = Agent.start(fn -> 1 + 1 end, name: @agent_name)
+  #   on_exit(fn -> Agent.stop(agent) end)
+
+  #   %{agent: agent}
+  # end
+
   setup do
-    assert :ets.info(@cache_table) == :undefined
-    assert :ets.info(@scope_table) == :undefined
-    :ets.new(@cache_table, [:set, :public, :named_table])
-    :ets.new(@scope_table, [:bag, :public, :named_table])
-
+    Process.sleep(2)
+    {:ok, cache} = Cache.start_link(nil)
     {:ok, agent} = Agent.start(fn -> 1 + 1 end, name: @agent_name)
-    on_exit(fn -> Agent.stop(agent) end)
+    Process.sleep(4)
 
-    %{agent: agent}
+    on_exit(fn ->
+      Agent.stop(agent)
+      Process.exit(cache, :normal)
+    end)
+
+    %{cache: cache, agent: agent}
   end
 
   # ============================================================================
@@ -115,6 +129,22 @@ defmodule Scenic.CacheTest do
     assert Cache.keys() == ["test_key_0", "test_key_1"]
     assert Cache.get!("test_key_0") == "data_0"
     assert Cache.get!("test_key_1") == "data_1"
+  end
+
+  test "put overwrites existing items" do
+    Cache.put({:test_key, 123}, "data")
+    assert Cache.get!({:test_key, 123}) == "data"
+    Cache.put({:test_key, 123}, "new data")
+    assert Cache.get!({:test_key, 123}) == "new data"
+  end
+
+  # ============================================================================
+  # member?
+
+  test "member? works" do
+    refute Cache.member?("test_key")
+    Cache.put("test_key", "data")
+    assert Cache.member?("test_key")
   end
 
   # ============================================================================
@@ -244,6 +274,29 @@ defmodule Scenic.CacheTest do
 
   test "release returns false if the key does not exist" do
     refute Cache.release("test_key", delay: 0)
+  end
+
+  test "release delays the release by default" do
+    assert Cache.put("test_key", "data") == {:ok, "test_key"}
+    assert :ets.lookup(@cache_table, "test_key") == [{"test_key", 1, "data"}]
+    assert :ets.lookup(@scope_table, self()) == [{self(), "test_key", self()}]
+
+    assert Cache.release("test_key")
+
+    assert :ets.lookup(@cache_table, "test_key") == [{"test_key", 1, "data"}]
+  end
+
+  test "release delays the release by the specified amount" do
+    assert Cache.put("test_key", "data") == {:ok, "test_key"}
+    assert :ets.lookup(@cache_table, "test_key") == [{"test_key", 1, "data"}]
+    assert :ets.lookup(@scope_table, self()) == [{self(), "test_key", self()}]
+
+    assert Cache.release("test_key", delay: 10)
+    assert :ets.lookup(@cache_table, "test_key") == [{"test_key", 1, "data"}]
+
+    Process.sleep(20)
+    assert :ets.lookup(@cache_table, "test_key") == []
+    assert :ets.lookup(@scope_table, self()) == []
   end
 
   # ============================================================================
@@ -401,6 +454,26 @@ defmodule Scenic.CacheTest do
     assert Registry.keys(@cache_registry, self()) == [@cache_release]
     Cache.stop_notification(@cache_release)
     assert Registry.keys(@cache_registry, self()) == []
+  end
+
+  # ============================================================================
+  # notifications - integration style
+
+  test "notifications work - integration style" do
+    refute Cache.member?("test_key")
+
+    # sign up for notifications
+    Cache.request_notification(@cache_put)
+    refute_received({:"$gen_cast", {:cache_put, _}})
+
+    # put the key. This should send a notification
+    Cache.put("test_key", 123)
+    assert_received({:"$gen_cast", {:cache_put, "test_key"}})
+
+    # stop notifications
+    Cache.stop_notification()
+    Cache.put("test_key1", 123)
+    refute_received({:"$gen_cast", {:cache_put, _}})
   end
 end
 
