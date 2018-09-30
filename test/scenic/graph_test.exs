@@ -14,7 +14,7 @@ defmodule Scenic.GraphTest do
   alias Scenic.Primitive.Rectangle
   alias Scenic.Primitive.Line
 
-  # import IEx
+  import IEx
 
   @root_uid 0
 
@@ -442,6 +442,25 @@ defmodule Scenic.GraphTest do
   # end
 
   # ============================================================================
+  # add
+
+  test "add a pre-built primitive to a graph" do
+    p = Primitive.Line.build({{0, 0}, {2, 2}}, id: :added)
+    graph = Graph.add(@graph_find, p)
+    Graph.get!(graph, :added)
+  end
+
+  test "add a new primitive to a graph" do
+    count = Graph.count(@graph_find)
+
+    post_add_count =
+      Graph.add(@graph_find, Primitive.Line, {{0, 0}, {2, 2}})
+      |> Graph.count()
+
+    assert post_add_count > count
+  end
+
+  # ============================================================================
   # def modify( graph, uid, action )
 
   test "modify transforms a single primitive by developer id" do
@@ -638,5 +657,9 @@ defmodule Scenic.GraphTest do
     assert Map.get(graph.primitives[t0], :transforms) == @transform
     assert Map.get(graph.primitives[t1], :transforms) == @transform
     assert Map.get(graph.primitives[other], :transforms) == nil
+  end
+
+  test "style_stack returns an empty map for invalid uid" do
+    assert Graph.style_stack(@graph_find, 1234) == %{}
   end
 end
