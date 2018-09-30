@@ -14,7 +14,7 @@ defmodule Scenic.GraphTest do
   alias Scenic.Primitive.Rectangle
   alias Scenic.Primitive.Line
 
-  import IEx
+  # import IEx
 
   @root_uid 0
 

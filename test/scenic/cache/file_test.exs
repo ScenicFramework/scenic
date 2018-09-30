@@ -88,6 +88,15 @@ defmodule Scenic.Cache.FileReadTest do
              decompress: true
            ) == {:error, :hash_failure}
   end
+
+  test "read passes through errors" do
+    # missing term file
+    assert Cache.File.read(
+             "not/valid/path",
+             @invalid_sha256,
+             hash: :sha256
+           ) == {:error, :enoent}
+  end
 end
 
 defmodule Scenic.Cache.FileLoadTest do
@@ -186,5 +195,14 @@ defmodule Scenic.Cache.FileLoadTest do
              hash: :sha256,
              decompress: true
            ) == {:error, :hash_failure}
+  end
+
+  test "load passes through errors" do
+    # missing term file
+    assert Cache.File.load(
+             "not/valid/path",
+             @invalid_sha256,
+             hash: :sha256
+           ) == {:error, :enoent}
   end
 end
