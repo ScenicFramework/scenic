@@ -4,7 +4,21 @@
 #
 defmodule Scenic.Cache do
   @moduledoc """
-  Documentation for ScenicCache.
+  The Cache module serves several purposes at the same time.
+
+  First, static assets such as fonts, images and more tend to be relatively large compared to other data in the system.
+  It is good to have one place to load and access them for use by multiple scenes and drivers.
+
+  Second, the scenes are in control on when things are loaded. However, multiple scenes (across multiple viewports) may
+  try to load the same assets at the same time. The Cache does it’s best to manage the lifetime of these assets to
+  minimize memory used and work done to load and unload them.
+
+  Finally, the drivers react to the cache as assets are loaded and unloaded. They use a pub/sub interface to get changes
+  to items in the cache as they come and go.
+
+  In addition to the core cache/pub-sub features, the helper modules such as Cache.File, Cache.Hash and Cache.Term
+  enforce that the files being loaded are the ones the developer intended at build time. This helps reduce an attack
+  vector on devices and should be used consistently.
   """
   use GenServer
 
