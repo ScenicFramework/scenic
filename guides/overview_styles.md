@@ -25,7 +25,7 @@ For example, to use the style defined in the module Scenic.Primitive.Style.Font 
 * [`MiterLimit`](Scenic.Primitive.Style.MiterLimit.html) sets whether or not to miter a joint if the intersection of two lines is very sharp.
 * [`Scissor`](Scenic.Primitive.Style.Scissor.html) defines a rectangle that drawing will be clipped to.
 * [`Stroke`](Scenic.Primitive.Style.Stroke.html) defines how to draw the edge of a primitive. Specifies both a width and a [paint style](overview_styles.html#primitive-paint-styles).
-* [`TextAign`](Scenic.Primitive.Style.TextAign.html) sets the alignment of text relative to the starting point. Examples: :left, :center, or :right
+* [`TextAlign`](Scenic.Primitive.Style.TextAlign.html) sets the alignment of text relative to the starting point. Examples: :left, :center, or :right
 * [`Theme`](Scenic.Primitive.Style.Theme.html) a collection of default colors. Usually passed to components, telling them how to draw in your preferred color scheme.
 
 ## Primitive Paint Styles
