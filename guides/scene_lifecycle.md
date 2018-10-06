@@ -1,6 +1,6 @@
 # Life-cycle of a Scene
 
-A very important part of Scenic is the Scene life-cycle management. Most scenes' live-cycles will be managed automatically by their [ViewPort](overview_viewport.html). The ViewPort determines when to start and stop these dynamic scenes.
+A very important part of Scenic is the Scene life-cycle management. Most scenes' life-cycles will be managed automatically by their [ViewPort](overview_viewport.html). The ViewPort determines when to start and stop these dynamic scenes.
 
 In effect, when you create a graph and add components like `button`, `checkbox` and more, you are doing more than just saying, "Draw a button here". You instructing the `ViewPort` how and when to start and stop the processes that drive those components.
 

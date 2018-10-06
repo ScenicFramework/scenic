@@ -1,6 +1,6 @@
 # Structure of a Scene
 
-A `Scenic.Scene` is a `GenServer` process which creates and manages a [Graph](overview_graph.html) that gets drawn to the screen. Scenes also respondss to user input and other events.
+A `Scenic.Scene` is a `GenServer` process which creates and manages a [Graph](overview_graph.html) that gets drawn to the screen. Scenes also respond to user input and other events.
 
 Scenes can reference each other, creating a logical hierarchy that lives above
 the Graphs themselves. This allows scenes to be reusable, small, and simple. A
@@ -11,7 +11,7 @@ Scenes that are specifically meant to be reused are called components.
 Components have sugar apis that make them very easy to use inside of a parent
 scene.
 
-For example, if you create a dashboard. It may have buttons, text input,
+For example, if you create a dashboard, it may have buttons, text input,
 sliders, or other input controls in it. Each of those controls is a component
 scene that is dynamically created when the dashboard scene is started. This
 collection of scenes forms a graph, which can be quite deep (scenes using scenes
@@ -30,7 +30,7 @@ defines what is to be drawn to the screen, any referenced components, and the
 overall draw order. When the Scene decides the graph is ready to be drawn to the
 screen, it pushes it to the Viewport.
 
-In general, a graph is immutable data structure that you manipulate through
+In general, a graph is an immutable data structure that you manipulate through
 transform functions. In the example below `Graph.build()` creates an empty
 graph, which is piped into functions that add things to it. The `text/3`
 function accepts a graph, adds some text to it, then applies a list of options
@@ -130,7 +130,7 @@ option      | description
 ----------- | -----------
 `:id`       | If this scene is a component, then the id that was assigned to its reference in the parent's graph is passed in as the `:id` option. Typically, controls that generate and send events to its parent scene use this id to identify themselves. If this is the root scene, the id will not be set.
 `:styles`   | This is the map of styles inherited from the parent graph. The scene can use these styles (or not) as makes sense for its needs.
-`:viewport` | This is gives the pid of the viewport running this scene. It is very useful if you want to generate input or change the currently showing scene. If you are managing the scene in your own supervisor, it will not be set. See [life-cycle of a scene](scene_lifecycle.html) for more information.
+`:viewport` | This gives the pid of the viewport running this scene. It is very useful if you want to generate input or change the currently showing scene. If you are managing the scene in your own supervisor, it will not be set. See [life-cycle of a scene](scene_lifecycle.html) for more information.
 
 ## Pushing a Graph
 
@@ -183,7 +183,7 @@ event that you handle.
 ## User Input
 
 A Scene also responds to messages. The two types of messages Scenic will send to
-scene are user input, and events.
+the scene are user input and events.
 
 ## Events
 
@@ -198,7 +198,7 @@ to use from within another scene. To make a component, call the
 `use Scenic.Component` macro instead of the Scene version.
 
 You will then need to add `info/0` and `verify/1` callbacks. The `verify/1`
-accepts the `scene_args`parameter that will be passed to the `init/2` function,
+accepts the `scene_args` parameter that will be passed to the `init/2` function
 and verifies that it is correctly formatted. If it is correct, return
 `{:ok, data}`. If it is not ok, return `:invalid_data`.
 
@@ -274,5 +274,5 @@ With helper functions, the above graph would be re-written like this:
 ## What to read next?
 
 Next, you should read about the [life-cycle of a scene](scene_lifecycle.html).
-This will explain how scenes get started, when the stop, and how they relate to
+This will explain how scenes get started, when they stop, and how they relate to
 each other.

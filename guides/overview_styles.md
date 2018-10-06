@@ -2,7 +2,7 @@
 
 Styles are optional modifiers that you can put on any primitive. Each style does a specific thing and some only affect certain primitives.
 
-There is a fixed list of primitives styles, which are understood by the drivers. Some Components may introduce their own optional styles, but the only ones sent down to the drivers for rendering is the list below.
+There is a fixed list of primitive styles which are understood by the drivers. Some Components may introduce their own optional styles, but the only ones sent down to the drivers for rendering are contained in the list below.
 
 In general, the primitive styles are each defined in their own module, but you apply them as options in a primitive's option list.
 
@@ -34,7 +34,7 @@ The `Fill` and `Stroke` styles accept a paint type. This describes what to fill 
 
 There is a fixed set of paint types that the drivers know how to render.
 
-* [`BoxGradient`](Scenic.Primitive.Style.Paint.BoxGradient.html) fills an primitive with a box gradient.
+* [`BoxGradient`](Scenic.Primitive.Style.Paint.BoxGradient.html) fills a primitive with a box gradient.
 * [`Color`](Scenic.Primitive.Style.Paint.Color.html) fills a primitive with a solid color. 
 * [`Image`](Scenic.Primitive.Style.Paint.Image.html) fills a primitive with an image that is loaded into `Scenic.Cache`.
 * [`LinearGradient`](Scenic.Primitive.Style.Paint.LinearGradient.html) fills a primitive with a linear gradient.

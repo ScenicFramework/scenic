@@ -5,7 +5,7 @@ building your first Scenic application.
 
 ## Install `scenic.new`
 
-The Scenic Archive is the home of the `scenic.new` mix task, which layout a
+The Scenic Archive is the home of the `scenic.new` mix task, which lays out a
 starter application for you. This is the easiest way to set up a new Scenic
 project.
 
@@ -51,7 +51,7 @@ configurations should live in your app's config.exs file.
       ]
     }
 
-Then use that config for start your supervisor with the `Scenic` supervisor.
+Then use that config to start your supervisor with the `Scenic` supervisor.
 
 ```elixir
 defmodule MyApp do
@@ -112,7 +112,7 @@ Scenic application. It has four scenes, two components, and a simulated sensor.
 
 - **Splash:** The Splash scene is configured to run when the app is started in
   the `config/config.exs` file. It runs a simple animation, then transitions to
-  the Sensor scene. It also shows how intercept basic user input to exit the
+  the Sensor scene. It also shows how to intercept basic user input to exit the
   scene early.
 
 - **Sensor:** The Sensor scene depicts a simulated temperature sensor. The

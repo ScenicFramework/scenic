@@ -1,3 +1,3 @@
-Placesholder for getting started with Nerves
+Placeholder for getting started with Nerves
 
 Coming soon
