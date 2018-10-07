@@ -1,3 +1,4 @@
+# credo:disable-for-this-file Credo.Check.Warning.IoInspect
 defmodule Mix.Tasks.Scenic.Hash do
   use Mix.Task
 
@@ -35,7 +36,7 @@ defmodule Mix.Tasks.Scenic.Hash do
       >> guides/overview_general.md -> "UNcd84guRIEBK5a0tWdp5MYmJpI"
       >> guides/overview_driver.md -> "zsTJ_xDQGrXLBtQk80hSUt-wZYE"
       >> guides/scene_lifecycle.md -> "jNcP7dPNXon0zEMtyCqL2z-A7FY"
-      >> guides/scene_structure.md -> "apxgZRkCBHZeNNzCMpxgQRytHLA"
+      >> guides/overview_scene.md -> "apxgZRkCBHZeNNzCMpxgQRytHLA"
       >> guides/getting_started.md -> "v1So-K14iPs_mGQZqr237TPah8I"
       >> guides/overview_viewport.md -> "3TpXIFxcwG54N2bb0O-86aznSS4"
       >> guides/mix_tasks.md -> "CWp9l8tDfHf5czjJqpbKtPqaqlc"

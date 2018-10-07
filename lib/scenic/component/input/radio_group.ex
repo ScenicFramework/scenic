@@ -1,4 +1,5 @@
 defmodule Scenic.Component.Input.RadioGroup do
+  @moduledoc false
   use Scenic.Component, has_children: true
 
   alias Scenic.Graph
@@ -90,10 +91,10 @@ defmodule Scenic.Component.Input.RadioGroup do
     {:ok, state}
   end
 
-  # --------------------------------------------------------
-  def handle_cast({:set_value, new_value}, state) do
-    {:noreply, %{state | value: new_value}}
-  end
+  # # --------------------------------------------------------
+  # def handle_cast({:set_value, new_value}, state) do
+  #   {:noreply, %{state | value: new_value}}
+  # end
 
   # ============================================================================
 

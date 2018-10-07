@@ -3,10 +3,10 @@
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Component.Input.Carat do
+defmodule Scenic.Component.Input.Caret do
+  @moduledoc false
+
   use Scenic.Component, has_children: false
-  alias Scenic.Graph
-  alias Scenic.Primitive.Style.Paint.Color
 
   import Scenic.Primitives,
     only: [
@@ -14,12 +14,15 @@ defmodule Scenic.Component.Input.Carat do
       {:update_opts, 2}
     ]
 
+  alias Scenic.Graph
+  alias Scenic.Primitive.Style.Paint.Color
+
   @width 2
   @inset_v 4
 
-  # carat blink speed in hertz
-  @carat_hz 1.5
-  @carat_ms trunc(@carat_hz * 500)
+  # caret blink speed in hertz
+  @caret_hz 1.5
+  @caret_ms trunc(@caret_hz * 500)
 
   # ============================================================================
   # setup
@@ -27,13 +30,14 @@ defmodule Scenic.Component.Input.Carat do
   # --------------------------------------------------------
   def info(data) do
     """
-    #{IO.ANSI.red()}Carat data must be: {height, color}
+    #{IO.ANSI.red()}Caret data must be: {height, color}
     #{IO.ANSI.yellow()}Received: #{inspect(data)}
     #{IO.ANSI.default_color()}
     """
   end
 
   # --------------------------------------------------------
+  @spec verify(any()) :: :invalid_data | {:ok, {number(), any()}}
   def verify({height, color} = data)
       when is_number(height) and height > 0 do
     case Color.verify(color) do
@@ -53,13 +57,13 @@ defmodule Scenic.Component.Input.Carat do
         {{0, @inset_v}, {0, height - @inset_v}},
         stroke: {@width, color},
         hidden: true,
-        id: :carat
+        id: :caret
       )
       |> push_graph()
 
     state = %{
       graph: graph,
-      hidden: false,
+      hidden: true,
       timer: nil,
       focused: false
     }
@@ -68,25 +72,25 @@ defmodule Scenic.Component.Input.Carat do
   end
 
   # --------------------------------------------------------
-  def handle_cast(:gain_focus, %{graph: graph, timer: nil} = state) do
-    # turn on the carat
+  def handle_cast(:start_caret, %{graph: graph, timer: nil} = state) do
+    # turn on the caret
     graph =
       graph
-      |> Graph.modify(:carat, &update_opts(&1, hidden: false))
+      |> Graph.modify(:caret, &update_opts(&1, hidden: false))
       |> push_graph()
 
     # start the timer
-    {:ok, timer} = :timer.send_interval(@carat_ms, :blink)
+    {:ok, timer} = :timer.send_interval(@caret_ms, :blink)
 
     {:noreply, %{state | graph: graph, hidden: false, timer: timer, focused: true}}
   end
 
   # --------------------------------------------------------
-  def handle_cast(:lose_focus, %{graph: graph, timer: timer} = state) do
-    # hide the carat
+  def handle_cast(:stop_caret, %{graph: graph, timer: timer} = state) do
+    # hide the caret
     graph =
       graph
-      |> Graph.modify(:carat, &update_opts(&1, hidden: true))
+      |> Graph.modify(:caret, &update_opts(&1, hidden: true))
       |> push_graph()
 
     # stop the timer
@@ -100,20 +104,20 @@ defmodule Scenic.Component.Input.Carat do
 
   # --------------------------------------------------------
   def handle_cast(
-        :reset_carat,
+        :reset_caret,
         %{graph: graph, timer: timer, focused: true} = state
       ) do
-    # show the carat
+    # show the caret
     graph =
       graph
-      |> Graph.modify(:carat, &update_opts(&1, hidden: false))
+      |> Graph.modify(:caret, &update_opts(&1, hidden: false))
       |> push_graph()
 
     # stop the timer
     if timer, do: :timer.cancel(timer)
 
     # restart the timer
-    {:ok, timer} = :timer.send_interval(@carat_ms, :blink)
+    {:ok, timer} = :timer.send_interval(@caret_ms, :blink)
 
     {:noreply, %{state | graph: graph, hidden: false, timer: timer}}
   end
@@ -129,7 +133,7 @@ defmodule Scenic.Component.Input.Carat do
 
     graph =
       graph
-      |> Graph.modify(:carat, &update_opts(&1, hidden: hidden))
+      |> Graph.modify(:caret, &update_opts(&1, hidden: hidden))
       |> push_graph()
 
     {:noreply, %{state | graph: graph, hidden: hidden}}

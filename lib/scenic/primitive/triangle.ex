@@ -4,10 +4,10 @@
 #
 
 defmodule Scenic.Primitive.Triangle do
+  @moduledoc false
+
   use Scenic.Primitive
   alias Scenic.Math
-  #  alias Scenic.Primitive
-  #  alias Scenic.Primitive.Style
 
   @styles [:hidden, :fill, :stroke]
 
@@ -30,6 +30,7 @@ defmodule Scenic.Primitive.Triangle do
   def verify(_), do: :invalid_data
 
   # ============================================================================
+  @spec valid_styles() :: [:fill | :hidden | :stroke, ...]
   def valid_styles(), do: @styles
 
   # --------------------------------------------------------
@@ -68,9 +69,9 @@ defmodule Scenic.Primitive.Triangle do
       dot12 = Math.Vector2.dot(v1, v2)
 
       # Compute barycentric coordinates
-      invDenom = 1.0 / (dot00 * dot11 - dot01 * dot01)
-      u = (dot11 * dot02 - dot01 * dot12) * invDenom
-      v = (dot00 * dot12 - dot01 * dot02) * invDenom
+      inv_denom = 1.0 / (dot00 * dot11 - dot01 * dot01)
+      u = (dot11 * dot02 - dot01 * dot12) * inv_denom
+      v = (dot00 * dot12 - dot01 * dot02) * inv_denom
 
       # Check if point is in triangle
       u >= 0 && v >= 0 && u + v < 1

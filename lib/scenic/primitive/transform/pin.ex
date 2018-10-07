@@ -4,30 +4,18 @@
 #
 
 defmodule Scenic.Primitive.Transform.Pin do
+  @moduledoc false
   use Scenic.Primitive.Transform
 
   # ============================================================================
   # data verification and serialization
 
   # --------------------------------------------------------
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be a 2d vector: {x,y}
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
-      #{IO.ANSI.default_color()}
-    """
+  defdelegate info(data), to: Scenic.Primitive.Transform.Translate
 
   # --------------------------------------------------------
-  def verify(percent) do
-    try do
-      normalize(percent)
-      true
-    rescue
-      _ -> false
-    end
-  end
+  defdelegate verify(percent), to: Scenic.Primitive.Transform.Translate
 
   # --------------------------------------------------------
-  # normalize named stipples
-  def normalize({x, y}) when is_number(x) and is_number(y), do: {x, y}
+  defdelegate normalize(v2), to: Scenic.Primitive.Transform.Translate
 end

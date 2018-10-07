@@ -10,6 +10,10 @@ defmodule Scenic.Primitive.Style.TextAlignTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.TextAlign
 
+  test "info works" do
+    assert TextAlign.info(:test_data) =~ ":test_data"
+  end
+
   # ============================================================================
   # verify - various forms
 

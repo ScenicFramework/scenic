@@ -10,6 +10,10 @@ defmodule Scenic.Primitive.Style.StrokeTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Stroke
 
+  test "info works" do
+    assert Stroke.info(:test_data) =~ ":test_data"
+  end
+
   # ============================================================================
   # verify - various forms
 

@@ -4,23 +4,24 @@
 #
 
 defmodule Scenic.Graph do
-  alias Scenic.Graph
+  @moduledoc false
+
   alias Scenic.Primitive
   alias Scenic.Primitive.Group
-
-  #  import IEx
 
   # make reserved uids, 3 or shorter to avoid potential conflicts
   @root_uid 0
 
   @default_max_depth 128
 
+  @default_font :roboto
+  @default_font_size 24
+
   @root_id :_root_
 
-  # defstruct primitives: %{}, ids: %{}, next_uid: 1, add_to: 0    
   defstruct primitives: %{}, ids: %{}, next_uid: 1, add_to: 0
 
-  @type t :: %Graph{
+  @type t :: %__MODULE__{
           primitives: map,
           ids: map,
           next_uid: pos_integer,
@@ -32,6 +33,7 @@ defmodule Scenic.Graph do
   # ===========================================================================
   # define a policy error here - not found or something like that
   defmodule Error do
+    @moduledoc false
     defexception message: "Graph was unable to perform the operation",
                  # expecting more appropriate messages when raising this
                  primitive: nil,
@@ -40,7 +42,7 @@ defmodule Scenic.Graph do
 
   @err_msg_depth "Graph too deep. Possible circular reference!"
   @err_msg_depth_option "The :max_depth option must be a positive integer"
-  # @err_msg_group          "Can only add primitives to Group nodes"
+  # @err_msg_group "Can only add primitives to Group nodes"
   @err_msg_put "Graph.put can only update existing items."
   @err_msg_get_id_one "Graph.get! expected to find one and only one element"
 
@@ -48,54 +50,39 @@ defmodule Scenic.Graph do
   # access to the raw graph fields
   # concentrate all knowledge of the internal structure of the graph tuple here
 
-  @spec get_root(graph :: Graph.t()) :: Primitive.t()
-  def get_root(%Graph{} = graph), do: graph.primitives[@root_uid]
+  @spec get_root(graph :: t()) :: Primitive.t()
+  def get_root(%__MODULE__{} = graph) do
+    Map.delete(graph.primitives[@root_uid], :styles)
+  end
 
   # ============================================================================
   # build a new graph, starting with the given element
-  @spec build(opts :: keyword) :: Graph.t()
+  @spec build(opts :: keyword) :: t()
   def build(opts \\ []) do
-    root = Group.build([], opts)
+    opts = handle_options(opts)
 
-    graph = %Graph{
-      primitives: %{@root_uid => root},
-      # pre-map the root
-      ids: %{@root_id => [0]}
-    }
-
-    graph =
-      case opts[:id] do
-        nil -> graph
-        id -> map_id_to_uid(graph, id, @root_uid)
-      end
-
-    case opts[:max_depth] do
-      nil ->
-        graph
-
-      max ->
-        cond do
-          is_integer(max) && max > 0 -> Map.put(graph, :max_depth, max)
-          true -> raise Error, message: @err_msg_depth_option
-        end
-    end
+    []
+    |> Group.build(opts)
+    |> new()
+    |> set_id(opts[:id])
+    |> set_max_depth(opts[:max_depth])
   end
 
   # ============================================================================
   # add a pre-built primitive
-  @spec add(graph :: Graph.t(), primitive :: Primitive.t()) :: Graph.t()
+  @spec add(graph :: t(), primitive :: Primitive.t()) :: t()
   def add(graph, primitive)
 
-  def add(%Graph{add_to: puid} = g, %Primitive{} = p) do
+  def add(%__MODULE__{add_to: puid} = g, %Primitive{} = p) do
     {graph, _uid} = insert_at({g, puid}, -1, p)
     graph
   end
 
   # build and add new primitives
-  @spec add(graph :: Graph.t(), module :: atom, data :: any, opts :: keyword) :: Graph.t()
+  @spec add(graph :: t(), module :: atom, data :: any, opts :: keyword) :: t()
   def add(graph, primitive_module, primitive_data, opts \\ [])
 
-  def add(%Graph{add_to: puid} = g, Group, builder, opts) when is_function(builder, 1) do
+  def add(%__MODULE__{add_to: puid} = g, Group, builder, opts) when is_function(builder, 1) do
     p = Group.build([], opts)
     {graph, uid} = insert_at({g, puid}, -1, p, opts)
 
@@ -108,7 +95,7 @@ defmodule Scenic.Graph do
     |> Map.put(:add_to, puid)
   end
 
-  def add(%Graph{add_to: puid} = g, mod, data, opts) when is_atom(mod) do
+  def add(%__MODULE__{add_to: puid} = g, mod, data, opts) when is_atom(mod) do
     p = mod.build(data, opts)
     {graph, _uid} = insert_at({g, puid}, -1, p, opts)
     graph
@@ -116,8 +103,8 @@ defmodule Scenic.Graph do
 
   # ============================================================================
   # delete a primitive/s from a graph
-  @spec delete(graph :: Graph.t(), id :: any) :: Graph.t()
-  def delete(%Graph{primitives: primitives, ids: ids} = graph, id) do
+  @spec delete(graph :: t(), id :: any) :: t()
+  def delete(%__MODULE__{primitives: primitives, ids: ids} = graph, id) do
     # resolve the id into a list of uids
     uids = Map.get(ids, id, [])
 
@@ -127,20 +114,10 @@ defmodule Scenic.Graph do
         # get the uid of the parent group
         %Primitive{parent_uid: puid} = prims[uid]
 
-        # remove the reference from the parent
-        prims =
-          case prims[puid] do
-            # no parent
-            -1 ->
-              prims
-
-            %Primitive{module: Group, data: children} = p ->
-              children = Enum.reject(children, fn cuid -> cuid == uid end)
-              Map.put(prims, puid, %{p | data: children})
-          end
-
+        prims[puid]
+        |> remove_reference_from_parent(prims, uid, puid)
         # delete the primitive itself
-        Map.delete(prims, uid)
+        |> Map.delete(uid)
       end)
 
     # delete the ids
@@ -148,6 +125,19 @@ defmodule Scenic.Graph do
 
     # reassemble the graph
     %{graph | primitives: primitives, ids: ids}
+  end
+
+  # no parent
+  defp remove_reference_from_parent(-1, prims, _uid, _puid), do: prims
+
+  defp remove_reference_from_parent(
+         %Primitive{module: Group, data: children} = p,
+         prims,
+         uid,
+         puid
+       ) do
+    children = Enum.reject(children, fn cuid -> cuid == uid end)
+    Map.put(prims, puid, %{p | data: children})
   end
 
   # ============================================================================
@@ -191,7 +181,8 @@ defmodule Scenic.Graph do
   # put an element by uid - internal use
   defp put_by_uid(graph, uid, primitive)
 
-  defp put_by_uid(%Graph{primitives: primitives} = graph, uid, primitive) when is_integer(uid) do
+  defp put_by_uid(%__MODULE__{primitives: primitives} = graph, uid, primitive)
+       when is_integer(uid) do
     case get_by_uid(graph, uid) do
       nil ->
         raise Error, message: @err_msg_put
@@ -205,11 +196,40 @@ defmodule Scenic.Graph do
     end
   end
 
+  # handle options helper
+  defp handle_options(opts) do
+    font = opts[:font] || @default_font
+    font_size = opts[:font_size] || @default_font_size
+
+    Keyword.merge(opts, font: font, font_size: font_size)
+  end
+
+  # new
+  defp new(root) do
+    %__MODULE__{
+      primitives: %{@root_uid => root},
+      # pre-map the root
+      ids: %{@root_id => [0]}
+    }
+  end
+
+  # Set Graph ID
+  defp set_id(%__MODULE__{} = graph, nil), do: graph
+  defp set_id(%__MODULE__{} = graph, id), do: map_id_to_uid(graph, id, @root_uid)
+
+  # Set Graph max depth
+  defp set_max_depth(%__MODULE__{} = graph, nil), do: graph
+
+  defp set_max_depth(%__MODULE__{} = graph, max) when is_integer(max) and max > 0,
+    do: Map.put(graph, :max_depth, max)
+
+  defp set_max_depth(_, _), do: raise(Error, message: @err_msg_depth_option)
+
   # ============================================================================
   # create an entry in the ids
   defp map_id_to_uid(graph, id, uid)
 
-  defp map_id_to_uid(%Graph{ids: ids} = graph, id, uid) when is_integer(uid) do
+  defp map_id_to_uid(%__MODULE__{ids: ids} = graph, id, uid) when is_integer(uid) do
     Map.put(
       graph,
       :ids,
@@ -218,7 +238,7 @@ defmodule Scenic.Graph do
   end
 
   defp do_map_id_to_uid(%{} = ids, id, uid) when is_integer(uid) do
-    uid_list = [uid | Map.get(ids, id, [])] |> Enum.uniq()
+    uid_list = Enum.uniq([uid | Map.get(ids, id, [])])
     Map.put(ids, id, uid_list)
   end
 
@@ -243,26 +263,26 @@ defmodule Scenic.Graph do
   # ============================================================================
   defp resolve_id(graph, id)
 
-  defp resolve_id(%Graph{ids: ids}, id) do
+  defp resolve_id(%__MODULE__{ids: ids}, id) do
     Map.get(ids, id, [])
   end
 
   # ============================================================================
   # --------------------------------------------------------
   # count all the nodes in a graph.
-  @spec count(graph :: Graph.t()) :: integer
+  @spec count(graph :: t()) :: integer
   def count(graph)
 
-  def count(%Graph{} = graph) do
+  def count(%__MODULE__{} = graph) do
     do_reduce(graph, 0, 0, fn _, acc -> acc + 1 end)
   end
 
   # --------------------------------------------------------
   # count the nodes associated with an id.
-  @spec count(graph :: Graph.t(), id :: any) :: integer
+  @spec count(graph :: t(), id :: any) :: integer
   def count(graph, id)
 
-  def count(%Graph{ids: ids}, id) do
+  def count(%__MODULE__{ids: ids}, id) do
     ids
     |> Map.get(id, [])
     |> Enum.count()
@@ -272,7 +292,7 @@ defmodule Scenic.Graph do
   # get an element by uid. Used internally
   defp get_by_uid(graph, uid, default \\ nil)
 
-  defp get_by_uid(%Graph{primitives: primitives}, uid, default) when is_integer(uid) do
+  defp get_by_uid(%__MODULE__{primitives: primitives}, uid, default) when is_integer(uid) do
     Map.get(primitives, uid, default)
   end
 
@@ -280,14 +300,14 @@ defmodule Scenic.Graph do
   # get an element by uid. Raise error if not there
   defp get_by_uid!(graph, uid)
 
-  defp get_by_uid!(%Graph{primitives: primitives}, uid) do
+  defp get_by_uid!(%__MODULE__{primitives: primitives}, uid) do
     Map.fetch!(primitives, uid)
   end
 
   # ============================================================================
   # get a list of primitives by id
-  @spec get(graph :: Graph.t(), id :: any) :: list(Primitive.t())
-  def get(%Graph{} = graph, id) do
+  @spec get(graph :: t(), id :: any) :: list(Primitive.t())
+  def get(%__MODULE__{} = graph, id) do
     graph
     |> resolve_id(id)
     |> Enum.reduce([], fn uid, acc -> [get_by_uid(graph, uid) | acc] end)
@@ -296,8 +316,8 @@ defmodule Scenic.Graph do
 
   # --------------------------------------------------------
   # get a single primitive by id. Raise error if it finds any count other than one
-  @spec get!(graph :: Graph.t(), id :: any) :: Primitive.t()
-  def get!(%Graph{} = graph, id) do
+  @spec get!(graph :: t(), id :: any) :: Primitive.t()
+  def get!(%__MODULE__{} = graph, id) do
     case resolve_id(graph, id) do
       [uid] -> get_by_uid(graph, uid)
       _ -> raise Error, message: @err_msg_get_id_one
@@ -317,7 +337,7 @@ defmodule Scenic.Graph do
   # --------------------------------------------------------
   # main version - force it to be a new item via -1 parent id
   defp insert_at(
-         {%Graph{primitives: primitives} = graph, parent_uid},
+         {%__MODULE__{primitives: primitives} = graph, parent_uid},
          index,
          %Primitive{} = primitive,
          _opts
@@ -327,10 +347,7 @@ defmodule Scenic.Graph do
     uid = next_uid = graph.next_uid
 
     # prepare the primitive
-    primitive =
-      primitive
-      # |> Map.put(:uid, uid)
-      |> Map.put(:parent_uid, parent_uid)
+    primitive = Map.put(primitive, :parent_uid, parent_uid)
 
     # add the element to the primitives map, setting parent_uid into place
     primitives = Map.put(primitives, uid, primitive)
@@ -345,7 +362,8 @@ defmodule Scenic.Graph do
         puid ->
           p_map = graph.primitives
 
-          Map.get(p_map, puid)
+          p_map
+          |> Map.get(puid)
           |> Group.insert_at(index, uid)
           |> (&Map.put(p_map, puid, &1)).()
           |> (&Map.put(graph, :primitives, &1)).()
@@ -358,10 +376,7 @@ defmodule Scenic.Graph do
         id -> map_id_to_uid(graph, id, uid)
       end
 
-    # |> calculate_transforms( uid )
-
     # increment the next uid and gen the completed graph
-    # {put_next_uid(graph, next_uid + 1), uid}
     {Map.put(graph, :next_uid, next_uid + 1), uid}
   end
 
@@ -369,8 +384,8 @@ defmodule Scenic.Graph do
   # In case I want to reintroduce templates.
   #   #--------------------------------------------------------
   #   # insert a template, which is a graph that has relative uids
-  #   # can't just merge the various maps. map the incoming graph into an id space that 
-  #   # starts with next_uid, then bump up next_uid to account for everything in the updated graph 
+  #   # can't just merge the various maps. map the incoming graph into an id space that
+  #   # starts with next_uid, then bump up next_uid to account for everything in the updated graph
   #   defp insert_at({%Graph{primitives: p_map, ids: ids, next_uid: next_uid} = graph, parent_uid},
   #       index,
   #       %Graph{primitives: t_p_map, ids: t_ids, next_uid: t_next_uid} = t_graph,
@@ -489,18 +504,14 @@ defmodule Scenic.Graph do
           %Primitive{module: mod} = p_modified ->
             # filter the styles
             styles =
-              Map.get(p_modified, :styles, %{})
+              p_modified
+              |> Map.get(:styles, %{})
               |> mod.filter_styles()
 
             p_modified = Map.put(p_modified, :styles, styles)
 
             graph
-            # |> put_delta_base( uid, p_original )
             |> put_by_uid(uid, p_modified)
-
-          # update the transforms. This means recalc the local_tx and recursivly update the inverse_tx
-          # |> calculate_local_transform( uid )
-          # |> calculate_inverse_transforms( uid )
 
           _ ->
             raise Error, message: "Action must return a valid primitive"
@@ -508,33 +519,35 @@ defmodule Scenic.Graph do
     end
   end
 
-  @spec modify(graph :: Graph.t(), id :: any, action :: function) :: Graph.t()
+  @spec modify(graph :: t(), id :: any, action :: (... -> Primitive.t())) :: t()
   def modify(graph, id, action)
 
   # pass in an atom based id, and it will transform all mapped uids
-  def modify(graph, id, action) do
-    resolve_id(graph, id)
+  def modify(%__MODULE__{} = graph, id, action) do
+    graph
+    |> resolve_id(id)
     |> Enum.reduce(graph, &modify_by_uid(&2, &1, action))
   end
 
   # ============================================================================
   # map a graph via traversal from the root node
-  @spec map(graph :: Graph.t(), action :: function) :: Graph.t()
-  def map(graph, action) when is_function(action, 1) do
+  @spec map(graph :: t(), action :: function) :: t()
+  def map(%__MODULE__{} = graph, action) when is_function(action, 1) do
     do_map(graph, @root_uid, action)
   end
 
   # ============================================================================
   # map a graph, but only those elements mapped to the id
-  @spec map(graph :: Graph.t(), id :: any, action :: function) :: Graph.t()
-  def map(graph, id, action) when is_function(action, 1) do
+  @spec map(graph :: t(), id :: any, action :: function) :: t()
+  def map(%__MODULE__{} = graph, id, action) when is_function(action, 1) do
     # resolve the id into a list of uids
     uids = resolve_id(graph, id)
 
     # map those elements via reduction
     Enum.reduce(uids, graph, fn uid, acc ->
-      # retreive and map this node
-      get_by_uid!(acc, uid)
+      # retrieve and map this node
+      acc
+      |> get_by_uid!(uid)
       |> action.()
       |> (&put_by_uid(acc, uid, &1)).()
     end)
@@ -552,10 +565,10 @@ defmodule Scenic.Graph do
   defp do_map(_, _, _, 0), do: raise(Error, message: @err_msg_depth)
 
   defp do_map(graph, uid, action, depth_remaining) do
-    # retreive this node
+    # retrieve this node
     primitive = get_by_uid!(graph, uid)
 
-    # retreive and map this node
+    # retrieve and map this node
     graph =
       primitive
       |> action.()
@@ -564,7 +577,7 @@ defmodule Scenic.Graph do
     # if this is a group, map its children
     case primitive.module do
       Group ->
-        # map it's children by reducing the graph
+        # map its children by reducing the graph
         Enum.reduce(Primitive.get(primitive), graph, fn uid, acc ->
           do_map(acc, uid, action, depth_remaining - 1)
         end)
@@ -577,15 +590,15 @@ defmodule Scenic.Graph do
 
   # ============================================================================
   # reduce a graph via traversal from the root node
-  @spec reduce(graph :: Graph.t(), acc :: any, action :: function) :: any
-  def reduce(%Graph{} = graph, acc, action) when is_function(action, 2) do
+  @spec reduce(graph :: t(), acc :: any, action :: function) :: any
+  def reduce(%__MODULE__{} = graph, acc, action) when is_function(action, 2) do
     do_reduce(graph, @root_uid, acc, action)
   end
 
   # ============================================================================
   # reduce a graph, but only for nodes mapped to the given id
-  @spec reduce(graph :: Graph.t(), id :: any, acc :: any, action :: function) :: any
-  def reduce(graph, id, acc, action) when is_function(action, 2) do
+  @spec reduce(graph :: t(), id :: any, acc :: any, action :: function) :: any
+  def reduce(%__MODULE__{} = graph, id, acc, action) when is_function(action, 2) do
     # resolve the id into a list of uids
     uids = resolve_id(graph, id)
 
@@ -609,7 +622,7 @@ defmodule Scenic.Graph do
   defp do_reduce(_, _, _, _, 0), do: raise(Error, message: @err_msg_depth)
 
   defp do_reduce(graph, uid, acc, action, depth_remaining) when depth_remaining > 0 do
-    # retreive this node
+    # retrieve this node
     primitive = get_by_uid!(graph, uid)
 
     # if this is a group, reduce its children
@@ -631,8 +644,8 @@ defmodule Scenic.Graph do
 
   # ============================================================================
   @doc false
-  @spec style_stack(graph :: Graph.t(), uid :: integer) :: map
-  def style_stack(%Graph{primitives: p_map} = graph, uid) when is_integer(uid) do
+  @spec style_stack(graph :: t(), uid :: integer) :: map
+  def style_stack(%__MODULE__{primitives: p_map} = graph, uid) when is_integer(uid) do
     # get the target primitive
     case p_map[uid] do
       nil ->
@@ -643,7 +656,8 @@ defmodule Scenic.Graph do
 
       %{parent_uid: puid} = p ->
         # merge the local styles into the parent styles
-        style_stack(graph, puid)
+        graph
+        |> style_stack(puid)
         |> Map.merge(Primitive.get_styles(p))
     end
   end

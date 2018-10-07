@@ -4,7 +4,21 @@
 #
 defmodule Scenic.Cache do
   @moduledoc """
-  Documentation for ScenicCache.
+  The Cache module serves several purposes at the same time.
+
+  First, static assets such as fonts, images and more tend to be relatively large compared to other data in the system.
+  It is good to have one place to load and access them for use by multiple scenes and drivers.
+
+  Second, the scenes are in control on when things are loaded. However, multiple scenes (across multiple viewports) may
+  try to load the same assets at the same time. The Cache does it’s best to manage the lifetime of these assets to
+  minimize memory used and work done to load and unload them.
+
+  Finally, the drivers react to the cache as assets are loaded and unloaded. They use a pub/sub interface to get changes
+  to items in the cache as they come and go.
+
+  In addition to the core cache/pub-sub features, the helper modules such as Cache.File, Cache.Hash and Cache.Term
+  enforce that the files being loaded are the ones the developer intended at build time. This helps reduce an attack
+  vector on devices and should be used consistently.
   """
   use GenServer
 
@@ -48,36 +62,39 @@ defmodule Scenic.Cache do
   def get(key, default \\ nil)
 
   def get(key, default) do
-    try do
-      :ets.lookup_element(@cache_table, key, 3)
-    rescue
-      ArgumentError -> default
-      other -> raise other
-    end
+    :ets.lookup_element(@cache_table, key, 3)
+  rescue
+    ArgumentError ->
+      default
+
+    other ->
+      reraise(other, __STACKTRACE__)
   end
 
   # --------------------------------------------------------
   def fetch(key)
 
   def fetch(key) do
-    try do
-      {:ok, :ets.lookup_element(@cache_table, key, 3)}
-    rescue
-      ArgumentError -> {:error, :not_found}
-      other -> raise other
-    end
+    {:ok, :ets.lookup_element(@cache_table, key, 3)}
+  rescue
+    ArgumentError ->
+      {:error, :not_found}
+
+    other ->
+      reraise(other, __STACKTRACE__)
   end
 
   # --------------------------------------------------------
   def get!(key)
 
   def get!(key) do
-    try do
-      :ets.lookup_element(@cache_table, key, 3)
-    rescue
-      ArgumentError -> raise Error, message: "Key #{inspect(key)} not found."
-      other -> raise other
-    end
+    :ets.lookup_element(@cache_table, key, 3)
+  rescue
+    ArgumentError ->
+      reraise(Error, [message: "Key #{inspect(key)} not found."], __STACKTRACE__)
+
+    other ->
+      reraise(other, __STACKTRACE__)
   end
 
   # --------------------------------------------------------
@@ -299,16 +316,14 @@ defmodule Scenic.Cache do
 
   # --------------------------------------------------------
   defp do_keys(scope) do
-    :ets.match(@scope_table, {scope, :"$2", :_})
+    @scope_table
+    |> :ets.match({scope, :"$2", :_})
     |> List.flatten()
   end
 
   # --------------------------------------------------------
   defp key_in_scope?(scope, key) do
-    case :ets.match(@scope_table, {scope, key, :_}) do
-      [] -> false
-      _ -> true
-    end
+    :ets.match(@scope_table, {scope, key, :_}) != []
   end
 
   # ============================================================================

@@ -1,4 +1,6 @@
 defmodule Scenic.Component.Input.RadioButton do
+  @moduledoc false
+
   use Scenic.Component, has_children: false
 
   alias Scenic.Graph
@@ -19,12 +21,15 @@ defmodule Scenic.Component.Input.RadioButton do
   end
 
   # --------------------------------------------------------
-  def verify({text, _}) when is_bitstring(text), do: {:ok, {text, false}}
-
-  def verify({text, _, checked?} = data)
-      when is_bitstring(text) and is_boolean(checked?) do
+  def verify({text, _} = data) when is_bitstring(text) do
     {:ok, data}
   end
+
+  def verify({text, _, checked?} = data) when is_bitstring(text) and is_boolean(checked?) do
+    {:ok, data}
+  end
+
+  def verify(_), do: :invalid_data
 
   # --------------------------------------------------------
   def init({text, id}, opts) when is_bitstring(text), do: init({text, id, false}, opts)
@@ -64,12 +69,12 @@ defmodule Scenic.Component.Input.RadioButton do
     {:ok, state}
   end
 
-  # --------------------------------------------------------
-  def handle_cast({:set_value, new_value}, state) do
-    state = Map.put(state, :checked, new_value)
-    graph = update_graph(state)
-    {:noreply, %{state | graph: graph}}
-  end
+  # # --------------------------------------------------------
+  # def handle_cast({:set_value, new_value}, state) do
+  #   state = Map.put(state, :checked, new_value)
+  #   graph = update_graph(state)
+  #   {:noreply, %{state | graph: graph}}
+  # end
 
   # --------------------------------------------------------
   def handle_cast({:set_to_msg, set_id}, %{id: id} = state) do

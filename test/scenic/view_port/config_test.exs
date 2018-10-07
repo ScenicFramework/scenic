@@ -96,13 +96,13 @@ defmodule Scenic.ViewPort.ConfigTest do
   end
 
   test "valid! fails a nil default scene" do
-    assert_raise RuntimeError, fn ->
+    assert_raise RuntimeError, "ViewPort Config requires a default_scene", fn ->
       Config.valid!(%Config{default_scene: nil, size: {640, 480}})
     end
   end
 
   test "valid! fails an invalid name" do
-    assert_raise RuntimeError, fn ->
+    assert_raise RuntimeError, "ViewPort Config name must be an atom", fn ->
       Config.valid!(%Config{
         default_scene: :some_scene,
         name: "invalid name",
@@ -112,7 +112,7 @@ defmodule Scenic.ViewPort.ConfigTest do
   end
 
   test "valid! fails an invalid driver" do
-    assert_raise RuntimeError, fn ->
+    assert_raise RuntimeError, "Driver.Config must reference a valid module", fn ->
       Config.valid!(%Config{
         default_scene: :some_scene,
         drivers: [%Driver.Config{module: "invalid driver name"}],

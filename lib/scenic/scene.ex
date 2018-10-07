@@ -60,7 +60,7 @@ defmodule Scenic.Scene do
   * Structure (graphs),
   * Logic (event handlers and filters)
   * Transitions to other scenes. Well... it can request the [`ViewPort`](overview_viewport.html)
-  goes to a different scene.
+  to go to a different scene.
 
   Your application is a collection of scenes that are in use at various times. There
   is only ever **one** scene showing in a [`ViewPort`](overview_viewport.html) at a given
@@ -90,8 +90,8 @@ defmodule Scenic.Scene do
   graphs can reference graphs in other scenes.
 
   On a typical screen of UI, there is one scene
-  that is the root. Each control, it it's own scene process with
-  it's own state. These child scenes can in turn contain other
+  that is the root. Each control, is its own scene process with
+  its own state. These child scenes can in turn contain other
   child scenes. This allows for strong code reuse, isolates knowledge
   and logic to just the pieces that need it, and keeps the size of any
   given graph to a reasonable size. For example, The graph
@@ -99,7 +99,7 @@ defmodule Scenic.Scene do
   how a slider works, even though they are both used in the same
   parent scene. At best, they only need to know that they
   both conform to the `Component.Input` behaviour, and can thus
-  query or set each other's value. Though it is usually
+  query or set each others value. Though it is usually
   the parent scene that does that.
 
   The application developer is responsible for building and
@@ -130,7 +130,7 @@ defmodule Scenic.Scene do
   1) You have a complex tree (perhaps a lot of text) that you want
   to animate. Rather than re-rendering the text (relatively expensive)
   every time you simply transform a rotation matrix, you could place
-  the text into it's own static sub-graph and then refer to it
+  the text into its own static sub-graph and then refer to it
   from the primary. This will save energy as you animate.
 
   2) Both the Remote and Recording clients make heavy use of sub-ids
@@ -168,7 +168,7 @@ defmodule Scenic.Scene do
 
   Events are messages that one scene generates for consumption
   by other scenes. For example, a `Component.Button` scene would
-  generate a `{:click, msg}` event that is sent to it's parent
+  generate a `{:click, msg}` event that is sent to its parent
   scene.
 
   You can generate any message you want, however, the standard
@@ -193,7 +193,7 @@ defmodule Scenic.Scene do
   this is how a text input field receives the key input. First,
   the user selects that field by clicking on it. In response
   to the cursor input, the text field captures text input (and
-  maybe transforms it's graph to show that it is selected).
+  maybe transforms its graph to show that it is selected).
 
   Captured input types are should be released when no longer
   needed so that normal operation can resume.
@@ -208,13 +208,13 @@ defmodule Scenic.Scene do
   up the tree of scenes that make up the current aggregate graph.
 
   In this way, a `Component.Button` scene can generate a`{:click, msg}`
-  event that is sent to it's parent. If the parent doesn't
+  event that is sent to its parent. If the parent doesn't
   handle it, it is sent to that scene's parent. And so on util the
   event reaches the root scene. If the root scene doesn't handle
   it either then the event is dropped.
 
   To handle events, you add `filter_event/3` functions to your scene.
-  This function handle the event, and stop it's progress backwards
+  This function handle the event, and stop its progress backwards
   up the graph. It can handle it and allow it to continue up the
   graph. Or it can transform the event and pass the transformed
   version up the graph.
@@ -232,7 +232,7 @@ defmodule Scenic.Scene do
   back to it), and your scene's state.
 
   A pattern I'm using is to handle and event at the filter and stop
-  it's progression. It also generates and sends new event to its
+  its progression. It also generates and sends new event to its
   parent. I do this instead of transforming and continuing when
   I want to change the originating scene.
 
@@ -243,6 +243,11 @@ defmodule Scenic.Scene do
 
   @type ref :: reference | atom
 
+  defmodule Error do
+    @moduledoc false
+    defexception message: nil
+  end
+
   # ============================================================================
   # client api - working with the scene
 
@@ -250,7 +255,7 @@ defmodule Scenic.Scene do
   send a filterable event to a scene.
 
   This is very similar in feel to casting a message to a GenServer. However,
-  This message will be handled by the Scene's `filter_event\3` function. If the 
+  This message will be handled by the Scene's `filter_event\3` function. If the
   Scene returns `{:continue, msg, state}` from `filter_event\3`, then the event
   will also be sent to the scene's parent. This will continue until the message
   reaches the root scene or some other permananently supervised scene.
@@ -260,7 +265,7 @@ defmodule Scenic.Scene do
 
   This private version of send_event will take care of the housekeeping of
   tracking the parent's pid. It will, in turn, call this function on the main
-  Scene module to send the event on it's way.
+  Scene module to send the event on its way.
 
       def handle_input( {:cursor_button, {:left, :release, _, _}}, _, %{msg: msg} = state ) do
         send_event( {:click, msg} )
@@ -302,17 +307,14 @@ defmodule Scenic.Scene do
   end
 
   def cast_to_refs(sub_id, msg) do
-    scene_ref =
-      case Process.get(:scene_ref) do
-        nil ->
-          "cast_to_refs requires a full graph_key or must be called within a scene"
-          |> raise()
+    case Process.get(:scene_ref) do
+      nil ->
+        "cast_to_refs requires a full graph_key or must be called within a scene"
+        |> raise()
 
-        scene_ref ->
-          scene_ref
-      end
-
-    cast_to_refs({:graph, scene_ref, sub_id}, msg)
+      scene_ref ->
+        cast_to_refs({:graph, scene_ref, sub_id}, msg)
+    end
   end
 
   # ============================================================================
@@ -329,7 +331,7 @@ defmodule Scenic.Scene do
   # using macro
 
   # ===========================================================================
-  # the using macro for scenes adopting this behavioiur
+  # the using macro for scenes adopting this behavior
   defmacro __using__(using_opts \\ []) do
     quote do
       @behaviour Scenic.Scene
@@ -516,10 +518,10 @@ defmodule Scenic.Scene do
   # ============================================================================
   # handle_info
 
-  def handle_info({:delayed_init, args, init_opts}, %{scene_module: scene_module} = state) do
-    {:ok, sc_state} = scene_module.init(args, init_opts)
-    {:noreply, %{state | scene_state: sc_state}}
-  end
+  # def handle_info({:delayed_init, args, init_opts}, %{scene_module: scene_module} = state) do
+  #   {:ok, sc_state} = scene_module.init(args, init_opts)
+  #   {:noreply, %{state | scene_state: sc_state}}
+  # end
 
   # --------------------------------------------------------
   # generic handle_info. give the scene a chance to handle it
@@ -573,6 +575,7 @@ defmodule Scenic.Scene do
             {:supervisor, Scene.Supervisor, _} ->
               dynamic_children_pid =
                 Supervisor.which_children(supervisor_pid)
+                # credo:disable-for-next-line Credo.Check.Refactor.Nesting
                 |> Enum.find_value(fn
                   {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
                   _ -> nil
@@ -657,7 +660,7 @@ defmodule Scenic.Scene do
       ) do
     graph_key = {:graph, scene_ref, sub_id}
 
-    # reduce the incoming graph to it's minimal form
+    # reduce the incoming graph to its minimal form
     # while simultaneously extracting the SceneRefs
     {graph, all_keys} =
       Enum.reduce(graph.primitives, {%{}, %{}}, fn
@@ -676,10 +679,12 @@ defmodule Scenic.Scene do
         # dynamic reference
         # Log an error and remove the ref from the graph
         {_uid, %{module: Primitive.SceneRef, data: {_, _} = ref}}, {g, all_refs} ->
-          Logger.error(
-            "Attempting to manage dynamic reference on graph with " <>
-              "has_children set to false. #{inspect(ref)}"
-          )
+          message = """
+          Attempting to manage dynamic reference on graph with "has_children set to false
+          reference: #{inspect(ref)}
+          """
+
+          raise Error, message: message
 
           {g, all_refs}
 
@@ -692,7 +697,7 @@ defmodule Scenic.Scene do
     # it for the drivers. Yes, the driver could do this from the all_keys term
     # that is also being written into the ets table, but it gets done all the
     # time for each reader and when consuming input, so it is better to do it
-    # once here. Note that the all_keys term is still being written becuase
+    # once here. Note that the all_keys term is still being written because
     # otherwise the drivers would need to do a full graph scan in order to prep
     # whatever translators they need. Again, the info has already been
     # calculated here, so just pass it along without throwing it out.
@@ -705,7 +710,7 @@ defmodule Scenic.Scene do
     ViewPort.Tables.insert_graph(graph_key, self(), graph, all_keys)
 
     # write the graph into the ets table
-    ViewPort.Tables.insert_graph(graph_key, self(), graph, all_keys)
+    # ViewPort.Tables.insert_graph(graph_key, self(), graph, all_keys)
 
     {:noreply, state}
   end
@@ -724,7 +729,7 @@ defmodule Scenic.Scene do
           viewport: viewport
         } = state
       ) do
-    # reduce the incoming graph to it's minimal form
+    # reduce the incoming graph to its minimal form
     # while simultaneously extracting the SceneRefs
     # this should be the only full scan when pushing a graph
     {graph, all_keys, new_raw_refs} =
@@ -817,7 +822,7 @@ defmodule Scenic.Scene do
     # it for the drivers. Yes, the driver could do this from the all_keys term
     # that is also being written into the ets table, but it gets done all the
     # time for each reader and when consuming input, so it is better to do it
-    # once here. Note that the all_keys term is still being written becuase
+    # once here. Note that the all_keys term is still being written because
     # otherwise the drivers would need to do a full graph scan in order to prep
     # whatever translators they need. Again, the info has already been
     # calculated here, so just pass it along without throwing it out.

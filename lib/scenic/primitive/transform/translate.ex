@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Primitive.Transform.Translate do
+  @moduledoc false
+
   use Scenic.Primitive.Transform
 
   # ============================================================================
@@ -19,15 +21,13 @@ defmodule Scenic.Primitive.Transform.Translate do
 
   # --------------------------------------------------------
   def verify(percent) do
-    try do
-      normalize(percent)
-      true
-    rescue
-      _ -> false
-    end
+    normalize(percent)
+    true
+  rescue
+    _ -> false
   end
 
   # --------------------------------------------------------
-  # normalize named stipples
+  @spec normalize({number(), number()}) :: {number(), number()}
   def normalize({x, y}) when is_number(x) and is_number(y), do: {x, y}
 end

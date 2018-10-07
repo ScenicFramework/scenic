@@ -24,6 +24,10 @@ defmodule Scenic.Primitive.ArcTest do
   # ============================================================================
   # verify
 
+  test "info works" do
+    assert Arc.info(:test_data) =~ ":test_data"
+  end
+
   test "verify passes valid data" do
     assert Arc.verify(@data) == {:ok, @data}
   end

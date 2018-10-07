@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Component.Input.Dropdown do
+  @moduledoc false
+
   use Scenic.Component, has_children: false
 
   alias Scenic.Graph
@@ -15,19 +17,22 @@ defmodule Scenic.Component.Input.Dropdown do
 
   @default_width 160
   @default_height 30
+  @default_direction :down
 
   @default_font :roboto
   @default_font_size 20
 
   @drop_click_window_ms 400
 
-  @carat {{0, 0}, {12, 0}, {6, 6}}
+  @caret {{0, 0}, {12, 0}, {6, 6}}
   @text_id :__dropbox_text__
-  @carat_id :__carat__
+  @caret_id :__caret__
   @dropbox_id :__dropbox__
   @button_id :__dropbox_btn__
 
-  @rad :math.pi() / 2
+  @rotate_neutral :math.pi() / 2
+  @rotate_down 0
+  @rotate_up :math.pi()
 
   # --------------------------------------------------------
   def info(data) do
@@ -40,12 +45,12 @@ defmodule Scenic.Component.Input.Dropdown do
 
   # --------------------------------------------------------
   def verify({items, initial} = data) when is_list(items) do
-    Enum.all?(items, &verify_item(&1)) &&
-      Enum.find_value(items, false, fn {_, id} -> id == initial end)
-      |> case do
-        true -> {:ok, data}
-        _ -> :invalid_data
-      end
+    (Enum.all?(items, &verify_item(&1)) &&
+       Enum.find_value(items, false, fn {_, id} -> id == initial end))
+    |> case do
+      true -> {:ok, data}
+      _ -> :invalid_data
+    end
   end
 
   def verify(_), do: :invalid_data
@@ -55,6 +60,7 @@ defmodule Scenic.Component.Input.Dropdown do
   defp verify_item(_), do: false
 
   # --------------------------------------------------------
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def init({items, initial_id}, opts) do
     id = opts[:id]
     styles = opts[:styles]
@@ -83,6 +89,23 @@ defmodule Scenic.Component.Input.Dropdown do
     item_count = Enum.count(items)
     drop_height = item_count * height
 
+    # get the drop direction
+    direction = styles[:direction] || @default_direction
+
+    # calculate the where to put the drop box. Depends on the direction
+    translate_menu =
+      case direction do
+        :down -> {0, height + 1}
+        :up -> {0, height * -item_count - 1}
+      end
+
+    # get the direction to rotate the caret
+    rotate_caret =
+      case direction do
+        :down -> @rotate_down
+        :up -> -@rotate_up
+      end
+
     graph =
       Graph.build(font: font, font_size: font_size)
       |> rect({width, height}, fill: theme.background, stroke: {2, theme.border})
@@ -92,12 +115,12 @@ defmodule Scenic.Component.Input.Dropdown do
         text_align: :left,
         id: @text_id
       )
-      |> triangle(@carat,
+      |> triangle(@caret,
         fill: theme.text,
         translate: {width - 18, height * 0.5},
         pin: {6, 0},
-        rotate: @rad,
-        id: @carat_id
+        rotate: @rotate_neutral,
+        id: @caret_id
       )
 
       # an invisible rect for hit-test purposes
@@ -113,11 +136,19 @@ defmodule Scenic.Component.Input.Dropdown do
               g =
                 group(
                   g,
+                  # credo:disable-for-next-line Credo.Check.Refactor.Nesting
                   fn g ->
-                    case id == initial_id do
-                      true -> rect(g, {width, height}, fill: theme.active, id: id)
-                      false -> rect(g, {width, height}, fill: theme.background, id: id)
-                    end
+                    rect(
+                      g,
+                      {width, height},
+                      fill:
+                        if id == initial_id do
+                          theme.active
+                        else
+                          theme.background
+                        end,
+                      id: id
+                    )
                     |> text(text,
                       fill: theme.text,
                       text_align: :left,
@@ -132,7 +163,7 @@ defmodule Scenic.Component.Input.Dropdown do
 
           g
         end,
-        translate: {0, height + 1},
+        translate: translate_menu,
         id: @dropbox_id,
         hidden: true
       )
@@ -145,7 +176,8 @@ defmodule Scenic.Component.Input.Dropdown do
       down: false,
       hover_id: nil,
       items: items,
-      drop_time: 0
+      drop_time: 0,
+      rotate_caret: rotate_caret
     }
 
     push_graph(graph)
@@ -170,7 +202,7 @@ defmodule Scenic.Component.Input.Dropdown do
   def handle_input(
         {:cursor_button, {:left, :press, _, _}},
         %{id: @button_id} = context,
-        %{down: false, graph: graph} = state
+        %{down: false, graph: graph, rotate_caret: rotate_caret} = state
       ) do
     # capture input
     ViewPort.capture_input(context, [:cursor_button, :cursor_pos])
@@ -178,7 +210,7 @@ defmodule Scenic.Component.Input.Dropdown do
     # drop the menu
     graph =
       graph
-      |> Graph.modify(@carat_id, &update_opts(&1, rotate: 0))
+      |> Graph.modify(@caret_id, &update_opts(&1, rotate: rotate_caret))
       |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: false))
       |> push_graph()
 
@@ -228,7 +260,12 @@ defmodule Scenic.Component.Input.Dropdown do
   def handle_input(
         {:cursor_button, {:left, :press, _, _}},
         %{id: nil} = context,
-        %{down: true, items: items, theme: theme, selected_id: selected_id} = state
+        %{
+          down: true,
+          items: items,
+          theme: theme,
+          selected_id: selected_id
+        } = state
       ) do
     # release the input capture
     ViewPort.release_input(context, [:cursor_button, :cursor_pos])
@@ -238,12 +275,12 @@ defmodule Scenic.Component.Input.Dropdown do
       # restore standard highliting
       |> update_highlighting(items, selected_id, nil, theme)
       # raise the dropdown
-      |> Graph.modify(@carat_id, &update_opts(&1, rotate: @rad))
+      |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
       |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
       # push to the viewport
       |> push_graph()
 
-    {:continue, %{state | down: false, graph: graph}}
+    {:noreply, %{state | down: false, graph: graph}}
   end
 
   # --------------------------------------------------------
@@ -268,7 +305,7 @@ defmodule Scenic.Component.Input.Dropdown do
       graph =
         graph
         |> update_highlighting(items, selected_id, nil, theme)
-        |> Graph.modify(@carat_id, &update_opts(&1, rotate: @rad))
+        |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
         |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
         |> push_graph()
 
@@ -284,7 +321,12 @@ defmodule Scenic.Component.Input.Dropdown do
   def handle_input(
         {:cursor_button, {:left, :release, _, _}},
         %{id: nil} = context,
-        %{down: true, items: items, theme: theme, selected_id: selected_id} = state
+        %{
+          down: true,
+          items: items,
+          theme: theme,
+          selected_id: selected_id
+        } = state
       ) do
     # release the input capture
     ViewPort.release_input(context, [:cursor_button, :cursor_pos])
@@ -294,7 +336,7 @@ defmodule Scenic.Component.Input.Dropdown do
       # restore standard highliting
       |> update_highlighting(items, selected_id, nil, theme)
       # raise the dropdown
-      |> Graph.modify(@carat_id, &update_opts(&1, rotate: @rad))
+      |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
       |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
       # push to the viewport
       |> push_graph()
@@ -307,7 +349,12 @@ defmodule Scenic.Component.Input.Dropdown do
   def handle_input(
         {:cursor_button, {:left, :release, _, _}},
         %{id: item_id} = context,
-        %{down: true, id: id, items: items, theme: theme} = state
+        %{
+          down: true,
+          id: id,
+          items: items,
+          theme: theme
+        } = state
       ) do
     # release the input capture
     ViewPort.release_input(context, [:cursor_button, :cursor_pos])
@@ -325,7 +372,7 @@ defmodule Scenic.Component.Input.Dropdown do
       # restore standard highliting
       |> update_highlighting(items, item_id, nil, theme)
       # raise the dropdown
-      |> Graph.modify(@carat_id, &update_opts(&1, rotate: @rad))
+      |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
       |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
       # push to the viewport
       |> push_graph()

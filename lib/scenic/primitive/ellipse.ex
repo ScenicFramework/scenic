@@ -4,10 +4,9 @@
 #
 
 defmodule Scenic.Primitive.Ellipse do
-  use Scenic.Primitive
+  @moduledoc false
 
-  # alias Scenic.Primitive
-  #  alias Scenic.Primitive.Style
+  use Scenic.Primitive
 
   @styles [:hidden, :fill, :stroke]
 
@@ -24,20 +23,20 @@ defmodule Scenic.Primitive.Ellipse do
 
   # --------------------------------------------------------
   def verify(data) do
-    try do
-      normalize(data)
-      {:ok, data}
-    rescue
-      _ -> :invalid_data
-    end
+    normalize(data)
+    {:ok, data}
+  rescue
+    _ -> :invalid_data
   end
 
   # --------------------------------------------------------
+  @spec normalize({number(), number()}) :: {number(), number()}
   def normalize({r1, r2} = data) when is_number(r1) and is_number(r2) do
     data
   end
 
   # ============================================================================
+  @spec valid_styles() :: [:fill | :hidden | :stroke, ...]
   def valid_styles(), do: @styles
 
   # --------------------------------------------------------

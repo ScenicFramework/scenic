@@ -75,6 +75,15 @@ defmodule Scenic.Cache.TermReadTest do
              @sample_sha
            ) == {:error, :invalid_term}
   end
+
+  test "read passes through errors" do
+    # missing term file
+    assert Cache.Term.read(
+             "not/valid/path",
+             @invalid_sha256,
+             hash: :sha256
+           ) == {:error, :enoent}
+  end
 end
 
 defmodule Scenic.Cache.TermLoadTest do
@@ -97,6 +106,9 @@ defmodule Scenic.Cache.TermLoadTest do
 
   @sample_path "test/artifacts/sample_file"
   @sample_sha "2PGNXGkoTc4stYncIe-qCdZFuw0"
+
+  @non_term_path "test/artifacts/sample_file"
+  @non_term_sha "2PGNXGkoTc4stYncIe-qCdZFuw0"
 
   @cache_table :scenic_cache_key_table
   @scope_table :scenic_cache_scope_table
@@ -153,6 +165,21 @@ defmodule Scenic.Cache.TermLoadTest do
     assert Cache.Term.load(
              @sample_path,
              @sample_sha
+           ) == {:error, :invalid_term}
+  end
+
+  test "load passes through errors" do
+    # missing term file
+    assert Cache.Term.load(
+             "not/valid/path",
+             @invalid_sha256,
+             hash: :sha256
+           ) == {:error, :enoent}
+
+    # badly formatted term file
+    assert Cache.Term.load(
+             @non_term_path,
+             @non_term_sha
            ) == {:error, :invalid_term}
   end
 end

@@ -9,8 +9,9 @@ defmodule Scenic.Primitive.Transform.RotateTest do
 
   alias Scenic.Primitive.Transform.Rotate
 
-  # ============================================================================
-  # verify
+  test "info works" do
+    assert Rotate.info(:test_data) =~ ":test_data"
+  end
 
   test "verify passes valid data" do
     assert Rotate.verify(1.0) == true
@@ -21,5 +22,16 @@ defmodule Scenic.Primitive.Transform.RotateTest do
     assert Rotate.verify({1.1, 1.2, 1.3, 1.4}) == false
     assert Rotate.verify({1.1, 1.2, :banana}) == false
     assert Rotate.verify(:banana) == false
+  end
+
+  test "normalize" do
+    assert Rotate.normalize(1) == 1
+    assert Rotate.normalize(1.1) == 1.1
+  end
+
+  test "normalize raises on bad data" do
+    assert_raise FunctionClauseError, fn ->
+      assert Rotate.normalize(:banana)
+    end
   end
 end

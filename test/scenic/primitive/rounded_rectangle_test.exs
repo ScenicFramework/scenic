@@ -26,6 +26,10 @@ defmodule Scenic.Primitive.RoundedRectangleTest do
   # ============================================================================
   # verify
 
+  test "info works" do
+    assert RoundedRectangle.info(:test_data) =~ ":test_data"
+  end
+
   test "verify passes valid data" do
     assert RoundedRectangle.verify(@data) == {:ok, @data}
   end
@@ -55,11 +59,16 @@ defmodule Scenic.Primitive.RoundedRectangleTest do
   # ============================================================================
   # point containment
   test "contains_point? returns true if it contains the point" do
+    # center
     assert RoundedRectangle.contains_point?(@data, {20, 40}) == true
 
+    # center bottom
     assert RoundedRectangle.contains_point?(@data, {20, 0}) == true
+    # center top
     assert RoundedRectangle.contains_point?(@data, {20, 80}) == true
+    # center left
     assert RoundedRectangle.contains_point?(@data, {0, 40}) == true
+    # center right
     assert RoundedRectangle.contains_point?(@data, {40, 40}) == true
   end
 
@@ -81,6 +90,7 @@ defmodule Scenic.Primitive.RoundedRectangleTest do
 
   # ------------------------
   # negative width
+
   test "contains_point? returns true if it contains the point - negative width" do
     assert RoundedRectangle.contains_point?(@data_neg_w, {-20, 40}) == true
   end

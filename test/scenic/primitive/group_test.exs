@@ -23,6 +23,10 @@ defmodule Scenic.Primitive.GroupTest do
     assert Primitive.get(p) == @data
   end
 
+  test "info works" do
+    assert Group.info(:test_data) =~ ":test_data"
+  end
+
   # ============================================================================
   # child management
   test "insert_at works" do
@@ -33,40 +37,42 @@ defmodule Scenic.Primitive.GroupTest do
     assert Primitive.get(g) == [1234]
 
     g =
-      Group.insert_at(group, -1, 1234)
-      |> Group.insert_at(-1, 12345)
+      group
+      |> Group.insert_at(-1, 1234)
+      |> Group.insert_at(-1, 12_345)
 
-    assert Primitive.get(g) == [1234, 12345]
+    assert Primitive.get(g) == [1234, 12_345]
 
     g =
-      Group.insert_at(group, -1, 1234)
-      |> Group.insert_at(0, 12345)
+      group
+      |> Group.insert_at(-1, 1234)
+      |> Group.insert_at(0, 12_345)
 
-    assert Primitive.get(g) == [12345, 1234]
+    assert Primitive.get(g) == [12_345, 1234]
   end
 
   test "delete works" do
     g =
       Group.build()
       |> Group.insert_at(-1, 1234)
-      |> Group.insert_at(-1, 12345)
+      |> Group.insert_at(-1, 12_345)
 
-    assert Primitive.get(g) == [1234, 12345]
+    assert Primitive.get(g) == [1234, 12_345]
 
     g = Group.delete(g, 1234)
-    assert Primitive.get(g) == [12345]
+    assert Primitive.get(g) == [12_345]
   end
 
   test "increment_data adds a constant to the child ids" do
     g =
       Group.build()
       |> Group.insert_at(-1, 1234)
-      |> Group.insert_at(-1, 12345)
+      |> Group.insert_at(-1, 12_345)
 
-    assert Primitive.get(g) == [1234, 12345]
+    assert Primitive.get(g) == [1234, 12_345]
 
     g = Group.increment(g, 10)
-    assert Primitive.get(g) == [1244, 12355]
+    assert Primitive.get(g) == [1244, 12_355]
   end
 
   # ============================================================================

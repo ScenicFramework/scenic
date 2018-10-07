@@ -24,6 +24,10 @@ defmodule Scenic.Primitive.CircleTest do
   # ============================================================================
   # verify
 
+  test "info works" do
+    assert Circle.info(:test_data) =~ ":test_data"
+  end
+
   test "verify passes valid data" do
     assert Circle.verify(@data) == {:ok, @data}
   end

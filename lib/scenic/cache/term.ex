@@ -3,25 +3,26 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-# simple functions to load a file, following the hashing rules
-
 defmodule Scenic.Cache.Term do
+  @moduledoc """
+  Simple functions to load a file, following the hashing rules.
+  """
+
   alias Scenic.Cache
   alias Scenic.Cache.Hash
 
-  #  import IEx
+  # import IEx
 
   # --------------------------------------------------------
   def load(path, hash, opts \\ [])
 
   # insecure loading. Loads file blindly even it is altered
-  # don't recommend doing this in production. Better to embedd the expected
-  # hashes. Is also slower becase it has to load the file and compute the hash
+  # don't recommend doing this in production. Better to embed the expected
+  # hashes. Is also slower because it has to load the file and compute the hash
   # to use as a key even it is is already loaded into the cache.
   def load(path, :insecure, opts) do
-    with {:ok, data} <- Cache.File.read(path, :insecure, opts) do
-      hash = Hash.compute(data, opts[:hash] || :sha)
-
+    with {:ok, data} <- Cache.File.read(path, :insecure, opts),
+         {:ok, hash} <- Hash.binary(data, opts[:hash] || :sha) do
       case Cache.claim(hash, opts[:scope]) do
         true ->
           {:ok, hash}
@@ -58,8 +59,8 @@ defmodule Scenic.Cache.Term do
   def read(path, hash, opts \\ [])
 
   # insecure read
-  # don't recommend doing this in production. Better to embedd the expected
-  # hashes. Is also slower becase it has to load the file and compute the hash
+  # don't recommend doing this in production. Better to embed the expected
+  # hashes. Is also slower because it has to load the file and compute the hash
   # to use as a key even it is is already loaded into the cache.
   def read(path, :insecure, opts) do
     with {:ok, data} <- File.read(path) do

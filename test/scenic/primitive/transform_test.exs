@@ -11,7 +11,7 @@ defmodule Scenic.Primitive.TransformTest do
 
   alias Scenic.Primitive.Transform
   alias Scenic.Math.Matrix
-  alias Scenic.Math.Vector
+  alias Scenic.Math.Vector2
 
   @identity Matrix.identity()
 
@@ -30,6 +30,19 @@ defmodule Scenic.Primitive.TransformTest do
   }
 
   # ============================================================================
+  # verify!
+
+  test "verify! works" do
+    assert Transform.verify!(:pin, {1, 1})
+  end
+
+  test "verify! rejects invalid transform types" do
+    assert_raise Scenic.Primitive.Transform.FormatError, fn ->
+      assert Transform.verify!(:invalid, {1, 1})
+    end
+  end
+
+  # ============================================================================
   # calculate the local matrix
 
   test "calculate_local returns nil if the transform is nil" do
@@ -44,7 +57,7 @@ defmodule Scenic.Primitive.TransformTest do
   test "calculate_local calculates the local matrix in the right order" do
     # first calc all the matrices
     mx_pin = Matrix.build_translation(@pin)
-    mx_inv_pin = Matrix.build_translation(Vector.invert(@pin))
+    mx_inv_pin = Matrix.build_translation(Vector2.invert(@pin))
     mx_rotation = Matrix.build_rotation(@rotation)
     mx_scale = Matrix.build_scale(@scale)
     mx_translation = Matrix.build_translation(@translate)

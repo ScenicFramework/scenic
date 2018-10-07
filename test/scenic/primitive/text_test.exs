@@ -24,6 +24,10 @@ defmodule Scenic.Primitive.TextTest do
   # ============================================================================
   # verify
 
+  test "info works" do
+    assert Text.info(:test_data) =~ ":test_data"
+  end
+
   test "verify passes valid data" do
     assert Text.verify(@data) == {:ok, @data}
   end

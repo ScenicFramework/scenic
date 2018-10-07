@@ -1,88 +1,133 @@
 defmodule Scenic.Mixfile do
   use Mix.Project
 
-  @version "0.7.0"
+  @app_name :scenic
+
+  @version "0.8.0"
+
+  @elixir_version "~> 1.6"
   @github "https://github.com/boydm/scenic"
 
   def project do
     [
-      app: :scenic,
+      app: @app_name,
       version: @version,
-      build_path: "_build",
-      config_path: "config/config.exs",
-      deps_path: "deps",
-      elixir: "~> 1.6",
-      name: "Scenic",
+      elixir: @elixir_version,
+      deps: deps(),
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
-      deps: deps(),
-      docs: [
-        extras: doc_guides(),
-        main: "Scenic",
-        groups_for_modules: groups_for_modules()
-        # source_ref: "v#{@version}",
-        # source_url: "https://github.com/boydm/scenic",
-        # homepage_url: "http://kry10.com",
-      ],
-        package: [
-        name: :scenic,
-        contributors: ["Boyd Multerer"],
-        maintainers: ["Boyd Multerer"],
-        licenses: ["Apache 2"],
-        links: %{github: @github}
-      ],
-      dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex, :scenic_math]]
+      compilers: [:elixir_make | Mix.compilers()],
+      make_targets: ["all"],
+      make_clean: ["clean"],
+      make_env: make_env(),
+      name: "Scenic",
+      description: description(),
+      docs: docs(),
+      package: package(),
+      dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex]],
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: cli_env()
     ]
   end
 
-  # Configuration for the OTP application
-  #
-  # Type "mix help compile.app" for more information
+  defp description do
+    """
+    Scenic -- a client application library written directly on the Elixir/Erlang/OTP stack
+    """
+  end
+
+  defp make_env do
+    case System.get_env("ERL_EI_INCLUDE_DIR") do
+      nil ->
+        %{
+          "ERL_EI_INCLUDE_DIR" => "#{:code.root_dir()}/usr/include",
+          "ERL_EI_LIBDIR" => "#{:code.root_dir()}/usr/lib"
+        }
+
+      _ ->
+        %{}
+    end
+  end
+
   def application do
     [
       # mod: {Scenic, []},
-      applications: [:logger]
+      extra_applications: [:logger]
     ]
   end
 
-  # Dependencies can be Hex packages:
-  #
-  #   {:mydep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:mydep, git: "https://github.com/elixir-lang/mydep.git", tag: "0.1.0"}
-  #
-  # To depend on another app inside the umbrella:
-  #
-  #   {:myapp, in_umbrella: true}
-  #
-  # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:scenic_math, "~> #{@version}"},
+      {:elixir_make, "~> 0.4"},
 
-      # Docs dependencies
-      {:ex_doc, ">= 0.0.0", only: [:dev, :docs]},
-      {:inch_ex, ">= 0.0.0", only: :docs},
+      # Tools
+      {:ex_doc, ">= 0.0.0", only: :dev},
+      {:credo, ">= 0.0.0", only: [:dev, :test], runtime: false},
+      {:excoveralls, ">= 0.0.0", only: :test, runtime: false},
+      {:inch_ex, github: "rrrene/inch_ex", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 0.5", only: :dev, runtime: false}
+    ]
+  end
+
+  defp cli_env do
+    [
+      coveralls: :test,
+      "coveralls.html": :test,
+      "coveralls.json": :test
+    ]
+  end
+
+  defp package do
+    [
+      name: @app_name,
+      contributors: ["Boyd Multerer"],
+      maintainers: ["Boyd Multerer"],
+      licenses: ["Apache 2"],
+      links: %{Github: @github},
+      files: [
+        "Makefile",
+        "Makefile.win",
+        # only include *.c and *.h files
+        "c_src/*.[ch]",
+        # only include *.ex files
+        "lib/**/*.ex",
+        "mix.exs",
+        "guides/**/*.md",
+        # don't include the bird for now
+        # "guides/**/*.png",
+        "README.md"
+      ]
+    ]
+  end
+
+  defp docs do
+    [
+      extras: doc_guides(),
+      main: "welcome",
+      groups_for_modules: groups_for_modules(),
+      source_ref: "v#{@version}",
+      source_url: "https://github.com/boydm/scenic"
+      # homepage_url: "http://kry10.com",
     ]
   end
 
   defp doc_guides do
     [
+      "guides/welcome.md",
+      "guides/install_dependencies.md",
       "guides/overview_general.md",
       "guides/getting_started.md",
       "guides/getting_started_nerves.md",
-      "guides/scene_structure.md",
+      "guides/overview_scene.md",
       "guides/scene_lifecycle.md",
       "guides/overview_graph.md",
       "guides/overview_viewport.md",
       "guides/overview_driver.md",
-      "guides/styles_overview.md",
-      "guides/transforms_overview.md",
-      "CODE_OF_CONDUCT.md",
-      "CONTRIBUTING.md"
+      "guides/overview_styles.md",
+      "guides/overview_transforms.md",
+      "guides/overview_primitives.md",
+      ".github/CODE_OF_CONDUCT.md",
+      ".github/CONTRIBUTING.md"
     ]
   end
 
@@ -111,7 +156,8 @@ defmodule Scenic.Mixfile do
         Scenic.Component.Input.RadioGroup,
         Scenic.Component.Input.Slider,
         Scenic.Component.Input.TextField,
-        Scenic.Component.Input.Carat
+        Scenic.Component.Input.Caret,
+        Scenic.Component.Input.Toggle
       ],
       Primitives: [
         Scenic.Primitive,
@@ -161,6 +207,14 @@ defmodule Scenic.Mixfile do
         Scenic.Primitive.Transform.Rotate,
         Scenic.Primitive.Transform.Scale,
         Scenic.Primitive.Transform.Translate
+      ],
+      Math: [
+        Scenic.Math,
+        Scenic.Math.Line,
+        Scenic.Math.Matrix,
+        Scenic.Math.Matrix.Utils,
+        Scenic.Math.Quad,
+        Scenic.Math.Vector2
       ],
       Animations: [
         Scenic.Animation,

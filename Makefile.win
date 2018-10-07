@@ -1,0 +1,50 @@
+!IF [where /Q Makefile.auto.win]
+# The file doesn't exist, so don't include it.
+!ELSE
+!INCLUDE Makefile.auto.win
+!IF [del /Q /F Makefile.auto.win] == 0
+!ENDIF
+!ENDIF
+
+CC=cl
+LINK=link
+NMAKE = nmake /$(MAKEFLAGS)
+
+SRC_DIR = c_src
+
+# Scenic.Math.Line.parallel({{1,2},{3,4}}, 4)
+
+calling_from_make:
+	mix compile
+
+all: clean priv Makefile.auto.win NIF
+
+clean:
+	del /Q /F priv
+
+priv:
+	mkdir priv
+
+Makefile.auto.win:
+	erl -eval "io:format(\"~s~n\", [lists:concat([\"ERTS_INCLUDE_PATH=\", code:root_dir(), \"/erts-\", erlang:system_info(version), \"/include\"])])" -s init stop -noshell > $@
+
+NIF: priv\line.dll priv\matrix.dll
+
+!IFDEF ERTS_INCLUDE_PATH
+priv\line.obj:
+	$(CC) -c $(ERL_CFLAGS) $(CFLAGS) /I"$(ERTS_INCLUDE_PATH)" /LD /MD /Fo: $@ $(SRC_DIR)\line.c
+
+priv\line.dll: priv\line.obj
+	$(LINK) /DLL /OUT:priv\line.dll priv\line.obj
+
+priv\matrix.obj:
+	$(CC) -c $(ERL_CFLAGS) $(CFLAGS) /I"$(ERTS_INCLUDE_PATH)" /LD /MD /Fo: $@ $(SRC_DIR)\matrix.c
+priv\matrix.dll: priv\matrix.obj
+	$(LINK) /DLL /OUT:priv\matrix.dll priv\matrix.obj
+
+!ELSE
+priv\line.dll: Makefile.auto.win
+	$(NMAKE) /F Makefile.win priv\line.dll
+priv\matrix.dll: Makefile.auto.win
+	$(NMAKE) /F Makefile.win priv\matrix.dll
+!ENDIF

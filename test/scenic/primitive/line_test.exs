@@ -24,6 +24,10 @@ defmodule Scenic.Primitive.LineTest do
   # ============================================================================
   # verify
 
+  test "info works" do
+    assert Line.info(:test_data) =~ ":test_data"
+  end
+
   test "verify passes valid data" do
     assert Line.verify(@data) == {:ok, @data}
   end

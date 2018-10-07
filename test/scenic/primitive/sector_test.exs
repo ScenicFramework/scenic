@@ -25,6 +25,10 @@ defmodule Scenic.Primitive.SectorTest do
   # ============================================================================
   # verify
 
+  test "info works" do
+    assert Sector.info(:test_data) =~ ":test_data"
+  end
+
   test "verify passes valid data" do
     assert Sector.verify(@data) == {:ok, @data}
   end
@@ -50,11 +54,19 @@ defmodule Scenic.Primitive.SectorTest do
 
   # ============================================================================
   # point containment
-  test "contains_point? always returns false" do
+  test "contains_point? works (clockwise)" do
     assert Sector.contains_point?(@data, {20, 32}) == true
     assert Sector.contains_point?(@data, {-20, 32}) == false
     assert Sector.contains_point?(@data, {30, 60}) == true
     assert Sector.contains_point?(@data, {130, 280}) == false
+  end
+
+  test "contains_point? works (counter-clockwise)" do
+    data = {100, 1.4, 0.0}
+    assert Sector.contains_point?(data, {20, 32}) == true
+    assert Sector.contains_point?(data, {-20, 32}) == false
+    assert Sector.contains_point?(data, {30, 60}) == true
+    assert Sector.contains_point?(data, {130, 280}) == false
   end
 
   test "contains_point? straight up and down" do

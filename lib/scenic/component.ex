@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Component do
+  @moduledoc false
+
   alias Scenic.Primitive
 
   @callback add_to_graph(map, any, list) :: map
@@ -14,6 +16,8 @@ defmodule Scenic.Component do
 
   # ===========================================================================
   defmodule Error do
+    @moduledoc false
+
     defexception message: nil, error: nil, data: nil
   end
 
@@ -24,6 +28,7 @@ defmodule Scenic.Component do
 
       use Scenic.Scene, unquote(opts)
 
+      @spec add_to_graph(graph :: Scenic.Graph.t(), data :: any, opts :: list) :: Scenic.Graph.t()
       def add_to_graph(graph, data \\ nil, opts \\ [])
 
       def add_to_graph(%Scenic.Graph{} = graph, data, opts) do
@@ -32,6 +37,7 @@ defmodule Scenic.Component do
       end
 
       @doc false
+      @spec info(data :: any) :: String.t()
       def info(data) do
         """
         #{inspect(__MODULE__)} invalid add_to_graph data
@@ -40,6 +46,7 @@ defmodule Scenic.Component do
       end
 
       @doc false
+      @spec verify!(data :: any) :: any
       def verify!(data) do
         case verify(data) do
           {:ok, data} -> data

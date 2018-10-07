@@ -4,9 +4,10 @@
 #
 
 defmodule Scenic.Primitive.Group do
+  @moduledoc false
+
   use Scenic.Primitive
   alias Scenic.Primitive
-  #  alias Scenic.Graph
 
   #  import IEx
 
@@ -31,10 +32,7 @@ defmodule Scenic.Primitive.Group do
 
   # --------------------------------------------------------
   def verify(ids) when is_list(ids) do
-    case Enum.all?(ids, fn id -> is_integer(id) end) do
-      true -> {:ok, ids}
-      false -> :invalid_data
-    end
+    if Enum.all?(ids, &is_integer/1), do: {:ok, ids}, else: :invalid_data
   end
 
   def verify(_), do: :invalid_data
@@ -42,7 +40,9 @@ defmodule Scenic.Primitive.Group do
   # ============================================================================
   # filter and gather styles
 
+  @spec valid_styles() :: [:all, ...]
   def valid_styles(), do: [:all]
+
   def filter_styles(styles) when is_map(styles), do: styles
 
   # ============================================================================

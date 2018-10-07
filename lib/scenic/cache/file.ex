@@ -3,9 +3,10 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-# simple functions to load a file, following the hashing rules
-
 defmodule Scenic.Cache.File do
+  @moduledoc """
+  Simple functions to load a file, following the hashing rules  
+  """
   alias Scenic.Cache
   alias Scenic.Cache.Hash
 
@@ -15,12 +16,12 @@ defmodule Scenic.Cache.File do
   def load(path, hash, opts \\ [])
 
   # insecure loading. Loads file blindly even it is altered
-  # don't recommend doing this in production. Better to embedd the expected
-  # hashes. Is also slower becase it has to load the file and compute the hash
+  # don't recommend doing this in production. Better to embed the expected
+  # hashes. Is also slower because it has to load the file and compute the hash
   # to use as a key even it is is already loaded into the cache.
   def load(path, :insecure, opts) do
     with {:ok, data} <- read(path, :insecure, opts) do
-      hash = Hash.compute(data, opts[:hash] || :sha)
+      hash = Hash.binary(data, opts[:hash] || :sha)
 
       case Cache.claim(hash, opts[:scope]) do
         true ->
@@ -55,8 +56,8 @@ defmodule Scenic.Cache.File do
   def read(path, hash, opts \\ [])
 
   # insecure read
-  # don't recommend doing this in production. Better to embedd the expected
-  # hashes. Is also slower becase it has to load the file and compute the hash
+  # don't recommend doing this in production. Better to embed the expected
+  # hashes. Is also slower because it has to load the file and compute the hash
   # to use as a key even it is is already loaded into the cache.
   def read(path, :insecure, opts) do
     with {:ok, data} <- File.read(path) do
@@ -81,10 +82,7 @@ defmodule Scenic.Cache.File do
   defp do_unzip(data, opts) do
     case opts[:decompress] do
       true ->
-        case :zlib.gunzip(data) do
-          bin when is_binary(bin) -> {:ok, bin}
-          _ -> {:error, :gunzip}
-        end
+        {:ok, :zlib.gunzip(data)}
 
       _ ->
         # not decompressing

@@ -3,11 +3,13 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-# generic code for the transform styles. Not intended to be used directly
-
 defmodule Scenic.Primitive.Transform do
+  @moduledoc """
+  Generic code for the transform styles.
+  Not intended to be used directly
+  """
   alias Scenic.Math.Matrix
-  alias Scenic.Math.Vector
+  alias Scenic.Math.Vector2
   alias Scenic.Primitive.Transform
 
   @callback info(data :: any) :: bitstring
@@ -15,6 +17,8 @@ defmodule Scenic.Primitive.Transform do
 
   # ===========================================================================
   defmodule FormatError do
+    @moduledoc false
+
     defexception message: nil, module: nil, data: nil
   end
 
@@ -95,7 +99,7 @@ defmodule Scenic.Primitive.Transform do
   defp multiply_partial(mx, :matrix, dev_mx), do: Matrix.mul(mx, dev_mx)
 
   defp multiply_partial(mx, :inv_pin, point) do
-    Matrix.translate(mx, Vector.invert(point))
+    Matrix.translate(mx, Vector2.invert(point))
   end
 
   # --------------------------------------------------------

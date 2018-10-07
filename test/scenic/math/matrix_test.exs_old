@@ -1,0 +1,674 @@
+#
+#  Copyright © 2017 Boyd Multerer. All rights reserved.
+#
+
+defmodule Scenic.Math.MatrixTest do
+  use ExUnit.Case
+  doctest Scenic.Math
+  alias Scenic.Math.Matrix
+  alias Scenic.Math.Matrix.Utils
+
+#  @default_major    :col
+
+  @binary_format        :binary
+  @tuple_format         :tuple
+
+  @matrix_a {
+      {3.0, 2.0, 0.0, 1.0},
+      {4.0, 0.0, 1.0, 2.0},
+      {3.0, 0.0, 2.0, 1.0},
+      {9.0, 2.0, 3.0, 1.0}
+    }
+
+  @matrix_a_double {
+      {6.0, 4.0, 0.0, 2.0},
+      {8.0, 0.0, 2.0, 4.0},
+      {6.0, 0.0, 4.0, 2.0},
+      {18.0, 4.0, 6.0, 2.0}
+    }
+
+  @matrix_b {
+      {1.5, 3.0, 0.0, 1.0},
+      {4.0, 0.1, 1.0, 2.0},
+      {2.9, 0.0, 2.0, 1.0},
+      {3.0, 2.0, 4.0, 1.2}
+    }
+
+  @matrix_c {
+      {0, 10, 20, 30},
+      {1, 11, 21, 31},
+      {2, 12, 22, 32},
+      {3, 13, 23, 33}
+    }
+
+  @matrix_zero {
+    {0.0, 0.0, 0.0, 0.0},
+    {0.0, 0.0, 0.0, 0.0},
+    {0.0, 0.0, 0.0, 0.0},
+    {0.0, 0.0, 0.0, 0.0}
+  }
+  @matrix_zero_bin  Utils.to_binary( @matrix_zero )
+
+  @matrix_identity {
+    {1.0, 0.0, 0.0, 0.0},
+    {0.0, 1.0, 0.0, 0.0},
+    {0.0, 0.0, 1.0, 0.0},
+    {0.0, 0.0, 0.0, 1.0}
+  }
+  @matrix_identity_bin  Utils.to_binary( @matrix_identity )
+
+  #----------------------------------------------------------------------------
+  # zero()
+  test "zero returns the zero matrix" do
+    assert Matrix.zero()                == @matrix_zero_bin
+    assert Matrix.zero(@tuple_format)   == @matrix_zero
+    assert Matrix.zero(@binary_format)  == @matrix_zero_bin
+  end
+
+  #----------------------------------------------------------------------------
+  # identity()
+  test "identity returns the identity matrix" do
+    assert Matrix.identity()                == @matrix_identity_bin
+    assert Matrix.identity(@tuple_format)   == @matrix_identity
+    assert Matrix.identity(@binary_format)  == @matrix_identity_bin
+  end
+
+  #============================================================================
+  # explicit builders
+
+  #--------------------------------------------------------
+  # 2x2 builder
+  test "build(row0, row1) works" do
+    assert Matrix.build({0,10}, {1,11}) == ({
+          {0.0, 10.0, 0.0, 0.0},
+          {1.0, 11.0, 0.0, 0.0},
+          {0.0, 0.0,  1.0, 0.0},
+          {0.0, 0.0,  0.0, 1.0}
+        } |> Utils.to_binary())
+  end
+
+  test "build(row0, row1) works, as tuple" do
+    assert Matrix.build({0,10}, {1,11}, @tuple_format) == {
+          {0.0, 10.0, 0.0, 0.0},
+          {1.0, 11.0, 0.0, 0.0},
+          {0.0, 0.0,  1.0, 0.0},
+          {0.0, 0.0,  0.0, 1.0}
+        }
+  end
+
+  test "build(row0, row1) works, as binary" do
+    assert Matrix.build({0,10}, {1,11}, @binary_format) == ({
+          {0.0, 10.0, 0.0, 0.0},
+          {1.0, 11.0, 0.0, 0.0},
+          {0.0, 0.0,  1.0, 0.0},
+          {0.0, 0.0,  0.0, 1.0}
+        } |> Utils.to_binary())
+  end
+
+  #--------------------------------------------------------
+  # 3x3 builder
+  test "build(row0, row1, row3) works - tuple by default" do
+    assert Matrix.build({0,10,20}, {1,11,21}, {2,12,22}) == ({
+          {0.0, 10.0, 20.0, 0.0},
+          {1.0, 11.0, 21.0, 0.0},
+          {2.0, 12.0, 22.0, 0.0},
+          {0.0, 0.0,  0.0,  1.0}
+        } |> Utils.to_binary())
+  end
+
+  test "build(row0, row1, row3) works, as tuple" do
+    assert Matrix.build({0,10,20}, {1,11,21}, {2,12,22}, @tuple_format) == {
+          {0.0, 10.0, 20.0, 0.0},
+          {1.0, 11.0, 21.0, 0.0},
+          {2.0, 12.0, 22.0, 0.0},
+          {0.0, 0.0,  0.0,  1.0}
+        }
+  end
+
+  test "build(row0, row1, row3) works, as binary" do
+    assert Matrix.build({0,10,20}, {1,11,21}, {2,12,22}, @binary_format) == ({
+          {0.0, 10.0, 20.0, 0.0},
+          {1.0, 11.0, 21.0, 0.0},
+          {2.0, 12.0, 22.0, 0.0},
+          {0.0, 0.0,  0.0,  1.0}
+        } |> Utils.to_binary())
+  end
+
+  #--------------------------------------------------------
+  # 4x4 builder
+  test "build(row0, row1, row3, row4) works - tuple by default" do
+    assert Matrix.build({0,10,20,30}, {1,11,21,31}, {2,12,22,32}, {3,13,23,33}) == ({
+          {0.0, 10.0, 20.0, 30.0},
+          {1.0, 11.0, 21.0, 31.0},
+          {2.0, 12.0, 22.0, 32.0},
+          {3.0, 13.0, 23.0, 33.0}
+        } |> Utils.to_binary())
+  end
+
+  test "build(row0, row1, row3, row4) works, as tuple" do
+    assert Matrix.build({0,10,20,30}, {1,11,21,31}, {2,12,22,32}, {3,13,23,33}, @tuple_format) == {
+          {0.0, 10.0, 20.0, 30.0},
+          {1.0, 11.0, 21.0, 31.0},
+          {2.0, 12.0, 22.0, 32.0},
+          {3.0, 13.0, 23.0, 33.0}
+        }
+  end
+
+  test "build(row0, row1, row3, row4) works, as binary" do
+    assert Matrix.build({0,10,20,30}, {1,11,21,31}, {2,12,22,32}, {3,13,23,33}, @binary_format) == ({
+          {0.0, 10.0, 20.0, 30.0},
+          {1.0, 11.0, 21.0, 31.0},
+          {2.0, 12.0, 22.0, 32.0},
+          {3.0, 13.0, 23.0, 33.0}
+        } |> Utils.to_binary())
+  end
+
+
+  #============================================================================
+  # specific builders
+
+  #--------------------------------------------------------
+  # build_translation
+  test "build_translation( 2x2 ) works" do
+    tuple = {
+          {1.0, 0.0, 0.0, 2.0},
+          {0.0, 1.0, 0.0, 3.0},
+          {0.0, 0.0, 1.0, 0.0},
+          {0.0, 0.0, 0.0, 1.0}
+        }
+    binary = Utils.to_binary(tuple)
+
+    assert Matrix.build_translation(2.0, 3.0)                   == binary
+    assert Matrix.build_translation({2.0, 3.0})                 == binary
+    assert Matrix.build_translation(2.0, 3.0,   @tuple_format)  == tuple
+    assert Matrix.build_translation({2.0, 3.0}, @tuple_format)  == tuple
+    assert Matrix.build_translation(2.0, 3.0,   @binary_format) == binary
+    assert Matrix.build_translation({2.0, 3.0}, @binary_format) == binary
+  end
+
+  test "build_translation( 3x3 ) works" do
+    tuple = {
+        {1.0, 0.0, 0.0, 2.0},
+        {0.0, 1.0, 0.0, 3.0},
+        {0.0, 0.0, 1.0, 4.0},
+        {0.0, 0.0, 0.0, 1.0}
+      }
+    binary = Utils.to_binary(tuple)
+
+    assert Matrix.build_translation(2.0, 3.0, 4.0)                   == binary
+    assert Matrix.build_translation({2.0, 3.0, 4.0})                 == binary
+    assert Matrix.build_translation(2.0, 3.0, 4.0,   @tuple_format)  == tuple
+    assert Matrix.build_translation({2.0, 3.0, 4.0}, @tuple_format)  == tuple
+    assert Matrix.build_translation(2.0, 3.0, 4.0,   @binary_format) == binary
+    assert Matrix.build_translation({2.0, 3.0, 4.0}, @binary_format) == binary
+  end
+
+
+  #--------------------------------------------------------
+  #build_scale
+  test "build_scale(s) works" do
+    tuple = {
+        {2.0, 0.0, 0.0, 0.0},
+        {0.0, 2.0, 0.0, 0.0},
+        {0.0, 0.0, 2.0, 0.0},
+        {0.0, 0.0, 0.0, 1.0}
+      }
+    binary = Utils.to_binary(tuple)
+
+    assert Matrix.build_scale(2.0)                  == binary
+    assert Matrix.build_scale(2.0, @tuple_format)   == tuple
+    assert Matrix.build_scale(2.0, @binary_format)  == binary
+  end
+
+  test "build_scale( x,y ) works" do
+    tuple = {
+        {2.0, 0.0, 0.0, 0.0},
+        {0.0, 3.0, 0.0, 0.0},
+        {0.0, 0.0, 1.0, 0.0},
+        {0.0, 0.0, 0.0, 1.0}
+      }
+    binary = Utils.to_binary(tuple)
+
+    assert Matrix.build_scale(2.0, 3.0)                   == binary
+    assert Matrix.build_scale({2.0, 3.0})                 == binary
+    assert Matrix.build_scale(2.0, 3.0, @tuple_format)    == tuple
+    assert Matrix.build_scale({2.0, 3.0}, @tuple_format)  == tuple
+    assert Matrix.build_scale(2.0, 3.0, @binary_format)   == binary
+    assert Matrix.build_scale({2.0, 3.0}, @binary_format) == binary
+  end
+
+  test "build_scale( x,y,z ) works" do
+    tuple = {
+        {2.0, 0.0, 0.0, 0.0},
+        {0.0, 3.0, 0.0, 0.0},
+        {0.0, 0.0, 4.0, 0.0},
+        {0.0, 0.0, 0.0, 1.0}
+      }
+    binary = Utils.to_binary(tuple)
+
+    assert Matrix.build_scale(2.0, 3.0, 4.0)                   == binary
+    assert Matrix.build_scale({2.0, 3.0, 4.0})                 == binary
+    assert Matrix.build_scale(2.0, 3.0, 4.0, @tuple_format)    == tuple
+    assert Matrix.build_scale({2.0, 3.0, 4.0}, @tuple_format)  == tuple
+    assert Matrix.build_scale(2.0, 3.0, 4.0, @binary_format)   == binary
+    assert Matrix.build_scale({2.0, 3.0, 4.0}, @binary_format) == binary
+  end
+
+
+  #--------------------------------------------------------
+  # build_rotation( radians )
+
+  test "build_rotation builds a z rotation by default" do
+    cos = :math.cos(1.0)
+    sin = :math.sin(1.0)
+
+    tuple = {
+        {cos, sin, 0.0, 0.0},
+        {-sin, cos, 0.0, 0.0},
+        {0.0, 0.0, 1.0, 0.0},
+        {0.0, 0.0, 0.0, 1.0}
+      }
+    binary = Utils.to_binary(tuple)
+
+    assert Matrix.build_rotation(1.0) == binary
+  end
+
+  test "build_rotation( radians, :x ) works" do
+    cos = :math.cos(1.0)
+    sin = :math.sin(1.0)
+
+    tuple = {
+        {1.0, 0.0, 0.0, 0.0},
+        {0.0, cos, sin, 0.0},
+        {0.0, -sin, cos, 0.0},
+        {0.0, 0.0, 0.0, 1.0}
+      }
+    binary = Utils.to_binary(tuple)
+
+    assert Matrix.build_rotation(1.0, :x)                 == binary
+    assert Matrix.build_rotation(1.0, :x, @tuple_format)  == tuple
+    assert Matrix.build_rotation(1.0, :x, @binary_format) == binary
+  end
+
+  test "build_rotation( radians, :y ) works" do
+    cos = :math.cos(1.0)
+    sin = :math.sin(1.0)
+
+    tuple = {
+        {cos, 0.0, sin, 0.0},
+        {0.0, 1.0, 0.0, 0.0},
+        {-sin, 0.0, cos, 0.0},
+        {0.0, 0.0, 0.0, 1.0}
+      }
+    binary = Utils.to_binary(tuple)
+
+    assert Matrix.build_rotation(1.0, :y)                 == binary
+    assert Matrix.build_rotation(1.0, :y, @tuple_format)  == tuple
+    assert Matrix.build_rotation(1.0, :y, @binary_format) == binary
+  end
+
+  test "build_rotation( radians, :z ) works" do
+    cos = :math.cos(1.0)
+    sin = :math.sin(1.0)
+
+    tuple = {
+        {cos, sin, 0.0, 0.0},
+        {-sin, cos, 0.0, 0.0},
+        {0.0, 0.0, 1.0, 0.0},
+        {0.0, 0.0, 0.0, 1.0}
+      }
+    binary = Utils.to_binary(tuple)
+
+    assert Matrix.build_rotation(1.0, :z)                 == binary
+    assert Matrix.build_rotation(1.0, :z, @tuple_format)  == tuple
+    assert Matrix.build_rotation(1.0, :z, @binary_format) == binary
+  end
+
+
+
+  #--------------------------------------------------------
+  # build_rotate_around( radians, point, axis \\ :z)
+
+  test "build_rotate_around works around :z by default" do
+    r = 1.0
+    x = 10
+    y = 20
+
+    mx_inv = Matrix.build_translation( -x, -y )
+    mx_rot = Matrix.build_rotation( r, :z )
+    mx_bak = Matrix.build_translation( x, y )
+
+    mx = Matrix.mul(mx_inv, mx_rot) |> Matrix.mul(mx_bak)
+
+    assert Matrix.build_rotate_around(r, {x,y}) == mx
+  end
+
+  test "build_rotate_around works around :x axis" do
+    r = 1.0
+    x = 10
+    y = 20
+
+    mx_inv = Matrix.build_translation( -x, -y )
+    mx_rot = Matrix.build_rotation( r, :x )
+    mx_bak = Matrix.build_translation( x, y )
+
+    mx = Matrix.mul(mx_inv, mx_rot) |> Matrix.mul(mx_bak)
+
+    assert Matrix.build_rotate_around(r, {x,y}, :x) == mx
+  end
+
+  test "build_rotate_around works around :y axis" do
+    r = 1.0
+    x = 10
+    y = 20
+
+    mx_inv = Matrix.build_translation( -x, -y )
+    mx_rot = Matrix.build_rotation( r, :y )
+    mx_bak = Matrix.build_translation( x, y )
+
+    mx = Matrix.mul(mx_inv, mx_rot) |> Matrix.mul(mx_bak)
+
+    assert Matrix.build_rotate_around(r, {x,y}, :y) == mx
+  end
+
+  test "build_rotate_around works around :z axis" do
+    r = 1.0
+    x = 10
+    y = 20
+
+    mx_inv = Matrix.build_translation( -x, -y )
+    mx_rot = Matrix.build_rotation( r, :z )
+    mx_bak = Matrix.build_translation( x, y )
+
+    mx = Matrix.mul(mx_inv, mx_rot) |> Matrix.mul(mx_bak)
+
+    assert Matrix.build_rotate_around(r, {x,y}, :z) == mx
+  end
+
+
+  #============================================================================
+  # act on a matrix
+
+  test "rotate rotates a matrix" do
+    mx_trans  = Matrix.build_translation( 123, 456 )
+    mx_rot    = Matrix.build_rotation( {1.3, :z} )
+    assert Matrix.rotate(mx_trans, {1.3, :z}) == Matrix.mul(mx_trans, mx_rot)
+  end
+  test "rotate does nothing if the value is nil" do
+    mx_trans  = Matrix.build_translation( 123, 456 )
+    assert Matrix.rotate(mx_trans, nil) == mx_trans
+  end
+
+  test "translate translates a matrix" do
+    mx_trans  = Matrix.build_translation( 123, 456 )
+    mx_rot    = Matrix.build_rotation( {1.3, :y} )
+    assert Matrix.translate(mx_rot, {123, 456}) == Matrix.mul(mx_rot, mx_trans)
+  end
+  test "translate does nothing if the value is nil" do
+    mx_rot    = Matrix.build_rotation( {1.3, :y} )
+    assert Matrix.translate(mx_rot, nil) == mx_rot
+  end
+
+  test "scale scales a matrix" do
+    mx_scale  = Matrix.build_scale( 1.2 )
+    mx_rot    = Matrix.build_rotation( {1.3, :x} )
+    assert Matrix.scale(mx_rot, 1.2) == Matrix.mul(mx_rot, mx_scale)
+  end
+  test "scale does nothing if the value is nil" do
+    mx_rot    = Matrix.build_rotation( {1.3, :y} )
+    assert Matrix.scale(mx_rot, nil) == mx_rot
+  end
+
+
+  #============================================================================
+  # basic functions
+
+  #----------------------------------------------------------------------------
+  # close?( a, b, within )
+  test "close? returns true if two matrixes are the same" do
+    assert Matrix.close?( @matrix_a, @matrix_a )
+  end
+
+  test "close? returns true if two matrixes are similar" do
+    assert Matrix.close?( @matrix_b, Matrix.put(@matrix_b, 0, 0, 1.500001) )
+  end
+  
+  test "close? returns false if two matrixes beyond within" do
+    refute Matrix.close?( @matrix_a, Matrix.put(@matrix_b, 0, 0, 1.500001), 0.000001 )
+  end
+
+  test "close? returns false if two matrixes are different" do
+    refute Matrix.close?( @matrix_b, @matrix_a )
+  end  
+
+
+  #----------------------------------------------------------------------------
+  # get(matrix, x, y)
+  # get an element from the matrix
+
+  test "get works" do
+    assert Matrix.get(@matrix_c, 0, 0) == 0
+    assert Matrix.get(@matrix_c, 0, 1) == 1
+    assert Matrix.get(@matrix_c, 0, 2) == 2
+    assert Matrix.get(@matrix_c, 0, 3) == 3
+    
+    assert Matrix.get(@matrix_c, 1, 0) == 10
+    assert Matrix.get(@matrix_c, 1, 1) == 11
+    assert Matrix.get(@matrix_c, 1, 2) == 12
+    assert Matrix.get(@matrix_c, 1, 3) == 13
+    
+    assert Matrix.get(@matrix_c, 2, 0) == 20
+    assert Matrix.get(@matrix_c, 2, 1) == 21
+    assert Matrix.get(@matrix_c, 2, 2) == 22
+    assert Matrix.get(@matrix_c, 2, 3) == 23
+    
+    assert Matrix.get(@matrix_c, 3, 0) == 30
+    assert Matrix.get(@matrix_c, 3, 1) == 31
+    assert Matrix.get(@matrix_c, 3, 2) == 32
+    assert Matrix.get(@matrix_c, 3, 3) == 33
+  end
+
+
+  #----------------------------------------------------------------------------
+  # put(matrix, x, y, v)
+  # put an element into the matrix
+  test "put works" do
+    assert @matrix_zero
+      |> Matrix.put( 0, 0, 123)
+      |> Matrix.get( 0, 0 ) == 123
+    assert @matrix_zero
+      |> Matrix.put( 0, 1, 123)
+      |> Matrix.get( 0, 1 ) == 123
+    assert @matrix_zero
+      |> Matrix.put( 0, 2, 123)
+      |> Matrix.get( 0, 2 ) == 123
+    assert @matrix_zero
+      |> Matrix.put( 0, 3, 123)
+      |> Matrix.get( 0, 3 ) == 123
+
+    assert @matrix_zero
+      |> Matrix.put( 1, 0, 123)
+      |> Matrix.get( 1, 0 ) == 123
+    assert @matrix_zero
+      |> Matrix.put( 1, 1, 123)
+      |> Matrix.get( 1, 1 ) == 123
+    assert @matrix_zero
+      |> Matrix.put( 1, 2, 123)
+      |> Matrix.get( 1, 2 ) == 123
+    assert @matrix_zero
+      |> Matrix.put( 1, 3, 123)
+      |> Matrix.get( 1, 3 ) == 123
+
+    assert @matrix_zero
+      |> Matrix.put( 2, 0, 123)
+      |> Matrix.get( 2, 0 ) == 123
+    assert @matrix_zero
+      |> Matrix.put( 2, 1, 123)
+      |> Matrix.get( 2, 1 ) == 123
+    assert @matrix_zero
+      |> Matrix.put( 2, 2, 123)
+      |> Matrix.get( 2, 2 ) == 123
+    assert @matrix_zero
+      |> Matrix.put( 2, 3, 123)
+      |> Matrix.get( 2, 3 ) == 123
+
+    assert @matrix_zero
+      |> Matrix.put( 3, 0, 123)
+      |> Matrix.get( 3, 0 ) == 123
+    assert @matrix_zero
+      |> Matrix.put( 3, 1, 123)
+      |> Matrix.get( 3, 1 ) == 123
+    assert @matrix_zero
+      |> Matrix.put( 3, 2, 123)
+      |> Matrix.get( 3, 2 ) == 123
+    assert @matrix_zero
+      |> Matrix.put( 3, 3, 123)
+      |> Matrix.get( 3, 3 ) == 123
+  end
+
+
+
+  #----------------------------------------------------------------------------
+  # get_xy(matrix)
+  # get the xy coordinates from the matrix
+  test "get_xy works" do
+    assert Matrix.get_xy(@matrix_c) == {30, 31}
+  end
+
+  #----------------------------------------------------------------------------
+  # get_xyz(matrix)
+  # get the xyz coordinates from the matrix
+  test "get_xyz works" do
+    assert Matrix.get_xyz(@matrix_c) == {30, 31, 32}
+  end
+
+
+  #----------------------------------------------------------------------------
+  # add( a, b )
+  test "add adds two matrices together" do
+    answer = Matrix.add(@matrix_a, @matrix_b)
+    target = {
+      {4.5, 5.0, 0.0, 2.0},
+      {8.0, 0.1, 2.0, 4.0},
+      {5.9, 0.0, 4.0, 2.0},
+      {12.0, 4.0, 7.0, 2.2}
+    }
+    assert Matrix.close?(answer, target)
+  end
+
+  #----------------------------------------------------------------------------
+  # sub( a, b )
+  test "sub subtracts two matrices" do
+    answer = Matrix.sub(@matrix_a, @matrix_b)
+    target = {
+      {1.5, -1.0, 0.0, 0.0},
+      {0.0, -0.1, 0.0, 0.0},
+      {0.1, 0.0, 0.0, 0.0},
+      {6.0, 0.0, -1.0, -0.2}
+    }
+    assert Matrix.close?(answer, target)
+  end
+
+  #----------------------------------------------------------------------------
+  # mul( a, b )
+  # multiply two matrices
+  # see http://ncalculators.com/matrix/4x4-matrix-multiplication-calculator.htm
+  test "mul multiplies two matrices" do
+    answer = Matrix.mul(@matrix_a, @matrix_b)
+    target = {
+      {15.5, 11.2, 6.0 ,8.2},
+      {14.9, 16.0, 10.0, 7.4},
+      {13.3, 11.0, 8.0, 6.2},
+      {33.2, 29.2, 12.0, 17.2}
+    }
+    assert Matrix.close?(answer, target) 
+  end
+
+  #----------------------------------------------------------------------------
+  # mul( a, s )
+  # multiply a matrix and a scalar
+  test "mul multiplies a matrix and a scalar" do
+    answer = Matrix.mul(@matrix_a, 2.0)
+    assert Matrix.close?(answer, @matrix_a_double) 
+  end
+
+  #----------------------------------------------------------------------------
+  # div( a, s )
+  # divide a matrix by a scalar
+  test "div divides a matrix by a scalar" do
+    answer = Matrix.div(@matrix_a_double, 2.0)
+    assert Matrix.close?(answer, @matrix_a) 
+  end
+
+  #----------------------------------------------------------------------------
+  # find the determinant of a matrix. See example at:
+  # https://people.richland.edu/james/lecture/m116/matrices/determinant.html
+  test "determinant works" do
+    assert Matrix.determinant(@matrix_a) == 24.0
+  end
+
+  test "determinant finds a zero" do
+    m = {
+      {3.0, 2.0, 0.0, 1.0},
+      {4.0, 0.0, 1.0, 2.0},
+      {0.0, 0.0, 0.0, 0.0},
+      {9.0, 2.0, 3.0, 1.0}
+    }
+    assert Matrix.determinant(m) == 0.0
+  end
+
+  #----------------------------------------------------------------------------
+  # calculate the Transpose matrix
+  # see http://ncalculators.com/matrix/4x4-inverse-matrix-calculator.htm
+  test "transpose works" do
+    assert Matrix.transpose(@matrix_a) == {
+          {3.0, 4.0, 3.0, 9.0},
+          {2.0, 0.0, 0.0, 2.0},
+          {0.0, 1.0, 2.0, 3.0},
+          {1.0, 2.0, 1.0, 1.0}
+        }
+  end
+
+  #----------------------------------------------------------------------------
+  # calculate the adjugate matrix
+  # see http://ncalculators.com/matrix/4x4-inverse-matrix-calculator.htm
+  test "adjugate works" do
+    assert Matrix.adjugate(@matrix_a) == {
+          {-6.0, 6.0, -12.0, 6.0},
+          {16.0, -12.0, 12.0, -4.0},
+          {4.0, -12.0, 24.0, -4.0},
+          {10.0, 6.0, 12.0, -10.0}
+        }
+  end
+
+  #----------------------------------------------------------------------------
+  # find the inverse of a matrix. See example at:
+  # http://www.cg.info.hiroshima-cu.ac.jp/~miyazaki/knowledge/teche23.html
+    # see http://ncalculators.com/matrix/4x4-inverse-matrix-calculator.htm
+
+  test "invert works" do
+    inverse = Matrix.invert(@matrix_a)
+    target = {
+      {-6/24, 6/24, -12/24, 6/24},
+      {16/24, -12/24, 12/24, -4/24},
+      {4/24, -12/24, 24/24, -4/24},
+      {10/24, 6/24, 12/24, -10/24}
+    }
+    assert Matrix.close?(inverse, target)
+  end
+
+  test "invert returns error if determinant is zero" do
+    m = {
+      {3.0, 2.0, 0.0, 1.0},
+      {4.0, 0.0, 1.0, 2.0},
+      {0.0, 0.0, 0.0, 0.0},
+      {9.0, 2.0, 3.0, 1.0}
+    }
+    
+    assert Matrix.invert(m) == :err_zero_determinant
+    assert Matrix.invert(Utils.to_binary(m)) == :err_zero_determinant
+  end
+
+
+
+end

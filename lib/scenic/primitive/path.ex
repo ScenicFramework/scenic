@@ -4,9 +4,9 @@
 #
 
 defmodule Scenic.Primitive.Path do
+  @moduledoc false
+
   use Scenic.Primitive
-  #  alias Scenic.Primitive
-  #  alias Scenic.Primitive.Style
 
   #  import IEx
 
@@ -68,6 +68,7 @@ defmodule Scenic.Primitive.Path do
   defp verify_action(_), do: false
 
   # ============================================================================
+  @spec valid_styles() :: [:fill | :hidden | :stroke, ...]
   def valid_styles(), do: @styles
 
   # ============================================================================

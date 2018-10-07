@@ -10,6 +10,10 @@ defmodule Scenic.Primitive.Style.JoinTest do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Join
 
+  test "info works" do
+    assert Join.info(:test_data) =~ ":test_data"
+  end
+
   # ============================================================================
   # verify - various forms
 

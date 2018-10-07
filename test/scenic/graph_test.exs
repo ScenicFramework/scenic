@@ -5,9 +5,8 @@
 
 defmodule Scenic.GraphTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Graph
 
-  # alias Scenic.Math.Matrix
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.Primitive.Group
@@ -23,7 +22,6 @@ defmodule Scenic.GraphTest do
   @tx_rot 0.1
   @transform %{pin: @tx_pin, rotate: @tx_rot}
 
-  # |> Primitive.put_uid(@root_uid)
   @empty_root Group.build()
   @graph_empty Graph.build()
 
@@ -79,11 +77,25 @@ defmodule Scenic.GraphTest do
            ) == @graph_empty
   end
 
-  test "build puts styles on the root node" do
-    graph = Graph.build(clear_color: :dark_slate_blue)
+  test "build injects default values for font and font size" do
+    graph = Graph.build()
 
     assert graph.primitives[@root_uid]
-           |> Primitive.get_styles() == %{clear_color: :dark_slate_blue}
+           |> Primitive.get_styles() == %{font: :roboto, font_size: 24}
+  end
+
+  test "build gives higher priority to user options" do
+    graph = Graph.build(font_size: 20)
+
+    assert graph.primitives[@root_uid]
+           |> Primitive.get_styles() == %{font: :roboto, font_size: 20}
+  end
+
+  test "build puts styles on the root node" do
+    color = :dark_slate_blue
+    graph = Graph.build(clear_color: color)
+
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:clear_color) == color
   end
 
   test "build puts transforms on the root node" do
@@ -363,7 +375,7 @@ defmodule Scenic.GraphTest do
   #   # check that the item's uid was updated
   #   # assert Primitive.get_uid(p) == uid
 
-  #   # check that the parent references the new element    
+  #   # check that the parent references the new element
   #   p = graph.primitives[parent_uid]
   #   assert Primitive.get(p) == [uid]
 
@@ -428,6 +440,25 @@ defmodule Scenic.GraphTest do
   #   # make sure the template's input request was merged in without duplicates
   #   # assert Map.get(merged, :input) == [:key, :char, :cursor_down]
   # end
+
+  # ============================================================================
+  # add
+
+  test "add a pre-built primitive to a graph" do
+    p = Primitive.Line.build({{0, 0}, {2, 2}}, id: :added)
+    graph = Graph.add(@graph_find, p)
+    Graph.get!(graph, :added)
+  end
+
+  test "add a new primitive to a graph" do
+    count = Graph.count(@graph_find)
+
+    post_add_count =
+      Graph.add(@graph_find, Primitive.Line, {{0, 0}, {2, 2}})
+      |> Graph.count()
+
+    assert post_add_count > count
+  end
 
   # ============================================================================
   # def modify( graph, uid, action )
@@ -626,5 +657,9 @@ defmodule Scenic.GraphTest do
     assert Map.get(graph.primitives[t0], :transforms) == @transform
     assert Map.get(graph.primitives[t1], :transforms) == @transform
     assert Map.get(graph.primitives[other], :transforms) == nil
+  end
+
+  test "style_stack returns an empty map for invalid uid" do
+    assert Graph.style_stack(@graph_find, 1234) == %{}
   end
 end
