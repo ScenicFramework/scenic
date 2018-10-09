@@ -1,5 +1,5 @@
 #
-#  Created by Boyd Multerer on August 8, 2018.
+#  Created by Boyd Multerer on 2018-08-08.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 # Seperate Status out into its own file
