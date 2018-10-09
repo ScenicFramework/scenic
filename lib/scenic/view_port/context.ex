@@ -1,5 +1,5 @@
 #
-#  Created by Boyd Multerer on July 23, 2018.
+#  Created by Boyd Multerer on 2018-07-23.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 # Seperate Context out into its own file

@@ -1,5 +1,5 @@
 #
-#  Created by Boyd Multerer on August 28, 2018.
+#  Created by Boyd Multerer on 2018-08-28.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 
