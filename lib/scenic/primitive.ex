@@ -93,15 +93,15 @@ defmodule Scenic.Primitive do
     quote do
       @behaviour Scenic.Primitive
 
+      @doc false
       def build(data \\ nil, opts \\ [])
-
       def build(data, opts) do
         data = verify!(data)
         Primitive.build(__MODULE__, data, opts)
       end
 
+      @doc false
       def add_to_graph(graph, data \\ nil, opts \\ [])
-
       def add_to_graph(%Scenic.Graph{} = graph, data, opts) do
         Graph.add(graph, __MODULE__, data, opts)
       end
@@ -142,8 +142,11 @@ defmodule Scenic.Primitive do
       def default_pin(_), do: {0.0, 0.0}
 
       # simple defaults that can be overridden
+      @doc false
       def get(%Primitive{data: data}), do: data
+      @doc false
       def put(p, data), do: Primitive.do_put(p, data)
+
       @doc false
       def normalize(data), do: data
 

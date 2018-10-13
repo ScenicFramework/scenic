@@ -4,7 +4,35 @@
 #
 
 defmodule Scenic.Primitive.Path do
-  @moduledoc false
+  @moduledoc """
+  Draw a complex path on the screen described by a list of actions.
+
+  ## Data
+
+  `list_of_commands`
+
+  The data for a path is a list of commands. They are interpreted in order
+  when the path is drawn. See below for the commands it will accept.
+
+  ## Styles
+
+  This primitive recognizes the following styles
+  * `hidden` - show or hide the primitive
+  * `fill` - fill in the area of the primitive
+  * `stroke` - stroke the outline of the primitive.
+
+  ## Commands
+
+  * `:begin` - start a new path segment
+  * `:close_path` - draw a line back to the start of the current segment
+  * `:solid` - mark the current segment as something that will be filled
+  * `:hole` - mark the current segment as something that cut out of other segments
+  * `{:move_to, x, y}` - move the current draw position
+  * `{:line_to, x, y}` - draw a line from the current position to a new location.
+  * `{:bezier_to, c1x, c1y, c2x, c2y, x, y}` - draw a bezier curve from the current position to a new location.
+  * `{:quadratic_to, cx, cy, x, y}` - draw a quadratic curve from the current position to a new location.
+  * `{:arc_to, x1, y1, x2, y2, radius}` - draw an arc from the current position to a new location.
+  """
 
   use Scenic.Primitive
 
@@ -16,6 +44,7 @@ defmodule Scenic.Primitive.Path do
   # data verification and serialization
 
   # --------------------------------------------------------
+  @doc false
   def info(data),
     do: """
       #{IO.ANSI.red()}#{__MODULE__} data must be a list of actions. See docs.
@@ -24,6 +53,7 @@ defmodule Scenic.Primitive.Path do
     """
 
   # --------------------------------------------------------
+  @doc false
   def verify(actions) when is_list(actions) do
     actions
     |> Enum.all?(&verify_action(&1))
@@ -68,6 +98,9 @@ defmodule Scenic.Primitive.Path do
   defp verify_action(_), do: false
 
   # ============================================================================
+  @doc """
+  Returns a list of styles recognized by this primitive.
+  """
   @spec valid_styles() :: [:fill | :hidden | :stroke, ...]
   def valid_styles(), do: @styles
 

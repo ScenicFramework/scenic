@@ -4,7 +4,25 @@
 #
 
 defmodule Scenic.Primitive.Triangle do
-  @moduledoc false
+  @moduledoc """
+  Draw a triangle on the screen.
+
+  ## Data
+
+  `{point_a, point_b, point_c}`
+
+  The data for a line is a tuple containing three points.
+  * `point_a` - position to start drawing from
+  * `point_b` - position to draw to
+  * `point_c` - position to draw to
+
+  ## Styles
+
+  This primitive recognizes the following styles
+  * `hidden` - show or hide the primitive
+  * `fill` - fill in the area of the primitive
+  * `stroke` - stroke the outline of the primitive.
+  """
 
   use Scenic.Primitive
   alias Scenic.Math
@@ -15,6 +33,7 @@ defmodule Scenic.Primitive.Triangle do
   # data verification and serialization
 
   # --------------------------------------------------------
+  @doc false
   def info(data),
     do: """
       #{IO.ANSI.red()}#{__MODULE__} data must be three points: {{x0,y0}, {x1,y1}, {x2,y2}}
@@ -22,6 +41,7 @@ defmodule Scenic.Primitive.Triangle do
       #{IO.ANSI.default_color()}
     """
 
+  @doc false
   def verify({{x0, y0}, {x1, y1}, {x2, y2}} = data)
       when is_number(x0) and is_number(y0) and is_number(x1) and is_number(y1) and is_number(x2) and
              is_number(y2),
@@ -30,6 +50,9 @@ defmodule Scenic.Primitive.Triangle do
   def verify(_), do: :invalid_data
 
   # ============================================================================
+  @doc """
+  Returns a list of styles recognized by this primitive.
+  """
   @spec valid_styles() :: [:fill | :hidden | :stroke, ...]
   def valid_styles(), do: @styles
 

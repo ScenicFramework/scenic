@@ -236,6 +236,19 @@ defmodule Scenic.Scene do
   parent. I do this instead of transforming and continuing when
   I want to change the originating scene.
 
+
+  ## No children
+
+  There is an optimization you can use. If you know for certain that your component
+  will not attempt to use any components, you can set `has_children` to `false` like this.
+
+      use Scenic.Component, has_children: false
+
+  Setting `has_children` to `false` this will do two things. First, it won't create
+  a dynamic supervisor for this scene, which saves some resources. Second,
+  `push_graph/1` goes through a fast pass that doesn't scan the graph for dynamic children.
+
+  For example, the Button component sets `has_children` to `false`.
   """
 
   # @viewport             :viewport

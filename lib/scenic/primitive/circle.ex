@@ -4,7 +4,23 @@
 #
 
 defmodule Scenic.Primitive.Circle do
-  @moduledoc false
+  @moduledoc """
+  Draw a circle on the screen.
+
+  ## Data
+
+  `radius`
+
+  The data for an arc is a single number.
+  * `radius` - the radius of the arc
+
+  ## Styles
+
+  This primitive recognizes the following styles
+  * `hidden` - show or hide the primitive
+  * `fill` - fill in the area of the primitive
+  * `stroke` - stroke the outline of the primitive.
+  """
 
   use Scenic.Primitive
 
@@ -14,6 +30,7 @@ defmodule Scenic.Primitive.Circle do
   # data verification and serialization
 
   # --------------------------------------------------------
+  @doc false
   def info(data),
     do: """
       #{IO.ANSI.red()}#{__MODULE__} data must be: radius
@@ -22,6 +39,7 @@ defmodule Scenic.Primitive.Circle do
     """
 
   # --------------------------------------------------------
+  @doc false
   def verify(data) do
     normalize(data)
     {:ok, data}
@@ -30,12 +48,16 @@ defmodule Scenic.Primitive.Circle do
   end
 
   # --------------------------------------------------------
+  @doc false
   @spec normalize(number()) :: number()
   def normalize(radius) when is_number(radius) do
     radius
   end
 
   # ============================================================================
+  @doc """
+  Returns a list of styles recognized by this primitive.
+  """
   @spec valid_styles() :: [:hidden | :fill | :stroke]
   def valid_styles(), do: @styles
 

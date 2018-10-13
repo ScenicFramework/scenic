@@ -4,7 +4,41 @@
 #
 
 defmodule Scenic.Component do
-  @moduledoc false
+  @moduledoc """
+  A Component is simply a Scene that is optimized to be referenced by another scene.
+
+  All you need to do to create a Component is call
+
+      use Scenic.Component
+
+  instead of 
+
+      use Scenic.Scene
+
+  At the top of your module definition.
+
+  ## Verifiers
+
+  One of the main differences between a Component and a Scene is the two extra callbacks
+  that are used to verify incoming data. Since Components are meant to be reused, you
+  should do some basic validation that the data being set up is valid, then provide
+  feedback if it isn't.
+
+  ## No children
+
+  There is an optimization you can use. If you know for certain that your component
+  will not attempt to use any components, you can set `has_children` to `false` like this.
+
+      use Scenic.Component, has_children: false
+
+  Setting `has_children` to `false` this will do two things. First, it won't create
+  a dynamic supervisor for this scene, which saves some resources. Second,
+  `push_graph/1` goes through a fast pass that doesn't scan the graph for dynamic children.
+
+  For example, the Button component sets `has_children` to `false`.
+
+  This option is available for any Scene, not just components
+  """
 
   alias Scenic.Primitive
 

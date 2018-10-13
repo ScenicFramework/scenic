@@ -4,7 +4,24 @@
 #
 
 defmodule Scenic.Primitive.Rectangle do
-  @moduledoc false
+  @moduledoc """
+  Draw a rectangle on the screen.
+
+  ## Data
+
+  `{width, height}`
+
+  The data for a line is a tuple containing two numbers.
+  * `width` - width of the rectangle
+  * `height` - height of the rectangle
+
+  ## Styles
+
+  This primitive recognizes the following styles
+  * `hidden` - show or hide the primitive
+  * `fill` - fill in the area of the primitive
+  * `stroke` - stroke the outline of the primitive.
+  """
 
   use Scenic.Primitive
 
@@ -14,6 +31,7 @@ defmodule Scenic.Primitive.Rectangle do
   # data verification and serialization
 
   # --------------------------------------------------------
+  @doc false
   def info(data),
     do: """
       #{IO.ANSI.red()}#{__MODULE__} data must be: {width, height}
@@ -22,13 +40,16 @@ defmodule Scenic.Primitive.Rectangle do
     """
 
   # --------------------------------------------------------
+  @doc false
   def verify({width, height} = data) when is_number(width) and is_number(height) do
     {:ok, data}
   end
-
   def verify(_), do: :invalid_data
 
   # ============================================================================
+  @doc """
+  Returns a list of styles recognized by this primitive.
+  """
   @spec valid_styles() :: [:fill | :hidden | :stroke, ...]
   def valid_styles(), do: @styles
 
