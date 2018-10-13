@@ -179,24 +179,24 @@ defmodule Scenic.PrimitiveTest do
   end
 
   # --------------------------------------------------------
-  # put
+  # merge_opts
 
-  test "put_opts updates only the options on a primitive" do
-    assert Primitive.put_opts(@primitive, fill: :blue).styles == %{
+  test "merge_opts updates only the options on a primitive" do
+    assert Primitive.merge_opts(@primitive, fill: :blue).styles == %{
              fill: :blue,
              stroke: {10, :green}
            }
   end
 
-  test "put_opts rejects invalid style" do
+  test "merge_opts rejects invalid style" do
     assert_raise Primitive.Style.FormatError, fn ->
-      Primitive.put_opts(@primitive, fill: :invalid)
+      Primitive.merge_opts(@primitive, fill: :invalid)
     end
   end
 
-  test "put_opts rejects invalid transform" do
+  test "merge_opts rejects invalid transform" do
     assert_raise Primitive.Transform.FormatError, fn ->
-      Primitive.put_opts(@primitive, rotate: :invalid)
+      Primitive.merge_opts(@primitive, rotate: :invalid)
     end
   end
 

@@ -862,7 +862,7 @@ defmodule Scenic.Primitives do
           options :: list
         ) :: Primitive.t()
 
-  def update_opts(p, opts), do: Primitive.put_opts(p, opts)
+  def update_opts(p, opts), do: Primitive.merge_opts(p, opts)
 
   # ============================================================================
   # generic workhorse versions
