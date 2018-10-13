@@ -22,7 +22,6 @@ defmodule Scenic.GraphTest do
   @tx_rot 0.1
   @transform %{pin: @tx_pin, rotate: @tx_rot}
 
-  # @empty_root Group.build()
   @graph_empty Graph.build()
 
   @graph_find Graph.build()
