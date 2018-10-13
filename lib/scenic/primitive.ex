@@ -179,9 +179,9 @@ defmodule Scenic.Primitive do
   [Scenic.Primitives](Scenic.Primitives.html) instead.
 
   Parameters:
-  `module` - The module of the primitive you are building
-  `data` - the primitive-specific data being set into the primitive
-  `opts` - a list of style and transform options to apply to the primitive
+  * `module` - The module of the primitive you are building
+  * `data` - the primitive-specific data being set into the primitive
+  * `opts` - a list of style and transform options to apply to the primitive
 
   Returns the built primitive.
   """
@@ -298,7 +298,7 @@ defmodule Scenic.Primitive do
   Get the styles map from a primitive.
 
   Parameters:
-  `primitive` - The primitive
+  * `primitive` - The primitive
 
   Returns the a map of styles set directly onto this primitive. This does 
   not include any inherited styles.
@@ -314,8 +314,8 @@ defmodule Scenic.Primitive do
   Update the styles map in a primitive.
 
   Parameters:
-  `primitive` - The primitive
-  `styles` - The new styles map
+  * `primitive` - The primitive
+  * `styles` - The new styles map
 
   Returns the primitive with the updated styles.
   """
@@ -337,9 +337,9 @@ defmodule Scenic.Primitive do
   If the style is not set, it returns default
 
   Parameters:
-  `primitive` - The primitive
-  `type` - atom representing the style to get.
-  `default` - default value to return if the style is not set.
+  * `primitive` - The primitive
+  * `type` - atom representing the style to get.
+  * `default` - default value to return if the style is not set.
 
   Returns the value of the style.
   """
@@ -352,9 +352,9 @@ defmodule Scenic.Primitive do
   Update the value of a specific style set on the primitive.
 
   Parameters:
-  `primitive` - The primitive
-  `type` - atom representing the style to get.
-  `data` - the value to set on the style.
+  * `primitive` - The primitive
+  * `type` - atom representing the style to get.
+  * `data` - the value to set on the style.
 
   Returns the updated primitive.
   """
@@ -371,6 +371,7 @@ defmodule Scenic.Primitive do
     |> (&put_styles(p, &1)).()
   end
 
+  @deprecated "Use Primitive.merge_opts instead"
   def put_style(%Primitive{} = p, list) when is_list(list) do
     Enum.reduce(list, p, fn {type, data}, acc ->
       put_style(acc, type, data)
@@ -383,8 +384,8 @@ defmodule Scenic.Primitive do
   Does nothing if the style is not set.
 
   Parameters:
-  `primitive` - The primitive
-  `type` - atom representing the style to delete.
+  * `primitive` - The primitive
+  * `type` - atom representing the style to delete.
 
   Returns the updated primitive.
   """
@@ -404,7 +405,7 @@ defmodule Scenic.Primitive do
   Get the transforms map from a primitive.
 
   Parameters:
-  `primitive` - The primitive
+  * `primitive` - The primitive
 
   Returns the a map of transforms set directly onto this primitive. This does 
   not include any inherited transforms.
@@ -420,8 +421,8 @@ defmodule Scenic.Primitive do
   Update the transforms map in a primitive.
 
   Parameters:
-  `primitive` - The primitive
-  `transforms` - The new transforms map
+  * `primitive` - The primitive
+  * `transforms` - The new transforms map
 
   Returns the primitive with the updated transforms.
   """
@@ -444,9 +445,9 @@ defmodule Scenic.Primitive do
   If the transform is not set, it returns default
 
   Parameters:
-  `primitive` - The primitive
-  `type` - atom representing the transform to get.
-  `default` - default value to return if the transform is not set.
+  * `primitive` - The primitive
+  * `type` - atom representing the transform to get.
+  * `default` - default value to return if the transform is not set.
 
   Returns the value of the transform.
   """
@@ -459,9 +460,9 @@ defmodule Scenic.Primitive do
   Update the value of a specific transform set on the primitive.
 
   Parameters:
-  `primitive` - The primitive
-  `type` - atom representing the transform to get.
-  `data` - the value to set on the transform.
+  * `primitive` - The primitive
+  * `type` - atom representing the transform to get.
+  * `data` - the value to set on the transform.
 
   Returns the updated primitive.
   """
@@ -478,6 +479,7 @@ defmodule Scenic.Primitive do
     |> (&put_transforms(p, &1)).()
   end
 
+  @deprecated "Use Primitive.merge_opts instead"
   def put_transform(%Primitive{} = p, tx_list) when is_list(tx_list) do
     Enum.reduce(tx_list, p, fn {k, v}, acc ->
       put_transform(acc, k, v)
@@ -491,8 +493,8 @@ defmodule Scenic.Primitive do
   Does nothing if the transform is not set.
 
   Parameters:
-  `primitive` - The primitive
-  `type` - atom representing the transform to delete.
+  * `primitive` - The primitive
+  * `type` - atom representing the transform to delete.
 
   Returns the updated primitive.
   """
@@ -512,7 +514,7 @@ defmodule Scenic.Primitive do
   Get the value of the primitive-specific data.
 
   Parameters:
-  `primitive` - The primitive
+  * `primitive` - The primitive
 
   Returns the value of the primitive-specific data.
   """
@@ -528,7 +530,7 @@ defmodule Scenic.Primitive do
   @spec put_opts(primitive :: Primitive.t(), opts :: keyword) :: Primitive.t()
   def put_opts(primitive, opts)
 
-  def put_opts(%Primitive{} = p, opts) when is_list(opts) do
+  def put_opts(%Primitive{}, opts) when is_list(opts) do
     raise "Primitive.put_opts has been deprecated. Use Primitive.merge_opts instead."
   end
 
@@ -540,7 +542,7 @@ defmodule Scenic.Primitive do
   more of a merge. The supplied list of styles and transforms
 
   Parameters:
-  `primitive` - The primitive
+  * `primitive` - The primitive
 
   Returns the value of the primitive-specific data.
   """
@@ -558,9 +560,9 @@ defmodule Scenic.Primitive do
   off using the helper functions in [`Scenic.Primitives`](Scenic.Primitives.html) instead.
 
   Parameters:
-  `primitive` - The primitive
-  `data` - The data to set
-  `opts` - A list of style/transform options to merge
+  * `primitive` - The primitive
+  * `data` - The data to set
+  * `opts` - A list of style/transform options to merge
 
   Returns the updated primitive.
   """
@@ -645,6 +647,26 @@ defmodule Scenic.Primitive do
   defp mprim_add_transforms(min_p, _), do: min_p
 
   # --------------------------------------------------------
+  @doc """
+  Determines if a point is contained within a primitive.
+
+  The supplied point must already be projected into the local coordinate space
+  of the primitive. In other words, this test does NOT take into account any
+  transforms that have been applied to the primitive.
+
+  The input mechanism takes care of this for you by projecting incoming points
+  by the inverse-matrix of a primitive before calling this function...
+
+  Note that some primitives, such as Group, do not inherently have a notion of
+  containing a point. In those cases, this function will always return false.
+
+  Parameters:
+  * `primitive` - The primitive
+  * `point` - The point to test
+
+  Returns `true` or `false`.
+  """
+
   @spec contains_point?(primitive :: Primitive.t(), point :: Scenic.Math.point()) :: map
   def contains_point?(%Primitive{module: mod, data: data}, point) do
     mod.contains_point?(data, point)
