@@ -62,8 +62,11 @@ defmodule Scenic.Primitive.Line do
   def default_pin(data), do: centroid(data)
 
   # --------------------------------------------------------
+  @doc """
+  Returns a the midpoint of the line. This is used as the default pin when applying
+  rotate or scale transforms.
+  """
   def centroid(data)
-
   def centroid({{x0, y0}, {x1, y1}}) do
     {
       (x0 + x1) / 2,
