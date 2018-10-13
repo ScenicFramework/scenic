@@ -200,6 +200,12 @@ defmodule Scenic.PrimitiveTest do
     end
   end
 
+  test "put_opts raises" do
+    assert_raise RuntimeError, fn ->
+      Primitive.put_opts(@primitive, fill: :blue)
+    end
+  end
+
   # ============================================================================
   # transform field
 
