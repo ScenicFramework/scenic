@@ -4,6 +4,7 @@
 * Much improved testing
 * Simplify rules around user-closing a viewport
 * Fix bug where captured positional inputs were not casting the transformed location
+* Deprecate Graph.get_root(). Use Graph.get!(graph, :\_root\_) instead.
 
 ## 0.8.0
 
