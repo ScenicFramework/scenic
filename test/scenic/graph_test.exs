@@ -22,7 +22,7 @@ defmodule Scenic.GraphTest do
   @tx_rot 0.1
   @transform %{pin: @tx_pin, rotate: @tx_rot}
 
-  @empty_root Group.build()
+  # @empty_root Group.build()
   @graph_empty Graph.build()
 
   @graph_find Graph.build()
@@ -46,9 +46,9 @@ defmodule Scenic.GraphTest do
   # access to the basics. These concentrate knowledge of the internal format
   # into just a few functions
 
-  test "get_root returns the root node" do
-    assert Graph.get_root(@graph_empty) == @empty_root
-  end
+  # test "get_root returns the root node" do
+  #   assert Graph.get_root(@graph_empty) == @empty_root
+  # end
 
   # ============================================================================
   # build
