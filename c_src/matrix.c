@@ -22,7 +22,6 @@ static const float matrix_identity[16] = {
 
 #define   MATRIX_SIZE     (sizeof(float) * 16)
 
-
 //=============================================================================
 // utilities
 
@@ -205,8 +204,6 @@ void matrix_project_vector3(float mx[], float* x, float* y, float* z) {
   *z = mx_out[11];
 }
 
-
-
 //=============================================================================
 // Erlang NIF stuff from here down.
 
@@ -240,7 +237,6 @@ nif_close(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
     return enif_make_atom(env, "false");
   }
 }
-
 
 //-----------------------------------------------------------------------------
 // add two matrices together. result is stored in a new matrix
@@ -304,7 +300,6 @@ nif_subtract(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   return result;
 }
 
-
 //-----------------------------------------------------------------------------
 // multiply two matrices together. result is stored in a new matrix
 
@@ -335,7 +330,6 @@ nif_multiply(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   // return the result
   return result;
 }
-
 
 //-----------------------------------------------------------------------------
 // multiply two matrices together. result is stored in a new matrix
@@ -449,8 +443,6 @@ nif_divide_scalar(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   return result;
 }
 
-
-
 //-----------------------------------------------------------------------------
 // calculate the scalar determinant
 
@@ -521,7 +513,6 @@ nif_adjugate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   // return the result
   return result;
 }
-
 
 //-----------------------------------------------------------------------------
 // project a 2d vector by a matrix
