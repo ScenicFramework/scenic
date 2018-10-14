@@ -67,6 +67,7 @@ defmodule Scenic.Primitive.Triangle do
   rotate or scale transforms.
   """
   def centroid(data)
+
   def centroid({{x0, y0}, {x1, y1}, {x2, y2}}) do
     {
       (x0 + x1 + x2) / 3,

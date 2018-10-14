@@ -22,7 +22,7 @@ defmodule Scenic.Primitive.Line do
   * [`cap`](Scenic.Primitive.Style.Cap.html) - says how to draw the ends of the line.
   * [`stroke`](Scenic.Primitive.Style.Stroke.html) - stroke the outline of the primitive. In this case, only the curvy part.
   """
-  
+
   use Scenic.Primitive
 
   #  import IEx
@@ -67,6 +67,7 @@ defmodule Scenic.Primitive.Line do
   rotate or scale transforms.
   """
   def centroid(data)
+
   def centroid({{x0, y0}, {x1, y1}}) do
     {
       (x0 + x1) / 2,

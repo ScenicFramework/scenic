@@ -16,7 +16,7 @@ defmodule Scenic.Primitive.Style.MiterLimit do
       )
 
   ## Data
-  
+
   A number greater than zero.
   """
 

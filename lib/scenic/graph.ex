@@ -4,7 +4,6 @@
 #
 
 defmodule Scenic.Graph do
-
   @moduledoc """
   Please see [`Graph Overview`](overview_graph.html) for a high-level description.
 
@@ -125,7 +124,6 @@ defmodule Scenic.Graph do
   In fact you can use any Erlang term you want. This can be very powerful, especially
   when used to identify components...
   """
-
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Group
@@ -255,7 +253,7 @@ defmodule Scenic.Graph do
   # delete a primitive/s from a graph
   @doc """
   Permanently delete a primitive from a group by id.
-  
+
   This will remove a primitive (or many if they have the same id) from a graph. It
   then returns the modified graph.
 
@@ -679,8 +677,6 @@ defmodule Scenic.Graph do
         end
     end
   end
-
-
 
   @doc """
   Modify one or more primitives in a graph.

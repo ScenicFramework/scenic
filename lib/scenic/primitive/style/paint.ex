@@ -4,7 +4,33 @@
 #
 
 defmodule Scenic.Primitive.Style.Paint do
-  @moduledoc false
+  @moduledoc """
+  Paint is used to "fill" the area of primitives.
+
+  When you apply the `:fill` style to a primitive, you must supply valid
+  paint data.
+
+  There are five types of paint.
+  * [`:color`](Scenic.Primitive.Style.Paint.Color.html) - Fill with a solid color. This is the most common and has shortcuts.
+  * [`:image`](Scenic.Primitive.Style.Paint.Image.html) - Fill with an image from the cache.
+  * [`:box_gradient`](Scenic.Primitive.Style.Paint.BoxGradient.html) - Fill with a box gradient.
+  * [`:linear_gradient`](Scenic.Primitive.Style.Paint.LinearGradient.html) - Fill with a linear gradient.
+  * [`:radial_gradient`](Scenic.Primitive.Style.Paint.RadialGradient.html) - Fill with a radial gradient.
+
+  See the documentation for each type for details.
+
+  ## Color Shortcut
+
+  Filling with a color is so common, you can just declare any valid color
+  in a fill, and it will figure out the right paint to use.
+
+  Examples:
+
+      graph
+      |> line({{0,0}, {100,100}}, fill: :blue)
+      |> line({{10,0}, {110,100}}, fill: {:blue, 128})
+      |> line({{20,0}, {120,100}}, fill: {10,20,30,40})
+  """
 
   alias Scenic.Primitive.Style.Paint
 

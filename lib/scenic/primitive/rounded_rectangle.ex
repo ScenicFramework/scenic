@@ -86,6 +86,7 @@ defmodule Scenic.Primitive.RoundedRectangle do
   rotate or scale transforms.
   """
   def centroid(data)
+
   def centroid({width, height, _}) do
     {width / 2, height / 2}
   end

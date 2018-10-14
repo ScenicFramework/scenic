@@ -35,6 +35,7 @@ defmodule Scenic.Primitive.Group do
   # --------------------------------------------------------
   @doc false
   def build(nil, opts), do: build([], opts)
+
   def build(ids, opts) do
     verify!(ids)
     Primitive.build(__MODULE__, ids, opts)

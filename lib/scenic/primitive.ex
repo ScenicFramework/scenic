@@ -27,7 +27,6 @@ defmodule Scenic.Primitive do
   You can use the generic helpers in this module to access or manipulate them. 
   """
 
-
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.Primitive.Style
@@ -95,6 +94,7 @@ defmodule Scenic.Primitive do
 
       @doc false
       def build(data \\ nil, opts \\ [])
+
       def build(data, opts) do
         data = verify!(data)
         Primitive.build(__MODULE__, data, opts)
@@ -102,6 +102,7 @@ defmodule Scenic.Primitive do
 
       @doc false
       def add_to_graph(graph, data \\ nil, opts \\ [])
+
       def add_to_graph(%Scenic.Graph{} = graph, data, opts) do
         Graph.add(graph, __MODULE__, data, opts)
       end
@@ -438,7 +439,6 @@ defmodule Scenic.Primitive do
     Map.put(p, :transforms, txs)
   end
 
-
   @spec get_transform(primitive :: Primitive.t(), type :: atom, default :: any) :: any
   def get_transform(primitive, tx_type, default \\ nil)
 
@@ -489,7 +489,6 @@ defmodule Scenic.Primitive do
     end)
   end
 
-
   @doc """
   Deletes a specified transform from a primitive.
 
@@ -536,7 +535,6 @@ defmodule Scenic.Primitive do
   def put_opts(%Primitive{}, opts) when is_list(opts) do
     raise "Primitive.put_opts has been deprecated. Use Primitive.merge_opts instead."
   end
-
 
   @doc """
   Merge an options-list of styles and transforms onto a primitive.

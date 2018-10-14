@@ -24,7 +24,6 @@ defmodule Scenic.Primitive.Style.Join do
   * `:bevel` - Bevel the joint.
   """
 
-
   use Scenic.Primitive.Style
 
   # ============================================================================

@@ -46,6 +46,7 @@ defmodule Scenic.Primitive.Rectangle do
   def verify({width, height} = data) when is_number(width) and is_number(height) do
     {:ok, data}
   end
+
   def verify(_), do: :invalid_data
 
   # ============================================================================
@@ -64,6 +65,7 @@ defmodule Scenic.Primitive.Rectangle do
   rotate or scale transforms.
   """
   def centroid(data)
+
   def centroid({width, height}) do
     {width / 2, height / 2}
   end

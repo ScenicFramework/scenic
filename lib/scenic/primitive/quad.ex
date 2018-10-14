@@ -53,6 +53,7 @@ defmodule Scenic.Primitive.Quad do
              is_number(y2) and is_number(x3) and is_number(y3) do
     {:ok, data}
   end
+
   def verify(_), do: :invalid_data
 
   # ============================================================================
