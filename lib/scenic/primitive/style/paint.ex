@@ -13,7 +13,7 @@ defmodule Scenic.Primitive.Style.Paint do
 
   # --------------------------------------------------------
   # verify that a color is correctly described
-
+  @doc false
   def verify(paint) do
     try do
       normalize(paint)
@@ -24,7 +24,7 @@ defmodule Scenic.Primitive.Style.Paint do
   end
 
   # --------------------------------------------------------
-  # single color
+  @doc false
   def normalize({:color, color}), do: {:color, Paint.Color.normalize(color)}
   def normalize({:linear, gradient}), do: {:linear, Paint.LinearGradient.normalize(gradient)}
   def normalize({:box, gradient}), do: {:box, Paint.BoxGradient.normalize(gradient)}

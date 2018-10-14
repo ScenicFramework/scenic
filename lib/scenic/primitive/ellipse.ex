@@ -18,9 +18,9 @@ defmodule Scenic.Primitive.Ellipse do
   ## Styles
 
   This primitive recognizes the following styles
-  * `hidden` - show or hide the primitive
-  * `fill` - fill in the area of the primitive
-  * `stroke` - stroke the outline of the primitive.
+  * [`hidden`](Scenic.Primitive.Style.Hidden.html) - show or hide the primitive
+  * [`fill`](Scenic.Primitive.Style.Fill.html) - fill in the area of the primitive
+  * [`stroke`](Scenic.Primitive.Style.Stroke.html) - stroke the outline of the primitive. In this case, only the curvy part.
 
   Note: you can achieve the same effect with a Circle primitive
   by applying a :size transform to it with unequal values on the axes

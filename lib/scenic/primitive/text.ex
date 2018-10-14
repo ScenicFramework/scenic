@@ -17,13 +17,13 @@ defmodule Scenic.Primitive.Text do
   ## Styles
 
   This primitive recognizes the following styles
-  * `hidden` - show or hide the primitive
-  * `fill` - fill in the area of the primitive - only accepts solid colors...
-  * `font` - name (or key) of font to use
-  * `font_size` - point size of the font
-  * `font_blur` - option to blur the characters
-  * `text_align` - alignment of lines of text
-  * `text_height` - spacing between lines of text
+  * [`hidden`](Scenic.Primitive.Style.Hidden.html) - show or hide the primitive
+  * [`fill`](Scenic.Primitive.Style.Fill.html) - fill in the area of the text. Only solid colors!
+  * [`font`](Scenic.Primitive.Style.Font.html) - name (or key) of font to use
+  * [`font_size`](Scenic.Primitive.Style.FontSize.html) - point size of the font
+  * [`font_blur`](Scenic.Primitive.Style.FontBlur.html) - option to blur the characters
+  * [`text_align`](Scenic.Primitive.Style.TextAlign.html) - alignment of lines of text
+  * [`text_height`](Scenic.Primitive.Style.TextHeight.html) - spacing between lines of text
   """
 
   use Scenic.Primitive

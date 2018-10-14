@@ -20,9 +20,11 @@ defmodule Scenic.Primitive.Quad do
   ## Styles
 
   This primitive recognizes the following styles
-  * `hidden` - show or hide the primitive
-  * `fill` - fill in the area of the primitive
-  * `stroke` - stroke the outline of the primitive.
+  * [`hidden`](Scenic.Primitive.Style.Hidden.html) - show or hide the primitive
+  * [`fill`](Scenic.Primitive.Style.Fill.html) - fill in the area of the primitive
+  * [`stroke`](Scenic.Primitive.Style.Stroke.html) - stroke the outline of the primitive. In this case, only the curvy part.
+  * [`join`](Scenic.Primitive.Style.Join.html) - control how segments are joined.
+  * [`miter_limit`](Scenic.Primitive.Style.MiterLimit.html) - control how segments are joined.
   """
 
   use Scenic.Primitive
@@ -31,7 +33,7 @@ defmodule Scenic.Primitive.Quad do
 
   #  import IEx
 
-  @styles [:hidden, :fill, :stroke]
+  @styles [:hidden, :fill, :stroke, :join, :miter_limit]
 
   # ============================================================================
   # data verification and serialization

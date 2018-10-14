@@ -16,6 +16,7 @@ defmodule Scenic.Primitive.Style.TextAlign do
   # data verification and serialization
 
   # --------------------------------------------------------
+  @doc false
   def info(data),
     do: """
       #{IO.ANSI.red()}#{__MODULE__} data must be one of ...
@@ -28,6 +29,7 @@ defmodule Scenic.Primitive.Style.TextAlign do
     """
 
   # --------------------------------------------------------
+  @doc false
   def verify(align) do
     try do
       normalize(align)
@@ -38,6 +40,7 @@ defmodule Scenic.Primitive.Style.TextAlign do
   end
 
   # --------------------------------------------------------
+  @doc false
   def normalize(:left = align), do: align
   def normalize(:right = align), do: align
   def normalize(:center = align), do: align

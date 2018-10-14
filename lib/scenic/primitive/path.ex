@@ -17,9 +17,12 @@ defmodule Scenic.Primitive.Path do
   ## Styles
 
   This primitive recognizes the following styles
-  * `hidden` - show or hide the primitive
-  * `fill` - fill in the area of the primitive
-  * `stroke` - stroke the outline of the primitive.
+  * [`hidden`](Scenic.Primitive.Style.Hidden.html) - show or hide the primitive
+  * [`fill`](Scenic.Primitive.Style.Fill.html) - fill in the area of the primitive
+  * [`stroke`](Scenic.Primitive.Style.Stroke.html) - stroke the outline of the primitive. In this case, only the curvy part.
+  * [`cap`](Scenic.Primitive.Style.Cap.html) - says how to draw the ends of the line.
+  * [`join`](Scenic.Primitive.Style.Join.html) - control how segments are joined.
+  * [`miter_limit`](Scenic.Primitive.Style.MiterLimit.html) - control how segments are joined.
 
   ## Commands
 
@@ -38,7 +41,7 @@ defmodule Scenic.Primitive.Path do
 
   #  import IEx
 
-  @styles [:hidden, :fill, :stroke]
+  @styles [:hidden, :fill, :stroke, :cap, :join, :miter_limit]
 
   # ============================================================================
   # data verification and serialization

@@ -18,11 +18,11 @@ defmodule Scenic.Primitive.Line do
   ## Styles
 
   This primitive recognizes the following styles
-  * `hidden` - show or hide the primitive
-  * `cap` - says how to draw the ends of the line.
-  * `stroke` - stroke the outline of the primitive.
+  * [`hidden`](Scenic.Primitive.Style.Hidden.html) - show or hide the primitive
+  * [`cap`](Scenic.Primitive.Style.Cap.html) - says how to draw the ends of the line.
+  * [`stroke`](Scenic.Primitive.Style.Stroke.html) - stroke the outline of the primitive. In this case, only the curvy part.
   """
-
+  
   use Scenic.Primitive
 
   #  import IEx

@@ -60,6 +60,7 @@ defmodule Scenic.Primitive.Style.Theme do
   # data verification and serialization
 
   # --------------------------------------------------------
+  @doc false
   def info(data),
     do: """
       #{IO.ANSI.red()}#{__MODULE__} data must either a preset theme or a map of named colors
@@ -75,6 +76,7 @@ defmodule Scenic.Primitive.Style.Theme do
     """
 
   # --------------------------------------------------------
+  @doc false
   def verify(name) when is_atom(name), do: Map.has_key?(@themes, name)
 
   def verify(custom) when is_map(custom) do
@@ -84,9 +86,11 @@ defmodule Scenic.Primitive.Style.Theme do
   def verify(_), do: false
 
   # --------------------------------------------------------
+  @doc false
   def normalize(theme) when is_atom(theme), do: Map.get(@themes, theme)
   def normalize(theme) when is_map(theme), do: theme
 
   # --------------------------------------------------------
+  @doc false
   def preset(theme), do: Map.get(@themes, theme)
 end

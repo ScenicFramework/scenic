@@ -65,6 +65,7 @@ defmodule Scenic.Primitive.Style do
     quote do
       @behaviour Scenic.Primitive.Style
 
+      @doc false
       def verify!(data) do
         case verify(data) do
           true ->
@@ -75,6 +76,7 @@ defmodule Scenic.Primitive.Style do
         end
       end
 
+      @doc false
       def normalize(data), do: data
 
       # --------------------------------------------------------

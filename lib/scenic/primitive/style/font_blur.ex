@@ -4,7 +4,20 @@
 #
 
 defmodule Scenic.Primitive.Style.FontBlur do
-  @moduledoc false
+  @moduledoc """
+  Apply a blur effect to text.
+
+  Example:
+
+      graph
+      |> text("Blurry", font_blur: 2.0)
+
+  ## Data
+
+  Any number greater than or equal to zero.
+
+  The higher the number, the more it blurs.
+  """
 
   use Scenic.Primitive.Style
 
@@ -14,6 +27,7 @@ defmodule Scenic.Primitive.Style.FontBlur do
   # data verification and serialization
 
   # --------------------------------------------------------
+  @doc false
   def info(data),
     do: """
       #{IO.ANSI.red()}#{__MODULE__} data must be a positive number
@@ -22,6 +36,7 @@ defmodule Scenic.Primitive.Style.FontBlur do
     """
 
   # --------------------------------------------------------
+  @doc false
   def verify(blur) do
     try do
       normalize(blur)
@@ -32,6 +47,7 @@ defmodule Scenic.Primitive.Style.FontBlur do
   end
 
   # --------------------------------------------------------
+  @doc false
   def normalize(blur) when is_number(blur) and blur >= 0 do
     blur
   end

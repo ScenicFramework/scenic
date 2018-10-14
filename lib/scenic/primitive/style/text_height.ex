@@ -16,6 +16,7 @@ defmodule Scenic.Primitive.Style.TextHeight do
   # data verification and serialization
 
   # --------------------------------------------------------
+  @doc false
   def info(data),
     do: """
       #{IO.ANSI.red()}#{__MODULE__} data must be a number
@@ -24,6 +25,7 @@ defmodule Scenic.Primitive.Style.TextHeight do
     """
 
   # --------------------------------------------------------
+  @doc false
   def verify(height) when is_number(height), do: true
   def verify(_), do: false
 end
