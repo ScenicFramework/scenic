@@ -13,6 +13,7 @@ defmodule Scenic.Primitive.Style.Stroke do
   # data verification and serialization
 
   # --------------------------------------------------------
+  @doc false
   def info(data),
     do: """
       #{IO.ANSI.red()}#{__MODULE__} data must be {width, paint_type}
@@ -27,8 +28,7 @@ defmodule Scenic.Primitive.Style.Stroke do
     """
 
   # --------------------------------------------------------
-  # named color
-
+  @doc false
   def verify(stroke) do
     try do
       normalize(stroke)
@@ -39,7 +39,7 @@ defmodule Scenic.Primitive.Style.Stroke do
   end
 
   # --------------------------------------------------------
-
+  @doc false
   def normalize({width, paint}) when is_number(width) and width >= 0 do
     {width, Paint.normalize(paint)}
   end

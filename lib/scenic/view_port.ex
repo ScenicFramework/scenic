@@ -399,7 +399,7 @@ defmodule Scenic.ViewPort do
 
     # extract the viewport global styles. Do this by reusing tools in Primitive.
     p =
-      Primitive.put_opts(
+      Primitive.merge_opts(
         %Primitive{module: Primitive.Group},
         Map.get(config, :opts, [])
       )

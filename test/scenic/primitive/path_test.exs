@@ -76,7 +76,7 @@ defmodule Scenic.Primitive.PathTest do
   # styles
 
   test "valid_styles works" do
-    assert Path.valid_styles() == [:hidden, :fill, :stroke]
+    assert Path.valid_styles() == [:hidden, :fill, :stroke, :cap, :join, :miter_limit]
   end
 
   # ============================================================================

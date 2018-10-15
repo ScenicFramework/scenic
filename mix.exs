@@ -132,20 +132,6 @@ defmodule Scenic.Mixfile do
   end
 
   defp groups_for_modules do
-    # Ungrouped Modules
-    #
-    # Plug
-    # Plug.Builder
-    # Plug.Conn
-    # Plug.Crypto
-    # Plug.Debugger
-    # Plug.ErrorHandler
-    # Plug.Exception
-    # Plug.HTML
-    # Plug.Router
-    # Plug.Test
-    # Plug.Upload
-
     [
       Components: [
         Scenic.Component,
@@ -222,7 +208,7 @@ defmodule Scenic.Mixfile do
       ],
       ViewPort: [
         Scenic.ViewPort.Config,
-        # Scenic.ViewPort.Input,
+        Scenic.ViewPort.Input,
         Scenic.ViewPort.Context,
         Scenic.ViewPort.Tables
       ],
@@ -235,7 +221,8 @@ defmodule Scenic.Mixfile do
         Scenic.Cache,
         Scenic.Cache.File,
         Scenic.Cache.Term,
-        Scenic.Cache.Hash
+        Scenic.Cache.Hash,
+        Scenic.Cache.Supervisor
       ],
       Utilities: [
         Scenic.Utilities.Enum,

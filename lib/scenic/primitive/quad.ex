@@ -4,7 +4,28 @@
 #
 
 defmodule Scenic.Primitive.Quad do
-  @moduledoc false
+  @moduledoc """
+  Draw a quad on the screen.
+
+  ## Data
+
+  `{point_a, point_b, point_c, point_d}`
+
+  The data for a line is a tuple containing four points.
+  * `point_a` - position to start drawing from
+  * `point_b` - position to draw to
+  * `point_c` - position to draw to
+  * `point_d` - position to draw to
+
+  ## Styles
+
+  This primitive recognizes the following styles
+  * [`hidden`](Scenic.Primitive.Style.Hidden.html) - show or hide the primitive
+  * [`fill`](Scenic.Primitive.Style.Fill.html) - fill in the area of the primitive
+  * [`stroke`](Scenic.Primitive.Style.Stroke.html) - stroke the outline of the primitive. In this case, only the curvy part.
+  * [`join`](Scenic.Primitive.Style.Join.html) - control how segments are joined.
+  * [`miter_limit`](Scenic.Primitive.Style.MiterLimit.html) - control how segments are joined.
+  """
 
   use Scenic.Primitive
   alias Scenic.Math
@@ -12,12 +33,13 @@ defmodule Scenic.Primitive.Quad do
 
   #  import IEx
 
-  @styles [:hidden, :fill, :stroke]
+  @styles [:hidden, :fill, :stroke, :join, :miter_limit]
 
   # ============================================================================
   # data verification and serialization
 
   # --------------------------------------------------------
+  @doc false
   def info(data),
     do: """
       #{IO.ANSI.red()}#{__MODULE__} data must be four points: {{x0,y0}, {x1,y1}, {x2,y2}, {x3,y3}}
@@ -25,6 +47,7 @@ defmodule Scenic.Primitive.Quad do
       #{IO.ANSI.default_color()}
     """
 
+  @doc false
   def verify({{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}} = data)
       when is_number(x0) and is_number(y0) and is_number(x1) and is_number(y1) and is_number(x2) and
              is_number(y2) and is_number(x3) and is_number(y3) do
@@ -34,6 +57,9 @@ defmodule Scenic.Primitive.Quad do
   def verify(_), do: :invalid_data
 
   # ============================================================================
+  @doc """
+  Returns a list of styles recognized by this primitive.
+  """
   def valid_styles(), do: @styles
 
   # --------------------------------------------------------

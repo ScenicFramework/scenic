@@ -12,6 +12,7 @@ defmodule Scenic.Primitive.Style.Scissor do
   # data verification and serialization
 
   # --------------------------------------------------------
+  @doc false
   def info(data),
     do: """
       #{IO.ANSI.red()}#{__MODULE__} data must be {width, height}
@@ -23,8 +24,7 @@ defmodule Scenic.Primitive.Style.Scissor do
     """
 
   # --------------------------------------------------------
-  # named color
-
+  @doc false
   def verify(data) do
     try do
       normalize(data)
@@ -35,7 +35,7 @@ defmodule Scenic.Primitive.Style.Scissor do
   end
 
   # --------------------------------------------------------
-
+  @doc false
   def normalize({w, h}) when is_number(w) and is_number(h) do
     {w, h}
   end

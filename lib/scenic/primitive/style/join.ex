@@ -4,7 +4,25 @@
 #
 
 defmodule Scenic.Primitive.Style.Join do
-  @moduledoc false
+  @moduledoc """
+  Set how to connect two lines in a path.
+
+  Works with primitives that have clear joints, such as Rectangle,
+  Quad, Triangle, and Path.
+
+  Example:
+
+      graph
+      |> triangle( {{0,40},{40,40},{40,0}}
+        join: :round,
+        stroke: {2, :green}
+      )
+
+  ## Data
+  * `:miter` - Miter the pointy part of the joint.
+  * `:round` - Round the entire joint.
+  * `:bevel` - Bevel the joint.
+  """
 
   use Scenic.Primitive.Style
 
@@ -12,6 +30,7 @@ defmodule Scenic.Primitive.Style.Join do
   # data verification and serialization
 
   # --------------------------------------------------------
+  @doc false
   def info(data),
     do: """
       #{IO.ANSI.red()}#{__MODULE__} data must be one of :miter, :round, :bevel
@@ -20,8 +39,7 @@ defmodule Scenic.Primitive.Style.Join do
     """
 
   # --------------------------------------------------------
-  # named color
-
+  @doc false
   def verify(stroke) do
     try do
       normalize(stroke)
@@ -32,7 +50,7 @@ defmodule Scenic.Primitive.Style.Join do
   end
 
   # --------------------------------------------------------
-
+  @doc false
   def normalize(:miter), do: :miter
   def normalize(:round), do: :round
   def normalize(:bevel), do: :bevel

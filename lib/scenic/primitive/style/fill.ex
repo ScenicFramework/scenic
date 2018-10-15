@@ -4,7 +4,18 @@
 #
 
 defmodule Scenic.Primitive.Style.Fill do
-  @moduledoc false
+  @moduledoc """
+  Fill primitives with the specified paint.
+
+  Example:
+
+      graph
+      |> rectangle({10, 20}, fill: :blue)
+
+  ## Data
+
+  Any [valid paint](Scenic.Primitive.Style.Paint.html).
+  """
 
   use Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Paint
@@ -13,6 +24,7 @@ defmodule Scenic.Primitive.Style.Fill do
   # data verification and serialization
 
   # --------------------------------------------------------
+  @doc false
   def info(data),
     do: """
       #{IO.ANSI.red()}#{__MODULE__} data must be a valid paint type
@@ -21,8 +33,7 @@ defmodule Scenic.Primitive.Style.Fill do
     """
 
   # --------------------------------------------------------
-  # named color
-
+  @doc false
   def verify(paint) do
     try do
       normalize(paint)
@@ -33,7 +44,7 @@ defmodule Scenic.Primitive.Style.Fill do
   end
 
   # --------------------------------------------------------
-
+  @doc false
   def normalize(paint) do
     Paint.normalize(paint)
   end

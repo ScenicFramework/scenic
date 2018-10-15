@@ -4,7 +4,126 @@
 #
 
 defmodule Scenic.Graph do
-  @moduledoc false
+  @moduledoc """
+  Please see [`Graph Overview`](overview_graph.html) for a high-level description.
+
+  ## What is a Graph
+
+  There are many types of graphs in the world of computer science. There are graphs that
+  show data to a user. There are graphs that give access to databases. Graphs that link
+  people to a social network.
+
+  In Scenic, a Graph is a graph in same way that the DOM in HTML is a graph. It is a
+  hierarchical tree of data that describes a set of things to draw on the screen.
+
+  You build a graph by appending primitives (individual things to draw) to the current
+  node in the tree. Nodes are represented by the Group primitive in Scenic.
+
+  The following example builds a simple graph that displays some text, creates a group,
+  then adds more text and a rounded rectangle to it.
+
+      @graph  Scenic.Graph.build()
+      |> text( "This is some text", translate: {20, 20} )
+      |> group( fn(graph) ->
+        graph
+        |> text( "This text is in a group", translate: {200, 24} )
+        |> rounded_rectangle( {400, 30}, stroke: {2, :blue})
+      end, translate: {20, 100}, text_align: :center)
+
+  There is a fair amount going on in the example above, we we will break it down.
+  The first line
+
+      @graph  Scenic.Graph.build()
+
+  builds an empty graph with only one group as the root node. By assigning it to the 
+  compile directive @group, we know that this group will be built once at compile
+  time and will be very fast to access later during runtime.
+
+  The empty graph that is returned from `build()` is then passed to `text(...)`, which
+  adds a text primitive to the root group. The resulting graph from that call is then
+  passed again into the `group(...)` call. This creates a new group and has calls an
+  anonymous function that you can use to add primitives to the newly created group.
+
+  Notice that the anonymous "builder" function receives a graph as its only parameter.
+  This is the same graph that we are building, except that it has a marker indicating
+  that new primitives added to it are inserted into the new group instead of the
+  root of the graph.
+
+  Finally, when the group is finished, a translation matrix and a `:text_align` style
+  are added to it. These properties are _inherited_ by the primitives in the group.
+
+  ## Inheritance
+
+  An important concept to understand is that both [styles](overview_styles.html) and
+  [transforms](overview_styles.html) are inherited down the graph. This means that if
+  you apply a style or transform to any group (including the root), then all primitives
+  contained by that group will have those properties applied to them too. This is true
+  even if the primitive is nested in several groups at the same time.
+
+      @graph  Scenic.Graph.build(font: :roboto_mono)
+      |> text( "This text inherits the font", translate: {20, 20} )
+      |> group( fn(graph) ->
+        graph
+        |> text( "This text also inherits the font", translate: {200, 24} )
+        |> text( "This text overrides the font", font: :roboto )
+      end, translate: {20, 100}, text_align: :center)
+
+  Transforms, such as translate, rotate, scale, also inherit down the graph, but do
+  so slightly differently than the styles. With a style, when you set a specific value
+  on a primitive, that overrides the inherited value of the same type.
+
+  With a transform, the values multiply together. This allows you to position items
+  within a group relative to the origin {0,0}, then move the group as a whole, keeping
+  the interior positions unchanged.
+
+  ## Modifying a Graph
+
+  Scenic was written specifically for Erlang/Elixir, which is a functional programming
+  model with immutable data.
+
+  As such, once you make a graph, it stays in memory unchanged - until you transform it
+  via `Graph.modify/3`. Technically you never change it (that's the immutable part),
+  instead Graph.modify returns a new graph with different data in it.
+
+  [Graph.modify/3](Scenic.Graph.html#modify/3) is the single Graph function that you
+  will use the most.
+
+  For example, lets go back to our graph with the two text items in it.
+
+      @graph Graph.build(font: :roboto, font_size: 24, rotate: 0.4)
+        |> text("Hello World", translate: {300, 300}, id: :small_text)
+        |> text("Bigger Hello", font_size: 40, scale: 1.5, id: :big_text)
+
+  This time, we've assigned ids to both of the text primitives. This makes it easy to
+  find and modify that primitive in the graph.
+
+      graph =
+        @graph
+        |> Graph.modify( :small_text, &text(&1, "Smaller Hello", font_size: 16))
+        |> Graph.modify( :big_text, &text(&1, "Bigger Hello", font_size: 60))
+        |> push_graph()
+
+  Notice that the graph is modified multiple times in the pipeline. The `push_graph/1`
+  function is relatively heavy when the graph references other scenes. The recommended
+  pattern is to make multiple changes to the graph and then push once at the end.
+
+  ## Accessing Primitives
+
+  When using a Graph, it is extremely common to access and modify primitives. They way
+  you do this is by putting an id on the primitives you care about in a graph.
+
+      @graph Graph.build()
+        |> text("small text", id: :small_text)
+        |> text("bit text", id: :big_text)
+
+  When you get primitives, or modify a graph, you specify them by id. This happens
+  quickly, but at a cost of using a little memory. If you aren't going to access
+  a primitive, then don't assign an id to them.
+
+  One interesting note: There is nothing saying you have to use an atom as the id.
+  In fact you can use any Erlang term you want. This can be very powerful, especially
+  when used to identify components...
+  """
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Group
@@ -46,17 +165,26 @@ defmodule Scenic.Graph do
   @err_msg_put "Graph.put can only update existing items."
   @err_msg_get_id_one "Graph.get! expected to find one and only one element"
 
-  # ============================================================================
-  # access to the raw graph fields
-  # concentrate all knowledge of the internal structure of the graph tuple here
-
+  # ============================================================================  
+  @doc """
+  Returns the root group of a graph as a primitive.
+  Deprecated. Use `Graph.get!(graph, :_root_)` instead.
+  """
+  @deprecated "Use Graph.get!(graph, :_root_) instead"
   @spec get_root(graph :: t()) :: Primitive.t()
   def get_root(%__MODULE__{} = graph) do
-    Map.delete(graph.primitives[@root_uid], :styles)
+    get!(graph, :_root_)
+    # Map.delete(graph.primitives[@root_uid], :styles)
   end
 
   # ============================================================================
   # build a new graph, starting with the given element
+  @doc """
+  Builds and returns an empty graph.
+
+  Just like any primitive, you can pass in an option list of styles and transforms.
+  These will be applied to the otherwise empty root group in the new graph.
+  """
   @spec build(opts :: keyword) :: t()
   def build(opts \\ []) do
     opts = handle_options(opts)
@@ -70,6 +198,16 @@ defmodule Scenic.Graph do
 
   # ============================================================================
   # add a pre-built primitive
+  @doc """
+  Add a pre-built primitive to the current group in the graph.
+
+  This is usually called during graph construction. When add a new Group primitive
+  to a Graph, it marks the new group as the current one before calling the group's
+  builder function. This is what allows you to add primitives to the right place
+  in the new Group.
+
+  Note that all primitives added to a group are appended to the draw order.
+  """
   @spec add(graph :: t(), primitive :: Primitive.t()) :: t()
   def add(graph, primitive)
 
@@ -79,6 +217,16 @@ defmodule Scenic.Graph do
   end
 
   # build and add new primitives
+  @doc """
+  Build and add a primitive to the current group in the graph.
+
+  This is usually called during graph construction. When add a new Group primitive
+  to a Graph, it marks the new group as the current one before calling the group's
+  builder function. This is what allows you to add primitives to the right place
+  in the new Group.
+
+  Note that all primitives added to a group are appended to the draw order.
+  """
   @spec add(graph :: t(), module :: atom, data :: any, opts :: keyword) :: t()
   def add(graph, primitive_module, primitive_data, opts \\ [])
 
@@ -103,6 +251,15 @@ defmodule Scenic.Graph do
 
   # ============================================================================
   # delete a primitive/s from a graph
+  @doc """
+  Permanently delete a primitive from a group by id.
+
+  This will remove a primitive (or many if they have the same id) from a graph. It
+  then returns the modified graph.
+
+  If you delete a group from a graph, then all primitives contained by that
+  group are deleted as well.
+  """
   @spec delete(graph :: t(), id :: any) :: t()
   def delete(%__MODULE__{primitives: primitives, ids: ids} = graph, id) do
     # resolve the id into a list of uids
@@ -141,6 +298,8 @@ defmodule Scenic.Graph do
   end
 
   # ============================================================================
+  # KEEP THIS AROUND FOR NOW
+  # might want to put it back in...
   # add a pre-built primitive to an existing group in a graph
   # def add_to( graph, id, primitive )
 
@@ -243,24 +402,6 @@ defmodule Scenic.Graph do
   end
 
   # ============================================================================
-  # remove an entry in the ids
-  # defp unmap_id_to_uid(graph, id, uid)
-  # defp unmap_id_to_uid(graph, nil, _uid),  do: graph
-  # defp unmap_id_to_uid(graph, _id, nil),   do: graph
-  # defp unmap_id_to_uid(%Graph{ids: ids} = graph, id, uid) when is_integer(uid) do
-
-  #   uid_list = Map.get(ids, id, [])
-  #     |> Enum.reject(fn(mapped_uid)-> mapped_uid == uid end)
-
-  #   ids = case uid_list do
-  #     []   -> Map.delete(ids, id)
-  #     uids -> Map.put(ids, id, uids)
-  #   end
-
-  #   %{graph | ids: ids}
-  # end
-
-  # ============================================================================
   defp resolve_id(graph, id)
 
   defp resolve_id(%__MODULE__{ids: ids}, id) do
@@ -270,6 +411,12 @@ defmodule Scenic.Graph do
   # ============================================================================
   # --------------------------------------------------------
   # count all the nodes in a graph.
+  @doc """
+  Returns a count of all the primitives in a graph.
+
+  The root Group counts as a primitive, so an empty graph should have a count
+  of 1.
+  """
   @spec count(graph :: t()) :: integer
   def count(graph)
 
@@ -279,6 +426,9 @@ defmodule Scenic.Graph do
 
   # --------------------------------------------------------
   # count the nodes associated with an id.
+  @doc """
+  Returns a count of all the primitives in a graph with a specific id.
+  """
   @spec count(graph :: t(), id :: any) :: integer
   def count(graph, id)
 
@@ -306,6 +456,9 @@ defmodule Scenic.Graph do
 
   # ============================================================================
   # get a list of primitives by id
+  @doc """
+  Returns a list of primitives from a graph with a specific id.
+  """
   @spec get(graph :: t(), id :: any) :: list(Primitive.t())
   def get(%__MODULE__{} = graph, id) do
     graph
@@ -316,6 +469,12 @@ defmodule Scenic.Graph do
 
   # --------------------------------------------------------
   # get a single primitive by id. Raise error if it finds any count other than one
+  @doc """
+  Returns a single primitive from a graph with a specific id.
+
+  This will raise an error if either none or multiple primitives are found with
+  the specified id.
+  """
   @spec get!(graph :: t(), id :: any) :: Primitive.t()
   def get!(%__MODULE__{} = graph, id) do
     case resolve_id(graph, id) do
@@ -519,6 +678,17 @@ defmodule Scenic.Graph do
     end
   end
 
+  @doc """
+  Modify one or more primitives in a graph.
+
+  Retrieves the primitive (or primitives) specified by an id and passes them to
+  a callback function. The result of the callback function is stored as the new
+  version of that primitive in the graph.
+
+  If multiple primitives match the specified id, then each is passed, in turn,
+  to the callback function.
+  """
+
   @spec modify(graph :: t(), id :: any, action :: (... -> Primitive.t())) :: t()
   def modify(graph, id, action)
 
@@ -531,13 +701,30 @@ defmodule Scenic.Graph do
 
   # ============================================================================
   # map a graph via traversal from the root node
+  @doc """
+  Map all primitives in a graph into a new graph.
+
+  Crawls through the entire graph, passing each primitive to the callback function.
+  The result of the callback replaces that primitive in the graph. The updated
+  graph is returned.
+  """
+
   @spec map(graph :: t(), action :: function) :: t()
   def map(%__MODULE__{} = graph, action) when is_function(action, 1) do
     do_map(graph, @root_uid, action)
   end
 
   # ============================================================================
-  # map a graph, but only those elements mapped to the id
+  @doc """
+  Map all primitives in a graph that match a specified id into a new graph.
+
+  Crawls through the entire graph, passing each primitive to the callback function.
+  The result of the callback replaces that primitive in the graph. The updated
+  graph is returned.
+
+  This is so similar to the modify function that it may be deprecated in the future.
+  For now I recommend you use `Graph.modify/3` instead of this.  
+  """
   @spec map(graph :: t(), id :: any, action :: function) :: t()
   def map(%__MODULE__{} = graph, id, action) when is_function(action, 1) do
     # resolve the id into a list of uids
@@ -589,6 +776,16 @@ defmodule Scenic.Graph do
   end
 
   # ============================================================================
+  @doc """
+  Invokes action for each primitive in the graph with the accumulator.
+
+  Iterates over all primitives in a graph, passing each into the callback function
+  with an accumulator. The return value of the callback is the new accumulator.
+
+  This is extremely similar in behaviour to Elixir's Enum.reduce function, except
+  that it understands now to navigate the tree structure of a Graph.
+  """
+
   # reduce a graph via traversal from the root node
   @spec reduce(graph :: t(), acc :: any, action :: function) :: any
   def reduce(%__MODULE__{} = graph, acc, action) when is_function(action, 2) do
@@ -596,7 +793,15 @@ defmodule Scenic.Graph do
   end
 
   # ============================================================================
-  # reduce a graph, but only for nodes mapped to the given id
+  @doc """
+  Invokes action for each primitive that matches an id in the graph with the accumulator.
+
+  Iterates over all primitives that match a specified id, passing each into the callback
+  function with an accumulator.
+
+  This is extremely similar in behaviour to Elixir's Enum.reduce function, except
+  that it understands now to navigate the tree structure of a Graph.
+  """
   @spec reduce(graph :: t(), id :: any, acc :: any, action :: function) :: any
   def reduce(%__MODULE__{} = graph, id, acc, action) when is_function(action, 2) do
     # resolve the id into a list of uids

@@ -4,6 +4,11 @@
 * Much improved testing
 * Simplify rules around user-closing a viewport
 * Fix bug where captured positional inputs were not casting the transformed location
+* Deprecated Graph.get_root(). Use Graph.get!(graph, :\_root\_) instead.
+* Renamed Primitive.put_opts to Primitive.merge_opts
+* Deprecated Primitive.put_style(w/list). Use Primitive.merge_opts(...) instead.
+* Deprecated Primitive.put_transform(w/list). Use Primitive.merge_opts(...) instead.
+
 
 ## 0.8.0
 

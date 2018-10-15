@@ -4,7 +4,19 @@
 #
 
 defmodule Scenic.Primitive.Style.FontSize do
-  @moduledoc false
+  @moduledoc """
+  The point-size to draw text in.
+
+  Example:
+
+      graph
+      |> text("Small", font_size: 6)
+      |> text("Large", font_size: 64)
+
+  ## Data
+
+  Any number greater than or equal to 6.
+  """
 
   use Scenic.Primitive.Style
 
@@ -14,6 +26,7 @@ defmodule Scenic.Primitive.Style.FontSize do
   # data verification and serialization
 
   # --------------------------------------------------------
+  @doc false
   def info(data),
     do: """
       #{IO.ANSI.red()}#{__MODULE__} data must be a positive number >= 6
@@ -22,6 +35,7 @@ defmodule Scenic.Primitive.Style.FontSize do
     """
 
   # --------------------------------------------------------
+  @doc false
   def verify(font) do
     try do
       normalize(font)
@@ -32,6 +46,7 @@ defmodule Scenic.Primitive.Style.FontSize do
   end
 
   # --------------------------------------------------------
+  @doc false
   def normalize(point_size) when is_number(point_size) and point_size >= 6 do
     point_size
   end
