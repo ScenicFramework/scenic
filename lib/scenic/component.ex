@@ -24,7 +24,7 @@ defmodule Scenic.Component do
   should do some basic validation that the data being set up is valid, then provide
   feedback if it isn't.
 
-  ## No children
+  ## Optional: No Children
 
   There is an optimization you can use. If you know for certain that your component
   will not attempt to use any components, you can set `has_children` to `false` like this.
