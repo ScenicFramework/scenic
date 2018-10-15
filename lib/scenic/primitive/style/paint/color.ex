@@ -228,10 +228,11 @@ defmodule Scenic.Primitive.Style.Paint.Color do
   @type rgb :: {r :: number, g :: number, b :: number}
   @type rgba :: {r :: number, g :: number, b :: number, a :: number}
 
-  @type t :: atom |
-    {name :: atom, a :: number} |
-    rgb |
-    rgba
+  @type t ::
+          atom
+          | {name :: atom, a :: number}
+          | rgb
+          | rgba
 
   # ============================================================================
   # data verification and serialization

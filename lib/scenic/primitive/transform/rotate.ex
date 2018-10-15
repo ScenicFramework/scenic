@@ -4,13 +4,38 @@
 #
 
 defmodule Scenic.Primitive.Transform.Rotate do
-  @moduledoc false
+  @moduledoc """
+  Apply a rotation matrix.
+
+  Always rotates around the z-axis (coming out of the screen).
+
+  The value is given in radians.
+
+  Positive values rotate clockwise.
+
+  The rotation is pinned to the sensible default for each primitive, or to the
+  [`:pin`](Scenic.Primitive.Transform.Pin.html) that you assign explicitly.
+
+  Example:
+      graph
+      |> text("Rotated!", rotate: 1.2)
+      |> text("Rotated!", rotate: 1.2, pin: {10, 20})
+
+  ## Shortcut
+
+  Rotation is common enough that you can use `:r` as a shortcut.
+
+  Example:
+      graph
+      |> text("Rotated!", r: 1.2)
+  """
   use Scenic.Primitive.Transform
 
   # ============================================================================
   # data verification and serialization
 
   # --------------------------------------------------------
+  @doc false
   def info(data),
     do: """
       #{IO.ANSI.red()}#{__MODULE__} data must be a number
@@ -22,6 +47,7 @@ defmodule Scenic.Primitive.Transform.Rotate do
     """
 
   # --------------------------------------------------------
+  @doc false
   def verify(angle) do
     normalize(angle)
     true
@@ -30,6 +56,7 @@ defmodule Scenic.Primitive.Transform.Rotate do
   end
 
   # --------------------------------------------------------
+  @doc false
   @spec normalize(number()) :: number()
   def normalize(a) when is_number(a), do: a
 end
