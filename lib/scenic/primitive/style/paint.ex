@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2018-06-04.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Style.Paint do
@@ -27,9 +27,9 @@ defmodule Scenic.Primitive.Style.Paint do
   Examples:
 
       graph
-      |> line({{0,0}, {100,100}}, fill: :blue)
-      |> line({{10,0}, {110,100}}, fill: {:blue, 128})
-      |> line({{20,0}, {120,100}}, fill: {10,20,30,40})
+      |> rect({100,200}, fill: :blue)
+      |> rect({60,120}, fill: {:blue, 128})
+      |> rect({30,60}, fill: {10,20,30,40})
   """
 
   alias Scenic.Primitive.Style.Paint
