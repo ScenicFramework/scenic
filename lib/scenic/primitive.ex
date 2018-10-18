@@ -24,7 +24,30 @@ defmodule Scenic.Primitive do
   a scene you are building and modify later as you react to events.
 
   Once you get a primitive out of a graph via functions such as `Graph.modify`, or `Graph.get`,
-  You can use the generic helpers in this module to access or manipulate them. 
+  You can use the generic helpers in this module to access or manipulate them.
+
+  ## Standard primitives
+
+  The set of primitives supported in Scenic is fixed in any given version. They have been chosen
+  to provide the maximum flexibility when combined together, while still requiring the minimal
+  amount of code and maintenance.
+
+  If required, new primitives can be added in the future, but they will not work with older
+  versions of the drivers.
+
+  * [`Arc`](Scenic.Primitive.Arc.html) draws an arc. This would be a line cut out of a part of the edge of a circle. If you want a shape that looks like a piece of pie, then you should use the [`Sector`](Scenic.Primitive.Sector.html).
+  * [`Circle`](Scenic.Primitive.Circle.html) draws a circle. 
+  * [`Ellipse`](Scenic.Primitive.Ellipse.html) draws an ellipse.
+  * [`Group`](Scenic.Primitive.Group.html) doesn't draw anything. Instead, it creates a node in the graph that you can insert more primitives into. Any styles or transforms you apply to the Group are inherited by all the primitives below it.
+  * [`Line`](Scenic.Primitive.Line.html) draws a line.
+  * [`Path`](Scenic.Primitive.Path.html) is sort of an escape valve for complex shapes not covered by the other primitives. You supply a list of instructions, such as :move_to, :line_to, :bezier_to, etc to generate a complex shape.
+  * [`Quad`](Scenic.Primitive.Quad.html) draws polygon with four sides.
+  * [`Rectangle`](Scenic.Primitive.Rectangle.html) draws a rectangle.
+  * [`RoundedRectangle`](Scenic.Primitive.RoundedRectangle.html) draws a rectangle with the corners rounded by a given radius.
+  * [`SceneRef`](Scenic.Primitive.SceneRef.html) doesn't draw anything by itself. Instead it points to another scene/graph and tells the driver to draw that here.
+  * [`Sector`](Scenic.Primitive.Sector.html) draws a shape that looks like a piece of pie. If you want to stroke just the curved edge, then combine it with an [`Arc`](Scenic.Primitive.Arc.html).
+  * [`Text`](Scenic.Primitive.Text.html) draws a string of text.
+  * [`Triangle`](Scenic.Primitive.Triangle.html) draws a triangle.
   """
 
   alias Scenic.Graph
