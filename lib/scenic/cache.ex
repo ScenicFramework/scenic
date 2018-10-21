@@ -68,14 +68,13 @@ defmodule Scenic.Cache do
   function returns the term stored in the cache with the using the provided key
 
   ## Examples
+      iex> Scenic.Cache.get("test_key")
+      nil
 
-  iex> Scenic.Cache.get("test_key")
-  nil
-
-  iex> :ets.insert(:scenic_cache_key_table, {"test_key", 1, :test_data})
-  ...> true
-  ...> Scenic.Cache.get("test_key")
-  :test_data
+      iex> :ets.insert(:scenic_cache_key_table, {"test_key", 1, :test_data})
+      ...> true
+      ...> Scenic.Cache.get("test_key")
+      :test_data
   """
   @spec get(term(), term()) :: term() | nil
   def get(key, default \\ nil)
@@ -95,13 +94,13 @@ defmodule Scenic.Cache do
   making this function ideal if you need to pattern match on the result of getting from the cache
 
   ## Examples
-  iex> Scenic.Cache.fetch("test_key")
-  {:error, :not_found}
+      iex> Scenic.Cache.fetch("test_key")
+      {:error, :not_found}
 
-  iex> :ets.insert(:scenic_cache_key_table, {"test_key", 1, :test_data})
-  ...> true
-  ...> Scenic.Cache.fetch("test_key")
-  {:ok, :test_data}
+      iex> :ets.insert(:scenic_cache_key_table, {"test_key", 1, :test_data})
+      ...> true
+      ...> Scenic.Cache.fetch("test_key")
+      {:ok, :test_data}
   """
   def fetch(key)
 
