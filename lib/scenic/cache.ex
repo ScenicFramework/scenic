@@ -90,6 +90,19 @@ defmodule Scenic.Cache do
       reraise(other, __STACKTRACE__)
   end
 
+  @doc """
+  This function works the same as the `get` function. That is it accepts a key paramter and  returns a ok/error tuple i
+  making this function ideal if you need to pattern match on the result of getting from the cache
+
+  ## Examples
+  iex> Scenic.Cache.fetch("test_key")
+  {:error, :not_found}
+
+  iex> :ets.insert(:scenic_cache_key_table, {"test_key", 1, :test_data})
+  ...> true
+  ...> Scenic.Cache.fetch("test_key")
+  {:ok, :test_data}
+  """
   def fetch(key)
 
   def fetch(key) do
