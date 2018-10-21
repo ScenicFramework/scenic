@@ -52,13 +52,32 @@ defmodule Scenic.Cache do
 
   # ===========================================================================
   defmodule Error do
+    @moduledoc """
+    Defines the exception thrown by the CacheModule
+    """
     defexception message: nil
   end
 
-  # ============================================================================
   # client apis
 
-  # --------------------------------------------------------
+  @doc """
+  This function to collects an item from the Cache.
+  This function accepts a key and a default both being any term in Elixir.
+
+  If there is no item in the Cache that corresponds to the key the function will return nil else the
+  function returns the term stored in the cache with the using the provided key
+
+  ## Examples
+
+  iex> Scenic.Cache.get("test_key")
+  nil
+
+  iex> :ets.insert(:scenic_cache_key_table, {"test_key", 1, :test_data})
+  ...> true
+  ...> Scenic.Cache.get("test_key")
+  :test_data
+  """
+  @spec get(term(), term()) :: term() | nil
   def get(key, default \\ nil)
 
   def get(key, default) do
@@ -71,7 +90,19 @@ defmodule Scenic.Cache do
       reraise(other, __STACKTRACE__)
   end
 
-  # --------------------------------------------------------
+  @doc """
+  This function works the same as the `get` function. That is it accepts a key paramter and  returns a ok/error tuple i
+  making this function ideal if you need to pattern match on the result of getting from the cache
+
+  ## Examples
+  iex> Scenic.Cache.fetch("test_key")
+  {:error, :not_found}
+
+  iex> :ets.insert(:scenic_cache_key_table, {"test_key", 1, :test_data})
+  ...> true
+  ...> Scenic.Cache.fetch("test_key")
+  {:ok, :test_data}
+  """
   def fetch(key)
 
   def fetch(key) do
