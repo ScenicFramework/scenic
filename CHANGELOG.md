@@ -10,6 +10,8 @@
 * Deprecated Primitive.put_transform(w/list). Use Primitive.merge_opts(...) instead.
 * Add Graph.find/2
 * Add Graph.modify/3 with a finder function
+* Rename Cache.request_notification/1 -> Cache.subscribe/1
+* Rename Cache.stop_notification/1 -> Cache.unsubscribe/1
 
 
 ## 0.8.0
