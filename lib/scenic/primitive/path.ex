@@ -35,6 +35,11 @@ defmodule Scenic.Primitive.Path do
   * `{:bezier_to, c1x, c1y, c2x, c2y, x, y}` - draw a bezier curve from the current position to a new location.
   * `{:quadratic_to, cx, cy, x, y}` - draw a quadratic curve from the current position to a new location.
   * `{:arc_to, x1, y1, x2, y2, radius}` - draw an arc from the current position to a new location.
+
+  ## Usage
+
+  You should add/modify primitives via the helper functions in
+  [`Scenic.Primitives`](Scenic.Primitives.html#line/3)
   """
 
   use Scenic.Primitive

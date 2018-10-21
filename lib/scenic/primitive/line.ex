@@ -21,6 +21,11 @@ defmodule Scenic.Primitive.Line do
   * [`hidden`](Scenic.Primitive.Style.Hidden.html) - show or hide the primitive
   * [`cap`](Scenic.Primitive.Style.Cap.html) - says how to draw the ends of the line.
   * [`stroke`](Scenic.Primitive.Style.Stroke.html) - stroke the outline of the primitive. In this case, only the curvy part.
+
+  ## Usage
+
+  You should add/modify primitives via the helper functions in
+  [`Scenic.Primitives`](Scenic.Primitives.html#line/3)
   """
 
   use Scenic.Primitive

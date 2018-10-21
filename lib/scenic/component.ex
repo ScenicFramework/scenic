@@ -17,6 +17,31 @@ defmodule Scenic.Component do
 
   At the top of your module definition.
 
+  ## Standard Components
+
+  Scenic includes a small number of standard components that you can simply reuse in your
+  scenes. These were chosen to be in the main library because a) they are used frequently,
+  and b) their use promotes a certain amount of "common" look and feel.
+
+  All of these components are typically added/modified via the helper functions in the
+  [`Scenic.Components`](Scenic.Components.html) module.
+
+  * [`Button`](Scenic.Component.Button.html) a simple button.
+  * [`Checkbox`](Scenic.Component.Input.Checkbox.html) a checkbox input field. 
+  * [`Dropdown`](Scenic.Component.Input.Dropdown.html) a dropdown / select input field.
+  * [`RadioGroup`](Scenic.Component.Input.RadioGroup.html) a group of radio button inputs.
+  * [`Slider`](Scenic.Component.Input.Slider.html) a slider input.
+  * [`TextField`](Scenic.Component.Input.TextField.html) a text / password input field.
+  * [`Toggle`](Scenic.Component.Input.Toggle.html) an on/off toggle input.
+
+  ## Other Components
+
+  For completeness, Scenic also includes the following standard components. They are used
+  by the components above, although you are free to use them as well if they fit your needs.
+
+  * [`Caret`](Scenic.Component.Input.Caret.html) the vertical, blinking, caret line in a text field.
+  * [`RadioButton`](Scenic.Component.Input.RadioButton.html) a single radio button in a radio group.
+
   ## Verifiers
 
   One of the main differences between a Component and a Scene is the two extra callbacks
@@ -24,7 +49,7 @@ defmodule Scenic.Component do
   should do some basic validation that the data being set up is valid, then provide
   feedback if it isn't.
 
-  ## No children
+  ## Optional: No Children
 
   There is an optimization you can use. If you know for certain that your component
   will not attempt to use any components, you can set `has_children` to `false` like this.

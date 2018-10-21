@@ -1,6 +1,77 @@
 defmodule Scenic.Component.Button do
-  @moduledoc false
+  @moduledoc """
+  Add a button to a graph
 
+  A button is a small scene that is pretty much just some text drawn over a
+  rounded rectangle. The button scene contains logic to detect when the button
+  is pressed, tracks it as the pointer moves around, and when it is released.
+
+  ## Data
+
+  `title`
+
+  * `title` - a bitstring describing the text to show in the button
+
+  ## Messages
+
+  If a button press is successful, it sends an event message to the host scene
+  in the form of:
+
+      {:click, id}
+
+  ## Styles
+
+  Buttons honor the following standard styles
+
+  * `:hidden` - If `false` the component is rendered. If `true`, it is skipped.
+  The default is `false`.
+  * `:theme` - The color set used to draw. See below. The default is `:primary`
+
+  ## Additional Styles
+
+  Buttons honor the following list of additional styles.
+
+  * `:width` - pass in a number to set the width of the button.
+  * `:height` - pass in a number to set the height of the button.
+  * `:radius` - pass in a number to set the radius of the button's rounded
+  rectangle.
+  * `:alignment` - set the alignment of the text inside the button. Can be one
+  of `:left, :right, :center`. The default is `:center`.
+  * `:button_font_size` - the size of the font in the button
+
+  Buttons do not use the inherited `:font_size` style as they should look
+  consistent regardless of what size the surrounding text is.
+
+  ## Theme
+
+  Buttons work well with the following predefined themes:
+  `:primary`, `:secondary`, `:success`, `:danger`, `:warning`, `:info`,
+  `:text`, `:light`, `:dark`
+
+  To pass in a custom theme, supply a map with at least the following entries:
+
+  * `:text` - the color of the text in the button
+  * `:background` - the normal background of the button
+  * `:active` - the background while the button is pressed
+
+  ## Usage
+
+  You should add/modify components via the helper functions in
+  [`Scenic.Components`](Scenic.Components.html#button/3)
+
+  ### Examples
+
+  The following example creates a simple button and positions it on the screen.
+
+      graph
+      |> button("Example", id: :button_id, translate: {20, 20})
+
+  The next example makes the same button as before, but colors it as a warning
+  button. See the options list above for more details.
+
+      graph
+      |> button("Example", id: :button_id, translate: {20, 20}, theme: :warning)
+  """
   use Scenic.Component, has_children: false
 
   alias Scenic.Graph
@@ -20,6 +91,7 @@ defmodule Scenic.Component.Button do
   @default_alignment :center
 
   # --------------------------------------------------------
+  @doc false
   def info(data) do
     """
     #{IO.ANSI.red()}Button data must be a bitstring: initial_text
@@ -29,10 +101,12 @@ defmodule Scenic.Component.Button do
   end
 
   # --------------------------------------------------------
+  @doc false
   def verify(text) when is_bitstring(text), do: {:ok, text}
   def verify(_), do: :invalid_data
 
   # --------------------------------------------------------
+  @doc false
   def init(text, opts) when is_bitstring(text) and is_list(opts) do
     id = opts[:id]
     styles = opts[:styles]
@@ -114,6 +188,7 @@ defmodule Scenic.Component.Button do
   end
 
   # --------------------------------------------------------
+  @doc false
   def handle_input(
         {:cursor_enter, _uid},
         _context,
