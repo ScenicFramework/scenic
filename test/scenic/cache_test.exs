@@ -498,6 +498,7 @@ defmodule Scenic.CacheTest do
       Agent.start(fn ->
         Cache.subscribe(:all)
       end)
+
     Process.sleep(4)
     Agent.stop(pid)
     Process.sleep(4)
