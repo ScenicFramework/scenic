@@ -22,6 +22,11 @@ defmodule Scenic.Primitive.Group do
 
   The group is special in that it accepts all styles and transforms, even if they
   are non-standard. These are then inherited by any primitives, including SceneRefs
+
+  ## Usage
+
+  You should add/modify primitives via the helper functions in
+  [`Scenic.Primitives`](Scenic.Primitives.html#group/3)
   """
 
   use Scenic.Primitive

@@ -4,8 +4,82 @@
 #
 
 defmodule Scenic.Component.Input.Dropdown do
-  @moduledoc false
+  @moduledoc """
+  Add a dropdown to a graph
 
+  ## Data
+
+  `{items, initial_item}`
+
+  * `items` - must be a list of items, each of which is: `{text, id}`. See below...
+  * `initial_item` - the `id` of the initial selected item. It can be any term
+  you want, however it must be an `item_id` in the `items` list. See below.
+
+  Per item data:
+
+  `{text, item_id}`
+
+  * `text` - a string that will be shown in the dropdown.
+  * `item_id` - any term you want. It will identify the item that is
+  currently selected in the dropdown and will be passed back to you during
+  event messages.
+
+  ## Messages
+
+  When the state of the checkbox, it sends an event message to the host scene
+  in the form of:
+
+  `{:value_changed, id, selected_item_id}`
+
+  ## Options
+
+  Dropdowns honor the following list of options.
+
+  ## Styles
+
+  Buttons honor the following styles
+
+  * `:hidden` - If `false` the component is rendered. If `true`, it is skipped.
+  The default is `false`.
+  * `:theme` - The color set used to draw. See below. The default is `:dark`
+
+  ## Additional Styles
+
+  Buttons honor the following list of additional styles.
+
+  * `:width` - pass in a number to set the width of the button.
+  * `:height` - pass in a number to set the height of the button.
+  * `:direction` - what direction should the menu drop. Can be either `:down`
+  or `:up`. The default is `:down`.
+
+  ## Theme
+
+  Dropdowns work well with the following predefined themes: `:light`, `:dark`
+
+  To pass in a custom theme, supply a map with at least the following entries:
+
+  * `:text` - the color of the text
+  * `:background` - the background of the component
+  * `:border` - the border of the component
+  * `:active` - the background of selected item in the dropdown list
+  * `:thumb` - the color of the item being hovered over
+
+  ## Usage
+
+  You should add/modify components via the helper functions in
+  [`Scenic.Components`](Scenic.Components.html#dropdown/3)
+
+  ## Examples
+
+  The following example creates a dropdown and positions it on the screen.
+
+      graph
+      |> dropdown({[
+        {"Dashboard", :dashboard},
+        {"Controls", :controls},
+        {"Primitives", :primitives}
+      ], :controls}, id: :dropdown_id, translate: {20, 20})
+  """
   use Scenic.Component, has_children: false
 
   alias Scenic.Graph

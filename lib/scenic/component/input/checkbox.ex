@@ -1,5 +1,53 @@
 defmodule Scenic.Component.Input.Checkbox do
-  @moduledoc false
+  @moduledoc """
+  Add a checkbox to a graph
+
+  ## Data
+
+  `{text, checked?}`
+
+  * `text` - must be a bitstring
+  * `checked?` - must be a boolean and indicates if the checkbox is set.
+
+  ## Messages
+
+  When the state of the checkbox, it sends an event message to the host scene
+  in the form of:
+
+  `{:value_changed, id, checked?}`
+
+  ## Styles
+
+  Buttons honor the following standard styles
+
+  * `:hidden` - If `false` the component is rendered. If `true`, it is skipped.
+  The default is `false`.
+  * `:theme` - The color set used to draw. See below. The default is `:dark`
+
+  ## Theme
+
+  Checkboxes work well with the following predefined themes: `:light`, `:dark`
+
+  To pass in a custom theme, supply a map with at least the following entries:
+
+  * `:text` - the color of the text in the button
+  * `:background` - the background of the box
+  * `:border` - the border of the box
+  * `:active` - the border of the box while the button is pressed
+  * `:thumb` - the color of the check mark itself
+
+  ## Usage
+
+  You should add/modify components via the helper functions in
+  [`Scenic.Components`](Scenic.Components.html#checkbox/3)
+
+  ### Examples
+
+  The following example creates a checkbox and positions it on the screen.
+
+      graph
+      |> checkbox({"Example", true}, id: :checkbox_id, translate: {20, 20})
+  """
 
   use Scenic.Component, has_children: false
 

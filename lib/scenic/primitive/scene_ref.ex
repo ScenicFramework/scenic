@@ -34,6 +34,11 @@ defmodule Scenic.Primitive.SceneRef do
 
   The SceneRef is special in that it accepts all styles and transforms, even if they
   are non-standard. These are then inherited by any dynamic scenes that get created.
+
+  ## Usage
+
+  You should add/modify primitives via the helper functions in
+  [`Scenic.Primitives`](Scenic.Primitives.html#scene_ref/3)
   """
 
   use Scenic.Primitive

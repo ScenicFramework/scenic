@@ -24,6 +24,11 @@ defmodule Scenic.Primitive.Text do
   * [`font_blur`](Scenic.Primitive.Style.FontBlur.html) - option to blur the characters
   * [`text_align`](Scenic.Primitive.Style.TextAlign.html) - alignment of lines of text
   * [`text_height`](Scenic.Primitive.Style.TextHeight.html) - spacing between lines of text
+
+  ## Usage
+
+  You should add/modify primitives via the helper functions in
+  [`Scenic.Primitives`](Scenic.Primitives.html#text/3)
   """
 
   use Scenic.Primitive

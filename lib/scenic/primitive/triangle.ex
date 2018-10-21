@@ -24,6 +24,11 @@ defmodule Scenic.Primitive.Triangle do
   * [`stroke`](Scenic.Primitive.Style.Stroke.html) - stroke the outline of the primitive. In this case, only the curvy part.
   * [`join`](Scenic.Primitive.Style.Join.html) - control how segments are joined.
   * [`miter_limit`](Scenic.Primitive.Style.MiterLimit.html) - control how segments are joined.
+
+  ## Usage
+
+  You should add/modify primitives via the helper functions in
+  [`Scenic.Primitives`](Scenic.Primitives.html#text/3)
   """
 
   use Scenic.Primitive

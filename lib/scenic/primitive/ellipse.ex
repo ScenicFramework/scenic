@@ -24,6 +24,11 @@ defmodule Scenic.Primitive.Ellipse do
 
   Note: you can achieve the same effect with a Circle primitive
   by applying a :size transform to it with unequal values on the axes
+
+  ## Usage
+
+  You should add/modify primitives via the helper functions in
+  [`Scenic.Primitives`](Scenic.Primitives.html#ellipse/3)
   """
 
   use Scenic.Primitive
