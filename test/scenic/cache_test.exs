@@ -463,6 +463,23 @@ defmodule Scenic.CacheTest do
     refute Cache.member?("test_key")
 
     # sign up for notifications
+    Cache.subscribe(@cache_put)
+    refute_received({:"$gen_cast", {:cache_put, _}})
+
+    # put the key. This should send a notification
+    Cache.put("test_key", 123)
+    assert_received({:"$gen_cast", {:cache_put, "test_key"}})
+
+    # stop notifications
+    Cache.unsubscribe()
+    Cache.put("test_key1", 123)
+    refute_received({:"$gen_cast", {:cache_put, _}})
+  end
+
+  test "notifications work - integration style - old functions" do
+    refute Cache.member?("test_key")
+
+    # sign up for notifications
     Cache.request_notification(@cache_put)
     refute_received({:"$gen_cast", {:cache_put, _}})
 
