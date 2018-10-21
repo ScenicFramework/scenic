@@ -235,6 +235,25 @@ defmodule Scenic.GraphTest do
   end
 
   # ============================================================================
+  test "find returns the matching items" do
+    graph =
+      Graph.build()
+      |> Text.add_to_graph("text one", id: {:a, :one})
+      |> Text.add_to_graph("text two", id: {:a, :two})
+      |> Text.add_to_graph("text three", id: {:b, :three})
+
+    # confirm result
+    assert Graph.find(graph, &match?({:a, _}, &1)) == [
+             Graph.get!(graph, {:a, :one}),
+             Graph.get!(graph, {:a, :two})
+           ]
+
+    assert Graph.find(graph, &match?({:b, _}, &1)) == [
+             Graph.get!(graph, {:b, :three})
+           ]
+  end
+
+  # ============================================================================
   # insert_at(graph_and_parent, index, element, opts \\ [])
   # test "insert_at inserts an element at the root with just a graph passed in and assigns a new uid - no id" do
   #   # insert - returns transformed graph and assigned uid
@@ -529,6 +548,25 @@ defmodule Scenic.GraphTest do
 
     rect = graph.primitives[uid]
     assert Primitive.get_styles(rect) == %{fill: :red, stroke: {10, :blue}}
+  end
+
+  test "modify transforms a via a match function" do
+    graph =
+      Graph.build()
+      |> Text.add_to_graph("text one", id: {:a, :one})
+      |> Text.add_to_graph("text two", id: {:a, :two})
+      |> Text.add_to_graph("text three", id: {:b, :three})
+
+    # modify the element by assigning a transform to it
+    graph =
+      Graph.modify(graph, &match?({:a, _}, &1), fn p ->
+        Primitive.put_transforms(p, @transform)
+      end)
+
+    # confirm result
+    assert Map.get(Graph.get!(graph, {:a, :one}), :transforms) == @transform
+    assert Map.get(Graph.get!(graph, {:a, :two}), :transforms) == @transform
+    refute Map.get(Graph.get!(graph, {:b, :three}), :transforms)
   end
 
   # ============================================================================

@@ -8,6 +8,8 @@
 * Renamed Primitive.put_opts to Primitive.merge_opts
 * Deprecated Primitive.put_style(w/list). Use Primitive.merge_opts(...) instead.
 * Deprecated Primitive.put_transform(w/list). Use Primitive.merge_opts(...) instead.
+* Add Graph.find/2
+* Add Graph.modify/3 with a finder function
 
 
 ## 0.8.0
