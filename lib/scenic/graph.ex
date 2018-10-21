@@ -639,8 +639,35 @@ defmodule Scenic.Graph do
   # end
 
   # ============================================================================
-  # apis to modify the specified elements in a graph
-  # this is different from map in that it does not walk the tree below the given uid
+
+  @doc """
+  Find one or more primitives in a graph via a filter function.
+
+  Pass in a function that accepts a primitive and returns a boolean.
+
+  Returns a list of tuples containing the matching id at the primitive.
+
+  `[{id, primitive}]`
+
+  __Warning:__ This function crawls the entire graph and is thus slower than
+  accessing items via a fully-specified id.
+  """
+
+  @spec find(graph :: t(), (any -> as_boolean(term()))) :: list({any, Primitive.t()})
+  def find(graph, finder)
+
+  # pass in an atom based id, and it will transform all mapped uids
+  def find(%__MODULE__{} = graph, finder) when is_function(finder, 1) do
+    reduce(graph, [], fn p, acc ->
+      Map.get(p, :id)
+      |> finder.()
+      |> case do
+        true -> [p | acc]
+        false -> acc
+      end
+    end)
+    |> Enum.reverse()
+  end
 
   # --------------------------------------------------------
   # transform a single primitive by uid
@@ -681,23 +708,68 @@ defmodule Scenic.Graph do
   @doc """
   Modify one or more primitives in a graph.
 
-  Retrieves the primitive (or primitives) specified by an id and passes them to
+  Retrieves the primitive (or primitives) specified by id and passes them to
   a callback function. The result of the callback function is stored as the new
   version of that primitive in the graph.
 
   If multiple primitives match the specified id, then each is passed, in turn,
   to the callback function.
+
+  The id can be either
+  * a term to match against (fast)
+  * a filter function that returns a boolean (slower)
+
+  Examples:
+
+      graph
+      |> Graph.modify( :explicit_id, &text("Updated Text 1") )
+      |> Graph.modify( {:id, 123}, &text("Updated Text 2") )
+      |> Graph.modify( &match?({:id,_},&1), &text("Updated Text 3") )
   """
 
-  @spec modify(graph :: t(), id :: any, action :: (... -> Primitive.t())) :: t()
+  @spec modify(
+          graph :: t(),
+          id :: any | (any -> as_boolean(term())),
+          action :: (... -> Primitive.t())
+        ) :: t()
   def modify(graph, id, action)
 
-  # pass in an atom based id, and it will transform all mapped uids
+  # pass in a finder function
+  def modify(%__MODULE__{} = graph, finder, action) when is_function(finder, 1) do
+    graph
+    |> find(finder)
+    |> Enum.map(fn %{id: id} -> id end)
+    |> Enum.uniq()
+    |> Enum.reduce(graph, &modify(&2, &1, action))
+  end
+
+  # pass in generic term id
   def modify(%__MODULE__{} = graph, id, action) do
     graph
     |> resolve_id(id)
     |> Enum.reduce(graph, &modify_by_uid(&2, &1, action))
   end
+
+  # @doc """
+  # Modify one or more primitives in a graph via a match pattern.
+
+  # Retrieves the primitive (or primitives) that match a pattern and passes them to
+  # a callback function. The result of the callback function is stored as the new
+  # version of that primitive in the graph.
+
+  # If multiple primitives match the specified id, then each is passed, in turn,
+  # to the callback function.
+  # """
+
+  # @spec modify_match(graph :: t(), pattern :: any, action :: (... -> Primitive.t())) :: t()
+  # def modify_match(graph, pattern, action)
+
+  # # pass in an atom based id, and it will transform all mapped uids
+  # def modify_match(%__MODULE__{} = graph, pattern, action) do
+  #   graph
+  #   |> find(pattern)
+  #   |> Enum.reduce(graph, &modify_by_uid(&2, &1, action))
+  # end
 
   # ============================================================================
   # map a graph via traversal from the root node
