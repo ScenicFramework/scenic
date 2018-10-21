@@ -727,7 +727,11 @@ defmodule Scenic.Graph do
       |> Graph.modify( &match?({:id,_},&1), &text("Updated Text 3") )
   """
 
-  @spec modify(graph :: t(), id :: any, action :: (... -> Primitive.t())) :: t()
+  @spec modify(
+          graph :: t(),
+          id :: any | (any -> as_boolean(term())),
+          action :: (... -> Primitive.t())
+        ) :: t()
   def modify(graph, id, action)
 
   # pass in a finder function
