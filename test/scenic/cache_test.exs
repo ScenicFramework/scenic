@@ -492,6 +492,17 @@ defmodule Scenic.CacheTest do
     Cache.put("test_key1", 123)
     refute_received({:"$gen_cast", {:cache_put, _}})
   end
+
+  test "notifications deal with bad subscriptions" do
+    {:ok, pid} =
+      Agent.start(fn ->
+        Cache.subscribe(:all)
+      end)
+    Process.sleep(4)
+    Agent.stop(pid)
+    Process.sleep(4)
+    Cache.put("test_key1", 123)
+  end
 end
 
 # ==============================================================================
