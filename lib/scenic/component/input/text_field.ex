@@ -112,6 +112,7 @@ defmodule Scenic.Component.Input.TextField do
   @hint_color :grey
 
   # --------------------------------------------------------
+  @doc false
   def info(data) do
     """
     #{IO.ANSI.red()}TextField data must be a bitstring: initial_text
@@ -121,6 +122,7 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   # --------------------------------------------------------
+  @doc false
   def verify(initial_text) when is_bitstring(initial_text) do
     {:ok, initial_text}
   end
@@ -128,6 +130,7 @@ defmodule Scenic.Component.Input.TextField do
   def verify(_), do: :invalid_data
 
   # --------------------------------------------------------
+  @doc false
   def init(value, opts) do
     id = opts[:id]
     styles = opts[:styles]
@@ -333,6 +336,7 @@ defmodule Scenic.Component.Input.TextField do
   # User input handling - get the focus
 
   # --------------------------------------------------------
+  @doc false
   # unfocused click in the text field
   def handle_input(
         {:cursor_button, {:left, :press, _, _}},

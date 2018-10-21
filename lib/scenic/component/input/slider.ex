@@ -87,6 +87,7 @@ defmodule Scenic.Component.Input.Slider do
   # setup
 
   # --------------------------------------------------------
+  @doc false
   def info(data) do
     """
     #{IO.ANSI.red()}Slider data must be: {extents, initial_value}
@@ -103,6 +104,7 @@ defmodule Scenic.Component.Input.Slider do
   end
 
   # --------------------------------------------------------
+  @doc false
   def verify({ext, initial} = data) do
     verify_initial(ext, initial)
     |> case do
@@ -127,6 +129,7 @@ defmodule Scenic.Component.Input.Slider do
   defp verify_initial(_, _), do: false
 
   # --------------------------------------------------------
+  @doc false
   def init({extents, value}, opts) do
     id = opts[:id]
     styles = opts[:styles]
@@ -163,6 +166,7 @@ defmodule Scenic.Component.Input.Slider do
   # ============================================================================
 
   # --------------------------------------------------------
+  @doc false
   def handle_input({:cursor_button, {:left, :press, _, {x, _}}}, context, state) do
     state =
       state

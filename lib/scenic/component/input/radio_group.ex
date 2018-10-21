@@ -84,7 +84,8 @@ defmodule Scenic.Component.Input.RadioGroup do
 
   @line_height 22
 
-  #  #--------------------------------------------------------
+  #--------------------------------------------------------
+  @doc false
   def info(data) do
     """
     #{IO.ANSI.red()}RadioGroup data must be a list of items
@@ -103,6 +104,7 @@ defmodule Scenic.Component.Input.RadioGroup do
   end
 
   # --------------------------------------------------------
+  @doc false
   def verify(items) when is_list(items) do
     items
     |> Enum.all?(fn item ->
@@ -120,9 +122,7 @@ defmodule Scenic.Component.Input.RadioGroup do
   def verify(_), do: :invalid_data
 
   # --------------------------------------------------------
-  # def valid?( _items ), do: true
-
-  # --------------------------------------------------------
+  @doc false
   def init(items, opts) when is_list(items) do
     id = opts[:id]
     styles = opts[:styles]
@@ -171,6 +171,7 @@ defmodule Scenic.Component.Input.RadioGroup do
 
   # ============================================================================
 
+  @doc false
   def filter_event({:click, btn_id}, _from, %{id: id} = state) do
     Scene.cast_to_refs(nil, {:set_to_msg, btn_id})
 

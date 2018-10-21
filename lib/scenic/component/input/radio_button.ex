@@ -1,5 +1,29 @@
 defmodule Scenic.Component.Input.RadioButton do
-  @moduledoc false
+  @moduledoc """
+  Add a single radio button to a graph.
+
+  ## Data
+
+  `{text, id}`
+  `{text, id, selected?}`
+
+  * `text` - a bitstring of the text to display
+  * `id` - any term. Identifies the radio button.
+  * `selected?` - boolean. `true` if selected. `false if not`. Default is `false` if
+  this term is not provided.
+
+  ## Usage
+
+  The RadioButton component is used by the RadioGroup component and usually isn't accessed
+  directly, although you are free to do so if it fits your needs. There is no short-cut
+  helper function so you will need to add it to the graph manually.
+
+  The following example adds a caret to a graph.
+
+      graph
+      |> RadioButton.add_to_graph({"A button", :an_id, true})
+
+  """
 
   use Scenic.Component, has_children: false
 
@@ -11,7 +35,8 @@ defmodule Scenic.Component.Input.RadioButton do
 
   # import IEx
 
-  #  #--------------------------------------------------------
+  #--------------------------------------------------------
+  @doc false
   def info(data) do
     """
     #{IO.ANSI.red()}RadioButton data must be: {text, id} or {text, id, checked?}
@@ -21,6 +46,7 @@ defmodule Scenic.Component.Input.RadioButton do
   end
 
   # --------------------------------------------------------
+  @doc false
   def verify({text, _} = data) when is_bitstring(text) do
     {:ok, data}
   end
@@ -32,6 +58,7 @@ defmodule Scenic.Component.Input.RadioButton do
   def verify(_), do: :invalid_data
 
   # --------------------------------------------------------
+  @doc false
   def init({text, id}, opts) when is_bitstring(text), do: init({text, id, false}, opts)
 
   def init({text, id, checked?}, opts) do
@@ -69,14 +96,8 @@ defmodule Scenic.Component.Input.RadioButton do
     {:ok, state}
   end
 
-  # # --------------------------------------------------------
-  # def handle_cast({:set_value, new_value}, state) do
-  #   state = Map.put(state, :checked, new_value)
-  #   graph = update_graph(state)
-  #   {:noreply, %{state | graph: graph}}
-  # end
-
   # --------------------------------------------------------
+  @doc false
   def handle_cast({:set_to_msg, set_id}, %{id: id} = state) do
     state = Map.put(state, :checked, set_id == id)
     graph = update_graph(state)
@@ -98,6 +119,7 @@ defmodule Scenic.Component.Input.RadioButton do
   end
 
   # --------------------------------------------------------
+  @doc false
   def handle_input({:cursor_button, {:left, :press, _, _}}, context, state) do
     state =
       state

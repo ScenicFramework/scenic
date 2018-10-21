@@ -109,6 +109,7 @@ defmodule Scenic.Component.Input.Dropdown do
   @rotate_up :math.pi()
 
   # --------------------------------------------------------
+  @doc false
   def info(data) do
     """
     #{IO.ANSI.red()}Dropdown data must be: {items, initial}
@@ -118,6 +119,7 @@ defmodule Scenic.Component.Input.Dropdown do
   end
 
   # --------------------------------------------------------
+  @doc false
   def verify({items, initial} = data) when is_list(items) do
     (Enum.all?(items, &verify_item(&1)) &&
        Enum.find_value(items, false, fn {_, id} -> id == initial end))
@@ -134,6 +136,7 @@ defmodule Scenic.Component.Input.Dropdown do
   defp verify_item(_), do: false
 
   # --------------------------------------------------------
+  @doc false
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def init({items, initial_id}, opts) do
     id = opts[:id]
@@ -263,6 +266,7 @@ defmodule Scenic.Component.Input.Dropdown do
   # tracking when the dropdown is UP
 
   # --------------------------------------------------------
+  @doc false
   def handle_input({:cursor_enter, _uid}, %{id: id}, %{down: false} = state) do
     {:noreply, %{state | hover_id: id}}
   end

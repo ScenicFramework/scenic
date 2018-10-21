@@ -95,7 +95,8 @@ defmodule Scenic.Component.Input.Toggle do
           }
   end
 
-  #  #--------------------------------------------------------
+  #--------------------------------------------------------
+  @doc false
   def info(data) do
     """
     #{IO.ANSI.red()}Toggle data must be: on?
@@ -105,6 +106,7 @@ defmodule Scenic.Component.Input.Toggle do
   end
 
   # --------------------------------------------------------
+  @doc false
   @spec verify(any) :: {:ok, boolean} | :invalid_data
   def verify(on? = data) when is_boolean(on?) do
     {:ok, data}
@@ -113,6 +115,7 @@ defmodule Scenic.Component.Input.Toggle do
   def verify(_), do: :invalid_data
 
   # --------------------------------------------------------
+  @doc false
   @spec init(any, Keyword.t() | map | nil) :: {:ok, State.t()}
   def init(on?, opts) do
     id = opts[:id]
@@ -195,6 +198,7 @@ defmodule Scenic.Component.Input.Toggle do
   end
 
   # --------------------------------------------------------
+  @doc false
   def handle_input({:cursor_enter, _uid}, _, %{pressed?: true} = state) do
     state = Map.put(state, :contained?, true)
     graph = update_graph(state)

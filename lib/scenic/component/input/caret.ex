@@ -4,8 +4,28 @@
 #
 
 defmodule Scenic.Component.Input.Caret do
-  @moduledoc false
+  @moduledoc """
+  Add a blinking text-input caret to a graph.
 
+
+  ## Data
+
+  `{height, color}`
+
+  * `height` - integer greater than zero
+  * `color` - any [valid color](Scenic.Primitive.Style.Paint.Color.html).
+
+  ## Usage
+
+  The caret component is used by the TextField component and usually isn't accessed directly,
+  although you are free to do so if it fits your needs. There is no short-cut helper
+  function so you will need to add it to the graph manually.
+
+  The following example adds a caret to a graph.
+
+      graph
+      |> Caret.add_to_graph({height, theme.text}, id: :caret)
+  """
   use Scenic.Component, has_children: false
 
   import Scenic.Primitives,
@@ -28,6 +48,7 @@ defmodule Scenic.Component.Input.Caret do
   # setup
 
   # --------------------------------------------------------
+  @doc false
   def info(data) do
     """
     #{IO.ANSI.red()}Caret data must be: {height, color}
@@ -37,6 +58,7 @@ defmodule Scenic.Component.Input.Caret do
   end
 
   # --------------------------------------------------------
+  @doc false
   @spec verify(any()) :: :invalid_data | {:ok, {number(), any()}}
   def verify({height, color} = data)
       when is_number(height) and height > 0 do
@@ -49,6 +71,7 @@ defmodule Scenic.Component.Input.Caret do
   def verify(_), do: :invalid_data
 
   # --------------------------------------------------------
+  @doc false
   def init({height, color}, _opts) do
     # build the graph, initially not showing
     graph =
@@ -72,6 +95,7 @@ defmodule Scenic.Component.Input.Caret do
   end
 
   # --------------------------------------------------------
+  @doc false
   def handle_cast(:start_caret, %{graph: graph, timer: nil} = state) do
     # turn on the caret
     graph =
@@ -127,6 +151,7 @@ defmodule Scenic.Component.Input.Caret do
   def handle_cast(_, state), do: {:noreply, state}
 
   # --------------------------------------------------------
+  @doc false
   def handle_info(:blink, %{graph: graph, hidden: hidden} = state) do
     # invert the hidden flag
     hidden = !hidden

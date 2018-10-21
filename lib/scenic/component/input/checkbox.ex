@@ -66,7 +66,8 @@ defmodule Scenic.Component.Input.Checkbox do
   # @default_height    16
   # @default_radius    3
 
-  #  #--------------------------------------------------------
+  # --------------------------------------------------------
+  @doc false
   def info(data) do
     """
     #{IO.ANSI.red()}Checkbox data must be: {text, checked?}
@@ -76,6 +77,7 @@ defmodule Scenic.Component.Input.Checkbox do
   end
 
   # --------------------------------------------------------
+  @doc false
   def verify({text, checked} = data) when is_bitstring(text) and is_boolean(checked) do
     {:ok, data}
   end
@@ -83,6 +85,7 @@ defmodule Scenic.Component.Input.Checkbox do
   def verify(_), do: :invalid_data
 
   # --------------------------------------------------------
+  @doc false
   def init({text, checked?}, opts) do
     id = opts[:id]
     styles = opts[:styles]
@@ -149,6 +152,7 @@ defmodule Scenic.Component.Input.Checkbox do
   end
 
   # --------------------------------------------------------
+  @doc false
   def handle_input({:cursor_enter, _uid}, _, %{pressed: true} = state) do
     state = Map.put(state, :contained, true)
     graph = update_graph(state)

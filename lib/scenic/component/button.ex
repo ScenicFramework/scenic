@@ -91,6 +91,7 @@ defmodule Scenic.Component.Button do
   @default_alignment :center
 
   # --------------------------------------------------------
+  @doc false
   def info(data) do
     """
     #{IO.ANSI.red()}Button data must be a bitstring: initial_text
@@ -100,10 +101,12 @@ defmodule Scenic.Component.Button do
   end
 
   # --------------------------------------------------------
+  @doc false
   def verify(text) when is_bitstring(text), do: {:ok, text}
   def verify(_), do: :invalid_data
 
   # --------------------------------------------------------
+  @doc false
   def init(text, opts) when is_bitstring(text) and is_list(opts) do
     id = opts[:id]
     styles = opts[:styles]
@@ -185,6 +188,7 @@ defmodule Scenic.Component.Button do
   end
 
   # --------------------------------------------------------
+  @doc false
   def handle_input(
         {:cursor_enter, _uid},
         _context,
