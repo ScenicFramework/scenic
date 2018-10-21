@@ -95,7 +95,7 @@ defmodule Scenic.Component.Input.Toggle do
           }
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc false
   def info(data) do
     """

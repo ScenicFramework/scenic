@@ -1,5 +1,4 @@
 defmodule Scenic.Component.Input.RadioGroup do
-
   @moduledoc """
   Add a radio group to a graph
 
@@ -84,7 +83,7 @@ defmodule Scenic.Component.Input.RadioGroup do
 
   @line_height 22
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc false
   def info(data) do
     """

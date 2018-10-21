@@ -35,7 +35,7 @@ defmodule Scenic.Component.Input.RadioButton do
 
   # import IEx
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc false
   def info(data) do
     """
