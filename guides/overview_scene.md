@@ -88,7 +88,7 @@ you are ready.
       push_graph( @graph )
 
       state = %{
-        graph: @graph
+        graph: @graph,
         viewport: opts[:viewport]
       }
 
