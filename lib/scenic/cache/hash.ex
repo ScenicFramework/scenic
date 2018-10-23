@@ -19,7 +19,6 @@ defmodule Scenic.Cache.Hash do
   """
 
   @hash_types [:sha, :sha224, :sha256, :sha384, :sha512, :ripemd160]
-  @default_hash :sha
 
   @type hash_type ::
           :sha
