@@ -117,14 +117,14 @@ defmodule Scenic.Cache.HashTest do
 
   test "verify_file returns {:ok, data} when the hash checks out ok" do
     assert Hash.verify_file(@missing_hash_path, @missing_hash, :sha) == {:ok, @missing_hash}
+
     assert Hash.verify_file(@missing_hash_path, @missing_hash_256, :sha256) ==
              {:ok, @missing_hash_256}
   end
 
   test "verify_file returns {:error, :hash_failure} when the hash fails" do
     assert Hash.verify_file(@missing_hash_path, "not_a_hash", :sha) == {:error, :hash_failure}
-    assert Hash.verify_file(@missing_hash_path, "not_a_hash", :sha256) ==
-             {:error, :hash_failure}
+    assert Hash.verify_file(@missing_hash_path, "not_a_hash", :sha256) == {:error, :hash_failure}
   end
 
   test "verify_file passes through file system errors" do
@@ -137,8 +137,7 @@ defmodule Scenic.Cache.HashTest do
 
   test "verify_file! returns data when the hash checks out ok" do
     assert Hash.verify_file!(@missing_hash_path, @missing_hash, :sha) == @missing_hash
-    assert Hash.verify_file!(@missing_hash_path, @missing_hash_256, :sha256) ==
-             @missing_hash_256
+    assert Hash.verify_file!(@missing_hash_path, @missing_hash_256, :sha256) == @missing_hash_256
   end
 
   test "verify_file! raises on a hash failure" do
