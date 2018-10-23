@@ -23,7 +23,7 @@ defmodule Scenic.Cache.File do
             images/
               asset.jpg
 
-  
+
   At compile time you need to build the actual path of your asset by combining
   the build directory with the partial path inside of `priv/`
 
@@ -110,9 +110,10 @@ defmodule Scenic.Cache.File do
   # hashes. Is also slower because it has to load the file and compute the hash
   # to use as a key even it is is already loaded into the cache.
   def load(path, :insecure, opts) do
-    if Mix.env != :test do
-      IO.puts "WARNING: Cache asset loaded as :insecure \"#{path}\""
+    if Mix.env() != :test do
+      IO.puts("WARNING: Cache asset loaded as :insecure \"#{path}\"")
     end
+
     with {:ok, data} <- read(path, :insecure, opts) do
       hash = Hash.binary(data, opts[:hash] || :sha)
 
@@ -173,8 +174,9 @@ defmodule Scenic.Cache.File do
   # to use as a key even it is is already loaded into the cache.
   def read(path, :insecure, opts) do
     if Mix.env() != :test do
-      IO.puts "WARNING: Cache asset read as :insecure \"#{path}\""
+      IO.puts("WARNING: Cache asset read as :insecure \"#{path}\"")
     end
+
     with {:ok, data} <- File.read(path) do
       do_unzip(data, opts)
     else
