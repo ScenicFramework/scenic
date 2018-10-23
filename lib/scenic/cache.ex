@@ -85,7 +85,7 @@ defmodule Scenic.Cache do
   These scheme is much stronger when the application code itself is also signed and
   verified, but that is an exercise for the packaging tools.
 
-  Example:
+  Full Example:
 
       defmodule MyApp.MyScene do
         use Scenic.Scene
@@ -94,16 +94,24 @@ defmodule Scenic.Cache do
         @asset_path :code.priv_dir(:my_app) |> Path.join("/static/images/asset.jpg")
 
         # pre-compute the hash (compile time)
-        @asset_hash Scenic.Cache.Hash.file!( @bird_path, :sha )
+        @asset_hash Scenic.Cache.Hash.file!( @asset_path, :sha )
+
+        # build a graph that uses the asset (compile time)
+        @graph Scenic.Graph.build()
+        |> rect( {100, 100}, fill: {:image, @asset_hash} )
+
 
         def init( _, _ ) {
           # load the asset into the cache (run time)
           Scenic.Cache.File.load(@asset_path, @asset_hash)
 
-          ...
-        }
+          # push the graph. (run time)
+          push_graph(@graph)
 
-        ...
+          {:ok, @graph}
+        end
+
+      end
 
   When assets are loaded this way, the `@asset_hash` term is also used as the key in
   the cache. This has the additional benefit of allowing you to pre-compute

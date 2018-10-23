@@ -426,29 +426,37 @@ defmodule Scenic.CacheTest do
 
   test "request & stop notification put" do
     assert Registry.keys(@cache_registry, self()) == []
-    Cache.request_notification(@cache_put)
+    Cache.subscribe(@cache_put)
     assert Registry.keys(@cache_registry, self()) == [@cache_put]
-    Cache.stop_notification(@cache_put)
+    Cache.unsubscribe(@cache_put)
     assert Registry.keys(@cache_registry, self()) == []
   end
 
   test "request & stop notification delete" do
     assert Registry.keys(@cache_registry, self()) == []
-    Cache.request_notification(@cache_delete)
+    Cache.subscribe(@cache_delete)
     assert Registry.keys(@cache_registry, self()) == [@cache_delete]
-    Cache.stop_notification(@cache_delete)
+    Cache.unsubscribe(@cache_delete)
     assert Registry.keys(@cache_registry, self()) == []
   end
 
   test "request & stop notification claim" do
     assert Registry.keys(@cache_registry, self()) == []
-    Cache.request_notification(@cache_claim)
+    Cache.subscribe(@cache_claim)
     assert Registry.keys(@cache_registry, self()) == [@cache_claim]
-    Cache.stop_notification(@cache_claim)
+    Cache.unsubscribe(@cache_claim)
     assert Registry.keys(@cache_registry, self()) == []
   end
 
   test "request & stop notification release" do
+    assert Registry.keys(@cache_registry, self()) == []
+    Cache.subscribe(@cache_release)
+    assert Registry.keys(@cache_registry, self()) == [@cache_release]
+    Cache.unsubscribe(@cache_release)
+    assert Registry.keys(@cache_registry, self()) == []
+  end
+
+  test "deprecated start/stop still work`" do
     assert Registry.keys(@cache_registry, self()) == []
     Cache.request_notification(@cache_release)
     assert Registry.keys(@cache_registry, self()) == [@cache_release]
@@ -480,15 +488,15 @@ defmodule Scenic.CacheTest do
     refute Cache.member?("test_key")
 
     # sign up for notifications
-    Cache.request_notification(@cache_put)
+    Cache.subscribe(@cache_put)
     refute_received({:"$gen_cast", {:cache_put, _}})
 
     # put the key. This should send a notification
     Cache.put("test_key", 123)
     assert_received({:"$gen_cast", {:cache_put, "test_key"}})
 
-    # stop notifications
-    Cache.stop_notification()
+    # stop notificationsunsubscribe
+    Cache.unsubscribe()
     Cache.put("test_key1", 123)
     refute_received({:"$gen_cast", {:cache_put, _}})
   end

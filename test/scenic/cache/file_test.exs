@@ -12,8 +12,6 @@ defmodule Scenic.Cache.FileReadTest do
 
   alias Scenic.Cache
 
-  #  import IEx
-
   @sample_path "test/artifacts/sample_file"
   @sample_gzip_path "test/artifacts/sample_file_gzip"
 
@@ -125,7 +123,7 @@ defmodule Scenic.Cache.FileLoadTest do
     assert :ets.info(@scope_table) == :undefined
     :ets.new(@cache_table, [:set, :public, :named_table])
     :ets.new(@scope_table, [:bag, :public, :named_table])
-    {:ok, data} = Cache.File.read(@sample_path, :insecure)
+    {:ok, data} = Cache.File.read(@sample_path, @sample_sha)
 
     %{data: data}
   end
@@ -161,7 +159,7 @@ defmodule Scenic.Cache.FileLoadTest do
     assert Cache.get(@sample_gzip_sha) == data
   end
 
-  test "load(path, hash) loads gzip with a :sha256 hash", %{data: data} do
+  test "load(path, hash) loads gzip with a :sha256 hash" do
     {:ok, key} =
       Cache.File.load(
         @sample_gzip_path,
@@ -171,7 +169,7 @@ defmodule Scenic.Cache.FileLoadTest do
       )
 
     assert key == @sample_gzip_sha256
-    assert Cache.get(@sample_gzip_sha256) == data
+    "sample_file" <> _ = Cache.get(@sample_gzip_sha256)
   end
 
   test "load(path, hash) FAILS with invalid :sha hash" do

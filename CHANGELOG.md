@@ -13,7 +13,7 @@
 * Add Graph.modify/3 with a finder function
 * Rename Cache.request_notification/1 -> Cache.subscribe/1
 * Rename Cache.stop_notification/1 -> Cache.unsubscribe/1
-
+* General cleanup of Scenic.Cache.Hash. Some functions removed. Some function signatures changed.
 
 ## 0.8.0
 
