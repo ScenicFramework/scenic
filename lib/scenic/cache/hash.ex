@@ -68,7 +68,7 @@ defmodule Scenic.Cache.Hash do
   Returns the hash wrapped in a `{:ok, hash}` tuple.
   """
   @spec binary(data :: binary, type :: hash_type) ::
-    {:ok, bitstring()} | {:error, :invalid_hash_type}
+          {:ok, bitstring()} | {:error, :invalid_hash_type}
   def binary(data, type) do
     case valid_hash_type?(type) do
       true -> {:ok, type |> :crypto.hash(data) |> Base.url_encode64(padding: false)}
@@ -90,7 +90,7 @@ defmodule Scenic.Cache.Hash do
 
   # --------------------------------------------------------
   @spec file(path :: bitstring, type :: hash_type) ::
-    {:ok, bitstring()} | {:error, :invalid_hash_type}
+          {:ok, bitstring()} | {:error, :invalid_hash_type}
   def file(path, hash_type) do
     do_compute_file(
       path,
@@ -148,7 +148,7 @@ defmodule Scenic.Cache.Hash do
   If it fails, returns `{:error, :hash_failure}`
   """
   @spec verify(data :: binary, hash :: bitstring, type :: hash_type) ::
-    {:ok, binary} | {:error, :hash_failure}
+          {:ok, binary} | {:error, :hash_failure}
   def verify(data, hash, hash_type) do
     case binary(data, hash_type) do
       {:ok, ^hash} -> {:ok, data}
