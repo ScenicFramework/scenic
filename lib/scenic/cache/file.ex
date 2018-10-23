@@ -47,11 +47,6 @@ defmodule Scenic.Cache.File do
   and to store the result in your applications code itself. Then during run time, you 
   compare then pre-computed hash against the run-time of the asset being loaded.
 
-  Please take advantage of the helper modules [`Cache.File`](Scenic.Cache.File.html),
-  [`Cache.Term`](Scenic.Cache.Term.html), and [`Cache.Hash`](Scenic.Cache.Hash.html) to
-  do this for you. These modules load files and insert them into the cache while checking
-  a precomputed hash.
-
   These scheme is much stronger when the application code itself is also signed and
   verified, but that is an exercise for the packaging tools.
 
@@ -86,7 +81,6 @@ defmodule Scenic.Cache.File do
 
       end
   """
-
   alias Scenic.Cache
   alias Scenic.Cache.Hash
 
@@ -100,8 +94,9 @@ defmodule Scenic.Cache.File do
   * `opts` - a list of options. See below.
 
   Options:
-  * `hash` - format of the hash. Valid formats include `:sha, :sha224, :sha256, :sha384, :sha512, :ripemd160`
+  * `hash` - format of the hash. Valid formats include `:sha, :sha224, :sha256, :sha384, :sha512, :ripemd160`. If the hash option is not set, it will use `:sha` by default.
   * `scope` - Explicitly set the scope of the asset in the cache.
+  * `decompress` - if `true` - decompress the data (zlib) after reading and verifying the hash.
 
   On success, returns
   `{:ok, cache_key}`
@@ -115,7 +110,9 @@ defmodule Scenic.Cache.File do
   # hashes. Is also slower because it has to load the file and compute the hash
   # to use as a key even it is is already loaded into the cache.
   def load(path, :insecure, opts) do
-    IO.puts "WARNING: Cache asset loaded as :insecure \"#{path}\""
+    if Mix.env != :test do
+      IO.puts "WARNING: Cache asset loaded as :insecure \"#{path}\""
+    end
     with {:ok, data} <- read(path, :insecure, opts) do
       hash = Hash.binary(data, opts[:hash] || :sha)
 
@@ -161,8 +158,8 @@ defmodule Scenic.Cache.File do
   * `opts` - a list of options. See below.
 
   Options:
-  * `hash` - format of the hash. Valid formats include `:sha, :sha224, :sha256, :sha384, :sha512, :ripemd160`
-  * `decompress` - if true - decompress the data (zlib) after reading and verifying the hash.
+  * `hash` - format of the hash. Valid formats include `:sha, :sha224, :sha256, :sha384, :sha512, :ripemd160`. If the hash option is not set, it will use `:sha` by default.
+  * `decompress` - if `true` - decompress the data (zlib) after reading and verifying the hash.
 
   On success, returns
   `{:ok, data}`
@@ -175,7 +172,9 @@ defmodule Scenic.Cache.File do
   # hashes. Is also slower because it has to load the file and compute the hash
   # to use as a key even it is is already loaded into the cache.
   def read(path, :insecure, opts) do
-    IO.puts "WARNING: Cache asset read as :insecure \"#{path}\""
+    if Mix.env() != :test do
+      IO.puts "WARNING: Cache asset read as :insecure \"#{path}\""
+    end
     with {:ok, data} <- File.read(path) do
       do_unzip(data, opts)
     else
