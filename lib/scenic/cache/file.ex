@@ -148,9 +148,9 @@ defmodule Scenic.Cache.File do
 
   # --------------------------------------------------------
   @doc """
-  Read a file into the memory.
+  Read a file into memory.
 
-  The reason you would use this instead of File.read is to verify the file against
+  The reason you would use this instead of File.read is to verify the data against
   a pre-computed hash.
 
   Parameters:

@@ -12,8 +12,6 @@ defmodule Scenic.Cache.FileReadTest do
 
   alias Scenic.Cache
 
-  #  import IEx
-
   @sample_path "test/artifacts/sample_file"
   @sample_gzip_path "test/artifacts/sample_file_gzip"
 
