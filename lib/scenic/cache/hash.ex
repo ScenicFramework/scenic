@@ -176,7 +176,8 @@ defmodule Scenic.Cache.Hash do
   If the verification passes, returns `{:ok, hash}`
   If it fails, returns `{:error, :hash_failure}`
   """
-  @spec verify_file(path :: bitstring, hash :: bitstring, type :: hash_type) :: binary | hash_error
+  @spec verify_file(path :: bitstring, hash :: bitstring, type :: hash_type) ::
+          binary | hash_error
   def verify_file(path, hash, hash_type) do
     case file(path, hash_type) do
       {:ok, computed_hash} ->
@@ -197,7 +198,8 @@ defmodule Scenic.Cache.Hash do
   If the verification passes, returns the hash unchanged.
   If it fails, raises an error
   """
-  @spec verify_file!(path :: bitstring, hash :: bitstring, type :: hash_type) :: binary | no_return
+  @spec verify_file!(path :: bitstring, hash :: bitstring, type :: hash_type) ::
+          binary | no_return
   def verify_file!(path, hash, hash_type) do
     case file!(path, hash_type) == hash do
       true -> hash
