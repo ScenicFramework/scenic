@@ -38,8 +38,7 @@ defmodule Scenic do
 
   @viewports :scenic_dyn_viewports
 
-  @version    Mix.Project.config()[:version]
-
+  @version Mix.Project.config()[:version]
 
   @doc """
   Return the current version of scenic
