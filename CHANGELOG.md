@@ -14,6 +14,7 @@
 * Rename Cache.request_notification/1 -> Cache.subscribe/1
 * Rename Cache.stop_notification/1 -> Cache.unsubscribe/1
 * General cleanup of Scenic.Cache.Hash. Some functions removed. Some function signatures changed.
+* Add Scenic.version function. Returns current version of Scenic.
 
 ## 0.8.0
 
