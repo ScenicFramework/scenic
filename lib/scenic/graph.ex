@@ -144,7 +144,7 @@ defmodule Scenic.Graph do
           primitives: map,
           ids: map,
           next_uid: pos_integer,
-          add_to: pos_integer
+          add_to: non_neg_integer
         }
 
   @type key :: {:graph, Scenic.Scene.ref(), any}
@@ -730,7 +730,7 @@ defmodule Scenic.Graph do
   @spec modify(
           graph :: t(),
           id :: any | (any -> as_boolean(term())),
-          action :: (... -> Primitive.t())
+          action :: (any -> Primitive.t())
         ) :: t()
   def modify(graph, id, action)
 
