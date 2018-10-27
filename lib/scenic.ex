@@ -38,6 +38,13 @@ defmodule Scenic do
 
   @viewports :scenic_dyn_viewports
 
+  @version Mix.Project.config()[:version]
+
+  @doc """
+  Return the current version of scenic
+  """
+  def version(), do: @version
+
   # --------------------------------------------------------
   @doc false
   def child_spec(opts) do
