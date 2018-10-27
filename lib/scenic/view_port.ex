@@ -356,7 +356,9 @@ defmodule Scenic.ViewPort do
           root_config: root_config,
           root_scene_pid: root_scene_pid,
           root_graph_key: root_graph_key,
-          size: size
+          size: size,
+          master_styles: styles,
+          master_transforms: transforms
         } = state
       ) do
     status = %ViewPort.Status{
@@ -364,7 +366,9 @@ defmodule Scenic.ViewPort do
       root_config: root_config,
       root_graph: root_graph_key,
       drivers: driver_registry,
-      size: size
+      size: size,
+      styles: styles,
+      transforms: transforms
     }
 
     {:reply, {:ok, status}, state}
@@ -434,6 +438,7 @@ defmodule Scenic.ViewPort do
       max_depth: config.max_depth,
       on_close: on_close,
       master_styles: styles,
+      master_transforms: transforms,
       master_graph: master_graph,
       master_graph_key: master_graph_key
     }
