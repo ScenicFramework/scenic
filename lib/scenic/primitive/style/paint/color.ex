@@ -237,16 +237,14 @@ defmodule Scenic.Primitive.Style.Paint.Color do
   # ============================================================================
   # data verification and serialization
 
-  # --------------------------------------------------------
-  # verify that a color is correctly described
-  @doc false
+  @doc """
+  Verify that a color is correctly described
+  """
   def verify(color) do
-    try do
-      normalize(color)
-      true
-    rescue
-      _ -> false
-    end
+    normalize(color)
+    true
+  rescue
+    _ -> false
   end
 
   # --------------------------------------------------------
@@ -280,7 +278,7 @@ defmodule Scenic.Primitive.Style.Paint.Color do
   def to_rgba({:clear, _}), do: to_rgba(:transparent)
   def to_rgba(:clear), do: to_rgba(:transparent)
 
-  def to_rgba({r, g, b}), do: {r, g, b, 0xFF}
+  def to_rgba({r, g, b}), do: to_rgba({r, g, b, 0xFF})
 
   def to_rgba({r, g, b, a})
       when is_uint8(r) and is_uint8(g) and is_uint8(b) and is_uint8(a) do
@@ -290,12 +288,13 @@ defmodule Scenic.Primitive.Style.Paint.Color do
   def to_rgba(<<r::size(8), g::size(8), b::size(8), a::size(8)>>), do: {r, g, b, a}
 
   def to_rgba(named_color) when is_atom(named_color) do
-    name_to_rgb(named_color)
+    named_color
+    |> name_to_rgb()
     |> to_rgba()
   end
 
   def to_rgba({named_color, alpha})
-      when is_atom(named_color) and is_integer(alpha) and alpha >= 0 and alpha <= 255 do
+      when is_atom(named_color) and is_uint8(alpha) do
     {r, g, b} = name_to_rgb(named_color)
     {r, g, b, alpha}
   end
