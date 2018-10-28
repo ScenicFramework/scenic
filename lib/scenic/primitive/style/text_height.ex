@@ -4,7 +4,23 @@
 #
 
 defmodule Scenic.Primitive.Style.TextHeight do
-  @moduledoc false
+  @moduledoc """
+  Set the vertical spacing of lines of text in a single block.
+
+  Example:
+
+      graph
+      |> text( "Some Text\\r\\nMore Text" text_height: 50 )
+
+  The natural vertical spacing of the font is used by default. Set this style if
+  you want to override it.
+
+  ## Data
+
+  `spacing`
+
+  * `spacing` - Vertical spacing from line to line.
+  """
 
   use Scenic.Primitive.Style
   #  alias Scenic.Primitive.Style
