@@ -4,7 +4,33 @@
 #
 
 defmodule Scenic.Primitive.Style.TextAlign do
-  @moduledoc false
+  @moduledoc """
+  Set the alignment of the text with regard to the start point.
+
+  Example:
+
+      graph
+      |> text( "Some Text" text_align: :center_middle )
+
+  ## Data
+
+  `alignment`
+
+  The alignment type can be any one of the following
+
+  * `left` - Left side horizontally. Base of the text vertically.
+  * `:right` - Right side horizontally. Base of the text vertically.
+  * `:center` - Centered horizontally. Base of the text vertically.
+  * `left_top` - Left side horizontally. Top of the text vertically.
+  * `:right_top` - Right side horizontally. Top of the text vertically.
+  * `:center_top` - Centered horizontally. Top of the text vertically.
+  * `left_middle` - Left side horizontally. Centered vertically.
+  * `:right_middle` - Right side horizontally. Centered vertically.
+  * `:center_middle` - Centered horizontally. Centered vertically.
+  * `left_bottom` - Left side horizontally. Bottom of the text vertically.
+  * `:right_bottom` - Right side horizontally. Bottom of the text vertically.
+  * `:center_bottom` - Centered horizontally. Bottom of the text vertically.
+  """
 
   use Scenic.Primitive.Style
   #  alias Scenic.Primitive.Style

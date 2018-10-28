@@ -4,7 +4,24 @@
 #
 
 defmodule Scenic.Primitive.Style.Stroke do
-  @moduledoc false
+  @moduledoc """
+  Draw an outline around a primitive with the given paint.
+
+  Example:
+
+      graph
+      |> triangle( {{0,40},{40,40},{40,0}}
+        miter_limit: 2,
+        stroke: {2, :green}
+      )
+
+  ## Data
+
+  `{width, paint}`
+
+  * `width` - Width of the border being stroked.
+  * `:paint` - Any [valid paint](Scenic.Primitive.Style.Paint.html).
+  """
 
   use Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Paint
