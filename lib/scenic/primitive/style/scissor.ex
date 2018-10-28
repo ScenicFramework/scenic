@@ -4,7 +4,25 @@
 #
 
 defmodule Scenic.Primitive.Style.Scissor do
-  @moduledoc false
+  @moduledoc """
+  Define a "Scissor Rectangle" that drawing will be clipped to.
+
+  Example:
+
+      graph
+      |> triangle( {{0,40},{40,40},{40,0}}
+        miter_limit: 2,
+        fill: :green,
+        scissor: {20, 40}
+      )
+
+  ## Data
+
+  `{width, height}`
+
+  * `width` - Width of the scissor rectangle.
+  * `height` - Height of the scissor rectangle.
+  """
 
   use Scenic.Primitive.Style
 

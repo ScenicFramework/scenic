@@ -234,7 +234,9 @@ defmodule Scenic.ViewPortTest do
           root_config: :root_config,
           root_scene_pid: :root_scene_pid,
           root_graph_key: :root_graph_key,
-          size: :size
+          size: :size,
+          master_styles: %{},
+          master_transforms: %{}
         }
       )
 
@@ -243,6 +245,8 @@ defmodule Scenic.ViewPortTest do
     assert info.root_scene_pid == :root_scene_pid
     assert info.root_config == :root_config
     assert info.size == :size
+    assert info.styles == %{}
+    assert info.transforms == %{}
   end
 
   # ============================================================================
