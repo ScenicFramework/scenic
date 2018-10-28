@@ -15,7 +15,7 @@ Install the Scenic Archive like this
 mix archive.install hex scenic_new
 ```
 
-## Build the Starter App
+## Build the Basic App
 
 First, navigate the command-line to the directory where you want to create your
 new Scenic app. Then run the following commands:  (change `my_app` to the name
@@ -23,6 +23,20 @@ of your app...)
 
 ```bash
 mix scenic.new my_app
+cd my_app
+mix do deps.get, scenic.run
+```
+
+If you want to explore the more full-on example, then follow the instructions below.
+
+## Build the Example App
+
+First, navigate the command-line to the directory where you want to create your
+new Scenic app. Then run the following commands:  (change `my_app` to the name
+of your app...)
+
+```bash
+mix scenic.new.example my_app
 cd my_app
 mix do deps.get, scenic.run
 ```
