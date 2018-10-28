@@ -95,7 +95,9 @@ defmodule Scenic.Mixfile do
         "guides/**/*.md",
         # don't include the bird for now
         # "guides/**/*.png",
-        "README.md"
+        "README.md",
+        "LICENSE",
+        "CHANGELOG.md"
       ]
     ]
   end
