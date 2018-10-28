@@ -75,6 +75,12 @@ Then you can build the boot image and burn it to your micro-SD card.
 mix firmware.burn
 ```
 
+## Supported Devices
+
+At the moment, the only supported devices are Raspberry Pis. In fact, the only one I've really tested is the Raspberry Pi 3, although it should work on the others.
+
+Support for the BeagleBone is coming, but isn't ready yet.
+
 ## What to read next?
 
 Next, you should read about the [structure of a scene](overview_scene.html).
