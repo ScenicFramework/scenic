@@ -206,7 +206,7 @@ In the event that `verify/1` returns `:invalid_data`, then the `info/1` callback
 is called to get a bitstring describing useful information to the developer.
 This will be included in the error that gets raised.
 
-      defmodule Scenic.Component.ExampleComponent do
+      defmodule MyApp.MyComponent do
         use Scenic.Component
         import Scenic.Primitives, only: [{:text, 3}, {:update_opts, 2}]
 
@@ -247,8 +247,9 @@ other scene.
 
 ## Adding Components to a Parent Scene
 
-You can add a component to a scene's graph via the `add_to_graph/3` public
-function that is added to your component via the `use Scenic.Component` macro.
+You can add a component (like the one above) to a scene's graph via the
+`add_to_graph/3` public function that is added to your component via the `use
+Scenic.Component` macro.
 
       defmodule MyApp.Scene.ExampleScene do
         @graph Graph.build()
