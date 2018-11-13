@@ -200,11 +200,11 @@ defmodule Scenic.PrimitiveTest do
     end
   end
 
-  test "put_opts raises" do
-    assert_raise RuntimeError, fn ->
-      Primitive.put_opts(@primitive, fill: :blue)
-    end
-  end
+  # test "put_opts raises" do
+  #   assert_raise RuntimeError, fn ->
+  #     Primitive.put_opts(@primitive, fill: :blue)
+  #   end
+  # end
 
   # ============================================================================
   # transform field
@@ -222,15 +222,16 @@ defmodule Scenic.PrimitiveTest do
     assert Primitive.get_transform(p, :pin) == {987, 654}
   end
 
-  test "put_transform puts a list of transforms" do
-    p = Primitive.put_transform(@primitive, pin: {1, 2}, scale: 1.2)
+  # deprecated - use merge_opts
+  # test "put_transform puts a list of transforms" do
+  #   p = Primitive.put_transform(@primitive, pin: {1, 2}, scale: 1.2)
 
-    assert Primitive.get_transforms(p) == %{
-             pin: {1, 2},
-             scale: 1.2,
-             rotate: @tx_rotate
-           }
-  end
+  #   assert Primitive.get_transforms(p) == %{
+  #            pin: {1, 2},
+  #            scale: 1.2,
+  #            rotate: @tx_rotate
+  #          }
+  # end
 
   test "put_transform deletes the transform type if setting to nil" do
     p = Primitive.put_transform(@primitive, :pin, nil)
@@ -288,15 +289,21 @@ defmodule Scenic.PrimitiveTest do
     assert Primitive.get_styles(p) == %{fill: :cornsilk, stroke: {10, :green}}
   end
 
-  test "put_style a list of styles" do
-    new_styles = %{fill: :magenta, stroke: {4, :green}}
-    p = Primitive.put_style(@primitive, fill: :magenta, stroke: {4, :green})
-    assert Primitive.get_styles(p) == new_styles
-  end
-
   test "delete_style removes a style in the style list" do
     assert Primitive.delete_style(@primitive, :fill)
            |> Primitive.get_styles() == %{stroke: {10, :green}}
+  end
+
+  test "merge_opts sets a list of styles" do
+    new_styles = %{fill: :magenta, stroke: {4, :green}}
+    p = Primitive.merge_opts(@primitive, fill: :magenta, stroke: {4, :green})
+    assert Primitive.get_styles(p) == new_styles
+  end
+
+  test "merge_opts sets a list of transforms" do
+    new_txs = %{translate: {1, 2}, rotate: 1.23, pin: {10, 11}}
+    p = Primitive.merge_opts(@primitive, translate: {1, 2}, r: 1.23)
+    assert Primitive.get_transforms(p) == new_txs
   end
 
   # ============================================================================

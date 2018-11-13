@@ -170,12 +170,12 @@ defmodule Scenic.Graph do
   Returns the root group of a graph as a primitive.
   Deprecated. Use `Graph.get!(graph, :_root_)` instead.
   """
-  @deprecated "Use Graph.get!(graph, :_root_) instead"
-  @spec get_root(graph :: t()) :: Primitive.t()
-  def get_root(%__MODULE__{} = graph) do
-    get!(graph, :_root_)
-    # Map.delete(graph.primitives[@root_uid], :styles)
-  end
+  # @deprecated "Use Graph.get!(graph, :_root_) instead"
+  # @spec get_root(graph :: t()) :: Primitive.t()
+  # def get_root(%__MODULE__{} = graph) do
+  #   get!(graph, :_root_)
+  #   # Map.delete(graph.primitives[@root_uid], :styles)
+  # end
 
   # ============================================================================
   # build a new graph, starting with the given element

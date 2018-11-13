@@ -398,12 +398,12 @@ defmodule Scenic.Primitive do
     |> (&put_styles(p, &1)).()
   end
 
-  @deprecated "Use Primitive.merge_opts instead"
-  def put_style(%Primitive{} = p, list) when is_list(list) do
-    Enum.reduce(list, p, fn {type, data}, acc ->
-      put_style(acc, type, data)
-    end)
-  end
+  # @deprecated "Use Primitive.merge_opts instead"
+  # def put_style(%Primitive{} = p, list) when is_list(list) do
+  #   Enum.reduce(list, p, fn {type, data}, acc ->
+  #     put_style(acc, type, data)
+  #   end)
+  # end
 
   @doc """
   Deletes a specified style from a primitive.
@@ -505,12 +505,12 @@ defmodule Scenic.Primitive do
     |> (&put_transforms(p, &1)).()
   end
 
-  @deprecated "Use Primitive.merge_opts instead"
-  def put_transform(%Primitive{} = p, tx_list) when is_list(tx_list) do
-    Enum.reduce(tx_list, p, fn {k, v}, acc ->
-      put_transform(acc, k, v)
-    end)
-  end
+  # @deprecated "Use Primitive.merge_opts instead"
+  # def put_transform(%Primitive{} = p, tx_list) when is_list(tx_list) do
+  #   Enum.reduce(tx_list, p, fn {k, v}, acc ->
+  #     put_transform(acc, k, v)
+  #   end)
+  # end
 
   @doc """
   Deletes a specified transform from a primitive.
@@ -551,13 +551,13 @@ defmodule Scenic.Primitive do
     mod.get(p)
   end
 
-  @deprecated "Use Primitive.merge_opts instead."
-  @spec put_opts(primitive :: Primitive.t(), opts :: keyword) :: Primitive.t()
-  def put_opts(primitive, opts)
+  # @deprecated "Use Primitive.merge_opts instead."
+  # @spec put_opts(primitive :: Primitive.t(), opts :: keyword) :: Primitive.t()
+  # def put_opts(primitive, opts)
 
-  def put_opts(%Primitive{}, opts) when is_list(opts) do
-    raise "Primitive.put_opts has been deprecated. Use Primitive.merge_opts instead."
-  end
+  # def put_opts(%Primitive{}, opts) when is_list(opts) do
+  #   raise "Primitive.put_opts has been deprecated. Use Primitive.merge_opts instead."
+  # end
 
   @doc """
   Merge an options-list of styles and transforms onto a primitive.
