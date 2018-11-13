@@ -71,6 +71,22 @@ defmodule Scenic.Component.Input.TextFieldTest do
     assert state.type == :password
   end
 
+  test "init works with text field style options" do
+    {:ok, state} = TextField.init(@initial_value, styles: %{
+      type: :password,
+      width: 11,
+      height: 13,
+      hint: "hint string",
+      filter: :test_filter
+    }, id: :test_id)
+
+    assert state.type == :password
+    assert state.width == 11
+    assert state.height == 13
+    assert state.hint == "hint string"
+    assert state.filter == :test_filter
+  end
+
   # ============================================================================
   # handle_input
 

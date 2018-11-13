@@ -142,8 +142,8 @@ defmodule Scenic.Component.Input.TextField do
 
     # get the text_field specific styles
     hint = styles[:hint] || @default_hint
-    width = opts[:width] || opts[:w] || @default_width
-    height = styles[:height] || opts[:h] || @default_height
+    width = styles[:width] || styles[:w] || @default_width
+    height = styles[:height] || styles[:h] || @default_height
     type = styles[:type] || @default_type
     filter = styles[:filter] || @default_filter
 
