@@ -583,8 +583,8 @@ defmodule Scenic.Cache do
     subscribe(@cache_release)
   end
 
-  @deprecated "Use Cache.subscribe/1 instead"
-  def request_notification(message_type), do: subscribe(message_type)
+  # @deprecated "Use Cache.subscribe/1 instead"
+  # def request_notification(message_type), do: subscribe(message_type)
 
   # ----------------------------------------------
   @doc """
@@ -612,8 +612,8 @@ defmodule Scenic.Cache do
     unsubscribe(@cache_release)
   end
 
-  @deprecated "Use Cache.unsubscribe/1 instead"
-  def stop_notification(message_type \\ :all), do: unsubscribe(message_type)
+  # @deprecated "Use Cache.unsubscribe/1 instead"
+  # def stop_notification(message_type \\ :all), do: unsubscribe(message_type)
 
   # ----------------------------------------------
   defp dispatch_notification(action, data) do

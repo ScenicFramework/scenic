@@ -456,13 +456,13 @@ defmodule Scenic.CacheTest do
     assert Registry.keys(@cache_registry, self()) == []
   end
 
-  test "deprecated start/stop still work`" do
-    assert Registry.keys(@cache_registry, self()) == []
-    Cache.request_notification(@cache_release)
-    assert Registry.keys(@cache_registry, self()) == [@cache_release]
-    Cache.stop_notification(@cache_release)
-    assert Registry.keys(@cache_registry, self()) == []
-  end
+  # test "deprecated start/stop still work`" do
+  #   assert Registry.keys(@cache_registry, self()) == []
+  #   Cache.request_notification(@cache_release)
+  #   assert Registry.keys(@cache_registry, self()) == [@cache_release]
+  #   Cache.stop_notification(@cache_release)
+  #   assert Registry.keys(@cache_registry, self()) == []
+  # end
 
   # ============================================================================
   # notifications - integration style
