@@ -106,8 +106,8 @@ defmodule Scenic.Scene do
   maintaining the scene's graph. It only enters the world of the
   `ViewPort` when you call `push_graph`. Once you have called
   `push_graph`, that graph is sent to the drivers and is out of your
-  immediate control. You update that graph by either calling
-  `push_graph` again, or cleaning it up via `release_graph`.
+  immediate control. You update that graph by calling `push_graph`
+  again.
 
   This does mean you could maintain two seperate graphs
   and rapidly switch back and forth between them via push_graph.
