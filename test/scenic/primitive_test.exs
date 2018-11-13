@@ -289,7 +289,6 @@ defmodule Scenic.PrimitiveTest do
     assert Primitive.get_styles(p) == %{fill: :cornsilk, stroke: {10, :green}}
   end
 
-
   test "delete_style removes a style in the style list" do
     assert Primitive.delete_style(@primitive, :fill)
            |> Primitive.get_styles() == %{stroke: {10, :green}}
@@ -302,11 +301,10 @@ defmodule Scenic.PrimitiveTest do
   end
 
   test "merge_opts sets a list of transforms" do
-    new_txs = %{translate: {1,2}, rotate: 1.23, pin: {10, 11}}
-    p = Primitive.merge_opts(@primitive, translate: {1,2}, r: 1.23)
+    new_txs = %{translate: {1, 2}, rotate: 1.23, pin: {10, 11}}
+    p = Primitive.merge_opts(@primitive, translate: {1, 2}, r: 1.23)
     assert Primitive.get_transforms(p) == new_txs
   end
-
 
   # ============================================================================
   # data field
