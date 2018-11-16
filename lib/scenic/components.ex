@@ -191,6 +191,35 @@ defmodule Scenic.Components do
     modify(p, Component.Button, data, options)
   end
 
+@moduledoc """
+  ### Examples
+
+  The following example creates a simple icon and positions it on the screen.
+
+      graph
+      |> icon("Example", id: :button_id, img: @image_hash, translate: {20, 20})
+
+      Ensure the image has been loaded and hashed in your scene before passing the hash into the icon
+
+  """
+
+  @spec icon(
+          source :: Graph.t() | Primitive.t(),
+          title :: String.t(),
+          options :: list
+        ) :: Graph.t() | Primitive.t()
+
+  def icon(graph, title, options \\ [])
+
+  def icon(%Graph{} = g, data, options) do
+    add_to_graph(g, Component.Icon, data, options)
+  end
+
+  def icon(%Primitive{module: SceneRef} = p, data, options) do
+    modify(p, Component.Icon, data, options)
+  end
+
+
   # --------------------------------------------------------
   @doc """
   Add a [`Checkbox`](Scenic.Component.Input.Checkbox.html) to a graph
