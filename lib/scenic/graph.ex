@@ -168,10 +168,10 @@ defmodule Scenic.Graph do
   @err_msg_get_id_one "Graph.get! expected to find one and only one element"
 
   # ============================================================================
-  #@doc """
-  #Returns the root group of a graph as a primitive.
-  #Deprecated. Use `Graph.get!(graph, :_root_)` instead.
-  #"""
+  # @doc """
+  # Returns the root group of a graph as a primitive.
+  # Deprecated. Use `Graph.get!(graph, :_root_)` instead.
+  # """
   # @deprecated "Use Graph.get!(graph, :_root_) instead"
   # @spec get_root(graph :: t()) :: Primitive.t()
   # def get_root(%__MODULE__{} = graph) do

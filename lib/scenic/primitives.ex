@@ -12,26 +12,26 @@ defmodule Scenic.Primitives do
   alias Scenic.Math
 
   @typep width_and_height :: {
-    width  :: number,
-    height :: number
-  }
+           width :: number,
+           height :: number
+         }
 
   @typep width_height_and_radius :: {
-    width  :: number,
-    height :: number,
-    radius :: number
-  }
+           width :: number,
+           height :: number,
+           radius :: number
+         }
 
   @typep scene_ref ::
-    { :graph, reference, any }
-    | {module :: atom, init_data :: any}
-    | (scene_name :: atom)
+           {:graph, reference, any}
+           | {module :: atom, init_data :: any}
+           | (scene_name :: atom)
 
-  @typep sector ::  {
-    radius :: number,
-    start  :: number,
-    finish :: number
-  }
+  @typep sector :: {
+           radius :: number,
+           start :: number,
+           finish :: number
+         }
   # import IEx
 
   @moduledoc """
@@ -231,22 +231,22 @@ defmodule Scenic.Primitives do
 
   """
 
-  @spec add_specs_to_graph(Graph.t, [ Graph.deferred, ...]) :: Graph.t
+  @spec add_specs_to_graph(Graph.t(), [Graph.deferred(), ...]) :: Graph.t()
 
   def add_specs_to_graph(g, list) when is_list(list) do
     Enum.reduce(list, g, fn item, g -> item.(g) end)
   end
 
-  @spec add_specs_to_graph(Graph.t, [ Graph.deferred, ...], keyword()) :: Graph.t
+  @spec add_specs_to_graph(Graph.t(), [Graph.deferred(), ...], keyword()) :: Graph.t()
 
   def add_specs_to_graph(g, list, options) when is_list(list) do
     display_list = fn g ->
       list
-       |> Enum.reduce(g, fn item, g -> item.(g) end)
+      |> Enum.reduce(g, fn item, g -> item.(g) end)
     end
+
     group(g, display_list, options)
   end
-
 
   # --------------------------------------------------------
   @doc """
@@ -320,9 +320,9 @@ defmodule Scenic.Primitives do
   """
 
   @spec arc_spec(
-    arc :: {radius :: number, start :: number, finish :: number},
-    options :: list
-  ) :: Graph.deferred()
+          arc :: {radius :: number, start :: number, finish :: number},
+          options :: list
+        ) :: Graph.deferred()
 
   def arc_spec(arc_params, opts \\ []) do
     fn g -> arc(g, arc_params, opts) end
@@ -393,9 +393,9 @@ defmodule Scenic.Primitives do
   """
 
   @spec circle_spec(
-    radius :: number,
-    options :: list
-  ) :: Graph.deferred()
+          radius :: number,
+          options :: list
+        ) :: Graph.deferred()
 
   def circle_spec(radius, opts \\ []) do
     fn g -> circle(g, radius, opts) end
@@ -452,7 +452,7 @@ defmodule Scenic.Primitives do
     modify(p, data, opts)
   end
 
- # --------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Create the specification that adds an ellipse to a graph.
 
@@ -465,9 +465,9 @@ defmodule Scenic.Primitives do
   """
 
   @spec ellipse_spec(
-    radii :: Math.vector2(),
-    options :: list
-  ) :: Graph.deferred()
+          radii :: Math.vector2(),
+          options :: list
+        ) :: Graph.deferred()
 
   def ellipse_spec(radii, opts \\ []) do
     fn g -> ellipse(g, radii, opts) end
@@ -518,7 +518,7 @@ defmodule Scenic.Primitives do
     Primitive.Group.add_to_graph(graph, builder, opts)
   end
 
- # --------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Bundle a list of specifications together, and return a function that
   when called will add those specs as a group to a graph.
@@ -549,15 +549,16 @@ defmodule Scenic.Primitives do
   """
 
   @spec group_spec(
-    items :: ( Group.deferred | [ Group.deferred(), ... ]),
-    options :: list
-  ) :: Graph.deferred()
+          items :: Group.deferred() | [Group.deferred(), ...],
+          options :: list
+        ) :: Graph.deferred()
 
   def group_spec(list, opts) when is_list(list) do
     fn g ->
       content = fn g ->
-        Enum.reduce(list, g, fn  element, g  -> element.(g) end)
+        Enum.reduce(list, g, fn element, g -> element.(g) end)
       end
+
       group(g, content, opts)
     end
   end
@@ -565,7 +566,6 @@ defmodule Scenic.Primitives do
   def group_spec(item, opts) do
     group_spec([item], opts)
   end
-
 
   # --------------------------------------------------------
   @doc """
@@ -616,8 +616,7 @@ defmodule Scenic.Primitives do
     modify(p, data, opts)
   end
 
-
- # --------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Create the specification that adds a line to a graph.
 
@@ -630,14 +629,13 @@ defmodule Scenic.Primitives do
   """
 
   @spec line_spec(
-    line :: Math.line(),
-    options :: list
-  ) :: Graph.deferred()
+          line :: Math.line(),
+          options :: list
+        ) :: Graph.deferred()
 
   def line_spec(line_params, opts \\ []) do
     fn g -> line(g, line_params, opts) end
   end
-
 
   # --------------------------------------------------------
   @doc """
@@ -679,8 +677,7 @@ defmodule Scenic.Primitives do
     modify(p, data, opts)
   end
 
-
- # --------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Create the specification that adds a path to a graph.
 
@@ -704,9 +701,9 @@ defmodule Scenic.Primitives do
   """
 
   @spec path_spec(
-    elements :: list,
-    options :: list
-  ) :: Graph.deferred()
+          elements :: list,
+          options :: list
+        ) :: Graph.deferred()
 
   def path_spec(elements, opts \\ []) do
     fn g -> path(g, elements, opts) end
@@ -770,7 +767,6 @@ defmodule Scenic.Primitives do
     modify(p, data, opts)
   end
 
-
   # --------------------------------------------------------
   @doc """
   Create the specification that adds a quad to a graph.
@@ -788,9 +784,9 @@ defmodule Scenic.Primitives do
   """
 
   @spec quad_spec(
-    corners :: Math.quad(),
-    options :: list
-  ) :: Graph.deferred()
+          corners :: Math.quad(),
+          options :: list
+        ) :: Graph.deferred()
 
   def quad_spec(corners, opts \\ []) do
     fn g -> quad(g, corners, opts) end
@@ -804,7 +800,7 @@ defmodule Scenic.Primitives do
   """
   @spec rect(
           source :: Graph.t() | Primitive.t(),
-          rect   :: width_and_height(),
+          rect :: width_and_height(),
           options :: list
         ) :: Graph.t() | Primitive.t()
 
@@ -829,9 +825,9 @@ defmodule Scenic.Primitives do
   """
 
   @spec rect_spec(
-    dims    :: width_and_height(),
-    options :: list
-  ) :: Graph.deferred()
+          dims :: width_and_height(),
+          options :: list
+        ) :: Graph.deferred()
 
   def rect_spec(dims, opts \\ []) do
     fn g -> rectangle(g, dims, opts) end
@@ -911,9 +907,9 @@ defmodule Scenic.Primitives do
   """
 
   @spec rectangle_spec(
-    dims    :: width_and_height(),
-    options :: list
-  ) :: Graph.deferred()
+          dims :: width_and_height(),
+          options :: list
+        ) :: Graph.deferred()
 
   def rectangle_spec(dims, opts \\ []) do
     fn g -> rectangle(g, dims, opts) end
@@ -952,14 +948,13 @@ defmodule Scenic.Primitives do
   """
 
   @spec rrect_spec(
-    dims    :: width_height_and_radius(),
-    options :: list
-  ) :: Graph.deferred()
+          dims :: width_height_and_radius(),
+          options :: list
+        ) :: Graph.deferred()
 
   def rrect_spec(dims, opts \\ []) do
     fn g -> rounded_rectangle(g, dims, opts) end
   end
-
 
   @doc """
   Add a rounded rectangle to a graph
@@ -1027,9 +1022,9 @@ defmodule Scenic.Primitives do
   """
 
   @spec rounded_rectangle_spec(
-    dims    :: width_height_and_radius(),
-    options :: list
-  ) :: Graph.deferred()
+          dims :: width_height_and_radius(),
+          options :: list
+        ) :: Graph.deferred()
 
   def rounded_rectangle_spec(dims, opts \\ []) do
     fn g -> rounded_rectangle(g, dims, opts) end
@@ -1080,7 +1075,6 @@ defmodule Scenic.Primitives do
     modify(p, data, opts)
   end
 
-
   # --------------------------------------------------------
   @doc """
   Create the specification that adds a scene ref to a graph.
@@ -1094,9 +1088,9 @@ defmodule Scenic.Primitives do
   """
 
   @spec scene_ref_spec(
-    ref     :: scene_ref(),
-    options :: list
-  ) :: Graph.deferred()
+          ref :: scene_ref(),
+          options :: list
+        ) :: Graph.deferred()
 
   def scene_ref_spec(ref, opts \\ []) do
     fn g -> scene_ref(g, ref, opts) end
@@ -1168,7 +1162,6 @@ defmodule Scenic.Primitives do
     modify(p, data, opts)
   end
 
-
   # --------------------------------------------------------
   @doc """
   Create the specification that adds a sector ref to a graph.
@@ -1182,9 +1175,9 @@ defmodule Scenic.Primitives do
   """
 
   @spec sector_spec(
-    params  :: sector(),
-    options :: list
-  ) :: Graph.deferred()
+          params :: sector(),
+          options :: list
+        ) :: Graph.deferred()
 
   def sector_spec(params, opts \\ []) do
     fn g -> sector(g, params, opts) end
@@ -1249,7 +1242,6 @@ defmodule Scenic.Primitives do
     modify(p, data, opts)
   end
 
-
   # --------------------------------------------------------
   @doc """
   Create the specification that adds text to a graph.
@@ -1263,9 +1255,9 @@ defmodule Scenic.Primitives do
   """
 
   @spec text_spec(
-    string  :: String.t(),
-    options :: list
-  ) :: Graph.deferred()
+          string :: String.t(),
+          options :: list
+        ) :: Graph.deferred()
 
   def text_spec(string, opts \\ []) do
     fn g -> text(g, string, opts) end
@@ -1329,7 +1321,6 @@ defmodule Scenic.Primitives do
     modify(p, data, opts)
   end
 
-
   # --------------------------------------------------------
   @doc """
   Create the specification that adds a triangle to a graph.
@@ -1343,9 +1334,9 @@ defmodule Scenic.Primitives do
   """
 
   @spec triangle_spec(
-    corners :: Math.triangle(),
-    options :: list
-  ) :: Graph.deferred()
+          corners :: Math.triangle(),
+          options :: list
+        ) :: Graph.deferred()
 
   def triangle_spec(corners, opts \\ []) do
     fn g -> triangle(g, corners, opts) end
