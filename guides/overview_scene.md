@@ -41,7 +41,7 @@ applies a list of options to.
 
 Text is a [Primitive](overview_primitives.html), which can be drawn directly to
 the screen. The `text/3` helper function is imported from the
-`Scenic.Primitives` module. Button is a [component](standard_components.html)
+`Scenic.Primitives` module. Button is a [component](Scenic.Components.html)
 whose helper function is imported from the `Scenic.Components` module.
 
       defmodule MyApp.Scene.Example do
