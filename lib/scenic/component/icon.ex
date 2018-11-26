@@ -131,12 +131,12 @@ defmodule Scenic.Component.Icon do
 
     graph =
       Graph.build(font: font, font_size: font_size)
-      |> rrect({width, height, radius}, fill: {:image, {image, 100}}, id: :btn)
+      |> rrect({width, height, radius}, fill: {:image, {image, 200}}, id: :btn)
       #|> rect({200, 200}, fill: {:image, {image, 100}}, translate: {0, 0})
       |> do_aligned_text(alignment, text, theme.text, width, height)
 
     # special case the dark and light themes to show an outline
-    graph = do_special_theme_outline(styles[:theme], graph, theme.border)
+    #graph = do_special_theme_outline(styles[:theme], graph, theme.border)
 
     state = %{
       graph: graph,
@@ -173,8 +173,8 @@ defmodule Scenic.Component.Icon do
   defp do_aligned_text(graph, :right, text, fill, width, height) do
     text(graph, text,
       fill: fill,
-      translate: {width - 8, height * 0.7},
-      text_align: :right,
+      translate: {width + 5, height * 0.7},
+      text_align: :left,
       id: :title
     )
   end
