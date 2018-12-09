@@ -201,7 +201,7 @@ defmodule Scenic.Component.Icon do
         } = state
       ) do
     state = Map.put(state, :contained, true)
-    update_color(state)
+    #update_color(state)
     {:noreply, state}
   end
 
@@ -214,7 +214,7 @@ defmodule Scenic.Component.Icon do
         } = state
       ) do
     state = Map.put(state, :contained, false)
-    update_color(state)
+    #update_color(state)
     {:noreply, state}
   end
 
@@ -225,7 +225,7 @@ defmodule Scenic.Component.Icon do
       |> Map.put(:pressed, true)
       |> Map.put(:contained, true)
 
-    update_color(state)
+    #update_color(state)
 
     ViewPort.capture_input(context, [:cursor_button, :cursor_pos])
 
@@ -239,7 +239,7 @@ defmodule Scenic.Component.Icon do
         %{pressed: pressed, contained: contained, id: id} = state
       ) do
     state = Map.put(state, :pressed, false)
-    update_color(state)
+    #update_color(state)
 
     ViewPort.release_input(context, [:cursor_button, :cursor_pos])
 
