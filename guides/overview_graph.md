@@ -12,7 +12,7 @@ For example, the graph below shows the words "Hello World" around them.
 
     @graph Graph.build(font: :roboto, font_size: 24)
       |> text("Hello World", text_align: center, translate: {300, 300})
-      |> circle(100, stroke: {2, :green} translate: {300, 300})
+      |> circle(100, stroke: {2, :green}, translate: {300, 300})
 
 In the example above, the first line creates a new graph and assigns two font styles to its root. The next two lines form a pipeline that adds primitives to the root
 node of the new graph. Each of these primitives also assigns styles.
