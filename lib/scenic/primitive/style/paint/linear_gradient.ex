@@ -9,7 +9,7 @@ defmodule Scenic.Primitive.Style.Paint.LinearGradient do
 
   ## Full Format
 
-  `{:linear_gradient, {start_x, start_y, end_x, end_y, color_start, color_end}}`
+  `{:linear, {start_x, start_y, end_x, end_y, color_start, color_end}}`
   """
 
   alias Scenic.Primitive.Style.Paint.Color
