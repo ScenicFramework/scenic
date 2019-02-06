@@ -89,6 +89,7 @@ defmodule Scenic.Cache do
 
       defmodule MyApp.MyScene do
         use Scenic.Scene
+        import Scenic.Primitives
 
         # build the path to the static asset file (compile time)
         @asset_path :code.priv_dir(:my_app) |> Path.join("/static/images/asset.jpg")
@@ -101,7 +102,7 @@ defmodule Scenic.Cache do
         |> rect( {100, 100}, fill: {:image, @asset_hash} )
 
 
-        def init( _, _ ) {
+        def init( _, _ ) do
           # load the asset into the cache (run time)
           Scenic.Cache.File.load(@asset_path, @asset_hash)
 

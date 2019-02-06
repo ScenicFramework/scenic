@@ -9,7 +9,7 @@ defmodule Scenic.Primitive.Style.Paint.RadialGradient do
 
   ## Full Format
 
-  `{:radial_gradient, {center_x, center_y, inner_radius, outer_radius, color_start, color_end}}`
+  `{:radial, {center_x, center_y, inner_radius, outer_radius, color_start, color_end}}`
   """
 
   alias Scenic.Primitive.Style.Paint.Color
