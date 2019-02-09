@@ -163,6 +163,30 @@ defmodule Scenic.GraphTest do
     refute Enum.member?(deleted.primitives[puid].data, uid)
   end
 
+  test "delete a group removes group children" do
+    [tuid] = @graph_find.ids[:inner_text]
+    [luid] = @graph_find.ids[:inner_line]
+    refute @graph_find.primitives[tuid] == nil
+    refute @graph_find.primitives[luid] == nil
+    deleted = Graph.delete(@graph_find, :group)
+    assert Graph.get(deleted, :inner_text) == []
+    assert deleted.ids[:inner_text] == nil
+    assert Graph.get(deleted, :inner_line) == []
+    assert deleted.ids[:inner_line] == nil
+  end
+
+  @graph_find Graph.build()
+              |> Text.add_to_graph("Some sample text", id: :outer_text)
+              |> Line.add_to_graph({{10, 10}, {100, 100}}, id: :outer_line)
+              |> Group.add_to_graph(
+                fn g ->
+                  g
+                  |> Text.add_to_graph("inner text", id: :inner_text)
+                  |> Line.add_to_graph({{10, 10}, {100, 100}}, id: :inner_line)
+                end,
+                id: :group
+              )
+
   # ============================================================================
   # count - all nodes
   test "count returns 1 if only the root node exists" do
