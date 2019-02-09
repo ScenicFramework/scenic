@@ -41,6 +41,25 @@ defmodule Scenic.GraphTest do
                  |> Text.add_to_graph("text", id: :text)
                  |> Line.add_to_graph({{30, 30}, {300, 300}}, id: :line)
 
+  @graph_delete Graph.build()
+                |> Text.add_to_graph("Some sample text", id: :outer_text)
+                |> Line.add_to_graph({{10, 10}, {100, 100}}, id: :outer_line)
+                |> Group.add_to_graph(
+                  fn g ->
+                    g
+                    |> Text.add_to_graph("inner text", id: :inner_text)
+                    |> Line.add_to_graph({{10, 10}, {100, 100}}, id: :inner_line)
+                    |> Group.add_to_graph(
+                      fn h ->
+                        h
+                        |> Text.add_to_graph("deep text", id: :deep_text)
+                      end,
+                      id: :inner_group
+                    )
+                  end,
+                  id: :group
+                )
+
   # ============================================================================
   # access to the basics. These concentrate knowledge of the internal format
   # into just a few functions
@@ -164,15 +183,23 @@ defmodule Scenic.GraphTest do
   end
 
   test "delete a group removes group children" do
-    [tuid] = @graph_find.ids[:inner_text]
-    [luid] = @graph_find.ids[:inner_line]
-    refute @graph_find.primitives[tuid] == nil
-    refute @graph_find.primitives[luid] == nil
-    deleted = Graph.delete(@graph_find, :group)
+    [tuid] = @graph_delete.ids[:inner_text]
+    [luid] = @graph_delete.ids[:inner_line]
+    [guid] = @graph_delete.ids[:inner_group]
+    [duid] = @graph_delete.ids[:deep_text]
+    refute @graph_delete.primitives[tuid] == nil
+    refute @graph_delete.primitives[luid] == nil
+    refute @graph_delete.primitives[guid] == nil
+    refute @graph_delete.primitives[duid] == nil
+    deleted = Graph.delete(@graph_delete, :group)
     assert Graph.get(deleted, :inner_text) == []
     assert deleted.ids[:inner_text] == nil
     assert Graph.get(deleted, :inner_line) == []
     assert deleted.ids[:inner_line] == nil
+    assert Graph.get(deleted, :inner_group) == []
+    assert deleted.ids[:inner_group] == nil
+    assert Graph.get(deleted, :deep_text) == []
+    assert deleted.ids[:deep_text] == nil
   end
 
   # ============================================================================
