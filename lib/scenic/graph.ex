@@ -265,23 +265,55 @@ defmodule Scenic.Graph do
     # resolve the id into a list of uids
     uids = Map.get(ids, id, [])
 
-    # delete each uid
-    primitives =
-      Enum.reduce(uids, primitives, fn uid, prims ->
+    # delete each uid. Keep track of the primitives map, and build
+    # list of descendands if we're deleting a group
+    {primitives, descendants} =
+      Enum.reduce(uids, {primitives, []}, fn uid, {prims, removes} ->
         # get the uid of the parent group
-        %Primitive{parent_uid: puid} = prims[uid]
+        %Primitive{parent_uid: puid, module: mod, data: data} = prims[uid]
 
-        prims[puid]
-        |> remove_reference_from_parent(prims, uid, puid)
-        # delete the primitive itself
-        |> Map.delete(uid)
+        p =
+          prims[puid]
+          |> remove_reference_from_parent(prims, uid, puid)
+          # delete the primitive itself
+          |> Map.delete(uid)
+
+        {p, removes ++ children_to_remove(p, mod, data)}
       end)
 
     # delete the ids
     ids = Map.delete(ids, id)
 
-    # reassemble the graph
-    %{graph | primitives: primitives, ids: ids}
+    # if there was a group involved, remove that group's children
+    {primitives, ids} = remove_group_children(descendants, primitives, ids)
+
+    # rebuild an updated graph
+    graph
+    |> Map.put(:primitives, primitives)
+    |> Map.put(:ids, ids)
+  end
+
+  # if the thing we're deleting is a group, find all descendants of the
+  # grop so they can be deleted, too
+  defp children_to_remove(prims, Group, children) do
+    ([children] ++
+       Enum.reduce(children, [], fn child, acc ->
+         case prims[child].module do
+           Group -> acc ++ children_to_remove(prims, prims[child].module, prims[child].data)
+           _ -> acc
+         end
+       end))
+    |> List.flatten()
+  end
+
+  defp children_to_remove(_prims, _, _children), do: []
+
+  # remove all the descendants of the group that was just deleted
+  defp remove_group_children(children, prims, ids) do
+    Enum.reduce(children, {prims, ids}, fn child, {prims, ids} ->
+      id = Map.get(prims[child], :id, nil)
+      {Map.delete(prims, child), Map.delete(ids, id)}
+    end)
   end
 
   # no parent
