@@ -175,18 +175,6 @@ defmodule Scenic.GraphTest do
     assert deleted.ids[:inner_line] == nil
   end
 
-  @graph_find Graph.build()
-              |> Text.add_to_graph("Some sample text", id: :outer_text)
-              |> Line.add_to_graph({{10, 10}, {100, 100}}, id: :outer_line)
-              |> Group.add_to_graph(
-                fn g ->
-                  g
-                  |> Text.add_to_graph("inner text", id: :inner_text)
-                  |> Line.add_to_graph({{10, 10}, {100, 100}}, id: :inner_line)
-                end,
-                id: :group
-              )
-
   # ============================================================================
   # count - all nodes
   test "count returns 1 if only the root node exists" do
