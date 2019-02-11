@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.0
+* PR to fix delete the children of a group when the group itself is deleted. Thanks to Chris Boebel. @cboebel
+
+
 ## 0.9.0
 * Much improved testing
 * Much improved documentation
