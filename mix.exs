@@ -14,12 +14,11 @@ defmodule Scenic.Mixfile do
       version: @version,
       elixir: @elixir_version,
       deps: deps(),
-      build_embedded: Mix.env() == :prod,
+      build_embedded: true,
       start_permanent: Mix.env() == :prod,
       compilers: [:elixir_make | Mix.compilers()],
       make_targets: ["all"],
       make_clean: ["clean"],
-      make_env: make_env(),
       name: "Scenic",
       description: description(),
       docs: docs(),
@@ -36,19 +35,6 @@ defmodule Scenic.Mixfile do
     """
   end
 
-  defp make_env do
-    case System.get_env("ERL_EI_INCLUDE_DIR") do
-      nil ->
-        %{
-          "ERL_EI_INCLUDE_DIR" => "#{:code.root_dir()}/usr/include",
-          "ERL_EI_LIBDIR" => "#{:code.root_dir()}/usr/lib"
-        }
-
-      _ ->
-        %{}
-    end
-  end
-
   def application do
     [
       # mod: {Scenic, []},
@@ -58,7 +44,7 @@ defmodule Scenic.Mixfile do
 
   defp deps do
     [
-      {:elixir_make, "~> 0.4"},
+      {:elixir_make, "~> 0.5", runtime: false},
 
       # Tools
       {:ex_doc, ">= 0.0.0", only: :dev},
