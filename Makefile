@@ -7,6 +7,10 @@
 # ERL_EI_LIBDIR path to libei.a
 # LDFLAGS	linker flags for linking all binaries
 # ERL_LDFLAGS	additional linker flags for projects referencing Erlang libraries
+# MIX_COMPILE_PATH path to the build's ebin directory
+
+PREFIX = $(MIX_COMPILE_PATH)/../priv
+BUILD  = $(MIX_COMPILE_PATH)/../obj
 
 # Look for the EI library and header files
 # For crosscompiled builds, ERL_EI_INCLUDE_DIR and ERL_EI_LIBDIR must be
@@ -25,12 +29,12 @@ LDFLAGS += -undefined dynamic_lookup
 endif
 endif
 
-NIF=priv/line.so priv/matrix.so
+NIF=$(PREFIX)/line.so $(PREFIX)/matrix.so
 
 calling_from_make:
 	mix compile
 
-all: priv $(NIF)
+all: $(PREFIX) $(BUILD) $(NIF)
 
 pull_deps:
 	mix local.hex --force
@@ -47,17 +51,17 @@ unit_test:
 docs_report:
 	mix inch.report
 
-priv:
-	mkdir -p priv
-
-%.o: %.c
+$(BUILD)/%.o: c_src/%.c
 	$(CC) -c $(ERL_CFLAGS) $(CFLAGS) -o $@ $<
 
-priv/line.so: c_src/line.o
+$(PREFIX)/line.so: $(BUILD)/line.o
 	$(CC) $^ $(ERL_LDFLAGS) $(LDFLAGS) -o $@
 
-priv/matrix.so: c_src/matrix.o
+$(PREFIX)/matrix.so: $(BUILD)/matrix.o
 	$(CC) $^ $(ERL_LDFLAGS) $(LDFLAGS) -o $@
+
+$(PREFIX) $(BUILD):
+	mkdir -p $@
 
 clean:
 	$(RM) $(NIF) c_src/*.o
