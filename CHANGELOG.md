@@ -2,6 +2,7 @@
 
 ## 0.10.0
 * PR to fix delete the children of a group when the group itself is deleted. Thanks to Chris Boebel. @cboebel
+* Improve building the C products. PR #126 - @fhunleth
 
 
 ## 0.9.0
