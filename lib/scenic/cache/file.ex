@@ -97,6 +97,10 @@ defmodule Scenic.Cache.File do
   * `hash` - format of the hash. Valid formats include `:sha, :sha224, :sha256, :sha384, :sha512, :ripemd160`. If the hash option is not set, it will use `:sha` by default.
   * `scope` - Explicitly set the scope of the asset in the cache.
   * `decompress` - if `true` - decompress the data (zlib) after reading and verifying the hash.
+  * `parser` - pointer to a function to do custom parsing of the data. The only parameter passed to the parser is the data.
+
+  Note: if you set `decompress` to `true` and also supply a `parser`, the parser function
+  will be run after the data is decompressed.
 
   On success, returns
   `{:ok, cache_key}`
@@ -162,6 +166,10 @@ defmodule Scenic.Cache.File do
   Options:
   * `hash` - format of the hash. Valid formats include `:sha, :sha224, :sha256, :sha384, :sha512, :ripemd160`. If the hash option is not set, it will use `:sha` by default.
   * `decompress` - if `true` - decompress the data (zlib) after reading and verifying the hash.
+  * `parser` - pointer to a function to do custom parsing of the data. The only parameter passed to the parser is the data.
+
+  Note: if you set `decompress` to `true` and also supply a `parser`, the parser function
+  will be run after the data is decompressed.
 
   On success, returns
   `{:ok, data}`
