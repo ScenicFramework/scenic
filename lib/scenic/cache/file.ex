@@ -113,18 +113,15 @@ defmodule Scenic.Cache.File do
     if Mix.env() != :test do
       IO.puts("WARNING: Cache asset loaded as :insecure \"#{path}\"")
     end
-
-    with {:ok, data} <- read(path, :insecure, opts) do
-      hash = Hash.binary(data, opts[:hash] || :sha)
-
-      case Cache.claim(hash, opts[:scope]) do
-        true ->
-          {:ok, hash}
-
-        false ->
-          Cache.put(hash, data, opts[:scope])
-      end
-    else
+    # read the data and calculate it's hash as we are still going to use
+    # that as the handle in the cache
+    case read(path, :insecure, opts) do
+      {:ok, data} ->
+        hash = Hash.binary(data, opts[:hash] || :sha)
+        case Cache.claim(hash, opts[:scope]) do
+          true -> {:ok, hash}
+          false -> Cache.put(hash, data, opts[:scope])
+        end
       err -> err
     end
   end
@@ -177,8 +174,10 @@ defmodule Scenic.Cache.File do
       IO.puts("WARNING: Cache asset read as :insecure \"#{path}\"")
     end
 
-    with {:ok, data} <- File.read(path) do
-      do_unzip(data, opts)
+    with {:ok, data} <- File.read(path),
+         {:ok, data} <- do_unzip(data, opts),
+         {:ok, data} <- do_parse(data, opts) do
+      {:ok, data}
     else
       err -> err
     end
@@ -186,8 +185,10 @@ defmodule Scenic.Cache.File do
 
   def read(path, hash, opts) do
     with {:ok, data} <- File.read(path),
-         {:ok, data} <- Hash.verify(data, hash, opts[:hash] || :sha) do
-      do_unzip(data, opts)
+         {:ok, data} <- Hash.verify(data, hash, opts[:hash] || :sha),
+         {:ok, data} <- do_unzip(data, opts),
+         {:ok, data} <- do_parse(data, opts) do
+      {:ok, data}
     else
       err -> err
     end
@@ -198,12 +199,18 @@ defmodule Scenic.Cache.File do
   # the data unchanged.
   defp do_unzip(data, opts) do
     case opts[:decompress] do
-      true ->
-        {:ok, :zlib.gunzip(data)}
+      true -> {:ok, :zlib.gunzip(data)}
+      _ -> {:ok, data}
+    end
+  end
 
-      _ ->
-        # not decompressing
-        {:ok, data}
+  # --------------------------------------------------------
+  # unzip the data if the unzip option is true. Otherwise just returns
+  # the data unchanged.
+  defp do_parse(data, opts) do
+    case opts[:parser] do
+      parser when is_function(parser,1) -> parser.(data)
+      _ -> {:ok, data}
     end
   end
 end
