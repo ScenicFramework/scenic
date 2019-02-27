@@ -113,16 +113,20 @@ defmodule Scenic.Cache.File do
     if Mix.env() != :test do
       IO.puts("WARNING: Cache asset loaded as :insecure \"#{path}\"")
     end
+
     # read the data and calculate it's hash as we are still going to use
     # that as the handle in the cache
     case read(path, :insecure, opts) do
       {:ok, data} ->
         hash = Hash.binary(data, opts[:hash] || :sha)
+
         case Cache.claim(hash, opts[:scope]) do
           true -> {:ok, hash}
           false -> Cache.put(hash, data, opts[:scope])
         end
-      err -> err
+
+      err ->
+        err
     end
   end
 
@@ -209,7 +213,7 @@ defmodule Scenic.Cache.File do
   # the data unchanged.
   defp do_parse(data, opts) do
     case opts[:parser] do
-      parser when is_function(parser,1) -> parser.(data)
+      parser when is_function(parser, 1) -> parser.(data)
       _ -> {:ok, data}
     end
   end
