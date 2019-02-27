@@ -43,6 +43,10 @@ defmodule Scenic.SceneTest do
   # ============================================================================
   # faux module callbacks...
 
+  def init(:crash, _opts) do
+    raise "purposefully raise an un-handled error"
+  end
+
   def init(args, _opts) do
     assert args == [1, 2, 3]
     {:ok, :init_state}
@@ -282,6 +286,17 @@ defmodule Scenic.SceneTest do
              })
 
     assert new_state.scene_state == :init_state
+  end
+
+  test "handle_cast :after_init deals with exceptions during the client init and goes to the error scene" do
+    scene_ref = make_ref()
+    Process.put(:"$ancestors", [self()])
+
+    Scene.handle_cast({:after_init, __MODULE__, :crash, [viewport: self()]}, %{
+      scene_ref: scene_ref
+    })
+
+    assert_receive({:"$gen_cast", {:set_root, {Scenic.Scene.InitError, _}, _}})
   end
 
   test "handle_cast :input calls the mod input handler, which returns noreply" do

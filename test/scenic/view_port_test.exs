@@ -127,6 +127,20 @@ defmodule Scenic.ViewPortTest do
     DynamicSupervisor.stop(dyn_sup, :normal)
   end
 
+  test "reset dynamic viewport" do
+    {:ok, dyn_sup} = DynamicSupervisor.start_link(strategy: :one_for_one, name: @viewports)
+    {:ok, vp_pid} = ViewPort.start(@config)
+    # make sure it started
+    [{:undefined, _, :supervisor, [ViewPort.Supervisor]}] =
+      DynamicSupervisor.which_children(dyn_sup)
+
+    # reset the ViewPort
+    ViewPort.reset(vp_pid)
+
+    # cleanup
+    DynamicSupervisor.stop(dyn_sup, :normal)
+  end
+
   test "info calls back into the viewport" do
     {:ok, pid} = GenServer.start(TestViewPort, nil)
     {:ok, :test_info} = ViewPort.info(pid)

@@ -607,8 +607,56 @@ defmodule Scenic.Scene do
       {self(), dynamic_children_pid, supervisor_pid}
     )
 
-    # {:ok, sc_state} = scene_module.init( args, opts[:styles] || %{}, opts[:viewport] )
-    {:ok, sc_state} = scene_module.init(args, opts)
+    {:ok, sc_state} =
+      try do
+        scene_module.init(args, opts)
+      rescue
+        err ->
+          # build error message components
+          head_msg = "#{inspect(scene_module)} crashed during init"
+          err_msg = inspect(err)
+          args_msg = "args: #{inspect(args)}"
+
+          stack_msg =
+            Enum.reduce(__STACKTRACE__, [], fn
+              {mod, func, arity, [file: file, line: line]}, acc ->
+                ["#{file}:#{line}: #{mod}.#{func}/#{arity}" | acc]
+            end)
+            |> Enum.reverse()
+            |> Enum.join("\n")
+
+          # assemble into a final message to output to the command line
+          unless Mix.env() == :test do
+            [
+              IO.ANSI.red(),
+              head_msg,
+              "\n",
+              IO.ANSI.yellow(),
+              args_msg,
+              "\n",
+              IO.ANSI.red(),
+              err_msg,
+              "\n",
+              "--> ",
+              stack_msg,
+              "\n",
+              IO.ANSI.default_color()
+            ]
+            |> Enum.join()
+            |> IO.puts()
+          end
+
+          case opts[:viewport] do
+            nil ->
+              :ok
+
+            vp ->
+              msgs = {head_msg, err_msg, args_msg, stack_msg}
+              ViewPort.set_root(vp, {Scenic.Scene.InitError, {msgs, scene_module, args}})
+          end
+
+          {:ok, nil}
+      end
 
     state =
       state
