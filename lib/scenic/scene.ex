@@ -574,14 +574,25 @@ defmodule Scenic.Scene do
     case mod.handle_call(msg, from, sc_state) do
       {:reply, reply, sc_state} ->
         {:reply, reply, %{state | scene_state: sc_state}}
+
       {:reply, reply, sc_state, timeout} ->
         {:reply, reply, %{state | scene_state: sc_state}, timeout}
-      :hibernate -> :hibernate
-      {:continue, term} -> {:continue, term}
-      {:noreply, sc_state} -> {:noreply, %{state | scene_state: sc_state}}
-      {:noreply, sc_state, t_out} -> {:noreply, %{state | scene_state: sc_state}, t_out}
+
+      :hibernate ->
+        :hibernate
+
+      {:continue, term} ->
+        {:continue, term}
+
+      {:noreply, sc_state} ->
+        {:noreply, %{state | scene_state: sc_state}}
+
+      {:noreply, sc_state, t_out} ->
+        {:noreply, %{state | scene_state: sc_state}, t_out}
+
       {:stop, reason, reply, sc_state} ->
         {:stop, reason, reply, %{state | scene_state: sc_state}}
+
       {:stop, reason, sc_state} ->
         {:stop, reason, %{state | scene_state: sc_state}}
     end
@@ -648,14 +659,14 @@ defmodule Scenic.Scene do
       |> Map.put(:scene_state, nil)
 
     # set up to init the module
-    GenServer.cast( self(), {:init_module, scene_module, args, opts} )
+    GenServer.cast(self(), {:init_module, scene_module, args, opts})
 
     # reply with the state so far
     {:noreply, state}
   end
 
   # --------------------------------------------------------
-  def handle_cast( {:init_module, scene_module, args, opts}, state ) do
+  def handle_cast({:init_module, scene_module, args, opts}, state) do
     # initialize the scene itself
     try do
       scene_module.init(args, opts)

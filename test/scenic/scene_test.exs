@@ -282,7 +282,8 @@ defmodule Scenic.SceneTest do
 
     {:noreply, new_state} =
       assert Scene.handle_cast({:init_module, __MODULE__, [1, 2, 3], []}, %{
-               scene_ref: scene_ref, scene_state: nil
+               scene_ref: scene_ref,
+               scene_state: nil
              })
 
     assert new_state.scene_state == :init_state
@@ -293,7 +294,8 @@ defmodule Scenic.SceneTest do
     Process.put(:"$ancestors", [self()])
 
     Scene.handle_cast({:init_module, __MODULE__, :crash, [viewport: self()]}, %{
-      scene_ref: scene_ref, scene_state: nil
+      scene_ref: scene_ref,
+      scene_state: nil
     })
 
     assert_receive({:"$gen_cast", {:set_root, {Scenic.Scene.InitError, _}, _}})
