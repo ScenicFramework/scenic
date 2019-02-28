@@ -54,7 +54,7 @@ whose helper function is imported from the `Scenic.Components` module.
           |> text("Hello World", font_size: 22, translate: {20, 80})
           |> button({"Do Something", :btn_something}, translate: {20, 180})
 
-        def init( _scene_args, _viewport ) do
+        def init( _scene_args, _options ) do
           push_graph( @graph )
           {:ok, @graph}
         end
