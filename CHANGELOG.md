@@ -9,6 +9,7 @@
   Also displays that info in the command line.
 * Added a ViewPort.reset() function (used by the error scene), which can be used to send
   a ViewPort back to the original scene it was started with.
+* Added support for the new returns for handle_init, and such in OTP 21+. Also added handle_continue.
 
 
 ## 0.9.0
