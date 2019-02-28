@@ -9,26 +9,27 @@ defmodule Scenic.Scene.InitErrorTest do
 
   alias Scenic.Scene.InitError
 
-
   test "init" do
     self = self()
-    {:ok, {:mod, :args, ^self}} = InitError.init(
-      {{"head", "err", "args", "stack"}, :mod, :args}, viewport: self
-    )
+
+    {:ok, {:mod, :args, ^self}} =
+      InitError.init(
+        {{"head", "err", "args", "stack"}, :mod, :args},
+        viewport: self
+      )
   end
 
   test "filter_event {:click, :try_again}" do
     self = self()
     state = {:mod, :args, self}
-    { :stop, ^state } = InitError.filter_event( {:click, :try_again}, nil, state )
+    {:stop, ^state} = InitError.filter_event({:click, :try_again}, nil, state)
     assert_receive({:"$gen_cast", {:set_root, {:mod, :args}, _}})
   end
 
   test "filter_event {:click, :restart}" do
     self = self()
     state = {:mod, :args, self}
-    { :stop, ^state } = InitError.filter_event( {:click, :restart}, nil, state )
+    {:stop, ^state} = InitError.filter_event({:click, :restart}, nil, state)
     assert_receive({:"$gen_cast", :reset})
   end
-  
 end
