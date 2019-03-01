@@ -45,6 +45,18 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :modified
   end
 
+  test "arc adds via spec" do
+    p = @graph
+    |> Primitives.add_specs_to_graph([
+      Primitives.arc_spec({0, 1, 20}, id: :arc)
+    ])
+    |> Graph.get!(:arc)
+
+    assert p.module == Scenic.Primitive.Arc
+    assert p.data == {0, 1, 20}
+    assert p.id == :arc
+  end
+
   # ============================================================================
   test "circle adds to a graph - default opts" do
     g = Primitives.circle(@graph, 20)
@@ -74,6 +86,18 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :modified
   end
 
+  test "circle adds via spec" do
+    p = @graph
+    |> Primitives.add_specs_to_graph([
+      Primitives.circle_spec( 20, id: :circle )
+    ])
+    |> Graph.get!(:circle)
+
+    assert p.module == Scenic.Primitive.Circle
+    assert p.data == 20
+    assert p.id == :circle
+  end
+
   # ============================================================================
   test "ellipse adds to a graph - default opts" do
     g = Primitives.ellipse(@graph, {20, 30})
@@ -101,6 +125,18 @@ defmodule Scenic.PrimitivesTest do
 
     assert p.data == {40, 50}
     assert p.id == :modified
+  end
+
+  test "ellipse adds via spec" do
+    p = @graph
+    |> Primitives.add_specs_to_graph([
+      Primitives.ellipse_spec( {20, 30}, id: :ellipse )
+    ])
+    |> Graph.get!(:ellipse)
+
+    assert p.module == Scenic.Primitive.Ellipse
+    assert p.data == {20, 30}
+    assert p.id == :ellipse
   end
 
   # ============================================================================
@@ -133,6 +169,19 @@ defmodule Scenic.PrimitivesTest do
   #   assert p.id == :group
   # end
 
+  test "group adds via spec" do
+    p = @graph
+    |> Primitives.add_specs_to_graph([
+      Primitives.group_spec( [], id: :group )
+    ])
+    |> Graph.get!(:group)
+
+    assert p.module == Scenic.Primitive.Group
+    assert p.data == []
+    assert p.id == :group
+  end
+
+
   # ============================================================================
   test "line adds to a graph - default opts" do
     g = Primitives.line(@graph, {{0, 0}, {10, 100}})
@@ -160,6 +209,18 @@ defmodule Scenic.PrimitivesTest do
 
     assert p.data == {{10, 20}, {100, 200}}
     assert p.id == :modified
+  end
+
+  test "line adds via spec" do
+    p = @graph
+    |> Primitives.add_specs_to_graph([
+      Primitives.line_spec( {{0, 0}, {10, 100}}, id: :line )
+    ])
+    |> Graph.get!(:line)
+
+    assert p.module == Scenic.Primitive.Line
+    assert p.data == {{0, 0}, {10, 100}}
+    assert p.id == :line
   end
 
   # ============================================================================
@@ -222,6 +283,25 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :modified
   end
 
+  test "path adds via spec" do
+    actions = [
+      {:move_to, 1, 2},
+      {:line_to, 3, 4},
+      {:line_to, 3, 5}
+    ]
+
+    p = @graph
+    |> Primitives.add_specs_to_graph([
+      Primitives.path_spec( actions, id: :path )
+    ])
+    |> Graph.get!(:path)
+
+    assert p.module == Scenic.Primitive.Path
+    assert p.data == actions
+    assert p.id == :path
+  end
+
+
   # ============================================================================
   test "quad adds to a graph - default opts" do
     g = Primitives.quad(@graph, {{1, 2}, {3, 4}, {3, 10}, {2, 8}})
@@ -249,6 +329,18 @@ defmodule Scenic.PrimitivesTest do
 
     assert p.data == {{10, 20}, {30, 40}, {30, 100}, {20, 80}}
     assert p.id == :modified
+  end
+
+  test "quad adds via spec" do
+    p = @graph
+    |> Primitives.add_specs_to_graph([
+      Primitives.quad_spec( {{10, 20}, {30, 40}, {30, 100}, {20, 80}}, id: :quad )
+    ])
+    |> Graph.get!(:quad)
+
+    assert p.module == Scenic.Primitive.Quad
+    assert p.data =={{10, 20}, {30, 40}, {30, 100}, {20, 80}}
+    assert p.id == :quad
   end
 
   # ============================================================================
@@ -280,6 +372,18 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :modified
   end
 
+  test "rect adds via spec" do
+    p = @graph
+    |> Primitives.add_specs_to_graph([
+      Primitives.rect_spec( {200, 100}, id: :rect )
+    ])
+    |> Graph.get!(:rect)
+
+    assert p.module == Scenic.Primitive.Rectangle
+    assert p.data =={200, 100}
+    assert p.id == :rect
+  end
+
   # ============================================================================
   test "rectangle adds to a graph - default opts" do
     g = Primitives.rectangle(@graph, {200, 100})
@@ -307,6 +411,18 @@ defmodule Scenic.PrimitivesTest do
 
     assert p.data == {20, 10}
     assert p.id == :modified
+  end
+
+  test "rectangle adds via spec" do
+    p = @graph
+    |> Primitives.add_specs_to_graph([
+      Primitives.rectangle_spec( {200, 100}, id: :rectangle )
+    ])
+    |> Graph.get!(:rectangle)
+
+    assert p.module == Scenic.Primitive.Rectangle
+    assert p.data =={200, 100}
+    assert p.id == :rectangle
   end
 
   # ============================================================================
@@ -338,6 +454,18 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :modified
   end
 
+  test "rrect adds via spec" do
+    p = @graph
+    |> Primitives.add_specs_to_graph([
+      Primitives.rrect_spec( {20, 10, 2}, id: :rounded_rectangle )
+    ])
+    |> Graph.get!(:rounded_rectangle)
+
+    assert p.module == Scenic.Primitive.RoundedRectangle
+    assert p.data == {20, 10, 2}
+    assert p.id == :rounded_rectangle
+  end
+
   # ============================================================================
   test "rounded_rectangle adds to a graph - default opts" do
     g = Primitives.rounded_rectangle(@graph, {200, 100, 5})
@@ -365,6 +493,18 @@ defmodule Scenic.PrimitivesTest do
 
     assert p.data == {20, 10, 2}
     assert p.id == :modified
+  end
+
+  test "rounded_rectangle adds via spec" do
+    p = @graph
+    |> Primitives.add_specs_to_graph([
+      Primitives.rounded_rectangle_spec( {20, 10, 2}, id: :rounded_rectangle )
+    ])
+    |> Graph.get!(:rounded_rectangle)
+
+    assert p.module == Scenic.Primitive.RoundedRectangle
+    assert p.data == {20, 10, 2}
+    assert p.id == :rounded_rectangle
   end
 
   # ============================================================================
@@ -450,6 +590,18 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :modified
   end
 
+  test "scene_ref adds via spec" do
+    p = @graph
+    |> Primitives.add_specs_to_graph([
+      Primitives.scene_ref_spec( {self(), 123}, id: :scene_ref )
+    ])
+    |> Graph.get!(:scene_ref)
+
+    assert p.module == Scenic.Primitive.SceneRef
+    assert p.data == {self(), 123}
+    assert p.id == :scene_ref
+  end
+
   # ============================================================================
   test "sector adds to a graph - default opts" do
     g = Primitives.sector(@graph, {0, 1, 20})
@@ -477,6 +629,18 @@ defmodule Scenic.PrimitivesTest do
 
     assert p.data == {1, 1.5, 22}
     assert p.id == :modified
+  end
+
+  test "sector adds via spec" do
+    p = @graph
+    |> Primitives.add_specs_to_graph([
+      Primitives.sector_spec( {1, 1.5, 22}, id: :sector )
+    ])
+    |> Graph.get!(:sector)
+
+    assert p.module == Scenic.Primitive.Sector
+    assert p.data == {1, 1.5, 22}
+    assert p.id == :sector
   end
 
   # ============================================================================
@@ -508,6 +672,18 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :modified
   end
 
+  test "text adds via spec" do
+    p = @graph
+    |> Primitives.add_specs_to_graph([
+      Primitives.text_spec( "test text", id: :text )
+    ])
+    |> Graph.get!(:text)
+
+    assert p.module == Scenic.Primitive.Text
+    assert p.data == "test text"
+    assert p.id == :text
+  end
+
   # ============================================================================
   test "triangle adds to a graph - default opts" do
     g = Primitives.triangle(@graph, {{0, 0}, {10, 100}, {100, 40}})
@@ -535,6 +711,18 @@ defmodule Scenic.PrimitivesTest do
 
     assert p.data == {{1, 2}, {11, 102}, {101, 42}}
     assert p.id == :modified
+  end
+
+  test "triangle adds via spec" do
+    p = @graph
+    |> Primitives.add_specs_to_graph([
+      Primitives.triangle_spec( {{1, 2}, {11, 102}, {101, 42}}, id: :triangle )
+    ])
+    |> Graph.get!(:triangle)
+
+    assert p.module == Scenic.Primitive.Triangle
+    assert p.data == {{1, 2}, {11, 102}, {101, 42}}
+    assert p.id == :triangle
   end
 
   # ============================================================================
