@@ -702,67 +702,67 @@ defmodule Scenic.Scene do
   # handle_cast
 
   # --------------------------------------------------------
-  def handle_cast(
-        {:after_init, scene_module, args, opts},
-        %{
-          scene_ref: scene_ref
-        } = state
-      ) do
-    # get the scene supervisors
-    [supervisor_pid | _] =
-      self()
-      |> Process.info()
-      |> get_in([:dictionary, :"$ancestors"])
+  # def handle_cast(
+  #       {:after_init, scene_module, args, opts},
+  #       %{
+  #         scene_ref: scene_ref
+  #       } = state
+  #     ) do
+  #   # get the scene supervisors
+  #   [supervisor_pid | _] =
+  #     self()
+  #     |> Process.info()
+  #     |> get_in([:dictionary, :"$ancestors"])
 
-    # make sure it is a pid and not a name
-    supervisor_pid =
-      case supervisor_pid do
-        name when is_atom(name) -> Process.whereis(name)
-        pid when is_pid(pid) -> pid
-      end
+  #   # make sure it is a pid and not a name
+  #   supervisor_pid =
+  #     case supervisor_pid do
+  #       name when is_atom(name) -> Process.whereis(name)
+  #       pid when is_pid(pid) -> pid
+  #     end
 
-    # make sure this is a Scene.Supervisor, not something else
-    {supervisor_pid, dynamic_children_pid} =
-      case Process.info(supervisor_pid) do
-        nil ->
-          {nil, nil}
+  #   # make sure this is a Scene.Supervisor, not something else
+  #   {supervisor_pid, dynamic_children_pid} =
+  #     case Process.info(supervisor_pid) do
+  #       nil ->
+  #         {nil, nil}
 
-        info ->
-          case get_in(info, [:dictionary, :"$initial_call"]) do
-            {:supervisor, Scene.Supervisor, _} ->
-              dynamic_children_pid =
-                Supervisor.which_children(supervisor_pid)
-                # credo:disable-for-next-line Credo.Check.Refactor.Nesting
-                |> Enum.find_value(fn
-                  {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
-                  _ -> nil
-                end)
+  #       info ->
+  #         case get_in(info, [:dictionary, :"$initial_call"]) do
+  #           {:supervisor, Scene.Supervisor, _} ->
+  #             dynamic_children_pid =
+  #               Supervisor.which_children(supervisor_pid)
+  #               # credo:disable-for-next-line Credo.Check.Refactor.Nesting
+  #               |> Enum.find_value(fn
+  #                 {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
+  #                 _ -> nil
+  #               end)
 
-              {supervisor_pid, dynamic_children_pid}
+  #             {supervisor_pid, dynamic_children_pid}
 
-            _ ->
-              {nil, nil}
-          end
-      end
+  #           _ ->
+  #             {nil, nil}
+  #         end
+  #     end
 
-    # register the scene in the scenes ets table
-    Scenic.ViewPort.Tables.register_scene(
-      scene_ref,
-      {self(), dynamic_children_pid, supervisor_pid}
-    )
+  #   # register the scene in the scenes ets table
+  #   Scenic.ViewPort.Tables.register_scene(
+  #     scene_ref,
+  #     {self(), dynamic_children_pid, supervisor_pid}
+  #   )
 
-    # {:ok, sc_state} = scene_module.init( args, opts[:styles] || %{}, opts[:viewport] )
-    {:ok, sc_state} = scene_module.init(args, opts)
+  #   # {:ok, sc_state} = scene_module.init( args, opts[:styles] || %{}, opts[:viewport] )
+  #   {:ok, sc_state} = scene_module.init(args, opts)
 
-    state =
-      state
-      #    |> Map.put( :scene_state, sc_state)
-      |> Map.put(:supervisor_pid, supervisor_pid)
-      |> Map.put(:dynamic_children_pid, dynamic_children_pid)
-      |> Map.put(:scene_state, sc_state)
+  #   state =
+  #     state
+  #     #    |> Map.put( :scene_state, sc_state)
+  #     |> Map.put(:supervisor_pid, supervisor_pid)
+  #     |> Map.put(:dynamic_children_pid, dynamic_children_pid)
+  #     |> Map.put(:scene_state, sc_state)
 
-    {:noreply, state}
-  end
+  #   {:noreply, state}
+  # end
 
   # --------------------------------------------------------
   def handle_cast(
