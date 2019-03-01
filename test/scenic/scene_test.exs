@@ -236,8 +236,8 @@ defmodule Scenic.SceneTest do
        dynamic_children_pid: nil,
        activation: @not_activated
      },
-       {:continue, {:__scene_init_2__, __MODULE__, ^args, ^opts}}
-     } = Scene.init({__MODULE__, args, opts})
+     {:continue, {:__scene_init_2__, __MODULE__, ^args, ^opts}}} =
+      Scene.init({__MODULE__, args, opts})
   end
 
   # ============================================================================

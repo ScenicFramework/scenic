@@ -530,9 +530,9 @@ defmodule Scenic.Scene do
 
   # --------------------------------------------------------
   def handle_continue(
-    {:__scene_init_2__, scene_module, args, opts},
-    %{ scene_ref: scene_ref } = state
-  ) do
+        {:__scene_init_2__, scene_module, args, opts},
+        %{scene_ref: scene_ref} = state
+      ) do
     # get the scene supervisors
     [supervisor_pid | _] =
       self()
@@ -589,7 +589,6 @@ defmodule Scenic.Scene do
     # reply with the state so far
     {:noreply, state, {:continue, {:__scene_init_3__, scene_module, args, opts}}}
   end
-
 
   # --------------------------------------------------------
   def handle_continue({:__scene_init_3__, scene_module, args, opts}, state) do
@@ -649,6 +648,7 @@ defmodule Scenic.Scene do
         {:noreply, nil}
     end
   end
+
   # ============================================================================
   # handle_info
 
@@ -735,7 +735,6 @@ defmodule Scenic.Scene do
 
     {:noreply, state}
   end
-
 
   # --------------------------------------------------------
   def handle_cast(
