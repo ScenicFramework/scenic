@@ -218,6 +218,8 @@ defmodule Scenic.SceneTest do
 
   test "init call mod.init and returns first round of state" do
     self = self()
+    args = [1, 2, 3]
+    opts = [name: :scene_name, parent: self]
 
     {:ok,
      %{
@@ -233,7 +235,9 @@ defmodule Scenic.SceneTest do
        supervisor_pid: nil,
        dynamic_children_pid: nil,
        activation: @not_activated
-     }} = Scene.init({__MODULE__, [1, 2, 3], [name: :scene_name, parent: self]})
+     },
+       {:continue, {:__scene_init_2__, __MODULE__, ^args, ^opts}}
+     } = Scene.init({__MODULE__, args, opts})
   end
 
   # ============================================================================
