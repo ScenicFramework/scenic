@@ -4,6 +4,11 @@
 * PR to fix delete the children of a group when the group itself is deleted. Thanks to Chris Boebel. @cboebel
 * Improve building the C products. PR #126 - @fhunleth
 * Added a :parser option to Cache.File.read/load to allow custom interpreters
+* Much improved error handling when a scene crashes during its init phase. Instead of quickly
+  restarting the scene over and over, it now goes to an error scene that displays debug info.
+  Also displays that info in the command line.
+* Added a ViewPort.reset() function (used by the error scene), which can be used to send
+  a ViewPort back to the original scene it was started with.
 
 
 ## 0.9.0
