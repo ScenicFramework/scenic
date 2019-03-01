@@ -95,6 +95,15 @@ defmodule Scenic.Cache.FileReadTest do
              hash: :sha256
            ) == {:error, :enoent}
   end
+
+  test "read uses a passed in parser" do
+    # missing term file
+    assert Cache.File.read(@sample_path, :insecure,
+             parser: fn _ ->
+               :parsed_data
+             end
+           ) == :parsed_data
+  end
 end
 
 defmodule Scenic.Cache.FileLoadTest do
@@ -202,5 +211,14 @@ defmodule Scenic.Cache.FileLoadTest do
              @invalid_sha256,
              hash: :sha256
            ) == {:error, :enoent}
+  end
+
+  test "load uses a passed in parser" do
+    # missing term file
+    assert Cache.File.load(@sample_path, :insecure,
+             parser: fn _ ->
+               :parsed_data
+             end
+           ) == :parsed_data
   end
 end
