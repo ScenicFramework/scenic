@@ -22,15 +22,14 @@ defmodule Scenic.Scenes.Error do
 
   # --------------------------------------------------------
   def init({{head_msg, err_msg, args_msg, stack_msg}, scene_mod, scene_args}, opts) do
-    graph =
-      Graph.build(font: :roboto, font_size: @size)
-      |> button("Try Again", id: :try_again, translate: {20, 40}, theme: :warning)
-      |> button("Reset", id: :restart, translate: {120, 40})
-      |> text(head_msg, translate: {20, 120}, font_size: @size + 4)
-      |> text(err_msg, translate: {20, 130 + @size}, fill: :red)
-      |> text(args_msg, translate: {20, 140 + @size * 2}, fill: :yellow)
-      |> text(stack_msg, translate: {20, 150 + @size * 4}, fill: :red)
-      |> push_graph()
+    Graph.build(font: :roboto, font_size: @size)
+    |> button("Try Again", id: :try_again, translate: {20, 40}, theme: :warning)
+    |> button("Reset", id: :restart, translate: {120, 40})
+    |> text(head_msg, translate: {20, 120}, font_size: @size + 4)
+    |> text(err_msg, translate: {20, 130 + @size}, fill: :red)
+    |> text(args_msg, translate: {20, 140 + @size * 2}, fill: :yellow)
+    |> text(stack_msg, translate: {20, 150 + @size * 4}, fill: :red)
+    |> push_graph()
 
     {:ok, {scene_mod, scene_args, opts[:viewport]}}
   end
