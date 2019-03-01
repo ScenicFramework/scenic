@@ -33,3 +33,6 @@ mix.lock
 # generally ignore object files
 *.o
 *.so
+
+# vscode
+/.elixir_ls/
