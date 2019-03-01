@@ -276,18 +276,6 @@ defmodule Scenic.SceneTest do
   # ============================================================================
   # handle_cast
 
-  test "handle_cast :after_init inits the scene module" do
-    scene_ref = make_ref()
-    Process.put(:"$ancestors", [self()])
-
-    {:noreply, new_state} =
-      assert Scene.handle_cast({:after_init, __MODULE__, [1, 2, 3], []}, %{
-               scene_ref: scene_ref
-             })
-
-    assert new_state.scene_state == :init_state
-  end
-
   test "handle_cast :input calls the mod input handler, which returns noreply" do
     context = %Scenic.ViewPort.Context{
       viewport: self()
