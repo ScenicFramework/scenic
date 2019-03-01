@@ -498,9 +498,6 @@ defmodule Scenic.Scene do
           parent_pid
       end
 
-    # some setup needs to happen after init - must be before the scene_module init
-    GenServer.cast(self(), {:after_init, scene_module, args, opts})
-
     # if this scene is named... Meaning it is supervised by the app and is not a
     # dynamic scene, then we need monitor the ViewPort. If the viewport goes
     # down while this scene is activated, the scene will need to be able to
@@ -525,16 +522,135 @@ defmodule Scenic.Scene do
       activation: @not_activated
     }
 
-    {:ok, state}
+    {:ok, state, {:continue, {:__scene_init_2__, scene_module, args, opts}}}
   end
 
   # ============================================================================
-  # handle_info
+  # handle_continue
 
-  # def handle_info({:delayed_init, args, init_opts}, %{scene_module: scene_module} = state) do
-  #   {:ok, sc_state} = scene_module.init(args, init_opts)
-  #   {:noreply, %{state | scene_state: sc_state}}
-  # end
+  # --------------------------------------------------------
+  def handle_continue(
+    {:__scene_init_2__, scene_module, args, opts},
+    %{ scene_ref: scene_ref } = state
+  ) do
+    # get the scene supervisors
+    [supervisor_pid | _] =
+      self()
+      |> Process.info()
+      |> get_in([:dictionary, :"$ancestors"])
+
+    # make sure it is a pid and not a name
+    supervisor_pid =
+      case supervisor_pid do
+        name when is_atom(name) -> Process.whereis(name)
+        pid when is_pid(pid) -> pid
+      end
+
+    # make sure this is a Scene.Supervisor, not something else
+    {supervisor_pid, dynamic_children_pid} =
+      case Process.info(supervisor_pid) do
+        nil ->
+          {nil, nil}
+
+        info ->
+          case get_in(info, [:dictionary, :"$initial_call"]) do
+            {:supervisor, Scene.Supervisor, _} ->
+              dynamic_children_pid =
+                Supervisor.which_children(supervisor_pid)
+                # credo:disable-for-next-line Credo.Check.Refactor.Nesting
+                |> Enum.find_value(fn
+                  {DynamicSupervisor, pid, :supervisor, [DynamicSupervisor]} -> pid
+                  _ -> nil
+                end)
+
+              {supervisor_pid, dynamic_children_pid}
+
+            _ ->
+              {nil, nil}
+          end
+      end
+
+    # register the scene in the scenes ets table
+    Scenic.ViewPort.Tables.register_scene(
+      scene_ref,
+      {self(), dynamic_children_pid, supervisor_pid}
+    )
+
+    # store bookeeping in the state
+    state =
+      state
+      |> Map.put(:supervisor_pid, supervisor_pid)
+      |> Map.put(:dynamic_children_pid, dynamic_children_pid)
+      |> Map.put(:scene_state, nil)
+
+    # set up to init the module
+    # GenServer.cast(self(), {:init_module, scene_module, args, opts})
+
+    # reply with the state so far
+    {:noreply, state, {:continue, {:__scene_init_3__, scene_module, args, opts}}}
+  end
+
+
+  # --------------------------------------------------------
+  def handle_continue({:__scene_init_3__, scene_module, args, opts}, state) do
+    # initialize the scene itself
+    try do
+      # handle the result of the scene init and return
+      case scene_module.init(args, opts) do
+        {:ok, sc_state} ->
+          IO.puts "Deprecated init in #{inspect(scene_module)}"
+          {:noreply, %{state | scene_state: sc_state}}
+      end
+    rescue
+      err ->
+        # build error message components
+        head_msg = "#{inspect(scene_module)} crashed during init"
+        err_msg = inspect(err)
+        args_msg = "args: #{inspect(args)}"
+
+        stack_msg =
+          Enum.reduce(__STACKTRACE__, [], fn
+            {mod, func, arity, [file: file, line: line]}, acc ->
+              ["#{file}:#{line}: #{mod}.#{func}/#{arity}" | acc]
+          end)
+          |> Enum.reverse()
+          |> Enum.join("\n")
+
+        # assemble into a final message to output to the command line
+        unless Mix.env() == :test do
+          [
+            IO.ANSI.red(),
+            head_msg,
+            "\n",
+            IO.ANSI.yellow(),
+            args_msg,
+            "\n",
+            IO.ANSI.red(),
+            err_msg,
+            "\n",
+            "--> ",
+            stack_msg,
+            "\n",
+            IO.ANSI.default_color()
+          ]
+          |> Enum.join()
+          |> IO.puts()
+        end
+
+        case opts[:viewport] do
+          nil ->
+            :ok
+
+          vp ->
+            msgs = {head_msg, err_msg, args_msg, stack_msg}
+            ViewPort.set_root(vp, {Scenic.Scenes.Error, {msgs, scene_module, args}})
+        end
+
+        {:noreply, nil}
+    end
+  end
+  # ============================================================================
+  # handle_info
 
   # --------------------------------------------------------
   # generic handle_info. give the scene a chance to handle it
@@ -619,6 +735,7 @@ defmodule Scenic.Scene do
 
     {:noreply, state}
   end
+
 
   # --------------------------------------------------------
   def handle_cast(

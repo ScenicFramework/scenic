@@ -149,6 +149,21 @@ defmodule Scenic.ViewPort do
 
   # --------------------------------------------------------
   @doc """
+  Reset a running viewport
+
+  This causes the viewport to rest the original scene as the root,
+  with the original arguments were received with the ViewPort started.
+  """
+  @spec reset(viewport :: GenServer.server()) :: :ok
+  def reset(viewport)
+
+  def reset(viewport)
+      when is_pid(viewport) or (is_atom(viewport) and not is_nil(viewport)) do
+    GenServer.cast(viewport, :reset)
+  end
+
+  # --------------------------------------------------------
+  @doc """
   query the last recorded viewport status
   """
   @spec info(viewport :: GenServer.server()) :: {:ok, ViewPort.Status.t()}
@@ -377,6 +392,14 @@ defmodule Scenic.ViewPort do
   # ============================================================================
   # handle_cast
 
+  def handle_cast(
+        :reset,
+        %{default_scene: scene, default_scene_activation: activation} = state
+      ) do
+    GenServer.cast(self(), {:set_root, scene, activation})
+    {:noreply, state}
+  end
+
   def handle_cast({:delayed_init, vp_supervisor, config}, _) do
     # find the viewport and associated pids this driver belongs to
     dyn_sup_pid =
@@ -440,7 +463,9 @@ defmodule Scenic.ViewPort do
       master_styles: styles,
       master_transforms: transforms,
       master_graph: master_graph,
-      master_graph_key: master_graph_key
+      master_graph_key: master_graph_key,
+      default_scene: config.default_scene,
+      default_scene_activation: config.default_scene_activation
     }
 
     # set the initial scene as the root
