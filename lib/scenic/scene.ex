@@ -598,7 +598,6 @@ defmodule Scenic.Scene do
       # handle the result of the scene init and return
       case scene_module.init(args, opts) do
         {:ok, sc_state} ->
-          IO.puts "Deprecated init in #{inspect(scene_module)}"
           {:noreply, %{state | scene_state: sc_state}}
       end
     rescue
@@ -619,6 +618,7 @@ defmodule Scenic.Scene do
         # assemble into a final message to output to the command line
         unless Mix.env() == :test do
           [
+            "\n",
             IO.ANSI.red(),
             head_msg,
             "\n",

@@ -29,8 +29,9 @@ defmodule Scenic.Scenes.Error do
     |> text(err_msg, translate: {20, 130 + @size}, fill: :red)
     |> text(args_msg, translate: {20, 140 + @size * 2}, fill: :yellow)
     |> text(stack_msg, translate: {20, 150 + @size * 4}, fill: :red)
+    |> push_graph()
 
-    {:ok, graph, {scene_mod, scene_args, opts[:viewport]}}
+    {:ok, {scene_mod, scene_args, opts[:viewport]}}
   end
 
   # --------------------------------------------------------
