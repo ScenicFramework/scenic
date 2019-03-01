@@ -11,6 +11,27 @@ defmodule Scenic.Primitives do
   alias Scenic.Graph
   alias Scenic.Math
 
+  @typep width_and_height :: {
+           width :: number,
+           height :: number
+         }
+
+  @typep width_height_and_radius :: {
+           width :: number,
+           height :: number,
+           radius :: number
+         }
+
+  @typep scene_ref ::
+           {:graph, reference, any}
+           | {module :: atom, init_data :: any}
+           | (scene_name :: atom)
+
+  @typep sector :: {
+           radius :: number,
+           start :: number,
+           finish :: number
+         }
   # import IEx
 
   @moduledoc """
@@ -18,11 +39,26 @@ defmodule Scenic.Primitives do
   a graph.
 
   In general, each helper function is of the form
+
       def name_of_primitive( graph, data, opts \\\\ [] )
+
+  or
+
+      def name_of_primitive_spec( data, opts \\\\ [] )
+
+
+  The first form builds the primitive immediately and adds it to the
+  graph that is passed in. The second form creates a specification for
+  the primitive (basically, a data structure describing how to draw it).
+  You then add this to a graph at some later time.
+
+  Let's start by lookng at the immediate versions.
+
+  ## Immediate Primitive Helpers
 
   When adding primitives to a graph, each helper function accepts a
   graph as the first parameter and returns the transformed graph. This
-  makes is very easy to build a complex graph by piping helper functions
+  makes it very easy to build a complex graph by piping helper functions
   together.
 
       @graph Graph.build()
@@ -56,6 +92,67 @@ defmodule Scenic.Primitives do
       |> text( "Hello World", id: :hello, font_size: 24, rotate: 0.4 )
       |> rectangle( {100, 200}, translate: {10, 30}, fill: :yellow)
       |> line( {{10,20}, {100, 20}}, id: :a_line, stroke: {4, :green})
+
+  ## Deferred Primitive Helpers
+
+  Each immediate primitive helper has a corresponding deferred helper.
+  The deferred variant does not add the primitive to a graph. Instead,
+  the deferred helper returns a function. You can then call that
+  function, passing it a graph, and the primitive will be added to that
+  graph.
+
+      text = text_spec( "Hello World" )
+      rect = rectangle_spec( {100, 200} )
+      line = line_spec( {{10,20}, {100, 20}})
+
+      g = Graph.build()
+      g = text.(g)
+      g = rect.(g)
+      g = line.(g)
+
+  Written like this, the deferred helpers aren't compelling. But we
+  could also write
+
+      items = [
+        text_spec( "Hello World" ),
+        rectangle_spec( {100, 200} ),
+        line_spec( {{10,20}, {100, 20}}),
+      ]
+
+      g = items
+          |> Enum.reduce(Graph.build(), fn item, g -> item.(g) end)
+
+  Deferred helpers let us express primitives as data. This
+  makes it easier to define display graphs at compile time, particularly
+  when we use the `group_spec` helper to express the grouping of
+  components:
+
+      @line {{0, 0}, {60, 60}}
+
+      @lines [
+        line_spec(@line, stroke: {4, :red}),
+        line_spec(@line, stroke: {20, :green}, cap: :butt, t: {60, 0}),
+        line_spec(@line, stroke: {20, :yellow}, cap: :round, t: {120, 0}),
+      ]
+
+      @text [
+        text_spec("Hello", translate: {0, 40}),
+        text_spec("World", translate: {90, 40}, fill: :yellow),
+      ]
+
+      @drawing Graph.build() |> add_specs_to_graph([ @lines, @text ])
+
+  If you wanted to put the lines into one group and the text into
+  another, simply interpose the `group_spec` helper:
+
+      @drawing Graph.build()
+               |> add_specs_to_graph([
+                     group_spec( @lines, t: [ 100, 50 ]),
+                     group_spec( @text,  t: [ 150, 50 ])
+                  ])
+
+  These examples use `add_specs_to_graph/2`, a simple helper that
+  converts specs into primitives and adds them to a graph.
 
   ### Style options
 
@@ -112,6 +209,44 @@ defmodule Scenic.Primitives do
 
   The SceneRef follows the same style/transform inheritance as the Group.
   """
+
+  # --------------------------------------------------------
+  @doc """
+  Given a graph and a list of deferred primitive specifications,
+  run the specs in order, adding the primitives to the graph.
+
+  Example:
+
+      items = [
+        text_spec("hello "),
+        text_spec("world")
+      ]
+
+      graph = graph |> add_specs_to_graph(items)
+
+  If given a third parameter, the specs are wrapped in a group, and that
+  parameter is used as the group's options.
+
+      graph = graph |> add_specs_to_graph(items, t: {100,100})
+
+  """
+
+  @spec add_specs_to_graph(Graph.t(), [Graph.deferred(), ...]) :: Graph.t()
+
+  def add_specs_to_graph(g, list) when is_list(list) do
+    Enum.reduce(list, g, fn item, g -> item.(g) end)
+  end
+
+  @spec add_specs_to_graph(Graph.t(), [Graph.deferred(), ...], keyword()) :: Graph.t()
+
+  def add_specs_to_graph(g, list, options) when is_list(list) do
+    display_list = fn g ->
+      list
+      |> Enum.reduce(g, fn item, g -> item.(g) end)
+    end
+
+    group(g, display_list, options)
+  end
 
   # --------------------------------------------------------
   @doc """
@@ -174,6 +309,27 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
+  Create the specification that adds an arc to a graph.
+
+  See the documentation for `arc/3` for details.
+
+  Example:
+
+      arc = arc_spec( {100, 0, 0.4}, stroke: {4, :blue} )
+      graph = arc.(graph)
+  """
+
+  @spec arc_spec(
+          arc :: {radius :: number, start :: number, finish :: number},
+          options :: list
+        ) :: Graph.deferred()
+
+  def arc_spec(arc_params, opts \\ []) do
+    fn g -> arc(g, arc_params, opts) end
+  end
+
+  # --------------------------------------------------------
+  @doc """
   Add a Circle to a graph
 
   Circles are defined by a radius
@@ -222,6 +378,27 @@ defmodule Scenic.Primitives do
 
   def circle(%Primitive{module: Primitive.Circle} = p, data, opts) do
     modify(p, data, opts)
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Create the specification that adds a circleto a graph.
+
+  See the documentation for `circle/3` for details.
+
+  Example:
+
+      circle = circle_spec( 40, stroke: {4, :blue} )
+      graph = circle.(graph)
+  """
+
+  @spec circle_spec(
+          radius :: number,
+          options :: list
+        ) :: Graph.deferred()
+
+  def circle_spec(radius, opts \\ []) do
+    fn g -> circle(g, radius, opts) end
   end
 
   # --------------------------------------------------------
@@ -277,6 +454,27 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
+  Create the specification that adds an ellipse to a graph.
+
+  See the documentation for `ellipse/3` for details.
+
+  Example:
+
+      ellipse = ellipse_spec( { 40, 60 }, stroke: {4, :blue} )
+      graph = ellipse.(graph)
+  """
+
+  @spec ellipse_spec(
+          radii :: Math.vector2(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def ellipse_spec(radii, opts \\ []) do
+    fn g -> ellipse(g, radii, opts) end
+  end
+
+  # --------------------------------------------------------
+  @doc """
   Create a new branch in a Graph
 
   The Group primitive creates a new branch in the Graph's tree. The data field
@@ -318,6 +516,55 @@ defmodule Scenic.Primitives do
 
   def group(%Graph{} = graph, builder, opts) when is_function(builder, 1) do
     Primitive.Group.add_to_graph(graph, builder, opts)
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Bundle a list of specifications together, and return a function that
+  when called will add those specs as a group to a graph.
+
+  The options are the same as for `group/3`
+
+  Example:
+
+      line = {{0, 0}, {60, 60}}
+
+      lines = [
+        line_spec(@line, stroke: {4, :red}),
+        line_spec(@line, stroke: {20, :green}, cap: :butt, t: {60, 0}),
+        line_spec(@line, stroke: {20, :yellow}, cap: :round, t: {120, 0}),
+      ]
+
+      line_group = group_spec(lines, t: [ 100, 100 ])
+
+      graph = line_group.(graph)
+
+  You can also pass in a single primitive spec:
+
+      line = line_spec({{0, 0}, {60, 60}}, stroke: {4, :red}),
+      line_group = group_spec(line, t: [ 100, 100 ])
+
+      graph = line_group.(graph)
+
+  """
+
+  @spec group_spec(
+          items :: Group.deferred() | [Group.deferred(), ...],
+          options :: list
+        ) :: Graph.deferred()
+
+  def group_spec(list, opts) when is_list(list) do
+    fn g ->
+      content = fn g ->
+        Enum.reduce(list, g, fn element, g -> element.(g) end)
+      end
+
+      group(g, content, opts)
+    end
+  end
+
+  def group_spec(item, opts) do
+    group_spec([item], opts)
   end
 
   # --------------------------------------------------------
@@ -371,6 +618,27 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
+  Create the specification that adds a line to a graph.
+
+  See the documentation for `line/3` for details.
+
+  Example:
+
+      ellipse = ellipse_spec( { 40, 60 }, stroke: {4, :blue} )
+      graph = ellipse.(graph)
+  """
+
+  @spec line_spec(
+          line :: Math.line(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def line_spec(line_params, opts \\ []) do
+    fn g -> line(g, line_params, opts) end
+  end
+
+  # --------------------------------------------------------
+  @doc """
   Add custom, complex shape to a graph
 
   A custom path is defined by a list of actions that the renderer
@@ -407,6 +675,38 @@ defmodule Scenic.Primitives do
 
   def path(%Primitive{module: Primitive.Path} = p, data, opts) do
     modify(p, data, opts)
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Create the specification that adds a path to a graph.
+
+  See the documentation for `path/3` for details.
+
+  Example:
+
+      path = path_spec( [
+          :begin,
+          {:move_to, 10, 20},
+          {:line_to, 30, 40},
+          {:bezier_to, 10, 11, 20, 21, 30, 40},
+          {:quadratic_to, 10, 11, 50, 60},
+          {:arc_to, 70, 80, 90, 100, 20},
+          :close_path,
+        ],
+        stroke: {4, :blue}, cap: :round
+      )
+
+      graph = path.(graph)
+  """
+
+  @spec path_spec(
+          elements :: list,
+          options :: list
+        ) :: Graph.deferred()
+
+  def path_spec(elements, opts \\ []) do
+    fn g -> path(g, elements, opts) end
   end
 
   # --------------------------------------------------------
@@ -469,18 +769,68 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
+  Create the specification that adds a quad to a graph.
+
+  See the documentation for `quad/3` for details.
+
+  Example:
+
+      quad = quad_spec(
+        {{10,20}, {100,20}, {90, 120}, {15, 70}},
+        fill, :red, stroke: {3, :blue}, join: :round
+      )
+
+      graph = quad.(graph)
+  """
+
+  @spec quad_spec(
+          corners :: Math.quad(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def quad_spec(corners, opts \\ []) do
+    fn g -> quad(g, corners, opts) end
+  end
+
+  # --------------------------------------------------------
+  @doc """
   Shortcut to the `rectangle/3` function.
 
   `rect/3` is the same as calling `rectangle/3`
   """
   @spec rect(
           source :: Graph.t() | Primitive.t(),
-          rect :: {width :: number, height :: number},
+          rect :: width_and_height(),
           options :: list
         ) :: Graph.t() | Primitive.t()
 
   def rect(graph_or_primitive, rect, opts \\ []) do
     rectangle(graph_or_primitive, rect, opts)
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Create the specification that adds a rectangle to a graph.
+
+  See the documentation for `rectangle/3` for details.
+
+  Example:
+
+      rect = rect_spec(
+        {{10,20}, {100,20}},
+        fill, :red, stroke: {3, :blue}, join: :round
+      )
+
+      graph = rect.(graph)
+  """
+
+  @spec rect_spec(
+          dims :: width_and_height(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def rect_spec(dims, opts \\ []) do
+    fn g -> rectangle(g, dims, opts) end
   end
 
   @doc """
@@ -542,18 +892,68 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
+  Create the specification that adds a rectangle to a graph.
+
+  See the documentation for `rectangle/3` for details.
+
+  Example:
+
+      rect = rectangle_spec(
+        {{10,20}, {100,20}},
+        fill, :red, stroke: {3, :blue}, join: :round
+      )
+
+      graph = rect.(graph)
+  """
+
+  @spec rectangle_spec(
+          dims :: width_and_height(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def rectangle_spec(dims, opts \\ []) do
+    fn g -> rectangle(g, dims, opts) end
+  end
+
+  # --------------------------------------------------------
+  @doc """
   Shortcut to the `rounded_rectangle/3` function.
 
   `rrect/3` is the same as calling `rounded_rectangle/3`
   """
   @spec rrect(
           source :: Graph.t() | Primitive.t(),
-          rrect :: {width :: number, height :: number, radius :: number},
+          rrect :: width_height_and_radius(),
           options :: list
         ) :: Graph.t() | Primitive.t()
 
   def rrect(graph_or_primitive, rrect, opts \\ []) do
     rounded_rectangle(graph_or_primitive, rrect, opts)
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Create the specification that adds a rounded rectangle to a graph.
+
+  See the documentation for `rounded_rectangle/3` for details.
+
+  Example:
+
+      rect = rrect_spec(
+        {{10,20}, {100,20}},
+        fill, :red, stroke: {3, :blue}, join: :round
+      )
+
+      graph = rect.(graph)
+  """
+
+  @spec rrect_spec(
+          dims :: width_height_and_radius(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def rrect_spec(dims, opts \\ []) do
+    fn g -> rounded_rectangle(g, dims, opts) end
   end
 
   @doc """
@@ -607,14 +1007,39 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
+  Create the specification that adds a rounded rectangle to a graph.
+
+  See the documentation for `rounded_rectangle/3` for details.
+
+  Example:
+
+      rect = rounded_rectangle_spec(
+        {{10,20}, {100,20}},
+        fill, :red, stroke: {3, :blue}, join: :round
+      )
+
+      graph = rect.(graph)
+  """
+
+  @spec rounded_rectangle_spec(
+          dims :: width_height_and_radius(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def rounded_rectangle_spec(dims, opts \\ []) do
+    fn g -> rounded_rectangle(g, dims, opts) end
+  end
+
+  # --------------------------------------------------------
+  @doc """
   Reference another scene or graph from within a graph.
 
-  The SceneRef allows you to next other graphs inside a graph. This means
+  The SceneRef allows you to nest other graphs inside a graph. This means
   you can build smaller components that you can compose into a larger image.
 
   *Typically you do not specify SceneRefs yourself.* These get added
-  for you when you add components to you graph. Examples: Buttons,
-  Sliders, checkboxes, etc.
+  for you when you add components to your graph. Examples include Buttons,
+  Sliders, checkboxes, and so on.
 
   Usually, the graph you reference is controlled by another scene, but
   it doesn't have to be. A single scene could create multiple graphs
@@ -636,10 +1061,7 @@ defmodule Scenic.Primitives do
   """
   @spec scene_ref(
           source :: Graph.t() | Primitive.t(),
-          ref ::
-            {:graph, reference, any}
-            | {module :: atom, init_data :: any}
-            | (scene_name :: atom),
+          ref :: scene_ref(),
           options :: list
         ) :: Graph.t() | Primitive.t()
 
@@ -651,6 +1073,27 @@ defmodule Scenic.Primitives do
 
   def scene_ref(%Primitive{module: Primitive.SceneRef} = p, data, opts) do
     modify(p, data, opts)
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Create the specification that adds a scene ref to a graph.
+
+  See the documentation for `scene_ref/3` for details.
+
+  Example:
+
+      ref = scene_ref_spec(:my_scene)
+      graph = ref.(graph)
+  """
+
+  @spec scene_ref_spec(
+          ref :: scene_ref(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def scene_ref_spec(ref, opts \\ []) do
+    fn g -> scene_ref(g, ref, opts) end
   end
 
   # --------------------------------------------------------
@@ -705,7 +1148,7 @@ defmodule Scenic.Primitives do
   """
   @spec sector(
           source :: Graph.t() | Primitive.t(),
-          sector :: {radius :: number, start :: number, finish :: number},
+          sector :: sector(),
           options :: list
         ) :: Graph.t() | Primitive.t()
 
@@ -721,9 +1164,30 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
+  Create the specification that adds a sector ref to a graph.
+
+  See the documentation for `sector/3` for details.
+
+  Example:
+
+      sector = sector_spec( {100, 0, 0.4}, fill: :red )
+      graph  = sector.(graph)
+  """
+
+  @spec sector_spec(
+          params :: sector(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def sector_spec(params, opts \\ []) do
+    fn g -> sector(g, params, opts) end
+  end
+
+  # --------------------------------------------------------
+  @doc """
   Adds text to a graph
 
-  Text pretty simple. Specify the string you would like drawn.
+  Text is pretty simple. Specify the string you would like drawn.
 
   Data:
 
@@ -759,7 +1223,7 @@ defmodule Scenic.Primitives do
 
       graph
       |> text( "Hello World", fill: :yellow, font: :roboto_mono
-        flont_blur: 2.0, text_align: :center )
+          font_blur: 2.0, text_align: :center )
 
   """
   @spec text(
@@ -776,6 +1240,27 @@ defmodule Scenic.Primitives do
 
   def text(%Primitive{module: Primitive.Text} = p, data, opts) do
     modify(p, data, opts)
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Create the specification that adds text to a graph.
+
+  See the documentation for `text/3` for details.
+
+  Example:
+
+      text  = text_spec( "a wombat is a marsupial", fill: :red )
+      graph = text.(graph)
+  """
+
+  @spec text_spec(
+          string :: String.t(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def text_spec(string, opts \\ []) do
+    fn g -> text(g, string, opts) end
   end
 
   # --------------------------------------------------------
@@ -834,6 +1319,27 @@ defmodule Scenic.Primitives do
 
   def triangle(%Primitive{module: Primitive.Triangle} = p, data, opts) do
     modify(p, data, opts)
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Create the specification that adds a triangle to a graph.
+
+  See the documentation for `triangle/3` for details.
+
+  Example:
+
+      triangle = triangle_spec({{10,20}, {100,20}, {50, 120}}, fill: :red )
+      graph    = triangle.(graph)
+  """
+
+  @spec triangle_spec(
+          corners :: Math.triangle(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def triangle_spec(corners, opts \\ []) do
+    fn g -> triangle(g, corners, opts) end
   end
 
   # --------------------------------------------------------

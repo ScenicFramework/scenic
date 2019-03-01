@@ -35,7 +35,7 @@ defmodule Scenic.Graph do
 
       @graph  Scenic.Graph.build()
 
-  builds an empty graph with only one group as the root node. By assigning it to the 
+  builds an empty graph with only one group as the root node. By assigning it to the
   compile directive @group, we know that this group will be built once at compile
   time and will be very fast to access later during runtime.
 
@@ -146,6 +146,8 @@ defmodule Scenic.Graph do
           next_uid: pos_integer,
           add_to: non_neg_integer
         }
+
+  @type deferred :: (t -> t)
 
   @type key :: {:graph, Scenic.Scene.ref(), any}
 
@@ -827,7 +829,7 @@ defmodule Scenic.Graph do
   graph is returned.
 
   This is so similar to the modify function that it may be deprecated in the future.
-  For now I recommend you use `Graph.modify/3` instead of this.  
+  For now I recommend you use `Graph.modify/3` instead of this.
   """
   @spec map(graph :: t(), id :: any, action :: function) :: t()
   def map(%__MODULE__{} = graph, id, action) when is_function(action, 1) do
