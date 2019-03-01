@@ -598,6 +598,34 @@ defmodule Scenic.Scene do
       case scene_module.init(args, opts) do
         {:ok, sc_state} ->
           {:noreply, %{state | scene_state: sc_state}}
+        unknown ->
+          # build error message components
+          head_msg = "#{inspect(scene_module)} init returned invalid response"
+          err_msg = ""
+          args_msg = "return value: #{inspect(unknown)}"
+          stack_msg = ""
+          unless Mix.env() == :test do
+            [
+              "\n",
+              IO.ANSI.red(),
+              head_msg,
+              "\n",
+              IO.ANSI.yellow(),
+              args_msg,
+              IO.ANSI.default_color()
+            ]
+            |> Enum.join()
+            |> IO.puts()
+          end
+          case opts[:viewport] do
+            nil ->
+              :ok
+
+            vp ->
+              msgs = {head_msg, err_msg, args_msg, stack_msg}
+              ViewPort.set_root(vp, {Scenic.Scenes.Error, {msgs, scene_module, args}})
+          end
+          {:noreply, nil}
       end
     rescue
       err ->
