@@ -10,7 +10,7 @@
 * Added a ViewPort.reset() function (used by the error scene), which can be used to send
   a ViewPort back to the original scene it was started with.
 * Integrated spec-based graphs from @pragdave. This is a cleaner looking way to build graphs.
-  See the changes in components.ex
+  See the changes in primitives.ex
 
 
 ## 0.9.0
