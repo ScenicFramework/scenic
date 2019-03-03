@@ -191,6 +191,12 @@ defmodule Scenic.Components do
     modify(p, Component.Button, data, options)
   end
 
+  @doc """
+  Generate an uninstantiated button spec, parallel to the concept of
+  primitive specs. This allows buttons to be treated as data.
+  """
+  def button_spec(data, options), do: &button(&1, data, options)
+
   # --------------------------------------------------------
   @doc """
   Add a [`Checkbox`](Scenic.Component.Input.Checkbox.html) to a graph
@@ -252,6 +258,12 @@ defmodule Scenic.Components do
   def checkbox(%Primitive{module: SceneRef} = p, data, options) do
     modify(p, Component.Input.Checkbox, data, options)
   end
+
+  @doc """
+  Generate an uninstantiated checkbox spec, parallel to the concept of
+  primitive specs. See `Components.checkbox` for data and options values.
+  """
+  def checkbox_spec(data, options), do: &checkbox(&1, data, options)
 
   # --------------------------------------------------------
   @doc """
@@ -342,6 +354,12 @@ defmodule Scenic.Components do
     modify(p, Component.Input.Dropdown, data, options)
   end
 
+  @doc """
+  Generate an uninstantiated dropdown spec, parallel to the concept of
+  primitive specs. See `Components.dropdown` for data and options values.
+  """
+  def dropdown_spec(data, options), do: &dropdown(&1, data, options)
+
   # --------------------------------------------------------
   @doc """
   Add a [`RadioGroup`](Scenic.Component.Input.RadioGroup.html) to a graph
@@ -425,6 +443,12 @@ defmodule Scenic.Components do
     modify(p, Component.Input.RadioGroup, data, options)
   end
 
+  @doc """
+  Generate an uninstantiated radio_group spec, parallel to the concept of
+  primitive specs. See `Components.radio_group` for data and options values.
+  """
+  def radio_group_spec(data, options), do: &radio_group(&1, data, options)
+
   # --------------------------------------------------------
   @doc """
   Add a [`Slider`](Scenic.Component.Input.Slider.html) to a graph
@@ -503,6 +527,12 @@ defmodule Scenic.Components do
   def slider(%Primitive{module: SceneRef} = p, data, options) do
     modify(p, Component.Input.Slider, data, options)
   end
+
+  @doc """
+  Generate an uninstantiated slider spec, parallel to the concept of
+  primitive specs. See `Components.slider` for data and options values.
+  """
+  def slider_spec(data, options), do: &slider(&1, data, options)
 
   # --------------------------------------------------------
   @doc """
@@ -587,6 +617,12 @@ defmodule Scenic.Components do
   end
 
   @doc """
+  Generate an uninstantiated text_field spec, parallel to the concept of
+  primitive specs. See `Components.text_field` for data and options values.
+  """
+  def text_field_spec(data, options), do: &text_field(&1, data, options)
+
+  @doc """
   Add [`Toggle`](Scenic.Component.Input.Toggle.html) to a Scenic graph.
 
   ### Data
@@ -644,6 +680,12 @@ defmodule Scenic.Components do
   def toggle(%Primitive{module: SceneRef} = p, data, options) do
     modify(p, Component.Input.Toggle, data, options)
   end
+
+  @doc """
+  Generate an uninstantiated toggle spec, parallel to the concept of
+  primitive specs. See `Components.toggle` for data and options values.
+  """
+  def toggle_spec(data, options), do: &toggle(&1, data, options)
 
   # ============================================================================
   # generic workhorse versions

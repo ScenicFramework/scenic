@@ -242,6 +242,7 @@ defmodule Scenic.Primitives do
   def add_specs_to_graph(g, list, options) when is_list(list) do
     display_list = fn g ->
       list
+      |> List.flatten()
       |> Enum.reduce(g, fn item, g -> item.(g) end)
     end
 
