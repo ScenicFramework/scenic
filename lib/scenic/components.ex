@@ -197,7 +197,7 @@ defmodule Scenic.Components do
   """
   def button_spec(data, options), do: &button(&1, data, options)
 
-    # --------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Add a [`Checkbox`](Scenic.Component.Input.Checkbox.html) to a graph
 
@@ -359,7 +359,6 @@ defmodule Scenic.Components do
   primitive specs. See `Components.dropdown` for data and options values.
   """
   def dropdown_spec(data, options), do: &dropdown(&1, data, options)
-
 
   # --------------------------------------------------------
   @doc """
