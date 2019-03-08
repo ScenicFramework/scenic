@@ -12,16 +12,17 @@ defmodule Scenic.Cache.Static.FontMetrics do
   @base_path "static/font_metrics"
 
   @priv :code.priv_dir(:scenic)
-  File.ls(@priv)
   |> IO.inspect(label: "priv dir")
+  File.ls(@priv)
+  |> IO.inspect(label: "ls priv dir")
 
   Path.join(@priv, "static")
   |> File.ls()
-  |> IO.inspect(label: "static path")
+  |> IO.inspect(label: "ls static path")
 
   Path.join(@priv, "static/font_metrics")
   |> File.ls()
-  |> IO.inspect(label: "font_metrics path")
+  |> IO.inspect(label: "ls ont_metrics path")
 
 
 
