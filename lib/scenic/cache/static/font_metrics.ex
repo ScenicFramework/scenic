@@ -11,10 +11,19 @@ defmodule Scenic.Cache.Static.FontMetrics do
 
   @base_path "static/font_metrics"
 
-  :code.priv_dir(:scenic)
-  |> Path.join(@base_path)
+  @priv :code.priv_dir(:scenic)
+  File.ls(@priv)
+  |> IO.inspect(label: "priv dir")
+
+  Path.join(@priv, "static")
   |> File.ls()
-  |> IO.inspect(label: "metrics_files")
+  |> IO.inspect(label: "static path")
+
+  Path.join(@priv, "static/font_metrics")
+  |> File.ls()
+  |> IO.inspect(label: "font_metrics path")
+
+
 
   @roboto_path "Roboto-Regular.ttf.metrics"
   @roboto_hash :code.priv_dir(:scenic)
