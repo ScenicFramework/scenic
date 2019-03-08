@@ -44,7 +44,7 @@ defmodule Scenic.Mixfile do
 
   defp deps do
     [
-      {:font_metrics, git: "git@github.com:boydm/font_metrics.git"},
+      {:font_metrics, git: "https://github.com/boydm/font_metrics.git"},
       {:elixir_make, "~> 0.5", runtime: false},
 
       # Tools
