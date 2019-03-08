@@ -3,16 +3,14 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Cache.HashTest do
+defmodule Scenic.Cache.Support.HashTest do
   use ExUnit.Case, async: true
-  doctest Scenic.Cache.File
+  doctest Scenic.Cache.Support.Hash
 
-  alias Scenic.Cache.Hash
+  alias Scenic.Cache.Support.Hash
 
   #  import IEx
 
-  # @valid_hash_path "test/test_data/valid_hash_file.txt.aqw2vpKePkeDvZzBz-1wFsC2Xac"
-  # @bad_hash_path "test/test_data/bad_hash_file.txt.not_a_valid_hash"
   @missing_hash_path "test/test_data/missing_hash_file.txt"
   @no_such_file_path "test/test_data/no_such_file.txt.whatever"
 
@@ -20,8 +18,6 @@ defmodule Scenic.Cache.HashTest do
   @valid_hash_256 "XmLxE6HaLNGiAE3Xhhs-G4I3PCap-fsK90vJZnQMbFI"
   @missing_hash "TMRA5gAj7BwXxcRfPGq2avbh6nc"
   @missing_hash_256 "6XheyWIkgKP7baORQ3y2TRWVQNptzlOSfuXFiXoZ_Ao"
-
-  #    hash = Cache.File.compute_file_hash( @valid_hash_path )
 
   # ============================================================================
   # compute hash for binary
@@ -46,7 +42,7 @@ defmodule Scenic.Cache.HashTest do
   test "binary! raises on an invalid hash type" do
     data = "some data. af98hwu4lhrliw4uhtliuhet;giojres;ihg;usdhg"
 
-    assert_raise Scenic.Cache.Hash.Error, fn ->
+    assert_raise Hash.Error, fn ->
       Hash.binary!(data, :invalid)
     end
   end
@@ -148,71 +144,4 @@ defmodule Scenic.Cache.HashTest do
     assert_raise File.Error, fn -> Hash.verify_file!(@no_such_file_path, "not_a_hash", :sha) end
   end
 
-  # ============================================================================
-  # path functions
-
-  # test "from_path returns just the hash appended to the end of a path" do
-  #   assert Hash.from_path(@valid_hash_path) == @valid_hash
-  # end
-
-  # test "from_path returns the extension - which is obviously not a valid hash" do
-  #   assert Hash.from_path(@missing_hash_path) == "txt"
-  # end
-
-  # ============================================================================
-  # path  param checking
-
-  # test "path_params(path) works" do
-  #   assert Hash.path_params(@valid_hash_path) == {@valid_hash_path, @valid_hash, :sha}
-  # end
-
-  # test "path_params(not_a_path) fails" do
-  #   assert_raise FunctionClauseError, fn -> Hash.path_params(:not_a_path) end
-  # end
-
-  # test "path_params(path, hash_type) works" do
-  #   assert Hash.path_params(@valid_hash_path, :sha256) == {@valid_hash_path, @valid_hash, :sha256}
-
-  #   assert Hash.path_params({@valid_hash_path, :sha256}) ==
-  #            {@valid_hash_path, @valid_hash, :sha256}
-  # end
-
-  # test "path_params(path, hash) works" do
-  #   assert Hash.path_params(@missing_hash_path, @missing_hash) ==
-  #            {@missing_hash_path, @missing_hash, :sha}
-
-  #   assert Hash.path_params({@missing_hash_path, @missing_hash}) ==
-  #            {@missing_hash_path, @missing_hash, :sha}
-  # end
-
-  # test "path_params(path, something_else) fails" do
-  #   assert_raise FunctionClauseError, fn -> Hash.path_params(@missing_hash_path, 123) end
-  # end
-
-  # test "path_params(path, hash, type) works" do
-  #   assert Hash.path_params(@missing_hash_path, @missing_hash_256, :sha256) ==
-  #            {@missing_hash_path, @missing_hash_256, :sha256}
-
-  #   assert Hash.path_params({@missing_hash_path, @missing_hash_256, :sha256}) ==
-  #            {@missing_hash_path, @missing_hash_256, :sha256}
-  # end
-
-  # test "path_params(path, hash, type) with bogus params fails" do
-  #   assert_raise FunctionClauseError, fn -> Hash.path_params(123, @missing_hash, :sha256) end
-  #   assert_raise FunctionClauseError, fn -> Hash.path_params({123, @missing_hash, :sha256}) end
-
-  #   assert_raise FunctionClauseError, fn -> Hash.path_params(@missing_hash_path, 123, :sha256) end
-
-  #   assert_raise FunctionClauseError, fn ->
-  #     Hash.path_params({@missing_hash_path, 1232, :sha256})
-  #   end
-
-  #   assert_raise FunctionClauseError, fn ->
-  #     Hash.path_params(@missing_hash_path, @missing_hash, 123)
-  #   end
-
-  #   assert_raise FunctionClauseError, fn ->
-  #     Hash.path_params({@missing_hash_path, @missing_hash, 123})
-  #   end
-  # end
 end

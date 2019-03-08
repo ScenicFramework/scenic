@@ -49,7 +49,7 @@ unit_test:
 	mix coveralls.json
 
 docs_report:
-	mix inch.report
+	MIX_ENV=docs mix inch.report
 
 $(BUILD)/%.o: c_src/%.c
 	$(CC) -c $(ERL_CFLAGS) $(CFLAGS) -o $@ $<

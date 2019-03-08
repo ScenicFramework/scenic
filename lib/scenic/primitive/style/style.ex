@@ -17,7 +17,7 @@ defmodule Scenic.Primitive.Style do
 
       graph =
         Graph.build
-        |> text( "Styled Text", font: :roboto_slab )
+        |> text( "Styled Text", font: :roboto )
 
   ## Primitive Styles
 
@@ -70,7 +70,7 @@ defmodule Scenic.Primitive.Style do
 
   alias Scenic.Primitive.Style
 
-  #  import IEx
+  # import IEx
 
   @style_name_map %{
     :hidden => Style.Hidden,
@@ -183,16 +183,31 @@ defmodule Scenic.Primitive.Style do
   end
 
   # ===========================================================================
-  # filter a style map so only the primitive types remain
+  # transform a style map so only the primitive types remain
   @doc false
   def primitives(style_map)
 
   def primitives(style_map) do
-    Enum.reduce(@primitive_styles, %{}, fn k, acc ->
-      case Map.get(style_map, k) do
-        nil -> acc
-        v -> Map.put(acc, k, normalize(k, v))
-      end
+    Enum.reduce(@primitive_styles, %{}, fn
+      # only send direct font refs to the drivers
+      :font, acc ->
+        case Map.get(style_map, :font) do
+          nil -> acc
+          {type, hash} -> Map.put(acc, :font, {type, hash})
+          fm_hash ->
+            case Scenic.Cache.Static.FontMetrics.get(fm_hash) do
+              %FontMetrics{source: %{font_type: type, signature: hash}} ->
+                Map.put(acc, :font, {type, hash})
+              _ ->
+                acc
+            end
+        end
+
+      k, acc ->
+        case Map.get(style_map, k) do
+          nil -> acc
+          v -> Map.put(acc, k, normalize(k, v))
+        end
     end)
   end
 end

@@ -19,7 +19,9 @@ defmodule Scenic.Math do
   @type point :: {x :: number, y :: number}
 
   @type line :: {p0 :: point, p1 :: point}
+
   @type triangle :: {p0 :: point, p1 :: point, p2 :: point}
+
   @type quad :: {p0 :: point, p1 :: point, p2 :: point, p3 :: point}
 
   @type matrix :: binary()

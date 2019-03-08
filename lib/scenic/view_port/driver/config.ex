@@ -15,12 +15,22 @@ defmodule Scenic.ViewPort.Driver.Config do
 
   # import IEx
 
+  @doc """
+  Test if the config for a driver is valid or not.
+
+  returns true or false
+  """
   def valid?(%Config{module: mod, name: name}) do
     is_atom(mod) && !is_nil(mod) && is_atom(name)
   end
 
   def valid?(%{} = config), do: valid?(struct(Config, config))
 
+  @doc """
+  Test if the config for a driver is valid or not.
+
+  returns :ok or raises an error
+  """
   def valid!(%Config{module: mod, name: name})
       when is_atom(mod) and not is_nil(mod) and is_atom(name) do
     :ok

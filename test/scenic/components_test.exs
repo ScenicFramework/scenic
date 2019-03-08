@@ -8,7 +8,6 @@ defmodule Scenic.ComponentsTest do
   doctest Scenic.Components
   alias Scenic.Graph
   alias Scenic.Primitive
-  alias Scenic.Primitives
   alias Scenic.Components
 
   @graph Graph.build()
@@ -46,19 +45,6 @@ defmodule Scenic.ComponentsTest do
     assert p.id == :modified
   end
 
-  test "button_spec adds a button to the graph" do
-    spec = Components.button_spec("Name1", id: :button1)
-
-    result =
-      @graph
-      |> Primitives.add_specs_to_graph([spec])
-      |> Graph.get!(:button1)
-
-    assert result.module == Primitive.SceneRef
-    assert result.data == {Scenic.Component.Button, "Name1"}
-    assert result.id == :button1
-  end
-
   # ============================================================================
   test "checkbox adds to a graph - default opts" do
     g = Components.checkbox(@graph, {"Name", true})
@@ -94,19 +80,6 @@ defmodule Scenic.ComponentsTest do
     assert p.id == :modified
   end
 
-  test "checkbox_spec adds a checkbox to the graph" do
-    spec = Components.checkbox_spec({"Name1", true}, id: :checkbox1)
-
-    result =
-      @graph
-      |> Primitives.add_specs_to_graph([spec])
-      |> Graph.get!(:checkbox1)
-
-    assert result.module == Primitive.SceneRef
-    assert result.data == {Scenic.Component.Input.Checkbox, {"Name1", true}}
-    assert result.id == :checkbox1
-  end
-
   # ============================================================================
   @drop_data {[{"a", 1}, {"b", 2}], 2}
 
@@ -140,19 +113,6 @@ defmodule Scenic.ComponentsTest do
     assert p.id == :modified
   end
 
-  test "dropdown_spec adds a dropdown to the graph" do
-    spec = Components.dropdown_spec(@drop_data, id: :dropdown1)
-
-    result =
-      @graph
-      |> Primitives.add_specs_to_graph([spec])
-      |> Graph.get!(:dropdown1)
-
-    assert result.module == Primitive.SceneRef
-    assert result.data == {Scenic.Component.Input.Dropdown, @drop_data}
-    assert result.id == :dropdown1
-  end
-
   # ============================================================================
   @radio_data [{"a", 1}, {"b", 2, true}, {"c", 2, false}]
 
@@ -184,19 +144,6 @@ defmodule Scenic.ComponentsTest do
 
     assert p.data == {Scenic.Component.Input.RadioGroup, mod_data}
     assert p.id == :modified
-  end
-
-  test "radio_group_spec adds a radio_group to the graph" do
-    spec = Components.radio_group_spec(@radio_data, id: :radio_group1)
-
-    result =
-      @graph
-      |> Primitives.add_specs_to_graph([spec])
-      |> Graph.get!(:radio_group1)
-
-    assert result.module == Primitive.SceneRef
-    assert result.data == {Scenic.Component.Input.RadioGroup, @radio_data}
-    assert result.id == :radio_group1
   end
 
   # ============================================================================
@@ -246,19 +193,6 @@ defmodule Scenic.ComponentsTest do
     assert p.id == :modified
   end
 
-  test "slider_spec adds a slider to the graph" do
-    spec = Components.slider_spec(@slider_int_data, id: :slider1)
-
-    result =
-      @graph
-      |> Primitives.add_specs_to_graph([spec])
-      |> Graph.get!(:slider1)
-
-    assert result.module == Primitive.SceneRef
-    assert result.data == {Scenic.Component.Input.Slider, @slider_int_data}
-    assert result.id == :slider1
-  end
-
   # ============================================================================
   test "text_field adds to a graph - default opts" do
     g = Components.text_field(@graph, "Name")
@@ -286,19 +220,6 @@ defmodule Scenic.ComponentsTest do
 
     assert p.data == {Scenic.Component.Input.TextField, "Modified"}
     assert p.id == :modified
-  end
-
-  test "text_field_spec adds a text_field to the graph" do
-    spec = Components.text_field_spec("wibble", id: :text_field1)
-
-    result =
-      @graph
-      |> Primitives.add_specs_to_graph([spec])
-      |> Graph.get!(:text_field1)
-
-    assert result.module == Primitive.SceneRef
-    assert result.data == {Scenic.Component.Input.TextField, "wibble"}
-    assert result.id == :text_field1
   end
 
   # ============================================================================
@@ -334,18 +255,5 @@ defmodule Scenic.ComponentsTest do
 
     assert p.data == {Scenic.Component.Input.Toggle, false}
     assert p.id == :modified
-  end
-
-  test "toggle_spec adds a toggle to the graph" do
-    spec = Components.toggle_spec(true, id: :toggle1)
-
-    result =
-      @graph
-      |> Primitives.add_specs_to_graph([spec])
-      |> Graph.get!(:toggle1)
-
-    assert result.module == Primitive.SceneRef
-    assert result.data == {Scenic.Component.Input.Toggle, true}
-    assert result.id == :toggle1
   end
 end

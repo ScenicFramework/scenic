@@ -254,7 +254,7 @@ defmodule Scenic.Scene do
   # @viewport             :viewport
   @not_activated :__not_activated__
 
-  @type ref :: reference | atom
+  # @type ref :: reference | atom
 
   defmodule Error do
     @moduledoc false
@@ -304,6 +304,9 @@ defmodule Scenic.Scene do
   end
 
   # --------------------------------------------------------
+  @doc """
+  cast a message to a scene.
+  """
   def cast(scene_or_graph_key, msg) do
     with {:ok, pid} <- ViewPort.Tables.get_scene_pid(scene_or_graph_key) do
       GenServer.cast(pid, msg)
@@ -333,9 +336,6 @@ defmodule Scenic.Scene do
   # ============================================================================
   # callback definitions
 
-  # @callback init( args :: any, inherited_styles :: map, viewport :: GenServer.server ) ::
-  #   {:ok, any}
-  @callback init(args :: any, otps :: list) :: {:ok, any}
   @callback handle_input(input :: any, context :: Context.t(), state :: any) ::
               {:noreply, state :: any}
   @callback filter_event(any, any, any) :: {:continue, any, any} | {:stop, any}
@@ -641,7 +641,11 @@ defmodule Scenic.Scene do
         stack_msg =
           Enum.reduce(__STACKTRACE__, [], fn
             {mod, func, arity, [file: file, line: line]}, acc ->
-              ["#{file}:#{line}: #{mod}.#{func}/#{arity}" | acc]
+              [
+                "#{inspect(file)}:#{inspect(line)}: #{inspect(mod)}." <>
+                "#{inspect(func)}/#{inspect(arity)}"
+                | acc
+              ]
           end)
           |> Enum.reverse()
           |> Enum.join("\n")
@@ -677,6 +681,9 @@ defmodule Scenic.Scene do
             ViewPort.set_root(vp, {Scenic.Scenes.Error, {msgs, scene_module, args}})
         end
 
+        # purposefully slow down the reply in the event of a crash. Just in 
+        # case it does to into a crazy loop
+        Process.sleep(400)
         {:noreply, nil}
     end
   end

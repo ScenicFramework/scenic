@@ -47,6 +47,11 @@ defmodule Scenic.ViewPort.Config do
       width >= @min_window_width and height >= @min_window_height
   end
 
+  @doc """
+  Test if the config for a ViewPort is valid or not.
+
+  returns true or false
+  """
   def valid?(%Config{
         default_scene: {mod, _},
         name: name,
@@ -76,6 +81,11 @@ defmodule Scenic.ViewPort.Config do
   def valid?(%{} = config), do: valid?(struct(Config, config))
 
   # --------------------------------------------------------
+  @doc """
+  Test if the config for a ViewPort is valid or not.
+
+  returns :ok or raises an error
+  """
   def valid!(%Config{
         default_scene: {mod, _},
         name: name,

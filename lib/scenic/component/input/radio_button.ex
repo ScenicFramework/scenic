@@ -35,6 +35,9 @@ defmodule Scenic.Component.Input.RadioButton do
 
   # import IEx
 
+  @default_font :roboto
+  @default_font_size 20
+
   # --------------------------------------------------------
   @doc false
   def info(data) do
@@ -69,18 +72,38 @@ defmodule Scenic.Component.Input.RadioButton do
       (styles[:theme] || Theme.preset(:dark))
       |> Theme.normalize()
 
+    # font related info
+    fm = Scenic.Cache.Static.FontMetrics.get!( @default_font )
+    ascent = FontMetrics.ascent(@default_font_size, fm)
+    fm_width = FontMetrics.width(text, @default_font_size, fm)
+    space_width = FontMetrics.width(' ', @default_font_size, fm)
+    box_width = fm_width + ascent + space_width * 2
+    box_height = trunc(ascent) + 1
+    outer_radius = ascent * 0.5
+    inner_radius = ascent * 0.3125
+
     graph =
-      Graph.build(font: :roboto, font_size: 16)
+      Graph.build(font: @default_font, font_size: @default_font_size)
       |> Primitive.Group.add_to_graph(
         fn graph ->
           graph
-          |> rect({140, 16}, fill: :clear, translate: {-2, -2})
-          |> circle(8, fill: theme.background, stroke: {2, theme.border}, id: :box, t: {6, 6})
-          |> circle(5, fill: theme.thumb, id: :chx, hidden: !checked?, t: {6, 6})
+          |> rect({box_width, box_height}, fill: :clear, translate: {-2, -2})
+          |> circle(
+            outer_radius,
+            fill: theme.background,
+            stroke: {2, theme.border},
+            id: :box, t: {6, 6}
+          )
+          |> circle(
+            inner_radius,
+            fill: theme.thumb,
+            id: :chx, hidden: !checked?,
+            t: {6, 6}
+          )
         end,
         translate: {0, -11}
       )
-      |> text(text, fill: theme.text, translate: {20, 0})
+      |> text(text, fill: theme.text, translate: {box_height + space_width, 0})
 
     state = %{
       graph: graph,
