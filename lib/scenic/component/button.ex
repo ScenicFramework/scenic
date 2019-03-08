@@ -117,27 +117,29 @@ defmodule Scenic.Component.Button do
     # font related info
     font = @default_font
     font_size = @default_font_size
-    fm = Scenic.Cache.Static.FontMetrics.get!( font )
+    fm = Scenic.Cache.Static.FontMetrics.get!(font)
     ascent = FontMetrics.ascent(font_size, fm)
     descent = FontMetrics.descent(font_size, fm)
     fm_width = FontMetrics.width(text, font_size, fm)
 
-    width = case styles[:width] || opts[:w] do
-      nil -> fm_width + ascent + ascent
-      :auto -> fm_width + ascent + ascent
-      width when is_number(width) and width > 0 -> width
-    end
+    width =
+      case styles[:width] || opts[:w] do
+        nil -> fm_width + ascent + ascent
+        :auto -> fm_width + ascent + ascent
+        width when is_number(width) and width > 0 -> width
+      end
 
-    height = case styles[:height] || opts[:h] do
-      nil -> font_size + ascent
-      :auto -> font_size + ascent
-      height when is_number(height) and height > 0 -> height
-    end
+    height =
+      case styles[:height] || opts[:h] do
+        nil -> font_size + ascent
+        :auto -> font_size + ascent
+        height when is_number(height) and height > 0 -> height
+      end
 
     radius = styles[:radius] || @default_radius
     alignment = styles[:alignment] || @default_alignment
 
-    vpos = (height / 2) + (ascent / 2) + (descent / 3)
+    vpos = height / 2 + ascent / 2 + descent / 3
 
     # build the graph
     graph =

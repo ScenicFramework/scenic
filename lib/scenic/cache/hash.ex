@@ -33,5 +33,4 @@ defmodule Scenic.Cache.Hash do
 
   @deprecated "Scenic.Cache.Hash.verify_file!/3 is now in Scenic.Cache.Support.Hash.verify_file!/3"
   defdelegate verify_file!(path, hash, hash_type), to: Scenic.Cache.Support.Hash
-
 end

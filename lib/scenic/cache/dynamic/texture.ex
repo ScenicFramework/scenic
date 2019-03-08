@@ -7,17 +7,17 @@ defmodule Scenic.Cache.Dynamic.Texture do
   use Scenic.Cache.Base, name: "texture", static: false
   alias Scenic.Cache.Support
 
-  #--------------------------------------------------------
-  def load( hash, path, opts \\ [] )
-  when is_bitstring(hash) and is_bitstring(path) do
+  # --------------------------------------------------------
+  def load(hash, path, opts \\ [])
+      when is_bitstring(hash) and is_bitstring(path) do
     # if the static font is already loaded, just return it.
-    case member?( hash ) do
+    case member?(hash) do
       true ->
         {:ok, hash}
 
-      false->
+      false ->
         with {:ok, texture} <- Support.File.read(path, hash, opts),
-        {:ok, ^hash} <- put_new( hash, texture, opts[:scope] ) do
+             {:ok, ^hash} <- put_new(hash, texture, opts[:scope]) do
           {:ok, hash}
         else
           err -> err
@@ -25,19 +25,18 @@ defmodule Scenic.Cache.Dynamic.Texture do
     end
   end
 
-  #--------------------------------------------------------
-  def load!( hash, path, opts \\ [] )
-  when is_bitstring(hash) and is_bitstring(path) do
+  # --------------------------------------------------------
+  def load!(hash, path, opts \\ [])
+      when is_bitstring(hash) and is_bitstring(path) do
     # if the static font is already loaded, just return it.
-    case member?( hash ) do
+    case member?(hash) do
       true ->
         hash
 
       false ->
         texture = Support.File.read!(path, hash, opts)
-        {:ok, ^hash} = put_new( hash, texture, opts[:scope] )
+        {:ok, ^hash} = put_new(hash, texture, opts[:scope])
         hash
     end
   end
-
 end

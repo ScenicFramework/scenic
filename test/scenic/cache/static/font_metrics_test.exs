@@ -10,11 +10,11 @@ defmodule Scenic.Cache.Static.FontMetricsTest do
   alias Scenic.Cache.Static
   alias Scenic.Cache.Support
 
-  @base_path  :code.priv_dir(:scenic)
-              |> Path.join( "static/font_metrics" )
+  @base_path :code.priv_dir(:scenic)
+             |> Path.join("static/font_metrics")
 
-  @roboto_path  Path.join( @base_path, "Roboto-Regular.ttf.metrics" )
-  @roboto_hash  Support.Hash.file!(@roboto_path, :sha)
+  @roboto_path Path.join(@base_path, "Roboto-Regular.ttf.metrics")
+  @roboto_hash Support.Hash.file!(@roboto_path, :sha)
 
   setup do
     GenServer.call(Static.FontMetrics, :reset)
@@ -102,38 +102,39 @@ defmodule Scenic.Cache.Static.FontMetricsTest do
     refute_receive {:"$gen_cast", {Static.FontMetrics, :put, "hash"}}
   end
 
-
   # ============================================================================
   # loaders
 
   test "load works" do
-    assert Static.FontMetrics.load( @roboto_hash, @roboto_path ) == {:ok, @roboto_hash}
+    assert Static.FontMetrics.load(@roboto_hash, @roboto_path) == {:ok, @roboto_hash}
     # twice to exercise already loaded path
-    assert Static.FontMetrics.load( @roboto_hash, @roboto_path ) == {:ok, @roboto_hash}
+    assert Static.FontMetrics.load(@roboto_hash, @roboto_path) == {:ok, @roboto_hash}
   end
 
   test "load passes through errors" do
-    assert Static.FontMetrics.load( @roboto_hash, "wrong/path" ) ==
-      {:error, :enoent}
-    assert Static.FontMetrics.load( "bad_hash", @roboto_path ) ==
-      {:error, :hash_failure}
+    assert Static.FontMetrics.load(@roboto_hash, "wrong/path") ==
+             {:error, :enoent}
+
+    assert Static.FontMetrics.load("bad_hash", @roboto_path) ==
+             {:error, :hash_failure}
   end
 
   # ============================================================================
   # loaders!
 
   test "load! works" do
-    assert Static.FontMetrics.load!( @roboto_hash, @roboto_path ) == @roboto_hash
+    assert Static.FontMetrics.load!(@roboto_hash, @roboto_path) == @roboto_hash
     # twice to exercise already loaded path
-    assert Static.FontMetrics.load!( @roboto_hash, @roboto_path ) == @roboto_hash
+    assert Static.FontMetrics.load!(@roboto_hash, @roboto_path) == @roboto_hash
   end
 
   test "load! raises errors" do
     assert_raise File.Error, fn ->
-      Static.FontMetrics.load!( @roboto_hash, "wrong/path" )
+      Static.FontMetrics.load!(@roboto_hash, "wrong/path")
     end
+
     assert_raise Support.Hash.Error, fn ->
-      Static.FontMetrics.load!( "bad_hash", @roboto_path )
+      Static.FontMetrics.load!("bad_hash", @roboto_path)
     end
   end
 
@@ -141,30 +142,32 @@ defmodule Scenic.Cache.Static.FontMetricsTest do
   # overridden inherited functions
 
   test "get( :roboto ) works" do
-    %FontMetrics{} = fm = Static.FontMetrics.get( :roboto )
+    %FontMetrics{} = fm = Static.FontMetrics.get(:roboto)
     assert fm.max_box == {-1509, -555, 2352, 2163}
   end
+
   test "get( :roboto_mono ) works" do
-    %FontMetrics{} = fm = Static.FontMetrics.get( :roboto_mono )
+    %FontMetrics{} = fm = Static.FontMetrics.get(:roboto_mono)
     assert fm.max_box == {-1019, -555, 1945, 2163}
   end
 
   test "get!( :roboto ) works" do
-    %FontMetrics{} = fm = Static.FontMetrics.get!( :roboto )
+    %FontMetrics{} = fm = Static.FontMetrics.get!(:roboto)
     assert fm.max_box == {-1509, -555, 2352, 2163}
   end
+
   test "get!( :roboto_mono ) works" do
-    %FontMetrics{} = fm = Static.FontMetrics.get!( :roboto_mono )
+    %FontMetrics{} = fm = Static.FontMetrics.get!(:roboto_mono)
     assert fm.max_box == {-1019, -555, 1945, 2163}
   end
 
   test "fetch( :roboto ) works" do
-    {:ok, %FontMetrics{} = fm} = Static.FontMetrics.fetch( :roboto )
+    {:ok, %FontMetrics{} = fm} = Static.FontMetrics.fetch(:roboto)
     assert fm.max_box == {-1509, -555, 2352, 2163}
   end
+
   test "fetch( :roboto_mono ) works" do
-    {:ok, %FontMetrics{} = fm} = Static.FontMetrics.fetch( :roboto_mono )
+    {:ok, %FontMetrics{} = fm} = Static.FontMetrics.fetch(:roboto_mono)
     assert fm.max_box == {-1019, -555, 1945, 2163}
   end
-
 end

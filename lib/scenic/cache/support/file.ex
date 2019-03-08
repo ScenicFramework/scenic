@@ -135,7 +135,6 @@ defmodule Scenic.Cache.Support.File do
     end
   end
 
-
   # --------------------------------------------------------
   @doc """
   Read a file into memory.
@@ -166,18 +165,18 @@ defmodule Scenic.Cache.Support.File do
     if Mix.env() != :test do
       IO.puts("WARNING: Cache asset read! as :insecure \"#{path}\"")
     end
+
     path
     |> File.read!()
-    |> do_unzip!( opts )
+    |> do_unzip!(opts)
   end
 
   def read!(path, hash, opts) do
     path
     |> File.read!()
-    |> Hash.verify!( hash, opts[:hash] || :sha)
-    |> do_unzip!( opts )
+    |> Hash.verify!(hash, opts[:hash] || :sha)
+    |> do_unzip!(opts)
   end
-
 
   # --------------------------------------------------------
   # unzip the data if the unzip option is true. Otherwise just returns
@@ -190,7 +189,9 @@ defmodule Scenic.Cache.Support.File do
         rescue
           _ -> {:error, :decompress}
         end
-      _ -> {:ok, data}
+
+      _ ->
+        {:ok, data}
     end
   end
 
@@ -200,5 +201,4 @@ defmodule Scenic.Cache.Support.File do
       _ -> data
     end
   end
-
 end

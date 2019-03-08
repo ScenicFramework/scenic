@@ -73,7 +73,7 @@ defmodule Scenic.Component.Input.RadioButton do
       |> Theme.normalize()
 
     # font related info
-    fm = Scenic.Cache.Static.FontMetrics.get!( @default_font )
+    fm = Scenic.Cache.Static.FontMetrics.get!(@default_font)
     ascent = FontMetrics.ascent(@default_font_size, fm)
     fm_width = FontMetrics.width(text, @default_font_size, fm)
     space_width = FontMetrics.width(' ', @default_font_size, fm)
@@ -92,12 +92,14 @@ defmodule Scenic.Component.Input.RadioButton do
             outer_radius,
             fill: theme.background,
             stroke: {2, theme.border},
-            id: :box, t: {6, 6}
+            id: :box,
+            t: {6, 6}
           )
           |> circle(
             inner_radius,
             fill: theme.thumb,
-            id: :chx, hidden: !checked?,
+            id: :chx,
+            hidden: !checked?,
             t: {6, 6}
           )
         end,

@@ -14,7 +14,7 @@ defmodule Scenic.Cache do
   | Font Metrics | [Scenic.Cache.FontMetrics](Scenic.Cache.FontMetrics.html) |
   | Textures (images in a fill) | [Scenic.Cache.Texture](Scenic.Cache.Texture.html) |
   """
- 
+
   @doc """
   This function is deprecated, please use the specific cache modules instead.
 
@@ -26,6 +26,7 @@ defmodule Scenic.Cache do
   """
   @deprecated "Use get in the appropriate cache module"
   def get(key, default \\ nil)
+
   def get(_, _) do
     raise """
     #{IO.ANSI.red()}
@@ -53,6 +54,7 @@ defmodule Scenic.Cache do
   """
   @deprecated "Use fetch in the appropriate cache module"
   def fetch(key)
+
   def fetch(_) do
     raise """
     #{IO.ANSI.red()}
@@ -108,6 +110,7 @@ defmodule Scenic.Cache do
   """
   @deprecated "Use put in the appropriate cache module"
   def put(key, data, scope \\ nil)
+
   def put(_, _, _) do
     raise """
     #{IO.ANSI.red()}
@@ -135,6 +138,7 @@ defmodule Scenic.Cache do
   """
   @deprecated "Use claim in the appropriate cache module"
   def claim(key, scope \\ nil)
+
   def claim(_, _) do
     raise """
     #{IO.ANSI.red()}
@@ -162,6 +166,7 @@ defmodule Scenic.Cache do
   """
   @deprecated "Use release in the appropriate cache module"
   def release(key, opts \\ [])
+
   def release(_, _) do
     raise """
     #{IO.ANSI.red()}
@@ -189,6 +194,7 @@ defmodule Scenic.Cache do
   """
   @deprecated "Use status in the appropriate cache module"
   def status(key, scope \\ nil)
+
   def status(_, _) do
     raise """
     #{IO.ANSI.red()}
@@ -216,6 +222,7 @@ defmodule Scenic.Cache do
   """
   @deprecated "Use keys in the appropriate cache module"
   def keys(scope \\ nil)
+
   def keys(_) do
     raise """
     #{IO.ANSI.red()}
@@ -243,6 +250,7 @@ defmodule Scenic.Cache do
   """
   @deprecated "Use member? in the appropriate cache module"
   def member?(key, scope \\ nil)
+
   def member?(_, _) do
     raise """
     #{IO.ANSI.red()}

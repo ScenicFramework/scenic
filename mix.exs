@@ -45,7 +45,6 @@ defmodule Scenic.Mixfile do
   defp deps do
     [
       {:font_metrics, git: "git@github.com:boydm/font_metrics.git"},
-
       {:elixir_make, "~> 0.5", runtime: false},
 
       # Tools
@@ -53,7 +52,7 @@ defmodule Scenic.Mixfile do
       {:credo, ">= 0.0.0", only: [:dev, :test], runtime: false},
       {:excoveralls, ">= 0.0.0", only: :test, runtime: false},
       {:inch_ex, "~> 2.0", only: [:dev, :docs], runtime: false},
-      {:dialyxir, "~> 0.5", only: :dev, runtime: false},
+      {:dialyxir, "~> 0.5", only: :dev, runtime: false}
     ]
   end
 

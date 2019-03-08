@@ -15,36 +15,39 @@ defmodule Scenic.Cache.Static.Font do
     defexception message: "Font not found", err: nil, hash: nil, font_folder: nil
   end
 
-  @default_hash   :sha256
+  @default_hash :sha256
 
-  #--------------------------------------------------------
-  def load( source, font_folder, opts \\ [] )
+  # --------------------------------------------------------
+  def load(source, font_folder, opts \\ [])
 
   def load(
-    %FontMetrics{source: %{signature: hash}}, font_folder, opts
-  ) do
-    load( hash, font_folder, opts )
+        %FontMetrics{source: %{signature: hash}},
+        font_folder,
+        opts
+      ) do
+    load(hash, font_folder, opts)
   end
 
-  #--------------------------------------------------------
-  def load( {:true_type, hash}, font_folder, opts ) do
-    load( hash, font_folder, opts )
+  # --------------------------------------------------------
+  def load({:true_type, hash}, font_folder, opts) do
+    load(hash, font_folder, opts)
   end
 
-  #--------------------------------------------------------
-  def load( hash, font_folder, opts )
-  when is_bitstring(hash) and is_bitstring(font_folder) do
+  # --------------------------------------------------------
+  def load(hash, font_folder, opts)
+      when is_bitstring(hash) and is_bitstring(font_folder) do
     # if the static font is already loaded, just return it.
 
-    case member?( hash ) do
+    case member?(hash) do
       true ->
         {:ok, hash}
 
-      false->
+      false ->
         opts = Keyword.put_new(opts, :hash, @default_hash)
-        with {:ok, path} <- resolve_path( font_folder, hash ),
-        {:ok, font} <- Support.File.read(path, hash, opts),
-        {:ok, ^hash} <- put_new( hash, font, opts[:scope] ) do
+
+        with {:ok, path} <- resolve_path(font_folder, hash),
+             {:ok, font} <- Support.File.read(path, hash, opts),
+             {:ok, ^hash} <- put_new(hash, font, opts[:scope]) do
           {:ok, hash}
         else
           err ->
@@ -53,42 +56,47 @@ defmodule Scenic.Cache.Static.Font do
     end
   end
 
-  #--------------------------------------------------------
-  def load!( source, font_folder, opts \\ [] )
+  # --------------------------------------------------------
+  def load!(source, font_folder, opts \\ [])
 
   def load!(
-    %FontMetrics{source: %{signature: hash}}, font_folder, opts
-  ) do
-    load!( hash, font_folder, opts )
+        %FontMetrics{source: %{signature: hash}},
+        font_folder,
+        opts
+      ) do
+    load!(hash, font_folder, opts)
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   def load!({:true_type, hash}, font_folder, opts) do
-    load!( hash, font_folder, opts )
+    load!(hash, font_folder, opts)
   end
 
   def load!(hash, font_folder, opts)
-  when is_bitstring(hash) and is_bitstring(font_folder) do
+      when is_bitstring(hash) and is_bitstring(font_folder) do
     # if the static font is already loaded, just return it.
-    case member?( hash ) do
+    case member?(hash) do
       true ->
         hash
 
       false ->
         # use default hash for fonts
         opts = Keyword.put_new(opts, :hash, @default_hash)
-        font = resolve_path!( font_folder, hash )
-        |> Support.File.read!(hash, opts)
-        {:ok, ^hash} = put_new( hash, font, opts[:scope] )
+
+        font =
+          resolve_path!(font_folder, hash)
+          |> Support.File.read!(hash, opts)
+
+        {:ok, ^hash} = put_new(hash, font, opts[:scope])
         hash
     end
   end
 
-  #--------------------------------------------------------
-  defp resolve_path( font_folder, hash ) do
+  # --------------------------------------------------------
+  defp resolve_path(font_folder, hash) do
     font_folder
     |> Path.expand()
-    |> Kernel.<>( "/**/*#{hash}" )
+    |> Kernel.<>("/**/*#{hash}")
     |> Path.wildcard()
     |> case do
       [] -> {:error, :not_found}
@@ -97,9 +105,9 @@ defmodule Scenic.Cache.Static.Font do
     end
   end
 
-  #--------------------------------------------------------
-  defp resolve_path!( font_folder, hash ) do
-    case resolve_path( font_folder, hash ) do
+  # --------------------------------------------------------
+  defp resolve_path!(font_folder, hash) do
+    case resolve_path(font_folder, hash) do
       {:ok, path} -> path
       err -> raise Error, err: err, hash: hash, font_folder: font_folder
     end

@@ -10,8 +10,8 @@ defmodule Scenic.Cache.Dynamic.TextureTest do
   alias Scenic.Cache.Support
   alias Scenic.Cache.Dynamic.Texture
 
-  @parrot_path  "test/artifacts/scenic_parrot.png"
-  @parrot_hash  Support.Hash.file!(@parrot_path, :sha)
+  @parrot_path "test/artifacts/scenic_parrot.png"
+  @parrot_hash Support.Hash.file!(@parrot_path, :sha)
 
   setup do
     GenServer.call(Texture, :reset)
@@ -110,10 +110,11 @@ defmodule Scenic.Cache.Dynamic.TextureTest do
   end
 
   test "load passes through errors" do
-    assert Texture.load( @parrot_hash, "wrong/path", [] ) ==
-      {:error, :enoent}
-    assert Texture.load( "bad_hash", @parrot_path, [] ) ==
-      {:error, :hash_failure}
+    assert Texture.load(@parrot_hash, "wrong/path", []) ==
+             {:error, :enoent}
+
+    assert Texture.load("bad_hash", @parrot_path, []) ==
+             {:error, :hash_failure}
   end
 
   # ============================================================================
@@ -127,11 +128,11 @@ defmodule Scenic.Cache.Dynamic.TextureTest do
 
   test "load! raises errors" do
     assert_raise File.Error, fn ->
-      Texture.load!( @parrot_hash, "wrong/path", [] )
+      Texture.load!(@parrot_hash, "wrong/path", [])
     end
+
     assert_raise Support.Hash.Error, fn ->
-      Texture.load!( "bad_hash", @parrot_path, [] )
+      Texture.load!("bad_hash", @parrot_path, [])
     end
   end
-
 end

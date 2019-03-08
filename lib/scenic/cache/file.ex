@@ -14,8 +14,9 @@ defmodule Scenic.Cache.File do
   defdelegate read(path, hash, opts), to: Scenic.Cache.Support.File
 
   @deprecated "Use load in the appropriate cache module"
-  def load( path, hash, opts \\ [] )
-  def load( _, _, _ ) do
+  def load(path, hash, opts \\ [])
+
+  def load(_, _, _) do
     raise """
     #{IO.ANSI.red()}
     Scenic.Cache.File.load/3 has been deprecated and is longer supported.
@@ -30,5 +31,4 @@ defmodule Scenic.Cache.File do
     #{IO.ANSI.default_color()}
     """
   end
-
 end

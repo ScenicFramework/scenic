@@ -143,5 +143,4 @@ defmodule Scenic.Cache.Support.HashTest do
   test "verify_file! passes through file system errors" do
     assert_raise File.Error, fn -> Hash.verify_file!(@no_such_file_path, "not_a_hash", :sha) end
   end
-
 end

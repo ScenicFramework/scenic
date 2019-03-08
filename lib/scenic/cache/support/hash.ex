@@ -208,5 +208,4 @@ defmodule Scenic.Cache.Support.Hash do
       false -> raise Error
     end
   end
-
 end

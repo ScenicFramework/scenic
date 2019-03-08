@@ -192,12 +192,17 @@ defmodule Scenic.Primitive.Style do
       # only send direct font refs to the drivers
       :font, acc ->
         case Map.get(style_map, :font) do
-          nil -> acc
-          {type, hash} -> Map.put(acc, :font, {type, hash})
+          nil ->
+            acc
+
+          {type, hash} ->
+            Map.put(acc, :font, {type, hash})
+
           fm_hash ->
             case Scenic.Cache.Static.FontMetrics.get(fm_hash) do
               %FontMetrics{source: %{font_type: type, signature: hash}} ->
                 Map.put(acc, :font, {type, hash})
+
               _ ->
                 acc
             end

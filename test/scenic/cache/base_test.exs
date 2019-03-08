@@ -9,7 +9,7 @@ defmodule Scenic.Cache.BaseTest do
 
   alias Scenic.Cache.Base
 
-  @table    :base_test_table
+  @table :base_test_table
 
   defmodule Static.Test do
     use Scenic.Cache.Base, name: "static_test", static: true
@@ -19,11 +19,13 @@ defmodule Scenic.Cache.BaseTest do
 
   setup do
     :ets.new(@table, [:set, :protected, :named_table])
-    {:ok, static} = Base.start_link(Static.Test, "static_test")    
+    {:ok, static} = Base.start_link(Static.Test, "static_test")
+
     on_exit(fn ->
       Process.exit(static, :normal)
       Process.sleep(2)
     end)
+
     %{static: static}
   end
 
@@ -68,6 +70,7 @@ defmodule Scenic.Cache.BaseTest do
 
   test "get! raises error if missing" do
     :ets.insert(@table, {"hash", 0, "some_data"})
+
     assert_raise Base.Error, fn ->
       Base.get!(@table, "missing")
     end
@@ -81,9 +84,9 @@ defmodule Scenic.Cache.BaseTest do
     :erlang.trace(static, true, [:receive])
     assert Base.put(Static.Test, "hash", "new_data") == {:ok, "hash"}
     assert Base.get(Static.Test, "hash") == "new_data"
+
     assert_receive {:trace, ^static, :receive,
-      {:"$gen_call", {^self,_}, {:put, ^self, "hash", "new_data"}}
-    }
+                    {:"$gen_call", {^self, _}, {:put, ^self, "hash", "new_data"}}}
   end
 
   test "put overwrites existing data", %{static: static} do
@@ -93,9 +96,9 @@ defmodule Scenic.Cache.BaseTest do
     :erlang.trace(static, true, [:receive])
     assert Base.put(Static.Test, "hash", "new_data") == {:ok, "hash"}
     assert Base.get(Static.Test, "hash") == "new_data"
+
     assert_receive {:trace, ^static, :receive,
-      {:"$gen_call", {^self,_}, {:put, ^self, "hash", "new_data"}}
-    }
+                    {:"$gen_call", {^self, _}, {:put, ^self, "hash", "new_data"}}}
   end
 
   test "put claims against various scopes" do
@@ -116,7 +119,6 @@ defmodule Scenic.Cache.BaseTest do
     Agent.stop(agent)
   end
 
-
   # ============================================================================
   # put_new(service, key, data, scope \\ nil)
 
@@ -127,8 +129,7 @@ defmodule Scenic.Cache.BaseTest do
     assert Base.get(Static.Test, "hash") == "new_data"
 
     assert_receive {:trace, ^static, :receive,
-      {:"$gen_call", {^self,_}, {:put_new, ^self, "hash", "new_data"}}
-    }
+                    {:"$gen_call", {^self, _}, {:put_new, ^self, "hash", "new_data"}}}
   end
 
   test "put_new does not overwrite existing data", %{static: static} do
@@ -137,9 +138,8 @@ defmodule Scenic.Cache.BaseTest do
     assert Base.put_new(Static.Test, "hash", "new_data") == {:ok, "hash"}
     assert Base.get(Static.Test, "hash") == "existing_data"
 
-    refute_receive {:trace, ^static, :receive, {:"$gen_call", _, {:put_new, _, _, _}} }
+    refute_receive {:trace, ^static, :receive, {:"$gen_call", _, {:put_new, _, _, _}}}
   end
-
 
   test "put_new claims against various scopes" do
     {:ok, agent} = Agent.start(fn -> 1 + 1 end, name: :named_scope)
@@ -159,7 +159,6 @@ defmodule Scenic.Cache.BaseTest do
     Agent.stop(agent)
   end
 
-
   # ============================================================================
   # claim(service, key, scope \\ nil)
 
@@ -171,7 +170,6 @@ defmodule Scenic.Cache.BaseTest do
     assert Base.claim(Static.Test, "hash") == :ok
     assert Base.keys(Static.Test) == ["hash"]
   end
-
 
   test "claim works with various scopes" do
     {:ok, agent} = Agent.start(fn -> 1 + 1 end, name: :named_scope)
@@ -217,15 +215,18 @@ defmodule Scenic.Cache.BaseTest do
     assert Base.fetch(Static.Test, "hash") == {:ok, "new_data"}
 
     assert Base.release(Static.Test, "hash", delay: 0) == :ok
-    Process.sleep(6) # release is async. Wait for it to do it's work
+    # release is async. Wait for it to do it's work
+    Process.sleep(6)
     assert Base.fetch(Static.Test, "hash") == {:ok, "new_data"}
 
     assert Base.release(Static.Test, "hash", scope: :global, delay: 0) == :ok
-    Process.sleep(6) # release is async. Wait for it to do it's work
+    # release is async. Wait for it to do it's work
+    Process.sleep(6)
     assert Base.fetch(Static.Test, "hash") == {:ok, "new_data"}
 
     assert Base.release(Static.Test, "hash", scope: :named_scope, delay: 0) == :ok
-    Process.sleep(6) # release is async. Wait for it to do it's work
+    # release is async. Wait for it to do it's work
+    Process.sleep(6)
     assert Base.fetch(Static.Test, "hash") == {:error, :not_found}
 
     Agent.stop(agent)
@@ -250,9 +251,8 @@ defmodule Scenic.Cache.BaseTest do
 
     assert Base.status(Static.Test, "hash") == {:ok, self}
 
-    assert_receive {:trace, ^static, :receive, {:"$gen_call", {^self, _},
-      {:status, ^self, "hash"}}
-    }
+    assert_receive {:trace, ^static, :receive,
+                    {:"$gen_call", {^self, _}, {:status, ^self, "hash"}}}
   end
 
   test "status indicates if the scope is claimed globally" do
@@ -273,7 +273,6 @@ defmodule Scenic.Cache.BaseTest do
     Agent.stop(agent)
   end
 
-
   # ============================================================================
   # keys( service, scope \\ nil)
 
@@ -282,8 +281,8 @@ defmodule Scenic.Cache.BaseTest do
 
     Base.put(Static.Test, "hash_0", "data_0")
     Base.put(Static.Test, "hash_1", "data_1")
-    Base.claim(Static.Test, "hash_0",  :global)
-    Base.claim(Static.Test, "hash_1",  :named_scope)
+    Base.claim(Static.Test, "hash_0", :global)
+    Base.claim(Static.Test, "hash_1", :named_scope)
 
     assert Base.keys(Static.Test) == ["hash_1", "hash_0"]
     assert Base.keys(Static.Test, :global) == ["hash_0"]
@@ -300,8 +299,8 @@ defmodule Scenic.Cache.BaseTest do
   test "member? works" do
     Base.put(Static.Test, "hash_0", "data_0")
 
-    assert Base.member?( Static.Test, "hash_0" )
-    refute Base.member?( Static.Test, "hash_1" )
+    assert Base.member?(Static.Test, "hash_0")
+    refute Base.member?(Static.Test, "hash_1")
   end
 
   # ============================================================================
@@ -312,12 +311,11 @@ defmodule Scenic.Cache.BaseTest do
 
     Base.put(Static.Test, "hash_0", "data_0")
     Base.put(Static.Test, "hash_1", "data_1")
-    Base.claim(Static.Test, "hash_0",  :global)
-    Base.claim(Static.Test, "hash_1",  :named_scope)
+    Base.claim(Static.Test, "hash_0", :global)
+    Base.claim(Static.Test, "hash_1", :named_scope)
 
     assert Base.claimed?(Static.Test, "hash_0")
     assert Base.claimed?(Static.Test, "hash_1")
-
 
     assert Base.claimed?(Static.Test, "hash_0", :global)
     refute Base.claimed?(Static.Test, "hash_1", :global)
@@ -411,5 +409,4 @@ defmodule Scenic.Cache.BaseTest do
     assert_receive {:"$gen_cast", {Static.Test, :delete, "hash"}}
     refute_receive {:"$gen_cast", {Static.Test, :delete, "hash2"}}
   end
-
 end

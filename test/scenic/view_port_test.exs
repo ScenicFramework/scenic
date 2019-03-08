@@ -51,13 +51,13 @@ defmodule Scenic.ViewPortTest do
     drivers: [@driver_config]
   }
 
-  @roboto_hash  :code.priv_dir(:scenic)
-  |> Path.join( "static/font_metrics" )
-  |> Path.join("Roboto-Regular.ttf.metrics" )
-  |> Support.File.read!(:insecure)
-  |> FontMetrics.from_binary!()
-  |> Map.get(:source)
-  |> Map.get(:signature)
+  @roboto_hash :code.priv_dir(:scenic)
+               |> Path.join("static/font_metrics")
+               |> Path.join("Roboto-Regular.ttf.metrics")
+               |> Support.File.read!(:insecure)
+               |> FontMetrics.from_binary!()
+               |> Map.get(:source)
+               |> Map.get(:signature)
 
   setup do
     {:ok, tables} = Tables.start_link(nil)

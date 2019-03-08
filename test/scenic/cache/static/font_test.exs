@@ -10,15 +10,14 @@ defmodule Scenic.Cache.Static.FontTest do
   alias Scenic.Cache.Static.Font
   alias Scenic.Cache.Support
 
-
-  @folder  File.cwd!()
-  |> Path.join( "test/artifacts" )
-  |> Path.expand()
+  @folder File.cwd!()
+          |> Path.join("test/artifacts")
+          |> Path.expand()
   @hash Path.join(
-    @folder,
-    "sub_folder/file.gcr-YPuqPx54bvrIT40N7Ly-_l1sXer-62_Q7xnrzoE"
-  )
-  |> Support.Hash.file!(:sha256)
+          @folder,
+          "sub_folder/file.gcr-YPuqPx54bvrIT40N7Ly-_l1sXer-62_Q7xnrzoE"
+        )
+        |> Support.Hash.file!(:sha256)
 
   setup do
     GenServer.call(Font, :reset)
@@ -107,37 +106,37 @@ defmodule Scenic.Cache.Static.FontTest do
     refute_receive {:"$gen_cast", {Font, :put, "hash"}}
   end
 
-
   # ============================================================================
   # loaders
 
   test "load font works from the given directory" do
-    assert Font.load( @hash, @folder ) == {:ok, @hash}
-    assert Font.load( {:true_type, @hash}, @folder ) == {:ok, @hash}
+    assert Font.load(@hash, @folder) == {:ok, @hash}
+    assert Font.load({:true_type, @hash}, @folder) == {:ok, @hash}
   end
 
   test "load passes through errors" do
-    assert Font.load( @hash, "wrong/path" ) ==
-      {:error, :not_found}
-    assert Font.load( "bad_hash", @folder ) ==
-      {:error, :hash_failure}
+    assert Font.load(@hash, "wrong/path") ==
+             {:error, :not_found}
+
+    assert Font.load("bad_hash", @folder) ==
+             {:error, :hash_failure}
   end
 
   # ============================================================================
   # loaders!
 
   test "load! font works" do
-    assert Font.load!( @hash, @folder ) == @hash
-    assert Font.load!( {:true_type, @hash}, @folder ) == @hash
+    assert Font.load!(@hash, @folder) == @hash
+    assert Font.load!({:true_type, @hash}, @folder) == @hash
   end
 
   test "load! raises errors" do
     assert_raise Scenic.Cache.Static.Font.Error, fn ->
-      Font.load!( @hash, "wrong/path", [] )
+      Font.load!(@hash, "wrong/path", [])
     end
+
     assert_raise Support.Hash.Error, fn ->
-      Font.load!( "bad_hash", @folder, [] )
+      Font.load!("bad_hash", @folder, [])
     end
   end
-
 end

@@ -97,10 +97,9 @@ defmodule Scenic.Cache.Support.FileTest do
   end
 
   test "read handles unzip errors" do
-    assert Support.File.read( @sample_path, @sample_sha, decompress: true ) ==
-      {:error, :decompress}
+    assert Support.File.read(@sample_path, @sample_sha, decompress: true) ==
+             {:error, :decompress}
   end
-
 
   # ============================================================================
   # read!
@@ -163,28 +162,27 @@ defmodule Scenic.Cache.Support.FileTest do
   test "read!(path, hash) gzip FAILS with invalid :sha256 hash" do
     assert_raise Scenic.Cache.Support.Hash.Error, fn ->
       Support.File.read!(
-             @sample_gzip_path,
-             @invalid_sha256,
-             hash: :sha256,
-             decompress: true
-           )
+        @sample_gzip_path,
+        @invalid_sha256,
+        hash: :sha256,
+        decompress: true
+      )
     end
   end
 
   test "read! passes through file rrors" do
     assert_raise File.Error, fn ->
       Support.File.read!(
-             "not/valid/path",
-             @invalid_sha256,
-             hash: :sha256
-           )
+        "not/valid/path",
+        @invalid_sha256,
+        hash: :sha256
+      )
     end
   end
 
   test "read! passes through unzip errors" do
     assert_raise ErlangError, fn ->
-      Support.File.read!( @sample_path, @sample_sha, decompress: true )
+      Support.File.read!(@sample_path, @sample_sha, decompress: true)
     end
   end
-
 end

@@ -150,9 +150,10 @@ defmodule Scenic.Cache.Base do
 
   @type hash :: String.t()
 
-  @type sub_types :: :put
-  | :delete
-  | :all
+  @type sub_types ::
+          :put
+          | :delete
+          | :all
 
   @default_release_delay 400
 
@@ -164,18 +165,14 @@ defmodule Scenic.Cache.Base do
     defexception message: nil
   end
 
-
   # ============================================================================
   # callback definitions
 
-  @callback load( hash_name :: String.t(), file_path :: String.t(), options :: list ) ::
-    {:ok, data :: any()} | {:error, error :: atom}
+  @callback load(hash_name :: String.t(), file_path :: String.t(), options :: list) ::
+              {:ok, data :: any()} | {:error, error :: atom}
 
-  @callback load!( hash_name :: String.t(), file_path :: String.t(), options :: list ) ::
-    data :: any()
-
-
-
+  @callback load!(hash_name :: String.t(), file_path :: String.t(), options :: list) ::
+              data :: any()
 
   # ============================================================================
   # using macro
@@ -334,9 +331,8 @@ defmodule Scenic.Cache.Base do
       """
       @spec get(hash :: Scenic.Cache.Base.hash(), default :: term()) :: term() | nil
       def get(hash, default \\ nil) do
-        Scenic.Cache.Base.get( __MODULE__, hash, default )
+        Scenic.Cache.Base.get(__MODULE__, hash, default)
       end
-
 
       # --------------------------------------------------------
       @doc """
@@ -353,7 +349,7 @@ defmodule Scenic.Cache.Base do
       """
       @spec fetch(hash :: Scenic.Cache.Base.hash()) :: term() | {:error, :not_found}
       def fetch(hash) do
-        Scenic.Cache.Base.fetch( __MODULE__, hash )
+        Scenic.Cache.Base.fetch(__MODULE__, hash)
       end
 
       # --------------------------------------------------------
@@ -364,7 +360,7 @@ defmodule Scenic.Cache.Base do
       """
       @spec get!(hash :: Scenic.Cache.Base.hash()) :: term()
       def get!(hash) do
-        Scenic.Cache.Base.get!( __MODULE__, hash )
+        Scenic.Cache.Base.get!(__MODULE__, hash)
       end
 
       # put is not to be inserted into static-item caches
@@ -387,12 +383,12 @@ defmodule Scenic.Cache.Base do
         {:ok, hash}
         """
         @spec put(
-          hash :: Scenic.Cache.Base.hash(),
-          data :: term(),
-          scope :: :global | nil | GenServer.server()
-        ) :: term()
+                hash :: Scenic.Cache.Base.hash(),
+                data :: term(),
+                scope :: :global | nil | GenServer.server()
+              ) :: term()
         def put(hash, data, scope \\ nil) do
-          Scenic.Cache.Base.put( __MODULE__, hash, data, scope )
+          Scenic.Cache.Base.put(__MODULE__, hash, data, scope)
         end
       end
 
@@ -414,12 +410,12 @@ defmodule Scenic.Cache.Base do
       {:ok, hash}
       """
       @spec put_new(
-        hash :: Scenic.Cache.Base.hash(),
-        data :: term(),
-        scope :: :global | nil | GenServer.server()
-      ) :: term()
+              hash :: Scenic.Cache.Base.hash(),
+              data :: term(),
+              scope :: :global | nil | GenServer.server()
+            ) :: term()
       def put_new(hash, data, scope \\ nil) do
-        Scenic.Cache.Base.put_new( __MODULE__, hash, data, scope )
+        Scenic.Cache.Base.put_new(__MODULE__, hash, data, scope)
       end
 
       # --------------------------------------------------------
@@ -433,9 +429,9 @@ defmodule Scenic.Cache.Base do
       Returns `false` if the asset is not loaded into the cache.
       """
       @spec claim(
-        hash :: Scenic.Cache.Base.hash(),
-        scope :: :global | nil | GenServer.server()
-      ) :: term()
+              hash :: Scenic.Cache.Base.hash(),
+              scope :: :global | nil | GenServer.server()
+            ) :: term()
       def claim(hash, scope \\ nil) do
         Scenic.Cache.Base.claim(__MODULE__, hash, scope)
       end
@@ -460,9 +456,9 @@ defmodule Scenic.Cache.Base do
 
       # returns :ok
       @spec release(
-        hash :: Scenic.Cache.Base.hash(),
-        opts :: list
-      ) :: :ok
+              hash :: Scenic.Cache.Base.hash(),
+              opts :: list
+            ) :: :ok
 
       def release(hash, opts \\ []) do
         Scenic.Cache.Base.release(__MODULE__, hash, opts)
@@ -475,9 +471,9 @@ defmodule Scenic.Cache.Base do
       This is used to test if the current process has claimed a scope on an asset.
       """
       @spec status(
-        hash :: Scenic.Cache.Base.hash(),
-        scope :: :global | nil | GenServer.server()
-      ) :: :ok
+              hash :: Scenic.Cache.Base.hash(),
+              scope :: :global | nil | GenServer.server()
+            ) :: :ok
       def status(hash, scope \\ nil) do
         Scenic.Cache.Base.status(__MODULE__, hash, scope)
       end
@@ -486,10 +482,8 @@ defmodule Scenic.Cache.Base do
       @doc """
       Returns a list of keys claimed by the given scope.
       """
-      @spec keys(
-        scope :: :global | nil | GenServer.server()
-      ) :: list
-      def keys( scope \\ nil ) do
+      @spec keys(scope :: :global | nil | GenServer.server()) :: list
+      def keys(scope \\ nil) do
         Scenic.Cache.Base.keys(__MODULE__, scope)
       end
 
@@ -497,9 +491,7 @@ defmodule Scenic.Cache.Base do
       @doc """
       Tests if a key is claimed by *any* scope.
       """
-      @spec member?(
-        hash :: Scenic.Cache.Base.hash()
-      ) :: true | false
+      @spec member?(hash :: Scenic.Cache.Base.hash()) :: true | false
       def member?(hash) do
         Scenic.Cache.Base.member?(__MODULE__, hash)
       end
@@ -509,10 +501,10 @@ defmodule Scenic.Cache.Base do
       Tests if a key is claimed by the given scope.
       """
       @spec claimed?(
-      hash :: Scenic.Cache.Base.hash(),
-      scope :: :global | nil | GenServer.server()
-      ) :: true | false
-      def claimed?(hash,  scope \\ nil) do
+              hash :: Scenic.Cache.Base.hash(),
+              scope :: :global | nil | GenServer.server()
+            ) :: true | false
+      def claimed?(hash, scope \\ nil) do
         Scenic.Cache.Base.claimed?(__MODULE__, hash, scope)
       end
 
@@ -531,9 +523,9 @@ defmodule Scenic.Cache.Base do
         * `:all` - all of the above message types
       """
       @spec subscribe(
-        hash :: Scenic.Cache.Base.hash() | :all,
-        sub_type :: Scenic.Cache.Base.sub_types()
-      ) :: :ok
+              hash :: Scenic.Cache.Base.hash() | :all,
+              sub_type :: Scenic.Cache.Base.sub_types()
+            ) :: :ok
 
       def subscribe(hash, sub_type \\ :all) do
         Scenic.Cache.Base.subscribe(__MODULE__, hash, sub_type)
@@ -555,9 +547,9 @@ defmodule Scenic.Cache.Base do
 
       """
       @spec unsubscribe(
-        hash :: Scenic.Cache.Base.hash() | :all,
-        sub_type :: Scenic.Cache.Base.sub_types()
-      ) :: :ok
+              hash :: Scenic.Cache.Base.hash() | :all,
+              sub_type :: Scenic.Cache.Base.sub_types()
+            ) :: :ok
 
       def unsubscribe(hash, sub_type \\ :all) do
         Scenic.Cache.Base.unsubscribe(__MODULE__, hash, sub_type)
@@ -568,7 +560,8 @@ defmodule Scenic.Cache.Base do
       @doc false
       def child_spec(_) do
         %{
-          id: __MODULE__, #make_ref(),
+          # make_ref(),
+          id: __MODULE__,
           start: {Scenic.Cache.Base, :start_link, [__MODULE__, unquote(using_opts)[:name]]},
           type: :worker,
           restart: :permanent,
@@ -587,7 +580,6 @@ defmodule Scenic.Cache.Base do
     end
   end
 
-
   # ============================================================================
   # client API 
 
@@ -599,10 +591,10 @@ defmodule Scenic.Cache.Base do
   either nil or the supplied default value
   """
   @spec get(
-    service :: atom,
-    hash :: Scenic.Cache.Base.hash(),
-    default :: term()
-  ) :: term() | nil
+          service :: atom,
+          hash :: Scenic.Cache.Base.hash(),
+          default :: term()
+        ) :: term() | nil
 
   def get(service, hash, default \\ nil) do
     :ets.lookup_element(service, hash, 3)
@@ -614,7 +606,6 @@ defmodule Scenic.Cache.Base do
       reraise(other, __STACKTRACE__)
   end
 
-
   # --------------------------------------------------------
   @doc """
   Retrieve an item from the cache and wrap it in an `{:ok, _}` tuple.
@@ -622,9 +613,9 @@ defmodule Scenic.Cache.Base do
   This function ideal if you need to pattern match on the result.
   """
   @spec fetch(
-    service :: atom,
-    hash :: Scenic.Cache.Base.hash()
-  ) :: term() | {:error, :not_found}
+          service :: atom,
+          hash :: Scenic.Cache.Base.hash()
+        ) :: term() | {:error, :not_found}
   def fetch(service, hash)
 
   def fetch(service, hash) do
@@ -644,9 +635,9 @@ defmodule Scenic.Cache.Base do
   If there is no item in the Cache that corresponds to the hash the function will raise an error.
   """
   @spec get!(
-    service :: atom,
-    hash :: Scenic.Cache.Base.hash()
-  ) :: term()
+          service :: atom,
+          hash :: Scenic.Cache.Base.hash()
+        ) :: term()
 
   def get!(service, hash)
 
@@ -681,14 +672,14 @@ defmodule Scenic.Cache.Base do
       :test_data
   """
   @spec put(
-    service :: atom,
-    hash :: Scenic.Cache.Base.hash(),
-    data :: term(),
-    scope :: :global | nil | GenServer.server()
-  ) :: term()
+          service :: atom,
+          hash :: Scenic.Cache.Base.hash(),
+          data :: term(),
+          scope :: :global | nil | GenServer.server()
+        ) :: term()
 
-  def put(service, key, data, scope \\ nil) when
-  service != nil and (is_atom(service) or is_pid(service)) do
+  def put(service, key, data, scope \\ nil)
+      when service != nil and (is_atom(service) or is_pid(service)) do
     GenServer.call(service, {:put, normalize_scope(scope), key, data})
   end
 
@@ -713,23 +704,24 @@ defmodule Scenic.Cache.Base do
       :test_data
   """
   @spec put_new(
-    service :: atom,
-    hash :: Scenic.Cache.Base.hash(),
-    data :: term(),
-    scope :: :global | nil | GenServer.server()
-  ) :: term()
+          service :: atom,
+          hash :: Scenic.Cache.Base.hash(),
+          data :: term(),
+          scope :: :global | nil | GenServer.server()
+        ) :: term()
 
-  def put_new(service, hash, data, scope \\ nil) when
-  service != nil and (is_atom(service) or is_pid(service)) do
+  def put_new(service, hash, data, scope \\ nil)
+      when service != nil and (is_atom(service) or is_pid(service)) do
     scope = normalize_scope(scope)
+
     case :ets.member(service, hash) do
       true ->
         {:ok, hash}
+
       false ->
         GenServer.call(service, {:put_new, scope, hash, data})
     end
   end
-
 
   # --------------------------------------------------------
   @doc """
@@ -742,15 +734,16 @@ defmodule Scenic.Cache.Base do
   Returns `false` if the asset is not loaded into the cache.
   """
   @spec claim(
-    service :: atom,
-    hash :: Scenic.Cache.Base.hash(),
-    scope :: :global | nil | GenServer.server()
-  ) :: {:ok, Scenic.Cache.Base.hash()}
+          service :: atom,
+          hash :: Scenic.Cache.Base.hash(),
+          scope :: :global | nil | GenServer.server()
+        ) :: {:ok, Scenic.Cache.Base.hash()}
 
   def claim(service, key, scope \\ nil) do
     case :ets.member(service, key) do
       true ->
-        GenServer.call( service, {:claim, normalize_scope(scope), key} )
+        GenServer.call(service, {:claim, normalize_scope(scope), key})
+
       false ->
         {:error, :not_found}
     end
@@ -776,10 +769,10 @@ defmodule Scenic.Cache.Base do
 
   # returns :ok
   @spec release(
-    service :: atom,
-    hash :: Scenic.Cache.Base.hash(),
-    opts :: list
-  ) :: :ok
+          service :: atom,
+          hash :: Scenic.Cache.Base.hash(),
+          opts :: list
+        ) :: :ok
   def release(service, hash, opts \\ []) do
     case :ets.member(service, hash) do
       true ->
@@ -788,14 +781,15 @@ defmodule Scenic.Cache.Base do
 
         case opts[:delay] do
           nil ->
-            Process.send_after( service, msg, @default_release_delay )
+            Process.send_after(service, msg, @default_release_delay)
 
-          0 -> 
-            Process.send( service, msg, [] )
-             
+          0 ->
+            Process.send(service, msg, [])
+
           delay when is_integer(delay) and delay >= 0 ->
-            Process.send_after( service, msg, delay )
+            Process.send_after(service, msg, delay)
         end
+
         :ok
 
       false ->
@@ -817,14 +811,15 @@ defmodule Scenic.Cache.Base do
     {:error, :not_found}  # it is not in the cache at all
   """
   @spec status(
-    service :: atom,
-    hash :: Scenic.Cache.Base.hash(),
-    scope :: :global | nil | GenServer.server()
-  ) :: :ok
+          service :: atom,
+          hash :: Scenic.Cache.Base.hash(),
+          scope :: :global | nil | GenServer.server()
+        ) :: :ok
   def status(service, hash, scope \\ nil) do
     case :ets.member(service, hash) do
       true ->
-        GenServer.call( service, {:status, normalize_scope(scope), hash} )
+        GenServer.call(service, {:status, normalize_scope(scope), hash})
+
       false ->
         {:error, :not_found}
     end
@@ -839,13 +834,12 @@ defmodule Scenic.Cache.Base do
   returns a list of claimed keys.
   """
   @spec keys(
-    service :: atom,
-    scope :: :global | nil | GenServer.server()
-  ) :: list
-  def keys( service, scope \\ nil) do
-    GenServer.call( service, {:keys, normalize_scope(scope)} )
+          service :: atom,
+          scope :: :global | nil | GenServer.server()
+        ) :: list
+  def keys(service, scope \\ nil) do
+    GenServer.call(service, {:keys, normalize_scope(scope)})
   end
-
 
   @doc """
   Tests if a key is claimed by *any* scope.
@@ -855,13 +849,12 @@ defmodule Scenic.Cache.Base do
   returns true or false.
   """
   @spec member?(
-    service :: atom,
-    hash :: Scenic.Cache.Base.hash()
-  ) :: true | false
+          service :: atom,
+          hash :: Scenic.Cache.Base.hash()
+        ) :: true | false
   def member?(service, key) do
     :ets.member(service, key)
   end
-
 
   @doc """
   Tests if a key is claimed by the scope.
@@ -871,21 +864,19 @@ defmodule Scenic.Cache.Base do
   returns true or false.
   """
   @spec claimed?(
-    service :: atom,
-    hash :: Scenic.Cache.Base.hash(),
-    scope :: :global | nil | GenServer.server()
-  ) :: true | false
+          service :: atom,
+          hash :: Scenic.Cache.Base.hash(),
+          scope :: :global | nil | GenServer.server()
+        ) :: true | false
   def claimed?(service, key, scope \\ nil) do
     case :ets.member(service, key) do
       true ->
-        GenServer.call( service, {:claimed?, normalize_scope(scope), key} )
+        GenServer.call(service, {:claimed?, normalize_scope(scope), key})
+
       false ->
         {:error, :not_found}
     end
   end
-
-
-
 
   # ----------------------------------------------
   @doc """
@@ -902,33 +893,36 @@ defmodule Scenic.Cache.Base do
     in :all for messages about all keys
   """
   @spec subscribe(
-    service :: atom,
-    hash :: hash() | :all,
-    sub_type :: sub_types()
-  ) :: :ok
+          service :: atom,
+          hash :: hash() | :all,
+          sub_type :: sub_types()
+        ) :: :ok
 
   def subscribe(service, hash, sub_type \\ :all)
 
   # explicit calls to enforce incoming types
-  def subscribe(service, hash, :all), do: do_subscribe( service, hash, :all )
-  def subscribe(service, hash, :put), do: do_subscribe( service, hash, :put )
-  def subscribe(service, hash, :delete), do: do_subscribe( service, hash, :delete )
+  def subscribe(service, hash, :all), do: do_subscribe(service, hash, :all)
+  def subscribe(service, hash, :put), do: do_subscribe(service, hash, :put)
+  def subscribe(service, hash, :delete), do: do_subscribe(service, hash, :delete)
 
-  def subscribe(service, hash, :cache_put), do: deprecated_sub( service, hash, :cache_put, :put )
-  def subscribe(service, hash, :cache_delete), do: deprecated_sub( service, hash, :cache_delete, :delete )
+  def subscribe(service, hash, :cache_put), do: deprecated_sub(service, hash, :cache_put, :put)
 
-  defp do_subscribe( service, key, type ) do
-    GenServer.cast( service, {:subscribe, type, key, self()} )
+  def subscribe(service, hash, :cache_delete),
+    do: deprecated_sub(service, hash, :cache_delete, :delete)
+
+  defp do_subscribe(service, key, type) do
+    GenServer.cast(service, {:subscribe, type, key, self()})
   end
 
-  defp deprecated_sub( service, hash, old, new ) do
+  defp deprecated_sub(service, hash, old, new) do
     IO.ANSI.yellow() <>
-    """
-    Cache subscription type #{inspect(old)} is deprecated
-    Please use #{inspect(new)} instead
-    """ <>
-    IO.ANSI.default_color()
-    do_subscribe( service, hash, new )
+      """
+      Cache subscription type #{inspect(old)} is deprecated
+      Please use #{inspect(new)} instead
+      """ <>
+      IO.ANSI.default_color()
+
+    do_subscribe(service, hash, new)
   end
 
   # ----------------------------------------------
@@ -947,35 +941,38 @@ defmodule Scenic.Cache.Base do
 
   """
   @spec unsubscribe(
-    service :: atom,
-    hash :: hash() | :all,
-    sub_type :: sub_types()
-  ) :: :ok
+          service :: atom,
+          hash :: hash() | :all,
+          sub_type :: sub_types()
+        ) :: :ok
 
   def unsubscribe(service, sub_type, hash \\ :all)
 
   # explicit calls to enforce incoming types
-  def unsubscribe(service, hash, :all), do: do_unsubscribe( service, hash, :all )
-  def unsubscribe(service, hash, :put), do: do_unsubscribe( service, hash, :put )
-  def unsubscribe(service, hash, :delete), do: do_unsubscribe( service, hash, :delete )
+  def unsubscribe(service, hash, :all), do: do_unsubscribe(service, hash, :all)
+  def unsubscribe(service, hash, :put), do: do_unsubscribe(service, hash, :put)
+  def unsubscribe(service, hash, :delete), do: do_unsubscribe(service, hash, :delete)
 
-  def unsubscribe(service, hash, :cache_put), do: deprecated_unsub( service, hash, :cache_put, :put )
-  def unsubscribe(service, hash, :cache_delete), do: deprecated_unsub( service, hash, :cache_delete, :delete )
+  def unsubscribe(service, hash, :cache_put),
+    do: deprecated_unsub(service, hash, :cache_put, :put)
 
-  defp do_unsubscribe( service, key, type ) do
-    GenServer.cast( service, {:unsubscribe, type, key, self()} )
+  def unsubscribe(service, hash, :cache_delete),
+    do: deprecated_unsub(service, hash, :cache_delete, :delete)
+
+  defp do_unsubscribe(service, key, type) do
+    GenServer.cast(service, {:unsubscribe, type, key, self()})
   end
 
-  defp deprecated_unsub( service, hash, old, new ) do
+  defp deprecated_unsub(service, hash, old, new) do
     IO.ANSI.yellow() <>
-    """
-    Cache subscription type #{inspect(old)} is deprecated
-    Please use #{inspect(new)} instead
-    """ <>
-    IO.ANSI.default_color()
-    do_unsubscribe( service, hash, new )
-  end
+      """
+      Cache subscription type #{inspect(old)} is deprecated
+      Please use #{inspect(new)} instead
+      """ <>
+      IO.ANSI.default_color()
 
+    do_unsubscribe(service, hash, new)
+  end
 
   # ============================================================================
 
@@ -1003,7 +1000,6 @@ defmodule Scenic.Cache.Base do
   # --------------------------------------------------------
   @doc false
   def handle_info({:DOWN, _, :process, scope_pid, _}, %{scopes: scopes} = state) do
-
     # a scope process we are monitoring just went down. Clean up after it.
     Map.get(scopes, scope_pid, [])
     |> Enum.each(
@@ -1019,7 +1015,7 @@ defmodule Scenic.Cache.Base do
 
   # --------------------------------------------------------
   def handle_info({:release, scope, key}, state) do
-    {:noreply, internal_release( scope, key, state )}
+    {:noreply, internal_release(scope, key, state)}
   end
 
   # ============================================================================
@@ -1037,7 +1033,7 @@ defmodule Scenic.Cache.Base do
         :ets.insert(table, {key, 1, data})
 
         # monitor the scope
-        monitor_scope( scope )
+        monitor_scope(scope)
 
         # dispatch a put message
         dispatch_notification(:put, key, state)
@@ -1054,11 +1050,12 @@ defmodule Scenic.Cache.Base do
       true ->
         # already there. only need to claim it
         {:reply, {:ok, key}, internal_claim(scope, key, state)}
+
       false ->
         :ets.insert(table, {key, 1, data})
 
         # monitor the scope
-        monitor_scope( scope )
+        monitor_scope(scope)
 
         # dispatch a put message
         dispatch_notification(:put, key, state)
@@ -1075,10 +1072,12 @@ defmodule Scenic.Cache.Base do
 
   # --------------------------------------------------------
   def handle_call({:status, scope, key}, _, %{table: table, scopes: scopes} = state) do
-    reply = case :ets.member(table, key) do
-      true -> internal_status(scope, key, scopes)
-      false -> {:error, :not_found}
-    end
+    reply =
+      case :ets.member(table, key) do
+        true -> internal_status(scope, key, scopes)
+        false -> {:error, :not_found}
+      end
+
     {:reply, reply, state}
   end
 
@@ -1097,10 +1096,13 @@ defmodule Scenic.Cache.Base do
   if Mix.env() == :test do
     def handle_call(:reset, _, %{table: table} = state) do
       :ets.delete_all_objects(table)
-      state = state
-      |> Map.put( :scopes, %{} )
-      |> Map.put( :claims, %{} )
-      |> Map.put( :subs, %{} )
+
+      state =
+        state
+        |> Map.put(:scopes, %{})
+        |> Map.put(:claims, %{})
+        |> Map.put(:subs, %{})
+
       {:reply, :ok, state}
     end
   end
@@ -1110,30 +1112,27 @@ defmodule Scenic.Cache.Base do
 
   # --------------------------------------------------------
   def handle_cast({:subscribe, type, target, pid}, state) do
-    {:noreply, internal_subscribe( state, type, target, pid )}
+    {:noreply, internal_subscribe(state, type, target, pid)}
   end
 
   # --------------------------------------------------------
   def handle_cast({:unsubscribe, type, target, pid}, state) do
-    {:noreply, internal_unsubscribe( state, type, target, pid )}
+    {:noreply, internal_unsubscribe(state, type, target, pid)}
   end
-
-
-
 
   # ============================================================================
   # private helpers
 
   # --------------------------------------------------------
-  defp normalize_scope( scope )
-  defp normalize_scope( nil ), do: self()
-  defp normalize_scope( :global ), do: :global
-  defp normalize_scope( name ) when is_atom(name), do: Process.whereis(name)
-  defp normalize_scope( pid ) when is_pid(pid), do: pid
+  defp normalize_scope(scope)
+  defp normalize_scope(nil), do: self()
+  defp normalize_scope(:global), do: :global
+  defp normalize_scope(name) when is_atom(name), do: Process.whereis(name)
+  defp normalize_scope(pid) when is_pid(pid), do: pid
 
   # --------------------------------------------------------
-  defp monitor_scope( :global ), do: :ok
-  defp monitor_scope( scope_pid ), do: Process.monitor( scope_pid )
+  defp monitor_scope(:global), do: :ok
+  defp monitor_scope(scope_pid), do: Process.monitor(scope_pid)
 
   # --------------------------------------------------------
   defp internal_claim(scope, key, %{table: table, scopes: scopes, claims: claims} = state) do
@@ -1141,7 +1140,7 @@ defmodule Scenic.Cache.Base do
     key_scopes = Map.get(claims, key, [])
 
     with true <- :ets.member(table, key),
-    false <- Enum.member?(key_scopes, scope) do
+         false <- Enum.member?(key_scopes, scope) do
       scopes = Map.put(scopes, scope, Enum.uniq([key | scope_keys]))
       claims = Map.put(claims, key, Enum.uniq([scope | key_scopes]))
       %{state | scopes: scopes, claims: claims}
@@ -1150,40 +1149,42 @@ defmodule Scenic.Cache.Base do
     end
   end
 
-
   # --------------------------------------------------------
-  defp internal_release( scope, key, %{table: table, scopes: scopes, claims: claims} = state ) do
+  defp internal_release(scope, key, %{table: table, scopes: scopes, claims: claims} = state) do
     scope_keys = Map.get(scopes, scope, [])
     key_scopes = Map.get(claims, key, [])
 
     # first, cleanup the scope tracking
-    scopes = case Enum.member?( scope_keys, key ) do
-      false ->
-        scopes
+    scopes =
+      case Enum.member?(scope_keys, key) do
+        false ->
+          scopes
 
-      true ->
-        case Enum.reject(scope_keys, &Kernel.==(&1, key)) do
-          [] -> Map.delete(scopes, scope)
-          keys -> Map.put(scopes, scope, keys)
-        end
-    end
+        true ->
+          case Enum.reject(scope_keys, &Kernel.==(&1, key)) do
+            [] -> Map.delete(scopes, scope)
+            keys -> Map.put(scopes, scope, keys)
+          end
+      end
 
     # second, clean up the claim tracking
     # if claims go to zero, delete the row in the table
-    claims = case Enum.member?( scope_keys, key ) do
-      false ->
-        claims
+    claims =
+      case Enum.member?(scope_keys, key) do
+        false ->
+          claims
 
-      true ->
-        case Enum.reject(key_scopes, &Kernel.==(&1, scope)) do
-          [] ->
-            dispatch_notification(:delete, key, state)
-            :ets.delete(table, key)
-            Map.delete(claims, key)
-          ks ->
-            Map.put(claims, key, ks)
-        end
-    end
+        true ->
+          case Enum.reject(key_scopes, &Kernel.==(&1, scope)) do
+            [] ->
+              dispatch_notification(:delete, key, state)
+              :ets.delete(table, key)
+              Map.delete(claims, key)
+
+            ks ->
+              Map.put(claims, key, ks)
+          end
+      end
 
     %{state | scopes: scopes, claims: claims}
   end
@@ -1192,7 +1193,7 @@ defmodule Scenic.Cache.Base do
   defp internal_status(:global, key, scopes) do
     scopes
     |> Map.get(:global, [])
-    |> Enum.member?( key )
+    |> Enum.member?(key)
     |> case do
       true -> {:ok, :global}
       false -> {:error, :not_claimed}
@@ -1202,7 +1203,7 @@ defmodule Scenic.Cache.Base do
   defp internal_status(scope, key, scopes) do
     scopes
     |> Map.get(scope, [])
-    |> Enum.member?( key )
+    |> Enum.member?(key)
     |> case do
       true -> {:ok, scope}
       false -> internal_status(:global, key, scopes)
@@ -1215,49 +1216,57 @@ defmodule Scenic.Cache.Base do
   # @deprecated "Use Cache.unsubscribe/1 instead"
 
   # ----------------------------------------------
-  defp internal_subscribe( state, :all, target, pid ) do
+  defp internal_subscribe(state, :all, target, pid) do
     state
     |> internal_subscribe(:put, target, pid)
     |> internal_subscribe(:delete, target, pid)
   end
 
-  defp internal_subscribe( %{subs: subs} = state, type, target, pid ) do
+  defp internal_subscribe(%{subs: subs} = state, type, target, pid) do
     targets = Map.get(subs, type, %{})
-    subscribers = Map.get(targets, target, [])
-    |> List.insert_at( 0, pid )
-    |> Enum.uniq()
 
-    targets = Map.put( targets, target, subscribers )
-    subs = Map.put( subs, type, targets )
+    subscribers =
+      Map.get(targets, target, [])
+      |> List.insert_at(0, pid)
+      |> Enum.uniq()
+
+    targets = Map.put(targets, target, subscribers)
+    subs = Map.put(subs, type, targets)
     %{state | subs: subs}
   end
 
   # ----------------------------------------------
-  defp internal_unsubscribe( state, :all, target, pid ) do
+  defp internal_unsubscribe(state, :all, target, pid) do
     state
     |> internal_unsubscribe(:put, target, pid)
     |> internal_unsubscribe(:delete, target, pid)
   end
 
-  defp internal_unsubscribe( %{subs: subs} = state, type, target, pid ) do
+  defp internal_unsubscribe(%{subs: subs} = state, type, target, pid) do
     targets = Map.get(subs, type, %{})
-    subscribers = Map.get(targets, target, [])
-    |> Enum.reject( &Kernel.==(&1, pid) )
 
-    targets = case subscribers do
-      [] -> Map.delete( targets, target )
-      s -> Map.put( targets, target, s )
-    end
-    subs = Map.put( subs, type, targets )
+    subscribers =
+      Map.get(targets, target, [])
+      |> Enum.reject(&Kernel.==(&1, pid))
+
+    targets =
+      case subscribers do
+        [] -> Map.delete(targets, target)
+        s -> Map.put(targets, target, s)
+      end
+
+    subs = Map.put(subs, type, targets)
     %{state | subs: subs}
   end
 
   # ----------------------------------------------
   defp dispatch_notification(type, target, %{subs: subs, module: module}) do
     type_map = Map.get(subs, type, %{})
-    subs = [ Map.get(type_map, target, []) | Map.get(type_map, :all, []) ]
-    |> List.flatten()
-    |> Enum.uniq()
+
+    subs =
+      [Map.get(type_map, target, []) | Map.get(type_map, :all, [])]
+      |> List.flatten()
+      |> Enum.uniq()
 
     for pid <- subs do
       try do
@@ -1268,17 +1277,7 @@ defmodule Scenic.Cache.Base do
           IO.puts("dispatch_notification/3 failed with #{formatted}")
       end
     end
+
     :ok
   end
 end
-
-
-
-
-
-
-
-
-
-
-

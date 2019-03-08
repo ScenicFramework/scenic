@@ -643,7 +643,7 @@ defmodule Scenic.Scene do
             {mod, func, arity, [file: file, line: line]}, acc ->
               [
                 "#{inspect(file)}:#{inspect(line)}: #{inspect(mod)}." <>
-                "#{inspect(func)}/#{inspect(arity)}"
+                  "#{inspect(func)}/#{inspect(arity)}"
                 | acc
               ]
           end)

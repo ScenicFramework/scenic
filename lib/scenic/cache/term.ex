@@ -38,8 +38,9 @@ defmodule Scenic.Cache.Term do
       end
   """
 
-  def read( path, hash, opts \\ [] )
-  def read( _, _, _ ) do
+  def read(path, hash, opts \\ [])
+
+  def read(_, _, _) do
     raise """
     #{IO.ANSI.red()}
     Scenic.Cache.Term.read/3 has been deprecated and is longer supported.
@@ -49,8 +50,9 @@ defmodule Scenic.Cache.Term do
     """
   end
 
-  def load( path, hash, opts \\ [] )
-  def load( _, _, _ ) do
+  def load(path, hash, opts \\ [])
+
+  def load(_, _, _) do
     raise """
     #{IO.ANSI.red()}
     Scenic.Cache.Term.load/3 has been deprecated and is longer supported.
@@ -59,5 +61,4 @@ defmodule Scenic.Cache.Term do
     a cache for generic terms.
     """
   end
-
 end
