@@ -40,6 +40,8 @@ pull_deps:
 	mix local.hex --force
 	mix local.rebar --force
 	mix deps.get
+	mkdir -p priv/static/font_metrics
+	cp -r deps/font_metrics/test/metrics/*.ttf.metrics priv/static/font_metrics
 
 linter:
 	mix format --check-formatted
