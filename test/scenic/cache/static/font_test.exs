@@ -115,11 +115,9 @@ defmodule Scenic.Cache.Static.FontTest do
   end
 
   test "load passes through errors" do
-    assert Font.load(@hash, "wrong/path") ==
-             {:error, :not_found}
+    assert Font.load(@hash, "wrong/path") == {:error, :not_found}
 
-    assert Font.load("bad_hash", @folder) ==
-             {:error, :hash_failure}
+    assert Font.load("bad_hash", @folder) == {:error, :hash_failure}
   end
 
   # ============================================================================

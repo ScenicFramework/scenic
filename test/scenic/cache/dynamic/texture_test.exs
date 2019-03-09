@@ -110,11 +110,9 @@ defmodule Scenic.Cache.Dynamic.TextureTest do
   end
 
   test "load passes through errors" do
-    assert Texture.load(@parrot_hash, "wrong/path", []) ==
-             {:error, :enoent}
+    assert Texture.load(@parrot_hash, "wrong/path", []) == {:error, :enoent}
 
-    assert Texture.load("bad_hash", @parrot_path, []) ==
-             {:error, :hash_failure}
+    assert Texture.load("bad_hash", @parrot_path, []) == {:error, :hash_failure}
   end
 
   # ============================================================================

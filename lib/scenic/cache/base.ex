@@ -919,8 +919,7 @@ defmodule Scenic.Cache.Base do
       """
       Cache subscription type #{inspect(old)} is deprecated
       Please use #{inspect(new)} instead
-      """ <>
-      IO.ANSI.default_color()
+      """ <> IO.ANSI.default_color()
 
     do_subscribe(service, hash, new)
   end
@@ -968,8 +967,7 @@ defmodule Scenic.Cache.Base do
       """
       Cache subscription type #{inspect(old)} is deprecated
       Please use #{inspect(new)} instead
-      """ <>
-      IO.ANSI.default_color()
+      """ <> IO.ANSI.default_color()
 
     do_unsubscribe(service, hash, new)
   end

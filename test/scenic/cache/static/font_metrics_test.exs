@@ -112,11 +112,9 @@ defmodule Scenic.Cache.Static.FontMetricsTest do
   end
 
   test "load passes through errors" do
-    assert Static.FontMetrics.load(@roboto_hash, "wrong/path") ==
-             {:error, :enoent}
+    assert Static.FontMetrics.load(@roboto_hash, "wrong/path") == {:error, :enoent}
 
-    assert Static.FontMetrics.load("bad_hash", @roboto_path) ==
-             {:error, :hash_failure}
+    assert Static.FontMetrics.load("bad_hash", @roboto_path) == {:error, :hash_failure}
   end
 
   # ============================================================================

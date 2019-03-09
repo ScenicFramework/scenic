@@ -97,8 +97,7 @@ defmodule Scenic.Cache.Support.FileTest do
   end
 
   test "read handles unzip errors" do
-    assert Support.File.read(@sample_path, @sample_sha, decompress: true) ==
-             {:error, :decompress}
+    assert Support.File.read(@sample_path, @sample_sha, decompress: true) == {:error, :decompress}
   end
 
   # ============================================================================
