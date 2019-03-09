@@ -1,6 +1,10 @@
 language: elixir
 sudo: required
 
+branches:
+  only:
+  - /.*/
+
 elixir:
   - 1.8
 otp_release:
