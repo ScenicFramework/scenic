@@ -64,5 +64,5 @@ $(PREFIX) $(BUILD):
 	mkdir -p $@
 
 clean:
-	$(RM) $(NIF) c_src/*.o priv/*.so
+	$(RM) $(NIF) c_src/*.o
 
