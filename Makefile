@@ -42,7 +42,7 @@ pull_deps:
 	mix deps.get
 
 linter:
-	#mix format --check-formatted
+	mix format --check-formatted
 	# mix credo
 
 unit_test:
