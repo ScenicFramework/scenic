@@ -14,7 +14,6 @@ defmodule Scenic.Mixfile do
       version: @version,
       elixir: @elixir_version,
       deps: deps(),
-      # build_embedded: true,
       start_permanent: Mix.env() == :prod,
       compilers: [:elixir_make | Mix.compilers()],
       make_targets: ["all"],
