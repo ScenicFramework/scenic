@@ -573,10 +573,11 @@ defmodule Scenic.Cache.Base do
       # add local shortcuts to things like get/put graph and modify element
       # do not add a put element. keep it at modify to stay atomic
       # --------------------------------------------------------
-      defoverridable get: 1,
-                     get: 2,
-                     get!: 1,
-                     fetch: 1
+      case unquote(using_opts)[:static] do
+        true -> [get: 1, get: 2, get!: 1, fetch: 1, put_new: 3]
+        _ -> [get: 1, get: 2, get!: 1, fetch: 1, put_new: 3, put: 3]
+      end
+      |> defoverridable()
     end
   end
 
