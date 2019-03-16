@@ -48,7 +48,7 @@ defmodule Mix.Tasks.Scenic.Hash do
 
   @default_hash "sha"
 
-  @hash_types Scenic.Cache.Hash.valid_hash_types()
+  @hash_types Scenic.Cache.Support.Hash.valid_hash_types()
   @hash_map Enum.reduce(@hash_types, %{}, &Map.put(&2, to_string(&1), &1))
 
   # import IEx

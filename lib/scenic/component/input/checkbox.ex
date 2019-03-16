@@ -95,21 +95,25 @@ defmodule Scenic.Component.Input.Checkbox do
       (styles[:theme] || Theme.preset(:primary))
       |> Theme.normalize()
 
-    # get button specific styles
-    # width = styles[:width] || @default_width
-    # height = styles[:height] || @default_height
-    # radius = styles[:radius] || @default_radius
-    # font = styles[:component_font] || @default_font
-    # font_size = styles[:component_font_size] || @default_font_size
-    # alignment = styles[:component_align] || @default_alignment
+    # font related info
+    fm = Scenic.Cache.Static.FontMetrics.get!(@default_font)
+    ascent = FontMetrics.ascent(@default_font_size, fm)
+    fm_width = FontMetrics.width(text, @default_font_size, fm)
+    space_width = FontMetrics.width(' ', @default_font_size, fm)
+    box_width = fm_width + ascent + space_width * 2
+    box_height = trunc(ascent) + 1
 
     graph =
       Graph.build(font: @default_font, font_size: @default_font_size)
       |> group(
         fn graph ->
           graph
-          |> rect({140, 16}, fill: :clear, translate: {-2, -2})
-          |> rrect({16, 16, 3},
+          |> rect(
+            {box_width, box_height},
+            fill: :clear,
+            translate: {-2, -2}
+          )
+          |> rrect({box_height, box_height, 3},
             fill: theme.background,
             stroke: {2, theme.border},
             id: :box,
@@ -135,7 +139,7 @@ defmodule Scenic.Component.Input.Checkbox do
         end,
         translate: {0, -11}
       )
-      |> text(text, fill: theme.text, translate: {20, 0})
+      |> text(text, fill: theme.text, translate: {box_height + space_width, 0})
 
     state = %{
       graph: graph,

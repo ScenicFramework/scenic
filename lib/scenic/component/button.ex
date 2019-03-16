@@ -31,8 +31,8 @@ defmodule Scenic.Component.Button do
 
   Buttons honor the following list of additional styles.
 
-  * `:width` - pass in a number to set the width of the button.
-  * `:height` - pass in a number to set the height of the button.
+  * `:width` - :auto (default) or pass in a number to set the width of the button
+  * `:height` - :auto (default) or pass in a number to set the height of the button.
   * `:radius` - pass in a number to set the radius of the button's rounded
   rectangle.
   * `:alignment` - set the alignment of the text inside the button. Can be one
@@ -82,8 +82,6 @@ defmodule Scenic.Component.Button do
 
   # import IEx
 
-  @default_width 80
-  @default_height 30
   @default_radius 3
 
   @default_font :roboto
@@ -116,25 +114,44 @@ defmodule Scenic.Component.Button do
       (styles[:theme] || Theme.preset(:primary))
       |> Theme.normalize()
 
-    # get button specific styles
-    width = styles[:width] || @default_width
-    height = styles[:height] || @default_height
+    # font related info
+    font = @default_font
+    font_size = @default_font_size
+    fm = Scenic.Cache.Static.FontMetrics.get!(font)
+    ascent = FontMetrics.ascent(font_size, fm)
+    descent = FontMetrics.descent(font_size, fm)
+    fm_width = FontMetrics.width(text, font_size, fm)
+
+    width =
+      case styles[:width] || opts[:w] do
+        nil -> fm_width + ascent + ascent
+        :auto -> fm_width + ascent + ascent
+        width when is_number(width) and width > 0 -> width
+      end
+
+    height =
+      case styles[:height] || opts[:h] do
+        nil -> font_size + ascent
+        :auto -> font_size + ascent
+        height when is_number(height) and height > 0 -> height
+      end
+
     radius = styles[:radius] || @default_radius
-    font = styles[:button_font] || @default_font
-    font_size = styles[:button_font_size] || @default_font_size
     alignment = styles[:alignment] || @default_alignment
 
-    # build the graph
+    vpos = height / 2 + ascent / 2 + descent / 3
 
+    # build the graph
     graph =
       Graph.build(font: font, font_size: font_size)
       |> rrect({width, height, radius}, fill: theme.background, id: :btn)
-      |> do_aligned_text(alignment, text, theme.text, width, height)
+      |> do_aligned_text(alignment, text, theme.text, width, vpos)
 
     # special case the dark and light themes to show an outline
     graph = do_special_theme_outline(styles[:theme], graph, theme.border)
 
     state = %{
+      vpos: vpos,
       graph: graph,
       theme: theme,
       pressed: false,
@@ -148,28 +165,28 @@ defmodule Scenic.Component.Button do
     {:ok, state}
   end
 
-  defp do_aligned_text(graph, :center, text, fill, width, height) do
+  defp do_aligned_text(graph, :center, text, fill, width, vpos) do
     text(graph, text,
       fill: fill,
-      translate: {width / 2, height * 0.7},
+      translate: {width / 2, vpos},
       text_align: :center,
       id: :title
     )
   end
 
-  defp do_aligned_text(graph, :left, text, fill, _width, height) do
+  defp do_aligned_text(graph, :left, text, fill, _width, vpos) do
     text(graph, text,
       fill: fill,
-      translate: {8, height * 0.7},
+      translate: {8, vpos},
       text_align: :left,
       id: :title
     )
   end
 
-  defp do_aligned_text(graph, :right, text, fill, width, height) do
+  defp do_aligned_text(graph, :right, text, fill, width, vpos) do
     text(graph, text,
       fill: fill,
-      translate: {width - 8, height * 0.7},
+      translate: {width - 8, vpos},
       text_align: :right,
       id: :title
     )

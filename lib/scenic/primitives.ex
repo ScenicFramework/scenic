@@ -1208,7 +1208,7 @@ defmodule Scenic.Primitives do
   * `:fill` - The paint to color the text with. If not specified, the default
     is :white. Note: Text can only be filled with solid colors at this time.
   * `:font` - Specifies font family to draw the text with. The built-in system
-    fonts are `:roboto`, `:roboto_mono`, and `:roboto_slab`. If not specified, the
+    fonts are `:roboto` and `:roboto_mono`. If not specified, the
     default is `:roboto`. You can also load your own font into the Scenic.Cache,
     then specify its key for the font.
   * `:font_blur` - Draw the text with a blur effect. If you draw text with blur,

@@ -11,6 +11,7 @@
 
 PREFIX = $(MIX_COMPILE_PATH)/../priv
 BUILD  = $(MIX_COMPILE_PATH)/../obj
+STATIC = $(PREFIX)/static
 
 # Look for the EI library and header files
 # For crosscompiled builds, ERL_EI_INCLUDE_DIR and ERL_EI_LIBDIR must be
@@ -34,7 +35,7 @@ NIF=$(PREFIX)/line.so $(PREFIX)/matrix.so
 calling_from_make:
 	mix compile
 
-all: $(PREFIX) $(BUILD) $(NIF)
+all: $(PREFIX) $(STATIC) $(BUILD) $(NIF)
 
 pull_deps:
 	mix local.hex --force
@@ -49,7 +50,7 @@ unit_test:
 	mix coveralls.json
 
 docs_report:
-	mix inch.report
+	MIX_ENV=docs mix inch.report
 
 $(BUILD)/%.o: c_src/%.c
 	$(CC) -c $(ERL_CFLAGS) $(CFLAGS) -o $@ $<
@@ -62,6 +63,9 @@ $(PREFIX)/matrix.so: $(BUILD)/matrix.o
 
 $(PREFIX) $(BUILD):
 	mkdir -p $@
+
+$(STATIC):
+	cp -rf static $(STATIC)
 
 clean:
 	$(RM) $(NIF) c_src/*.o

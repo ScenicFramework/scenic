@@ -81,7 +81,7 @@ defmodule Scenic.Component.Input.RadioGroup do
 
   #  import IEx
 
-  @line_height 22
+  @line_height 24
 
   # --------------------------------------------------------
   @doc false
@@ -125,6 +125,8 @@ defmodule Scenic.Component.Input.RadioGroup do
   def init(items, opts) when is_list(items) do
     id = opts[:id]
     styles = opts[:styles]
+
+    # font related info
 
     graph =
       Graph.build()

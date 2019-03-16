@@ -89,8 +89,6 @@ defmodule Scenic.Component.Input.Dropdown do
 
   # import IEx
 
-  @default_width 160
-  @default_height 30
   @default_direction :down
 
   @default_font :roboto
@@ -147,13 +145,35 @@ defmodule Scenic.Component.Input.Dropdown do
       (styles[:theme] || Theme.preset(:dark))
       |> Theme.normalize()
 
-    width = opts[:width] || opts[:w] || @default_width
-    height = opts[:height] || opts[:h] || @default_height
-    # alignment = opts[:align] || opts[:a] || @default_alignment
+    # font related info
+    fm = Scenic.Cache.Static.FontMetrics.get!(@default_font)
+    ascent = FontMetrics.ascent(@default_font_size, fm)
+    descent = FontMetrics.descent(@default_font_size, fm)
 
-    # get style args
-    font = opts[:font] || @default_font
-    font_size = opts[:font_size] || @default_font_size
+    # find the width of the widest item 
+    fm_width =
+      Enum.reduce(items, 0, fn {text, _}, w ->
+        width = FontMetrics.width(text, @default_font_size, fm)
+
+        cond do
+          width > w -> width
+          true -> w
+        end
+      end)
+
+    width =
+      case styles[:width] || opts[:w] do
+        nil -> fm_width + ascent * 3
+        :auto -> fm_width + ascent * 3
+        width when is_number(width) and width > 0 -> width
+      end
+
+    height =
+      case styles[:height] || opts[:h] do
+        nil -> @default_font_size + ascent
+        :auto -> @default_font_size + ascent
+        height when is_number(height) and height > 0 -> height
+      end
 
     # get the initial text
     initial_text =
@@ -183,12 +203,14 @@ defmodule Scenic.Component.Input.Dropdown do
         :up -> -@rotate_up
       end
 
+    text_vpos = height / 2 + ascent / 2 + descent / 3
+
     graph =
-      Graph.build(font: font, font_size: font_size)
+      Graph.build(font: @default_font, font_size: @default_font_size)
       |> rect({width, height}, fill: theme.background, stroke: {2, theme.border})
       |> text(initial_text,
         fill: theme.text,
-        translate: {8, height * 0.7},
+        translate: {8, text_vpos},
         text_align: :left,
         id: @text_id
       )
@@ -229,7 +251,7 @@ defmodule Scenic.Component.Input.Dropdown do
                     |> text(text,
                       fill: theme.text,
                       text_align: :left,
-                      translate: {8, height * 0.7}
+                      translate: {8, text_vpos}
                     )
                   end,
                   translate: {0, height * i}
