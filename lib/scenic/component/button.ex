@@ -116,7 +116,7 @@ defmodule Scenic.Component.Button do
 
     # font related info
     font = @default_font
-    font_size = @default_font_size
+    font_size = styles[:button_font_size] || @default_font_size
     fm = Scenic.Cache.Static.FontMetrics.get!(font)
     ascent = FontMetrics.ascent(font_size, fm)
     descent = FontMetrics.descent(font_size, fm)
