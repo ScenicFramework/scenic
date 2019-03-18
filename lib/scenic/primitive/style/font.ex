@@ -17,7 +17,6 @@ defmodule Scenic.Primitive.Style.Font do
   You can choose one of the three named system fonts, or one you've loaded into the cache.
 
   * `:roboto` - The standard [Roboto](https://fonts.google.com/specimen/Roboto) sans-serif font.
-  * `:roboto_slab` - The standard [Roboto Slab](https://fonts.google.com/specimen/Roboto+Slab) serifed font.
   * `:roboto_mono` - The standard [Roboto Mono](https://fonts.google.com/specimen/Roboto+Mono) mono-spaced font.
 
   To use a font from the cache, set it's hash into the font style.

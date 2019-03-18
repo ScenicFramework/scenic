@@ -1,5 +1,3 @@
-priv/
-
 # The directory Mix will write compiled artifacts to.
 /_build
 
@@ -33,3 +31,6 @@ mix.lock
 # generally ignore object files
 *.o
 *.so
+
+# vscode
+/.elixir_ls/

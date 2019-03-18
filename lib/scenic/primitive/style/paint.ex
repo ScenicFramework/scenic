@@ -56,6 +56,7 @@ defmodule Scenic.Primitive.Style.Paint do
   def normalize({:box, gradient}), do: {:box, Paint.BoxGradient.normalize(gradient)}
   def normalize({:radial, gradient}), do: {:radial, Paint.RadialGradient.normalize(gradient)}
   def normalize({:image, pattern}), do: {:image, Paint.Image.normalize(pattern)}
-  # default is to treat it like a sindle color
+  def normalize({:dynamic, pattern}), do: {:dynamic, Paint.Dynamic.normalize(pattern)}
+  # default is to treat it like a single color
   def normalize(color), do: {:color, Paint.Color.normalize(color)}
 end

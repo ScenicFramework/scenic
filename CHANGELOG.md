@@ -10,7 +10,8 @@
 * Added a ViewPort.reset() function (used by the error scene), which can be used to send
   a ViewPort back to the original scene it was started with.
 * Added support for the new returns for handle_init, and such in OTP 21+. Also added handle_continue.
-
+* Integrated spec-based graphs from @pragdave. This is a cleaner looking way to build graphs.
+  See the changes in primitives.ex
 
 ## 0.9.0
 * Much improved testing

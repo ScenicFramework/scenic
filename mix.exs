@@ -3,9 +3,9 @@ defmodule Scenic.Mixfile do
 
   @app_name :scenic
 
-  @version "0.9.0"
+  @version "0.10.0"
 
-  @elixir_version "~> 1.6"
+  @elixir_version "~> 1.8"
   @github "https://github.com/boydm/scenic"
 
   def project do
@@ -14,7 +14,6 @@ defmodule Scenic.Mixfile do
       version: @version,
       elixir: @elixir_version,
       deps: deps(),
-      build_embedded: true,
       start_permanent: Mix.env() == :prod,
       compilers: [:elixir_make | Mix.compilers()],
       make_targets: ["all"],
@@ -44,13 +43,14 @@ defmodule Scenic.Mixfile do
 
   defp deps do
     [
+      {:font_metrics, "~> 0.3"},
       {:elixir_make, "~> 0.5", runtime: false},
 
       # Tools
       {:ex_doc, ">= 0.0.0", only: :dev},
       {:credo, ">= 0.0.0", only: [:dev, :test], runtime: false},
       {:excoveralls, ">= 0.0.0", only: :test, runtime: false},
-      {:inch_ex, github: "rrrene/inch_ex", only: [:dev, :test], runtime: false},
+      {:inch_ex, "~> 2.0", only: [:dev, :docs], runtime: false},
       {:dialyxir, "~> 0.5", only: :dev, runtime: false}
     ]
   end
@@ -114,6 +114,8 @@ defmodule Scenic.Mixfile do
       "guides/overview_styles.md",
       "guides/overview_transforms.md",
       "guides/overview_primitives.md",
+      "guides/overview_cache.md",
+      "guides/custom_fonts.md",
       ".github/CODE_OF_CONDUCT.md",
       ".github/CONTRIBUTING.md"
     ]

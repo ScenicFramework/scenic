@@ -95,7 +95,7 @@ defmodule Scenic.Scene do
   child scenes. This allows for strong code reuse, isolates knowledge
   and logic to just the pieces that need it, and keeps the size of any
   given graph to a reasonable size. For example, The graph
-  hand handlers of a checkbox don't need to know anything about
+  hand handlers of a check-box don't need to know anything about
   how a slider works, even though they are both used in the same
   parent scene. At best, they only need to know that they
   both conform to the `Component.Input` behavior, and can thus
@@ -209,7 +209,7 @@ defmodule Scenic.Scene do
 
   In this way, a `Component.Button` scene can generate a`{:click, msg}`
   event that is sent to its parent. If the parent doesn't
-  handle it, it is sent to that scene's parent. And so on until the
+  handle it, it is sent to that scene's parent. And so on util the
   event reaches the root scene. If the root scene doesn't handle
   it either then the event is dropped.
 
@@ -254,7 +254,7 @@ defmodule Scenic.Scene do
   # @viewport             :viewport
   @not_activated :__not_activated__
 
-  @type ref :: reference | atom
+  # @type ref :: reference | atom
 
   defmodule Error do
     @moduledoc false
@@ -304,6 +304,9 @@ defmodule Scenic.Scene do
   end
 
   # --------------------------------------------------------
+  @doc """
+  cast a message to a scene.
+  """
   def cast(scene_or_graph_key, msg) do
     with {:ok, pid} <- ViewPort.Tables.get_scene_pid(scene_or_graph_key) do
       GenServer.cast(pid, msg)
@@ -333,9 +336,8 @@ defmodule Scenic.Scene do
   # ============================================================================
   # callback definitions
 
-  # @callback init( args :: any, inherited_styles :: map, viewport :: GenServer.server ) ::
-  #   {:ok, any}
-  @callback init(args :: any, otps :: list) :: {:ok, any}
+  @callback handle_input(input :: any, context :: Context.t(), state :: any) ::
+              {:noreply, state :: any}
   @callback filter_event(any, any, any) :: {:continue, any, any} | {:stop, any}
 
   # ============================================================================
@@ -345,7 +347,6 @@ defmodule Scenic.Scene do
   # the using macro for scenes adopting this behavior
   defmacro __using__(using_opts \\ []) do
     quote do
-      @behaviour GenServer
       @behaviour Scenic.Scene
 
       # --------------------------------------------------------
@@ -353,16 +354,11 @@ defmodule Scenic.Scene do
       # def init(_, _, _),                            do: {:ok, nil}
 
       @doc false
-      defdelegate init(args), to: Scenic.Scene
-
-      @doc false
       def handle_call(_msg, _from, state), do: {:reply, :err_not_handled, state}
       @doc false
       def handle_cast(_msg, state), do: {:noreply, state}
       @doc false
       def handle_info(_msg, state), do: {:noreply, state}
-      @doc false
-      def handle_continue(_msg, state), do: {:noreply, state}
 
       @doc false
       def handle_input(event, _, scene_state), do: {:noreply, scene_state}
@@ -429,7 +425,6 @@ defmodule Scenic.Scene do
                      handle_cast: 2,
                      handle_info: 2,
                      handle_input: 3,
-                     handle_continue: 2,
                      filter_event: 3,
                      start_dynamic_scene: 3
     end
@@ -477,7 +472,7 @@ defmodule Scenic.Scene do
     scene_ref = opts[:scene_ref] || opts[:name]
     Process.put(:scene_ref, scene_ref)
 
-    # if this is being built as a ViewPort's dynamic root, let the vp know it is up.
+    # if this is being built as a viewport's dynamic root, let the vp know it is up.
     # this solves the case where this scene is dynamic and has crashed and is recovering.
     # The scene_ref is the same, but the pid has changed. This lets the vp know which
     # is the correct pid to use when it is cleaned up later.
@@ -503,9 +498,6 @@ defmodule Scenic.Scene do
           parent_pid
       end
 
-    # some setup needs to happen after init - must be before the scene_module init
-    GenServer.cast(self(), {:after_init, scene_module, args, opts})
-
     # if this scene is named... Meaning it is supervised by the app and is not a
     # dynamic scene, then we need monitor the ViewPort. If the viewport goes
     # down while this scene is activated, the scene will need to be able to
@@ -530,83 +522,16 @@ defmodule Scenic.Scene do
       activation: @not_activated
     }
 
-    {:ok, state}
+    {:ok, state, {:continue, {:__scene_init_2__, scene_module, args, opts}}}
   end
 
   # ============================================================================
-  # handle_info
+  # handle_continue
 
   # --------------------------------------------------------
-  # generic handle_info. give the scene a chance to handle it
-  @doc false
-  def handle_info(msg, %{scene_module: mod, scene_state: sc_state} = state) do
-    case mod.handle_info(msg, sc_state) do
-      {:noreply, sc_state} -> {:noreply, %{state | scene_state: sc_state}}
-      {:noreply, sc_state, t_out} -> {:noreply, %{state | scene_state: sc_state}, t_out}
-      {:continue, term} -> {:continue, term}
-      {:stop, reason, sc_state} -> {:stop, reason, %{state | scene_state: sc_state}}
-      :hibernate -> :hibernate
-    end
-  end
-
-  # ============================================================================
-  # handle_info
-
-  # --------------------------------------------------------
-  # generic handle_continue. give the scene a chance to handle it
-  @doc false
-  def handle_continue(msg, %{scene_module: mod, scene_state: sc_state} = state) do
-    case mod.handle_continue(msg, sc_state) do
-      {:noreply, sc_state} -> {:noreply, %{state | scene_state: sc_state}}
-      {:noreply, sc_state, t_out} -> {:noreply, %{state | scene_state: sc_state}, t_out}
-      :hibernate -> :hibernate
-      {:continue, term} -> {:continue, term}
-      {:stop, reason, sc_state} -> {:stop, reason, %{state | scene_state: sc_state}}
-    end
-  end
-
-  # ============================================================================
-  # handle_call
-
-  # --------------------------------------------------------
-  # generic handle_call. give the scene a chance to handle it
-  def handle_call(msg, from, %{scene_module: mod, scene_state: sc_state} = state) do
-    case mod.handle_call(msg, from, sc_state) do
-      {:reply, reply, sc_state} ->
-        {:reply, reply, %{state | scene_state: sc_state}}
-
-      {:reply, reply, sc_state, timeout} ->
-        {:reply, reply, %{state | scene_state: sc_state}, timeout}
-
-      :hibernate ->
-        :hibernate
-
-      {:continue, term} ->
-        {:continue, term}
-
-      {:noreply, sc_state} ->
-        {:noreply, %{state | scene_state: sc_state}}
-
-      {:noreply, sc_state, t_out} ->
-        {:noreply, %{state | scene_state: sc_state}, t_out}
-
-      {:stop, reason, reply, sc_state} ->
-        {:stop, reason, reply, %{state | scene_state: sc_state}}
-
-      {:stop, reason, sc_state} ->
-        {:stop, reason, %{state | scene_state: sc_state}}
-    end
-  end
-
-  # ============================================================================
-  # handle_cast
-
-  # --------------------------------------------------------
-  def handle_cast(
-        {:after_init, scene_module, args, opts},
-        %{
-          scene_ref: scene_ref
-        } = state
+  def handle_continue(
+        {:__scene_init_2__, scene_module, args, opts},
+        %{scene_ref: scene_ref} = state
       ) do
     # get the scene supervisors
     [supervisor_pid | _] =
@@ -659,17 +584,53 @@ defmodule Scenic.Scene do
       |> Map.put(:scene_state, nil)
 
     # set up to init the module
-    GenServer.cast(self(), {:init_module, scene_module, args, opts})
+    # GenServer.cast(self(), {:init_module, scene_module, args, opts})
 
     # reply with the state so far
-    {:noreply, state}
+    {:noreply, state, {:continue, {:__scene_init_3__, scene_module, args, opts}}}
   end
 
   # --------------------------------------------------------
-  def handle_cast({:init_module, scene_module, args, opts}, state) do
+  def handle_continue({:__scene_init_3__, scene_module, args, opts}, state) do
     # initialize the scene itself
     try do
-      scene_module.init(args, opts)
+      # handle the result of the scene init and return
+      case scene_module.init(args, opts) do
+        {:ok, sc_state} ->
+          {:noreply, %{state | scene_state: sc_state}}
+
+        unknown ->
+          # build error message components
+          head_msg = "#{inspect(scene_module)} init returned invalid response"
+          err_msg = ""
+          args_msg = "return value: #{inspect(unknown)}"
+          stack_msg = ""
+
+          unless Mix.env() == :test do
+            [
+              "\n",
+              IO.ANSI.red(),
+              head_msg,
+              "\n",
+              IO.ANSI.yellow(),
+              args_msg,
+              IO.ANSI.default_color()
+            ]
+            |> Enum.join()
+            |> IO.puts()
+          end
+
+          case opts[:viewport] do
+            nil ->
+              :ok
+
+            vp ->
+              msgs = {head_msg, err_msg, args_msg, stack_msg}
+              ViewPort.set_root(vp, {Scenic.Scenes.Error, {msgs, scene_module, args}})
+          end
+
+          {:noreply, state}
+      end
     rescue
       err ->
         # build error message components
@@ -680,7 +641,11 @@ defmodule Scenic.Scene do
         stack_msg =
           Enum.reduce(__STACKTRACE__, [], fn
             {mod, func, arity, [file: file, line: line]}, acc ->
-              ["#{file}:#{line}: #{mod}.#{func}/#{arity}" | acc]
+              [
+                "#{inspect(file)}:#{inspect(line)}: #{inspect(mod)}." <>
+                  "#{inspect(func)}/#{inspect(arity)}"
+                | acc
+              ]
           end)
           |> Enum.reverse()
           |> Enum.join("\n")
@@ -688,6 +653,7 @@ defmodule Scenic.Scene do
         # assemble into a final message to output to the command line
         unless Mix.env() == :test do
           [
+            "\n",
             IO.ANSI.red(),
             head_msg,
             "\n",
@@ -712,24 +678,43 @@ defmodule Scenic.Scene do
 
           vp ->
             msgs = {head_msg, err_msg, args_msg, stack_msg}
-            ViewPort.set_root(vp, {Scenic.Scene.InitError, {msgs, scene_module, args}})
+            ViewPort.set_root(vp, {Scenic.Scenes.Error, {msgs, scene_module, args}})
         end
 
-        {:ok, nil}
-    end
-    # handle the result of the scene init and return
-    |> case do
-      {:ok, sc_state} -> {:noreply, %{state | scene_state: sc_state}}
-      {:ok, sc_state, timeout} -> {:noreply, %{state | scene_state: sc_state}, timeout}
-      :ignore -> {:noreply, state}
-      {:continue, term} -> {:continue, term}
-      {:stop, reason} -> {:stop, reason, state}
+        # purposefully slow down the reply in the event of a crash. Just in 
+        # case it does to into a crazy loop
+        Process.sleep(400)
+        {:noreply, nil}
     end
   end
 
+  # ============================================================================
+  # handle_info
+
+  # --------------------------------------------------------
+  # generic handle_info. give the scene a chance to handle it
+  @doc false
+  def handle_info(msg, %{scene_module: mod, scene_state: sc_state} = state) do
+    {:noreply, sc_state} = mod.handle_info(msg, sc_state)
+    {:noreply, %{state | scene_state: sc_state}}
+  end
+
+  # ============================================================================
+  # handle_call
+
+  # --------------------------------------------------------
+  # generic handle_call. give the scene a chance to handle it
+  def handle_call(msg, from, %{scene_module: mod, scene_state: sc_state} = state) do
+    {:reply, reply, sc_state} = mod.handle_call(msg, from, sc_state)
+    {:reply, reply, %{state | scene_state: sc_state}}
+  end
+
+  # ============================================================================
+  # handle_cast
+
   # --------------------------------------------------------
   def handle_cast(
-        {:input, event, %Context{viewport: vp, raw_input: raw_input} = context},
+        {:input, event, %Scenic.ViewPort.Context{viewport: vp, raw_input: raw_input} = context},
         %{scene_module: mod, scene_state: sc_state} = state
       ) do
     sc_state =
@@ -981,17 +966,12 @@ defmodule Scenic.Scene do
   # --------------------------------------------------------
   # generic handle_cast. give the scene a chance to handle it
   def handle_cast(msg, %{scene_module: mod, scene_state: sc_state} = state) do
-    case mod.handle_cast(msg, sc_state) do
-      {:noreply, sc_state} -> {:noreply, %{state | scene_state: sc_state}}
-      {:noreply, sc_state, t_out} -> {:noreply, %{state | scene_state: sc_state}, t_out}
-      :hibernate -> :hibernate
-      {:continue, term} -> {:continue, term}
-      {:stop, reason, sc_state} -> {:stop, reason, %{state | scene_state: sc_state}}
-    end
+    {:noreply, sc_state} = mod.handle_cast(msg, sc_state)
+    {:noreply, %{state | scene_state: sc_state}}
   end
 
   # ============================================================================
-  # Scene managment
+  # Scene management
 
   # --------------------------------------------------------
   # this a root-level dynamic scene

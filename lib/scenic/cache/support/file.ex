@@ -3,9 +3,9 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Cache.File do
+defmodule Scenic.Cache.Support.File do
   @moduledoc """
-  Helpers for loading files directly into the cache.
+  Helpers for reading files in a hash-secured manner.
 
   Static assets such as fonts and images are usually stored as files on the local
   storage device. These files need to be loaded into the cache in order to be used
@@ -70,10 +70,10 @@ defmodule Scenic.Cache.File do
         |> rect( {100, 100}, fill: {:image, @asset_hash} )
 
         def init( _, _ ) {
-          # load the asset into the cache (run time)
-          Scenic.Cache.File.load(@asset_path, @asset_hash)
+          # load the asset into the texture cache (at run time)
+          Scenic.Cache.Static.Texture.load(@asset_path, @asset_hash)
 
-          # push the graph. (run time)
+          # push the graph.
           push_graph(@graph)
 
           {:ok, @graph}
@@ -81,75 +81,9 @@ defmodule Scenic.Cache.File do
 
       end
   """
-  alias Scenic.Cache
-  alias Scenic.Cache.Hash
+  alias Scenic.Cache.Support.Hash
 
-  # --------------------------------------------------------
-  @doc """
-  Load a file directly into the cache.
-
-  Parameters:
-  * `path` - the path to the asset file
-  * `hash` - the pre-computed hash of the file
-  * `opts` - a list of options. See below.
-
-  Options:
-  * `hash` - format of the hash. Valid formats include `:sha, :sha224, :sha256, :sha384, :sha512, :ripemd160`. If the hash option is not set, it will use `:sha` by default.
-  * `scope` - Explicitly set the scope of the asset in the cache.
-  * `decompress` - if `true` - decompress the data (zlib) after reading and verifying the hash.
-  * `parser` - pointer to a function to do custom parsing of the data. The only parameter passed to the parser is the data.
-
-  Note: if you set `decompress` to `true` and also supply a `parser`, the parser function
-  will be run after the data is decompressed.
-
-  On success, returns
-  `{:ok, cache_key}`
-
-  The key in the cache will be the hash of the file.
-  """
-  def load(path, hash, opts \\ [])
-
-  # insecure loading. Loads file blindly even it is altered
-  # don't recommend doing this in production. Better to embed the expected
-  # hashes. Is also slower because it has to load the file and compute the hash
-  # to use as a key even it is is already loaded into the cache.
-  def load(path, :insecure, opts) do
-    if Mix.env() != :test do
-      IO.puts("WARNING: Cache asset loaded as :insecure \"#{path}\"")
-    end
-
-    # read the data and calculate it's hash as we are still going to use
-    # that as the handle in the cache
-    case read(path, :insecure, opts) do
-      {:ok, data} ->
-        hash = Hash.binary(data, opts[:hash] || :sha)
-
-        case Cache.claim(hash, opts[:scope]) do
-          true -> {:ok, hash}
-          false -> Cache.put(hash, data, opts[:scope])
-        end
-
-      err ->
-        err
-    end
-  end
-
-  # preferred, more secure load. Expected hash signature is supplied
-  # also faster if the item is already loaded as then it can just skip
-  # loading the file
-  def load(path, hash, opts) do
-    case Cache.claim(hash, opts[:scope]) do
-      true ->
-        {:ok, hash}
-
-      false ->
-        # need to read and verify the file
-        case read(path, hash, opts) do
-          {:ok, data} -> Cache.put(hash, data, opts[:scope])
-          err -> err
-        end
-    end
-  end
+  # ===========================================================================
 
   # --------------------------------------------------------
   @doc """
@@ -160,16 +94,13 @@ defmodule Scenic.Cache.File do
 
   Parameters:
   * `path` - the path to the asset file
-  * `hash` - the pre-computed hash of the file
+  * `hash` - the pre-computed hash of the file.
   * `opts` - a list of options. See below.
 
   Options:
-  * `hash` - format of the hash. Valid formats include `:sha, :sha224, :sha256, :sha384, :sha512, :ripemd160`. If the hash option is not set, it will use `:sha` by default.
+  * `hash` - format of the hash. Valid formats include `:sha, :sha224, :sha256, :sha384, :sha512, :ripemd160`.
+    If the hash option is not set, it will use `:sha` by default.
   * `decompress` - if `true` - decompress the data (zlib) after reading and verifying the hash.
-  * `parser` - pointer to a function to do custom parsing of the data. The only parameter passed to the parser is the data.
-
-  Note: if you set `decompress` to `true` and also supply a `parser`, the parser function
-  will be run after the data is decompressed.
 
   On success, returns
   `{:ok, data}`
@@ -187,8 +118,7 @@ defmodule Scenic.Cache.File do
     end
 
     with {:ok, data} <- File.read(path),
-         {:ok, data} <- do_unzip(data, opts),
-         {:ok, data} <- do_parse(data, opts) do
+         {:ok, data} <- do_unzip(data, opts) do
       {:ok, data}
     else
       err -> err
@@ -198,8 +128,7 @@ defmodule Scenic.Cache.File do
   def read(path, hash, opts) do
     with {:ok, data} <- File.read(path),
          {:ok, data} <- Hash.verify(data, hash, opts[:hash] || :sha),
-         {:ok, data} <- do_unzip(data, opts),
-         {:ok, data} <- do_parse(data, opts) do
+         {:ok, data} <- do_unzip(data, opts) do
       {:ok, data}
     else
       err -> err
@@ -207,22 +136,69 @@ defmodule Scenic.Cache.File do
   end
 
   # --------------------------------------------------------
-  # unzip the data if the unzip option is true. Otherwise just returns
-  # the data unchanged.
-  defp do_unzip(data, opts) do
-    case opts[:decompress] do
-      true -> {:ok, :zlib.gunzip(data)}
-      _ -> {:ok, data}
+  @doc """
+  Read a file into memory.
+
+  The reason you would use this instead of File.read is to verify the data against
+  a pre-computed hash.
+
+  `read!` is similar to `read` except that it raises if an error occurs and returns the
+  data directly
+
+  Parameters:
+  * `path` - the path to the asset file
+  * `hash` - the pre-computed hash of the file
+  * `opts` - a list of options. See below.
+
+  Options:
+  * `hash` - format of the hash. Valid formats include `:sha, :sha224, :sha256, :sha384, :sha512, :ripemd160`.
+    If the hash option is not set, it will use `:sha` by default.
+  * `decompress` - if `true` - decompress the data (zlib) after reading and verifying the hash.
+
+  On success, returns
+  `data`
+  """
+
+  def read!(path, hash, opts \\ [])
+
+  def read!(path, :insecure, opts) do
+    if Mix.env() != :test do
+      IO.puts("WARNING: Cache asset read! as :insecure \"#{path}\"")
     end
+
+    path
+    |> File.read!()
+    |> do_unzip!(opts)
+  end
+
+  def read!(path, hash, opts) do
+    path
+    |> File.read!()
+    |> Hash.verify!(hash, opts[:hash] || :sha)
+    |> do_unzip!(opts)
   end
 
   # --------------------------------------------------------
   # unzip the data if the unzip option is true. Otherwise just returns
   # the data unchanged.
-  defp do_parse(data, opts) do
-    case opts[:parser] do
-      parser when is_function(parser, 1) -> parser.(data)
-      _ -> {:ok, data}
+  defp do_unzip(data, opts) do
+    case opts[:decompress] do
+      true ->
+        try do
+          {:ok, :zlib.gunzip(data)}
+        rescue
+          _ -> {:error, :decompress}
+        end
+
+      _ ->
+        {:ok, data}
+    end
+  end
+
+  defp do_unzip!(data, opts) do
+    case opts[:decompress] do
+      true -> :zlib.gunzip(data)
+      _ -> data
     end
   end
 end

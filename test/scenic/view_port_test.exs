@@ -8,6 +8,7 @@ defmodule Scenic.ViewPortTest do
   doctest Scenic.ViewPort
   alias Scenic.ViewPort
   alias Scenic.Scene
+  alias Scenic.Cache.Support
   alias Scenic.ViewPort.Tables
 
   @viewports :scenic_dyn_viewports
@@ -45,10 +46,18 @@ defmodule Scenic.ViewPortTest do
   @config %ViewPort.Config{
     name: :dyanmic_viewport,
     size: {700, 600},
-    opts: [font: :roboto_slab, font_size: 30, scale: 1.4],
+    opts: [font: :roboto, font_size: 30, scale: 1.4],
     default_scene: {TestSceneOne, nil},
     drivers: [@driver_config]
   }
+
+  @roboto_hash :code.priv_dir(:scenic)
+               |> Path.join("static/font_metrics")
+               |> Path.join("Roboto-Regular.ttf.metrics")
+               |> Support.File.read!(:insecure)
+               |> FontMetrics.from_binary!()
+               |> Map.get(:source)
+               |> Map.get(:signature)
 
   setup do
     {:ok, tables} = Tables.start_link(nil)
@@ -272,7 +281,7 @@ defmodule Scenic.ViewPortTest do
     {:noreply, state} = ViewPort.handle_cast({:delayed_init, vp_sup, @config}, nil)
 
     assert state.on_close == :stop_system
-    assert state.master_styles == %{font: :roboto_slab, font_size: 30}
+    assert state.master_styles == %{font: {:true_type, @roboto_hash}, font_size: 30}
     assert state.size == @config.size
     assert state.master_graph[0][:transforms] == %{scale: {1.4, 1.4}, pin: {0.0, 0.0}}
     assert_received({:"$gen_cast", {:set_root, {TestSceneOne, nil}, nil}})

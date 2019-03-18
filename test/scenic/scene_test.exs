@@ -43,10 +43,6 @@ defmodule Scenic.SceneTest do
   # ============================================================================
   # faux module callbacks...
 
-  def init(:crash, _opts) do
-    raise "purposefully raise an un-handled error"
-  end
-
   def init(args, _opts) do
     assert args == [1, 2, 3]
     {:ok, :init_state}
@@ -222,6 +218,8 @@ defmodule Scenic.SceneTest do
 
   test "init call mod.init and returns first round of state" do
     self = self()
+    args = [1, 2, 3]
+    opts = [name: :scene_name, parent: self]
 
     {:ok,
      %{
@@ -237,7 +235,9 @@ defmodule Scenic.SceneTest do
        supervisor_pid: nil,
        dynamic_children_pid: nil,
        activation: @not_activated
-     }} = Scene.init({__MODULE__, [1, 2, 3], [name: :scene_name, parent: self]})
+     },
+     {:continue, {:__scene_init_2__, __MODULE__, ^args, ^opts}}} =
+      Scene.init({__MODULE__, args, opts})
   end
 
   # ============================================================================
@@ -275,31 +275,6 @@ defmodule Scenic.SceneTest do
 
   # ============================================================================
   # handle_cast
-
-  test "handle_cast :init_module inits the scene module" do
-    scene_ref = make_ref()
-    Process.put(:"$ancestors", [self()])
-
-    {:noreply, new_state} =
-      assert Scene.handle_cast({:init_module, __MODULE__, [1, 2, 3], []}, %{
-               scene_ref: scene_ref,
-               scene_state: nil
-             })
-
-    assert new_state.scene_state == :init_state
-  end
-
-  test "handle_cast :init_module deals with exceptions during the client init and goes to the error scene" do
-    scene_ref = make_ref()
-    Process.put(:"$ancestors", [self()])
-
-    Scene.handle_cast({:init_module, __MODULE__, :crash, [viewport: self()]}, %{
-      scene_ref: scene_ref,
-      scene_state: nil
-    })
-
-    assert_receive({:"$gen_cast", {:set_root, {Scenic.Scene.InitError, _}, _}})
-  end
 
   test "handle_cast :input calls the mod input handler, which returns noreply" do
     context = %Scenic.ViewPort.Context{
