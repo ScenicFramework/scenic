@@ -5,16 +5,16 @@
 
 defmodule Scenic.Primitive.Style.Paint.Image do
   @moduledoc """
-  Fill a primitive with an image from the cache
+  Fill a primitive with an image from Scenic.Cache.Static.Texture
 
   ## Full Format
 
-  Image paint accepts several variations. In each case, the `image_key` is a key to
-  an image that has been loaded into the Cache.
+  Image paint accepts several variations. In each case, the `hash` is a key referencing
+  an image that has been loaded into Scenic.Cache.Static.Texture.
 
-  * `{:image, image_key}` - Show the full image
-  * `{:image, {image_key, alpha}}` - Show the full image with transparency
-  * `{:image, {image_key, start_x, start_y, end_x, end_y, angle, alpha}}`
+  * `{:image, hash}` - Show the full image
+  * `{:image, {hash, alpha}}` - Show the full image with transparency
+  * `{:image, {hash, start_x, start_y, end_x, end_y, angle, alpha}}`
   """
 
   # --------------------------------------------------------

@@ -28,7 +28,7 @@ priv:
 Makefile.auto.win:
 	erl -eval "io:format(\"~s~n\", [lists:concat([\"ERTS_INCLUDE_PATH=\", code:root_dir(), \"/erts-\", erlang:system_info(version), \"/include\"])])" -s init stop -noshell > $@
 
-NIF: priv\line.dll priv\matrix.dll
+NIF: priv\line.dll priv\matrix.dll priv\texture.dll
 
 !IFDEF ERTS_INCLUDE_PATH
 priv\line.obj:
@@ -36,6 +36,12 @@ priv\line.obj:
 
 priv\line.dll: priv\line.obj
 	$(LINK) /DLL /OUT:priv\line.dll priv\line.obj
+
+priv\texture.obj:
+	$(CC) -c $(ERL_CFLAGS) $(CFLAGS) /I"$(ERTS_INCLUDE_PATH)" /LD /MD /Fo: $@ $(SRC_DIR)\texture.c
+
+priv\texture.dll: priv\texture.obj
+	$(LINK) /DLL /OUT:priv\texture.dll priv\texture.obj
 
 priv\matrix.obj:
 	$(CC) -c $(ERL_CFLAGS) $(CFLAGS) /I"$(ERTS_INCLUDE_PATH)" /LD /MD /Fo: $@ $(SRC_DIR)\matrix.c
@@ -47,4 +53,6 @@ priv\line.dll: Makefile.auto.win
 	$(NMAKE) /F Makefile.win priv\line.dll
 priv\matrix.dll: Makefile.auto.win
 	$(NMAKE) /F Makefile.win priv\matrix.dll
+priv\texture.dll: Makefile.auto.win
+	$(NMAKE) /F Makefile.win priv\texture.dll
 !ENDIF

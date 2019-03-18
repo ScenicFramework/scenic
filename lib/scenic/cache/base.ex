@@ -414,8 +414,21 @@ defmodule Scenic.Cache.Base do
               data :: term(),
               scope :: :global | nil | GenServer.server()
             ) :: term()
-      def put_new(hash, data, scope \\ nil) do
-        Scenic.Cache.Base.put_new(__MODULE__, hash, data, scope)
+      case unquote(using_opts)[:static] do
+        true ->
+          def put_new(hash, data, scope \\ nil) do
+            case member?(hash) do
+              false -> Scenic.Cache.Base.put(__MODULE__, hash, data, scope)
+              true -> {:ok, hash}
+            end
+          end
+        false ->
+          def put_new(hash, data, scope \\ nil) do
+            case member?(hash) do
+              false -> put( hash, data, scope )
+              true -> {:ok, hash}
+            end
+          end
       end
 
       # --------------------------------------------------------
@@ -598,7 +611,7 @@ defmodule Scenic.Cache.Base do
         ) :: term() | nil
 
   def get(service, hash, default \\ nil) do
-    :ets.lookup_element(service, hash, 3)
+    :ets.lookup_element(service, hash, 2)
   rescue
     ArgumentError ->
       default
@@ -620,7 +633,7 @@ defmodule Scenic.Cache.Base do
   def fetch(service, hash)
 
   def fetch(service, hash) do
-    {:ok, :ets.lookup_element(service, hash, 3)}
+    {:ok, :ets.lookup_element(service, hash, 2)}
   rescue
     ArgumentError ->
       {:error, :not_found}
@@ -643,7 +656,7 @@ defmodule Scenic.Cache.Base do
   def get!(service, hash)
 
   def get!(service, hash) do
-    :ets.lookup_element(service, hash, 3)
+    :ets.lookup_element(service, hash, 2)
   rescue
     ArgumentError ->
       reraise(Error, [message: "Hash #{inspect(hash)} not found."], __STACKTRACE__)
@@ -684,45 +697,45 @@ defmodule Scenic.Cache.Base do
     GenServer.call(service, {:put, normalize_scope(scope), key, data})
   end
 
-  # --------------------------------------------------------
-  @doc """
-  Insert an item into the Cache. If it is already in the cache, then it
-  does nothing and returns {:ok, hash}
+  # # --------------------------------------------------------
+  # @doc """
+  # Insert an item into the Cache. If it is already in the cache, then it
+  # does nothing and returns {:ok, hash}
 
-  Parameters:
-  * `key` - term to use as the retrieval key. Typically a hash of the data itself.
-  * `data` - term to use as the stored data
-  * `scope` - Optional scope to track the lifetime of this asset against. Can be `:global`
-  but is usually nil, which defaults to the pid of the calling process.
+  # Parameters:
+  # * `key` - term to use as the retrieval key. Typically a hash of the data itself.
+  # * `data` - term to use as the stored data
+  # * `scope` - Optional scope to track the lifetime of this asset against. Can be `:global`
+  # but is usually nil, which defaults to the pid of the calling process.
 
-  ## Examples
-      iex> Scenic.Cache.get("test_key")
-      nil
+  # ## Examples
+  #     iex> Scenic.Cache.get("test_key")
+  #     nil
 
-      iex> :ets.insert(:scenic_cache_key_table, {"test_key", 1, :test_data})
-      ...> true
-      ...> Scenic.Cache.get("test_key")
-      :test_data
-  """
-  @spec put_new(
-          service :: atom,
-          hash :: Scenic.Cache.Base.hash(),
-          data :: term(),
-          scope :: :global | nil | GenServer.server()
-        ) :: term()
+  #     iex> :ets.insert(:scenic_cache_key_table, {"test_key", 1, :test_data})
+  #     ...> true
+  #     ...> Scenic.Cache.get("test_key")
+  #     :test_data
+  # """
+  # @spec put_new(
+  #         service :: atom,
+  #         hash :: Scenic.Cache.Base.hash(),
+  #         data :: term(),
+  #         scope :: :global | nil | GenServer.server()
+  #       ) :: term()
 
-  def put_new(service, hash, data, scope \\ nil)
-      when service != nil and (is_atom(service) or is_pid(service)) do
-    scope = normalize_scope(scope)
+  # def put_new(service, hash, data, scope \\ nil)
+  #     when service != nil and (is_atom(service) or is_pid(service)) do
+  #   scope = normalize_scope(scope)
 
-    case :ets.member(service, hash) do
-      true ->
-        {:ok, hash}
+  #   case :ets.member(service, hash) do
+  #     true ->
+  #       {:ok, hash}
 
-      false ->
-        GenServer.call(service, {:put_new, scope, hash, data})
-    end
-  end
+  #     false ->
+  #       GenServer.call(service, {:put_new, scope, hash, data})
+  #   end
+  # end
 
   # --------------------------------------------------------
   @doc """
@@ -1024,27 +1037,20 @@ defmodule Scenic.Cache.Base do
 
   # --------------------------------------------------------
   def handle_call({:put, scope, key, data}, _, %{table: table} = state) do
-    # Check if the key already exists. If so, overrwrite the data, if not insert it.
-    case :ets.member(table, key) do
-      true ->
-        :ets.update_element(table, key, {3, data})
-        {:reply, {:ok, key}, internal_claim(scope, key, state)}
-
-      false ->
-        :ets.insert(table, {key, 1, data})
-
-        # monitor the scope
-        monitor_scope(scope)
-
-        # dispatch a put message
-        dispatch_notification(:put, key, state)
-        state = internal_claim(scope, key, state)
-
-        {:reply, {:ok, key}, state}
+    unless :ets.member(table, key) do
+      # monitor the scope
+      monitor_scope(scope)
     end
+
+    # update the item
+    :ets.insert(table, {key, data})        
+    state = internal_claim(scope, key, state)
+    dispatch_notification(:put, key, state)
+
+    {:reply, {:ok, key}, state}
   end
 
-  # --------------------------------------------------------
+  # # --------------------------------------------------------
   def handle_call({:put_new, scope, key, data}, _, %{table: table} = state) do
     # Check if the key already exists. If so, overrwrite the data, if not insert it.
     case :ets.member(table, key) do
@@ -1053,7 +1059,7 @@ defmodule Scenic.Cache.Base do
         {:reply, {:ok, key}, internal_claim(scope, key, state)}
 
       false ->
-        :ets.insert(table, {key, 1, data})
+        :ets.insert(table, {key, data})
 
         # monitor the scope
         monitor_scope(scope)
