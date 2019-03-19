@@ -106,16 +106,16 @@ defmodule Scenic.Cache.Static.FontMetricsTest do
   # loaders
 
   test "load works" do
-    assert Static.FontMetrics.load(@roboto_hash, @roboto_path) == {:ok, @roboto_hash}
+    assert Static.FontMetrics.load(@roboto_path, @roboto_hash) == {:ok, @roboto_hash}
     # twice to exercise already loaded path
-    assert Static.FontMetrics.load(@roboto_hash, @roboto_path) == {:ok, @roboto_hash}
+    assert Static.FontMetrics.load(@roboto_path, @roboto_hash) == {:ok, @roboto_hash}
   end
 
   test "load passes through errors" do
-    assert Static.FontMetrics.load(@roboto_hash, "wrong/path") ==
+    assert Static.FontMetrics.load("wrong/path", @roboto_hash) ==
              {:error, :enoent}
 
-    assert Static.FontMetrics.load("bad_hash", @roboto_path) ==
+    assert Static.FontMetrics.load(@roboto_path, "bad_hash") ==
              {:error, :hash_failure}
   end
 
@@ -123,18 +123,18 @@ defmodule Scenic.Cache.Static.FontMetricsTest do
   # loaders!
 
   test "load! works" do
-    assert Static.FontMetrics.load!(@roboto_hash, @roboto_path) == @roboto_hash
+    assert Static.FontMetrics.load!(@roboto_path, @roboto_hash) == @roboto_hash
     # twice to exercise already loaded path
-    assert Static.FontMetrics.load!(@roboto_hash, @roboto_path) == @roboto_hash
+    assert Static.FontMetrics.load!(@roboto_path, @roboto_hash) == @roboto_hash
   end
 
   test "load! raises errors" do
     assert_raise File.Error, fn ->
-      Static.FontMetrics.load!(@roboto_hash, "wrong/path")
+      Static.FontMetrics.load!("wrong/path", @roboto_hash)
     end
 
     assert_raise Support.Hash.Error, fn ->
-      Static.FontMetrics.load!("bad_hash", @roboto_path)
+      Static.FontMetrics.load!(@roboto_path, "bad_hash")
     end
   end
 

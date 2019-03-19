@@ -104,16 +104,16 @@ defmodule Scenic.Cache.Static.TextureTest do
   # loaders
 
   test "load static texture works" do
-    assert Texture.load(@parrot_hash, @parrot_path) == {:ok, @parrot_hash}
+    assert Texture.load(@parrot_path, @parrot_hash) == {:ok, @parrot_hash}
     # twice to exercise the already-loaded path
-    assert Texture.load(@parrot_hash, @parrot_path) == {:ok, @parrot_hash}
+    assert Texture.load(@parrot_path, @parrot_hash) == {:ok, @parrot_hash}
   end
 
   test "load passes through errors" do
-    assert Texture.load(@parrot_hash, "wrong/path", []) ==
+    assert Texture.load("wrong/path", @parrot_hash, []) ==
              {:error, :enoent}
 
-    assert Texture.load("bad_hash", @parrot_path, []) ==
+    assert Texture.load(@parrot_path, "bad_hash", []) ==
              {:error, :hash_failure}
   end
 
@@ -121,18 +121,18 @@ defmodule Scenic.Cache.Static.TextureTest do
   # loaders!
 
   test "load! static texture works" do
-    assert Texture.load!(@parrot_hash, @parrot_path) == @parrot_hash
+    assert Texture.load!(@parrot_path, @parrot_hash) == @parrot_hash
     # twice to exercise the already-loaded path
-    assert Texture.load!(@parrot_hash, @parrot_path) == @parrot_hash
+    assert Texture.load!(@parrot_path, @parrot_hash) == @parrot_hash
   end
 
   test "load! raises errors" do
     assert_raise File.Error, fn ->
-      Texture.load!(@parrot_hash, "wrong/path", [])
+      Texture.load!("wrong/path", @parrot_hash, [])
     end
 
     assert_raise Support.Hash.Error, fn ->
-      Texture.load!("bad_hash", @parrot_path, [])
+      Texture.load!(@parrot_path, "bad_hash", [])
     end
   end
 end

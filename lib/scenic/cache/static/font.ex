@@ -18,23 +18,23 @@ defmodule Scenic.Cache.Static.Font do
   @default_hash :sha256
 
   # --------------------------------------------------------
-  def load(source, font_folder, opts \\ [])
+  def load(font_folder, font_ref, opts \\ [])
 
   def load(
-        %FontMetrics{source: %{signature: hash}},
         font_folder,
+        %FontMetrics{source: %{signature: hash}},
         opts
       ) do
-    load(hash, font_folder, opts)
+    load(font_folder, hash, opts)
   end
 
   # --------------------------------------------------------
-  def load({:true_type, hash}, font_folder, opts) do
-    load(hash, font_folder, opts)
+  def load(font_folder, {:true_type, hash}, opts) do
+    load(font_folder, hash, opts)
   end
 
   # --------------------------------------------------------
-  def load(hash, font_folder, opts)
+  def load(font_folder, hash, opts)
       when is_bitstring(hash) and is_bitstring(font_folder) do
     # if the static font is already loaded, just return it.
 
@@ -57,22 +57,22 @@ defmodule Scenic.Cache.Static.Font do
   end
 
   # --------------------------------------------------------
-  def load!(source, font_folder, opts \\ [])
+  def load!(font_folder, font_ref, opts \\ [])
 
   def load!(
-        %FontMetrics{source: %{signature: hash}},
         font_folder,
+        %FontMetrics{source: %{signature: hash}},
         opts
       ) do
-    load!(hash, font_folder, opts)
+    load!(font_folder, hash, opts)
   end
 
   # --------------------------------------------------------
-  def load!({:true_type, hash}, font_folder, opts) do
-    load!(hash, font_folder, opts)
+  def load!(font_folder, {:true_type, hash}, opts) do
+    load!(font_folder, hash, opts)
   end
 
-  def load!(hash, font_folder, opts)
+  def load!(font_folder, hash, opts)
       when is_bitstring(hash) and is_bitstring(font_folder) do
     # if the static font is already loaded, just return it.
     case member?(hash) do

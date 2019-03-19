@@ -168,10 +168,10 @@ defmodule Scenic.Cache.Base do
   # ============================================================================
   # callback definitions
 
-  @callback load(hash_name :: String.t(), file_path :: String.t(), options :: list) ::
+  @callback load(file_path :: String.t(), hash_name :: String.t(), options :: list) ::
               {:ok, data :: any()} | {:error, error :: atom}
 
-  @callback load!(hash_name :: String.t(), file_path :: String.t(), options :: list) ::
+  @callback load!(file_path :: String.t(), hash_name :: String.t(), options :: list) ::
               data :: any()
 
   # ============================================================================

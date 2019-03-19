@@ -34,7 +34,7 @@ defmodule Scenic.Cache.Static.FontMetrics do
   def get(:roboto, default) do
     path = font_path(@roboto_path)
 
-    case load(@roboto_hash, path) do
+    case load(path, @roboto_hash) do
       {:ok, @roboto_hash} -> get(@roboto_hash, default)
       _ -> default
     end
@@ -43,7 +43,7 @@ defmodule Scenic.Cache.Static.FontMetrics do
   def get(:roboto_mono, default) do
     path = font_path(@roboto_mono_path)
 
-    case load(@roboto_mono_hash, path) do
+    case load(path, @roboto_mono_hash) do
       {:ok, @roboto_mono_hash} -> get(@roboto_mono_hash, default)
       _ -> default
     end
@@ -68,14 +68,14 @@ defmodule Scenic.Cache.Static.FontMetrics do
   def get!(:roboto) do
     path = font_path(@roboto_path)
 
-    load!(@roboto_hash, path)
+    load!(path, @roboto_hash)
     |> super()
   end
 
   def get!(:roboto_mono) do
     path = font_path(@roboto_mono_path)
 
-    load!(@roboto_mono_hash, path)
+    load!(path, @roboto_mono_hash)
     |> super()
   end
 
@@ -87,7 +87,7 @@ defmodule Scenic.Cache.Static.FontMetrics do
   def fetch(:roboto) do
     path = font_path(@roboto_path)
 
-    case load(@roboto_hash, path) do
+    case load(path, @roboto_hash) do
       {:ok, @roboto_hash} -> super(@roboto_hash)
       err -> err
     end
@@ -96,7 +96,7 @@ defmodule Scenic.Cache.Static.FontMetrics do
   def fetch(:roboto_mono) do
     path = font_path(@roboto_mono_path)
 
-    case load(@roboto_mono_hash, path) do
+    case load(path, @roboto_mono_hash) do
       {:ok, @roboto_mono_hash} -> super(@roboto_mono_hash)
       err -> err
     end
@@ -105,9 +105,9 @@ defmodule Scenic.Cache.Static.FontMetrics do
   def fetch(hash) when is_bitstring(hash), do: super(hash)
 
   # --------------------------------------------------------
-  def load(hash, path, opts \\ [])
+  def load(path, hash, opts \\ [])
 
-  def load(hash, path, opts) when is_bitstring(hash) and is_bitstring(path) do
+  def load(path, hash, opts) when is_bitstring(hash) and is_bitstring(path) do
     # if the static font_metrics are already loaded, just return them.
     case member?(hash) do
       true ->
@@ -124,9 +124,9 @@ defmodule Scenic.Cache.Static.FontMetrics do
   end
 
   # --------------------------------------------------------
-  def load!(hash, path, opts \\ [])
+  def load!(path, hash, opts \\ [])
 
-  def load!(hash, path, opts) do
+  def load!(path, hash, opts) do
     case member?(hash) do
       true ->
         hash
