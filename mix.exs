@@ -101,6 +101,7 @@ defmodule Scenic.Mixfile do
 
   defp doc_guides do
     [
+      "guides/upgrading_to_v0.10.md",
       "guides/welcome.md",
       "guides/install_dependencies.md",
       "guides/overview_general.md",
