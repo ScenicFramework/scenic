@@ -422,10 +422,11 @@ defmodule Scenic.Cache.Base do
               true -> {:ok, hash}
             end
           end
+
         false ->
           def put_new(hash, data, scope \\ nil) do
             case member?(hash) do
-              false -> put( hash, data, scope )
+              false -> put(hash, data, scope)
               true -> {:ok, hash}
             end
           end
@@ -1043,7 +1044,7 @@ defmodule Scenic.Cache.Base do
     end
 
     # update the item
-    :ets.insert(table, {key, data})        
+    :ets.insert(table, {key, data})
     state = internal_claim(scope, key, state)
     dispatch_notification(:put, key, state)
 

@@ -6,7 +6,7 @@
 defmodule Scenic.Cache.Dynamic.TextureTest do
   use ExUnit.Case, async: false
   # doctest Scenic.Cache.Dynamic.Texture
-  
+
   alias Scenic.Utilities
   alias Scenic.Cache.Base
   alias Scenic.Cache.Dynamic.Texture
@@ -99,5 +99,4 @@ defmodule Scenic.Cache.Dynamic.TextureTest do
     Base.put(Texture, "name", "data")
     refute_receive {:"$gen_cast", {Texture, :put, "name"}}
   end
-
 end
