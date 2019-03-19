@@ -11,7 +11,11 @@
   a ViewPort back to the original scene it was started with.
 * Integrated spec-based graphs from @pragdave. This is a cleaner looking way to build graphs.
   See the changes in primitives.ex
-
+* Breaking changes to Scenic.Cache. It has been replaced by asset specific caches.
+* Integration of font metrics
+  * Buttons, checkboxes, radios, etc can be auto-sized to fix their text
+  * FontMetrics can be used to measure strings, trim to fit, and more
+* Dynamic Textures in the form of raw pixel maps are now supported. This should allow you to capture raw images off of a camera and display them without encoding/decoding
 
 ## 0.9.0
 * Much improved testing
