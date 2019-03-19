@@ -123,7 +123,7 @@ defmodule Scenic.Cache.Static.FontMetricsTest do
   # loaders!
 
   test "load! works" do
-    assert Static.FontMetrics.load!(@roboto_path, @roboto_hash) == @roboto_hash
+    assert Static.FontMetrics.load!(@roboto_path, @roboto_hash ) == @roboto_hash
     # twice to exercise already loaded path
     assert Static.FontMetrics.load!(@roboto_path, @roboto_hash) == @roboto_hash
   end

@@ -6,7 +6,7 @@
 defmodule Scenic.Cache.Dynamic.TextureTest do
   use ExUnit.Case, async: false
   # doctest Scenic.Cache.Dynamic.Texture
-
+  
   alias Scenic.Utilities
   alias Scenic.Cache.Base
   alias Scenic.Cache.Dynamic.Texture
@@ -38,13 +38,13 @@ defmodule Scenic.Cache.Dynamic.TextureTest do
   end
 
   test "put is mapped in" do
-    tex = Utilities.Texture.build(:g, 10, 20, 0)
+    tex = Utilities.Texture.build!(:g, 10, 20)
     assert Texture.put("name", tex) == {:ok, "name"}
     assert Texture.get("name") == tex
   end
 
   test "put_new is mapped in" do
-    tex = Utilities.Texture.build(:g, 10, 20, 0)
+    tex = Utilities.Texture.build!(:g, 10, 20)
     assert Texture.put_new("name", tex) == {:ok, "name"}
     assert Texture.get("name") == tex
   end
@@ -99,4 +99,5 @@ defmodule Scenic.Cache.Dynamic.TextureTest do
     Base.put(Texture, "name", "data")
     refute_receive {:"$gen_cast", {Texture, :put, "name"}}
   end
+
 end
