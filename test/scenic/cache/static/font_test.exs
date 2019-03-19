@@ -110,15 +110,15 @@ defmodule Scenic.Cache.Static.FontTest do
   # loaders
 
   test "load font works from the given directory" do
-    assert Font.load(@hash, @folder) == {:ok, @hash}
-    assert Font.load({:true_type, @hash}, @folder) == {:ok, @hash}
+    assert Font.load(@folder, @hash) == {:ok, @hash}
+    assert Font.load(@folder, {:true_type, @hash}) == {:ok, @hash}
   end
 
   test "load passes through errors" do
-    assert Font.load(@hash, "wrong/path") ==
+    assert Font.load("wrong/path", @hash) ==
              {:error, :not_found}
 
-    assert Font.load("bad_hash", @folder) ==
+    assert Font.load(@folder, "bad_hash") ==
              {:error, :hash_failure}
   end
 
@@ -126,17 +126,17 @@ defmodule Scenic.Cache.Static.FontTest do
   # loaders!
 
   test "load! font works" do
-    assert Font.load!(@hash, @folder) == @hash
-    assert Font.load!({:true_type, @hash}, @folder) == @hash
+    assert Font.load!(@folder, @hash) == @hash
+    assert Font.load!(@folder, {:true_type, @hash}) == @hash
   end
 
   test "load! raises errors" do
     assert_raise Scenic.Cache.Static.Font.Error, fn ->
-      Font.load!(@hash, "wrong/path", [])
+      Font.load!("wrong/path", @hash, [])
     end
 
     assert_raise Support.Hash.Error, fn ->
-      Font.load!("bad_hash", @folder, [])
+      Font.load!(@folder, "bad_hash", [])
     end
   end
 end

@@ -8,7 +8,7 @@ defmodule Scenic.Cache.Static.Texture do
   alias Scenic.Cache.Support
 
   # --------------------------------------------------------
-  def load(hash, path, opts \\ [])
+  def load(path, hash, opts \\ [])
       when is_bitstring(hash) and is_bitstring(path) do
     # if the static font is already loaded, just return it.
     case member?(hash) do
@@ -26,7 +26,7 @@ defmodule Scenic.Cache.Static.Texture do
   end
 
   # --------------------------------------------------------
-  def load!(hash, path, opts \\ [])
+  def load!(path, hash, opts \\ [])
       when is_bitstring(hash) and is_bitstring(path) do
     # if the static font is already loaded, just return it.
     case member?(hash) do
