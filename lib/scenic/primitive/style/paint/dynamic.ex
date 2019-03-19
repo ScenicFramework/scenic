@@ -3,18 +3,18 @@
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
-defmodule Scenic.Primitive.Style.Paint.Image do
+defmodule Scenic.Primitive.Style.Paint.Dynamic do
   @moduledoc """
-  Fill a primitive with an image from Scenic.Cache.Static.Texture
+  Fill a primitive with an image from Scenic.Cache.Dynamic.Texture
 
   ## Full Format
 
-  Image paint accepts several variations. In each case, the `hash` is a key referencing
-  an image that has been loaded into Scenic.Cache.Static.Texture.
+  Dynamic paint accepts several variations. In each case, the `key` is a key referencing
+  an image that has been loaded into Scenic.Cache.Dynamic.Texture.
 
-  * `{:image, hash}` - Show the full image
-  * `{:image, {hash, alpha}}` - Show the full image with transparency
-  * `{:image, {hash, start_x, start_y, end_x, end_y, angle, alpha}}`
+  * `{:dynamic, key}` - Show the full image
+  * `{:dynamic, {key, alpha}}` - Show the full image with transparency
+  * `{:dynamic, {key, start_x, start_y, end_x, end_y, angle, alpha}}`
   """
 
   # --------------------------------------------------------

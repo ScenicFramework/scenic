@@ -30,7 +30,7 @@ LDFLAGS += -undefined dynamic_lookup
 endif
 endif
 
-NIF=$(PREFIX)/line.so $(PREFIX)/matrix.so
+NIF=$(PREFIX)/line.so $(PREFIX)/matrix.so $(PREFIX)/texture.so
 
 calling_from_make:
 	mix compile
@@ -59,6 +59,9 @@ $(PREFIX)/line.so: $(BUILD)/line.o
 	$(CC) $^ $(ERL_LDFLAGS) $(LDFLAGS) -o $@
 
 $(PREFIX)/matrix.so: $(BUILD)/matrix.o
+	$(CC) $^ $(ERL_LDFLAGS) $(LDFLAGS) -o $@
+
+$(PREFIX)/texture.so: $(BUILD)/texture.o
 	$(CC) $^ $(ERL_LDFLAGS) $(LDFLAGS) -o $@
 
 $(PREFIX) $(BUILD):

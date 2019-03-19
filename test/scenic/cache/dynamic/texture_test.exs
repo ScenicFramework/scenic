@@ -5,13 +5,11 @@
 
 defmodule Scenic.Cache.Dynamic.TextureTest do
   use ExUnit.Case, async: false
-  # doctest Scenic.Cache.Static.Texture
+  # doctest Scenic.Cache.Dynamic.Texture
+  
+  alias Scenic.Utilities
   alias Scenic.Cache.Base
-  alias Scenic.Cache.Support
   alias Scenic.Cache.Dynamic.Texture
-
-  @parrot_path "test/artifacts/scenic_parrot.png"
-  @parrot_hash Support.Hash.file!(@parrot_path, :sha)
 
   setup do
     GenServer.call(Texture, :reset)
@@ -21,118 +19,85 @@ defmodule Scenic.Cache.Dynamic.TextureTest do
   # core inherited functions are mapped in
 
   test "get is mapped in" do
-    Base.put(Texture, "hash", :data)
-    assert Texture.get("hash") == :data
+    Base.put(Texture, "name", :data)
+    assert Texture.get("name") == :data
     assert Texture.get("missing") == nil
     assert Texture.get("missing", :default) == :default
   end
 
   test "get! is mapped in" do
-    Base.put(Texture, "hash", :data)
-    assert Texture.get!("hash") == :data
+    Base.put(Texture, "name", :data)
+    assert Texture.get!("name") == :data
     assert_raise Base.Error, fn -> Texture.get!("missing") end
   end
 
   test "fetch is mapped in" do
-    Base.put(Texture, "hash", :data)
-    assert Texture.fetch("hash") == {:ok, :data}
+    Base.put(Texture, "name", :data)
+    assert Texture.fetch("name") == {:ok, :data}
     assert Texture.fetch("missing") == {:error, :not_found}
   end
 
   test "put is mapped in" do
-    assert Texture.put("hash", :data) == {:ok, "hash"}
-    assert Texture.get("hash") == :data
+    tex = Utilities.Texture.build(:g, 10, 20, 0)
+    assert Texture.put("name", tex) == {:ok, "name"}
+    assert Texture.get("name") == tex
   end
 
   test "put_new is mapped in" do
-    assert Texture.put_new("hash", :data) == {:ok, "hash"}
-    assert Texture.get("hash") == :data
+    tex = Utilities.Texture.build(:g, 10, 20, 0)
+    assert Texture.put_new("name", tex) == {:ok, "name"}
+    assert Texture.get("name") == tex
   end
 
   test "claim is mapped in" do
-    Base.put(Texture, "hash", :data)
-    assert Texture.claim("hash", :global) == :ok
-    assert Base.claimed?(Texture, "hash", :global)
+    Base.put(Texture, "name", :data)
+    assert Texture.claim("name", :global) == :ok
+    assert Base.claimed?(Texture, "name", :global)
   end
 
   test "release is mapped in" do
-    Base.put(Texture, "hash", :data)
-    assert Base.fetch(Texture, "hash") == {:ok, :data}
-    assert Texture.release("hash", delay: 0) == :ok
+    Base.put(Texture, "name", :data)
+    assert Base.fetch(Texture, "name") == {:ok, :data}
+    assert Texture.release("name", delay: 0) == :ok
     Process.sleep(8)
-    assert Base.fetch(Texture, "hash") == {:error, :not_found}
+    assert Base.fetch(Texture, "name") == {:error, :not_found}
   end
 
   test "status is mapped in" do
-    Base.put(Texture, "hash", :data)
-    assert Texture.status("hash") == {:ok, self()}
-    assert Texture.status("hash", :global) == {:error, :not_claimed}
+    Base.put(Texture, "name", :data)
+    assert Texture.status("name") == {:ok, self()}
+    assert Texture.status("name", :global) == {:error, :not_claimed}
   end
 
   test "keys is mapped in" do
-    Base.put(Texture, "hash", :data)
-    assert Texture.keys() == ["hash"]
+    Base.put(Texture, "name", :data)
+    assert Texture.keys() == ["name"]
     assert Texture.keys(:global) == []
   end
 
   test "member? is mapped in" do
-    Base.put(Texture, "hash", :data)
-    assert Texture.member?("hash")
+    Base.put(Texture, "name", :data)
+    assert Texture.member?("name")
     refute Texture.member?("missing")
   end
 
   test "claimed? is mapped in" do
-    Base.put(Texture, "hash", :data)
-    assert Texture.claimed?("hash")
-    refute Texture.claimed?("hash", :global)
+    Base.put(Texture, "name", :data)
+    assert Texture.claimed?("name")
+    refute Texture.claimed?("name", :global)
   end
 
   test "subscribe is mapped in" do
     Texture.subscribe(:all, :all)
-    Base.put(Texture, "hash", "data")
-    assert_receive {:"$gen_cast", {Texture, :put, "hash"}}
+    Base.put(Texture, "name", "data")
+    assert_receive {:"$gen_cast", {Texture, :put, "name"}}
   end
 
   test "unsubscribe is mapped in" do
     Texture.subscribe(:all, :all)
     Texture.unsubscribe(:all, :all)
-    Base.put(Texture, "hash", "data")
-    refute_receive {:"$gen_cast", {Texture, :put, "hash"}}
+    Base.put(Texture, "name", "data")
+    refute_receive {:"$gen_cast", {Texture, :put, "name"}}
   end
 
-  # ============================================================================
-  # loaders
-
-  test "load dynamic texture works" do
-    assert Texture.load(@parrot_hash, @parrot_path) == {:ok, @parrot_hash}
-    # twice to exercise the already-loaded path
-    assert Texture.load(@parrot_hash, @parrot_path) == {:ok, @parrot_hash}
-  end
-
-  test "load passes through errors" do
-    assert Texture.load(@parrot_hash, "wrong/path", []) ==
-             {:error, :enoent}
-
-    assert Texture.load("bad_hash", @parrot_path, []) ==
-             {:error, :hash_failure}
-  end
-
-  # ============================================================================
-  # loaders!
-
-  test "load! dynamic texture works" do
-    assert Texture.load!(@parrot_hash, @parrot_path) == @parrot_hash
-    # twice to exercise the already-loaded path
-    assert Texture.load!(@parrot_hash, @parrot_path) == @parrot_hash
-  end
-
-  test "load! raises errors" do
-    assert_raise File.Error, fn ->
-      Texture.load!(@parrot_hash, "wrong/path", [])
-    end
-
-    assert_raise Support.Hash.Error, fn ->
-      Texture.load!("bad_hash", @parrot_path, [])
-    end
-  end
 end

@@ -33,17 +33,17 @@ defmodule Scenic.Cache.BaseTest do
   # get(service, hash, default \\ nil)
 
   test "get looks up the data" do
-    :ets.insert(@table, {"hash", 0, "some_data"})
+    :ets.insert(@table, {"hash", "some_data"})
     assert Base.get(@table, "hash") == "some_data"
   end
 
   test "get returns nil if missing" do
-    :ets.insert(@table, {"hash", 0, "some_data"})
+    :ets.insert(@table, {"hash", "some_data"})
     assert Base.get(@table, "missing") == nil
   end
 
   test "get returns default if not there" do
-    :ets.insert(@table, {"hash", 0, "some_data"})
+    :ets.insert(@table, {"hash", "some_data"})
     assert Base.get(@table, "missing", :default) == :default
   end
 
@@ -51,12 +51,12 @@ defmodule Scenic.Cache.BaseTest do
   # fetch(service, hash)
 
   test "fetch looks up the data" do
-    :ets.insert(@table, {"hash", 0, "some_data"})
+    :ets.insert(@table, {"hash", "some_data"})
     assert Base.fetch(@table, "hash") == {:ok, "some_data"}
   end
 
   test "fetch returns error if missing" do
-    :ets.insert(@table, {"hash", 0, "some_data"})
+    :ets.insert(@table, {"hash", "some_data"})
     assert Base.fetch(@table, "missing") == {:error, :not_found}
   end
 
@@ -64,12 +64,12 @@ defmodule Scenic.Cache.BaseTest do
   # get!(service, hash)
 
   test "get! returns the data" do
-    :ets.insert(@table, {"hash", 0, "some_data"})
+    :ets.insert(@table, {"hash", "some_data"})
     assert Base.get!(@table, "hash") == "some_data"
   end
 
   test "get! raises error if missing" do
-    :ets.insert(@table, {"hash", 0, "some_data"})
+    :ets.insert(@table, {"hash", "some_data"})
 
     assert_raise Base.Error, fn ->
       Base.get!(@table, "missing")
@@ -122,42 +122,42 @@ defmodule Scenic.Cache.BaseTest do
   # ============================================================================
   # put_new(service, key, data, scope \\ nil)
 
-  test "put_new sets new data", %{static: static} do
-    self = self()
-    :erlang.trace(static, true, [:receive])
-    assert Base.put_new(Static.Test, "hash", "new_data") == {:ok, "hash"}
-    assert Base.get(Static.Test, "hash") == "new_data"
+  # test "put_new sets new data", %{static: static} do
+  #   self = self()
+  #   :erlang.trace(static, true, [:receive])
+  #   assert Base.put_new(Static.Test, "hash", "new_data") == {:ok, "hash"}
+  #   assert Base.get(Static.Test, "hash") == "new_data"
 
-    assert_receive {:trace, ^static, :receive,
-                    {:"$gen_call", {^self, _}, {:put_new, ^self, "hash", "new_data"}}}
-  end
+  #   assert_receive {:trace, ^static, :receive,
+  #                   {:"$gen_call", {^self, _}, {:put_new, ^self, "hash", "new_data"}}}
+  # end
 
-  test "put_new does not overwrite existing data", %{static: static} do
-    assert Base.put(Static.Test, "hash", "existing_data") == {:ok, "hash"}
-    :erlang.trace(static, true, [:receive])
-    assert Base.put_new(Static.Test, "hash", "new_data") == {:ok, "hash"}
-    assert Base.get(Static.Test, "hash") == "existing_data"
+  # test "put_new does not overwrite existing data", %{static: static} do
+  #   assert Base.put(Static.Test, "hash", "existing_data") == {:ok, "hash"}
+  #   :erlang.trace(static, true, [:receive])
+  #   assert Base.put_new(Static.Test, "hash", "new_data") == {:ok, "hash"}
+  #   assert Base.get(Static.Test, "hash") == "existing_data"
 
-    refute_receive {:trace, ^static, :receive, {:"$gen_call", _, {:put_new, _, _, _}}}
-  end
+  #   refute_receive {:trace, ^static, :receive, {:"$gen_call", _, {:put_new, _, _, _}}}
+  # end
 
-  test "put_new claims against various scopes" do
-    {:ok, agent} = Agent.start(fn -> 1 + 1 end, name: :named_scope)
+  # test "put_new claims against various scopes" do
+  #   {:ok, agent} = Agent.start(fn -> 1 + 1 end, name: :named_scope)
 
-    Base.put_new(Static.Test, "hash_l", "some_data")
-    Base.put_new(Static.Test, "hash_g", "some_data", :global)
-    Base.put_new(Static.Test, "hash_n", "some_data", :named_scope)
-    Base.put_new(Static.Test, "hash_p", "some_data", agent)
+  #   Base.put_new(Static.Test, "hash_l", "some_data")
+  #   Base.put_new(Static.Test, "hash_g", "some_data", :global)
+  #   Base.put_new(Static.Test, "hash_n", "some_data", :named_scope)
+  #   Base.put_new(Static.Test, "hash_p", "some_data", agent)
 
-    assert Base.claimed?(Static.Test, "hash_l")
-    assert Base.claimed?(Static.Test, "hash_l", self())
-    refute Base.claimed?(Static.Test, "hash_l", :global)
-    assert Base.claimed?(Static.Test, "hash_g", :global)
-    assert Base.claimed?(Static.Test, "hash_n", :named_scope)
-    assert Base.claimed?(Static.Test, "hash_p", agent)
+  #   assert Base.claimed?(Static.Test, "hash_l")
+  #   assert Base.claimed?(Static.Test, "hash_l", self())
+  #   refute Base.claimed?(Static.Test, "hash_l", :global)
+  #   assert Base.claimed?(Static.Test, "hash_g", :global)
+  #   assert Base.claimed?(Static.Test, "hash_n", :named_scope)
+  #   assert Base.claimed?(Static.Test, "hash_p", agent)
 
-    Agent.stop(agent)
-  end
+  #   Agent.stop(agent)
+  # end
 
   # ============================================================================
   # claim(service, key, scope \\ nil)
