@@ -637,7 +637,7 @@ defmodule Scenic.Scene do
         head_msg = "#{inspect(scene_module)} crashed during init"
         err_msg = inspect(err)
         args_msg = "args: #{inspect(args)}"
-        stack_msg = Exception.format_stacktrace( __STACKTRACE__ )
+        stack_msg = Exception.format_stacktrace(__STACKTRACE__)
 
         # assemble into a final message to output to the command line
         unless Mix.env() == :test do
