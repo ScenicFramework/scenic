@@ -18,7 +18,7 @@ defmodule Scenic.Scenes.Error do
   import Scenic.Primitives
   import Scenic.Components
 
-# import IEx
+  # import IEx
 
   @size 20
   @margin_h 20
@@ -30,38 +30,41 @@ defmodule Scenic.Scenes.Error do
   @args_header "Scene Args\n  "
   @mod_header " crashed during init/2"
 
-  @font   :roboto_mono
+  @font :roboto_mono
   @error_color :orange_red
   @args_color :yellow
 
   # --------------------------------------------------------
   def init({{module_msg, err_msg, args_msg, stack_msg}, scene_mod, scene_args}, opts) do
-
     # Get the viewport width
-    {:ok, %ViewPort.Status{size: {width,_}}} = opts[:viewport]
-    |> ViewPort.info()
+    {:ok, %ViewPort.Status{size: {width, _}}} =
+      opts[:viewport]
+      |> ViewPort.info()
 
     fm = Scenic.Cache.Static.FontMetrics.get(@font)
     wrap_width = width - @margin_h * 2
 
     head_msg = module_msg <> @mod_header
 
-    err_msg = @error_header <> err_msg
-    |> FontMetrics.wrap(wrap_width, @size, fm, indent: 4)
+    err_msg =
+      (@error_header <> err_msg)
+      |> FontMetrics.wrap(wrap_width, @size, fm, indent: 4)
 
-    args_msg = @args_header <> args_msg
-    |> FontMetrics.wrap( wrap_width, @size, fm, indent: 4)
+    args_msg =
+      (@args_header <> args_msg)
+      |> FontMetrics.wrap(wrap_width, @size, fm, indent: 4)
 
-    stack_msg = @stack_header <> stack_msg
-    |> String.replace( "    ", "  " )
-    |> FontMetrics.wrap( wrap_width, @size, fm, indent: 4 )
+    stack_msg =
+      (@stack_header <> stack_msg)
+      |> String.replace("    ", "  ")
+      |> FontMetrics.wrap(wrap_width, @size, fm, indent: 4)
 
     head_v = 80
     args_v = head_v + msg_height(head_msg, @size) + @v_spacing
     err_v = args_v + msg_height(args_msg, @size) + @v_spacing
     stack_v = err_v + msg_height(err_msg, @size) + @v_spacing
 
-    Graph.build(font: @font, font_size: @size, t: {@margin_h,@margin_v})
+    Graph.build(font: @font, font_size: @size, t: {@margin_h, @margin_v})
     |> button("Try Again", id: :try_again, theme: :warning)
     |> button("Reset", id: :restart, translate: {116, 0})
     |> text(head_msg, translate: {0, head_v}, font_size: @size + 4)

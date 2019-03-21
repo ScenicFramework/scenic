@@ -16,7 +16,7 @@ defmodule Scenic.Scenes.ErrorTest do
     def init(nil), do: {:ok, nil}
 
     def handle_call(:query_info, _, state) do
-      {:reply, {:ok, %Scenic.ViewPort.Status{size: {500,400}}}, state}
+      {:reply, {:ok, %Scenic.ViewPort.Status{size: {500, 400}}}, state}
     end
   end
 
