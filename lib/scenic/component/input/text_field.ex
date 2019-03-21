@@ -359,8 +359,7 @@ defmodule Scenic.Component.Input.TextField do
           # reset_caret the caret blinker
           Scene.cast_to_refs(nil, :reset_caret)
           # move the caret
-          graph =
-            update_caret(graph, value, i)
+          graph = update_caret(graph, value, i)
 
           {i, graph}
       end

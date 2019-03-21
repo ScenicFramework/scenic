@@ -64,11 +64,15 @@ defmodule Scenic.Component.ButtonTest do
     %Primitive{styles: %{text_align: :left}} = Graph.get!(state.graph, :title)
     assert graph == state.graph
 
-    {:ok, state, push: graph} = Button.init("Button", styles: %{alignment: :center}, id: :button_id)
+    {:ok, state, push: graph} =
+      Button.init("Button", styles: %{alignment: :center}, id: :button_id)
+
     %Primitive{styles: %{text_align: :center}} = Graph.get!(state.graph, :title)
     assert graph == state.graph
 
-    {:ok, state, push: graph} = Button.init("Button", styles: %{alignment: :right}, id: :button_id)
+    {:ok, state, push: graph} =
+      Button.init("Button", styles: %{alignment: :right}, id: :button_id)
+
     %Primitive{styles: %{text_align: :right}} = Graph.get!(state.graph, :title)
     assert graph == state.graph
   end
@@ -77,13 +81,17 @@ defmodule Scenic.Component.ButtonTest do
   # handle_input
 
   test "handle_input {:cursor_enter, _uid} sets contained" do
-    {:noreply, state, push: graph} = Button.handle_input({:cursor_enter, 1}, %{}, %{@state | pressed: true})
+    {:noreply, state, push: graph} =
+      Button.handle_input({:cursor_enter, 1}, %{}, %{@state | pressed: true})
+
     assert state.contained
     assert graph == state.graph
   end
 
   test "handle_input {:cursor_exit, _uid} clears contained" do
-    {:noreply, state, push: graph} = Button.handle_input({:cursor_exit, 1}, %{}, %{@state | pressed: true})
+    {:noreply, state, push: graph} =
+      Button.handle_input({:cursor_exit, 1}, %{}, %{@state | pressed: true})
+
     refute state.contained
     assert graph == state.graph
   end

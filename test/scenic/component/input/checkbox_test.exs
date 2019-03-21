@@ -64,13 +64,17 @@ defmodule Scenic.Component.Input.CheckboxTest do
   # handle_input
 
   test "handle_input {:cursor_enter, _uid} sets contained" do
-    {:noreply, state, push: graph} = Checkbox.handle_input({:cursor_enter, 1}, %{}, %{@state | pressed: true})
+    {:noreply, state, push: graph} =
+      Checkbox.handle_input({:cursor_enter, 1}, %{}, %{@state | pressed: true})
+
     assert state.contained
     assert graph == state.graph
   end
 
   test "handle_input {:cursor_exit, _uid} clears contained" do
-    {:noreply, state, push: graph} = Checkbox.handle_input({:cursor_exit, 1}, %{}, %{@state | pressed: true})
+    {:noreply, state, push: graph} =
+      Checkbox.handle_input({:cursor_exit, 1}, %{}, %{@state | pressed: true})
+
     refute state.contained
     assert graph == state.graph
   end

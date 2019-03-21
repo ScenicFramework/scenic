@@ -57,11 +57,15 @@ defmodule Scenic.Component.Input.RadioButtonTest do
     assert state.checked == false
     assert state.id == :test_id
 
-    {:ok, state, push: graph} = RadioButton.init({"Title", :test_id, false}, styles: %{}, id: :test_id)
+    {:ok, state, push: graph} =
+      RadioButton.init({"Title", :test_id, false}, styles: %{}, id: :test_id)
+
     assert state.checked == false
     assert graph == state.graph
 
-    {:ok, state, push: graph} = RadioButton.init({"Title", :test_id, true}, styles: %{}, id: :test_id)
+    {:ok, state, push: graph} =
+      RadioButton.init({"Title", :test_id, true}, styles: %{}, id: :test_id)
+
     assert state.checked == true
     assert graph == state.graph
   end

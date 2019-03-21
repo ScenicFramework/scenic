@@ -64,13 +64,14 @@ defmodule Scenic.Scenes.Error do
     err_v = args_v + msg_height(args_msg, @size) + @v_spacing
     stack_v = err_v + msg_height(err_msg, @size) + @v_spacing
 
-    graph = Graph.build(font: @font, font_size: @size, t: {@margin_h, @margin_v})
-    |> button("Try Again", id: :try_again, theme: :warning)
-    |> button("Reset", id: :restart, translate: {116, 0})
-    |> text(head_msg, translate: {0, head_v}, font_size: @size + 4)
-    |> text(args_msg, translate: {0, args_v}, fill: @args_color)
-    |> text(err_msg, translate: {0, err_v}, fill: @error_color)
-    |> text(stack_msg, translate: {0, stack_v}, fill: @error_color)
+    graph =
+      Graph.build(font: @font, font_size: @size, t: {@margin_h, @margin_v})
+      |> button("Try Again", id: :try_again, theme: :warning)
+      |> button("Reset", id: :restart, translate: {116, 0})
+      |> text(head_msg, translate: {0, head_v}, font_size: @size + 4)
+      |> text(args_msg, translate: {0, args_v}, fill: @args_color)
+      |> text(err_msg, translate: {0, err_v}, fill: @error_color)
+      |> text(stack_msg, translate: {0, stack_v}, fill: @error_color)
 
     {:ok, {scene_mod, scene_args, opts[:viewport]}, push: graph}
   end

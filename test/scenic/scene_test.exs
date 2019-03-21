@@ -394,15 +394,16 @@ defmodule Scenic.SceneTest do
       # explicit graph
       |> scene_ref(graph_key_1)
 
-    {:ok, _} = Scene.test_push_graph(graph, 123, %{
-               has_children: false,
-               scene_ref: scene_ref_0,
-               raw_scene_refs: %{},
-               dyn_scene_pids: %{},
-               dyn_scene_keys: %{},
-               dynamic_children_pid: self(),
-               viewport: self()
-             })
+    {:ok, _} =
+      Scene.test_push_graph(graph, 123, %{
+        has_children: false,
+        scene_ref: scene_ref_0,
+        raw_scene_refs: %{},
+        dyn_scene_pids: %{},
+        dyn_scene_keys: %{},
+        dynamic_children_pid: self(),
+        viewport: self()
+      })
 
     # inserting the table is async, so wait a bit
     Process.sleep(100)
@@ -441,15 +442,16 @@ defmodule Scenic.SceneTest do
       |> button("Button0")
       |> button("Button1", id: :stoppit)
 
-    {:ok, state} = Scene.test_push_graph(graph, 123, %{
-               has_children: true,
-               scene_ref: scene_ref_0,
-               raw_scene_refs: %{},
-               dyn_scene_pids: %{},
-               dyn_scene_keys: %{},
-               dynamic_children_pid: dyn_sup,
-               viewport: self()
-             })
+    {:ok, state} =
+      Scene.test_push_graph(graph, 123, %{
+        has_children: true,
+        scene_ref: scene_ref_0,
+        raw_scene_refs: %{},
+        dyn_scene_pids: %{},
+        dyn_scene_keys: %{},
+        dynamic_children_pid: dyn_sup,
+        viewport: self()
+      })
 
     # inserting the table is async, so wait a bit
     Process.sleep(100)

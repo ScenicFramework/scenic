@@ -114,7 +114,8 @@ defmodule Scenic.Component.Input.DropdownTest do
   test "handle_input {:cursor_enter, _uid} - down" do
     context = %ViewPort.Context{viewport: self(), id: 1}
 
-    {:noreply, state, push: graph} = Dropdown.handle_input({:cursor_enter, 1}, context, %{@state | down: true})
+    {:noreply, state, push: graph} =
+      Dropdown.handle_input({:cursor_enter, 1}, context, %{@state | down: true})
 
     assert state.hover_id == 1
 
@@ -124,7 +125,8 @@ defmodule Scenic.Component.Input.DropdownTest do
   test "handle_input {:cursor_exit, _uid} - down" do
     context = %ViewPort.Context{viewport: self(), id: 1}
 
-    {:noreply, state, push: graph} = Dropdown.handle_input({:cursor_exit, 1}, context, %{@state | down: true})
+    {:noreply, state, push: graph} =
+      Dropdown.handle_input({:cursor_exit, 1}, context, %{@state | down: true})
 
     assert state.hover_id == nil
 

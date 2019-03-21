@@ -64,13 +64,17 @@ defmodule Scenic.Component.Input.ToggleTest do
   # handle_input
 
   test "handle_input {:cursor_enter, _uid} sets contained" do
-    {:noreply, state, push: graph} = Toggle.handle_input({:cursor_enter, 1}, %{}, %{@state | pressed?: true})
+    {:noreply, state, push: graph} =
+      Toggle.handle_input({:cursor_enter, 1}, %{}, %{@state | pressed?: true})
+
     assert state.contained?
     assert state.graph == graph
   end
 
   test "handle_input {:cursor_exit, _uid} clears contained" do
-    {:noreply, state, push: graph} = Toggle.handle_input({:cursor_exit, 1}, %{}, %{@state | pressed?: true})
+    {:noreply, state, push: graph} =
+      Toggle.handle_input({:cursor_exit, 1}, %{}, %{@state | pressed?: true})
+
     refute state.contained?
     assert state.graph == graph
   end
@@ -141,6 +145,7 @@ defmodule Scenic.Component.Input.ToggleTest do
         | pressed?: true,
           contained?: true
       })
+
     assert state.graph == graph
 
     # confirm the event was sent

@@ -254,12 +254,13 @@ defmodule Scenic.Scene do
   # @viewport             :viewport
   @not_activated :__not_activated__
 
-  @type response_opts :: list(
-    {:timeout, non_neg_integer}
-    | {:hibernate, true}
-    | {:continue, term}
-    | {:push, graph :: Graph.t()}
-  )
+  @type response_opts ::
+          list(
+            {:timeout, non_neg_integer}
+            | {:hibernate, true}
+            | {:continue, term}
+            | {:push, graph :: Graph.t()}
+          )
 
   defmodule Error do
     @moduledoc false
@@ -345,8 +346,6 @@ defmodule Scenic.Scene do
               {:noreply, state :: any}
   @callback filter_event(any, any, any) :: {:cont, any, any} | {:halt, any}
 
-
-
   @doc """
   Invoked when the `Scene` is started.
 
@@ -373,7 +372,7 @@ defmodule Scenic.Scene do
   Returning `{:ok, state, push: graph}` will push the indicated graph
   to the ViewPort. This is preferable to the old push_graph() function.
   """
-  
+
   @callback init(args :: term, options :: list) ::
               {:ok, new_state}
               | {:ok, new_state, timeout :: non_neg_integer}
@@ -408,7 +407,6 @@ defmodule Scenic.Scene do
               | {:stop, reason, reply, new_state}
               | {:stop, reason, new_state}
             when reply: term, new_state: term, reason: term
-
 
   @doc """
   Invoked to handle asynchronous `cast/2` messages.
@@ -454,7 +452,6 @@ defmodule Scenic.Scene do
               | {:stop, reason :: term, new_state}
             when new_state: term
 
-
   @doc """
   Invoked to handle `continue` instructions.
 
@@ -478,7 +475,6 @@ defmodule Scenic.Scene do
               | {:stop, reason :: term, new_state}
             when new_state: term
 
-
   @doc """
   Invoked when the Scene is about to exit. It should do any cleanup required.
 
@@ -491,7 +487,6 @@ defmodule Scenic.Scene do
   """
   @callback terminate(reason, state :: term) :: term
             when reason: :normal | :shutdown | {:shutdown, term}
-
 
   # ============================================================================
   # using macro
@@ -549,7 +544,7 @@ defmodule Scenic.Scene do
       end
 
       defp push_graph(%Graph{} = graph) do
-        IO.puts """
+        IO.puts("""
         #{IO.ANSI.yellow()}
         Deprecation in #{inspect(__MODULE__)}
 
@@ -576,11 +571,13 @@ defmodule Scenic.Scene do
         from handle_continue/3
             {:noreply, state, push: graph}
         #{IO.ANSI.default_color()}
-        """
+        """)
+
         GenServer.cast(self(), {:push_graph, graph, nil})
         # return the graph so this can be pipelined
         graph
       end
+
       # return the local scene process's scene_ref
       defp scene_ref(), do: Process.get(:scene_ref)
 
@@ -608,7 +605,7 @@ defmodule Scenic.Scene do
                      start_dynamic_scene: 3,
                      terminate: 2
 
-    # quote
+      # quote
     end
 
     # defmacro
@@ -649,11 +646,11 @@ defmodule Scenic.Scene do
   # --------------------------------------------------------
   @doc false
   def init({scene_module, args, opts}) do
-
-    has_children = case opts[:has_children] do
-      false -> false
-      _ -> true
-    end
+    has_children =
+      case opts[:has_children] do
+        false -> false
+        _ -> true
+      end
 
     scene_ref = opts[:scene_ref] || opts[:name]
     Process.put(:scene_ref, scene_ref)
@@ -715,8 +712,8 @@ defmodule Scenic.Scene do
   # ============================================================================
   # terminate
 
-  def terminate( reason, %{scene_module: mod, scene_state: sc_state} ) do
-    mod.terminate( reason, sc_state )
+  def terminate(reason, %{scene_module: mod, scene_state: sc_state}) do
+    mod.terminate(reason, sc_state)
   end
 
   # ============================================================================
@@ -790,10 +787,17 @@ defmodule Scenic.Scene do
     try do
       # handle the result of the scene init and return
       case scene_module.init(args, opts) do
-        {:ok, sc_state} -> deal_with_noreply( :noreply, state, sc_state )
-        {:ok, sc_state, opt} -> deal_with_noreply( :noreply, state, sc_state, opt )
-        :ignore -> :ignore
-        {:stop, reason} -> {:stop, reason}
+        {:ok, sc_state} ->
+          deal_with_noreply(:noreply, state, sc_state)
+
+        {:ok, sc_state, opt} ->
+          deal_with_noreply(:noreply, state, sc_state, opt)
+
+        :ignore ->
+          :ignore
+
+        {:stop, reason} ->
+          {:stop, reason}
 
         unknown ->
           # build error message components
@@ -873,14 +877,13 @@ defmodule Scenic.Scene do
     end
   end
 
-
   # --------------------------------------------------------
   # generic handle_continue. give the scene a chance to handle it
   @doc false
   def handle_continue(msg, %{scene_module: mod, scene_state: sc_state} = state) do
     case mod.handle_continue(msg, sc_state) do
-      {:noreply, sc_state} -> deal_with_noreply( :noreply, state, sc_state )
-      {:noreply, sc_state, opt} -> deal_with_noreply( :noreply, state, sc_state, opt )
+      {:noreply, sc_state} -> deal_with_noreply(:noreply, state, sc_state)
+      {:noreply, sc_state, opt} -> deal_with_noreply(:noreply, state, sc_state, opt)
       {:stop, reason, sc_state} -> {:stop, reason, %{state | scene_state: sc_state}}
     end
   end
@@ -893,8 +896,8 @@ defmodule Scenic.Scene do
   @doc false
   def handle_info(msg, %{scene_module: mod, scene_state: sc_state} = state) do
     case mod.handle_info(msg, sc_state) do
-      {:noreply, sc_state} -> deal_with_noreply( :noreply, state, sc_state )
-      {:noreply, sc_state, opt} -> deal_with_noreply( :noreply, state, sc_state, opt )
+      {:noreply, sc_state} -> deal_with_noreply(:noreply, state, sc_state)
+      {:noreply, sc_state, opt} -> deal_with_noreply(:noreply, state, sc_state, opt)
       {:stop, reason, sc_state} -> {:stop, reason, %{state | scene_state: sc_state}}
     end
   end
@@ -906,10 +909,10 @@ defmodule Scenic.Scene do
   # generic handle_call. give the scene a chance to handle it
   def handle_call(msg, from, %{scene_module: mod, scene_state: sc_state} = state) do
     case mod.handle_call(msg, from, sc_state) do
-      {:reply, reply, sc_state} -> deal_with_reply( reply, state, sc_state )
-      {:reply, reply, sc_state, opt} -> deal_with_reply( reply, state, sc_state, opt )
-      {:noreply, sc_state} -> deal_with_noreply( :noreply, state, sc_state )
-      {:noreply, sc_state, opt} -> deal_with_noreply( :noreply, state, sc_state, opt )
+      {:reply, reply, sc_state} -> deal_with_reply(reply, state, sc_state)
+      {:reply, reply, sc_state, opt} -> deal_with_reply(reply, state, sc_state, opt)
+      {:noreply, sc_state} -> deal_with_noreply(:noreply, state, sc_state)
+      {:noreply, sc_state, opt} -> deal_with_noreply(:noreply, state, sc_state, opt)
       {:stop, reason, sc_state} -> {:stop, reason, %{state | scene_state: sc_state}}
     end
   end
@@ -923,58 +926,71 @@ defmodule Scenic.Scene do
         %{scene_module: mod, scene_state: sc_state} = state
       ) do
     case mod.handle_input(event, context, sc_state) do
-      {:noreply, sc_state} -> deal_with_noreply( :noreply, state, sc_state )
-      {:noreply, sc_state, opts} -> deal_with_noreply( :noreply, state, sc_state, opts )
-      {:halt, sc_state} -> deal_with_noreply( :noreply, state, sc_state )
-      {:halt, sc_state, opts} -> deal_with_noreply( :noreply, state, sc_state, opts )
+      {:noreply, sc_state} ->
+        deal_with_noreply(:noreply, state, sc_state)
+
+      {:noreply, sc_state, opts} ->
+        deal_with_noreply(:noreply, state, sc_state, opts)
+
+      {:halt, sc_state} ->
+        deal_with_noreply(:noreply, state, sc_state)
+
+      {:halt, sc_state, opts} ->
+        deal_with_noreply(:noreply, state, sc_state, opts)
+
       {:cont, sc_state} ->
         GenServer.cast(vp, {:continue_input, raw_input})
-        deal_with_noreply( :noreply, state, sc_state )
+        deal_with_noreply(:noreply, state, sc_state)
+
       {:cont, sc_state, opts} ->
         GenServer.cast(vp, {:continue_input, raw_input})
-        deal_with_noreply( :noreply, state, sc_state, opts )
+        deal_with_noreply(:noreply, state, sc_state, opts)
 
       {:stop, sc_state} ->
-        IO.puts """
+        IO.puts("""
         #{IO.ANSI.yellow()}
         Deprecated handle_input :stop return in #{inspect(mod)} 
         Please return {:halt, state} instead
         This resolves a naming conflict with the newer GenServer return values
         #{IO.ANSI.default_color()}
-        """
-        deal_with_noreply( :noreply, state, sc_state )
+        """)
+
+        deal_with_noreply(:noreply, state, sc_state)
 
       {:stop, sc_state, opts} ->
-        IO.puts """
+        IO.puts("""
         #{IO.ANSI.yellow()}
         Deprecated handle_input :stop return in #{inspect(mod)} 
         Please return {:halt, state} instead
         This resolves a naming conflict with the newer GenServer return values
         #{IO.ANSI.default_color()}
-        """
-        deal_with_noreply( :noreply, state, sc_state, opts )
+        """)
+
+        deal_with_noreply(:noreply, state, sc_state, opts)
 
       {:continue, sc_state} ->
-        IO.puts """
+        IO.puts("""
         #{IO.ANSI.yellow()}
         Deprecated handle_input :continue return in #{inspect(mod)} 
         Please return {:cont, state} instead
         This resolves a naming conflict with the newer GenServer return values
         #{IO.ANSI.default_color()}
-        """
+        """)
+
         GenServer.cast(vp, {:continue_input, raw_input})
-        deal_with_noreply( :noreply, state, sc_state )
+        deal_with_noreply(:noreply, state, sc_state)
 
       {:continue, sc_state, opts} ->
-        IO.puts """
+        IO.puts("""
         #{IO.ANSI.yellow()}
         Deprecated handle_input :continue return in #{inspect(mod)} 
         Please return {:cont, state} instead
         This resolves a naming conflict with the newer GenServer return values
         #{IO.ANSI.default_color()}
-        """
+        """)
+
         GenServer.cast(vp, {:continue_input, raw_input})
-        deal_with_noreply( :noreply, state, sc_state, opts )
+        deal_with_noreply(:noreply, state, sc_state, opts)
     end
   end
 
@@ -988,64 +1004,77 @@ defmodule Scenic.Scene do
         } = state
       ) do
     case mod.filter_event(event, from_pid, sc_state) do
-      {:noreply, sc_state} -> deal_with_noreply( :noreply, state, sc_state )
-      {:noreply, sc_state, opts} -> deal_with_noreply( :noreply, state, sc_state, opts )
-      {:halt, sc_state} -> deal_with_noreply( :noreply, state, sc_state )
-      {:halt, sc_state, opts} -> deal_with_noreply( :noreply, state, sc_state, opts )
+      {:noreply, sc_state} ->
+        deal_with_noreply(:noreply, state, sc_state)
+
+      {:noreply, sc_state, opts} ->
+        deal_with_noreply(:noreply, state, sc_state, opts)
+
+      {:halt, sc_state} ->
+        deal_with_noreply(:noreply, state, sc_state)
+
+      {:halt, sc_state, opts} ->
+        deal_with_noreply(:noreply, state, sc_state, opts)
+
       {:cont, event, sc_state} ->
         GenServer.cast(parent_pid, {:event, event, from_pid})
-        deal_with_noreply( :noreply, state, sc_state )
+        deal_with_noreply(:noreply, state, sc_state)
+
       {:cont, event, sc_state, opts} ->
         GenServer.cast(parent_pid, {:event, event, from_pid})
-        deal_with_noreply( :noreply, state, sc_state, opts )
+        deal_with_noreply(:noreply, state, sc_state, opts)
 
       {:stop, sc_state} ->
-        IO.puts """
+        IO.puts("""
         #{IO.ANSI.yellow()}
         Deprecated filter_event :stop return in #{inspect(mod)} 
         Please return {:halt, state} instead
         This resolves a naming conflict with the newer GenServer return values
         #{IO.ANSI.default_color()}
-        """
-        deal_with_noreply( :noreply, state, sc_state )
+        """)
+
+        deal_with_noreply(:noreply, state, sc_state)
 
       {:stop, sc_state, opts} ->
-        IO.puts """
+        IO.puts("""
         #{IO.ANSI.yellow()}
         Deprecated filter_event :stop return in #{inspect(mod)} 
         Please return {:halt, state} instead
         This resolves a naming conflict with the newer GenServer return values
         #{IO.ANSI.default_color()}
-        """
-        deal_with_noreply( :noreply, state, sc_state, opts )
+        """)
+
+        deal_with_noreply(:noreply, state, sc_state, opts)
 
       {:continue, event, sc_state} ->
-        IO.puts """
+        IO.puts("""
         #{IO.ANSI.yellow()}
         Deprecated filter_event :continue return in #{inspect(mod)} 
         Please return {:cont, state} instead
         This resolves a naming conflict with the newer GenServer return values
         #{IO.ANSI.default_color()}
-        """
+        """)
+
         GenServer.cast(parent_pid, {:event, event, from_pid})
-        deal_with_noreply( :noreply, state, sc_state )
+        deal_with_noreply(:noreply, state, sc_state)
 
       {:continue, event, sc_state, opts} ->
-        IO.puts """
+        IO.puts("""
         #{IO.ANSI.yellow()}
         Deprecated filter_event :continue return in #{inspect(mod)} 
         Please return {:cont, state} instead
         This resolves a naming conflict with the newer GenServer return values
         #{IO.ANSI.default_color()}
-        """
+        """)
+
         GenServer.cast(parent_pid, {:event, event, from_pid})
-        deal_with_noreply( :noreply, state, sc_state, opts )
+        deal_with_noreply(:noreply, state, sc_state, opts)
     end
   end
 
   # --------------------------------------------------------
-  def handle_cast( {:push_graph, graph, sub_id}, state ) do
-    {:ok, state}  = internal_push_graph( graph, sub_id, state )
+  def handle_cast({:push_graph, graph, sub_id}, state) do
+    {:ok, state} = internal_push_graph(graph, sub_id, state)
     {:noreply, state}
   end
 
@@ -1067,8 +1096,8 @@ defmodule Scenic.Scene do
   # generic handle_cast. give the scene a chance to handle it
   def handle_cast(msg, %{scene_module: mod, scene_state: sc_state} = state) do
     case mod.handle_cast(msg, sc_state) do
-      {:noreply, sc_state} -> deal_with_noreply( :noreply, state, sc_state )
-      {:noreply, sc_state, opt} -> deal_with_noreply( :noreply, state, sc_state, opt )
+      {:noreply, sc_state} -> deal_with_noreply(:noreply, state, sc_state)
+      {:noreply, sc_state, opt} -> deal_with_noreply(:noreply, state, sc_state, opt)
       {:stop, reason, sc_state} -> {:stop, reason, %{state | scene_state: sc_state}}
     end
   end
@@ -1129,7 +1158,6 @@ defmodule Scenic.Scene do
     {:ok, pid, ref}
   end
 
-
   # ============================================================================
   # push_graph
 
@@ -1145,7 +1173,9 @@ defmodule Scenic.Scene do
   # end
 
   # not set up for dynamic children. Take the fast path
-  def internal_push_graph( %Graph{} = graph, sub_id,
+  def internal_push_graph(
+        %Graph{} = graph,
+        sub_id,
         %{
           has_children: false,
           scene_ref: scene_ref
@@ -1211,7 +1241,9 @@ defmodule Scenic.Scene do
   # --------------------------------------------------------
   # push a graph to the ets table and manage embedded dynamic child scenes
   # to the reader: You have no idea how difficult this was to get right.
-  def internal_push_graph( %Graph{} = raw_graph, sub_id,
+  def internal_push_graph(
+        %Graph{} = raw_graph,
+        sub_id,
         %{
           has_children: true,
           scene_ref: scene_ref,
@@ -1340,31 +1372,35 @@ defmodule Scenic.Scene do
   # ============================================================================
   # response management
 
-  defp deal_with_noreply( type, state, sc_state, opts \\ nil ) do
-    case deal_with_response_opts( opts, state ) do
+  defp deal_with_noreply(type, state, sc_state, opts \\ nil) do
+    case deal_with_response_opts(opts, state) do
       {nil, state} -> {type, %{state | scene_state: sc_state}}
       {opt, state} -> {type, %{state | scene_state: sc_state}, opt}
     end
   end
 
-  defp deal_with_reply( reply, state, sc_state, opts \\ nil )
-  defp deal_with_reply( reply, state, sc_state, opts) do
-    case deal_with_response_opts( opts, state ) do
+  defp deal_with_reply(reply, state, sc_state, opts \\ nil)
+
+  defp deal_with_reply(reply, state, sc_state, opts) do
+    case deal_with_response_opts(opts, state) do
       {nil, state} -> {:reply, reply, %{state | scene_state: sc_state}}
       {opt, state} -> {:reply, reply, %{state | scene_state: sc_state}, opt}
     end
   end
 
-  defp deal_with_response_opts( opts, state )
-  defp deal_with_response_opts( nil, state ), do: {nil, state}
-  defp deal_with_response_opts( timeout, state ) when is_integer(timeout), do: {timeout, state}
-  defp deal_with_response_opts( {:continue, term}, state ), do: {{:continue, term}, state}
-  defp deal_with_response_opts( opts, state ) when is_list(opts) do
-    {:ok, state} = case opts[:push] do
-      %Graph{} = graph -> internal_push_graph( graph, nil, state )
-      {%Graph{} = graph, sub_id} -> internal_push_graph( graph, sub_id, state )
-      _ -> {:ok, state}
-    end
+  defp deal_with_response_opts(opts, state)
+  defp deal_with_response_opts(nil, state), do: {nil, state}
+  defp deal_with_response_opts(timeout, state) when is_integer(timeout), do: {timeout, state}
+  defp deal_with_response_opts({:continue, term}, state), do: {{:continue, term}, state}
+
+  defp deal_with_response_opts(opts, state) when is_list(opts) do
+    {:ok, state} =
+      case opts[:push] do
+        %Graph{} = graph -> internal_push_graph(graph, nil, state)
+        {%Graph{} = graph, sub_id} -> internal_push_graph(graph, sub_id, state)
+        _ -> {:ok, state}
+      end
+
     opts
     |> Keyword.delete(:push)
     |> case do
@@ -1373,5 +1409,4 @@ defmodule Scenic.Scene do
       _ -> {nil, state}
     end
   end
-
 end
