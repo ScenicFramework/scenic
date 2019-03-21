@@ -57,8 +57,7 @@ defmodule Scenic.Component do
       use Scenic.Component, has_children: false
 
   Setting `has_children` to `false` this will do two things. First, it won't create
-  a dynamic supervisor for this scene, which saves some resources. Second,
-  `push_graph/1` goes through a fast pass that doesn't scan the graph for dynamic children.
+  a dynamic supervisor for this scene, which saves some resources.
 
   For example, the Button component sets `has_children` to `false`.
 

@@ -64,28 +64,27 @@ defmodule Scenic.Scenes.Error do
     err_v = args_v + msg_height(args_msg, @size) + @v_spacing
     stack_v = err_v + msg_height(err_msg, @size) + @v_spacing
 
-    Graph.build(font: @font, font_size: @size, t: {@margin_h, @margin_v})
+    graph = Graph.build(font: @font, font_size: @size, t: {@margin_h, @margin_v})
     |> button("Try Again", id: :try_again, theme: :warning)
     |> button("Reset", id: :restart, translate: {116, 0})
     |> text(head_msg, translate: {0, head_v}, font_size: @size + 4)
     |> text(args_msg, translate: {0, args_v}, fill: @args_color)
     |> text(err_msg, translate: {0, err_v}, fill: @error_color)
     |> text(stack_msg, translate: {0, stack_v}, fill: @error_color)
-    |> push_graph()
 
-    {:ok, {scene_mod, scene_args, opts[:viewport]}}
+    {:ok, {scene_mod, scene_args, opts[:viewport]}, push: graph}
   end
 
   # --------------------------------------------------------
   def filter_event({:click, :try_again}, _, {scene_mod, scene_args, vp} = state) do
     ViewPort.set_root(vp, {scene_mod, scene_args})
-    {:stop, state}
+    {:halt, state}
   end
 
   # --------------------------------------------------------
   def filter_event({:click, :restart}, _, {_, _, vp} = state) do
     ViewPort.reset(vp)
-    {:stop, state}
+    {:halt, state}
   end
 
   defp msg_height(msg, pixel_size) do

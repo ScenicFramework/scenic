@@ -279,9 +279,7 @@ defmodule Scenic.Component.Input.Dropdown do
       rotate_caret: rotate_caret
     }
 
-    push_graph(graph)
-
-    {:ok, state}
+    {:ok, state, push: graph}
   end
 
   # ============================================================================
@@ -312,7 +310,6 @@ defmodule Scenic.Component.Input.Dropdown do
       graph
       |> Graph.modify(@caret_id, &update_opts(&1, rotate: rotate_caret))
       |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: false))
-      |> push_graph()
 
     state =
       state
@@ -320,7 +317,7 @@ defmodule Scenic.Component.Input.Dropdown do
       |> Map.put(:drop_time, :os.system_time(:milli_seconds))
       |> Map.put(:graph, graph)
 
-    {:noreply, state}
+    {:noreply, state, push: graph}
   end
 
   # ============================================================================
@@ -333,11 +330,9 @@ defmodule Scenic.Component.Input.Dropdown do
         %{down: true, items: items, graph: graph, selected_id: selected_id, theme: theme} = state
       ) do
     # set the appropriate hilighting for each of the items
-    graph =
-      update_highlighting(graph, items, selected_id, id, theme)
-      |> push_graph
+    graph = update_highlighting(graph, items, selected_id, id, theme)
 
-    {:noreply, %{state | hover_id: id, graph: graph}}
+    {:noreply, %{state | hover_id: id, graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -347,11 +342,9 @@ defmodule Scenic.Component.Input.Dropdown do
         %{down: true, items: items, graph: graph, selected_id: selected_id, theme: theme} = state
       ) do
     # set the appropriate hilighting for each of the items
-    graph =
-      update_highlighting(graph, items, selected_id, nil, theme)
-      |> push_graph
+    graph = update_highlighting(graph, items, selected_id, nil, theme)
 
-    {:noreply, %{state | hover_id: nil, graph: graph}}
+    {:noreply, %{state | hover_id: nil, graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -377,10 +370,8 @@ defmodule Scenic.Component.Input.Dropdown do
       # raise the dropdown
       |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
       |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
-      # push to the viewport
-      |> push_graph()
 
-    {:noreply, %{state | down: false, graph: graph}}
+    {:noreply, %{state | down: false, graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -407,12 +398,11 @@ defmodule Scenic.Component.Input.Dropdown do
         |> update_highlighting(items, selected_id, nil, theme)
         |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
         |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
-        |> push_graph()
 
       # release the input capture
       ViewPort.release_input(context, [:cursor_button, :cursor_pos])
 
-      {:noreply, %{state | down: false, hover_id: nil, graph: graph}}
+      {:noreply, %{state | down: false, hover_id: nil, graph: graph}, push: graph}
     end
   end
 
@@ -438,10 +428,8 @@ defmodule Scenic.Component.Input.Dropdown do
       # raise the dropdown
       |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
       |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
-      # push to the viewport
-      |> push_graph()
 
-    {:noreply, %{state | down: false, graph: graph}}
+    {:noreply, %{state | down: false, graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -474,10 +462,8 @@ defmodule Scenic.Component.Input.Dropdown do
       # raise the dropdown
       |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
       |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
-      # push to the viewport
-      |> push_graph()
 
-    {:noreply, %{state | down: false, graph: graph, selected_id: item_id}}
+    {:noreply, %{state | down: false, graph: graph, selected_id: item_id}, push: graph}
   end
 
   # ============================================================================

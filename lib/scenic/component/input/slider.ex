@@ -158,9 +158,7 @@ defmodule Scenic.Component.Input.Slider do
       tracking: false
     }
 
-    push_graph(graph)
-
-    {:ok, state}
+    {:ok, state, push: graph}
   end
 
   # ============================================================================
@@ -176,8 +174,7 @@ defmodule Scenic.Component.Input.Slider do
 
     ViewPort.capture_input(context, [:cursor_button, :cursor_pos])
 
-    # %{state | graph: graph}}
-    {:noreply, state}
+    {:noreply, state, push: state.graph}
   end
 
   # --------------------------------------------------------
@@ -186,14 +183,13 @@ defmodule Scenic.Component.Input.Slider do
 
     ViewPort.release_input(context, [:cursor_button, :cursor_pos])
 
-    # %{state | graph: graph}}
-    {:noreply, state}
+    {:noreply, state, push: state.graph}
   end
 
   # --------------------------------------------------------
   def handle_input({:cursor_pos, {x, _}}, _context, %{tracking: true} = state) do
     state = update_slider(x, state)
-    {:noreply, state}
+    {:noreply, state, push: state.graph}
   end
 
   # --------------------------------------------------------
@@ -246,7 +242,6 @@ defmodule Scenic.Component.Input.Slider do
     Graph.modify(graph, :thumb, fn p ->
       update_opts(p, translate: {new_x, 0})
     end)
-    |> push_graph()
   end
 
   # --------------------------------------------------------

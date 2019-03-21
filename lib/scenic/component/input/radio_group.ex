@@ -160,9 +160,7 @@ defmodule Scenic.Component.Input.RadioGroup do
       id: id
     }
 
-    push_graph(graph)
-
-    {:ok, state}
+    {:ok, state, push: graph}
   end
 
   # # --------------------------------------------------------
@@ -177,10 +175,10 @@ defmodule Scenic.Component.Input.RadioGroup do
     Scene.cast_to_refs(nil, {:set_to_msg, btn_id})
 
     send_event({:value_changed, id, btn_id})
-    {:stop, %{state | value: btn_id}}
+    {:halt, %{state | value: btn_id}}
   end
 
   def filter_event(msg, _from, state) do
-    {:continue, msg, state}
+    {:cont, msg, state}
   end
 end

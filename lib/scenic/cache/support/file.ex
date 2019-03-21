@@ -73,10 +73,7 @@ defmodule Scenic.Cache.Support.File do
           # load the asset into the texture cache (at run time)
           Scenic.Cache.Static.Texture.load(@asset_path, @asset_hash)
 
-          # push the graph.
-          push_graph(@graph)
-
-          {:ok, @graph}
+          {:ok, :some_state, push: @graph}
         end
 
       end

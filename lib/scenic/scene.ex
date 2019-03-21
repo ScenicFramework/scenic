@@ -221,11 +221,11 @@ defmodule Scenic.Scene do
 
   You choose the behavior by returning either
 
-      {:continue, msg, state}
+      {:cont, msg, state}
 
   or
 
-      {:stop, state}
+      {:halt, state}
 
   Parameters passed in to `filter_event/3` are the event itself, a
   reference to the originating scene (which you can to communicate
@@ -254,7 +254,12 @@ defmodule Scenic.Scene do
   # @viewport             :viewport
   @not_activated :__not_activated__
 
-  # @type ref :: reference | atom
+  @type response_opts :: list(
+    {:timeout, non_neg_integer}
+    | {:hibernate, true}
+    | {:continue, term}
+    | {:push, graph :: Graph.t()}
+  )
 
   defmodule Error do
     @moduledoc false
@@ -338,7 +343,155 @@ defmodule Scenic.Scene do
 
   @callback handle_input(input :: any, context :: Context.t(), state :: any) ::
               {:noreply, state :: any}
-  @callback filter_event(any, any, any) :: {:continue, any, any} | {:stop, any}
+  @callback filter_event(any, any, any) :: {:cont, any, any} | {:halt, any}
+
+
+
+  @doc """
+  Invoked when the `Scene` is started.
+
+  `args` is the argument term you passed in via config or ViewPort.set_root.
+
+  `options` is a list of information giving you context about the environment
+  the scene is running in. If an option is not in the list, then it should be
+  treated as nil.
+    * `:viewport` - This is the pid of the ViewPort that is managing this dynamic scene.
+      It will be not set, or nil, if you are managing the Scene in a static
+      supervisor yourself.
+    * `:styles` - This is the map of styles that your scene can choose to inherit
+      (or not) from its parent scene. This is typically used by a child control that
+      wants to visually fit into its parent's look.
+    * `:id` - This is the :id term that the parent set a component when it was invoked.
+
+  The callback supports all the return values of the
+  [`init`](https://hexdocs.pm/elixir/GenServer.html#c:init/1)
+  callback in [`Genserver`](https://hexdocs.pm/elixir/GenServer.html).
+
+  In addition to the normal return values defined by GenServer, a `Scene` can
+  return two new ones that push a graph to the viewport
+
+  Returning `{:ok, state, push: graph}` will push the indicated graph
+  to the ViewPort. This is preferable to the old push_graph() function.
+  """
+  
+  @callback init(args :: term, options :: list) ::
+              {:ok, new_state}
+              | {:ok, new_state, timeout :: non_neg_integer}
+              | {:ok, new_state, :hibernate}
+              | {:ok, new_state, opts :: response_opts()}
+              | :ignore
+              | {:stop, reason :: any}
+            when new_state: any
+
+  @doc """
+  Invoked to handle synchronous `call/3` messages. `call/3` will block until a
+  reply is received.
+
+  The callback supports all the return values of the
+  [`handle_call`](https://hexdocs.pm/elixir/GenServer.html#c:handle_call/3)
+  callback in [`Genserver`](https://hexdocs.pm/elixir/GenServer.html).
+
+  In addition to the normal return values defined by GenServer, a `Scene` can
+  add an optional `{push: graph}` term, which pushes the graph to the viewport.
+
+  This has replaced push_graph() as the preferred way to push a graph.
+  """
+  @callback handle_call(request :: term, from :: GenServer.from(), state :: term) ::
+              {:reply, reply, new_state}
+              | {:reply, reply, new_state, timeout}
+              | {:reply, reply, new_state, :hibernate}
+              | {:reply, reply, new_state, opts :: response_opts()}
+              | {:noreply, new_state}
+              | {:noreply, new_state, timeout}
+              | {:noreply, new_state, :hibernate}
+              | {:noreply, new_state, opts :: response_opts()}
+              | {:stop, reason, reply, new_state}
+              | {:stop, reason, new_state}
+            when reply: term, new_state: term, reason: term
+
+
+  @doc """
+  Invoked to handle asynchronous `cast/2` messages.
+
+  `request` is the request message sent by a `cast/2` and `state` is the current
+  state of the `Scene`.
+
+  The callback supports all the return values of the
+  [`handle_cast`](https://hexdocs.pm/elixir/GenServer.html#c:handle_cast/2)
+  callback in [`Genserver`](https://hexdocs.pm/elixir/GenServer.html).
+
+  In addition to the normal return values defined by GenServer, a `Scene` can
+  add an optional `{push: graph}` term, which pushes the graph to the viewport.
+
+  This has replaced push_graph() as the preferred way to push a graph.
+  """
+  @callback handle_cast(request :: term, state :: term) ::
+              {:noreply, new_state}
+              | {:noreply, new_state, timeout}
+              | {:noreply, new_state, :hibernate}
+              | {:noreply, new_state, opts :: response_opts()}
+              | {:stop, reason :: term, new_state}
+            when new_state: term
+
+  @doc """
+  Invoked to handle all other messages.
+
+  `msg` is the message and `state` is the current state of the `Scene`. When
+  a timeout occurs the message is `:timeout`.
+
+  Return values are the same as `c:handle_cast/2`.
+
+  In addition to the normal return values defined by GenServer, a `Scene` can
+  add an optional `{push: graph}` term, which pushes the graph to the viewport.
+
+  This has replaced push_graph() as the preferred way to push a graph.
+  """
+  @callback handle_info(msg :: :timeout | term, state :: term) ::
+              {:noreply, new_state}
+              | {:noreply, new_state, timeout}
+              | {:noreply, new_state, :hibernate}
+              | {:noreply, new_state, opts :: response_opts()}
+              | {:stop, reason :: term, new_state}
+            when new_state: term
+
+
+  @doc """
+  Invoked to handle `continue` instructions.
+
+  It is useful for performing work after initialization or for splitting the work
+  in a callback in multiple steps, updating the process state along the way.
+
+  The callback supports all the return values of the
+  [`handle_continue`](https://hexdocs.pm/elixir/GenServer.html#c:handle_continue/2)
+  callback in [`Genserver`](https://hexdocs.pm/elixir/GenServer.html).
+
+  In addition to the normal return values defined by GenServer, a `Scene` can
+  add an optional `{push: graph}` term, which pushes the graph to the viewport.
+
+  This has replaced push_graph() as the preferred way to push a graph.
+  """
+  @callback handle_continue(continue :: term, state :: term) ::
+              {:noreply, new_state}
+              | {:noreply, new_state, timeout}
+              | {:noreply, new_state, :hibernate}
+              | {:noreply, new_state, opts :: response_opts()}
+              | {:stop, reason :: term, new_state}
+            when new_state: term
+
+
+  @doc """
+  Invoked when the Scene is about to exit. It should do any cleanup required.
+
+  `reason` is exit reason and `state` is the current state of the `Scene`.
+  The return value is ignored.
+
+  The callback identical to the
+  [`terminate`](https://hexdocs.pm/elixir/GenServer.html#c:terminate/2)
+  callback in [`Genserver`](https://hexdocs.pm/elixir/GenServer.html).
+  """
+  @callback terminate(reason, state :: term) :: term
+            when reason: :normal | :shutdown | {:shutdown, term}
+
 
   # ============================================================================
   # using macro
@@ -359,11 +512,16 @@ defmodule Scenic.Scene do
       def handle_cast(_msg, state), do: {:noreply, state}
       @doc false
       def handle_info(_msg, state), do: {:noreply, state}
+      @doc false
+      def handle_continue(_msg, state), do: {:noreply, nil, state}
 
       @doc false
       def handle_input(event, _, scene_state), do: {:noreply, scene_state}
       @doc false
-      def filter_event(event, _from, scene_state), do: {:continue, event, scene_state}
+      def filter_event(event, _from, scene_state), do: {:cont, event, scene_state}
+
+      @doc false
+      def terminate(_reason, _scene_state), do: :ok
 
       @doc false
       def start_dynamic_scene(supervisor, parent, args, opts \\ []) do
@@ -390,18 +548,39 @@ defmodule Scenic.Scene do
         end
       end
 
-      defp push_graph(graph) do
-        has_children =
-          case unquote(using_opts)[:has_children] do
-            false -> false
-            _ -> true
-          end
+      defp push_graph(%Graph{} = graph) do
+        IO.puts """
+        #{IO.ANSI.yellow()}
+        Deprecation in #{inspect(__MODULE__)}
 
-        GenServer.cast(self(), {:push_graph, graph, nil, has_children})
+        push_graph/1 has been deprecated and will be removed in a future version
+        Instead, use the returns below
+
+        from init/2
+            {:ok, state, push: graph}
+
+        from filter_event/3
+            {:halt, state, push: graph}
+            {:cont, event, state, push: graph}
+
+        from handle_cast/2
+            {:noreply, state, push: graph}
+
+        from handle_info/2
+            {:noreply, state, push: graph}
+
+        from handle_call/3
+            {:reply, reply, state, push: graph}
+            {:noreply, state, push: graph}
+
+        from handle_continue/3
+            {:noreply, state, push: graph}
+        #{IO.ANSI.default_color()}
+        """
+        GenServer.cast(self(), {:push_graph, graph, nil})
         # return the graph so this can be pipelined
         graph
       end
-
       # return the local scene process's scene_ref
       defp scene_ref(), do: Process.get(:scene_ref)
 
@@ -426,13 +605,14 @@ defmodule Scenic.Scene do
                      handle_info: 2,
                      handle_input: 3,
                      filter_event: 3,
-                     start_dynamic_scene: 3
-    end
+                     start_dynamic_scene: 3,
+                     terminate: 2
 
     # quote
-  end
+    end
 
-  # defmacro
+    # defmacro
+  end
 
   # ===========================================================================
   # calls for setting up a scene inside of a supervisor
@@ -469,6 +649,12 @@ defmodule Scenic.Scene do
   # --------------------------------------------------------
   @doc false
   def init({scene_module, args, opts}) do
+
+    has_children = case opts[:has_children] do
+      false -> false
+      _ -> true
+    end
+
     scene_ref = opts[:scene_ref] || opts[:name]
     Process.put(:scene_ref, scene_ref)
 
@@ -507,6 +693,7 @@ defmodule Scenic.Scene do
 
     # build up the state
     state = %{
+      has_children: has_children,
       raw_scene_refs: %{},
       dyn_scene_pids: %{},
       dyn_scene_keys: %{},
@@ -523,6 +710,13 @@ defmodule Scenic.Scene do
     }
 
     {:ok, state, {:continue, {:__scene_init_2__, scene_module, args, opts}}}
+  end
+
+  # ============================================================================
+  # terminate
+
+  def terminate( reason, %{scene_module: mod, scene_state: sc_state} ) do
+    mod.terminate( reason, sc_state )
   end
 
   # ============================================================================
@@ -596,8 +790,10 @@ defmodule Scenic.Scene do
     try do
       # handle the result of the scene init and return
       case scene_module.init(args, opts) do
-        {:ok, sc_state} ->
-          {:noreply, %{state | scene_state: sc_state}}
+        {:ok, sc_state} -> deal_with_noreply( :noreply, state, sc_state )
+        {:ok, sc_state, opt} -> deal_with_noreply( :noreply, state, sc_state, opt )
+        :ignore -> :ignore
+        {:stop, reason} -> {:stop, reason}
 
         unknown ->
           # build error message components
@@ -677,6 +873,18 @@ defmodule Scenic.Scene do
     end
   end
 
+
+  # --------------------------------------------------------
+  # generic handle_continue. give the scene a chance to handle it
+  @doc false
+  def handle_continue(msg, %{scene_module: mod, scene_state: sc_state} = state) do
+    case mod.handle_continue(msg, sc_state) do
+      {:noreply, sc_state} -> deal_with_noreply( :noreply, state, sc_state )
+      {:noreply, sc_state, opt} -> deal_with_noreply( :noreply, state, sc_state, opt )
+      {:stop, reason, sc_state} -> {:stop, reason, %{state | scene_state: sc_state}}
+    end
+  end
+
   # ============================================================================
   # handle_info
 
@@ -684,8 +892,11 @@ defmodule Scenic.Scene do
   # generic handle_info. give the scene a chance to handle it
   @doc false
   def handle_info(msg, %{scene_module: mod, scene_state: sc_state} = state) do
-    {:noreply, sc_state} = mod.handle_info(msg, sc_state)
-    {:noreply, %{state | scene_state: sc_state}}
+    case mod.handle_info(msg, sc_state) do
+      {:noreply, sc_state} -> deal_with_noreply( :noreply, state, sc_state )
+      {:noreply, sc_state, opt} -> deal_with_noreply( :noreply, state, sc_state, opt )
+      {:stop, reason, sc_state} -> {:stop, reason, %{state | scene_state: sc_state}}
+    end
   end
 
   # ============================================================================
@@ -694,8 +905,13 @@ defmodule Scenic.Scene do
   # --------------------------------------------------------
   # generic handle_call. give the scene a chance to handle it
   def handle_call(msg, from, %{scene_module: mod, scene_state: sc_state} = state) do
-    {:reply, reply, sc_state} = mod.handle_call(msg, from, sc_state)
-    {:reply, reply, %{state | scene_state: sc_state}}
+    case mod.handle_call(msg, from, sc_state) do
+      {:reply, reply, sc_state} -> deal_with_reply( reply, state, sc_state )
+      {:reply, reply, sc_state, opt} -> deal_with_reply( reply, state, sc_state, opt )
+      {:noreply, sc_state} -> deal_with_noreply( :noreply, state, sc_state )
+      {:noreply, sc_state, opt} -> deal_with_noreply( :noreply, state, sc_state, opt )
+      {:stop, reason, sc_state} -> {:stop, reason, %{state | scene_state: sc_state}}
+    end
   end
 
   # ============================================================================
@@ -706,20 +922,60 @@ defmodule Scenic.Scene do
         {:input, event, %Scenic.ViewPort.Context{viewport: vp, raw_input: raw_input} = context},
         %{scene_module: mod, scene_state: sc_state} = state
       ) do
-    sc_state =
-      case mod.handle_input(event, context, sc_state) do
-        {:noreply, sc_state} ->
-          sc_state
+    case mod.handle_input(event, context, sc_state) do
+      {:noreply, sc_state} -> deal_with_noreply( :noreply, state, sc_state )
+      {:noreply, sc_state, opts} -> deal_with_noreply( :noreply, state, sc_state, opts )
+      {:halt, sc_state} -> deal_with_noreply( :noreply, state, sc_state )
+      {:halt, sc_state, opts} -> deal_with_noreply( :noreply, state, sc_state, opts )
+      {:cont, sc_state} ->
+        GenServer.cast(vp, {:continue_input, raw_input})
+        deal_with_noreply( :noreply, state, sc_state )
+      {:cont, sc_state, opts} ->
+        GenServer.cast(vp, {:continue_input, raw_input})
+        deal_with_noreply( :noreply, state, sc_state, opts )
 
-        {:stop, sc_state} ->
-          sc_state
+      {:stop, sc_state} ->
+        IO.puts """
+        #{IO.ANSI.yellow()}
+        Deprecated handle_input :stop return in #{inspect(mod)} 
+        Please return {:halt, state} instead
+        This resolves a naming conflict with the newer GenServer return values
+        #{IO.ANSI.default_color()}
+        """
+        deal_with_noreply( :noreply, state, sc_state )
 
-        {:continue, sc_state} ->
-          GenServer.cast(vp, {:continue_input, raw_input})
-          sc_state
-      end
+      {:stop, sc_state, opts} ->
+        IO.puts """
+        #{IO.ANSI.yellow()}
+        Deprecated handle_input :stop return in #{inspect(mod)} 
+        Please return {:halt, state} instead
+        This resolves a naming conflict with the newer GenServer return values
+        #{IO.ANSI.default_color()}
+        """
+        deal_with_noreply( :noreply, state, sc_state, opts )
 
-    {:noreply, %{state | scene_state: sc_state}}
+      {:continue, sc_state} ->
+        IO.puts """
+        #{IO.ANSI.yellow()}
+        Deprecated handle_input :continue return in #{inspect(mod)} 
+        Please return {:cont, state} instead
+        This resolves a naming conflict with the newer GenServer return values
+        #{IO.ANSI.default_color()}
+        """
+        GenServer.cast(vp, {:continue_input, raw_input})
+        deal_with_noreply( :noreply, state, sc_state )
+
+      {:continue, sc_state, opts} ->
+        IO.puts """
+        #{IO.ANSI.yellow()}
+        Deprecated handle_input :continue return in #{inspect(mod)} 
+        Please return {:cont, state} instead
+        This resolves a naming conflict with the newer GenServer return values
+        #{IO.ANSI.default_color()}
+        """
+        GenServer.cast(vp, {:continue_input, raw_input})
+        deal_with_noreply( :noreply, state, sc_state, opts )
+    end
   end
 
   # --------------------------------------------------------
@@ -731,24 +987,167 @@ defmodule Scenic.Scene do
           scene_state: sc_state
         } = state
       ) do
-    sc_state =
-      case mod.filter_event(event, from_pid, sc_state) do
-        {:continue, event, sc_state} ->
-          GenServer.cast(parent_pid, {:event, event, from_pid})
-          sc_state
+    case mod.filter_event(event, from_pid, sc_state) do
+      {:noreply, sc_state} -> deal_with_noreply( :noreply, state, sc_state )
+      {:noreply, sc_state, opts} -> deal_with_noreply( :noreply, state, sc_state, opts )
+      {:halt, sc_state} -> deal_with_noreply( :noreply, state, sc_state )
+      {:halt, sc_state, opts} -> deal_with_noreply( :noreply, state, sc_state, opts )
+      {:cont, event, sc_state} ->
+        GenServer.cast(parent_pid, {:event, event, from_pid})
+        deal_with_noreply( :noreply, state, sc_state )
+      {:cont, event, sc_state, opts} ->
+        GenServer.cast(parent_pid, {:event, event, from_pid})
+        deal_with_noreply( :noreply, state, sc_state, opts )
 
-        {:stop, sc_state} ->
-          sc_state
-      end
+      {:stop, sc_state} ->
+        IO.puts """
+        #{IO.ANSI.yellow()}
+        Deprecated filter_event :stop return in #{inspect(mod)} 
+        Please return {:halt, state} instead
+        This resolves a naming conflict with the newer GenServer return values
+        #{IO.ANSI.default_color()}
+        """
+        deal_with_noreply( :noreply, state, sc_state )
 
-    {:noreply, %{state | scene_state: sc_state}}
+      {:stop, sc_state, opts} ->
+        IO.puts """
+        #{IO.ANSI.yellow()}
+        Deprecated filter_event :stop return in #{inspect(mod)} 
+        Please return {:halt, state} instead
+        This resolves a naming conflict with the newer GenServer return values
+        #{IO.ANSI.default_color()}
+        """
+        deal_with_noreply( :noreply, state, sc_state, opts )
+
+      {:continue, event, sc_state} ->
+        IO.puts """
+        #{IO.ANSI.yellow()}
+        Deprecated filter_event :continue return in #{inspect(mod)} 
+        Please return {:cont, state} instead
+        This resolves a naming conflict with the newer GenServer return values
+        #{IO.ANSI.default_color()}
+        """
+        GenServer.cast(parent_pid, {:event, event, from_pid})
+        deal_with_noreply( :noreply, state, sc_state )
+
+      {:continue, event, sc_state, opts} ->
+        IO.puts """
+        #{IO.ANSI.yellow()}
+        Deprecated filter_event :continue return in #{inspect(mod)} 
+        Please return {:cont, state} instead
+        This resolves a naming conflict with the newer GenServer return values
+        #{IO.ANSI.default_color()}
+        """
+        GenServer.cast(parent_pid, {:event, event, from_pid})
+        deal_with_noreply( :noreply, state, sc_state, opts )
+    end
   end
 
   # --------------------------------------------------------
+  def handle_cast( {:push_graph, graph, sub_id}, state ) do
+    {:ok, state}  = internal_push_graph( graph, sub_id, state )
+    {:noreply, state}
+  end
+
+  # --------------------------------------------------------
+  # generic handle_cast. give the scene a chance to handle it
+  def handle_cast({:stop, dyn_sup}, %{supervisor_pid: nil} = state) do
+    DynamicSupervisor.terminate_child(dyn_sup, self())
+    {:noreply, state}
+  end
+
+  # --------------------------------------------------------
+  # generic handle_cast. give the scene a chance to handle it
+  def handle_cast({:stop, dyn_sup}, %{supervisor_pid: supervisor_pid} = state) do
+    DynamicSupervisor.terminate_child(dyn_sup, supervisor_pid)
+    {:noreply, state}
+  end
+
+  # --------------------------------------------------------
+  # generic handle_cast. give the scene a chance to handle it
+  def handle_cast(msg, %{scene_module: mod, scene_state: sc_state} = state) do
+    case mod.handle_cast(msg, sc_state) do
+      {:noreply, sc_state} -> deal_with_noreply( :noreply, state, sc_state )
+      {:noreply, sc_state, opt} -> deal_with_noreply( :noreply, state, sc_state, opt )
+      {:stop, reason, sc_state} -> {:stop, reason, %{state | scene_state: sc_state}}
+    end
+  end
+
+  # ============================================================================
+  # Scene management
+
+  # --------------------------------------------------------
+  # this a root-level dynamic scene
+  @doc false
+  def start_dynamic_scene(dynamic_supervisor, parent, mod, args, opts, has_children)
+      when is_list(opts) and is_boolean(has_children) and is_atom(mod) do
+    ref = make_ref()
+
+    opts =
+      opts
+      |> Keyword.put_new(:parent, parent)
+      |> Keyword.put_new(:scene_ref, ref)
+
+    do_start_child_scene(dynamic_supervisor, ref, mod, args, opts, has_children)
+  end
+
+  # --------------------------------------------------------
+  defp do_start_child_scene(dynamic_supervisor, ref, mod, args, opts, true) do
+    opts = Keyword.put(opts, :has_children, true)
+
+    # start the scene supervision tree
+    {:ok, supervisor_pid} =
+      DynamicSupervisor.start_child(
+        dynamic_supervisor,
+        {Scenic.Scene.Supervisor, {mod, args, opts}}
+      )
+
+    # we want to return the pid of the scene itself. not the supervisor
+    scene_pid =
+      Supervisor.which_children(supervisor_pid)
+      |> Enum.find_value(fn
+        {_, pid, :worker, [Scenic.Scene]} ->
+          pid
+
+        _ ->
+          nil
+      end)
+
+    {:ok, scene_pid, ref}
+  end
+
+  # --------------------------------------------------------
+  defp do_start_child_scene(dynamic_supervisor, ref, mod, args, opts, false) do
+    opts = Keyword.put(opts, :has_children, true)
+
+    {:ok, pid} =
+      DynamicSupervisor.start_child(
+        dynamic_supervisor,
+        {Scenic.Scene, {mod, args, opts}}
+      )
+
+    {:ok, pid, ref}
+  end
+
+
+  # ============================================================================
+  # push_graph
+
+  if Mix.env() == :test do
+    def test_push_graph(graph, sub_id, state) do
+      internal_push_graph(graph, sub_id, state)
+    end
+  end
+
+  # --------------------------------------------------------
+  # def internal_push_graph( {graph, sub_id}, state ) do
+  #   internal_push_graph( graph, sub_id, state )
+  # end
+
   # not set up for dynamic children. Take the fast path
-  def handle_cast(
-        {:push_graph, graph, sub_id, false},
+  def internal_push_graph( %Graph{} = graph, sub_id,
         %{
+          has_children: false,
           scene_ref: scene_ref
         } = state
       ) do
@@ -806,15 +1205,15 @@ defmodule Scenic.Scene do
     # write the graph into the ets table
     # ViewPort.Tables.insert_graph(graph_key, self(), graph, all_keys)
 
-    {:noreply, state}
+    {:ok, state}
   end
 
   # --------------------------------------------------------
   # push a graph to the ets table and manage embedded dynamic child scenes
   # to the reader: You have no idea how difficult this was to get right.
-  def handle_cast(
-        {:push_graph, raw_graph, sub_id, true},
+  def internal_push_graph( %Graph{} = raw_graph, sub_id,
         %{
+          has_children: true,
           scene_ref: scene_ref,
           raw_scene_refs: old_raw_refs,
           dyn_scene_pids: old_dyn_pids,
@@ -935,79 +1334,44 @@ defmodule Scenic.Scene do
       |> Map.put(:dyn_scene_pids, new_dyn_pids)
       |> Map.put(:dyn_scene_keys, new_dyn_keys)
 
-    {:noreply, state}
-  end
-
-  # --------------------------------------------------------
-  # generic handle_cast. give the scene a chance to handle it
-  def handle_cast({:stop, dyn_sup}, %{supervisor_pid: nil} = state) do
-    DynamicSupervisor.terminate_child(dyn_sup, self())
-    {:noreply, state}
-  end
-
-  # --------------------------------------------------------
-  # generic handle_cast. give the scene a chance to handle it
-  def handle_cast({:stop, dyn_sup}, %{supervisor_pid: supervisor_pid} = state) do
-    DynamicSupervisor.terminate_child(dyn_sup, supervisor_pid)
-    {:noreply, state}
-  end
-
-  # --------------------------------------------------------
-  # generic handle_cast. give the scene a chance to handle it
-  def handle_cast(msg, %{scene_module: mod, scene_state: sc_state} = state) do
-    {:noreply, sc_state} = mod.handle_cast(msg, sc_state)
-    {:noreply, %{state | scene_state: sc_state}}
+    {:ok, state}
   end
 
   # ============================================================================
-  # Scene management
+  # response management
 
-  # --------------------------------------------------------
-  # this a root-level dynamic scene
-  @doc false
-  def start_dynamic_scene(dynamic_supervisor, parent, mod, args, opts, has_children)
-      when is_list(opts) and is_boolean(has_children) and is_atom(mod) do
-    ref = make_ref()
-
-    opts =
-      opts
-      |> Keyword.put_new(:parent, parent)
-      |> Keyword.put_new(:scene_ref, ref)
-
-    do_start_child_scene(dynamic_supervisor, ref, mod, args, opts, has_children)
+  defp deal_with_noreply( type, state, sc_state, opts \\ nil ) do
+    case deal_with_response_opts( opts, state ) do
+      {nil, state} -> {type, %{state | scene_state: sc_state}}
+      {opt, state} -> {type, %{state | scene_state: sc_state}, opt}
+    end
   end
 
-  # --------------------------------------------------------
-  defp do_start_child_scene(dynamic_supervisor, ref, mod, args, opts, true) do
-    # start the scene supervision tree
-    {:ok, supervisor_pid} =
-      DynamicSupervisor.start_child(
-        dynamic_supervisor,
-        {Scenic.Scene.Supervisor, {mod, args, opts}}
-      )
-
-    # we want to return the pid of the scene itself. not the supervisor
-    scene_pid =
-      Supervisor.which_children(supervisor_pid)
-      |> Enum.find_value(fn
-        {_, pid, :worker, [Scenic.Scene]} ->
-          pid
-
-        _ ->
-          nil
-      end)
-
-    {:ok, scene_pid, ref}
+  defp deal_with_reply( reply, state, sc_state, opts \\ nil )
+  defp deal_with_reply( reply, state, sc_state, opts) do
+    case deal_with_response_opts( opts, state ) do
+      {nil, state} -> {:reply, reply, %{state | scene_state: sc_state}}
+      {opt, state} -> {:reply, reply, %{state | scene_state: sc_state}, opt}
+    end
   end
 
-  # --------------------------------------------------------
-  defp do_start_child_scene(dynamic_supervisor, ref, mod, args, opts, false) do
-    {:ok, pid} =
-      DynamicSupervisor.start_child(
-        dynamic_supervisor,
-        {Scenic.Scene, {mod, args, opts}}
-      )
-
-    {:ok, pid, ref}
+  defp deal_with_response_opts( opts, state )
+  defp deal_with_response_opts( nil, state ), do: {nil, state}
+  defp deal_with_response_opts( timeout, state ) when is_integer(timeout), do: {timeout, state}
+  defp deal_with_response_opts( {:continue, term}, state ), do: {{:continue, term}, state}
+  defp deal_with_response_opts( opts, state ) when is_list(opts) do
+    {:ok, state} = case opts[:push] do
+      %Graph{} = graph -> internal_push_graph( graph, nil, state )
+      {%Graph{} = graph, sub_id} -> internal_push_graph( graph, sub_id, state )
+      _ -> {:ok, state}
+    end
+    opts
+    |> Keyword.delete(:push)
+    |> case do
+      [{:timeout, timeout}] -> {timeout, state}
+      [{:continue, term}] -> {{:continue, term}, state}
+      _ -> {nil, state}
+    end
   end
+
 end

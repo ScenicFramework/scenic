@@ -101,11 +101,10 @@ defmodule Scenic.Graph do
         @graph
         |> Graph.modify( :small_text, &text(&1, "Smaller Hello", font_size: 16))
         |> Graph.modify( :big_text, &text(&1, "Bigger Hello", font_size: 60))
-        |> push_graph()
 
   Notice that the graph is modified multiple times in the pipeline. The `push_graph/1`
   function is relatively heavy when the graph references other scenes. The recommended
-  pattern is to make multiple changes to the graph and then push once at the end.
+  pattern is to make multiple changes to the graph .
 
   ## Accessing Primitives
 

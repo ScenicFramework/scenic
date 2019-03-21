@@ -46,39 +46,39 @@ defmodule Scenic.Component.Input.ToggleTest do
   # init
 
   test "init works with simple data" do
-    {:ok, state} = Toggle.init(false, styles: %{}, id: :test_id)
+    {:ok, state, push: graph} = Toggle.init(false, styles: %{}, id: :test_id)
     %Graph{} = state.graph
     assert is_map(state.theme)
     assert state.contained? == false
     assert state.pressed? == false
     assert state.on? == false
     assert state.id == :test_id
+    assert state.graph == graph
 
-    {:ok, state} = Toggle.init(true, styles: %{}, id: :test_id)
+    {:ok, state, push: graph} = Toggle.init(true, styles: %{}, id: :test_id)
     assert state.on? == true
+    assert state.graph == graph
   end
 
   # ============================================================================
   # handle_input
 
   test "handle_input {:cursor_enter, _uid} sets contained" do
-    {:noreply, state} = Toggle.handle_input({:cursor_enter, 1}, %{}, %{@state | pressed?: true})
+    {:noreply, state, push: graph} = Toggle.handle_input({:cursor_enter, 1}, %{}, %{@state | pressed?: true})
     assert state.contained?
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert state.graph == graph
   end
 
   test "handle_input {:cursor_exit, _uid} clears contained" do
-    {:noreply, state} = Toggle.handle_input({:cursor_exit, 1}, %{}, %{@state | pressed?: true})
+    {:noreply, state, push: graph} = Toggle.handle_input({:cursor_exit, 1}, %{}, %{@state | pressed?: true})
     refute state.contained?
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert state.graph == graph
   end
 
   test "handle_input {:cursor_button, :press" do
     context = %ViewPort.Context{viewport: self()}
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       Toggle.handle_input({:cursor_button, {:left, :press, nil, nil}}, context, %{
         @state
         | pressed?: false,
@@ -90,14 +90,13 @@ defmodule Scenic.Component.Input.ToggleTest do
 
     # confirm the input was captured
     assert_receive({:"$gen_cast", {:capture_input, ^context, [:cursor_button, :cursor_pos]}})
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert state.graph == graph
   end
 
   test "handle_input {:cursor_button, :release when off" do
     context = %ViewPort.Context{viewport: self()}
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       Toggle.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
         @state
         | pressed?: true,
@@ -109,15 +108,13 @@ defmodule Scenic.Component.Input.ToggleTest do
 
     # confirm the input was released
     assert_receive({:"$gen_cast", {:release_input, [:cursor_button, :cursor_pos]}})
-
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert state.graph == graph
   end
 
   test "handle_input {:cursor_button, :release when on" do
     context = %ViewPort.Context{viewport: self()}
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       Toggle.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
         @state
         | on?: true,
@@ -130,9 +127,7 @@ defmodule Scenic.Component.Input.ToggleTest do
 
     # confirm the input was released
     assert_receive({:"$gen_cast", {:release_input, [:cursor_button, :cursor_pos]}})
-
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert state.graph == graph
   end
 
   test "handle_input {:cursor_button, :release sends a message if contained" do
@@ -140,12 +135,13 @@ defmodule Scenic.Component.Input.ToggleTest do
     Process.put(:parent_pid, self)
     context = %ViewPort.Context{viewport: self()}
 
-    {:noreply, _} =
+    {:noreply, state, push: graph} =
       Toggle.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
         @state
         | pressed?: true,
           contained?: true
       })
+    assert state.graph == graph
 
     # confirm the event was sent
     assert_receive({:"$gen_cast", {:event, {:value_changed, :test_id, true}, ^self}})

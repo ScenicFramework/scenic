@@ -40,7 +40,6 @@ defmodule Scenic.Cache.Support.Hash do
 
   # --------------------------------------------------------
   @doc false
-  @deprecated "Cache.valid_hash_types/0 will be removed in 0.10.0"
   @spec valid_hash_types() :: [:ripemd160 | :sha | :sha224 | :sha256 | :sha384 | :sha512, ...]
   def valid_hash_types(), do: @hash_types
 

@@ -23,7 +23,7 @@ defmodule Scenic.Scenes.ErrorTest do
   test "init" do
     {:ok, fvp} = FakeViewPort.start_link()
 
-    {:ok, {:mod, :args, ^fvp}} =
+    {:ok, {:mod, :args, ^fvp}, push: _} =
       Scenes.Error.init(
         {{"module", "err", "args", "stack"}, :mod, :args},
         viewport: fvp
@@ -35,14 +35,14 @@ defmodule Scenic.Scenes.ErrorTest do
   test "filter_event {:click, :try_again}" do
     self = self()
     state = {:mod, :args, self}
-    {:stop, ^state} = Scenes.Error.filter_event({:click, :try_again}, nil, state)
+    {:halt, ^state} = Scenes.Error.filter_event({:click, :try_again}, nil, state)
     assert_receive({:"$gen_cast", {:set_root, {:mod, :args}, _}})
   end
 
   test "filter_event {:click, :restart}" do
     self = self()
     state = {:mod, :args, self}
-    {:stop, ^state} = Scenes.Error.filter_event({:click, :restart}, nil, state)
+    {:halt, ^state} = Scenes.Error.filter_event({:click, :restart}, nil, state)
     assert_receive({:"$gen_cast", :reset})
   end
 end

@@ -39,8 +39,8 @@ defmodule Scenic.Components do
   1. A reference to the new scene is added to the graph.
 
   This doesn't happen all at once. These helper functions simply add a
-  reference to a to-be-started component to your graph. When you call
-  `push_graph/1` to the ViewPort then manages the life cycle of the components.
+  reference to a to-be-started component to your graph. When you push a graph,
+  the ViewPort then manages the life cycle of the components.
 
   You can also supervise components yourself, but then you should add the scene
   reference yourself via the `scene_ref/3` function, which is in the
@@ -94,11 +94,11 @@ defmodule Scenic.Components do
   ## Examples:
 
         def filter_event({:click, :sample_button}, _, state) do
-          {:stop, state}
+          {:halt, state}
         end
 
         def filter_event({:click, :sample_button}, _, state) do
-          {:continue, {:click, :transformed}, state}
+          {:cont, {:click, :transformed}, state}
         end
 
   Inside a `filter_event` callback you can modify a graph, change state, send

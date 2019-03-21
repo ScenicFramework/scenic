@@ -56,23 +56,25 @@ defmodule Scenic.Component.Input.TextFieldTest do
   # init
 
   test "init works with simple data" do
-    {:ok, state} = TextField.init(@initial_value, styles: %{}, id: :test_id)
+    {:ok, state, push: graph} = TextField.init(@initial_value, styles: %{}, id: :test_id)
     %Graph{} = state.graph
     assert is_map(state.theme)
+    assert state.graph == graph
     assert state.value == @initial_value
     assert state.display == @initial_value
     assert state.focused == false
     assert state.type == :text
     assert state.id == :test_id
 
-    {:ok, state} = TextField.init(@initial_value, styles: %{type: :password})
+    {:ok, state, push: graph} = TextField.init(@initial_value, styles: %{type: :password})
     assert state.value == @initial_value
     assert state.display == @initial_password
     assert state.type == :password
+    assert state.graph == graph
   end
 
   test "init works with text field style options" do
-    {:ok, state} =
+    {:ok, state, push: graph} =
       TextField.init(@initial_value,
         styles: %{
           type: :password,
@@ -84,6 +86,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
         id: :test_id
       )
 
+    assert state.graph == graph
     assert state.type == :password
     assert state.width == 11
     assert state.height == 13
@@ -106,17 +109,18 @@ defmodule Scenic.Component.Input.TextFieldTest do
     context = %ViewPort.Context{viewport: self}
 
     assert @state.index == 2
-    {:noreply, state} = TextField.handle_input({:key, {"left", :press, 0}}, context, @state)
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    {:noreply, state, push: graph} = TextField.handle_input({:key, {"left", :press, 0}}, context, @state)
     assert state.index == 1
+    assert state.graph == graph
 
-    {:noreply, state} = TextField.handle_input({:key, {"left", :press, 0}}, context, state)
+    {:noreply, state, push: graph} = TextField.handle_input({:key, {"left", :press, 0}}, context, state)
     assert state.index == 0
+    assert state.graph == graph
 
     # does not keep going below 0
-    {:noreply, state} = TextField.handle_input({:key, {"left", :press, 0}}, context, state)
+    {:noreply, state, push: graph} = TextField.handle_input({:key, {"left", :press, 0}}, context, state)
     assert state.index == 0
+    assert state.graph == graph
 
     # cleanup
     Process.exit(tables_pid, :shutdown)
@@ -133,17 +137,18 @@ defmodule Scenic.Component.Input.TextFieldTest do
     length = String.length(@initial_value)
     state = %{@state | index: length - 2}
 
-    {:noreply, state} = TextField.handle_input({:key, {"right", :press, 0}}, context, state)
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    {:noreply, state, push: graph} = TextField.handle_input({:key, {"right", :press, 0}}, context, state)
+    assert state.graph == graph
     assert state.index == length - 1
 
-    {:noreply, state} = TextField.handle_input({:key, {"right", :press, 0}}, context, state)
+    {:noreply, state, push: graph} = TextField.handle_input({:key, {"right", :press, 0}}, context, state)
     assert state.index == length
+    assert state.graph == graph
 
     # does not keep going past the end
-    {:noreply, state} = TextField.handle_input({:key, {"right", :press, 0}}, context, state)
+    {:noreply, state, push: graph} = TextField.handle_input({:key, {"right", :press, 0}}, context, state)
     assert state.index == length
+    assert state.graph == graph
 
     # cleanup
     Process.exit(tables_pid, :shutdown)
@@ -158,15 +163,13 @@ defmodule Scenic.Component.Input.TextFieldTest do
     context = %ViewPort.Context{viewport: self}
 
     state = %{@state | index: 4}
-    {:noreply, state} = TextField.handle_input({:key, {"home", :press, 0}}, context, state)
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    {:noreply, state, push: graph} = TextField.handle_input({:key, {"home", :press, 0}}, context, state)
+    assert state.graph == graph
     assert state.index == 0
 
     state = %{@state | index: 4}
-    {:noreply, state} = TextField.handle_input({:key, {"page_up", :press, 0}}, context, state)
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    {:noreply, state, push: graph} = TextField.handle_input({:key, {"page_up", :press, 0}}, context, state)
+    assert state.graph == graph
     assert state.index == 0
 
     # cleanup
@@ -184,15 +187,13 @@ defmodule Scenic.Component.Input.TextFieldTest do
     length = String.length(@initial_value)
 
     state = %{@state | index: 4}
-    {:noreply, state} = TextField.handle_input({:key, {"end", :press, 0}}, context, state)
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    {:noreply, state, push: graph} = TextField.handle_input({:key, {"end", :press, 0}}, context, state)
+    assert state.graph == graph
     assert state.index == length
 
     state = %{@state | index: 4}
-    {:noreply, state} = TextField.handle_input({:key, {"page_down", :press, 0}}, context, state)
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    {:noreply, state, push: graph} = TextField.handle_input({:key, {"page_down", :press, 0}}, context, state)
+    assert state.graph == graph
     assert state.index == length
 
     # cleanup
@@ -207,15 +208,15 @@ defmodule Scenic.Component.Input.TextFieldTest do
     {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
     context = %ViewPort.Context{viewport: self}
 
-    {:noreply, state} = TextField.handle_input({:key, {"backspace", :press, 0}}, context, @state)
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    {:noreply, state, push: graph} = TextField.handle_input({:key, {"backspace", :press, 0}}, context, @state)
+    assert state.graph == graph
     assert state.index == 1
     assert state.value == "Iitial value"
 
-    {:noreply, state} = TextField.handle_input({:key, {"backspace", :press, 0}}, context, state)
+    {:noreply, state, push: graph} = TextField.handle_input({:key, {"backspace", :press, 0}}, context, state)
     assert state.index == 0
     assert state.value == "itial value"
+    assert state.graph == graph
 
     # does nothing if already at position 0
     {:noreply, state} = TextField.handle_input({:key, {"backspace", :press, 0}}, context, state)
@@ -238,20 +239,21 @@ defmodule Scenic.Component.Input.TextFieldTest do
     pos = length - 2
     state = %{@state | index: pos}
 
-    {:noreply, state} = TextField.handle_input({:key, {"delete", :press, 0}}, context, state)
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    {:noreply, state, push: graph} = TextField.handle_input({:key, {"delete", :press, 0}}, context, state)
+    assert state.graph == graph
     assert state.index == pos
     assert state.value == "Initial vale"
 
-    {:noreply, state} = TextField.handle_input({:key, {"delete", :press, 0}}, context, state)
+    {:noreply, state, push: graph} = TextField.handle_input({:key, {"delete", :press, 0}}, context, state)
     assert state.index == pos
     assert state.value == "Initial val"
+    assert state.graph == graph
 
     # does nothing if already at position 0
-    {:noreply, state} = TextField.handle_input({:key, {"delete", :press, 0}}, context, state)
+    {:noreply, state, push: graph} = TextField.handle_input({:key, {"delete", :press, 0}}, context, state)
     assert state.index == pos
     assert state.value == "Initial val"
+    assert state.graph == graph
 
     # cleanup
     Process.exit(tables_pid, :shutdown)
@@ -267,17 +269,17 @@ defmodule Scenic.Component.Input.TextFieldTest do
 
     state = %{@state | index: 2}
 
-    {:noreply, state} = TextField.handle_input({:codepoint, {"a", 0}}, context, state)
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    {:noreply, state, push: graph} = TextField.handle_input({:codepoint, {"a", 0}}, context, state)
+    assert state.graph == graph
     assert state.index == 3
     assert state.value == "Inaitial value"
     assert state.display == "Inaitial value"
 
     # can also add strings
-    {:noreply, state} = TextField.handle_input({:codepoint, {".com", 0}}, context, state)
+    {:noreply, state, push: graph} = TextField.handle_input({:codepoint, {".com", 0}}, context, state)
     assert state.index == 7
     assert state.value == "Ina.comitial value"
+    assert state.graph == graph
 
     # cleanup
     Process.exit(tables_pid, :shutdown)
@@ -293,9 +295,8 @@ defmodule Scenic.Component.Input.TextFieldTest do
 
     state = %{@state | index: 2, type: :password, display: @initial_password}
 
-    {:noreply, state} = TextField.handle_input({:codepoint, {"a", 0}}, context, state)
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    {:noreply, state, push: graph} = TextField.handle_input({:codepoint, {"a", 0}}, context, state)
+    assert state.graph == graph
     assert state.index == 3
     assert state.value == "Inaitial value"
     assert state.display == @initial_password <> "*"
@@ -319,9 +320,10 @@ defmodule Scenic.Component.Input.TextFieldTest do
     assert state.index == 2
     assert state.value == "Initial value"
 
-    {:noreply, state} = TextField.handle_input({:codepoint, {"2", 0}}, context, state)
+    {:noreply, state, push: graph} = TextField.handle_input({:codepoint, {"2", 0}}, context, state)
     assert state.index == 3
     assert state.value == "In2itial value"
+    assert state.graph == graph
 
     # filters to floats
     state = %{@state | index: 2, value: "Initial value"}
@@ -330,13 +332,15 @@ defmodule Scenic.Component.Input.TextFieldTest do
     assert state.index == 2
     assert state.value == "Initial value"
 
-    {:noreply, state} = TextField.handle_input({:codepoint, {".", 0}}, context, state)
+    {:noreply, state, push: graph} = TextField.handle_input({:codepoint, {".", 0}}, context, state)
     assert state.index == 3
     assert state.value == "In.itial value"
+    assert state.graph == graph
 
-    {:noreply, state} = TextField.handle_input({:codepoint, {"2", 0}}, context, state)
+    {:noreply, state, push: graph} = TextField.handle_input({:codepoint, {"2", 0}}, context, state)
     assert state.index == 4
     assert state.value == "In.2itial value"
+    assert state.graph == graph
 
     # filters to char string
     state = %{@state | index: 2, value: "Initial value"}
@@ -345,9 +349,10 @@ defmodule Scenic.Component.Input.TextFieldTest do
     assert state.index == 2
     assert state.value == "Initial value"
 
-    {:noreply, state} = TextField.handle_input({:codepoint, {"d", 0}}, context, state)
+    {:noreply, state, push: graph} = TextField.handle_input({:codepoint, {"d", 0}}, context, state)
     assert state.index == 3
     assert state.value == "Inditial value"
+    assert state.graph == graph
 
     # filters to function
     state = %{@state | index: 2, value: "Initial value"}
@@ -356,9 +361,10 @@ defmodule Scenic.Component.Input.TextFieldTest do
     assert state.index == 2
     assert state.value == "Initial value"
 
-    {:noreply, state} = TextField.handle_input({:codepoint, {"k", 0}}, context, state)
+    {:noreply, state, push: graph} = TextField.handle_input({:codepoint, {"k", 0}}, context, state)
     assert state.index == 3
     assert state.value == "Inkitial value"
+    assert state.graph == graph
 
     # cleanup
     Process.exit(tables_pid, :shutdown)
@@ -374,22 +380,15 @@ defmodule Scenic.Component.Input.TextFieldTest do
 
     state = %{@state | index: 4}
 
-    {:noreply, state} = TextField.handle_input({:key, {"left", :repeat, 0}}, context, state)
-    {:noreply, state} = TextField.handle_input({:key, {"left", :repeat, 0}}, context, state)
+    {:noreply, state, push: graph} = TextField.handle_input({:key, {"left", :repeat, 0}}, context, state)
+    assert state.graph == graph
+    {:noreply, state, push: graph} = TextField.handle_input({:key, {"left", :repeat, 0}}, context, state)
+    assert state.graph == graph
     {:noreply, state} = TextField.handle_input({:key, {"", :repeat, 0}}, context, state)
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+
     assert state.index == 2
     assert state.value == "Initial value"
     assert state.display == "Initial value"
-
-    # {:noreply, state} = TextField.handle_input({:key, {"a", :repeat, 0}}, context, state)
-    # {:noreply, state} = TextField.handle_input({:key, {"a", :repeat, 0}}, context, state)
-    # # confirm the graph was pushed
-    # assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
-    # assert state.index == 4
-    # assert state.value == "Inaaaitial value"
-    # assert state.display == "Inaaaitial value"
 
     # cleanup
     Process.exit(tables_pid, :shutdown)
@@ -404,8 +403,10 @@ defmodule Scenic.Component.Input.TextFieldTest do
     context = %ViewPort.Context{viewport: self}
 
     state = %{@state | index: 2, value: "ab", display: "ab"}
-    {:noreply, state} = TextField.handle_input({:key, {"backspace", :repeat, 0}}, context, state)
-    {:noreply, state} = TextField.handle_input({:key, {"backspace", :repeat, 0}}, context, state)
+    {:noreply, state, push: graph} = TextField.handle_input({:key, {"backspace", :repeat, 0}}, context, state)
+    assert state.graph == graph
+    {:noreply, state, push: graph} = TextField.handle_input({:key, {"backspace", :repeat, 0}}, context, state)
+    assert state.graph == graph
 
     assert state.index == 0
     assert state.value == ""
@@ -426,7 +427,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
     context = %ViewPort.Context{viewport: self, id: :border}
     state = %{@state | index: 2, focused: true}
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       TextField.handle_input(
         {:cursor_button, {:left, :press, 0, {100, 0}}},
         context,
@@ -434,6 +435,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
       )
 
     assert state.index == 9
+    assert state.graph == graph
 
     # cleanup
     Process.exit(tables_pid, :shutdown)
@@ -448,7 +450,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
     context = %ViewPort.Context{viewport: self, id: :border}
     state = %{@state | index: 2, focused: true}
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       TextField.handle_input(
         {:cursor_button, {:left, :press, 0, {30, 0}}},
         context,
@@ -456,6 +458,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
       )
 
     assert state.index == 2
+    assert state.graph == graph
 
     # cleanup
     Process.exit(tables_pid, :shutdown)
