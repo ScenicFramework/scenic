@@ -634,9 +634,9 @@ defmodule Scenic.Scene do
     rescue
       err ->
         # build error message components
-        head_msg = "#{inspect(scene_module)} crashed during init"
+        module_msg = inspect(scene_module)
         err_msg = inspect(err)
-        args_msg = "args: #{inspect(args)}"
+        args_msg = inspect(args)
         stack_msg = Exception.format_stacktrace(__STACKTRACE__)
 
         # assemble into a final message to output to the command line
@@ -644,10 +644,10 @@ defmodule Scenic.Scene do
           [
             "\n",
             IO.ANSI.red(),
-            head_msg,
+            module_msg <> "crashed during init",
             "\n",
             IO.ANSI.yellow(),
-            args_msg,
+            "Scene Args:" <> args_msg,
             "\n",
             IO.ANSI.red(),
             err_msg,
@@ -666,14 +666,14 @@ defmodule Scenic.Scene do
             :ok
 
           vp ->
-            msgs = {head_msg, err_msg, args_msg, stack_msg}
+            msgs = {module_msg, err_msg, args_msg, stack_msg}
             ViewPort.set_root(vp, {Scenic.Scenes.Error, {msgs, scene_module, args}})
         end
 
         # purposefully slow down the reply in the event of a crash. Just in 
-        # case it does to into a crazy loop
-        Process.sleep(400)
-        {:noreply, nil}
+        # case it does go into a crazy loop
+        # Process.sleep(400)
+        {:noreply, state}
     end
   end
 
