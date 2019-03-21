@@ -16,6 +16,7 @@
   * Buttons, checkboxes, radios, etc can be auto-sized to fix their text
   * FontMetrics can be used to measure strings, trim to fit, and more
 * Dynamic Textures in the form of raw pixel maps are now supported. This should allow you to capture raw images off of a camera and display them without encoding/decoding
+* leading spaces in a text primitive are now rendered
 
 ## 0.9.0
 * Much improved testing
