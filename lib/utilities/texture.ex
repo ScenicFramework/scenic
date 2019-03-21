@@ -148,10 +148,18 @@ defmodule Scenic.Utilities.Texture do
 
   # --------------------------------------------------------
   def get(texture, x, y)
-  def get({:g, w, h, p, _}, x, y) when x <= w and y <= h, do: nif_get_g(p, y * w + x)
-  def get({:ga, w, h, p, _}, x, y) when x <= w and y <= h, do: nif_get_ga(p, y * w + x)
-  def get({:rgb, w, h, p, _}, x, y) when x <= w and y <= h, do: nif_get_rgb(p, y * w + x)
-  def get({:rgba, w, h, p, _}, x, y) when x <= w and y <= h, do: nif_get_rgba(p, y * w + x)
+
+  def get({:g, w, h, p, _}, x, y) when x >= 0 and x <= w and y >= 0 and y <= h,
+    do: nif_get_g(p, y * w + x)
+
+  def get({:ga, w, h, p, _}, x, y) when x >= 0 and x <= w and y >= 0 and y <= h,
+    do: nif_get_ga(p, y * w + x)
+
+  def get({:rgb, w, h, p, _}, x, y) when x >= 0 and x <= w and y >= 0 and y <= h,
+    do: nif_get_rgb(p, y * w + x)
+
+  def get({:rgba, w, h, p, _}, x, y) when x >= 0 and x <= w and y >= 0 and y <= h,
+    do: nif_get_rgba(p, y * w + x)
 
   defp nif_get_g(_, _), do: :erlang.nif_error("Did not find nif_get_g")
   defp nif_get_ga(_, _), do: :erlang.nif_error("Did not find nif_get_ga")
@@ -161,25 +169,25 @@ defmodule Scenic.Utilities.Texture do
   # --------------------------------------------------------
   def put!(texture, x, y, color)
 
-  def put!({:g, w, h, p, hints}, x, y, color) when x <= w and y <= h do
+  def put!({:g, w, h, p, hints}, x, y, color) when x >= 0 and x <= w and y >= 0 and y <= h do
     g = prep_color(:g, color)
     nif_put(p, y * w + x, g)
     {:g, w, h, p, hints}
   end
 
-  def put!({:ga, w, h, p, hints}, x, y, color) when x <= w and y <= h do
+  def put!({:ga, w, h, p, hints}, x, y, color) when x >= 0 and x <= w and y >= 0 and y <= h do
     {g, a} = prep_color(:ga, color)
     nif_put(p, y * w + x, g, a)
     {:ga, w, h, p, hints}
   end
 
-  def put!({:rgb, w, h, p, hints}, x, y, color) when x <= w and y <= h do
+  def put!({:rgb, w, h, p, hints}, x, y, color) when x >= 0 and x <= w and y >= 0 and y <= h do
     {r, g, b} = prep_color(:rgb, color)
     nif_put(p, y * w + x, r, g, b)
     {:rgb, w, h, p, hints}
   end
 
-  def put!({:rgba, w, h, p, hints}, x, y, color) when x <= w and y <= h do
+  def put!({:rgba, w, h, p, hints}, x, y, color) when x >= 0 and x <= w and y >= 0 and y <= h do
     {r, g, b, a} = Color.to_rgba(color)
     nif_put(p, y * w + x, r, g, b, a)
     {:rgba, w, h, p, hints}

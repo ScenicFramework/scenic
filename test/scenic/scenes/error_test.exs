@@ -9,14 +9,27 @@ defmodule Scenic.Scenes.ErrorTest do
 
   alias Scenic.Scenes
 
-  test "init" do
-    self = self()
+  defmodule FakeViewPort do
+    use GenServer
 
-    {:ok, {:mod, :args, ^self}} =
+    def start_link(), do: GenServer.start_link(__MODULE__, nil)
+    def init(nil), do: {:ok, nil}
+
+    def handle_call(:query_info, _, state) do
+      {:reply, {:ok, %Scenic.ViewPort.Status{size: {500, 400}}}, state}
+    end
+  end
+
+  test "init" do
+    {:ok, fvp} = FakeViewPort.start_link()
+
+    {:ok, {:mod, :args, ^fvp}} =
       Scenes.Error.init(
-        {{"head", "err", "args", "stack"}, :mod, :args},
-        viewport: self
+        {{"module", "err", "args", "stack"}, :mod, :args},
+        viewport: fvp
       )
+
+    Process.exit(fvp, :normal)
   end
 
   test "filter_event {:click, :try_again}" do

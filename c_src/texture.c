@@ -125,7 +125,6 @@ nif_get_g(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   // get the parameters
   if ( !enif_inspect_binary(env, argv[0], &pixels) ) {return enif_make_badarg(env);}
   if ( !enif_get_uint(env, argv[1], &pos) ) {return enif_make_badarg(env);}
-  if ( pos < 0 ) {return enif_make_badarg(env);}
   if ( pos >= pixels.size ) {return enif_make_badarg(env);}
 
   // return the value of g
@@ -143,7 +142,6 @@ nif_get_ga(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   // get the parameters
   if ( !enif_inspect_binary(env, argv[0], &pixels) )    {return enif_make_badarg(env);}
   if ( !enif_get_uint(env, argv[1], &pos) )       {return enif_make_badarg(env);}
-  if ( pos < 0 ) {return enif_make_badarg(env);}
   if ( pos >= (pixels.size - 1) ) {return enif_make_badarg(env);}
 
   // get the values
@@ -169,7 +167,6 @@ nif_get_rgb(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   // get the parameters
   if ( !enif_inspect_binary(env, argv[0], &pixels) )    {return enif_make_badarg(env);}
   if ( !enif_get_uint(env, argv[1], &pos) )       {return enif_make_badarg(env);}
-  if ( pos < 0 ) {return enif_make_badarg(env);}
   if ( pos >= (pixels.size - 2) ) {return enif_make_badarg(env);}
 
   // get the values
@@ -198,7 +195,6 @@ nif_get_rgba(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   // get the parameters
   if ( !enif_inspect_binary(env, argv[0], &pixels) )    {return enif_make_badarg(env);}
   if ( !enif_get_uint(env, argv[1], &pos) )       {return enif_make_badarg(env);}
-  if ( pos < 0 ) {return enif_make_badarg(env);}
   if ( pos >= (pixels.size - 3) ) {return enif_make_badarg(env);}
 
   // get the values
@@ -227,7 +223,6 @@ nif_put_g(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   // get the parameters
   if ( !enif_inspect_binary(env, argv[0], &pixels) )    {return enif_make_badarg(env);}
   if ( !enif_get_uint(env, argv[1], &pos) )       {return enif_make_badarg(env);}
-  if ( pos < 0 ) {return enif_make_badarg(env);}
   if ( pos >= pixels.size ) {return enif_make_badarg(env);}
   if ( !enif_get_uint(env, argv[2], &g) )      {return enif_make_badarg(env);}
 
@@ -248,7 +243,6 @@ nif_put_ga(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   // get the parameters
   if ( !enif_inspect_binary(env, argv[0], &pixels) )    {return enif_make_badarg(env);}
   if ( !enif_get_uint(env, argv[1], &pos) )       {return enif_make_badarg(env);}
-  if ( pos < 0 ) {return enif_make_badarg(env);}
   if ( pos >= (pixels.size - 1) ) {return enif_make_badarg(env);}
   if ( !enif_get_uint(env, argv[2], &g) )      {return enif_make_badarg(env);}
   if ( !enif_get_uint(env, argv[3], &a) )      {return enif_make_badarg(env);}
@@ -273,7 +267,6 @@ nif_put_rgb(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   // get the parameters
   if ( !enif_inspect_binary(env, argv[0], &pixels) )    {return enif_make_badarg(env);}
   if ( !enif_get_uint(env, argv[1], &pos) )       {return enif_make_badarg(env);}
-  if ( pos < 0 ) {return enif_make_badarg(env);}
   if ( pos >= (pixels.size - 2) ) {return enif_make_badarg(env);}
   if ( !enif_get_uint(env, argv[2], &r) )      {return enif_make_badarg(env);}
   if ( !enif_get_uint(env, argv[3], &g) )      {return enif_make_badarg(env);}
@@ -301,7 +294,6 @@ nif_put_rgba(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   // get the parameters
   if ( !enif_inspect_binary(env, argv[0], &pixels) )    {return enif_make_badarg(env);}
   if ( !enif_get_uint(env, argv[1], &pos) )       {return enif_make_badarg(env);}
-  if ( pos < 0 ) {return enif_make_badarg(env);}
   if ( pos >= (pixels.size - 3) ) {return enif_make_badarg(env);}
   if ( !enif_get_uint(env, argv[2], &r) )      {return enif_make_badarg(env);}
   if ( !enif_get_uint(env, argv[3], &g) )      {return enif_make_badarg(env);}
