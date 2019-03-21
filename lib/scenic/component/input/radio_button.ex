@@ -116,9 +116,7 @@ defmodule Scenic.Component.Input.RadioButton do
       id: id
     }
 
-    push_graph(graph)
-
-    {:ok, state}
+    {:ok, state, push: graph}
   end
 
   # --------------------------------------------------------
@@ -126,21 +124,21 @@ defmodule Scenic.Component.Input.RadioButton do
   def handle_cast({:set_to_msg, set_id}, %{id: id} = state) do
     state = Map.put(state, :checked, set_id == id)
     graph = update_graph(state)
-    {:noreply, %{state | graph: graph}}
+    {:noreply, %{state | graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
   def handle_input({:cursor_enter, _uid}, _, %{pressed: true} = state) do
     state = Map.put(state, :contained, true)
     graph = update_graph(state)
-    {:noreply, %{state | graph: graph}}
+    {:noreply, %{state | graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
   def handle_input({:cursor_exit, _uid}, _, %{pressed: true} = state) do
     state = Map.put(state, :contained, false)
     graph = update_graph(state)
-    {:noreply, %{state | graph: graph}}
+    {:noreply, %{state | graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -155,7 +153,7 @@ defmodule Scenic.Component.Input.RadioButton do
 
     ViewPort.capture_input(context, [:cursor_button, :cursor_pos])
 
-    {:noreply, %{state | graph: graph}}
+    {:noreply, %{state | graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -175,7 +173,7 @@ defmodule Scenic.Component.Input.RadioButton do
 
     graph = update_graph(state)
 
-    {:noreply, %{state | graph: graph}}
+    {:noreply, %{state | graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -210,6 +208,5 @@ defmodule Scenic.Component.Input.RadioButton do
       false ->
         Graph.modify(graph, :chx, &Primitive.put_style(&1, :hidden, true))
     end
-    |> push_graph()
   end
 end

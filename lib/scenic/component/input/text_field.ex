@@ -195,9 +195,8 @@ defmodule Scenic.Component.Input.TextField do
       )
       |> update_text(display, state)
       |> update_caret(display, index)
-      |> push_graph()
 
-    {:ok, %{state | graph: graph}}
+    {:ok, %{state | graph: graph}, push: graph}
   end
 
   # ============================================================================
@@ -252,7 +251,6 @@ defmodule Scenic.Component.Input.TextField do
       graph
       |> Graph.modify(:caret, &update_opts(&1, hidden: false))
       |> Graph.modify(:border, &update_opts(&1, stroke: {2, theme.focus}))
-      |> push_graph()
 
     # record the state
     state
@@ -273,7 +271,6 @@ defmodule Scenic.Component.Input.TextField do
       graph
       |> Graph.modify(:caret, &update_opts(&1, hidden: true))
       |> Graph.modify(:border, &update_opts(&1, stroke: {2, theme.border}))
-      |> push_graph()
 
     # record the state
     state
@@ -362,14 +359,12 @@ defmodule Scenic.Component.Input.TextField do
           # reset_caret the caret blinker
           Scene.cast_to_refs(nil, :reset_caret)
           # move the caret
-          graph =
-            update_caret(graph, value, i)
-            |> push_graph()
+          graph = update_caret(graph, value, i)
 
           {i, graph}
       end
 
-    {:noreply, %{state | index: index, graph: graph}}
+    {:noreply, %{state | index: index, graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -379,7 +374,8 @@ defmodule Scenic.Component.Input.TextField do
         context,
         %{focused: true} = state
       ) do
-    {:continue, release_focus(context, state)}
+    state = release_focus(context, state)
+    {:cont, state, push: state.graph}
   end
 
   # ============================================================================
@@ -409,14 +405,12 @@ defmodule Scenic.Component.Input.TextField do
           # move the caret
           i = i - 1
 
-          graph =
-            update_caret(graph, value, i)
-            |> push_graph()
+          graph = update_caret(graph, value, i)
 
           {i, graph}
       end
 
-    {:noreply, %{state | index: index, graph: graph}}
+    {:noreply, %{state | index: index, graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -440,14 +434,12 @@ defmodule Scenic.Component.Input.TextField do
           # move the caret
           i = i + 1
 
-          graph =
-            update_caret(graph, value, i)
-            |> push_graph()
+          graph = update_caret(graph, value, i)
 
           {i, graph}
       end
 
-    {:noreply, %{state | index: index, graph: graph}}
+    {:noreply, %{state | index: index, graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -470,14 +462,12 @@ defmodule Scenic.Component.Input.TextField do
           # reset the caret blinker
           Scene.cast_to_refs(nil, :reset_caret)
           # move the caret
-          graph =
-            update_caret(graph, value, 0)
-            |> push_graph()
+          graph = update_caret(graph, value, 0)
 
           {0, graph}
       end
 
-    {:noreply, %{state | index: index, graph: graph}}
+    {:noreply, %{state | index: index, graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -503,14 +493,12 @@ defmodule Scenic.Component.Input.TextField do
           # reset the caret blinker
           Scene.cast_to_refs(nil, :reset_caret)
           # move the caret
-          graph =
-            update_caret(graph, value, max_index)
-            |> push_graph()
+          graph = update_caret(graph, value, max_index)
 
           {max_index, graph}
       end
 
-    {:noreply, %{state | index: index, graph: graph}}
+    {:noreply, %{state | index: index, graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -552,7 +540,6 @@ defmodule Scenic.Component.Input.TextField do
       graph
       |> update_text(display, state)
       |> update_caret(display, index)
-      |> push_graph()
 
     state =
       state
@@ -561,7 +548,7 @@ defmodule Scenic.Component.Input.TextField do
       |> Map.put(:display, display)
       |> Map.put(:index, index)
 
-    {:noreply, state}
+    {:noreply, state, push: graph}
   end
 
   # --------------------------------------------------------
@@ -594,7 +581,6 @@ defmodule Scenic.Component.Input.TextField do
     graph =
       graph
       |> update_text(display, state)
-      |> push_graph()
 
     state =
       state
@@ -603,7 +589,7 @@ defmodule Scenic.Component.Input.TextField do
       |> Map.put(:display, display)
       |> Map.put(:index, index)
 
-    {:noreply, state}
+    {:noreply, state, push: graph}
   end
 
   # --------------------------------------------------------
@@ -663,7 +649,6 @@ defmodule Scenic.Component.Input.TextField do
       graph
       |> update_text(display, state)
       |> update_caret(display, index)
-      |> push_graph()
 
     state =
       state
@@ -672,7 +657,7 @@ defmodule Scenic.Component.Input.TextField do
       |> Map.put(:display, display)
       |> Map.put(:index, index)
 
-    {:noreply, state}
+    {:noreply, state, push: graph}
   end
 
   # ignore the char

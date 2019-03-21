@@ -82,7 +82,6 @@ defmodule Scenic.Component.Input.Caret do
         hidden: true,
         id: :caret
       )
-      |> push_graph()
 
     state = %{
       graph: graph,
@@ -91,31 +90,25 @@ defmodule Scenic.Component.Input.Caret do
       focused: false
     }
 
-    {:ok, state}
+    {:ok, state, push: graph}
   end
 
   # --------------------------------------------------------
   @doc false
   def handle_cast(:start_caret, %{graph: graph, timer: nil} = state) do
     # turn on the caret
-    graph =
-      graph
-      |> Graph.modify(:caret, &update_opts(&1, hidden: false))
-      |> push_graph()
+    graph = Graph.modify(graph, :caret, &update_opts(&1, hidden: false))
 
     # start the timer
     {:ok, timer} = :timer.send_interval(@caret_ms, :blink)
 
-    {:noreply, %{state | graph: graph, hidden: false, timer: timer, focused: true}}
+    {:noreply, %{state | graph: graph, hidden: false, timer: timer, focused: true}, push: graph}
   end
 
   # --------------------------------------------------------
   def handle_cast(:stop_caret, %{graph: graph, timer: timer} = state) do
     # hide the caret
-    graph =
-      graph
-      |> Graph.modify(:caret, &update_opts(&1, hidden: true))
-      |> push_graph()
+    graph = Graph.modify(graph, :caret, &update_opts(&1, hidden: true))
 
     # stop the timer
     case timer do
@@ -123,7 +116,7 @@ defmodule Scenic.Component.Input.Caret do
       timer -> :timer.cancel(timer)
     end
 
-    {:noreply, %{state | graph: graph, hidden: true, timer: nil, focused: false}}
+    {:noreply, %{state | graph: graph, hidden: true, timer: nil, focused: false}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -132,10 +125,7 @@ defmodule Scenic.Component.Input.Caret do
         %{graph: graph, timer: timer, focused: true} = state
       ) do
     # show the caret
-    graph =
-      graph
-      |> Graph.modify(:caret, &update_opts(&1, hidden: false))
-      |> push_graph()
+    graph = Graph.modify(graph, :caret, &update_opts(&1, hidden: false))
 
     # stop the timer
     if timer, do: :timer.cancel(timer)
@@ -143,7 +133,7 @@ defmodule Scenic.Component.Input.Caret do
     # restart the timer
     {:ok, timer} = :timer.send_interval(@caret_ms, :blink)
 
-    {:noreply, %{state | graph: graph, hidden: false, timer: timer}}
+    {:noreply, %{state | graph: graph, hidden: false, timer: timer}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -156,11 +146,8 @@ defmodule Scenic.Component.Input.Caret do
     # invert the hidden flag
     hidden = !hidden
 
-    graph =
-      graph
-      |> Graph.modify(:caret, &update_opts(&1, hidden: hidden))
-      |> push_graph()
+    graph = Graph.modify(graph, :caret, &update_opts(&1, hidden: hidden))
 
-    {:noreply, %{state | graph: graph, hidden: hidden}}
+    {:noreply, %{state | graph: graph, hidden: hidden}, push: graph}
   end
 end

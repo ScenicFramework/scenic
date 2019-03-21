@@ -48,8 +48,9 @@ defmodule Scenic.Component.Input.RadioGroupTest do
 
   test "init works with simple data" do
     list = [{"Title0", :abc}, {"Title1", :def, true}, {"Title2", :ghi, false}]
-    {:ok, state} = RadioGroup.init(list, styles: %{}, id: :test_id)
+    {:ok, state, push: graph} = RadioGroup.init(list, styles: %{}, id: :test_id)
     %Graph{} = state.graph
+    assert state.graph == graph
     assert state.value == :def
     assert state.id == :test_id
   end
@@ -66,7 +67,7 @@ defmodule Scenic.Component.Input.RadioGroupTest do
 
     Tables.insert_graph({:graph, scene_ref, nil}, self(), Graph.build(), %{})
 
-    {:stop, state} = RadioGroup.filter_event({:click, :def}, nil, @state)
+    {:halt, state} = RadioGroup.filter_event({:click, :def}, nil, @state)
     assert state.value == :def
 
     # confirm the event was sent
@@ -77,7 +78,7 @@ defmodule Scenic.Component.Input.RadioGroupTest do
   end
 
   test "filter_event unknown event does nothing" do
-    {:continue, :unknown, state} = RadioGroup.filter_event(:unknown, nil, @state)
+    {:cont, :unknown, state} = RadioGroup.filter_event(:unknown, nil, @state)
     assert state == @state
   end
 end

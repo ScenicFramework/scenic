@@ -192,9 +192,7 @@ defmodule Scenic.Component.Input.Toggle do
       color: color
     }
 
-    push_graph(graph)
-
-    {:ok, state}
+    {:ok, state, push: graph}
   end
 
   # --------------------------------------------------------
@@ -202,14 +200,14 @@ defmodule Scenic.Component.Input.Toggle do
   def handle_input({:cursor_enter, _uid}, _, %{pressed?: true} = state) do
     state = Map.put(state, :contained?, true)
     graph = update_graph(state)
-    {:noreply, %{state | graph: graph}}
+    {:noreply, %{state | graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
   def handle_input({:cursor_exit, _uid}, _, %{pressed?: true} = state) do
     state = Map.put(state, :contained?, false)
     graph = update_graph(state)
-    {:noreply, %{state | graph: graph}}
+    {:noreply, %{state | graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -223,7 +221,7 @@ defmodule Scenic.Component.Input.Toggle do
 
     ViewPort.capture_input(context, [:cursor_button, :cursor_pos])
 
-    {:noreply, %{state | graph: graph}}
+    {:noreply, %{state | graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -250,7 +248,7 @@ defmodule Scenic.Component.Input.Toggle do
 
     graph = update_graph(state)
 
-    {:noreply, %{state | graph: graph}}
+    {:noreply, %{state | graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -276,19 +274,16 @@ defmodule Scenic.Component.Input.Toggle do
           Graph.modify(graph, :thumb, &Primitive.put_style(&1, :fill, color.thumb.default))
       end
 
-    graph =
-      case on? do
-        true ->
-          graph
-          |> Graph.modify(:track, &Primitive.put_style(&1, :fill, color.track.on))
-          |> Graph.modify(:thumb, &Primitive.put_transform(&1, :translate, thumb_translate.on))
+    case on? do
+      true ->
+        graph
+        |> Graph.modify(:track, &Primitive.put_style(&1, :fill, color.track.on))
+        |> Graph.modify(:thumb, &Primitive.put_transform(&1, :translate, thumb_translate.on))
 
-        false ->
-          graph
-          |> Graph.modify(:track, &Primitive.put_style(&1, :fill, color.track.off))
-          |> Graph.modify(:thumb, &Primitive.put_transform(&1, :translate, thumb_translate.off))
-      end
-
-    push_graph(graph)
+      false ->
+        graph
+        |> Graph.modify(:track, &Primitive.put_style(&1, :fill, color.track.off))
+        |> Graph.modify(:thumb, &Primitive.put_transform(&1, :translate, thumb_translate.off))
+    end
   end
 end

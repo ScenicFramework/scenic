@@ -160,9 +160,7 @@ defmodule Scenic.Component.Button do
       id: id
     }
 
-    push_graph(graph)
-
-    {:ok, state}
+    {:ok, state, push: graph}
   end
 
   defp do_aligned_text(graph, :center, text, fill, width, vpos) do
@@ -214,8 +212,7 @@ defmodule Scenic.Component.Button do
         } = state
       ) do
     state = Map.put(state, :contained, true)
-    update_color(state)
-    {:noreply, state}
+    {:noreply, state, push: update_color(state)}
   end
 
   # --------------------------------------------------------
@@ -227,8 +224,7 @@ defmodule Scenic.Component.Button do
         } = state
       ) do
     state = Map.put(state, :contained, false)
-    update_color(state)
-    {:noreply, state}
+    {:noreply, state, push: update_color(state)}
   end
 
   # --------------------------------------------------------
@@ -242,7 +238,7 @@ defmodule Scenic.Component.Button do
 
     ViewPort.capture_input(context, [:cursor_button, :cursor_pos])
 
-    {:noreply, state}
+    {:noreply, state, push: update_color(state)}
   end
 
   # --------------------------------------------------------
@@ -260,7 +256,7 @@ defmodule Scenic.Component.Button do
       send_event({:click, id})
     end
 
-    {:noreply, state}
+    {:noreply, state, push: update_color(state)}
   end
 
   # --------------------------------------------------------
@@ -276,7 +272,6 @@ defmodule Scenic.Component.Button do
       p
       |> Primitive.put_style(:fill, theme.background)
     end)
-    |> push_graph()
   end
 
   defp update_color(%{graph: graph, theme: theme, pressed: false, contained: true}) do
@@ -284,7 +279,6 @@ defmodule Scenic.Component.Button do
       p
       |> Primitive.put_style(:fill, theme.background)
     end)
-    |> push_graph()
   end
 
   defp update_color(%{graph: graph, theme: theme, pressed: true, contained: false}) do
@@ -292,13 +286,11 @@ defmodule Scenic.Component.Button do
       p
       |> Primitive.put_style(:fill, theme.background)
     end)
-    |> push_graph()
   end
 
   defp update_color(%{graph: graph, theme: theme, pressed: true, contained: true}) do
     Graph.modify(graph, :btn, fn p ->
       Primitive.put_style(p, :fill, theme.active)
     end)
-    |> push_graph()
   end
 end

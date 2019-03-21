@@ -73,19 +73,19 @@ defmodule Scenic.SceneTest do
   end
 
   def handle_input({:input_stop, _}, _, _state) do
-    {:stop, :input_stop_state}
+    {:halt, :input_stop_state}
   end
 
   def handle_input({:input_continue, _}, _, _state) do
-    {:continue, :input_continue_state}
+    {:cont, :input_continue_state}
   end
 
   def filter_event(:stop_event, _, _state) do
-    {:stop, :filter_stop_state}
+    {:halt, :filter_stop_state}
   end
 
   def filter_event(:continue_event, _, _state) do
-    {:continue, :continue_event, :filter_continue_state}
+    {:cont, :continue_event, :filter_continue_state}
   end
 
   def handle_cast(msg, state) do
@@ -373,9 +373,9 @@ defmodule Scenic.SceneTest do
   end
 
   # ============================================================================
-  # handle_cast - push_graph
+  # internal_push_graph
 
-  test "handle_case :push_graph works with no children flag set" do
+  test "internal_push_graph works with has_children flag set to false" do
     # prep the self scene
     scene_ref_0 = make_ref()
     graph_key = {:graph, scene_ref_0, 123}
@@ -394,10 +394,16 @@ defmodule Scenic.SceneTest do
       # explicit graph
       |> scene_ref(graph_key_1)
 
-    {:noreply, state} =
-      assert Scene.handle_cast({:push_graph, graph, 123, false}, %{
-               scene_ref: scene_ref_0
-             })
+    {:ok, _} =
+      Scene.test_push_graph(graph, 123, %{
+        has_children: false,
+        scene_ref: scene_ref_0,
+        raw_scene_refs: %{},
+        dyn_scene_pids: %{},
+        dyn_scene_keys: %{},
+        dynamic_children_pid: self(),
+        viewport: self()
+      })
 
     # inserting the table is async, so wait a bit
     Process.sleep(100)
@@ -408,19 +414,9 @@ defmodule Scenic.SceneTest do
     assert min_graph[1] == %{data: {Scenic.Primitive.Circle, 100}}
     assert min_graph[2] == %{data: {SceneRef, {:graph, :named_scene, nil}}}
     assert min_graph[3] == %{data: {SceneRef, graph_key_1}}
-
-    # should fail to push a graph with a dynamic child
-    graph =
-      Graph.build()
-      |> circle(100)
-      |> button("Should Raise")
-
-    assert_raise Scenic.Scene.Error, fn ->
-      Scene.handle_cast({:push_graph, graph, 123, false}, state)
-    end
   end
 
-  test "handle_case :push_graph works with children flag set" do
+  test "internal_push_graph works with children flag set to true" do
     # prep the self scene
     scene_ref_0 = make_ref()
     graph_key = {:graph, scene_ref_0, 123}
@@ -446,15 +442,16 @@ defmodule Scenic.SceneTest do
       |> button("Button0")
       |> button("Button1", id: :stoppit)
 
-    {:noreply, state} =
-      assert Scene.handle_cast({:push_graph, graph, 123, true}, %{
-               scene_ref: scene_ref_0,
-               raw_scene_refs: %{},
-               dyn_scene_pids: %{},
-               dyn_scene_keys: %{},
-               dynamic_children_pid: dyn_sup,
-               viewport: self()
-             })
+    {:ok, state} =
+      Scene.test_push_graph(graph, 123, %{
+        has_children: true,
+        scene_ref: scene_ref_0,
+        raw_scene_refs: %{},
+        dyn_scene_pids: %{},
+        dyn_scene_keys: %{},
+        dynamic_children_pid: dyn_sup,
+        viewport: self()
+      })
 
     # inserting the table is async, so wait a bit
     Process.sleep(100)
@@ -486,7 +483,7 @@ defmodule Scenic.SceneTest do
       |> button("button2")
       |> Graph.delete(:stoppit)
 
-    {:noreply, _} = assert Scene.handle_cast({:push_graph, graph, 123, true}, state)
+    {:ok, _} = Scene.test_push_graph(graph, 123, state)
 
     # inserting the table is async, so wait a bit
     Process.sleep(100)

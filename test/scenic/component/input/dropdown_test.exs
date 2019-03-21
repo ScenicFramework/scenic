@@ -62,8 +62,9 @@ defmodule Scenic.Component.Input.DropdownTest do
   # init
 
   test "init works with simple data" do
-    {:ok, state} = Dropdown.init(@data, styles: %{}, id: :test_id)
+    {:ok, state, push: graph} = Dropdown.init(@data, styles: %{}, id: :test_id)
     %Graph{} = state.graph
+    assert state.graph == graph
     assert state.selected_id == @initial_item
     assert is_map(state.theme)
     assert state.down == false
@@ -92,7 +93,7 @@ defmodule Scenic.Component.Input.DropdownTest do
   test "handle_input {:cursor_button, :press - up" do
     context = %ViewPort.Context{viewport: self(), id: @button_id}
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       Dropdown.handle_input({:cursor_button, {:left, :press, nil, nil}}, context, %{
         @state
         | down: false
@@ -104,8 +105,7 @@ defmodule Scenic.Component.Input.DropdownTest do
     # confirm the input was captured
     assert_receive({:"$gen_cast", {:capture_input, ^context, [:cursor_button, :cursor_pos]}})
 
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert state.graph == graph
   end
 
   # ============================================================================
@@ -114,30 +114,30 @@ defmodule Scenic.Component.Input.DropdownTest do
   test "handle_input {:cursor_enter, _uid} - down" do
     context = %ViewPort.Context{viewport: self(), id: 1}
 
-    {:noreply, state} = Dropdown.handle_input({:cursor_enter, 1}, context, %{@state | down: true})
+    {:noreply, state, push: graph} =
+      Dropdown.handle_input({:cursor_enter, 1}, context, %{@state | down: true})
 
     assert state.hover_id == 1
 
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert state.graph == graph
   end
 
   test "handle_input {:cursor_exit, _uid} - down" do
     context = %ViewPort.Context{viewport: self(), id: 1}
 
-    {:noreply, state} = Dropdown.handle_input({:cursor_exit, 1}, context, %{@state | down: true})
+    {:noreply, state, push: graph} =
+      Dropdown.handle_input({:cursor_exit, 1}, context, %{@state | down: true})
 
     assert state.hover_id == nil
 
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert state.graph == graph
   end
 
   # mouse down outside menu
   test "handle_input {:cursor_button, :press nil - down" do
     context = %ViewPort.Context{viewport: self(), id: nil}
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       Dropdown.handle_input({:cursor_button, {:left, :press, nil, nil}}, context, %{
         @state
         | down: true
@@ -148,15 +148,14 @@ defmodule Scenic.Component.Input.DropdownTest do
     # confirm the input was released
     assert_receive({:"$gen_cast", {:release_input, [:cursor_button, :cursor_pos]}})
 
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert state.graph == graph
   end
 
   # mouse down inside button - slow
   test "handle_input {:cursor_button, :press button - down - slow - should close" do
     context = %ViewPort.Context{viewport: self(), id: @button_id}
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       Dropdown.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
         @state
         | down: true
@@ -167,8 +166,7 @@ defmodule Scenic.Component.Input.DropdownTest do
     # confirm the input was released
     assert_receive({:"$gen_cast", {:release_input, [:cursor_button, :cursor_pos]}})
 
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert state.graph == graph
   end
 
   # mouse down inside button - fast
@@ -186,16 +184,13 @@ defmodule Scenic.Component.Input.DropdownTest do
 
     # confirm the input was not released
     refute_receive({:"$gen_cast", {:release_input, [:cursor_button, :cursor_pos]}})
-
-    # confirm the graph was not pushed
-    refute_receive({:"$gen_cast", {:push_graph, _, _, _}})
   end
 
   # mouse released outside dropdown space
   test "handle_input {:cursor_button, :release button - outside menu" do
     context = %ViewPort.Context{viewport: self(), id: nil}
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       Dropdown.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
         @state
         | down: true,
@@ -211,8 +206,7 @@ defmodule Scenic.Component.Input.DropdownTest do
     # confirm the value change was not sent
     refute_receive({:"$gen_cast", {:event, {:value_changed, _, _}, _}})
 
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert state.graph == graph
   end
 
   # mouse released inside dropdown space
@@ -221,7 +215,7 @@ defmodule Scenic.Component.Input.DropdownTest do
     Process.put(:parent_pid, self)
     context = %ViewPort.Context{viewport: self, id: 1}
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       Dropdown.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
         @state
         | down: true
@@ -236,8 +230,7 @@ defmodule Scenic.Component.Input.DropdownTest do
     # confirm the value change was not sent
     assert_receive({:"$gen_cast", {:event, {:value_changed, :test_id, 1}, ^self}})
 
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert state.graph == graph
   end
 
   test "handle_input does nothing on unknown input" do

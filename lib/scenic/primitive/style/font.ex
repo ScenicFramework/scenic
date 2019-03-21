@@ -34,9 +34,7 @@ defmodule Scenic.Primitive.Style.Font do
         # load the font into the cache
         Scenic.Cache.File.load(@my_font_path, @my_font_hash)
 
-        push_graph(@graph)
-
-        {:ok, @graph}
+        {:ok, :some_state, push: @graph}
       end
 
   __Note 1:__ The font renderer used by Scenic is the fantastic
