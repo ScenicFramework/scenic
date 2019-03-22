@@ -8,6 +8,10 @@ and more.
 Scenic is primarily aimed at fixed screen connected devices (IoT), but can also
 be used to build portable applications.
 
+## Upgrading to v0.10
+
+If you have used versions before v0.10, please see the [Upgrading to v0.10 Guide](upgrading_to_v0-10.html).
+
 ## How to get started?
 
 If you are new to Scenic, then you should read the following guides.

@@ -17,6 +17,9 @@
   * FontMetrics can be used to measure strings, trim to fit, and more
 * Dynamic Textures in the form of raw pixel maps are now supported. This should allow you to capture raw images off of a camera and display them without encoding/decoding
 * leading spaces in a text primitive are now rendered
+* Scene callbacks are all updated to support the OTP 21+ callback returns.
+* Scenes now have the terminate callback.
+* push_graph is deprecated in favor of returning {:push, graph} options form the callbacks
 
 ## 0.9.0
 * Much improved testing
