@@ -1,25 +1,53 @@
 # Changelog
 
 ## 0.10.0
-* PR to fix delete the children of a group when the group itself is deleted. Thanks to Chris Boebel. @cboebel
-* Improve building the C products. PR #126 - @fhunleth
-* Added a :parser option to Cache.File.read/load to allow custom interpreters
-* Much improved error handling when a scene crashes during its init phase. Instead of quickly
-  restarting the scene over and over, it now goes to an error scene that displays debug info.
-  Also displays that info in the command line.
-* Added a ViewPort.reset() function (used by the error scene), which can be used to send
-  a ViewPort back to the original scene it was started with.
-* Integrated spec-based graphs from @pragdave. This is a cleaner looking way to build graphs.
-  See the changes in primitives.ex
-* Breaking changes to Scenic.Cache. It has been replaced by asset specific caches.
 * Integration of font metrics
   * Buttons, checkboxes, radios, etc can be auto-sized to fix their text
   * FontMetrics can be used to measure strings, trim to fit, and more
-* Dynamic Textures in the form of raw pixel maps are now supported. This should allow you to capture raw images off of a camera and display them without encoding/decoding
+* Much improved error handling when a scene crashes during its init phase. Instead of quickly
+  restarting the scene over and over, it now goes to an error scene that displays debug info.
+  Also displays that info in the command line.
+* Integrated spec-based graphs from @pragdave. This is a cleaner looking way to build graphs.
+  See the changes in primitives.ex
+* PR to fix delete the children of a group when the group itself is deleted. Thanks to
+  Chris Boebel. @cboebel
+* Improve building the C products. PR #126 - @fhunleth
+* Added a :parser option to Cache.File.read/load to allow custom interpreters
+* Added a ViewPort.reset() function (used by the error scene), which can be used to send
+  a ViewPort back to the original scene it was started with.
+* Dynamic Textures in the form of raw pixel maps are now supported. This should allow you
+  to capture raw images off of a camera and display them without encoding/decoding
 * leading spaces in a text primitive are now rendered
 * Scene callbacks are all updated to support the OTP 21+ callback returns.
 * Scenes now have the terminate callback.
-* push_graph is deprecated in favor of returning {:push, graph} options form the callbacks
+
+**Deprecations:**
+* `push_graph/1` is deprecated in favor of returning `{:push, graph}`
+  ([keyword](https://hexdocs.pm/elixir/Keyword.html)) options
+  from the `Scenic.Scene` callbacks. Since this is only a deprecation `push_graph/1` will
+  continue to work, but will log a warning when used. `push_graph/1` will be removed in a
+  future release.
+  * This allows us to utilize the full suite of OTP GenServer callback behaviors (such as
+    timeout and `handle_continue`)
+  * Replacing the call of `push_graph(graph)` within a callback function depends slightly
+    on the context in which it is used.
+  * in `init/2`:
+    * `{:ok, state, [push: graph]}`
+  * in `filter_event/3`:
+    * `{:halt, state, [push: graph]}`
+    * `{:cont, event, state, [push: graph]}`
+  * in `handle_cast/2`:
+    * `{:noreply, state, [push: graph]}`
+  * in `handle_info/2`:
+    * `{:noreply, state, [push: graph]}`
+  * in `handle_call/3`:
+    * `{:reply, reply, state, [push: graph]}`
+    * `{:noreply, state, [push: graph]}`
+  * in `handle_continue/3`:
+    * `{:noreply, state, [push: graph]}`
+
+**Breaking Changes:**
+* Breaking changes to Scenic.Cache. It has been replaced by asset specific caches.
 
 ## 0.9.0
 * Much improved testing
