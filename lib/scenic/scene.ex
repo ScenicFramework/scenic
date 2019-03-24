@@ -75,7 +75,7 @@ defmodule Scenic.Scene do
   them at compile time has two advantages
 
     1. Performance: It is clearly faster to build the graph once during
-    build time then to build it repeatedly during runtime.
+    build time than to build it repeatedly during runtime.
     2. Error checking: If your graph has an error in it, it is much
     better to have it stop compilation than cause an error during runtime.
 
@@ -94,8 +94,8 @@ defmodule Scenic.Scene do
   its own state. These child scenes can in turn contain other
   child scenes. This allows for strong code reuse, isolates knowledge
   and logic to just the pieces that need it, and keeps the size of any
-  given graph to a reasonable size. For example, The graph
-  handlers of a check-box don't need to know anything about
+  given graph to a reasonable size. For example, The
+  handlers of a check-box scene don't need to know anything about
   how a slider works, even though they are both used in the same
   parent scene. At best, they only need to know that they
   both conform to the `Component.Input` behavior, and can thus
@@ -198,8 +198,8 @@ defmodule Scenic.Scene do
   Captured input types should be released when no longer
   needed so that normal operation can resume.
 
-  The input messages are passed on to other scene if
-  the first one doesn't handle it.
+  The input messages are passed on to a scene's parent if
+  not processed.
 
   ## Event Filtering
 
@@ -209,7 +209,7 @@ defmodule Scenic.Scene do
 
   In this way, a `Component.Button` scene can generate a`{:click, msg}`
   event that is sent to its parent. If the parent doesn't
-  handle it, it is sent to that scene's parent. And so on util the
+  handle it, it is sent to that scene's parent. And so on until the
   event reaches the root scene. If the root scene doesn't handle
   it either then the event is dropped.
 
