@@ -75,7 +75,7 @@ defmodule Scenic.Scene do
   them at compile time has two advantages
 
     1. Performance: It is clearly faster to build the graph once during
-    build time to to build it repeatedly during runtime.
+    build time than to build it repeatedly during runtime.
     2. Error checking: If your graph has an error in it, it is much
     better to have it stop compilation than cause an error during runtime.
 
@@ -94,8 +94,8 @@ defmodule Scenic.Scene do
   its own state. These child scenes can in turn contain other
   child scenes. This allows for strong code reuse, isolates knowledge
   and logic to just the pieces that need it, and keeps the size of any
-  given graph to a reasonable size. For example, The graph
-  hand handlers of a check-box don't need to know anything about
+  given graph to a reasonable size. For example, The
+  handlers of a check-box scene don't need to know anything about
   how a slider works, even though they are both used in the same
   parent scene. At best, they only need to know that they
   both conform to the `Component.Input` behavior, and can thus
@@ -195,11 +195,11 @@ defmodule Scenic.Scene do
   to the cursor input, the text field captures text input (and
   maybe transforms its graph to show that it is selected).
 
-  Captured input types are should be released when no longer
+  Captured input types should be released when no longer
   needed so that normal operation can resume.
 
-  The input messages re not passed on to other scene if
-  the first one doesn't handle it.
+  The input messages are passed on to a scene's parent if
+  not processed.
 
   ## Event Filtering
 
@@ -209,12 +209,12 @@ defmodule Scenic.Scene do
 
   In this way, a `Component.Button` scene can generate a`{:click, msg}`
   event that is sent to its parent. If the parent doesn't
-  handle it, it is sent to that scene's parent. And so on util the
+  handle it, it is sent to that scene's parent. And so on until the
   event reaches the root scene. If the root scene doesn't handle
   it either then the event is dropped.
 
   To handle events, you add `filter_event/3` functions to your scene.
-  This function handle the event, and stop its progress backwards
+  This function handles the event, and stop its progress backwards
   up the graph. It can handle it and allow it to continue up the
   graph. Or it can transform the event and pass the transformed
   version up the graph.
@@ -948,7 +948,7 @@ defmodule Scenic.Scene do
             ViewPort.set_root(vp, {Scenic.Scenes.Error, {msgs, scene_module, args}})
         end
 
-        # purposefully slow down the reply in the event of a crash. Just in 
+        # purposefully slow down the reply in the event of a crash. Just in
         # case it does go into a crazy loop
         # Process.sleep(400)
         {:noreply, state}
@@ -1027,7 +1027,7 @@ defmodule Scenic.Scene do
       {:stop, sc_state} ->
         IO.puts("""
         #{IO.ANSI.yellow()}
-        Deprecated handle_input :stop return in #{inspect(mod)} 
+        Deprecated handle_input :stop return in #{inspect(mod)}
         Please return {:halt, state} instead
         This resolves a naming conflict with the newer GenServer return values
         #{IO.ANSI.default_color()}
@@ -1038,7 +1038,7 @@ defmodule Scenic.Scene do
       {:stop, sc_state, opts} ->
         IO.puts("""
         #{IO.ANSI.yellow()}
-        Deprecated handle_input :stop return in #{inspect(mod)} 
+        Deprecated handle_input :stop return in #{inspect(mod)}
         Please return {:halt, state} instead
         This resolves a naming conflict with the newer GenServer return values
         #{IO.ANSI.default_color()}
@@ -1049,7 +1049,7 @@ defmodule Scenic.Scene do
       {:continue, sc_state} ->
         IO.puts("""
         #{IO.ANSI.yellow()}
-        Deprecated handle_input :continue return in #{inspect(mod)} 
+        Deprecated handle_input :continue return in #{inspect(mod)}
         Please return {:cont, state} instead
         This resolves a naming conflict with the newer GenServer return values
         #{IO.ANSI.default_color()}
@@ -1061,7 +1061,7 @@ defmodule Scenic.Scene do
       {:continue, sc_state, opts} ->
         IO.puts("""
         #{IO.ANSI.yellow()}
-        Deprecated handle_input :continue return in #{inspect(mod)} 
+        Deprecated handle_input :continue return in #{inspect(mod)}
         Please return {:cont, state} instead
         This resolves a naming conflict with the newer GenServer return values
         #{IO.ANSI.default_color()}
@@ -1105,7 +1105,7 @@ defmodule Scenic.Scene do
       {:stop, sc_state} ->
         IO.puts("""
         #{IO.ANSI.yellow()}
-        Deprecated filter_event :stop return in #{inspect(mod)} 
+        Deprecated filter_event :stop return in #{inspect(mod)}
         Please return {:halt, state} instead
         This resolves a naming conflict with the newer GenServer return values
         #{IO.ANSI.default_color()}
@@ -1116,7 +1116,7 @@ defmodule Scenic.Scene do
       {:stop, sc_state, opts} ->
         IO.puts("""
         #{IO.ANSI.yellow()}
-        Deprecated filter_event :stop return in #{inspect(mod)} 
+        Deprecated filter_event :stop return in #{inspect(mod)}
         Please return {:halt, state} instead
         This resolves a naming conflict with the newer GenServer return values
         #{IO.ANSI.default_color()}
@@ -1127,7 +1127,7 @@ defmodule Scenic.Scene do
       {:continue, event, sc_state} ->
         IO.puts("""
         #{IO.ANSI.yellow()}
-        Deprecated filter_event :continue return in #{inspect(mod)} 
+        Deprecated filter_event :continue return in #{inspect(mod)}
         Please return {:cont, state} instead
         This resolves a naming conflict with the newer GenServer return values
         #{IO.ANSI.default_color()}
@@ -1139,7 +1139,7 @@ defmodule Scenic.Scene do
       {:continue, event, sc_state, opts} ->
         IO.puts("""
         #{IO.ANSI.yellow()}
-        Deprecated filter_event :continue return in #{inspect(mod)} 
+        Deprecated filter_event :continue return in #{inspect(mod)}
         Please return {:cont, state} instead
         This resolves a naming conflict with the newer GenServer return values
         #{IO.ANSI.default_color()}
