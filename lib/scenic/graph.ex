@@ -41,7 +41,7 @@ defmodule Scenic.Graph do
 
   The empty graph that is returned from `build()` is then passed to `text(...)`, which
   adds a text primitive to the root group. The resulting graph from that call is then
-  passed again into the `group(...)` call. This creates a new group and has calls an
+  passed again into the `group(...)` call. This creates a new group and then calls an
   anonymous function that you can use to add primitives to the newly created group.
 
   Notice that the anonymous "builder" function receives a graph as its only parameter.
@@ -166,7 +166,7 @@ defmodule Scenic.Graph do
   @err_msg_put "Graph.put can only update existing items."
   @err_msg_get_id_one "Graph.get! expected to find one and only one element"
 
-  # ============================================================================  
+  # ============================================================================
   # @doc """
   # Returns the root group of a graph as a primitive.
   # Deprecated. Use `Graph.get!(graph, :_root_)` instead.
