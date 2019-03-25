@@ -232,7 +232,11 @@ defmodule Scenic.ViewPort do
   @doc """
   Send raw input to a viewport.
 
-  This is used by drivers to send raw user input to the viewport.
+  This is used primarily by drivers to send raw user input to the viewport. Having said that,
+  nothing stops a scene from using it to send input into the system. There are a few cases
+  where that is useful.
+
+  See the [input docs](Scenic.ViewPort.Input.html#t:t/0) for the input formats you can send.
   """
 
   @spec input(
