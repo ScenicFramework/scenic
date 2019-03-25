@@ -9,7 +9,6 @@ defmodule Scenic.Cache.Static.Font do
 
   # import IEx
 
-
   @moduledoc """
   In memory cache for static font assets.
 
@@ -134,7 +133,6 @@ defmodule Scenic.Cache.Static.Font do
   loosely-coupled way to how the assets are managed in your scene.
 
   """
-
 
   defmodule Error do
     @moduledoc false
