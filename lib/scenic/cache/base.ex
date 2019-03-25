@@ -259,8 +259,7 @@ defmodule Scenic.Cache.Base do
         * `scope` - Optional scope to track the lifetime of this asset against. Can be `:global`
         but is usually nil, which defaults to the pid of the calling process.
 
-        Returns:
-        {:ok, hash}
+        Returns: `{:ok, hash}`
         """
         @spec put(
                 hash :: Scenic.Cache.Base.hash(),
@@ -286,8 +285,7 @@ defmodule Scenic.Cache.Base do
       * `scope` - Optional scope to track the lifetime of this asset against. Can be `:global`
       but is usually nil, which defaults to the pid of the calling process.
 
-      Returns:
-      {:ok, hash}
+      Returns: `{:ok, hash}`
       """
       @spec put_new(
               hash :: Scenic.Cache.Base.hash(),
@@ -578,46 +576,6 @@ defmodule Scenic.Cache.Base do
     GenServer.call(service, {:put, normalize_scope(scope), key, data})
   end
 
-  # # --------------------------------------------------------
-  # @doc """
-  # Insert an item into the Cache. If it is already in the cache, then it
-  # does nothing and returns {:ok, hash}
-
-  # Parameters:
-  # * `key` - term to use as the retrieval key. Typically a hash of the data itself.
-  # * `data` - term to use as the stored data
-  # * `scope` - Optional scope to track the lifetime of this asset against. Can be `:global`
-  # but is usually nil, which defaults to the pid of the calling process.
-
-  # ## Examples
-  #     iex> Scenic.Cache.get("test_key")
-  #     nil
-
-  #     iex> :ets.insert(:scenic_cache_key_table, {"test_key", 1, :test_data})
-  #     ...> true
-  #     ...> Scenic.Cache.get("test_key")
-  #     :test_data
-  # """
-  # @spec put_new(
-  #         service :: atom,
-  #         hash :: Scenic.Cache.Base.hash(),
-  #         data :: term(),
-  #         scope :: :global | nil | GenServer.server()
-  #       ) :: term()
-
-  # def put_new(service, hash, data, scope \\ nil)
-  #     when service != nil and (is_atom(service) or is_pid(service)) do
-  #   scope = normalize_scope(scope)
-
-  #   case :ets.member(service, hash) do
-  #     true ->
-  #       {:ok, hash}
-
-  #     false ->
-  #       GenServer.call(service, {:put_new, scope, hash, data})
-  #   end
-  # end
-
   # --------------------------------------------------------
   @doc """
   Add a scope to an existing asset in the cache.
@@ -662,7 +620,7 @@ defmodule Scenic.Cache.Base do
   processes a chance to claim a scope before it is unloaded.
   """
 
-  # returns :ok
+  # returns `:ok`
   @spec release(
           service :: atom,
           hash :: Scenic.Cache.Base.hash(),
@@ -701,9 +659,11 @@ defmodule Scenic.Cache.Base do
   Pass in the service, hash, and a scope.
 
   returns one of:
-    {:ok, hash}           # it is claimed by the given scope
-    {:ok, :global}        # it is NOT claimed by the given scope, but is :global
-    {:error, :not_found}  # it is not in the cache at all
+  ```elixir
+  {:ok, hash}           # it is claimed by the given scope
+  {:ok, :global}        # it is NOT claimed by the given scope, but is :global
+  {:error, :not_found}  # it is not in the cache at all
+  ```
   """
   @spec status(
           service :: atom,
@@ -741,7 +701,7 @@ defmodule Scenic.Cache.Base do
 
   Pass in the service and a hash.
 
-  returns true or false.
+  returns `true` or `false`.
   """
   @spec member?(
           service :: atom,
@@ -756,7 +716,7 @@ defmodule Scenic.Cache.Base do
 
   Pass in the service, hash, and scope.
 
-  returns true or false.
+  returns `true` or `false`.
   """
   @spec claimed?(
           service :: atom,
