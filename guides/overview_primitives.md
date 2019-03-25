@@ -93,9 +93,8 @@ In the above graph, we've assigned `:id` values to both primitives. This makes i
       @graph
       |> Graph.modify( :small_text, &text(&1, "Smaller Hello", font_size: 16))
       |> Graph.modify( :big_text, &text(&1, "Bigger Hello", font_size: 60))
-      |> push_graph()
 
-Notice that the graph is modified multiple times in the pipeline. The `push_graph/1` function is relatively heavy when the graph references other scenes. The recommended pattern is to make multiple changes to the graph and then push once at the end.
+Notice that the graph is modified multiple times in the pipeline.
 
 The last parameter to `Graph.modify/3` is a pointer to a function that receives a primitive and returns the the new primitive that should be inserted in its place.
 
