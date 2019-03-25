@@ -49,12 +49,20 @@
 **Breaking Changes:**
 * Breaking changes to Scenic.Cache. It has been replaced by asset specific caches.
 
-| Asset Type | Module |
-| --- | --- |
-| Static Textures | `Scenic.Cache.Static.Texture` |
-| Fonts | `Scenic.Cache.Static.Font` |
-| Font Metrics | `Scenic.Cache.Static.FontMetrics` |
-| Dynamic Textures | `Scenic.Cache.Dynamic.Texture` |
+  | Asset Class   | Module  |
+  | ------------- | -----|
+  | Fonts      | `Scenic.Cache.Static.Font` |  
+  | Font Metrics | `Scenic.Cache.Static.FontMetrics` |
+  | Textures (images in a fill) | `Scenic.Cache.Static.Texture` |
+  | Raw Pixel Maps | `Scenic.Cache.Dynamic.Texture` |
+
+  Some of the Cache support modules have moved
+
+  | Old Module   | New Module  |
+  | ------------- | -----|
+  | `Scenic.Cache.Hash` | `Scenic.Cache.Support.Hash` |
+  | `Scenic.Cache.File` | `Scenic.Cache.Support.File` |
+  | `Scenic.Cache.Supervisor` | `Scenic.Cache.Support.Supervisor` |
 
 
 ## 0.9.0
