@@ -55,8 +55,7 @@ whose helper function is imported from the `Scenic.Components` module.
           |> button({"Do Something", :btn_something}, translate: {20, 180})
 
         def init( _scene_args, _options ) do
-          push_graph( @graph )
-          {:ok, @graph}
+          {:ok, @graph, push: @graph}
         end
 
         ...
@@ -85,14 +84,12 @@ build and push your first graph, the user will see a blank space or screen until
 you are ready.
 
     def init( _scene_args, opts ) do
-      push_graph( @graph )
-
       state = %{
         graph: @graph,
         viewport: opts[:viewport]
       }
 
-      {:ok, state}
+      {:ok, state, push: @graph}
     end
 
 The first argument, `scene_args`, is any term that you pass to your scene when
@@ -134,51 +131,40 @@ option      | description
 
 ## Pushing a Graph
 
-`push_graph/1` is a "magic" function. Magic functions embody knowledge of the
-system outside of the data passed into them and are not purely "functional" in
-the programming sense. I am generally against using magic functions. However,
-after much thought and experimentation, I landed on this one bit of magic to
-accomplish a difficult job.
+Previous to v0.10, the way to push a graph to the ViewPort was the magic `push_graph/1` function, This has been deprecated in favor of a more functional return option. `push_graph/1` was also interfering with the newer OTP 21+ continue callbacks and timeouts and such. Since this is only a deprecation `push_graph/1` will continue to work, but will log a warning when used. `push_graph/1` will be removed in a future release.
 
-> `push_graph/1` is a private function that is injected into your scene by the
-> `use Scenic.Scene` macro. Your scene will not work without it.
+The new, better way to push a graph is via a {:push, graph} option when you return from any scene callback.
 
-In a nutshell, `push_graph/1` does two jobs.
+```elixir
+def init(_,_) do
+  {:ok, :whatever_state_you_want, push: @graph}
+end
 
-First, it triggers the [life-cycle](scene_lifecycle.html) of any components the
-graph references. This means that component processes may start or stop when you
-push a graph. This will only happen if you change components used in the graph.
+def handle_info(:some_msg, your_state) do
+  graph = Graph.modify( @graph, :some_id, &text(&1, "modified text") )
+  {:noreply, your_state, push: graph}
+end
+```
 
-Second, it prepares the graph for use by the [Drivers](overview_driver.html) and
-the input path of the [ViewPort](overview_viewport.html). This mostly involves
-stripping internal data and caching the resulting term in an
-[ets](https://elixirschool.com/en/lessons/specifics/ets/) table so that it can
-be used very quickly, on demand, by those systems.
+Almost all (except terminate...) of the callbacks accept a `{:push, graph}` option. Replacing the call of `push_graph(graph)` within a callback function depends slightly on the context in which it is used.
 
-`push_graph/1` returns the original graph passed in to it. This is so you can
-hang the call off the end of a pipe chain that transforms the graph. This isn't
-really necessary, but I like it as it visually indicates that the graph was
-transformed and pushed as a logical unit.
+  * in `init/2`:
+    * `{:ok, state, [push: graph]}`
+  * in `filter_event/3`:
+    * `{:halt, state, [push: graph]}`
+    * `{:cont, event, state, [push: graph]}`
+  * in `handle_cast/2`:
+    * `{:noreply, state, [push: graph]}`
+  * in `handle_info/2`:
+    * `{:noreply, state, [push: graph]}`
+  * in `handle_call/3`:
+    * `{:reply, reply, state, [push: graph]}`
+    * `{:noreply, state, [push: graph]}`
+  * in `handle_continue/3`:
+    * `{:noreply, state, [push: graph]}`
 
-      graph
-      |> Graph.modify(:background, &update_opts(&1, fill: clear_color) )
-      |> push_graph()
+See the [documentation for scene callbacks](Scenic.Scene.html#callbacks) for more information.
 
-More on `Graph.modify` in the [input](#user-input) and [events](#events)
-sections below. Also see the [Graph Overview](overview_graph.html) page.
-
-As you can guess, `push_graph/1` is relatively heavy since it scans every node
-in your graph every time you call it. You should only call it once per input or
-event that you handle.
-
-> A best practice is to make multiple modifications to a graph and then call
-> `push_graph/1` at the end.
-
-      graph = graph
-      |> Graph.modify(:text, &text(&1, "I've been modified") )
-      |> Graph.modify(:a_box, &rect(&1, {100, 200}) )
-      |> Graph.modify(:a_circle, &update_opts(&1, fill: :blue) )
-      |> push_graph()
 
 ## User Input
 
@@ -228,14 +214,13 @@ This will be included in the error that gets raised.
           graph = @graph
           |> Graph.modify(:_root_, &update_opts(&1, styles: opts[:styles]) )
           |> Graph.modify(:text, &text(&1, text) )
-          |> push_graph()
 
           state = %{
             graph: graph,
             text: text
           }
 
-          {:ok, state}
+          {:ok, state, push: graph}
         end
 
         ...

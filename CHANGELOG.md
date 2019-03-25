@@ -49,6 +49,14 @@
 **Breaking Changes:**
 * Breaking changes to Scenic.Cache. It has been replaced by asset specific caches.
 
+| Asset Type | Module |
+| --- | --- |
+| Static Textures | `Scenic.Cache.Static.Texture` |
+| Fonts | `Scenic.Cache.Static.Font` |
+| Font Metrics | `Scenic.Cache.Static.FontMetrics` |
+| Dynamic Textures | `Scenic.Cache.Dynamic.Texture` |
+
+
 ## 0.9.0
 * Much improved testing
 * Much improved documentation
