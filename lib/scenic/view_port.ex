@@ -229,6 +229,12 @@ defmodule Scenic.ViewPort do
   end
 
   # --------------------------------------------------------
+  @doc """
+  Send raw input to a viewport.
+
+  This is used by drivers to send raw user input to the viewport.
+  """
+
   @spec input(
           viewport :: GenServer.server(),
           input :: ViewPort.Input.t()
