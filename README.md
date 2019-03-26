@@ -65,6 +65,8 @@ mix task.
 
 Version 0.10 of Scenic contains both deprecations and breaking changes, which will need to be updated in your app in order to run. This is all good through as it enables goodness in the forms of proper font metrics and dynamic raw pixel textures.
 
+Please see the [v0.10 Upgrade Guide](https://hexdocs.pm/scenic/upgrading_to_v0-10.html).
+
 ### Deprecations
 
 `push_graph/1` is deprecated in favor of returning `{:push, graph}`
