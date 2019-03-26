@@ -84,7 +84,8 @@ defmodule Scenic.Mixfile do
         # "guides/**/*.png",
         "README.md",
         "LICENSE",
-        "CHANGELOG.md"
+        "CHANGELOG.md",
+        "static/**/*.metrics"
       ]
     ]
   end
