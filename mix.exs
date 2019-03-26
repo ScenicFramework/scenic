@@ -174,6 +174,7 @@ defmodule Scenic.Mixfile do
         Scenic.Primitive.Style.Paint,
         Scenic.Primitive.Style.Paint.Color,
         Scenic.Primitive.Style.Paint.Image,
+        Scenic.Primitive.Style.Paint.Dynamic,
         Scenic.Primitive.Style.Paint.BoxGradient,
         Scenic.Primitive.Style.Paint.LinearGradient,
         Scenic.Primitive.Style.Paint.RadialGradient
@@ -210,13 +211,18 @@ defmodule Scenic.Mixfile do
         Scenic.ViewPort.Driver.Info
       ],
       Cache: [
-        Scenic.Cache,
-        Scenic.Cache.File,
-        Scenic.Cache.Term,
-        Scenic.Cache.Hash,
-        Scenic.Cache.Supervisor
+        Scenic.Cache.Static.Texture,
+        Scenic.Cache.Dynamic.Texture,
+        Scenic.Cache.Static.Font,
+        Scenic.Cache.Static.FontMetrics,
+        Scenic.Cache.Base,
+        Scenic.Cache.Support.File,
+        Scenic.Cache.Support.Hash,
+        Scenic.Cache.Support.Supervisor,
+        Scenic.Cache.Hash
       ],
       Utilities: [
+        Scenic.Utilities.Texture,
         Scenic.Utilities.Enum,
         Scenic.Utilities.Map
       ]
