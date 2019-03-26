@@ -95,18 +95,22 @@ continue to work, but will log a warning when used.
 
 ### Breaking Changes
 
-##### Changes to the Cache
+Scenic.Cache has been removed. It has been replaced by asset specific caches.
 
-The most important (and immediate) change you need to deal with is to the cache. In order to handle static items with different life-cycle requirements, the cache has been broken out into multiple smaller caches, each for a specific type of content.
-
-The module `Scenic.Cache` is gone and should be replace with the appropriate cache in your code.
-
-| Asset Type | Module |
-| --- | --- |
-| Static Textures | `Scenic.Cache.Static.Texture` |
-| Fonts | `Scenic.Cache.Static.Font` |
+| Asset Class   | Module  |
+| ------------- | -----|
+| Fonts      | `Scenic.Cache.Static.Font` |  
 | Font Metrics | `Scenic.Cache.Static.FontMetrics` |
-| Dynamic Textures | `Scenic.Cache.Dynamic.Texture` |
+| Textures (images in a fill) | `Scenic.Cache.Static.Texture` |
+| Raw Pixel Maps | `Scenic.Cache.Dynamic.Texture` |
+
+Some of the Cache support modules have moved
+
+| Old Module   | New Module  |
+| ------------- | -----|
+| `Scenic.Cache.Hash` | `Scenic.Cache.Support.Hash` |
+| `Scenic.Cache.File` | `Scenic.Cache.Support.File` |
+| `Scenic.Cache.Supervisor` | `Scenic.Cache.Support.Supervisor` |
 
 ##### Static vs. Dynamic Caches
 

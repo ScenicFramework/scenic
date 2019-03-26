@@ -21,48 +21,52 @@
 * Scene callbacks are all updated to support the OTP 21+ callback returns.
 * Scenes now have the terminate callback.
 
-**Deprecations:**
-* `push_graph/1` is deprecated in favor of returning `{:push, graph}`
-  ([keyword](https://hexdocs.pm/elixir/Keyword.html)) options
-  from the `Scenic.Scene` callbacks. Since this is only a deprecation `push_graph/1` will
-  continue to work, but will log a warning when used. `push_graph/1` will be removed in a
-  future release.
-  * This allows us to utilize the full suite of OTP GenServer callback behaviors (such as
-    timeout and `handle_continue`)
-  * Replacing the call of `push_graph(graph)` within a callback function depends slightly
-    on the context in which it is used.
-  * in `init/2`:
-    * `{:ok, state, [push: graph]}`
-  * in `filter_event/3`:
-    * `{:halt, state, [push: graph]}`
-    * `{:cont, event, state, [push: graph]}`
-  * in `handle_cast/2`:
-    * `{:noreply, state, [push: graph]}`
-  * in `handle_info/2`:
-    * `{:noreply, state, [push: graph]}`
-  * in `handle_call/3`:
-    * `{:reply, reply, state, [push: graph]}`
-    * `{:noreply, state, [push: graph]}`
-  * in `handle_continue/3`:
-    * `{:noreply, state, [push: graph]}`
+### Deprecations
 
-**Breaking Changes:**
-* Breaking changes to Scenic.Cache. It has been replaced by asset specific caches.
+`push_graph/1` is deprecated in favor of returning `{:push, graph}`
+([keyword](https://hexdocs.pm/elixir/Keyword.html)) options
+from the `Scenic.Scene` callbacks. Since this is only a deprecation `push_graph/1` will
+continue to work, but will log a warning when used.
 
-  | Asset Class   | Module  |
-  | ------------- | -----|
-  | Fonts      | `Scenic.Cache.Static.Font` |  
-  | Font Metrics | `Scenic.Cache.Static.FontMetrics` |
-  | Textures (images in a fill) | `Scenic.Cache.Static.Texture` |
-  | Raw Pixel Maps | `Scenic.Cache.Dynamic.Texture` |
+`push_graph/1` will be removed in a future release.
 
-  Some of the Cache support modules have moved
+* This allows us to utilize the full suite of OTP GenServer callback behaviors (such as
+  timeout and `handle_continue`)
+* Replacing the call of `push_graph(graph)` within a callback function depends slightly
+  on the context in which it is used.
+* in `init/2`:
+  * `{:ok, state, [push: graph]}`
+* in `filter_event/3`:
+  * `{:halt, state, [push: graph]}`
+  * `{:cont, event, state, [push: graph]}`
+* in `handle_cast/2`:
+  * `{:noreply, state, [push: graph]}`
+* in `handle_info/2`:
+  * `{:noreply, state, [push: graph]}`
+* in `handle_call/3`:
+  * `{:reply, reply, state, [push: graph]}`
+  * `{:noreply, state, [push: graph]}`
+* in `handle_continue/3`:
+  * `{:noreply, state, [push: graph]}`
 
-  | Old Module   | New Module  |
-  | ------------- | -----|
-  | `Scenic.Cache.Hash` | `Scenic.Cache.Support.Hash` |
-  | `Scenic.Cache.File` | `Scenic.Cache.Support.File` |
-  | `Scenic.Cache.Supervisor` | `Scenic.Cache.Support.Supervisor` |
+### Breaking Changes
+
+Scenic.Cache has been removed. It has been replaced by asset specific caches.
+
+| Asset Class   | Module  |
+| ------------- | -----|
+| Fonts      | `Scenic.Cache.Static.Font` |  
+| Font Metrics | `Scenic.Cache.Static.FontMetrics` |
+| Textures (images in a fill) | `Scenic.Cache.Static.Texture` |
+| Raw Pixel Maps | `Scenic.Cache.Dynamic.Texture` |
+
+Some of the Cache support modules have moved
+
+| Old Module   | New Module  |
+| ------------- | -----|
+| `Scenic.Cache.Hash` | `Scenic.Cache.Support.Hash` |
+| `Scenic.Cache.File` | `Scenic.Cache.Support.File` |
+| `Scenic.Cache.Supervisor` | `Scenic.Cache.Support.Supervisor` |
 
 
 ## 0.9.0
