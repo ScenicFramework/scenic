@@ -63,9 +63,37 @@ mix task.
 
 ## Upgrading to v0.10
 
-Version 0.10 of Scenic contains breaking changes, which will need to be updated in your app in order to run. This is all good through as it enables goodness in the forms of proper font metrics and dynamic raw pixel textures.
+Version 0.10 of Scenic contains both deprecations and breaking changes, which will need to be updated in your app in order to run. This is all good through as it enables goodness in the forms of proper font metrics and dynamic raw pixel textures.
 
-### Changes to the Cache
+### Deprecations
+
+* `push_graph/1` is deprecated in favor of returning `{:push, graph}`
+  ([keyword](https://hexdocs.pm/elixir/Keyword.html)) options
+  from the `Scenic.Scene` callbacks. Since this is only a deprecation `push_graph/1` will
+  continue to work, but will log a warning when used. `push_graph/1` will be removed in a
+  future release.
+  * This allows us to utilize the full suite of OTP GenServer callback behaviors (such as
+    timeout and `handle_continue`)
+  * Replacing the call of `push_graph(graph)` within a callback function depends slightly
+    on the context in which it is used.
+  * in `init/2`:
+    * `{:ok, state, [push: graph]}`
+  * in `filter_event/3`:
+    * `{:halt, state, [push: graph]}`
+    * `{:cont, event, state, [push: graph]}`
+  * in `handle_cast/2`:
+    * `{:noreply, state, [push: graph]}`
+  * in `handle_info/2`:
+    * `{:noreply, state, [push: graph]}`
+  * in `handle_call/3`:
+    * `{:reply, reply, state, [push: graph]}`
+    * `{:noreply, state, [push: graph]}`
+  * in `handle_continue/3`:
+    * `{:noreply, state, [push: graph]}`
+
+### Breaking Changes
+
+##### Changes to the Cache
 
 The most important (and immediate) change you need to deal with is to the cache. In order to handle static items with different life-cycle requirements, the cache has been broken out into multiple smaller caches, each for a specific type of content.
 
@@ -78,13 +106,13 @@ The module `Scenic.Cache` is gone and should be replace with the appropriate cac
 | Font Metrics | `Scenic.Cache.Static.FontMetrics` |
 | Dynamic Textures | `Scenic.Cache.Dynamic.Texture` |
 
-### Static vs. Dynamic Caches
+##### Static vs. Dynamic Caches
 
 Note that caches are marked as either static or dynamic. Things that do not change and can be referred to by a hash of their content go into Static caches. This allows for future optimizations, such as caching these assets on a CDN.
 
 The Dynamic.Texture cache is for images that change over time. For example, this could be an image coming off of a camera, or something that you generate directly in your own code. Note that Dynamic caches are more expensive overall as they will not get the same level of optimization in the future.
 
-### Custom Fonts
+##### Custom Fonts
 
 If you have used custom fonts in your application, you need to use a new process to get them to load and render.
 
