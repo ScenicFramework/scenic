@@ -95,7 +95,7 @@ continue to work, but will log a warning when used.
 
 ### Breaking Changes
 
-Scenic.Cache has been removed. It has been replaced by asset specific caches.
+`Scenic.Cache` has been removed. It has been replaced by asset specific caches.
 
 | Asset Class   | Module  |
 | ------------- | -----|
