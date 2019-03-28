@@ -337,9 +337,9 @@ defmodule Scenic.Graph do
   Similar to adding a group during graph construction, the `add_to` function accepts
   a builder function that adds to a a graph under the identified group.
 
-  Primitives with the `:id` that are not groups are ignored.
+  Primitives with the `id` that are not groups are ignored.
 
-  If multiple groups have the given `:id`, then the builder is run against each of them.
+  If multiple groups have the given `id`, then the builder is run against each of them.
   """
 
   def add_to(%__MODULE__{primitives: prims} = graph, id, builder) when is_function(builder, 1) do
