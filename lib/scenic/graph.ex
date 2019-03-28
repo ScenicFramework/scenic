@@ -331,43 +331,36 @@ defmodule Scenic.Graph do
   end
 
   # ============================================================================
-  # KEEP THIS AROUND FOR NOW
-  # might want to put it back in...
-  # add a pre-built primitive to an existing group in a graph
-  # def add_to( graph, id, primitive )
+  @doc """
+  Add to a specified group in a graph.
 
-  # def add_to( %Graph{} = graph, id, p ) when not is_integer(id) do
-  #   get_by_uid(graph, id)
-  #   |> Enum.reduce( graph, fn(uid, g) ->
-  #     case get_by_uid(g, uid) do
-  #       %Primitive{module: Group} ->
-  #         {graph, _uid} = insert_at({g, uid}, -1, p)
-  #         graph
-  #       _ ->
-  #         raise @err_msg_group
-  #     end
-  #   end)
-  # end
+  Similar to adding a group during graph construction, the `add_to` function accepts
+  a builder function that adds to a a graph under the identified group.
 
-  # build and add a new primitive to an existing group in a graph
-  # def add_to( graph, id, primitive_module, primitive_data, opts \\ [])
-  # def add_to( %Graph{add_to: puid} = graph, id, primitive_module, primitive_data, opts) when not is_integer(id) do
-  #   get_id(graph, id)
-  #   |> Enum.reduce( graph, fn(uid, g) ->
-  #     case get_by_uid(graph, uid) do
-  #       %Primitive{module: Group} ->
-  #         g
-  #         # set the new group as the add_to target
-  #         |> Map.put(:add_to, uid)
-  #         # add the new primitive
-  #         |> add( primitive_module, primitive_data, opts )
-  #       _ ->
-  #         raise @err_msg_group
-  #     end
-  #   end)
-  #   # restore the add_to back to whatever it was before
-  #   |> Map.put(:add_to, puid)
-  # end
+  Primitives with the `id` that are not groups are ignored.
+
+  If multiple groups have the given `id`, then the builder is run against each of them.
+  """
+  def add_to(%__MODULE__{primitives: prims} = graph, id, builder) when is_function(builder, 1) do
+    # resolve the id into a list of uids
+    graph
+    |> resolve_id(id)
+    |> Enum.reduce(graph, fn uid, g ->
+      case prims[uid] do
+        %Primitive{module: Group} ->
+          g
+          |> Map.put(:add_to, uid)
+          |> builder.()
+          |> case do
+            %__MODULE__{} = g -> Map.put(g, :add_to, 0)
+            _ -> raise Error, message: "Group.add_to builder must return a valid graph"
+          end
+
+        _ ->
+          g
+      end
+    end)
+  end
 
   # ============================================================================
   # put an element by uid - internal use
