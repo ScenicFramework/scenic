@@ -331,10 +331,37 @@ defmodule Scenic.Graph do
   end
 
   # ============================================================================
-  # KEEP THIS AROUND FOR NOW
-  # might want to put it back in...
-  # add a pre-built primitive to an existing group in a graph
-  # def add_to( graph, id, primitive )
+  @doc """
+  Add to a specified group in a graph.
+
+  Similar to adding a group during graph construction, the `add_to` function accepts
+  a builder function that adds to a a graph under the identified group.
+
+  Primitives with the `:id` that are not groups are ignored.
+
+  If multiple groups have the given `:id`, then the builder is run against each of them.
+  """
+
+  def add_to(%__MODULE__{primitives: prims} = graph, id, builder) when is_function(builder, 1) do
+    # resolve the id into a list of uids
+    graph
+    |> resolve_id(id)
+    |> Enum.reduce(graph, fn uid, g ->
+      case prims[uid] do
+        %Primitive{module: Group} = p ->
+          g
+          |> Map.put(:add_to, uid)
+          |> builder.()
+          |> case do
+            %__MODULE__{} = g -> Map.put(g, :add_to, 0)
+            _ -> raise Error, message: "Group.add_to builder must return a valid graph"
+          end
+
+        _ ->
+          g
+      end
+    end)
+  end
 
   # def add_to( %Graph{} = graph, id, p ) when not is_integer(id) do
   #   get_by_uid(graph, id)

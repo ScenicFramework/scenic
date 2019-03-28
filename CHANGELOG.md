@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.11.0
+* Addded the `Graph.add_to/3` function so you can add primitives to an existing group in a graph
+
 ## 0.10.0
 * Integration of font metrics
   * Buttons, checkboxes, radios, etc can be auto-sized to fix their text

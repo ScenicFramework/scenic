@@ -518,6 +518,77 @@ defmodule Scenic.GraphTest do
   end
 
   # ============================================================================
+  # add_to
+
+  test "add_to adds to a specified group in a graph via a builder callback" do
+    import Scenic.Primitives
+
+    graph =
+      Graph.build()
+      |> group(fn g -> g end, id: :group_0)
+      |> group(fn g -> g end, id: :group_1)
+      |> group(fn g -> g end, id: :group_1)
+
+    assert graph.ids == %{_root_: [0], group_0: [1], group_1: [3, 2]}
+    assert graph.primitives[1].data == []
+    assert graph.primitives[2].data == []
+    assert graph.primitives[3].data == []
+
+    # add to one
+    graph_out =
+      Graph.add_to(graph, :group_0, fn g ->
+        line(g, {{0, 0}, {12, 23}}, id: :added_line)
+      end)
+
+    assert graph_out.add_to == 0
+    assert graph_out.primitives[1].data == [4]
+    assert graph_out.primitives[2].data == []
+    assert graph_out.primitives[3].data == []
+    assert graph_out.primitives[4].data == {{0, 0}, {12, 23}}
+    refute graph_out.primitives[5]
+
+    # add to multiple
+    graph_out =
+      Graph.add_to(graph, :group_1, fn g ->
+        line(g, {{0, 0}, {12, 23}}, id: :added_line)
+      end)
+
+    assert graph_out.add_to == 0
+    assert graph_out.primitives[1].data == []
+    assert graph_out.primitives[2].data == [5]
+    assert graph_out.primitives[3].data == [4]
+    assert graph_out.primitives[4].data == {{0, 0}, {12, 23}}
+    assert graph_out.primitives[5].data == {{0, 0}, {12, 23}}
+    refute graph_out.primitives[6]
+  end
+
+  test "add_to ignores adding to non-groups" do
+    import Scenic.Primitives
+
+    graph =
+      Graph.build()
+      |> line({{0, 0}, {12, 23}}, id: :line)
+
+    assert Graph.add_to(graph, :line, fn g ->
+             line(g, {{0, 0}, {12, 23}}, id: :added_line)
+           end) == graph
+  end
+
+  test "add_to raises if builder returns a non graph" do
+    import Scenic.Primitives
+
+    graph =
+      Graph.build()
+      |> group(fn g -> g end, id: :group_0)
+      |> group(fn g -> g end, id: :group_1)
+      |> group(fn g -> g end, id: :group_1)
+
+    assert_raise Graph.Error, fn ->
+      Graph.add_to(graph, :group_0, fn _ -> 123 end)
+    end
+  end
+
+  # ============================================================================
   # def modify( graph, uid, action )
 
   test "modify transforms a single primitive by developer id" do
