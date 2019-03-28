@@ -57,5 +57,4 @@ defmodule Scenic.Component.TextListTest do
     assert graph.primitives[1].transforms.translate == {0, 20}
     assert graph.primitives[2].transforms.translate == {0, 40}
   end
-
 end
