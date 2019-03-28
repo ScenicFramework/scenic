@@ -101,7 +101,7 @@ defmodule Scenic.Components do
           {:cont, {:click, :transformed}, state}
         end
 
-  Inside a `filter_event` callback you can modify a graph, change state, send
+  Inside a `filter_event` callback you can modify a graph, Change state, send
   messages, transform the event, stop the event, and much more.
   """
 
@@ -196,6 +196,77 @@ defmodule Scenic.Components do
   primitive specs. This allows buttons to be treated as data.
   """
   def button_spec(data, options), do: &button(&1, data, options)
+
+  # --------------------------------------------------------
+  @doc """
+  Add a simple text list to a graph.
+
+  A list is a small scene that enumerates over a list of strings.
+  It creates text_specs for each item and increments the transforms
+  Y by the `:font-size + 2` so each string is built below the previous
+  one in the graph. There is no logic in this scene for events or updating.
+  Warning, this scene builds the graph at runtime, NOT at compile time.
+
+  ## Data
+
+  `list`
+
+  * `list` - a list of strings to be displayed in a horizontal list format.
+
+  ## Styles
+
+  Lists honor the following styles
+
+  * `:hidden` - If `false` the component is rendered. If `true`, it is skipped. The default is `false`.
+  * `:fill` - fill in the area of the text. Only solid colors!
+  * `:font` - Name (or key) of font to use.
+  * `:font_size` - Point size of the font. This is used in calculating transform for each additional line.
+  * `:font_blur` - option to blur the characters
+  * `:text_align` - alignment of lines of text
+  * `:text_height` - spacing between lines of text
+  * `:t` - Translate, used to specify where to start the list in your scene
+
+  ## Usage
+
+  You should add/modify components via the helper functions in
+  [`Scenic.Components`](Scenic.Components.html#text_list/3)
+
+  ### Examples
+
+  The following example creates a simple list and adds it to the graph.
+
+      list_of_strings = ["a", "b", "c"]
+
+      graph
+      |> text_list(list_of_strings, id: :alpha_list, fill: :green, font_size: 18, t: {0, 10})
+
+  To remove the list use the `:id` you created the list with to delete it from the graph.
+
+      graph
+      |> Graph.delete(:alpha_list)
+
+  """
+  @spec text_list(
+          source :: Graph.t() | Primitive.t(),
+          list :: list,
+          options :: list
+        ) :: Graph.t() | Primitive.t()
+
+  def text_list(graph, list, options \\ [])
+
+  def text_list(%Graph{} = g, data, options) do
+    add_to_graph(g, Component.TextList, data, options)
+  end
+
+  def text_list(%Primitive{module: SceneRef} = p, data, options) do
+    modify(p, Component.TextList, data, options)
+  end
+
+  @doc """
+  Generate an uninstantiated text_list spec, parallel to the concept of
+  primitive specs. This allows text_list to be treated as data.
+  """
+  def text_list_spec(data, options), do: &text_list(&1, data, options)
 
   # --------------------------------------------------------
   @doc """
