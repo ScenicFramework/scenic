@@ -101,7 +101,7 @@ defmodule Scenic.Components do
           {:cont, {:click, :transformed}, state}
         end
 
-  Inside a `filter_event` callback you can modify a graph, Change state, send
+  Inside a `filter_event` callback you can modify a graph, change state, send
   messages, transform the event, stop the event, and much more.
   """
 
