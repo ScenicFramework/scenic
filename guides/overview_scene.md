@@ -171,6 +171,12 @@ See the [documentation for scene callbacks](Scenic.Scene.html#callbacks) for mor
 A Scene also responds to messages. The two types of messages Scenic will send to
 the scene are user input and events.
 
+Input is usually comes from the driver, such as mouse clicks and key presses, it
+can be handled with `c:Scenic.Scene.handle_input/3`.
+
+Messages are generally sent from child components (such as a button) and can be
+handled with `c:Scenic.Scene.filter_event/3`.
+
 ## Events
 
 You are free to send your own messages to scenes just as you would with any
