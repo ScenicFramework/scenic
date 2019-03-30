@@ -197,7 +197,7 @@ defmodule Scenic.Primitive do
   # --------------------------------------------------------
   # build a new primitive
   # in general, default the various lists and the assign map to nil to save space
-  # assume most elements do not hvae these items set.
+  # assume most elements do not have these items set.
 
   @doc """
   Generic builder to create a new primitive.
@@ -217,7 +217,7 @@ defmodule Scenic.Primitive do
   def build(module, data, opts \\ []) do
     # first build the map with the non-optional fields
     %{
-      # per Jose. Declaring stuct this way saves memory
+      # per Jose. Declaring struct this way saves memory
       __struct__: __MODULE__,
       module: module,
       data: data,
@@ -327,7 +327,7 @@ defmodule Scenic.Primitive do
   Parameters:
   * `primitive` - The primitive
 
-  Returns the a map of styles set directly onto this primitive. This does 
+  Returns the map of styles set directly onto this primitive. This does
   not include any inherited styles.
   """
   @spec get_styles(primitive :: Primitive.t()) :: map
@@ -434,7 +434,7 @@ defmodule Scenic.Primitive do
   Parameters:
   * `primitive` - The primitive
 
-  Returns the a map of transforms set directly onto this primitive. This does 
+  Returns the map of transforms set directly onto this primitive. This does
   not include any inherited transforms.
   """
   @spec get_transforms(primitive :: Primitive.t()) :: map

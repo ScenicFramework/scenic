@@ -3,8 +3,8 @@
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 
-# putting read and load in seperate modules (both in this file)
-# becuase load needs the cache to be set up and read doesn't.
+# putting read and load in separate modules (both in this file)
+# because load needs the cache to be set up and read doesn't.
 
 defmodule Scenic.Cache.Support.FileTest do
   use ExUnit.Case, async: true

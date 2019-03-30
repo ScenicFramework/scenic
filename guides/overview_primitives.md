@@ -96,7 +96,7 @@ In the above graph, we've assigned `:id` values to both primitives. This makes i
 
 Notice that the graph is modified multiple times in the pipeline.
 
-The last parameter to `Graph.modify/3` is a pointer to a function that receives a primitive and returns the the new primitive that should be inserted in its place.
+The last parameter to `Graph.modify/3` is a pointer to a function that receives a primitive and returns the new primitive that should be inserted in its place.
 
 The following is the same as one of the calls above, but in expanded form to make it easier to see what is going on
 

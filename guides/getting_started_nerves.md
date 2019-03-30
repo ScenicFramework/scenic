@@ -48,7 +48,7 @@ export MIX_TARGET=host
 mix deps.get
 ```
 
-Then you can run the app on your dev machine the same way you would a non-nervs app.
+Then you can run the app on your dev machine the same way you would a non-nerves app.
 
 ```bash
 mix scenic.run

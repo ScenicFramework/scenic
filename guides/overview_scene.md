@@ -28,7 +28,7 @@ The life-cycle of scenes (when they start, stop, etc.) is explained in the
 The most important state a Scene is responsible for is its Graph. The Graph
 defines what is to be drawn to the screen, any referenced components, and the
 overall draw order. When the Scene decides the graph is ready to be drawn to the
-screen, it pushes it to the Viewport.
+screen, it pushes it to the ViewPort.
 
 In general, a graph is an immutable data structure that you manipulate through
 transform functions. In the example below `Graph.build()` creates an empty

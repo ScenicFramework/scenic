@@ -14,7 +14,7 @@ There are a fixed set of transform helpers that create matrices for you.
 * [`Pin`](Scenic.Primitive.Transform.Pin.html) set a pin to rotate or scale around. Most primitives define a sensible default pin.
 * [`Rotate`](Scenic.Primitive.Transform.Rotate.html) rotate around the pin.
 * [`Scale`](Scenic.Primitive.Transform.Scale.html) scale larger or smaller. Centered around the pin.
-* [`Translate`](Scenic.Primitive.Transform.Translate.html) move/translate horizontally and veritcally.
+* [`Translate`](Scenic.Primitive.Transform.Translate.html) move/translate horizontally and vertically.
 
 ### Specifying Transforms
 

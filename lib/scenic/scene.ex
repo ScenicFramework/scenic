@@ -45,7 +45,7 @@ defmodule Scenic.Scene do
 
   ## Scenes
 
-  So.. scenes are the core of the UI model. A scene consists of one ore more
+  Scenes are the core of the UI model. A scene consists of one ore more
   graphs, and a set of event handlers and filters to deal with user input
   and other messages.
 

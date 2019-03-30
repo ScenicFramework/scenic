@@ -61,12 +61,12 @@ defmodule Scenic.ViewPort do
   ## CAPTURED INPUT
 
   A scene can request to "capture" all input events of a certain type.
-  this means that all events of that type are sent to a certain
+  This means that all events of that type are sent to a certain
   scene process regardless of position or root. In this way, a
   text input scene nested deep in the tree can capture key presses.
   Or a button can capture cursor_pos events after it has been pressed.
 
-  if a scene has "captured" a position dependent input type, that
+  If a scene has "captured" a position dependent input type, that
   position is projected into the scene's coordinate space before
   sending the event. Note that instead of walking the graph of graphs,
   the transforms provided in the input "context" field are used. You
@@ -175,7 +175,7 @@ defmodule Scenic.ViewPort do
 
   # --------------------------------------------------------
   @doc """
-  Set a the root scene/graph of the ViewPort.
+  Set the root scene/graph of the ViewPort.
   """
   @spec set_root(
           viewport :: GenServer.server(),
