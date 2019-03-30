@@ -19,6 +19,30 @@ defmodule Scenic.Component.Button do
 
       {:click, id}
 
+  These messages can be received and handled in your scene via
+  `c:Scenic.Scene.filter_event/3`. For example:
+
+  ```
+  ...
+
+  @impl Scenic.Scene
+  def init(_, _opts) do
+    graph =
+      Graph.build()
+      |> Scenic.Components.button("Sample Button", id: :sample_btn_id, t: {10, 10})
+
+    state = %{}
+
+    {:ok, state, push: graph}
+  end
+
+  @impl Scenic.Scene
+  def filter_event({:click, :sample_btn_id}, _from, state) do
+    IO.puts("Sample button was clicked!")
+    {:cont, event, state}
+  end
+  ```
+
   ## Styles
 
   Buttons honor the following standard styles
