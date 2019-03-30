@@ -47,11 +47,11 @@ defmodule Scenic.ViewPort do
 
   When user input happens, the drivers send it to the `ViewPort`.
   Input that does not depend on screen position (key presses, audio
-  window events, etc...) Are sent to the root scene unless some other
+  window events, etc.) Are sent to the root scene unless some other
   scene has captured that type of input (see captured input) below.
 
   If the input event does depend on position (cursor position, cursor
-  button presses, scrolling, etc...) then the ViewPort needs to
+  button presses, scrolling, etc.) then the ViewPort needs to
   scan the hierarchical graph of graphs, to find the correct
   scene, and the item in that scene that was "hit". The ViewPort
   then sends the event to that scene, with the position projected

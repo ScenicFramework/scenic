@@ -140,7 +140,7 @@ They should remain focused in scope and avoid containing unrelated commits.
 under the license used by the project.
 
 If you have any large pull request in mind (e.g. implementing features,
-refactoring code, etc), **please ask first** otherwise you risk spending a lot
+refactoring code, etc.), **please ask first** otherwise you risk spending a lot
 of time working on something that the project's developers might not want to
 merge into the project.
 

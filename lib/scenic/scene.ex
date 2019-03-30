@@ -185,7 +185,7 @@ defmodule Scenic.Scene do
   Under normal operation, input that is not position dependent
   (keys, window events, more...) is sent to the root scene. Input
   that does have a screen position (cursor_pos, cursor button
-  presses, etc...) Is sent to the scene that contains the
+  presses, etc.) Is sent to the scene that contains the
   graph that was hit.
 
   Your scene can "capture" all input of a given type so that

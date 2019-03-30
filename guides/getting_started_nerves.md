@@ -6,7 +6,7 @@ BeagleBone Black, and many more.
 
 Scenic has everything you need to run on in this environment. In fact, this is the
 type of system that Scenic was made for! When built with Nerves, the boot-image (this
-includes Linux, Erlang, Elixir, Scenic, several fonts, etc) is on the order of 30Mb in
+includes Linux, Erlang, Elixir, Scenic, several fonts, etc.) is on the order of 30Mb in
 size, which is a welcome relief.
 
 This guide assumes you have some familiarity with [Nerves](https://nerves-project.org/).
