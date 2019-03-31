@@ -16,8 +16,8 @@ be used to build portable applications.
 
 - **Small and Fast:** The only core dependencies are Erlang/OTP and OpenGL.
 
-- **Self Contained:** “Never trust a device if you don’t know where it keeps its
-  brain.” The logic to run a device should be on the device and it should remain
+- **Self Contained:** "Never trust a device if you don't know where it keeps its
+  brain." The logic to run a device should be on the device and it should remain
   operational even if the service it talks to becomes unavailable.
 
 - **Maintainable:** Each device knows how to run itself. This lets teams focus
@@ -49,7 +49,7 @@ be used to build portable applications.
   (such as transform matrices), but it does not support 3D drawing at this time.
 
 - **Immediate Mode:** In graphics speak, Scenic is a retained mode system. If
-  you need immediate mode, then Scenic isn’t for you. If you don’t know what
+  you need immediate mode, then Scenic isn't for you. If you don't know what
   retained and immediate modes are, then you are probably just fine. For
   reference: HTML is a retained mode model.
 
@@ -138,16 +138,16 @@ user input and route it back up to the ViewPort.
 
 ### Input
 
-There is a fixed set of user input data (mouse, keyboard, touch, etc…) that
+There is a fixed set of user input data (mouse, keyboard, touch, etc.) that
 drivers generate and hand up to the ViewPort. The ViewPort, in turn, sends the
-input as a message to the appropriate Scene. Scene’s handle raw user input via
+input as a message to the appropriate Scene. Scenes handle raw user input via
 the `handle_input/3` callback.
 
 ### Event
 
 In response to user input (or timers or any other message), a component can
 generate an event that it sends up to its parent scene. Unlike user input, if
-the parent doesn’t handle it, it is passed up again to that component’s parent
+the parent doesn't handle it, it is passed up again to that component's parent
 until it reaches the root scene. Scenes handle events that are bubbling up to
 the chain via the `filter_event/3` callback. This is analogous to event bubbling
 on a web page.

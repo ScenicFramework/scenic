@@ -9,7 +9,7 @@ There is a fixed set of primitives. This simplifies the internals of Scenic, par
 * [`Ellipse`](Scenic.Primitive.Ellipse.html) draws an ellipse.
 * [`Group`](Scenic.Primitive.Group.html) doesn't draw anything. Instead, it creates a node in the graph that you can insert more primitives into. Any styles or transforms you apply to the Group are inherited by all the primitives below it.
 * [`Line`](Scenic.Primitive.Line.html) draws a line.
-* [`Path`](Scenic.Primitive.Path.html) is sort of an escape valve for complex shapes not covered by the other primitives. You supply a list of instructions, such as :move_to, :line_to, :bezier_to, etc to generate a complex shape.
+* [`Path`](Scenic.Primitive.Path.html) is sort of an escape valve for complex shapes not covered by the other primitives. You supply a list of instructions, such as :move_to, :line_to, :bezier_to, etc. to generate a complex shape.
 * [`Quad`](Scenic.Primitive.Quad.html) draws polygon with four sides.
 * [`Rectangle`](Scenic.Primitive.Rectangle.html) draws a rectangle.
 * [`RoundedRectangle`](Scenic.Primitive.RoundedRectangle.html) draws a rectangle with the corners rounded by a given radius.
@@ -62,7 +62,7 @@ The final type of primitive control is transforms. Unlike html, which uses auto-
 
 A [matrix](https://en.wikipedia.org/wiki/Matrix_(mathematics)) is an array of numbers that can be used to change the positions, rotations, scale and more of locations.
 
-**Don’t worry!** You will not need to look at any matrices unless you want to get fancy. In Scenic, you will rarely (if ever) create matrices on your own (you can if you know what you are doing!), and will instead use the transform helpers.
+**Don't worry!** You will not need to look at any matrices unless you want to get fancy. In Scenic, you will rarely (if ever) create matrices on your own (you can if you know what you are doing!), and will instead use the transform helpers.
 
 [You can read about the transform types here.](overview_transforms.html)
 
@@ -96,7 +96,7 @@ In the above graph, we've assigned `:id` values to both primitives. This makes i
 
 Notice that the graph is modified multiple times in the pipeline.
 
-The last parameter to `Graph.modify/3` is a pointer to a function that receives a primitive and returns the the new primitive that should be inserted in its place.
+The last parameter to `Graph.modify/3` is a pointer to a function that receives a primitive and returns the new primitive that should be inserted in its place.
 
 The following is the same as one of the calls above, but in expanded form to make it easier to see what is going on
 

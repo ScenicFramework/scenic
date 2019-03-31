@@ -30,7 +30,7 @@ For example, to use the style defined in the module Scenic.Primitive.Style.Font 
 
 ## Primitive Paint Styles
 
-The `Fill` and `Stroke` styles accept a paint type. This describes what to fill or stroke the the primitive with.
+The `Fill` and `Stroke` styles accept a paint type. This describes what to fill or stroke the primitive with.
 
 There is a fixed set of paint types that the drivers know how to render.
 

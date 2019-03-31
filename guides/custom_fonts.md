@@ -9,7 +9,7 @@ To do this you will need do the following steps.
   1. Download the font you want to use and add it to the static files of your `priv/` folder in your application. Please be aware of font licenses and make good choices.
   2. Use the [truetype_metrics](https://hex.pm/packages/truetype_metrics) hex package to generate a `*.metrics` file, which you also add to your `priv/` folder. This tool will also change the name of your font so that a hash of the data is included in the file name.
   3. Load the `*.metrics` file into the `Scenic.Cache.Static.FontMetrics` cache.
-  4. refer to the font by the key to the metrics file in the graph where you want to use it.
+  4. Refer to the font by the key to the metrics file in the graph where you want to use it.
 
 These steps are descried in detail below
 
