@@ -39,11 +39,17 @@ defmodule Scenic do
   @viewports :scenic_dyn_viewports
 
   @version Mix.Project.config()[:version]
+  @mix_env Mix.env()
 
   @doc """
   Return the current version of scenic
   """
   def version(), do: @version
+
+  @doc """
+  Return the current Mix env
+  """
+  def mix_env(), do: @mix_env
 
   # --------------------------------------------------------
   @doc false
