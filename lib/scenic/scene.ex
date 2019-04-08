@@ -558,7 +558,7 @@ defmodule Scenic.Scene do
   `reason` is exit reason and `state` is the current state of the `Scene`.
   The return value is ignored.
 
-  The callback identical to the
+  The callback is identical to the
   [`terminate`](https://hexdocs.pm/elixir/GenServer.html#c:terminate/2)
   callback in [`Genserver`](https://hexdocs.pm/elixir/GenServer.html).
   """
