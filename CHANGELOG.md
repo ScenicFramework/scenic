@@ -1,7 +1,9 @@
 # Changelog
 
-## 0.11.0
+## 0.10.1
 * Addded the `Graph.add_to/3` function so you can add primitives to an existing group in a graph
+* Remove runtime dependency on Mix
+* Various doc fixes.
 
 ## 0.10.0
 * Integration of font metrics
