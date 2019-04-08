@@ -45,7 +45,7 @@ defmodule Scenic.Scene do
 
   ## Scenes
 
-  So.. scenes are the core of the UI model. A scene consists of one ore more
+  Scenes are the core of the UI model. A scene consists of one ore more
   graphs, and a set of event handlers and filters to deal with user input
   and other messages.
 
@@ -185,7 +185,7 @@ defmodule Scenic.Scene do
   Under normal operation, input that is not position dependent
   (keys, window events, more...) is sent to the root scene. Input
   that does have a screen position (cursor_pos, cursor button
-  presses, etc...) Is sent to the scene that contains the
+  presses, etc.) Is sent to the scene that contains the
   graph that was hit.
 
   Your scene can "capture" all input of a given type so that
@@ -883,7 +883,7 @@ defmodule Scenic.Scene do
           args_msg = "return value: #{inspect(unknown)}"
           stack_msg = ""
 
-          unless Mix.env() == :test do
+          unless Scenic.mix_env() == :test do
             [
               "\n",
               IO.ANSI.red(),
@@ -917,7 +917,7 @@ defmodule Scenic.Scene do
         stack_msg = Exception.format_stacktrace(__STACKTRACE__)
 
         # assemble into a final message to output to the command line
-        unless Mix.env() == :test do
+        unless Scenic.mix_env() == :test do
           [
             "\n",
             IO.ANSI.red(),
@@ -1238,7 +1238,7 @@ defmodule Scenic.Scene do
   # ============================================================================
   # push_graph
 
-  if Mix.env() == :test do
+  if Scenic.mix_env() == :test do
     def test_push_graph(graph, sub_id, state) do
       internal_push_graph(graph, sub_id, state)
     end

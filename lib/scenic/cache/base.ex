@@ -12,7 +12,7 @@ defmodule Scenic.Cache.Base do
 
   | Asset Class   | Module  |
   | ------------- | -----|
-  | Fonts      | `Scenic.Cache.Static.Font` |  
+  | Fonts      | `Scenic.Cache.Static.Font` |
   | Font Metrics | `Scenic.Cache.Static.FontMetrics` |
   | Textures (images in a fill) | `Scenic.Cache.Static.Texture` |
   | Raw Pixel Maps | `Scenic.Cache.Dynamic.Texture` |
@@ -87,7 +87,7 @@ defmodule Scenic.Cache.Base do
 
   ## Security
 
-  A lesson learned the hard way is that static assets (fonts, images, etc) that your app
+  A lesson learned the hard way is that static assets (fonts, images, etc.) that your app
   loads out of storage can easily become attack vectors.
 
   These formats are complicated! There is no guarantee (on any system) that a malformed
@@ -95,7 +95,7 @@ defmodule Scenic.Cache.Base do
   and the renderers need to be fast...
 
   The solution is to compute a SHA hash of these files during build-time of your
-  and to store the result in your applications code itself. Then during run time, you 
+  and to store the result in your applications code itself. Then during run time, you
   compare then pre-computed hash against the run-time of the asset being loaded.
 
   Please take advantage of the helper modules [`Cache.File`](Scenic.Cache.File.html),
@@ -474,7 +474,7 @@ defmodule Scenic.Cache.Base do
   end
 
   # ============================================================================
-  # client API 
+  # client API
 
   # --------------------------------------------------------
   @doc """
@@ -658,7 +658,7 @@ defmodule Scenic.Cache.Base do
 
   Pass in the service, hash, and a scope.
 
-  returns one of:
+  Returns one of:
   ```elixir
   {:ok, hash}           # it is claimed by the given scope
   {:ok, :global}        # it is NOT claimed by the given scope, but is :global
@@ -686,7 +686,7 @@ defmodule Scenic.Cache.Base do
 
   Pass in the service and a scope.
 
-  returns a list of claimed keys.
+  Returns a list of claimed keys.
   """
   @spec keys(
           service :: atom,
@@ -701,7 +701,7 @@ defmodule Scenic.Cache.Base do
 
   Pass in the service and a hash.
 
-  returns `true` or `false`.
+  Returns `true` or `false`.
   """
   @spec member?(
           service :: atom,
@@ -716,7 +716,7 @@ defmodule Scenic.Cache.Base do
 
   Pass in the service, hash, and scope.
 
-  returns `true` or `false`.
+  Returns `true` or `false`.
   """
   @spec claimed?(
           service :: atom,
@@ -893,7 +893,7 @@ defmodule Scenic.Cache.Base do
 
   # # --------------------------------------------------------
   def handle_call({:put_new, scope, key, data}, _, %{table: table} = state) do
-    # Check if the key already exists. If so, overrwrite the data, if not insert it.
+    # Check if the key already exists. If so, overwrite the data, if not insert it.
     case :ets.member(table, key) do
       true ->
         # already there. only need to claim it
@@ -941,7 +941,7 @@ defmodule Scenic.Cache.Base do
   end
 
   # --------------------------------------------------------
-  if Mix.env() == :test do
+  if Scenic.mix_env() == :test do
     def handle_call(:reset, _, %{table: table} = state) do
       :ets.delete_all_objects(table)
 

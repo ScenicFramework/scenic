@@ -2,7 +2,7 @@
 
 A very important part of Scenic is the Scene life-cycle management. Most scenes' life-cycles will be managed automatically by their [ViewPort](overview_viewport.html). The ViewPort determines when to start and stop these dynamic scenes.
 
-In effect, when you create a graph and add components like `button`, `checkbox` and more, you are doing more than just saying, "Draw a button here". You instructing the `ViewPort` how and when to start and stop the processes that drive those components.
+In effect, when you create a graph and add components like `button`, `checkbox` and more, you are doing more than just saying, "Draw a button here". You are instructing the `ViewPort` how and when to start and stop the processes that drive those components.
 
 ## The Root Scene
 
@@ -64,7 +64,7 @@ When you build your graphs, you can now use this statically supervised scene dir
 
 The main trade-off you make when you supervise a scene yourself is that the scene no longer knows which ViewPort it is running in. It could be several at the same time! You will not be able to use functions like `ViewPort.set_root` from these scenes.
 
-The second tradeoff is that if the root scene _doesn't_ reference a scene you are supervising yourself, then that scene is still taking up memory in both the scene and the driver even though it isn't being drawn.
+The second trade-off is that if the root scene _doesn't_ reference a scene you are supervising yourself, then that scene is still taking up memory in both the scene and the driver even though it isn't being drawn.
 
 
 ## What to read next?

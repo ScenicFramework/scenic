@@ -81,7 +81,7 @@ defmodule Scenic.Cache.Static.Font do
 
   ## Security
 
-  A lesson learned the hard way is that static assets (fonts, images, etc) that your app
+  A lesson learned the hard way is that static assets (fonts, images, etc.) that your app
   loads out of storage can easily become attack vectors.
 
   These formats are complicated! There is no guarantee (on any system) that a malformed

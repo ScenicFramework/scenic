@@ -36,7 +36,7 @@ defmodule Scenic.Cache.Support.File do
 
   ## Security
 
-  A lesson learned the hard way is that static assets (fonts, images, etc) that your app
+  A lesson learned the hard way is that static assets (fonts, images, etc.) that your app
   loads out of storage can easily become attack vectors.
 
   These formats are complicated! There is no guarantee (on any system) that a malformed
@@ -44,7 +44,7 @@ defmodule Scenic.Cache.Support.File do
   and the renderers need to be fast...
 
   The solution is to compute a SHA hash of these files during build-time of your
-  and to store the result in your applications code itself. Then during run time, you 
+  and to store the result in your applications code itself. Then during run time, you
   compare then pre-computed hash against the run-time of the asset being loaded.
 
   These scheme is much stronger when the application code itself is also signed and
@@ -110,7 +110,7 @@ defmodule Scenic.Cache.Support.File do
   # hashes. Is also slower because it has to load the file and compute the hash
   # to use as a key even it is is already loaded into the cache.
   def read(path, :insecure, opts) do
-    if Mix.env() != :test do
+    if Scenic.mix_env() != :test do
       IO.puts("WARNING: Cache asset read as :insecure \"#{path}\"")
     end
 
@@ -159,7 +159,7 @@ defmodule Scenic.Cache.Support.File do
   def read!(path, hash, opts \\ [])
 
   def read!(path, :insecure, opts) do
-    if Mix.env() != :test do
+    if Scenic.mix_env() != :test do
       IO.puts("WARNING: Cache asset read! as :insecure \"#{path}\"")
     end
 

@@ -3,7 +3,7 @@
 The most important state a Scene is responsible for is its Graph. The Graph
 defines what is to be drawn to the screen, any referenced components, and the
 overall draw order. When a Scene decides the graph is ready to be drawn to the
-screen, it pushes it to the Viewport.
+screen, it pushes it to the ViewPort.
 
 Graphs are made out of a handful of primitives, each of which knows how to draw
 one thing. When multiple primitives are put together, almost any standard UI can be drawn.
@@ -49,7 +49,7 @@ The final type of primitive control is transforms. Unlike html, which uses auto-
 
 A [matrix](https://en.wikipedia.org/wiki/Matrix_(mathematics)) is an array of numbers that can be used to change the positions, rotations, scale and more of locations.
 
-**Don’t worry!** You will not need to look at any matrices unless you want to get fancy. In Scenic, you will rarely (if ever) create matrices on your own (you can if you know what you are doing!), and will instead use the transform helpers.
+**Don't worry!** You will not need to look at any matrices unless you want to get fancy. In Scenic, you will rarely (if ever) create matrices on your own (you can if you know what you are doing!), and will instead use the transform helpers.
 
 [You can read about the transform types here.](overview_transforms.html)
 

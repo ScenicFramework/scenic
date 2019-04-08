@@ -482,7 +482,7 @@ defmodule Scenic.ViewPort.Input do
   end
 
   # --------------------------------------------------------
-  # Any other input (non-standard, generated, etc) get sent to the root graph_key
+  # Any other input (non-standard, generated, etc.) get sent to the root graph_key
   defp do_handle_input(msg, %{root_graph_key: root_key} = state) do
     Scene.cast(
       root_key,

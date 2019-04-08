@@ -5,7 +5,7 @@
 
 ## 0.10.0
 * Integration of font metrics
-  * Buttons, checkboxes, radios, etc can be auto-sized to fix their text
+  * Buttons, checkboxes, radios, etc. can be auto-sized to fix their text
   * FontMetrics can be used to measure strings, trim to fit, and more
 * Much improved error handling when a scene crashes during its init phase. Instead of quickly
   restarting the scene over and over, it now goes to an error scene that displays debug info.

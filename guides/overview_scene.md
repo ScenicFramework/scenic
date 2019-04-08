@@ -28,7 +28,7 @@ The life-cycle of scenes (when they start, stop, etc.) is explained in the
 The most important state a Scene is responsible for is its Graph. The Graph
 defines what is to be drawn to the screen, any referenced components, and the
 overall draw order. When the Scene decides the graph is ready to be drawn to the
-screen, it pushes it to the Viewport.
+screen, it pushes it to the ViewPort.
 
 In general, a graph is an immutable data structure that you manipulate through
 transform functions. In the example below `Graph.build()` creates an empty
@@ -170,6 +170,12 @@ See the [documentation for scene callbacks](Scenic.Scene.html#callbacks) for mor
 
 A Scene also responds to messages. The two types of messages Scenic will send to
 the scene are user input and events.
+
+Input is usually comes from the driver, such as mouse clicks and key presses, it
+can be handled with `c:Scenic.Scene.handle_input/3`.
+
+Messages are generally sent from child components (such as a button) and can be
+handled with `c:Scenic.Scene.filter_event/3`.
 
 ## Events
 

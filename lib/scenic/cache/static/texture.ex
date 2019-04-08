@@ -11,7 +11,7 @@ defmodule Scenic.Cache.Static.Texture do
   In memory cache for static static Image assets.
 
   In graphics-speak, an image that is being drawn to the screen is a "Texture". It doesn't
-  matter how the image was stored on the disk (jpg, png, etc...), they all end up as
+  matter how the image was stored on the disk (jpg, png, etc.), they all end up as
   textures presented to the graphics card.
 
   Assets such as textures tend to be relatively large compared to
@@ -66,7 +66,7 @@ defmodule Scenic.Cache.Static.Texture do
 
   ## Security
 
-  A lesson learned the hard way is that static assets (fonts, images, etc) that your app
+  A lesson learned the hard way is that static assets (fonts, images, etc.) that your app
   loads out of storage can easily become attack vectors.
 
   These formats are complicated! There is no guarantee (on any system) that a malformed

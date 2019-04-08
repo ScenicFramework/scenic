@@ -9,7 +9,7 @@ Version v0.10 contains two fairly major changes in how things work.
   * `Scenic.Cache` has been reorganized into asset-specific caches. **This is a breaking change.**
   * `push_graph` is deprecated and replaced with a more functional-style return value. This is not a breaking change, but it throws warnings as going forward, the new return values are the way to go.
 
-The changes to the cache are described first as they are breaking changes. The non-breaking push_graph deprecation will probably be more work to integrate, but you don't need to do it as immedately.
+The changes to the cache are described first as they are breaking changes. The non-breaking push_graph deprecation will probably be more work to integrate, but you don't need to do it as immediately.
 
 ## Changes to the Cache
 
@@ -34,7 +34,7 @@ The Dynamic.Texture cache is for images that change over time. For example, this
 
 If you have used custom fonts in your application, you need to use a new process to get them to load and render.
 
-1. use the `truetype_metrics` tool in hex to generate a `\*.metrics` file for your custom font. This will live in the same folder as your font.
+1. Use the `truetype_metrics` tool in hex to generate a `\*.metrics` file for your custom font. This will live in the same folder as your font.
 2. Make sure the name of the font file itself ends with the hash of its content. If you use the `-d` option in `truetype_metrics`, then that will be done for you.
 3. Load the font metrics file into the `Scenic.Cache.Static.FontMetrics` cache. The hash of this file is the hash that you will use to refer to the font in the graphs.
 4. Load the font itself into the `Scenic.Cache.Static.Font`
