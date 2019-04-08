@@ -883,7 +883,7 @@ defmodule Scenic.Scene do
           args_msg = "return value: #{inspect(unknown)}"
           stack_msg = ""
 
-          unless Mix.env() == :test do
+          unless Scenic.mix_env() == :test do
             [
               "\n",
               IO.ANSI.red(),
@@ -917,7 +917,7 @@ defmodule Scenic.Scene do
         stack_msg = Exception.format_stacktrace(__STACKTRACE__)
 
         # assemble into a final message to output to the command line
-        unless Mix.env() == :test do
+        unless Scenic.mix_env() == :test do
           [
             "\n",
             IO.ANSI.red(),
@@ -1238,7 +1238,7 @@ defmodule Scenic.Scene do
   # ============================================================================
   # push_graph
 
-  if Mix.env() == :test do
+  if Scenic.mix_env() == :test do
     def test_push_graph(graph, sub_id, state) do
       internal_push_graph(graph, sub_id, state)
     end

@@ -12,7 +12,7 @@ defmodule Scenic.Cache.Base do
 
   | Asset Class   | Module  |
   | ------------- | -----|
-  | Fonts      | `Scenic.Cache.Static.Font` |  
+  | Fonts      | `Scenic.Cache.Static.Font` |
   | Font Metrics | `Scenic.Cache.Static.FontMetrics` |
   | Textures (images in a fill) | `Scenic.Cache.Static.Texture` |
   | Raw Pixel Maps | `Scenic.Cache.Dynamic.Texture` |
@@ -95,7 +95,7 @@ defmodule Scenic.Cache.Base do
   and the renderers need to be fast...
 
   The solution is to compute a SHA hash of these files during build-time of your
-  and to store the result in your applications code itself. Then during run time, you 
+  and to store the result in your applications code itself. Then during run time, you
   compare then pre-computed hash against the run-time of the asset being loaded.
 
   Please take advantage of the helper modules [`Cache.File`](Scenic.Cache.File.html),
@@ -474,7 +474,7 @@ defmodule Scenic.Cache.Base do
   end
 
   # ============================================================================
-  # client API 
+  # client API
 
   # --------------------------------------------------------
   @doc """
@@ -941,7 +941,7 @@ defmodule Scenic.Cache.Base do
   end
 
   # --------------------------------------------------------
-  if Mix.env() == :test do
+  if Scenic.mix_env() == :test do
     def handle_call(:reset, _, %{table: table} = state) do
       :ets.delete_all_objects(table)
 
