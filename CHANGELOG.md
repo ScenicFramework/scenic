@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.2
+* A good set of documentation improvements. All minor, but good to get out there. Thank you @GregMefford
+* Minor improvements to do error scene readability. Thank you @lmarlow
+
 ## 0.10.1
 * Addded the `Graph.add_to/3` function so you can add primitives to an existing group in a graph
 * Remove runtime dependency on Mix
