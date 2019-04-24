@@ -921,10 +921,10 @@ defmodule Scenic.Scene do
           [
             "\n",
             IO.ANSI.red(),
-            module_msg <> "crashed during init",
+            module_msg <> " crashed during init",
             "\n",
             IO.ANSI.yellow(),
-            "Scene Args:" <> args_msg,
+            "Scene Args: " <> args_msg,
             "\n",
             IO.ANSI.red(),
             err_msg,
