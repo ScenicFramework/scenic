@@ -37,7 +37,15 @@ defmodule Scenic.SceneTest do
 
   defmodule TestSceneTwo do
     use Scenic.Scene
-    def init(_, _), do: {:ok, nil}
+    def init(nil, _), do: {:ok, nil}
+    def init(pid, _) when is_pid(pid) do
+      {:ok, pid, continue: :continued}
+    end
+
+    def handle_continue(:continued, pid) do
+      send(pid, :test_handle_continue)
+      {:noreply, pid}
+    end
   end
 
   # ============================================================================
@@ -115,7 +123,7 @@ defmodule Scenic.SceneTest do
     {:ok, pid_scene_1} = GenServer.start(Scene, {TestSceneOne, nil, [scene_ref: scene_ref_1]})
     # prep ref scene 2
     scene_ref_2 = make_ref()
-    {:ok, pid_scene_2} = GenServer.start(Scene, {TestSceneOne, nil, [scene_ref: scene_ref_2]})
+    {:ok, pid_scene_2} = GenServer.start(Scene, {TestSceneTwo, nil, [scene_ref: scene_ref_2]})
 
     # insert the graph we will test later
     graph =
@@ -537,5 +545,13 @@ defmodule Scenic.SceneTest do
 
     # cleanup
     DynamicSupervisor.stop(dyn_sup, :normal)
+  end
+
+  # ============================================================================
+  # gen_server abilities
+
+  test "scene can override handle_continue/2" do
+    {:ok, _scene} = GenServer.start(Scene, {TestSceneTwo, self(), []})
+    assert_receive :test_handle_continue
   end
 end

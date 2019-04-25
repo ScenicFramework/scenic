@@ -585,7 +585,7 @@ defmodule Scenic.Scene do
       @doc false
       def handle_info(_msg, state), do: {:noreply, state}
       @doc false
-      def handle_continue(_msg, state), do: {:noreply, nil, state}
+      def handle_continue(_msg, state), do: {:noreply, state}
 
       @doc false
       def handle_input(event, _, scene_state), do: {:noreply, scene_state}
@@ -645,7 +645,7 @@ defmodule Scenic.Scene do
             {:reply, reply, state, push: graph}
             {:noreply, state, push: graph}
 
-        from handle_continue/3
+        from handle_continue/2
             {:noreply, state, push: graph}
         #{IO.ANSI.default_color()}
         """)
@@ -676,6 +676,7 @@ defmodule Scenic.Scene do
       # --------------------------------------------------------
       defoverridable handle_call: 3,
                      handle_cast: 2,
+                     handle_continue: 2,
                      handle_info: 2,
                      handle_input: 3,
                      filter_event: 3,
