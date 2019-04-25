@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.10.3
+* Fix bug allowing handle_continue to be overridden by scene. Thank you @lmarlow
+
 ## 0.10.2
 * A good set of documentation improvements. All minor, but good to get out there. Thank you @GregMefford
 * Minor improvements to do error scene readability. Thank you @lmarlow
