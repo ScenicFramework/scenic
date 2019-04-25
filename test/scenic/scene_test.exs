@@ -38,6 +38,7 @@ defmodule Scenic.SceneTest do
   defmodule TestSceneTwo do
     use Scenic.Scene
     def init(nil, _), do: {:ok, nil}
+
     def init(pid, _) when is_pid(pid) do
       {:ok, pid, continue: :continued}
     end
