@@ -128,6 +128,37 @@ defmodule Scenic.GraphTest do
     assert Map.get(graph, :max_depth) == 1
   end
 
+  test "build uses default font and font_size" do
+    graph = Graph.build()
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font) == :roboto
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font_size) == 24
+  end
+
+  test "build honors fonts and font_sizes set directly" do
+    graph = Graph.build(font: :roboto_mono, font_size: 12)
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font) == :roboto_mono
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font_size) == 12
+  end
+
+  test "build honors fonts and font_sizes set in styles" do
+    styles = %{font: :roboto_mono, font_size: 12}
+    graph = Graph.build(styles: styles)
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font) == :roboto_mono
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font_size) == 12
+  end
+
+  test "build honors font info set in styles and directly by order" do
+    styles = %{font: :roboto_mono, font_size: 12}
+    graph = Graph.build(styles: styles, font_size: 13)
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font) == :roboto_mono
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font_size) == 13
+
+    styles = %{font: :roboto_mono, font_size: 12}
+    graph = Graph.build(font_size: 13, styles: styles)
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font) == :roboto_mono
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font_size) == 12
+  end
+
   # ============================================================================
   # get - retrieve a primitive (or primtives) from a graph given an id
 
