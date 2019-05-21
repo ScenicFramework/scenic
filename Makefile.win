@@ -10,6 +10,7 @@ CC=cl
 LINK=link
 NMAKE = nmake /$(MAKEFLAGS)
 
+STATIC = priv\static
 SRC_DIR = c_src
 
 # Scenic.Math.Line.parallel({{1,2},{3,4}}, 4)
@@ -17,13 +18,17 @@ SRC_DIR = c_src
 calling_from_make:
 	mix compile
 
-all: clean priv Makefile.auto.win NIF
+all: clean priv $(STATIC) Makefile.auto.win NIF
 
 clean:
 	del /Q /F priv
 
 priv:
 	mkdir priv
+
+$(STATIC):
+	mkdir $(STATIC)
+	xcopy /S /E /Y static $(STATIC)
 
 Makefile.auto.win:
 	erl -eval "io:format(\"~s~n\", [lists:concat([\"ERTS_INCLUDE_PATH=\", code:root_dir(), \"/erts-\", erlang:system_info(version), \"/include\"])])" -s init stop -noshell > $@
