@@ -383,17 +383,22 @@ defmodule Scenic.Graph do
 
   # handle options helper
   defp handle_options(opts) do
+    {font, font_size} =
+      Enum.reduce(opts, {@default_font, @default_font_size}, fn
+        {:font, font}, {_, size} ->
+          {font, size}
 
-    {font, font_size} = Enum.reduce(
-      opts, {@default_font, @default_font_size}, fn
-      {:font, font}, {_, size} -> {font, size}
-      {:font_size, size}, {font, _} -> {font, size}
-      {:styles, styles}, {f, s}  ->
-        font = styles[:font] || f
-        size = styles[:font_size] || s
-        {font, size}
-      _, info -> info
-    end)
+        {:font_size, size}, {font, _} ->
+          {font, size}
+
+        {:styles, styles}, {f, s} ->
+          font = styles[:font] || f
+          size = styles[:font_size] || s
+          {font, size}
+
+        _, info ->
+          info
+      end)
 
     Keyword.merge(opts, font: font, font_size: font_size)
   end
