@@ -185,6 +185,19 @@ defmodule Scenic.PrimitivesTest do
     assert p.id == :group
   end
 
+  test "group adds via reverse spec" do
+    p =
+      @graph
+      |> Primitives.add_specs_to_graph([
+        Primitives.group_spec_r([id: :group], [])
+      ])
+      |> Graph.get!(:group)
+
+    assert p.module == Scenic.Primitive.Group
+    assert p.data == []
+    assert p.id == :group
+  end
+
   # ============================================================================
   test "line adds to a graph - default opts" do
     g = Primitives.line(@graph, {{0, 0}, {10, 100}})
