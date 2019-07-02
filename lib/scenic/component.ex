@@ -11,7 +11,7 @@ defmodule Scenic.Component do
 
       use Scenic.Component
 
-  instead of 
+  instead of
 
       use Scenic.Scene
 
@@ -27,7 +27,7 @@ defmodule Scenic.Component do
   [`Scenic.Components`](Scenic.Components.html) module.
 
   * [`Button`](Scenic.Component.Button.html) a simple button.
-  * [`Checkbox`](Scenic.Component.Input.Checkbox.html) a checkbox input field. 
+  * [`Checkbox`](Scenic.Component.Input.Checkbox.html) a checkbox input field.
   * [`Dropdown`](Scenic.Component.Input.Dropdown.html) a dropdown / select input field.
   * [`RadioGroup`](Scenic.Component.Input.RadioGroup.html) a group of radio button inputs.
   * [`Slider`](Scenic.Component.Input.Slider.html) a slider input.
@@ -66,8 +66,44 @@ defmodule Scenic.Component do
 
   alias Scenic.Primitive
 
-  @callback add_to_graph(map, any, list) :: map
-  @callback verify(any) :: any
+  @optional_callbacks add_to_graph: 3, info: 1
+
+  @doc """
+  Add this component to a `Scenic.Graph`
+  """
+  @callback add_to_graph(graph :: Scenic.Graph.t(), data :: any, opts :: list) :: Scenic.Graph.t()
+
+  @doc """
+  Verify that this the data for this component is valid.
+
+  Return an `{:ok, data}` tuple if the data is valid and any other term if the data is
+  not valid. Here is an example implementation that checks if the input is a
+  valid binary:
+
+      @impl Scenic.Component
+      def verify(data) do
+        if is_binary(data) do
+          {:ok, data}
+        else
+          :invalid_data
+        end
+      end
+  """
+  @callback verify(data :: any) :: {:ok, any} | any
+
+  @doc """
+  Provide an info string about what was wrong with the provided data.
+
+  This string will typically be displayed in the terminal. Example implementation:
+
+      def info(data) do
+      \"""
+      \#{IO.ANSI.red()}Button data must be a binary
+      \#{IO.ANSI.yellow()}Received: \#{inspect(data)}
+      \#{IO.ANSI.default_color()}
+      \"""
+      end
+  """
   @callback info(data :: any) :: String.t()
 
   #  import IEx
