@@ -7,9 +7,9 @@
 # this module should be updated as new primitives are added
 
 defmodule Scenic.Primitives do
-  alias Scenic.Primitive
   alias Scenic.Graph
   alias Scenic.Math
+  alias Scenic.Primitive
 
   @typep width_and_height :: {
            width :: number,
@@ -147,9 +147,27 @@ defmodule Scenic.Primitives do
 
       @drawing Graph.build()
                |> add_specs_to_graph([
-                     group_spec( @lines, t: [ 100, 50 ]),
-                     group_spec( @text,  t: [ 150, 50 ])
-                  ])
+                 group_spec(@lines, t: [100, 50]),
+                 group_spec(@text, t: [150, 50])
+               ])
+
+  If you have a smaller graph or just like to see everything in one
+  place, you might prefer using `group_spec_r/2`:
+
+      @line {{0, 0}, {60, 60}}
+
+      @drawing Graph.build()
+               |> add_specs_to_graph([
+                 group_spec_r([t: {100, 50}], [
+                   line_spec(@line, stroke: {4, :red}),
+                   line_spec(@line, stroke: {20, :green}, cap: :butt, t: {60, 0}),
+                   line_spec(@line, stroke: {20, :yellow}, cap: :round, t: {120, 0})
+                 ]),
+                 group_spec_r([t: {150, 50}], [
+                   text_spec("Hello", translate: {0, 40}),
+                   text_spec("World", translate: {90, 40}, fill: :yellow),
+                 ])
+               ])
 
   These examples use `add_specs_to_graph/2`, a simple helper that
   converts specs into primitives and adds them to a graph.
@@ -559,6 +577,55 @@ defmodule Scenic.Primitives do
 
   def group_spec(item, opts) do
     group_spec([item], opts)
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Bundle a list of specifications together, and return a function that,
+  when called, will add those specs as a group to a graph.
+
+  The options are the same as for `group_spec/2`, but reversed, making
+  it suitable to use when declaring graph specs as big literals due to
+  the increased readability.
+
+  Example:
+
+      line = {{0, 0}, {60, 60}}
+
+      line_group = group_spec_r([t: {100, 100}], [
+        line_spec(@line, stroke: {4, :red}),
+        line_spec(@line, stroke: {20, :green}, cap: :butt, t: {60, 0}),
+        line_spec(@line, stroke: {20, :yellow}, cap: :round, t: {120, 0}),
+      ])
+
+      graph = line_group.(graph)
+
+  You can also pass in a single primitive spec:
+
+      line = line_spec({{0, 0}, {60, 60}}, stroke: {4, :red}),
+      line_group = group_spec_r([t: {100, 100}], line)
+
+      graph = line_group.(graph)
+
+  """
+
+  @spec group_spec_r(
+          options :: list,
+          items :: Group.deferred() | [Group.deferred(), ...]
+        ) :: Graph.deferred()
+
+  def group_spec_r(opts, list) when is_list(list) do
+    fn g ->
+      content = fn g ->
+        Enum.reduce(list, g, fn element, g -> element.(g) end)
+      end
+
+      group(g, content, opts)
+    end
+  end
+
+  def group_spec_r(opts, item) do
+    group_spec_r(opts, [item])
   end
 
   # --------------------------------------------------------
