@@ -76,7 +76,7 @@ defmodule Scenic.Component do
   @doc """
   Verify that this the data for this component is valid.
 
-  Return an okay tuple if the data is valid and any other term if the data is
+  Return an `{:ok, data}` tuple if the data is valid and any other term if the data is
   not valid. Here is an example implementation that checks if the input is a
   valid binary:
 
@@ -98,7 +98,7 @@ defmodule Scenic.Component do
 
       def info(data) do
       \"""
-      \#{IO.ANSI.red()}Button data must be binary text
+      \#{IO.ANSI.red()}Button data must be a binary
       \#{IO.ANSI.yellow()}Received: \#{inspect(data)}
       \#{IO.ANSI.default_color()}
       \"""
