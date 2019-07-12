@@ -10,7 +10,7 @@ defmodule Scenic.Primitive.Style.TextAlign do
   Example:
 
       graph
-      |> text( "Some Text" text_align: :center_middle )
+      |> text( "Some Text", text_align: :center_middle )
 
   ## Data
 
