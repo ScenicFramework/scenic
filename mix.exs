@@ -45,7 +45,7 @@ defmodule Scenic.Mixfile do
   defp deps do
     [
       {:font_metrics, "~> 0.3"},
-      {:elixir_make, "~> 0.5", runtime: false},
+      {:elixir_make, "~> 0.6", runtime: false},
 
       # Tools
       {:ex_doc, ">= 0.0.0", only: :dev},
