@@ -2,6 +2,8 @@
 defmodule Mix.Tasks.Scenic.Hash do
   use Mix.Task
 
+  alias Scenic.Cache.Support.Hash
+
   @shortdoc "Compute the hash of a file - mix scenic.hash path_to_file"
 
   @moduledoc """
@@ -30,7 +32,7 @@ defmodule Mix.Tasks.Scenic.Hash do
   You can also point it at a directory to have it hash the files within
 
       mix scenic.hash guides
-      
+
       >> File hash using :sha
       >> guides/overview_graph.md -> "xu6ihkVwAX7W8-Rzr2U769DR46w"
       >> guides/overview_general.md -> "UNcd84guRIEBK5a0tWdp5MYmJpI"
@@ -48,7 +50,7 @@ defmodule Mix.Tasks.Scenic.Hash do
 
   @default_hash "sha"
 
-  @hash_types Scenic.Cache.Support.Hash.valid_hash_types()
+  @hash_types Hash.valid_hash_types()
   @hash_map Enum.reduce(@hash_types, %{}, &Map.put(&2, to_string(&1), &1))
 
   # import IEx
@@ -81,7 +83,7 @@ defmodule Mix.Tasks.Scenic.Hash do
 
   defp hash_file(path, hash) do
     IO.write(path <> " -> ")
-    {:ok, hash} = do_hash_file(path, hash)
+    {:ok, hash} = Hash.compute_file(path, hash)
     IO.inspect(hash)
   end
 
@@ -113,31 +115,6 @@ defmodule Mix.Tasks.Scenic.Hash do
 
       h ->
         {:ok, h}
-    end
-  end
-
-  defp do_hash_file(path, hash_type) do
-    # start the hash context
-    hash_context = :crypto.hash_init(hash_type)
-
-    # since there is no File.stream option, only File.stream!, catch the error
-    try do
-      # stream the file into the hash
-      hash =
-        File.stream!(path, [], 2048)
-        |> Enum.reduce(hash_context, &:crypto.hash_update(&2, &1))
-        |> :crypto.hash_final()
-        |> Base.url_encode64(padding: false)
-
-      {:ok, hash}
-    rescue
-      err ->
-        :crypto.hash_final(hash_context)
-
-        case err do
-          %{reason: reason} -> {:error, reason}
-          _ -> {:error, :hash}
-        end
     end
   end
 end
