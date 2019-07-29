@@ -155,10 +155,7 @@ defmodule Scenic.Component.Input.Dropdown do
       Enum.reduce(items, 0, fn {text, _}, w ->
         width = FontMetrics.width(text, @default_font_size, fm)
 
-        cond do
-          width > w -> width
-          true -> w
-        end
+        max(w, width)
       end)
 
     width =
