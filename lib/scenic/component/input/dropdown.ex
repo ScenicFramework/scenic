@@ -150,15 +150,12 @@ defmodule Scenic.Component.Input.Dropdown do
     ascent = FontMetrics.ascent(@default_font_size, fm)
     descent = FontMetrics.descent(@default_font_size, fm)
 
-    # find the width of the widest item 
+    # find the width of the widest item
     fm_width =
       Enum.reduce(items, 0, fn {text, _}, w ->
         width = FontMetrics.width(text, @default_font_size, fm)
 
-        cond do
-          width > w -> width
-          true -> w
-        end
+        max(w, width)
       end)
 
     width =
@@ -363,13 +360,7 @@ defmodule Scenic.Component.Input.Dropdown do
     # release the input capture
     ViewPort.release_input(context, [:cursor_button, :cursor_pos])
 
-    graph =
-      state.graph
-      # restore standard highliting
-      |> update_highlighting(items, selected_id, nil, theme)
-      # raise the dropdown
-      |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
-      |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
+    graph = handle_cursor_button(state.graph, items, selected_id, theme)
 
     {:noreply, %{state | down: false, graph: graph}, push: graph}
   end
@@ -421,13 +412,7 @@ defmodule Scenic.Component.Input.Dropdown do
     # release the input capture
     ViewPort.release_input(context, [:cursor_button, :cursor_pos])
 
-    graph =
-      state.graph
-      # restore standard highliting
-      |> update_highlighting(items, selected_id, nil, theme)
-      # raise the dropdown
-      |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
-      |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
+    graph = handle_cursor_button(state.graph, items, selected_id, theme)
 
     {:noreply, %{state | down: false, graph: graph}, push: graph}
   end
@@ -492,5 +477,14 @@ defmodule Scenic.Component.Input.Dropdown do
       {_, regular_id}, g ->
         Graph.modify(g, regular_id, &update_opts(&1, fill: theme.background))
     end)
+  end
+
+  defp handle_cursor_button(graph, items, selected_id, theme) do
+    graph
+    # restore standard highliting
+    |> update_highlighting(items, selected_id, nil, theme)
+    # raise the dropdown
+    |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
+    |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
   end
 end

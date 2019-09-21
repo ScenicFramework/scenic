@@ -503,6 +503,9 @@ defmodule Scenic.Primitives do
         |> text( "I'm in the Group" )
       end, translate: {40,200})
 
+  NOTE: Unlike other primitives, `group/3` currently only takes a graph and not
+  an existing group primitive.
+
   ### Styles
 
   Groups will accept all styles. They don't use the styles directly, but
@@ -524,7 +527,7 @@ defmodule Scenic.Primitives do
           options :: list
         ) :: Graph.t()
 
-  def group(graph_or_primitive, builder, opts \\ [])
+  def group(graph, builder, opts \\ [])
 
   def group(%Graph{} = graph, builder, opts) when is_function(builder, 1) do
     Primitive.Group.add_to_graph(graph, builder, opts)

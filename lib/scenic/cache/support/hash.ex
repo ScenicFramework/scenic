@@ -115,6 +115,15 @@ defmodule Scenic.Cache.Support.Hash do
   defp do_compute_file(_, _, false), do: {:error, :invalid_hash_type}
 
   defp do_compute_file(path, hash_type, true) do
+    compute_file(path, hash_type)
+  end
+
+  @doc """
+  Compute hash for the given file
+  """
+  @spec file(path :: bitstring, type :: hash_type) ::
+          {:ok, bitstring()} | {:error, :invalid_hash_type}
+  def compute_file(path, hash_type) do
     # start the hash context
     hash_context = :crypto.hash_init(hash_type)
 
