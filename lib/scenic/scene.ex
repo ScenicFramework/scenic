@@ -681,7 +681,8 @@ defmodule Scenic.Scene do
                      handle_input: 3,
                      filter_event: 3,
                      start_dynamic_scene: 3,
-                     terminate: 2
+                     terminate: 2,
+                     child_spec: 1
 
       # quote
     end
@@ -697,13 +698,17 @@ defmodule Scenic.Scene do
 
   @doc false
   def child_spec({scene_module, args, opts}) do
-    %{
-      id: make_ref(),
-      start: {__MODULE__, :start_link, [scene_module, args, opts]},
-      type: :worker,
-      restart: :permanent,
-      shutdown: 500
-    }
+    if function_exported?(scene_module, :child_spec, 1) do
+      scene_module.child_spec({args, opts})
+    else
+      %{
+        id: make_ref(),
+        start: {__MODULE__, :start_link, [scene_module, args, opts]},
+        type: :worker,
+        restart: :permanent,
+        shutdown: 500
+      }
+    end
   end
 
   # ============================================================================
