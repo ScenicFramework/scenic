@@ -6,6 +6,7 @@
 defmodule Scenic.Cache.Static.Font do
   use Scenic.Cache.Base, name: "font", static: true
   alias Scenic.Cache.Support
+  require Logger
 
   # import IEx
 
@@ -176,6 +177,7 @@ defmodule Scenic.Cache.Static.Font do
           {:ok, hash}
         else
           err ->
+            Logger.error("Could not load font at #{font_folder}: #{inspect(err)}")
             err
         end
     end

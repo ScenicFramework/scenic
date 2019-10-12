@@ -9,6 +9,7 @@ defmodule Scenic.Cache.Static.FontTest do
   alias Scenic.Cache.Base
   alias Scenic.Cache.Static.Font
   alias Scenic.Cache.Support
+  import ExUnit.CaptureLog
 
   @folder File.cwd!()
           |> Path.join("test/artifacts")
@@ -115,11 +116,15 @@ defmodule Scenic.Cache.Static.FontTest do
   end
 
   test "load passes through errors" do
-    assert Font.load("wrong/path", @hash) ==
-             {:error, :not_found}
+    assert capture_log(fn ->
+             assert Font.load("wrong/path", @hash) ==
+                      {:error, :not_found}
+           end) =~ "Could not load font at"
 
-    assert Font.load(@folder, "bad_hash") ==
-             {:error, :hash_failure}
+    assert capture_log(fn ->
+             assert Font.load(@folder, "bad_hash") ==
+                      {:error, :hash_failure}
+           end) =~ "Could not load font at"
   end
 
   # ============================================================================

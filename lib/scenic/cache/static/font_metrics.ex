@@ -6,6 +6,7 @@
 defmodule Scenic.Cache.Static.FontMetrics do
   use Scenic.Cache.Base, name: "font_metrics", static: true
   alias Scenic.Cache.Support
+  require Logger
 
   @moduledoc """
   In memory cache for static font_metrics assets.
@@ -225,7 +226,9 @@ defmodule Scenic.Cache.Static.FontMetrics do
              {:ok, metrics} <- FontMetrics.from_binary(data) do
           put_new(hash, metrics, opts[:scope])
         else
-          err -> err
+          err ->
+            Logger.error("Could not load font metrics at #{path}: #{inspect(err)}")
+            err
         end
     end
   end
