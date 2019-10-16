@@ -64,7 +64,6 @@ In your scene, you need to make load both the `\*.metrics` file into the `Scenic
 
 
 ```elixir
-@font_folder :code.priv_dir(:my_app) |> Path.join("/static/fonts")
 @custom_font_hash "0IXAWqFTtjn6MKSgQOzxUgxNKGrmyhqz1e2d90PVHck"
 @custom_metrics_path :code.priv_dir(:scenic_example)
            |> Path.join("/static/fonts/Roboto_Slab/RobotoSlab-Regular.ttf.metrics")
@@ -72,8 +71,12 @@ In your scene, you need to make load both the `\*.metrics` file into the `Scenic
 
 def init(_, _opts) do
   # load the custom font
-  Cache.Static.Font.load(@font_folder, @custom_font_hash)
-  Cache.Static.FontMetrics.load(@custom_metrics_path, @custom_metrics_hash)
+  font_folder = :code.priv_dir(:my_app) |> Path.join("/static/fonts")
+  custom_metrics_path = :code.priv_dir(:scenic_example)
+           |> Path.join("/static/fonts/Roboto_Slab/RobotoSlab-Regular.ttf.metrics")
+  
+  Cache.Static.Font.load(font_folder, @custom_font_hash)
+  Cache.Static.FontMetrics.load(custom_metrics_path, @custom_metrics_hash)
 
   # no need to put the graph into state as we won't be using it again
   {:ok, nil, push: @graph}

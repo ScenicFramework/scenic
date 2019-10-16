@@ -9,6 +9,7 @@ defmodule Scenic.Cache.Static.FontMetricsTest do
   alias Scenic.Cache.Base
   alias Scenic.Cache.Static
   alias Scenic.Cache.Support
+  import ExUnit.CaptureLog
 
   @base_path :code.priv_dir(:scenic)
              |> Path.join("static/font_metrics")
@@ -112,11 +113,15 @@ defmodule Scenic.Cache.Static.FontMetricsTest do
   end
 
   test "load passes through errors" do
-    assert Static.FontMetrics.load("wrong/path", @roboto_hash) ==
-             {:error, :enoent}
+    assert capture_log(fn ->
+             assert Static.FontMetrics.load("wrong/path", @roboto_hash) ==
+                      {:error, :enoent}
+           end) =~ "Could not load font metrics at"
 
-    assert Static.FontMetrics.load(@roboto_path, "bad_hash") ==
-             {:error, :hash_failure}
+    assert capture_log(fn ->
+             assert Static.FontMetrics.load(@roboto_path, "bad_hash") ==
+                      {:error, :hash_failure}
+           end) =~ "Could not load font metrics at"
   end
 
   # ============================================================================
