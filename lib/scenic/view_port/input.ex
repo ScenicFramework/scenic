@@ -499,9 +499,9 @@ defmodule Scenic.ViewPort.Input do
   # ============================================================================
   # regular input helper utilties
 
-  defp send_exit_message(%{hover_primitve: nil} = state), do: state
+  defp send_exit_message(%{hover_primitive: nil} = state), do: state
 
-  defp send_exit_message(%{hover_primitve: {uid, graph_key}} = state) do
+  defp send_exit_message(%{hover_primitive: {uid, graph_key}} = state) do
     Scene.cast(
       graph_key,
       {
@@ -511,13 +511,13 @@ defmodule Scenic.ViewPort.Input do
       }
     )
 
-    %{state | hover_primitve: nil}
+    %{state | hover_primitive: nil}
   end
 
-  defp send_enter_message(uid, id, graph_key, %{hover_primitve: hover_primitve} = state) do
-    # first, send the previous hover_primitve an exit message
+  defp send_enter_message(uid, id, graph_key, %{hover_primitive: hover_primitive} = state) do
+    # first, send the previous hover_primitive an exit message
     state =
-      case hover_primitve do
+      case hover_primitive do
         nil ->
           # no previous hover_primitive set. do not send an exit message
           state
@@ -531,9 +531,9 @@ defmodule Scenic.ViewPort.Input do
           send_exit_message(state)
       end
 
-    # send the new hover_primitve an enter message
+    # send the new hover_primitive an enter message
     state =
-      case state.hover_primitve do
+      case state.hover_primitive do
         nil ->
           # yes. setting a new one. send it.
           Scene.cast(
@@ -545,7 +545,7 @@ defmodule Scenic.ViewPort.Input do
             }
           )
 
-          %{state | hover_primitve: {uid, graph_key}}
+          %{state | hover_primitive: {uid, graph_key}}
 
         _ ->
           # not setting a new one. do nothing.

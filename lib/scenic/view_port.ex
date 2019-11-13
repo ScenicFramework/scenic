@@ -463,7 +463,7 @@ defmodule Scenic.ViewPort do
       dynamic_root_pid: nil,
       root_config: nil,
       input_captures: %{},
-      hover_primitve: nil,
+      hover_primitive: nil,
       drivers: [],
       driver_registry: %{},
       supervisor: vp_supervisor,
@@ -512,7 +512,7 @@ defmodule Scenic.ViewPort do
     # prep state, which is mostly about resetting input
     state =
       state
-      |> Map.put(:hover_primitve, nil)
+      |> Map.put(:hover_primitive, nil)
       |> Map.put(:input_captures, %{})
 
     # fetch the dynamic supervisor
