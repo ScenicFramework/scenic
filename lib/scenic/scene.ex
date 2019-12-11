@@ -1384,11 +1384,17 @@ defmodule Scenic.Scene do
 
           # prepare the startup options to send to the new scene
           id = Map.get(raw_graph.primitives[uid], :id)
+          name = Map.get(raw_graph.primitives[uid], :name)
 
           init_opts =
             case viewport do
               nil -> [styles: styles, id: id]
               vp -> [viewport: vp, styles: styles, id: id]
+            end
+          init_opts =
+            case name do
+              nil -> init_opts
+              value -> [{:name, value} | init_opts]
             end
 
           # start the dynamic scene
