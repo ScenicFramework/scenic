@@ -11,10 +11,9 @@ Nerves/Linux, and more.
 Scenic is primarily aimed at fixed screen connected devices (IoT), but can also
 be used to build portable applications.
 
-## Getting Started
+See the [getting started guide](https://hexdocs.pm/scenic/getting_started.html) and the [online documentation](https://hexdocs.pm/scenic/) for more information. Other resources available are:
 
-See the [documentation for the scenic.new](https://github.com/boydm/scenic_new)
-mix task.
+- [Introducing Scenic](https://www.youtube.com/watch?v=1QNxLNMq3Uw), a video from ElixirConf 2018, which introduces Scenic and the problems it strives to solve.
 
 ## Goals
 
