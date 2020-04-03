@@ -811,7 +811,7 @@ defmodule Scenic.Primitives do
 
       graph
       |> quad( {{10,20}, {100,20}, {90, 120}, {15, 70}},
-        fill, :red, stroke: {3, :blue}, join: :round )
+        fill: :red, stroke: {3, :blue}, join: :round )
 
   """
   @spec quad(
