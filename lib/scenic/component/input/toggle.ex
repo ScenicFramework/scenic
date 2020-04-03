@@ -1,10 +1,57 @@
 defmodule Scenic.Component.Input.Toggle do
   @moduledoc """
-  An on/off toggle component
+  Add toggle to a Scenic graph.
 
-  See the [Components](Scenic.Toggle.Components.html#toggle/2) module for usage
+  ## Data
+
+  `on?`
+
+  * `on?` - `true` if the toggle is on, pass `false` if not.
+
+  ## Styles
+
+  Toggles honor the following styles. The `:light` and `:dark` styles look nice. The other bundled themes...not so much. You can also [supply your own theme](Scenic.Toggle.Components.html#toggle/3-theme).
+
+  * `:hidden` - If `false` the toggle is rendered. If true, it is skipped. The default
+    is `false`.
+  * `:theme` - The color set used to draw. See below. The default is `:dark`
+
+  ## Additional Styles
+
+  Toggles also honor the following additional styles.
+
+  * `:border_width` - the border width. Defaults to `2`.
+  * `:padding` - the space between the border and the thumb. Defaults to `2`
+  * `:thumb_radius` - the radius of the thumb. This determines the size of the entire toggle. Defaults to `10`.
+
+  ## Theme
+
+  To pass in a custom theme, supply a map with at least the following entries:
+
+  * `:border` - the color of the border around the toggle
+  * `:background` - the color of the track when the toggle is `off`.
+  * `:text` - the color of the thumb.
+  * `:thumb` - the color of the track when the toggle is `on`.
+
+  Optionally, you can supply the following entries:
+
+  * `:thumb_pressed` - the color of the thumb when pressed. Defaults to `:gainsboro`.
+
+  ## Usage
+
+  You should add/modify components via the helper functions in
+  [`Scenic.Components`](Scenic.Components.html#toggle/3)
+
+  ## Examples
+
+  The following example creates a toggle.
+      graph
+      |> toggle(true, translate: {20, 20})
+
+  The next example makes a larger toggle.
+      graph
+      |> toggle(true, translate: {20, 20}, thumb_radius: 14)
   """
-
   use Scenic.Component, has_children: false
 
   alias Scenic.Graph
@@ -48,7 +95,8 @@ defmodule Scenic.Component.Input.Toggle do
           }
   end
 
-  #  #--------------------------------------------------------
+  # --------------------------------------------------------
+  @doc false
   def info(data) do
     """
     #{IO.ANSI.red()}Toggle data must be: on?
@@ -58,6 +106,7 @@ defmodule Scenic.Component.Input.Toggle do
   end
 
   # --------------------------------------------------------
+  @doc false
   @spec verify(any) :: {:ok, boolean} | :invalid_data
   def verify(on? = data) when is_boolean(on?) do
     {:ok, data}
@@ -66,6 +115,7 @@ defmodule Scenic.Component.Input.Toggle do
   def verify(_), do: :invalid_data
 
   # --------------------------------------------------------
+  @doc false
   @spec init(any, Keyword.t() | map | nil) :: {:ok, State.t()}
   def init(on?, opts) do
     id = opts[:id]
@@ -142,23 +192,22 @@ defmodule Scenic.Component.Input.Toggle do
       color: color
     }
 
-    push_graph(graph)
-
-    {:ok, state}
+    {:ok, state, push: graph}
   end
 
   # --------------------------------------------------------
+  @doc false
   def handle_input({:cursor_enter, _uid}, _, %{pressed?: true} = state) do
     state = Map.put(state, :contained?, true)
     graph = update_graph(state)
-    {:noreply, %{state | graph: graph}}
+    {:noreply, %{state | graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
   def handle_input({:cursor_exit, _uid}, _, %{pressed?: true} = state) do
     state = Map.put(state, :contained?, false)
     graph = update_graph(state)
-    {:noreply, %{state | graph: graph}}
+    {:noreply, %{state | graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -172,7 +221,7 @@ defmodule Scenic.Component.Input.Toggle do
 
     ViewPort.capture_input(context, [:cursor_button, :cursor_pos])
 
-    {:noreply, %{state | graph: graph}}
+    {:noreply, %{state | graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -199,7 +248,7 @@ defmodule Scenic.Component.Input.Toggle do
 
     graph = update_graph(state)
 
-    {:noreply, %{state | graph: graph}}
+    {:noreply, %{state | graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -225,19 +274,16 @@ defmodule Scenic.Component.Input.Toggle do
           Graph.modify(graph, :thumb, &Primitive.put_style(&1, :fill, color.thumb.default))
       end
 
-    graph =
-      case on? do
-        true ->
-          graph
-          |> Graph.modify(:track, &Primitive.put_style(&1, :fill, color.track.on))
-          |> Graph.modify(:thumb, &Primitive.put_transform(&1, :translate, thumb_translate.on))
+    case on? do
+      true ->
+        graph
+        |> Graph.modify(:track, &Primitive.put_style(&1, :fill, color.track.on))
+        |> Graph.modify(:thumb, &Primitive.put_transform(&1, :translate, thumb_translate.on))
 
-        false ->
-          graph
-          |> Graph.modify(:track, &Primitive.put_style(&1, :fill, color.track.off))
-          |> Graph.modify(:thumb, &Primitive.put_transform(&1, :translate, thumb_translate.off))
-      end
-
-    push_graph(graph)
+      false ->
+        graph
+        |> Graph.modify(:track, &Primitive.put_style(&1, :fill, color.track.off))
+        |> Graph.modify(:thumb, &Primitive.put_transform(&1, :translate, thumb_translate.off))
+    end
   end
 end

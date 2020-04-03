@@ -1,5 +1,5 @@
 #
-#  Created by Boyd Multerer on September 18, 2018
+#  Created by Boyd Multerer on 2018-09-18.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 
@@ -48,46 +48,51 @@ defmodule Scenic.Component.Input.RadioButtonTest do
   # init
 
   test "init works with simple data" do
-    {:ok, state} = RadioButton.init({"Title", :test_id}, styles: %{})
+    {:ok, state, push: graph} = RadioButton.init({"Title", :test_id}, styles: %{})
     %Graph{} = state.graph
+    assert graph == state.graph
     assert is_map(state.theme)
     assert state.contained == false
     assert state.pressed == false
     assert state.checked == false
     assert state.id == :test_id
 
-    {:ok, state} = RadioButton.init({"Title", :test_id, false}, styles: %{}, id: :test_id)
-    assert state.checked == false
+    {:ok, state, push: graph} =
+      RadioButton.init({"Title", :test_id, false}, styles: %{}, id: :test_id)
 
-    {:ok, state} = RadioButton.init({"Title", :test_id, true}, styles: %{}, id: :test_id)
+    assert state.checked == false
+    assert graph == state.graph
+
+    {:ok, state, push: graph} =
+      RadioButton.init({"Title", :test_id, true}, styles: %{}, id: :test_id)
+
     assert state.checked == true
+    assert graph == state.graph
   end
 
   # ============================================================================
   # handle_input
 
   test "handle_input {:cursor_enter, _uid} sets contained" do
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       RadioButton.handle_input({:cursor_enter, 1}, %{}, %{@state | pressed: true})
 
     assert state.contained
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert graph == state.graph
   end
 
   test "handle_input {:cursor_exit, _uid} clears contained" do
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       RadioButton.handle_input({:cursor_exit, 1}, %{}, %{@state | pressed: true})
 
     refute state.contained
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert graph == state.graph
   end
 
   test "handle_input {:cursor_button, :press" do
     context = %ViewPort.Context{viewport: self()}
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       RadioButton.handle_input({:cursor_button, {:left, :press, nil, nil}}, context, %{
         @state
         | pressed: false,
@@ -98,14 +103,13 @@ defmodule Scenic.Component.Input.RadioButtonTest do
 
     # confirm the input was captured
     assert_receive({:"$gen_cast", {:capture_input, ^context, [:cursor_button, :cursor_pos]}})
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert graph == state.graph
   end
 
   test "handle_input {:cursor_button, :release" do
     context = %ViewPort.Context{viewport: self()}
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       RadioButton.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
         @state
         | pressed: true,
@@ -117,8 +121,7 @@ defmodule Scenic.Component.Input.RadioButtonTest do
     # confirm the input was released
     assert_receive({:"$gen_cast", {:release_input, [:cursor_button, :cursor_pos]}})
 
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert graph == state.graph
   end
 
   test "handle_input {:cursor_button, :release sends a message if contained" do
@@ -126,15 +129,14 @@ defmodule Scenic.Component.Input.RadioButtonTest do
     Process.put(:parent_pid, self)
     context = %ViewPort.Context{viewport: self()}
 
-    {:noreply, _} =
+    {:noreply, state, push: graph} =
       RadioButton.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
         @state
         | pressed: true,
           contained: true
       })
 
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:event, {:click, :test_id}, ^self}})
+    assert graph == state.graph
   end
 
   test "handle_input does nothing on unknown input" do

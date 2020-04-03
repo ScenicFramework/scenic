@@ -1,10 +1,33 @@
 #
-#  Created by Boyd Multerer on 5/6/17.
+#  Created by Boyd Multerer on 2017-05-06.
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Group do
-  @moduledoc false
+  @moduledoc """
+  A container to hold other primitives.
+
+  Any styles placed on a group will be inherited by the primitives in the 
+  group. Any transforms placed on a group will be multiplied into the transforms
+  in the primitives in the group.
+
+  ## Data
+
+  `uids`
+
+  The data for an arc is a list of internal uids for the primitives it contains
+
+
+  ## Styles
+
+  The group is special in that it accepts all styles and transforms, even if they
+  are non-standard. These are then inherited by any primitives, including SceneRefs
+
+  ## Usage
+
+  You should add/modify primitives via the helper functions in
+  [`Scenic.Primitives`](Scenic.Primitives.html#group/3)
+  """
 
   use Scenic.Primitive
   alias Scenic.Primitive
@@ -15,6 +38,7 @@ defmodule Scenic.Primitive.Group do
   # data verification and serialization
 
   # --------------------------------------------------------
+  @doc false
   def build(nil, opts), do: build([], opts)
 
   def build(ids, opts) do
@@ -23,6 +47,7 @@ defmodule Scenic.Primitive.Group do
   end
 
   # --------------------------------------------------------
+  @doc false
   def info(data),
     do: """
       #{IO.ANSI.red()}#{__MODULE__} data must be a list of valid uids of other elements in the graph.
@@ -31,6 +56,7 @@ defmodule Scenic.Primitive.Group do
     """
 
   # --------------------------------------------------------
+  @doc false
   def verify(ids) when is_list(ids) do
     if Enum.all?(ids, &is_integer/1), do: {:ok, ids}, else: :invalid_data
   end
@@ -40,6 +66,9 @@ defmodule Scenic.Primitive.Group do
   # ============================================================================
   # filter and gather styles
 
+  @doc """
+  Returns a list of styles recognized by this primitive.
+  """
   @spec valid_styles() :: [:all, ...]
   def valid_styles(), do: [:all]
 

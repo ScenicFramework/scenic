@@ -37,7 +37,16 @@ defmodule Scenic.SceneTest do
 
   defmodule TestSceneTwo do
     use Scenic.Scene
-    def init(_, _), do: {:ok, nil}
+    def init(nil, _), do: {:ok, nil}
+
+    def init(pid, _) when is_pid(pid) do
+      {:ok, pid, continue: :continued}
+    end
+
+    def handle_continue(:continued, pid) do
+      send(pid, :test_handle_continue)
+      {:noreply, pid}
+    end
   end
 
   # ============================================================================
@@ -73,19 +82,19 @@ defmodule Scenic.SceneTest do
   end
 
   def handle_input({:input_stop, _}, _, _state) do
-    {:stop, :input_stop_state}
+    {:halt, :input_stop_state}
   end
 
   def handle_input({:input_continue, _}, _, _state) do
-    {:continue, :input_continue_state}
+    {:cont, :input_continue_state}
   end
 
   def filter_event(:stop_event, _, _state) do
-    {:stop, :filter_stop_state}
+    {:halt, :filter_stop_state}
   end
 
   def filter_event(:continue_event, _, _state) do
-    {:continue, :continue_event, :filter_continue_state}
+    {:cont, :continue_event, :filter_continue_state}
   end
 
   def handle_cast(msg, state) do
@@ -115,7 +124,7 @@ defmodule Scenic.SceneTest do
     {:ok, pid_scene_1} = GenServer.start(Scene, {TestSceneOne, nil, [scene_ref: scene_ref_1]})
     # prep ref scene 2
     scene_ref_2 = make_ref()
-    {:ok, pid_scene_2} = GenServer.start(Scene, {TestSceneOne, nil, [scene_ref: scene_ref_2]})
+    {:ok, pid_scene_2} = GenServer.start(Scene, {TestSceneTwo, nil, [scene_ref: scene_ref_2]})
 
     # insert the graph we will test later
     graph =
@@ -218,6 +227,8 @@ defmodule Scenic.SceneTest do
 
   test "init call mod.init and returns first round of state" do
     self = self()
+    args = [1, 2, 3]
+    opts = [name: :scene_name, parent: self]
 
     {:ok,
      %{
@@ -233,7 +244,9 @@ defmodule Scenic.SceneTest do
        supervisor_pid: nil,
        dynamic_children_pid: nil,
        activation: @not_activated
-     }} = Scene.init({__MODULE__, [1, 2, 3], [name: :scene_name, parent: self]})
+     },
+     {:continue, {:__scene_init_2__, __MODULE__, ^args, ^opts}}} =
+      Scene.init({__MODULE__, args, opts})
   end
 
   # ============================================================================
@@ -271,18 +284,6 @@ defmodule Scenic.SceneTest do
 
   # ============================================================================
   # handle_cast
-
-  test "handle_cast :after_init inits the scene module" do
-    scene_ref = make_ref()
-    Process.put(:"$ancestors", [self()])
-
-    {:noreply, new_state} =
-      assert Scene.handle_cast({:after_init, __MODULE__, [1, 2, 3], []}, %{
-               scene_ref: scene_ref
-             })
-
-    assert new_state.scene_state == :init_state
-  end
 
   test "handle_cast :input calls the mod input handler, which returns noreply" do
     context = %Scenic.ViewPort.Context{
@@ -381,9 +382,9 @@ defmodule Scenic.SceneTest do
   end
 
   # ============================================================================
-  # handle_cast - push_graph
+  # internal_push_graph
 
-  test "handle_case :push_graph works with no children flag set" do
+  test "internal_push_graph works with has_children flag set to false" do
     # prep the self scene
     scene_ref_0 = make_ref()
     graph_key = {:graph, scene_ref_0, 123}
@@ -402,10 +403,16 @@ defmodule Scenic.SceneTest do
       # explicit graph
       |> scene_ref(graph_key_1)
 
-    {:noreply, state} =
-      assert Scene.handle_cast({:push_graph, graph, 123, false}, %{
-               scene_ref: scene_ref_0
-             })
+    {:ok, _} =
+      Scene.test_push_graph(graph, 123, %{
+        has_children: false,
+        scene_ref: scene_ref_0,
+        raw_scene_refs: %{},
+        dyn_scene_pids: %{},
+        dyn_scene_keys: %{},
+        dynamic_children_pid: self(),
+        viewport: self()
+      })
 
     # inserting the table is async, so wait a bit
     Process.sleep(100)
@@ -416,19 +423,9 @@ defmodule Scenic.SceneTest do
     assert min_graph[1] == %{data: {Scenic.Primitive.Circle, 100}}
     assert min_graph[2] == %{data: {SceneRef, {:graph, :named_scene, nil}}}
     assert min_graph[3] == %{data: {SceneRef, graph_key_1}}
-
-    # should fail to push a graph with a dynamic child
-    graph =
-      Graph.build()
-      |> circle(100)
-      |> button("Should Raise")
-
-    assert_raise Scenic.Scene.Error, fn ->
-      Scene.handle_cast({:push_graph, graph, 123, false}, state)
-    end
   end
 
-  test "handle_case :push_graph works with children flag set" do
+  test "internal_push_graph works with children flag set to true" do
     # prep the self scene
     scene_ref_0 = make_ref()
     graph_key = {:graph, scene_ref_0, 123}
@@ -454,15 +451,16 @@ defmodule Scenic.SceneTest do
       |> button("Button0")
       |> button("Button1", id: :stoppit)
 
-    {:noreply, state} =
-      assert Scene.handle_cast({:push_graph, graph, 123, true}, %{
-               scene_ref: scene_ref_0,
-               raw_scene_refs: %{},
-               dyn_scene_pids: %{},
-               dyn_scene_keys: %{},
-               dynamic_children_pid: dyn_sup,
-               viewport: self()
-             })
+    {:ok, state} =
+      Scene.test_push_graph(graph, 123, %{
+        has_children: true,
+        scene_ref: scene_ref_0,
+        raw_scene_refs: %{},
+        dyn_scene_pids: %{},
+        dyn_scene_keys: %{},
+        dynamic_children_pid: dyn_sup,
+        viewport: self()
+      })
 
     # inserting the table is async, so wait a bit
     Process.sleep(100)
@@ -494,7 +492,7 @@ defmodule Scenic.SceneTest do
       |> button("button2")
       |> Graph.delete(:stoppit)
 
-    {:noreply, _} = assert Scene.handle_cast({:push_graph, graph, 123, true}, state)
+    {:ok, _} = Scene.test_push_graph(graph, 123, state)
 
     # inserting the table is async, so wait a bit
     Process.sleep(100)
@@ -548,5 +546,13 @@ defmodule Scenic.SceneTest do
 
     # cleanup
     DynamicSupervisor.stop(dyn_sup, :normal)
+  end
+
+  # ============================================================================
+  # gen_server abilities
+
+  test "scene can override handle_continue/2" do
+    {:ok, _scene} = GenServer.start(Scene, {TestSceneTwo, self(), []})
+    assert_receive :test_handle_continue
   end
 end

@@ -1,5 +1,5 @@
 #
-#  Created by Boyd Multerer on 04/07/18.
+#  Created by Boyd Multerer on 2018-04-07.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 # Taking the learnings from several previous versions.
@@ -47,11 +47,11 @@ defmodule Scenic.ViewPort do
 
   When user input happens, the drivers send it to the `ViewPort`.
   Input that does not depend on screen position (key presses, audio
-  window events, etc...) Are sent to the root scene unless some other
+  window events, etc.) Are sent to the root scene unless some other
   scene has captured that type of input (see captured input) below.
 
   If the input event does depend on position (cursor position, cursor
-  button presses, scrolling, etc...) then the ViewPort needs to
+  button presses, scrolling, etc.) then the ViewPort needs to
   scan the hierarchical graph of graphs, to find the correct
   scene, and the item in that scene that was "hit". The ViewPort
   then sends the event to that scene, with the position projected
@@ -61,12 +61,12 @@ defmodule Scenic.ViewPort do
   ## CAPTURED INPUT
 
   A scene can request to "capture" all input events of a certain type.
-  this means that all events of that type are sent to a certain
+  This means that all events of that type are sent to a certain
   scene process regardless of position or root. In this way, a
   text input scene nested deep in the tree can capture key presses.
   Or a button can capture cursor_pos events after it has been pressed.
 
-  if a scene has "captured" a position dependent input type, that
+  If a scene has "captured" a position dependent input type, that
   position is projected into the scene's coordinate space before
   sending the event. Note that instead of walking the graph of graphs,
   the transforms provided in the input "context" field are used. You
@@ -149,6 +149,21 @@ defmodule Scenic.ViewPort do
 
   # --------------------------------------------------------
   @doc """
+  Reset a running viewport
+
+  This causes the viewport to rest the original scene as the root,
+  with the original arguments were received with the ViewPort started.
+  """
+  @spec reset(viewport :: GenServer.server()) :: :ok
+  def reset(viewport)
+
+  def reset(viewport)
+      when is_pid(viewport) or (is_atom(viewport) and not is_nil(viewport)) do
+    GenServer.cast(viewport, :reset)
+  end
+
+  # --------------------------------------------------------
+  @doc """
   query the last recorded viewport status
   """
   @spec info(viewport :: GenServer.server()) :: {:ok, ViewPort.Status.t()}
@@ -160,7 +175,7 @@ defmodule Scenic.ViewPort do
 
   # --------------------------------------------------------
   @doc """
-  Set a the root scene/graph of the ViewPort.
+  Set the root scene/graph of the ViewPort.
   """
   @spec set_root(
           viewport :: GenServer.server(),
@@ -214,6 +229,16 @@ defmodule Scenic.ViewPort do
   end
 
   # --------------------------------------------------------
+  @doc """
+  Send raw input to a viewport.
+
+  This is used primarily by drivers to send raw user input to the viewport. Having said that,
+  nothing stops a scene from using it to send input into the system. There are a few cases
+  where that is useful.
+
+  See the [input docs](Scenic.ViewPort.Input.html#t:t/0) for the input formats you can send.
+  """
+
   @spec input(
           viewport :: GenServer.server(),
           input :: ViewPort.Input.t()
@@ -356,7 +381,9 @@ defmodule Scenic.ViewPort do
           root_config: root_config,
           root_scene_pid: root_scene_pid,
           root_graph_key: root_graph_key,
-          size: size
+          size: size,
+          master_styles: styles,
+          master_transforms: transforms
         } = state
       ) do
     status = %ViewPort.Status{
@@ -364,7 +391,9 @@ defmodule Scenic.ViewPort do
       root_config: root_config,
       root_graph: root_graph_key,
       drivers: driver_registry,
-      size: size
+      size: size,
+      styles: styles,
+      transforms: transforms
     }
 
     {:reply, {:ok, status}, state}
@@ -372,6 +401,14 @@ defmodule Scenic.ViewPort do
 
   # ============================================================================
   # handle_cast
+
+  def handle_cast(
+        :reset,
+        %{default_scene: scene, default_scene_activation: activation} = state
+      ) do
+    GenServer.cast(self(), {:set_root, scene, activation})
+    {:noreply, state}
+  end
 
   def handle_cast({:delayed_init, vp_supervisor, config}, _) do
     # find the viewport and associated pids this driver belongs to
@@ -399,7 +436,7 @@ defmodule Scenic.ViewPort do
 
     # extract the viewport global styles. Do this by reusing tools in Primitive.
     p =
-      Primitive.put_opts(
+      Primitive.merge_opts(
         %Primitive{module: Primitive.Group},
         Map.get(config, :opts, [])
       )
@@ -434,8 +471,11 @@ defmodule Scenic.ViewPort do
       max_depth: config.max_depth,
       on_close: on_close,
       master_styles: styles,
+      master_transforms: transforms,
       master_graph: master_graph,
-      master_graph_key: master_graph_key
+      master_graph_key: master_graph_key,
+      default_scene: config.default_scene,
+      default_scene_activation: config.default_scene_activation
     }
 
     # set the initial scene as the root

@@ -1,5 +1,5 @@
 #
-#  Created by Boyd Multerer on July 15, 2018
+#  Created by Boyd Multerer on 2018-07-15.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 
@@ -45,50 +45,61 @@ defmodule Scenic.Component.ButtonTest do
   # init
 
   test "init works with simple data" do
-    {:ok, state} = Button.init("Button", styles: %{}, id: :button_id)
+    {:ok, state, push: graph} = Button.init("Button", styles: %{}, id: :button_id)
     %Graph{} = state.graph
     assert is_map(state.theme)
     assert state.contained == false
     assert state.pressed == false
     assert state.align == :center
     assert state.id == :button_id
+    assert graph == state.graph
   end
 
   test "init works with various alignments" do
-    {:ok, state} = Button.init("Button", [])
+    {:ok, state, push: graph} = Button.init("Button", [])
     %Primitive{styles: %{text_align: :center}} = Graph.get!(state.graph, :title)
+    assert graph == state.graph
 
-    {:ok, state} = Button.init("Button", styles: %{alignment: :left}, id: :button_id)
+    {:ok, state, push: graph} = Button.init("Button", styles: %{alignment: :left}, id: :button_id)
     %Primitive{styles: %{text_align: :left}} = Graph.get!(state.graph, :title)
+    assert graph == state.graph
 
-    {:ok, state} = Button.init("Button", styles: %{alignment: :center}, id: :button_id)
+    {:ok, state, push: graph} =
+      Button.init("Button", styles: %{alignment: :center}, id: :button_id)
+
     %Primitive{styles: %{text_align: :center}} = Graph.get!(state.graph, :title)
+    assert graph == state.graph
 
-    {:ok, state} = Button.init("Button", styles: %{alignment: :right}, id: :button_id)
+    {:ok, state, push: graph} =
+      Button.init("Button", styles: %{alignment: :right}, id: :button_id)
+
     %Primitive{styles: %{text_align: :right}} = Graph.get!(state.graph, :title)
+    assert graph == state.graph
   end
 
   # ============================================================================
   # handle_input
 
   test "handle_input {:cursor_enter, _uid} sets contained" do
-    {:noreply, state} = Button.handle_input({:cursor_enter, 1}, %{}, %{@state | pressed: true})
+    {:noreply, state, push: graph} =
+      Button.handle_input({:cursor_enter, 1}, %{}, %{@state | pressed: true})
+
     assert state.contained
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert graph == state.graph
   end
 
   test "handle_input {:cursor_exit, _uid} clears contained" do
-    {:noreply, state} = Button.handle_input({:cursor_exit, 1}, %{}, %{@state | pressed: true})
+    {:noreply, state, push: graph} =
+      Button.handle_input({:cursor_exit, 1}, %{}, %{@state | pressed: true})
+
     refute state.contained
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert graph == state.graph
   end
 
   test "handle_input {:cursor_button, :press" do
     context = %ViewPort.Context{viewport: self()}
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       Button.handle_input({:cursor_button, {:left, :press, nil, nil}}, context, %{
         @state
         | pressed: false,
@@ -96,17 +107,16 @@ defmodule Scenic.Component.ButtonTest do
       })
 
     assert state.pressed
+    assert graph == state.graph
 
     # confirm the input was captured
     assert_receive({:"$gen_cast", {:capture_input, ^context, [:cursor_button, :cursor_pos]}})
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
   end
 
   test "handle_input {:cursor_button, :release" do
     context = %ViewPort.Context{viewport: self()}
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       Button.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
         @state
         | pressed: true,
@@ -114,12 +124,10 @@ defmodule Scenic.Component.ButtonTest do
       })
 
     refute state.pressed
+    assert graph == state.graph
 
     # confirm the input was released
     assert_receive({:"$gen_cast", {:release_input, [:cursor_button, :cursor_pos]}})
-
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
   end
 
   test "handle_input {:cursor_button, :release sends a message if contained" do
@@ -127,15 +135,14 @@ defmodule Scenic.Component.ButtonTest do
     Process.put(:parent_pid, self)
     context = %ViewPort.Context{viewport: self()}
 
-    {:noreply, _} =
+    {:noreply, state, push: graph} =
       Button.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
         @state
         | pressed: true,
           contained: true
       })
 
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:event, {:click, :test_id}, ^self}})
+    assert graph == state.graph
   end
 
   test "handle_input does nothing on unknown input" do

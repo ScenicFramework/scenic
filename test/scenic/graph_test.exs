@@ -1,5 +1,5 @@
 #
-#  Created by Boyd Multerer on 5/6/17.
+#  Created by Boyd Multerer on 2017-05-06.
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
@@ -22,7 +22,6 @@ defmodule Scenic.GraphTest do
   @tx_rot 0.1
   @transform %{pin: @tx_pin, rotate: @tx_rot}
 
-  @empty_root Group.build()
   @graph_empty Graph.build()
 
   @graph_find Graph.build()
@@ -42,13 +41,32 @@ defmodule Scenic.GraphTest do
                  |> Text.add_to_graph("text", id: :text)
                  |> Line.add_to_graph({{30, 30}, {300, 300}}, id: :line)
 
+  @graph_delete Graph.build()
+                |> Text.add_to_graph("Some sample text", id: :outer_text)
+                |> Line.add_to_graph({{10, 10}, {100, 100}}, id: :outer_line)
+                |> Group.add_to_graph(
+                  fn g ->
+                    g
+                    |> Text.add_to_graph("inner text", id: :inner_text)
+                    |> Line.add_to_graph({{10, 10}, {100, 100}}, id: :inner_line)
+                    |> Group.add_to_graph(
+                      fn h ->
+                        h
+                        |> Text.add_to_graph("deep text", id: :deep_text)
+                      end,
+                      id: :inner_group
+                    )
+                  end,
+                  id: :group
+                )
+
   # ============================================================================
   # access to the basics. These concentrate knowledge of the internal format
   # into just a few functions
 
-  test "get_root returns the root node" do
-    assert Graph.get_root(@graph_empty) == @empty_root
-  end
+  # test "get_root returns the root node" do
+  #   assert Graph.get_root(@graph_empty) == @empty_root
+  # end
 
   # ============================================================================
   # build
@@ -110,6 +128,37 @@ defmodule Scenic.GraphTest do
     assert Map.get(graph, :max_depth) == 1
   end
 
+  test "build uses default font and font_size" do
+    graph = Graph.build()
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font) == :roboto
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font_size) == 24
+  end
+
+  test "build honors fonts and font_sizes set directly" do
+    graph = Graph.build(font: :roboto_mono, font_size: 12)
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font) == :roboto_mono
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font_size) == 12
+  end
+
+  test "build honors fonts and font_sizes set in styles" do
+    styles = %{font: :roboto_mono, font_size: 12}
+    graph = Graph.build(styles: styles)
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font) == :roboto_mono
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font_size) == 12
+  end
+
+  test "build honors font info set in styles and directly by order" do
+    styles = %{font: :roboto_mono, font_size: 12}
+    graph = Graph.build(styles: styles, font_size: 13)
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font) == :roboto_mono
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font_size) == 13
+
+    styles = %{font: :roboto_mono, font_size: 12}
+    graph = Graph.build(font_size: 13, styles: styles)
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font) == :roboto_mono
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font_size) == 12
+  end
+
   # ============================================================================
   # get - retrieve a primitive (or primtives) from a graph given an id
 
@@ -162,6 +211,26 @@ defmodule Scenic.GraphTest do
 
     # confirm the parent reference is cleared
     refute Enum.member?(deleted.primitives[puid].data, uid)
+  end
+
+  test "delete a group removes group children" do
+    [tuid] = @graph_delete.ids[:inner_text]
+    [luid] = @graph_delete.ids[:inner_line]
+    [guid] = @graph_delete.ids[:inner_group]
+    [duid] = @graph_delete.ids[:deep_text]
+    refute @graph_delete.primitives[tuid] == nil
+    refute @graph_delete.primitives[luid] == nil
+    refute @graph_delete.primitives[guid] == nil
+    refute @graph_delete.primitives[duid] == nil
+    deleted = Graph.delete(@graph_delete, :group)
+    assert Graph.get(deleted, :inner_text) == []
+    assert deleted.ids[:inner_text] == nil
+    assert Graph.get(deleted, :inner_line) == []
+    assert deleted.ids[:inner_line] == nil
+    assert Graph.get(deleted, :inner_group) == []
+    assert deleted.ids[:inner_group] == nil
+    assert Graph.get(deleted, :deep_text) == []
+    assert deleted.ids[:deep_text] == nil
   end
 
   # ============================================================================
@@ -233,6 +302,25 @@ defmodule Scenic.GraphTest do
     assert_raise Graph.Error, fn ->
       Graph.get!(@graph_ordered, :line)
     end
+  end
+
+  # ============================================================================
+  test "find returns the matching items" do
+    graph =
+      Graph.build()
+      |> Text.add_to_graph("text one", id: {:a, :one})
+      |> Text.add_to_graph("text two", id: {:a, :two})
+      |> Text.add_to_graph("text three", id: {:b, :three})
+
+    # confirm result
+    assert Graph.find(graph, &match?({:a, _}, &1)) == [
+             Graph.get!(graph, {:a, :one}),
+             Graph.get!(graph, {:a, :two})
+           ]
+
+    assert Graph.find(graph, &match?({:b, _}, &1)) == [
+             Graph.get!(graph, {:b, :three})
+           ]
   end
 
   # ============================================================================
@@ -461,6 +549,77 @@ defmodule Scenic.GraphTest do
   end
 
   # ============================================================================
+  # add_to
+
+  test "add_to adds to a specified group in a graph via a builder callback" do
+    import Scenic.Primitives
+
+    graph =
+      Graph.build()
+      |> group(fn g -> g end, id: :group_0)
+      |> group(fn g -> g end, id: :group_1)
+      |> group(fn g -> g end, id: :group_1)
+
+    assert graph.ids == %{_root_: [0], group_0: [1], group_1: [3, 2]}
+    assert graph.primitives[1].data == []
+    assert graph.primitives[2].data == []
+    assert graph.primitives[3].data == []
+
+    # add to one
+    graph_out =
+      Graph.add_to(graph, :group_0, fn g ->
+        line(g, {{0, 0}, {12, 23}}, id: :added_line)
+      end)
+
+    assert graph_out.add_to == 0
+    assert graph_out.primitives[1].data == [4]
+    assert graph_out.primitives[2].data == []
+    assert graph_out.primitives[3].data == []
+    assert graph_out.primitives[4].data == {{0, 0}, {12, 23}}
+    refute graph_out.primitives[5]
+
+    # add to multiple
+    graph_out =
+      Graph.add_to(graph, :group_1, fn g ->
+        line(g, {{0, 0}, {12, 23}}, id: :added_line)
+      end)
+
+    assert graph_out.add_to == 0
+    assert graph_out.primitives[1].data == []
+    assert graph_out.primitives[2].data == [5]
+    assert graph_out.primitives[3].data == [4]
+    assert graph_out.primitives[4].data == {{0, 0}, {12, 23}}
+    assert graph_out.primitives[5].data == {{0, 0}, {12, 23}}
+    refute graph_out.primitives[6]
+  end
+
+  test "add_to ignores adding to non-groups" do
+    import Scenic.Primitives
+
+    graph =
+      Graph.build()
+      |> line({{0, 0}, {12, 23}}, id: :line)
+
+    assert Graph.add_to(graph, :line, fn g ->
+             line(g, {{0, 0}, {12, 23}}, id: :added_line)
+           end) == graph
+  end
+
+  test "add_to raises if builder returns a non graph" do
+    import Scenic.Primitives
+
+    graph =
+      Graph.build()
+      |> group(fn g -> g end, id: :group_0)
+      |> group(fn g -> g end, id: :group_1)
+      |> group(fn g -> g end, id: :group_1)
+
+    assert_raise Graph.Error, fn ->
+      Graph.add_to(graph, :group_0, fn _ -> 123 end)
+    end
+  end
+
+  # ============================================================================
   # def modify( graph, uid, action )
 
   test "modify transforms a single primitive by developer id" do
@@ -530,6 +689,25 @@ defmodule Scenic.GraphTest do
 
     rect = graph.primitives[uid]
     assert Primitive.get_styles(rect) == %{fill: :red, stroke: {10, :blue}}
+  end
+
+  test "modify transforms a via a match function" do
+    graph =
+      Graph.build()
+      |> Text.add_to_graph("text one", id: {:a, :one})
+      |> Text.add_to_graph("text two", id: {:a, :two})
+      |> Text.add_to_graph("text three", id: {:b, :three})
+
+    # modify the element by assigning a transform to it
+    graph =
+      Graph.modify(graph, &match?({:a, _}, &1), fn p ->
+        Primitive.put_transforms(p, @transform)
+      end)
+
+    # confirm result
+    assert Map.get(Graph.get!(graph, {:a, :one}), :transforms) == @transform
+    assert Map.get(Graph.get!(graph, {:a, :two}), :transforms) == @transform
+    refute Map.get(Graph.get!(graph, {:b, :three}), :transforms)
   end
 
   # ============================================================================

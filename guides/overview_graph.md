@@ -3,7 +3,7 @@
 The most important state a Scene is responsible for is its Graph. The Graph
 defines what is to be drawn to the screen, any referenced components, and the
 overall draw order. When a Scene decides the graph is ready to be drawn to the
-screen, it pushes it to the Viewport.
+screen, it pushes it to the ViewPort.
 
 Graphs are made out of a handful of primitives, each of which knows how to draw
 one thing. When multiple primitives are put together, almost any standard UI can be drawn.
@@ -12,7 +12,7 @@ For example, the graph below shows the words "Hello World" around them.
 
     @graph Graph.build(font: :roboto, font_size: 24)
       |> text("Hello World", text_align: center, translate: {300, 300})
-      |> circle(100, stroke: {2, :green} translate: {300, 300})
+      |> circle(100, stroke: {2, :green}, translate: {300, 300})
 
 In the example above, the first line creates a new graph and assigns two font styles to its root. The next two lines form a pipeline that adds primitives to the root
 node of the new graph. Each of these primitives also assigns styles.
@@ -49,7 +49,7 @@ The final type of primitive control is transforms. Unlike html, which uses auto-
 
 A [matrix](https://en.wikipedia.org/wiki/Matrix_(mathematics)) is an array of numbers that can be used to change the positions, rotations, scale and more of locations.
 
-**Don’t worry!** You will not need to look at any matrices unless you want to get fancy. In Scenic, you will rarely (if ever) create matrices on your own (you can if you know what you are doing!), and will instead use the transform helpers.
+**Don't worry!** You will not need to look at any matrices unless you want to get fancy. In Scenic, you will rarely (if ever) create matrices on your own (you can if you know what you are doing!), and will instead use the transform helpers.
 
 [You can read about the transform types here.](overview_transforms.html)
 
@@ -84,9 +84,8 @@ This time, we've assigned ids to both of the text primitives. This makes it easy
       @graph
       |> Graph.modify( :small_text, &text(&1, "Smaller Hello", font_size: 16))
       |> Graph.modify( :big_text, &text(&1, "Bigger Hello", font_size: 60))
-      |> push_graph()
 
-Notice that the graph is modified multiple times in the pipeline. The `push_graph/1` function is relatively heavy when the graph references other scenes. The recommended pattern is to make multiple changes to the graph and then push once at the end.
+Notice that the graph is modified multiple times in the pipeline.
 
 
 ## What to read next?

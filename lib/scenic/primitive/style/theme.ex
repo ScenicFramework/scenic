@@ -1,5 +1,5 @@
 #
-#  Created by Boyd Multerer on August 18 2018.
+#  Created by Boyd Multerer on 2018-08-18.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 
@@ -12,6 +12,27 @@ defmodule Scenic.Primitive.Style.Theme do
 
   Unlike other styles, these are a guide to the components.
   Each component gets to pick, choose, or ignore any colors in a given style.
+
+  ## Main Predefined Themes
+  * `:dark` - This is the default and most common. Use when the background is dark.
+  * `:light` - Use when the background is light colored.
+
+  ## Specialty Themes
+
+  The remaining themes are designed to color the standard components and don't really
+  make much sense when applied to the root of a graph. You could, but it would be...
+  interesting.
+
+  The most obvious place to use them is with [`Button`](Scenic.Component.Button.html)
+  components.
+
+  * `:primary` - Blue background. This is the primary button type indicator.
+  * `:secondary` - Grey background. Not primary type indicator.
+  * `:success` - Green background.
+  * `:danger` - Red background. Use for irreversible or dangerous actions.
+  * `:warning` - Orange background.
+  * `:info` - Lightish blue background.
+  * `:text` - Transparent background.
   """
 
   use Scenic.Primitive.Style
@@ -60,6 +81,7 @@ defmodule Scenic.Primitive.Style.Theme do
   # data verification and serialization
 
   # --------------------------------------------------------
+  @doc false
   def info(data),
     do: """
       #{IO.ANSI.red()}#{__MODULE__} data must either a preset theme or a map of named colors
@@ -75,6 +97,7 @@ defmodule Scenic.Primitive.Style.Theme do
     """
 
   # --------------------------------------------------------
+  @doc false
   def verify(name) when is_atom(name), do: Map.has_key?(@themes, name)
 
   def verify(custom) when is_map(custom) do
@@ -84,9 +107,11 @@ defmodule Scenic.Primitive.Style.Theme do
   def verify(_), do: false
 
   # --------------------------------------------------------
+  @doc false
   def normalize(theme) when is_atom(theme), do: Map.get(@themes, theme)
   def normalize(theme) when is_map(theme), do: theme
 
   # --------------------------------------------------------
+  @doc false
   def preset(theme), do: Map.get(@themes, theme)
 end

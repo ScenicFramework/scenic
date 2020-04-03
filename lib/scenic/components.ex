@@ -1,5 +1,5 @@
 #
-#  Created by Boyd Multerer April 30, 2018.
+#  Created by Boyd Multerer 2018-04-30.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 
@@ -39,8 +39,8 @@ defmodule Scenic.Components do
   1. A reference to the new scene is added to the graph.
 
   This doesn't happen all at once. These helper functions simply add a
-  reference to a to-be-started component to your graph. When you call
-  `push_graph/1` to the ViewPort then manages the life cycle of the components.
+  reference to a to-be-started component to your graph. When you push a graph,
+  the ViewPort then manages the life cycle of the components.
 
   You can also supervise components yourself, but then you should add the scene
   reference yourself via the `scene_ref/3` function, which is in the
@@ -94,11 +94,11 @@ defmodule Scenic.Components do
   ## Examples:
 
         def filter_event({:click, :sample_button}, _, state) do
-          {:stop, state}
+          {:halt, state}
         end
 
         def filter_event({:click, :sample_button}, _, state) do
-          {:continue, {:click, :transformed}, state}
+          {:cont, {:click, :transformed}, state}
         end
 
   Inside a `filter_event` callback you can modify a graph, change state, send
@@ -107,17 +107,17 @@ defmodule Scenic.Components do
 
   # --------------------------------------------------------
   @doc """
-  Add a button to a graph
+  Add a [`Button`](Scenic.Component.Button.html) to a graph
 
   A button is a small scene that is pretty much just some text drawn over a
   rounded rectangle. The button scene contains logic to detect when the button
   is pressed, tracks it as the pointer moves around, and when it is released.
 
-  Data:
+  ### Data
 
-      text
+  `title`
 
-  * `text` must be a bitstring
+  * `title` - a bitstring describing the text to show in the button
 
   ### Messages
 
@@ -149,7 +149,7 @@ defmodule Scenic.Components do
   Buttons do not use the inherited `:font_size` style as they should look
   consistent regardless of what size the surrounding text is.
 
-  ## Theme
+  ### Theme
 
   Buttons work well with the following predefined themes:
   `:primary`, `:secondary`, `:success`, `:danger`, `:warning`, `:info`,
@@ -191,23 +191,29 @@ defmodule Scenic.Components do
     modify(p, Component.Button, data, options)
   end
 
+  @doc """
+  Generate an uninstantiated button spec, parallel to the concept of
+  primitive specs. This allows buttons to be treated as data.
+  """
+  def button_spec(data, options), do: &button(&1, data, options)
+
   # --------------------------------------------------------
   @doc """
-  Add a checkbox to a graph
+  Add a [`Checkbox`](Scenic.Component.Input.Checkbox.html) to a graph
 
-  Data:
+  ### Data
 
-      {text, checked?}
+  `{text, checked?}`
 
-  * `text` must be a bitstring
-  * `checked?` must be a boolean and indicates if the checkbox is set.
+  * `text` - must be a bitstring
+  * `checked?` - must be a boolean and indicates if the checkbox is set.
 
   ### Messages
 
   When the state of the checkbox, it sends an event message to the host scene
   in the form of:
 
-      {:value_changed, id, checked?}
+  `{:value_changed, id, checked?}`
 
   ### Styles
 
@@ -217,7 +223,7 @@ defmodule Scenic.Components do
   The default is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:dark`
 
-  ## Theme
+  ### Theme
 
   Checkboxes work well with the following predefined themes: `:light`, `:dark`
 
@@ -253,24 +259,30 @@ defmodule Scenic.Components do
     modify(p, Component.Input.Checkbox, data, options)
   end
 
+  @doc """
+  Generate an uninstantiated checkbox spec, parallel to the concept of
+  primitive specs. See `Components.checkbox` for data and options values.
+  """
+  def checkbox_spec(data, options), do: &checkbox(&1, data, options)
+
   # --------------------------------------------------------
   @doc """
-  Add a dropdown to a graph
+  Add a [`Dropdown`](Scenic.Component.Input.Dropdown.html) to a graph
 
-  Data:
+  ### Data
 
-      {items, initial_item}
+  `{items, initial_item}`
 
-  * `items` must be a list of items, each of which is: `{text, id}`. See below...
-  * `initial_item` is the `id` of the initial selected item. It can be any term
+  * `items` - must be a list of items, each of which is: `{text, id}`. See below...
+  * `initial_item` - the `id` of the initial selected item. It can be any term
   you want, however it must be an `item_id` in the `items` list. See below.
 
   Per item data:
 
-      {text, item_id}
+  `{text, item_id}`
 
-  * `text` is a string that will be shown in the dropdown.
-  * `item_id` can be any term you want. It will identify the item that is
+  * `text` - a string that will be shown in the dropdown.
+  * `item_id` - any term you want. It will identify the item that is
   currently selected in the dropdown and will be passed back to you during
   event messages.
 
@@ -279,7 +291,7 @@ defmodule Scenic.Components do
   When the state of the checkbox, it sends an event message to the host scene
   in the form of:
 
-      {:value_changed, id, selected_item_id}
+  `{:value_changed, id, selected_item_id}`
 
   ### Options
 
@@ -302,7 +314,7 @@ defmodule Scenic.Components do
   * `:direction` - what direction should the menu drop. Can be either `:down`
   or `:up`. The default is `:down`.
 
-  ## Theme
+  ### Theme
 
   Dropdowns work well with the following predefined themes: `:light`, `:dark`
 
@@ -342,24 +354,30 @@ defmodule Scenic.Components do
     modify(p, Component.Input.Dropdown, data, options)
   end
 
+  @doc """
+  Generate an uninstantiated dropdown spec, parallel to the concept of
+  primitive specs. See `Components.dropdown` for data and options values.
+  """
+  def dropdown_spec(data, options), do: &dropdown(&1, data, options)
+
   # --------------------------------------------------------
   @doc """
-  Add a radio group to a graph
+  Add a [`RadioGroup`](Scenic.Component.Input.RadioGroup.html) to a graph
 
-  Data:
+  ### Data
 
-      radio_buttons
+  `radio_buttons`
 
   * `radio_buttons` must be a list of radio button data. See below.
 
   Radio button data:
 
-      {text, radio_id, checked? \\\\ false}
+  `{text, radio_id, checked? \\\\ false}`
 
-  * `text` must be a bitstring
-  * `button_id` can be any term you want. It will be passed back to you as the
+  * `text` - must be a bitstring
+  * `button_id` - can be any term you want. It will be passed back to you as the
   group's value.
-  * `checked?` must be a boolean and indicates if the button is selected.
+  * `checked?` - must be a boolean and indicates if the button is selected.
   `checked?` is not required and will default to `false` if not supplied.
 
   ### Messages
@@ -367,7 +385,7 @@ defmodule Scenic.Components do
   When the state of the radio group changes, it sends an event message to the
   host scene in the form of:
 
-      {:value_changed, id, radio_id}
+  `{:value_changed, id, radio_id}`
 
   ### Options
 
@@ -386,7 +404,7 @@ defmodule Scenic.Components do
   The default is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:dark`
 
-  ## Theme
+  ### Theme
 
   Radio buttons work well with the following predefined themes: `:light`,
   `:dark`
@@ -409,7 +427,6 @@ defmodule Scenic.Components do
           {"Radio B", :radio_b, true},
           {"Radio C", :radio_c},
         ], id: :radio_group_id, translate: {20, 20})
-
   """
   @spec radio_group(
           source :: Graph.t() | Primitive.t(),
@@ -426,13 +443,19 @@ defmodule Scenic.Components do
     modify(p, Component.Input.RadioGroup, data, options)
   end
 
+  @doc """
+  Generate an uninstantiated radio_group spec, parallel to the concept of
+  primitive specs. See `Components.radio_group` for data and options values.
+  """
+  def radio_group_spec(data, options), do: &radio_group(&1, data, options)
+
   # --------------------------------------------------------
   @doc """
-  Add a slider to a graph
+  Add a [`Slider`](Scenic.Component.Input.Slider.html) to a graph
 
-  Data:
+  ### Data
 
-      { extents, initial_value}
+  `{ extents, initial_value}`
 
   * `extents` gives the range of values. It can take several forms...
     * `{min, max}` If `min` and `max` are integers, then the slider value will
@@ -448,7 +471,7 @@ defmodule Scenic.Components do
   When the state of the slider changes, it sends an event message to the host
   scene in the form of:
 
-      {:value_changed, id, value}
+  `{:value_changed, id, value}`
 
   ### Options
 
@@ -462,7 +485,7 @@ defmodule Scenic.Components do
   The default is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:dark`
 
-  ## Theme
+  ### Theme
 
   Sliders work well with the following predefined themes: `:light`, `:dark`
 
@@ -505,20 +528,28 @@ defmodule Scenic.Components do
     modify(p, Component.Input.Slider, data, options)
   end
 
+  @doc """
+  Generate an uninstantiated slider spec, parallel to the concept of
+  primitive specs. See `Components.slider` for data and options values.
+  """
+  def slider_spec(data, options), do: &slider(&1, data, options)
+
   # --------------------------------------------------------
   @doc """
-  Add a text field input to a graph
+  Add a [`TextField`](Scenic.Component.Input.TextField.html) input to a graph
 
-  Data: initial_value
+  ### Data
 
-  * `initial_value` is the string that will be the starting value
+  `initial_value`
+
+  * `initial_value` - is the string that will be the starting value
 
   ### Messages
 
   When the text in the field changes, it sends an event message to the host
   scene in the form of:
 
-      {:value_changed, id, value}
+  `{:value_changed, id, value}`
 
   ### Styles
 
@@ -548,7 +579,7 @@ defmodule Scenic.Components do
     * `:password` - Display a string of '*' characters instead of the value.
   * `:width` - set the width of the control.
 
-  ## Theme
+  ### Theme
 
   Text fields work well with the following predefined themes: `:light`, `:dark`
 
@@ -586,9 +617,19 @@ defmodule Scenic.Components do
   end
 
   @doc """
-  Add toggle to a Scenic graph.
+  Generate an uninstantiated text_field spec, parallel to the concept of
+  primitive specs. See `Components.text_field` for data and options values.
+  """
+  def text_field_spec(data, options), do: &text_field(&1, data, options)
 
-  You must pass the initial state, `on?`. Pass `true` if the toggle is on, pass `false` if not.
+  @doc """
+  Add [`Toggle`](Scenic.Component.Input.Toggle.html) to a Scenic graph.
+
+  ### Data
+
+  `on?`
+
+  * `on?` - `true` if the toggle is on, pass `false` if not.
 
   ### Styles
 
@@ -606,7 +647,7 @@ defmodule Scenic.Components do
   * `:padding` - the space between the border and the thumb. Defaults to `2`
   * `:thumb_radius` - the radius of the thumb. This determines the size of the entire toggle. Defaults to `10`.
 
-  ## Theme
+  ### Theme
 
   To pass in a custom theme, supply a map with at least the following entries:
 
@@ -639,6 +680,12 @@ defmodule Scenic.Components do
   def toggle(%Primitive{module: SceneRef} = p, data, options) do
     modify(p, Component.Input.Toggle, data, options)
   end
+
+  @doc """
+  Generate an uninstantiated toggle spec, parallel to the concept of
+  primitive specs. See `Components.toggle` for data and options values.
+  """
+  def toggle_spec(data, options), do: &toggle(&1, data, options)
 
   # ============================================================================
   # generic workhorse versions

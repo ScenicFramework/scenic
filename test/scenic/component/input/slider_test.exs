@@ -1,5 +1,5 @@
 #
-#  Created by Boyd Multerer on September 18, 2018
+#  Created by Boyd Multerer on 2018-09-18.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 
@@ -68,8 +68,9 @@ defmodule Scenic.Component.Input.SliderTest do
   # init
 
   test "init works with simple data" do
-    {:ok, state} = Slider.init(@data, styles: %{}, id: :test_id)
+    {:ok, state, push: graph} = Slider.init(@data, styles: %{}, id: :test_id)
     %Graph{} = state.graph
+    assert state.graph == graph
     assert state.value == @initial_value
     assert state.extents == @extents
     assert state.id == :test_id
@@ -84,7 +85,7 @@ defmodule Scenic.Component.Input.SliderTest do
     context = %ViewPort.Context{viewport: self}
     Process.put(:parent_pid, self)
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       Slider.handle_input({:cursor_button, {:left, :press, nil, {103, 0}}}, context, %{
         @state
         | tracking: false
@@ -95,11 +96,7 @@ defmodule Scenic.Component.Input.SliderTest do
 
     # confirm the input was captured
     assert_receive({:"$gen_cast", {:capture_input, ^context, [:cursor_button, :cursor_pos]}})
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
-
-    # confirm the value change was sent
-    assert_receive({:"$gen_cast", {:event, {:value_changed, :test_id, 34}, ^self}})
+    assert state.graph == graph
   end
 
   test "handle_input {:cursor_button, :press - float" do
@@ -111,7 +108,7 @@ defmodule Scenic.Component.Input.SliderTest do
     extents = {0.0, 100.0}
     state = %{@state | value: orig_value, extents: extents}
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       Slider.handle_input({:cursor_button, {:left, :press, nil, {103, 0}}}, context, %{
         state
         | tracking: false
@@ -122,8 +119,7 @@ defmodule Scenic.Component.Input.SliderTest do
 
     # confirm the input was captured
     assert_receive({:"$gen_cast", {:capture_input, ^context, [:cursor_button, :cursor_pos]}})
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert state.graph == graph
 
     # confirm the value change was sent
     assert_receive({:"$gen_cast", {:event, {:value_changed, :test_id, pos}, ^self}})
@@ -140,7 +136,7 @@ defmodule Scenic.Component.Input.SliderTest do
     extents = [:red, :yellow, :purple, :blue, :orange]
     state = %{@state | value: orig_value, extents: extents}
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       Slider.handle_input({:cursor_button, {:left, :press, nil, {203, 0}}}, context, %{
         state
         | tracking: false
@@ -151,14 +147,13 @@ defmodule Scenic.Component.Input.SliderTest do
 
     # confirm the input was captured
     assert_receive({:"$gen_cast", {:capture_input, ^context, [:cursor_button, :cursor_pos]}})
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert state.graph == graph
 
     # confirm the value change was sent
     assert_receive({:"$gen_cast", {:event, {:value_changed, :test_id, :blue}, ^self}})
 
     # below min
-    {:noreply, _} =
+    {:noreply, state, push: _} =
       Slider.handle_input({:cursor_button, {:left, :press, nil, {-203, 0}}}, context, %{
         state
         | tracking: false
@@ -167,7 +162,7 @@ defmodule Scenic.Component.Input.SliderTest do
     assert_receive({:"$gen_cast", {:event, {:value_changed, :test_id, :red}, ^self}})
 
     # above max
-    {:noreply, _} =
+    {:noreply, _, push: _} =
       Slider.handle_input({:cursor_button, {:left, :press, nil, {1203, 0}}}, context, %{
         state
         | tracking: false
@@ -181,7 +176,7 @@ defmodule Scenic.Component.Input.SliderTest do
     context = %ViewPort.Context{viewport: self}
     Process.put(:parent_pid, self)
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       Slider.handle_input({:cursor_button, {:left, :press, nil, {-103, 0}}}, context, %{
         @state
         | tracking: false
@@ -189,6 +184,7 @@ defmodule Scenic.Component.Input.SliderTest do
 
     assert state.tracking
     assert state.value == 0
+    assert state.graph == graph
   end
 
   test "handle_input {:cursor_button, :press, far right" do
@@ -196,7 +192,7 @@ defmodule Scenic.Component.Input.SliderTest do
     context = %ViewPort.Context{viewport: self}
     Process.put(:parent_pid, self)
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       Slider.handle_input({:cursor_button, {:left, :press, nil, {1003, 0}}}, context, %{
         @state
         | tracking: false
@@ -204,6 +200,7 @@ defmodule Scenic.Component.Input.SliderTest do
 
     assert state.tracking
     assert state.value == 100
+    assert state.graph == graph
   end
 
   test "handle_input {:cursor_button, :release" do
@@ -211,13 +208,14 @@ defmodule Scenic.Component.Input.SliderTest do
     context = %ViewPort.Context{viewport: self}
     Process.put(:parent_pid, self)
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       Slider.handle_input({:cursor_button, {:left, :release, nil, {13, 0}}}, context, %{
         @state
         | tracking: true
       })
 
     refute state.tracking
+    assert state.graph == graph
 
     # confirm the input was released
     assert_receive({:"$gen_cast", {:release_input, [:cursor_button, :cursor_pos]}})
@@ -231,7 +229,7 @@ defmodule Scenic.Component.Input.SliderTest do
     context = %ViewPort.Context{viewport: self}
     Process.put(:parent_pid, self)
 
-    {:noreply, state} =
+    {:noreply, state, push: graph} =
       Slider.handle_input({:cursor_pos, {103, 0}}, context, %{
         @state
         | tracking: true
@@ -240,8 +238,7 @@ defmodule Scenic.Component.Input.SliderTest do
     assert state.tracking
     assert state.value != @state.value
 
-    # confirm the graph was pushed
-    assert_receive({:"$gen_cast", {:push_graph, _, _, _}})
+    assert state.graph == graph
 
     # confirm the value change was sent
     assert_receive({:"$gen_cast", {:event, {:value_changed, :test_id, 34}, ^self}})

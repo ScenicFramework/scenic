@@ -1,10 +1,33 @@
 #
-#  Created by Boyd Multerer on 5/8/17.
+#  Created by Boyd Multerer on 2017-05-08.
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
 defmodule Scenic.Primitive.RoundedRectangle do
-  @moduledoc false
+  @moduledoc """
+  Draw a rectangle with rounded corners on the screen.
+
+  ## Data
+
+  `{width, height, radius}`
+
+  The data for a line is a tuple containing three numbers.
+  * `width` - width of the rectangle
+  * `height` - height of the rectangle
+  * `radius` - radius of the corners
+
+  ## Styles
+
+  This primitive recognizes the following styles
+  * [`hidden`](Scenic.Primitive.Style.Hidden.html) - show or hide the primitive
+  * [`fill`](Scenic.Primitive.Style.Fill.html) - fill in the area of the primitive
+  * [`stroke`](Scenic.Primitive.Style.Stroke.html) - stroke the outline of the primitive. In this case, only the curvy part.
+
+  ## Usage
+
+  You should add/modify primitives via the helper functions in
+  [`Scenic.Primitives`](Scenic.Primitives.html#rounded_rectangle/3)
+  """
 
   use Scenic.Primitive
 
@@ -16,6 +39,7 @@ defmodule Scenic.Primitive.RoundedRectangle do
   # data verification and serialization
 
   # --------------------------------------------------------
+  @doc false
   def info(data),
     do: """
       #{IO.ANSI.red()}#{__MODULE__} data must be: {width, height, radius}
@@ -25,6 +49,7 @@ defmodule Scenic.Primitive.RoundedRectangle do
     """
 
   # --------------------------------------------------------
+  @doc false
   def verify(data) do
     normalize(data)
     {:ok, data}
@@ -51,6 +76,9 @@ defmodule Scenic.Primitive.RoundedRectangle do
   end
 
   # ============================================================================
+  @doc """
+  Returns a list of styles recognized by this primitive.
+  """
   @spec valid_styles() :: [:fill | :hidden | :stroke, ...]
   def valid_styles(), do: @styles
 
@@ -58,6 +86,10 @@ defmodule Scenic.Primitive.RoundedRectangle do
   def default_pin(data), do: centroid(data)
 
   # --------------------------------------------------------
+  @doc """
+  Returns a the centroid of the rectangle. This is used as the default pin when applying
+  rotate or scale transforms.
+  """
   def centroid(data)
 
   def centroid({width, height, _}) do

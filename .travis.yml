@@ -2,7 +2,7 @@ language: elixir
 sudo: required
 
 elixir:
-  - 1.7
+  - 1.8
 otp_release:
   - 21.0
 

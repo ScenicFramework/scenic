@@ -2,7 +2,6 @@
 
 [![Build Status](https://travis-ci.org/boydm/scenic.svg?branch=master)](https://travis-ci.org/boydm/scenic)
 [![Codecov](https://codecov.io/gh/boydm/scenic/branch/master/graph/badge.svg)](https://codecov.io/gh/boydm/scenic)
-[![Inline Docs](http://inch-ci.org/github/boydm/scenic.svg)](http://inch-ci.org/github/boydm/scenic)
 
 Scenic is a client application library written directly on the
 Elixir/Erlang/OTP stack. With it you can build applications that operate
@@ -12,10 +11,9 @@ Nerves/Linux, and more.
 Scenic is primarily aimed at fixed screen connected devices (IoT), but can also
 be used to build portable applications.
 
-## Getting Started
+See the [getting started guide](https://hexdocs.pm/scenic/getting_started.html) and the [online documentation](https://hexdocs.pm/scenic/) for more information. Other resources available are:
 
-See the [documentation for the scenic.new](https://github.com/boydm/scenic_new)
-mix task.
+- [Introducing Scenic](https://www.youtube.com/watch?v=1QNxLNMq3Uw), a video from ElixirConf 2018, which introduces Scenic and the problems it strives to solve.
 
 ## Goals
 
@@ -25,8 +23,8 @@ mix task.
 
 - **Small and Fast:** The only core dependencies are Erlang/OTP and OpenGL.
 
-- **Self Contained:** “Never trust a device if you don’t know where it keeps its
-  brain.” The logic to run a device should be on the device and it should remain
+- **Self Contained:** "Never trust a device if you don't know where it keeps its
+  brain." The logic to run a device should be on the device and it should remain
   operational even if the service it talks to becomes unavailable.
 
 - **Maintainable:** Each device knows how to run itself. This lets teams focus
@@ -58,9 +56,77 @@ mix task.
   (such as transform matrices), but it does not support 3D drawing at this time.
 
 - **Immediate Mode:** In graphics speak, Scenic is a retained mode system. If
-  you need immediate mode, then Scenic isn’t for you. If you don’t know what
+  you need immediate mode, then Scenic isn't for you. If you don't know what
   retained and immediate modes are, then you are probably just fine. For
   reference: HTML is a retained mode model.
+
+## Upgrading to v0.10
+
+Version 0.10 of Scenic contains both deprecations and breaking changes, which will need to be updated in your app in order to run. This is all good through as it enables goodness in the forms of proper font metrics and dynamic raw pixel textures.
+
+Please see the [v0.10 Upgrade Guide](https://hexdocs.pm/scenic/upgrading_to_v0-10.html).
+
+### Deprecations
+
+`push_graph/1` is deprecated in favor of returning `{:push, graph}`
+([keyword](https://hexdocs.pm/elixir/Keyword.html)) options
+from the `Scenic.Scene` callbacks. Since this is only a deprecation `push_graph/1` will
+continue to work, but will log a warning when used.
+
+`push_graph/1` will be removed in a future release.
+
+* This allows us to utilize the full suite of OTP GenServer callback behaviors (such as
+  timeout and `handle_continue`)
+* Replacing the call of `push_graph(graph)` within a callback function depends slightly
+  on the context in which it is used.
+* in `init/2`:
+  * `{:ok, state, [push: graph]}`
+* in `filter_event/3`:
+  * `{:halt, state, [push: graph]}`
+  * `{:cont, event, state, [push: graph]}`
+* in `handle_cast/2`:
+  * `{:noreply, state, [push: graph]}`
+* in `handle_info/2`:
+  * `{:noreply, state, [push: graph]}`
+* in `handle_call/3`:
+  * `{:reply, reply, state, [push: graph]}`
+  * `{:noreply, state, [push: graph]}`
+* in `handle_continue/3`:
+  * `{:noreply, state, [push: graph]}`
+
+### Breaking Changes
+
+`Scenic.Cache` has been removed. It has been replaced by asset specific caches.
+
+| Asset Class   | Module  |
+| ------------- | -----|
+| Fonts      | `Scenic.Cache.Static.Font` |  
+| Font Metrics | `Scenic.Cache.Static.FontMetrics` |
+| Textures (images in a fill) | `Scenic.Cache.Static.Texture` |
+| Raw Pixel Maps | `Scenic.Cache.Dynamic.Texture` |
+
+Some of the Cache support modules have moved
+
+| Old Module   | New Module  |
+| ------------- | -----|
+| `Scenic.Cache.Hash` | `Scenic.Cache.Support.Hash` |
+| `Scenic.Cache.File` | `Scenic.Cache.Support.File` |
+| `Scenic.Cache.Supervisor` | `Scenic.Cache.Support.Supervisor` |
+
+##### Static vs. Dynamic Caches
+
+Note that caches are marked as either static or dynamic. Things that do not change and can be referred to by a hash of their content go into Static caches. This allows for future optimizations, such as caching these assets on a CDN.
+
+The Dynamic.Texture cache is for images that change over time. For example, this could be an image coming off of a camera, or something that you generate directly in your own code. Note that Dynamic caches are more expensive overall as they will not get the same level of optimization in the future.
+
+##### Custom Fonts
+
+If you have used custom fonts in your application, you need to use a new process to get them to load and render.
+
+1. use the `truetype_metrics` tool in hex to generate a `\*.metrics` file for your custom font. This will live in the same folder as your font.
+2. Make sure the name of the font file itself ends with the hash of its content. If you use the `-d` option in `truetype_metrics`, then that will be done for you.
+3. Load the font metrics file into the `Scenic.Cache.Static.FontMetrics` cache. The hash of this file is the hash that you will use to refer to the font in the graphs.
+4. Load the font itself into the `Scenic.Cache.Static.Font`
 
 ## Contributing
 

@@ -1,5 +1,5 @@
 #
-#  Created by Boyd Multerer on 11/05/17.
+#  Created by Boyd Multerer on 2017-11-05.
 #  Rewritten: 3/25/2018
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
@@ -482,7 +482,7 @@ defmodule Scenic.ViewPort.Input do
   end
 
   # --------------------------------------------------------
-  # Any other input (non-standard, generated, etc) get sent to the root graph_key
+  # Any other input (non-standard, generated, etc.) get sent to the root graph_key
   defp do_handle_input(msg, %{root_graph_key: root_key} = state) do
     Scene.cast(
       root_key,
@@ -563,21 +563,23 @@ defmodule Scenic.ViewPort.Input do
     # project the point by that inverse matrix to get the local point
     point = Matrix.project_vector(context.inverse_tx, point)
 
-    with {:ok, graph} <- ViewPort.Tables.get_graph(context.graph_key) do
-      do_find_by_captured_point(
-        point,
-        0,
-        graph,
-        Matrix.identity(),
-        Matrix.identity(),
-        max_depth
-      )
-      |> case do
-        {uid, id, point} -> {uid, id, point}
-        nil -> {nil, nil, point}
-      end
-    else
-      _ -> {nil, nil, point}
+    case ViewPort.Tables.get_graph(context.graph_key) do
+      {:ok, graph} ->
+        point
+        |> do_find_by_captured_point(
+          0,
+          graph,
+          Matrix.identity(),
+          Matrix.identity(),
+          max_depth
+        )
+        |> case do
+          {uid, id, point} -> {uid, id, point}
+          nil -> {nil, nil, point}
+        end
+
+      _ ->
+        {nil, nil, point}
     end
   end
 
@@ -692,10 +694,21 @@ defmodule Scenic.ViewPort.Input do
       %{data: {Primitive.SceneRef, ref_key}} = p ->
         {tx, inv_tx} = calc_transforms(p, parent_tx, parent_inv_tx)
 
-        with {:ok, graph} <- ViewPort.Tables.get_graph(ref_key) do
-          do_find_by_screen_point(x, y, 0, ref_key, graph, {tx, inv_tx}, {tx, inv_tx}, depth - 1)
-        else
-          _ -> nil
+        case ViewPort.Tables.get_graph(ref_key) do
+          {:ok, graph} ->
+            do_find_by_screen_point(
+              x,
+              y,
+              0,
+              ref_key,
+              graph,
+              {tx, inv_tx},
+              {tx, inv_tx},
+              depth - 1
+            )
+
+          _ ->
+            nil
         end
 
       # This is a regular primitive, test to see if it is hit

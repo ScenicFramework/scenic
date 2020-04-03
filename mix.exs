@@ -3,9 +3,9 @@ defmodule Scenic.Mixfile do
 
   @app_name :scenic
 
-  @version "0.8.0"
+  @version "0.10.3"
 
-  @elixir_version "~> 1.6"
+  @elixir_version "~> 1.8"
   @github "https://github.com/boydm/scenic"
 
   def project do
@@ -14,12 +14,11 @@ defmodule Scenic.Mixfile do
       version: @version,
       elixir: @elixir_version,
       deps: deps(),
-      build_embedded: Mix.env() == :prod,
+      build_embedded: true,
       start_permanent: Mix.env() == :prod,
       compilers: [:elixir_make | Mix.compilers()],
       make_targets: ["all"],
       make_clean: ["clean"],
-      make_env: make_env(),
       name: "Scenic",
       description: description(),
       docs: docs(),
@@ -36,19 +35,6 @@ defmodule Scenic.Mixfile do
     """
   end
 
-  defp make_env do
-    case System.get_env("ERL_EI_INCLUDE_DIR") do
-      nil ->
-        %{
-          "ERL_EI_INCLUDE_DIR" => "#{:code.root_dir()}/usr/include",
-          "ERL_EI_LIBDIR" => "#{:code.root_dir()}/usr/lib"
-        }
-
-      _ ->
-        %{}
-    end
-  end
-
   def application do
     [
       # mod: {Scenic, []},
@@ -58,13 +44,14 @@ defmodule Scenic.Mixfile do
 
   defp deps do
     [
-      {:elixir_make, "~> 0.4"},
+      {:font_metrics, "~> 0.3"},
+      {:elixir_make, "~> 0.6", runtime: false},
 
       # Tools
       {:ex_doc, ">= 0.0.0", only: :dev},
       {:credo, ">= 0.0.0", only: [:dev, :test], runtime: false},
       {:excoveralls, ">= 0.0.0", only: :test, runtime: false},
-      {:inch_ex, github: "rrrene/inch_ex", only: [:dev, :test], runtime: false},
+      {:inch_ex, "~> 2.0", only: [:dev, :docs], runtime: false},
       {:dialyxir, "~> 0.5", only: :dev, runtime: false}
     ]
   end
@@ -95,7 +82,10 @@ defmodule Scenic.Mixfile do
         "guides/**/*.md",
         # don't include the bird for now
         # "guides/**/*.png",
-        "README.md"
+        "README.md",
+        "LICENSE",
+        "CHANGELOG.md",
+        "static/**/*.metrics"
       ]
     ]
   end
@@ -113,6 +103,7 @@ defmodule Scenic.Mixfile do
 
   defp doc_guides do
     [
+      "guides/upgrading_to_v0.10.md",
       "guides/welcome.md",
       "guides/install_dependencies.md",
       "guides/overview_general.md",
@@ -126,26 +117,14 @@ defmodule Scenic.Mixfile do
       "guides/overview_styles.md",
       "guides/overview_transforms.md",
       "guides/overview_primitives.md",
+      "guides/overview_cache.md",
+      "guides/custom_fonts.md",
       ".github/CODE_OF_CONDUCT.md",
       ".github/CONTRIBUTING.md"
     ]
   end
 
   defp groups_for_modules do
-    # Ungrouped Modules
-    #
-    # Plug
-    # Plug.Builder
-    # Plug.Conn
-    # Plug.Crypto
-    # Plug.Debugger
-    # Plug.ErrorHandler
-    # Plug.Exception
-    # Plug.HTML
-    # Plug.Router
-    # Plug.Test
-    # Plug.Upload
-
     [
       Components: [
         Scenic.Component,
@@ -196,6 +175,7 @@ defmodule Scenic.Mixfile do
         Scenic.Primitive.Style.Paint,
         Scenic.Primitive.Style.Paint.Color,
         Scenic.Primitive.Style.Paint.Image,
+        Scenic.Primitive.Style.Paint.Dynamic,
         Scenic.Primitive.Style.Paint.BoxGradient,
         Scenic.Primitive.Style.Paint.LinearGradient,
         Scenic.Primitive.Style.Paint.RadialGradient
@@ -222,7 +202,7 @@ defmodule Scenic.Mixfile do
       ],
       ViewPort: [
         Scenic.ViewPort.Config,
-        # Scenic.ViewPort.Input,
+        Scenic.ViewPort.Input,
         Scenic.ViewPort.Context,
         Scenic.ViewPort.Tables
       ],
@@ -232,12 +212,18 @@ defmodule Scenic.Mixfile do
         Scenic.ViewPort.Driver.Info
       ],
       Cache: [
-        Scenic.Cache,
-        Scenic.Cache.File,
-        Scenic.Cache.Term,
+        Scenic.Cache.Static.Texture,
+        Scenic.Cache.Dynamic.Texture,
+        Scenic.Cache.Static.Font,
+        Scenic.Cache.Static.FontMetrics,
+        Scenic.Cache.Base,
+        Scenic.Cache.Support.File,
+        Scenic.Cache.Support.Hash,
+        Scenic.Cache.Support.Supervisor,
         Scenic.Cache.Hash
       ],
       Utilities: [
+        Scenic.Utilities.Texture,
         Scenic.Utilities.Enum,
         Scenic.Utilities.Map
       ]

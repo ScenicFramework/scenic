@@ -1,10 +1,80 @@
 #
-#  Created by Boyd Multerer August 5, 2018.
+#  Created by Boyd Multerer 2018-08-05.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 
 defmodule Scenic.Component.Input.TextField do
-  @moduledoc false
+  @moduledoc """
+  Add a text field input to a graph
+
+  ## Data
+
+  `initial_value`
+
+  * `initial_value` - is the string that will be the starting value
+
+  ## Messages
+
+  When the text in the field changes, it sends an event message to the host
+  scene in the form of:
+
+  `{:value_changed, id, value}`
+
+  ## Styles
+
+  Text fields honor the following styles
+
+  * `:hidden` - If `false` the component is rendered. If `true`, it is skipped.
+  The default is `false`.
+  * `:theme` - The color set used to draw. See below. The default is `:dark`
+
+  ## Additional Styles
+
+  Text fields honor the following list of additional styles.
+
+  * `:filter` - Adding a filter option restricts which characters can be
+  entered into the text_field component. The value of filter can be one of:
+    * `:all` - Accept all characters. This is the default
+    * `:number` - Any characters from "0123456789.,"
+    * `"filter_string"` - Pass in a string containing all the characters you
+    will accept
+    * `function/1` - Pass in an anonymous function. The single parameter will
+    be the character to be filtered. Return `true` or `false` to keep or reject
+    it.
+  * `:hint` - A string that will be shown (greyed out) when the entered value
+  of the component is empty.
+  * `:type` - Can be one of the following options:
+    * `:all` - Show all characters. This is the default.
+    * `:password` - Display a string of '*' characters instead of the value.
+  * `:width` - set the width of the control.
+
+  ## Theme
+
+  Text fields work well with the following predefined themes: `:light`, `:dark`
+
+  To pass in a custom theme, supply a map with at least the following entries:
+
+  * `:text` - the color of the text
+  * `:background` - the background of the component
+  * `:border` - the border of the component
+  * `:focus` - the border while the component has focus
+
+  ## Usage
+
+  You should add/modify components via the helper functions in
+  [`Scenic.Components`](Scenic.Components.html#text_field/3)
+
+  ## Examples
+
+      graph
+      |> text_field("Sample Text", id: :text_id, translate: {20,20})
+
+      graph
+      |> text_field(
+        "", id: :pass_id, type: :password, hint: "Enter password", translate: {20,20}
+      )
+  """
+
   use Scenic.Component, has_children: true
 
   alias Scenic.Graph
@@ -42,6 +112,7 @@ defmodule Scenic.Component.Input.TextField do
   @hint_color :grey
 
   # --------------------------------------------------------
+  @doc false
   def info(data) do
     """
     #{IO.ANSI.red()}TextField data must be a bitstring: initial_text
@@ -51,6 +122,7 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   # --------------------------------------------------------
+  @doc false
   def verify(initial_text) when is_bitstring(initial_text) do
     {:ok, initial_text}
   end
@@ -58,6 +130,7 @@ defmodule Scenic.Component.Input.TextField do
   def verify(_), do: :invalid_data
 
   # --------------------------------------------------------
+  @doc false
   def init(value, opts) do
     id = opts[:id]
     styles = opts[:styles]
@@ -69,8 +142,8 @@ defmodule Scenic.Component.Input.TextField do
 
     # get the text_field specific styles
     hint = styles[:hint] || @default_hint
-    width = opts[:width] || opts[:w] || @default_width
-    height = styles[:height] || opts[:h] || @default_height
+    width = styles[:width] || styles[:w] || @default_width
+    height = styles[:height] || styles[:h] || @default_height
     type = styles[:type] || @default_type
     filter = styles[:filter] || @default_filter
 
@@ -122,9 +195,8 @@ defmodule Scenic.Component.Input.TextField do
       )
       |> update_text(display, state)
       |> update_caret(display, index)
-      |> push_graph()
 
-    {:ok, %{state | graph: graph}}
+    {:ok, %{state | graph: graph}, push: graph}
   end
 
   # ============================================================================
@@ -179,7 +251,6 @@ defmodule Scenic.Component.Input.TextField do
       graph
       |> Graph.modify(:caret, &update_opts(&1, hidden: false))
       |> Graph.modify(:border, &update_opts(&1, stroke: {2, theme.focus}))
-      |> push_graph()
 
     # record the state
     state
@@ -200,7 +271,6 @@ defmodule Scenic.Component.Input.TextField do
       graph
       |> Graph.modify(:caret, &update_opts(&1, hidden: true))
       |> Graph.modify(:border, &update_opts(&1, stroke: {2, theme.border}))
-      |> push_graph()
 
     # record the state
     state
@@ -263,6 +333,7 @@ defmodule Scenic.Component.Input.TextField do
   # User input handling - get the focus
 
   # --------------------------------------------------------
+  @doc false
   # unfocused click in the text field
   def handle_input(
         {:cursor_button, {:left, :press, _, _}},
@@ -288,14 +359,12 @@ defmodule Scenic.Component.Input.TextField do
           # reset_caret the caret blinker
           Scene.cast_to_refs(nil, :reset_caret)
           # move the caret
-          graph =
-            update_caret(graph, value, i)
-            |> push_graph()
+          graph = update_caret(graph, value, i)
 
           {i, graph}
       end
 
-    {:noreply, %{state | index: index, graph: graph}}
+    {:noreply, %{state | index: index, graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -305,7 +374,8 @@ defmodule Scenic.Component.Input.TextField do
         context,
         %{focused: true} = state
       ) do
-    {:continue, release_focus(context, state)}
+    state = release_focus(context, state)
+    {:cont, state, push: state.graph}
   end
 
   # ============================================================================
@@ -335,14 +405,12 @@ defmodule Scenic.Component.Input.TextField do
           # move the caret
           i = i - 1
 
-          graph =
-            update_caret(graph, value, i)
-            |> push_graph()
+          graph = update_caret(graph, value, i)
 
           {i, graph}
       end
 
-    {:noreply, %{state | index: index, graph: graph}}
+    {:noreply, %{state | index: index, graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -366,14 +434,12 @@ defmodule Scenic.Component.Input.TextField do
           # move the caret
           i = i + 1
 
-          graph =
-            update_caret(graph, value, i)
-            |> push_graph()
+          graph = update_caret(graph, value, i)
 
           {i, graph}
       end
 
-    {:noreply, %{state | index: index, graph: graph}}
+    {:noreply, %{state | index: index, graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -396,14 +462,12 @@ defmodule Scenic.Component.Input.TextField do
           # reset the caret blinker
           Scene.cast_to_refs(nil, :reset_caret)
           # move the caret
-          graph =
-            update_caret(graph, value, 0)
-            |> push_graph()
+          graph = update_caret(graph, value, 0)
 
           {0, graph}
       end
 
-    {:noreply, %{state | index: index, graph: graph}}
+    {:noreply, %{state | index: index, graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -429,14 +493,12 @@ defmodule Scenic.Component.Input.TextField do
           # reset the caret blinker
           Scene.cast_to_refs(nil, :reset_caret)
           # move the caret
-          graph =
-            update_caret(graph, value, max_index)
-            |> push_graph()
+          graph = update_caret(graph, value, max_index)
 
           {max_index, graph}
       end
 
-    {:noreply, %{state | index: index, graph: graph}}
+    {:noreply, %{state | index: index, graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -478,7 +540,6 @@ defmodule Scenic.Component.Input.TextField do
       graph
       |> update_text(display, state)
       |> update_caret(display, index)
-      |> push_graph()
 
     state =
       state
@@ -487,7 +548,7 @@ defmodule Scenic.Component.Input.TextField do
       |> Map.put(:display, display)
       |> Map.put(:index, index)
 
-    {:noreply, state}
+    {:noreply, state, push: graph}
   end
 
   # --------------------------------------------------------
@@ -520,7 +581,6 @@ defmodule Scenic.Component.Input.TextField do
     graph =
       graph
       |> update_text(display, state)
-      |> push_graph()
 
     state =
       state
@@ -529,7 +589,7 @@ defmodule Scenic.Component.Input.TextField do
       |> Map.put(:display, display)
       |> Map.put(:index, index)
 
-    {:noreply, state}
+    {:noreply, state, push: graph}
   end
 
   # --------------------------------------------------------
@@ -589,7 +649,6 @@ defmodule Scenic.Component.Input.TextField do
       graph
       |> update_text(display, state)
       |> update_caret(display, index)
-      |> push_graph()
 
     state =
       state
@@ -598,7 +657,7 @@ defmodule Scenic.Component.Input.TextField do
       |> Map.put(:display, display)
       |> Map.put(:index, index)
 
-    {:noreply, state}
+    {:noreply, state, push: graph}
   end
 
   # ignore the char

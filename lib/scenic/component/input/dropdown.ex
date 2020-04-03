@@ -1,11 +1,85 @@
 #
-#  Created by Boyd Multerer July 15, 2018.
+#  Created by Boyd Multerer 2018-07-15.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 
 defmodule Scenic.Component.Input.Dropdown do
-  @moduledoc false
+  @moduledoc """
+  Add a dropdown to a graph
 
+  ## Data
+
+  `{items, initial_item}`
+
+  * `items` - must be a list of items, each of which is: `{text, id}`. See below...
+  * `initial_item` - the `id` of the initial selected item. It can be any term
+  you want, however it must be an `item_id` in the `items` list. See below.
+
+  Per item data:
+
+  `{text, item_id}`
+
+  * `text` - a string that will be shown in the dropdown.
+  * `item_id` - any term you want. It will identify the item that is
+  currently selected in the dropdown and will be passed back to you during
+  event messages.
+
+  ## Messages
+
+  When the state of the checkbox, it sends an event message to the host scene
+  in the form of:
+
+  `{:value_changed, id, selected_item_id}`
+
+  ## Options
+
+  Dropdowns honor the following list of options.
+
+  ## Styles
+
+  Buttons honor the following styles
+
+  * `:hidden` - If `false` the component is rendered. If `true`, it is skipped.
+  The default is `false`.
+  * `:theme` - The color set used to draw. See below. The default is `:dark`
+
+  ## Additional Styles
+
+  Buttons honor the following list of additional styles.
+
+  * `:width` - pass in a number to set the width of the button.
+  * `:height` - pass in a number to set the height of the button.
+  * `:direction` - what direction should the menu drop. Can be either `:down`
+  or `:up`. The default is `:down`.
+
+  ## Theme
+
+  Dropdowns work well with the following predefined themes: `:light`, `:dark`
+
+  To pass in a custom theme, supply a map with at least the following entries:
+
+  * `:text` - the color of the text
+  * `:background` - the background of the component
+  * `:border` - the border of the component
+  * `:active` - the background of selected item in the dropdown list
+  * `:thumb` - the color of the item being hovered over
+
+  ## Usage
+
+  You should add/modify components via the helper functions in
+  [`Scenic.Components`](Scenic.Components.html#dropdown/3)
+
+  ## Examples
+
+  The following example creates a dropdown and positions it on the screen.
+
+      graph
+      |> dropdown({[
+        {"Dashboard", :dashboard},
+        {"Controls", :controls},
+        {"Primitives", :primitives}
+      ], :controls}, id: :dropdown_id, translate: {20, 20})
+  """
   use Scenic.Component, has_children: false
 
   alias Scenic.Graph
@@ -15,8 +89,6 @@ defmodule Scenic.Component.Input.Dropdown do
 
   # import IEx
 
-  @default_width 160
-  @default_height 30
   @default_direction :down
 
   @default_font :roboto
@@ -35,6 +107,7 @@ defmodule Scenic.Component.Input.Dropdown do
   @rotate_up :math.pi()
 
   # --------------------------------------------------------
+  @doc false
   def info(data) do
     """
     #{IO.ANSI.red()}Dropdown data must be: {items, initial}
@@ -44,6 +117,7 @@ defmodule Scenic.Component.Input.Dropdown do
   end
 
   # --------------------------------------------------------
+  @doc false
   def verify({items, initial} = data) when is_list(items) do
     (Enum.all?(items, &verify_item(&1)) &&
        Enum.find_value(items, false, fn {_, id} -> id == initial end))
@@ -60,6 +134,7 @@ defmodule Scenic.Component.Input.Dropdown do
   defp verify_item(_), do: false
 
   # --------------------------------------------------------
+  @doc false
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def init({items, initial_id}, opts) do
     id = opts[:id]
@@ -70,13 +145,32 @@ defmodule Scenic.Component.Input.Dropdown do
       (styles[:theme] || Theme.preset(:dark))
       |> Theme.normalize()
 
-    width = opts[:width] || opts[:w] || @default_width
-    height = opts[:height] || opts[:h] || @default_height
-    # alignment = opts[:align] || opts[:a] || @default_alignment
+    # font related info
+    fm = Scenic.Cache.Static.FontMetrics.get!(@default_font)
+    ascent = FontMetrics.ascent(@default_font_size, fm)
+    descent = FontMetrics.descent(@default_font_size, fm)
 
-    # get style args
-    font = opts[:font] || @default_font
-    font_size = opts[:font_size] || @default_font_size
+    # find the width of the widest item
+    fm_width =
+      Enum.reduce(items, 0, fn {text, _}, w ->
+        width = FontMetrics.width(text, @default_font_size, fm)
+
+        max(w, width)
+      end)
+
+    width =
+      case styles[:width] || opts[:w] do
+        nil -> fm_width + ascent * 3
+        :auto -> fm_width + ascent * 3
+        width when is_number(width) and width > 0 -> width
+      end
+
+    height =
+      case styles[:height] || opts[:h] do
+        nil -> @default_font_size + ascent
+        :auto -> @default_font_size + ascent
+        height when is_number(height) and height > 0 -> height
+      end
 
     # get the initial text
     initial_text =
@@ -106,12 +200,14 @@ defmodule Scenic.Component.Input.Dropdown do
         :up -> -@rotate_up
       end
 
+    text_vpos = height / 2 + ascent / 2 + descent / 3
+
     graph =
-      Graph.build(font: font, font_size: font_size)
+      Graph.build(font: @default_font, font_size: @default_font_size)
       |> rect({width, height}, fill: theme.background, stroke: {2, theme.border})
       |> text(initial_text,
         fill: theme.text,
-        translate: {8, height * 0.7},
+        translate: {8, text_vpos},
         text_align: :left,
         id: @text_id
       )
@@ -152,7 +248,7 @@ defmodule Scenic.Component.Input.Dropdown do
                     |> text(text,
                       fill: theme.text,
                       text_align: :left,
-                      translate: {8, height * 0.7}
+                      translate: {8, text_vpos}
                     )
                   end,
                   translate: {0, height * i}
@@ -180,15 +276,14 @@ defmodule Scenic.Component.Input.Dropdown do
       rotate_caret: rotate_caret
     }
 
-    push_graph(graph)
-
-    {:ok, state}
+    {:ok, state, push: graph}
   end
 
   # ============================================================================
   # tracking when the dropdown is UP
 
   # --------------------------------------------------------
+  @doc false
   def handle_input({:cursor_enter, _uid}, %{id: id}, %{down: false} = state) do
     {:noreply, %{state | hover_id: id}}
   end
@@ -212,7 +307,6 @@ defmodule Scenic.Component.Input.Dropdown do
       graph
       |> Graph.modify(@caret_id, &update_opts(&1, rotate: rotate_caret))
       |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: false))
-      |> push_graph()
 
     state =
       state
@@ -220,7 +314,7 @@ defmodule Scenic.Component.Input.Dropdown do
       |> Map.put(:drop_time, :os.system_time(:milli_seconds))
       |> Map.put(:graph, graph)
 
-    {:noreply, state}
+    {:noreply, state, push: graph}
   end
 
   # ============================================================================
@@ -233,11 +327,9 @@ defmodule Scenic.Component.Input.Dropdown do
         %{down: true, items: items, graph: graph, selected_id: selected_id, theme: theme} = state
       ) do
     # set the appropriate hilighting for each of the items
-    graph =
-      update_highlighting(graph, items, selected_id, id, theme)
-      |> push_graph
+    graph = update_highlighting(graph, items, selected_id, id, theme)
 
-    {:noreply, %{state | hover_id: id, graph: graph}}
+    {:noreply, %{state | hover_id: id, graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -247,11 +339,9 @@ defmodule Scenic.Component.Input.Dropdown do
         %{down: true, items: items, graph: graph, selected_id: selected_id, theme: theme} = state
       ) do
     # set the appropriate hilighting for each of the items
-    graph =
-      update_highlighting(graph, items, selected_id, nil, theme)
-      |> push_graph
+    graph = update_highlighting(graph, items, selected_id, nil, theme)
 
-    {:noreply, %{state | hover_id: nil, graph: graph}}
+    {:noreply, %{state | hover_id: nil, graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -270,17 +360,9 @@ defmodule Scenic.Component.Input.Dropdown do
     # release the input capture
     ViewPort.release_input(context, [:cursor_button, :cursor_pos])
 
-    graph =
-      state.graph
-      # restore standard highliting
-      |> update_highlighting(items, selected_id, nil, theme)
-      # raise the dropdown
-      |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
-      |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
-      # push to the viewport
-      |> push_graph()
+    graph = handle_cursor_button(state.graph, items, selected_id, theme)
 
-    {:noreply, %{state | down: false, graph: graph}}
+    {:noreply, %{state | down: false, graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -307,12 +389,11 @@ defmodule Scenic.Component.Input.Dropdown do
         |> update_highlighting(items, selected_id, nil, theme)
         |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
         |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
-        |> push_graph()
 
       # release the input capture
       ViewPort.release_input(context, [:cursor_button, :cursor_pos])
 
-      {:noreply, %{state | down: false, hover_id: nil, graph: graph}}
+      {:noreply, %{state | down: false, hover_id: nil, graph: graph}, push: graph}
     end
   end
 
@@ -331,17 +412,9 @@ defmodule Scenic.Component.Input.Dropdown do
     # release the input capture
     ViewPort.release_input(context, [:cursor_button, :cursor_pos])
 
-    graph =
-      state.graph
-      # restore standard highliting
-      |> update_highlighting(items, selected_id, nil, theme)
-      # raise the dropdown
-      |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
-      |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
-      # push to the viewport
-      |> push_graph()
+    graph = handle_cursor_button(state.graph, items, selected_id, theme)
 
-    {:noreply, %{state | down: false, graph: graph}}
+    {:noreply, %{state | down: false, graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -374,10 +447,8 @@ defmodule Scenic.Component.Input.Dropdown do
       # raise the dropdown
       |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
       |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
-      # push to the viewport
-      |> push_graph()
 
-    {:noreply, %{state | down: false, graph: graph, selected_id: item_id}}
+    {:noreply, %{state | down: false, graph: graph, selected_id: item_id}, push: graph}
   end
 
   # ============================================================================
@@ -406,5 +477,14 @@ defmodule Scenic.Component.Input.Dropdown do
       {_, regular_id}, g ->
         Graph.modify(g, regular_id, &update_opts(&1, fill: theme.background))
     end)
+  end
+
+  defp handle_cursor_button(graph, items, selected_id, theme) do
+    graph
+    # restore standard highliting
+    |> update_highlighting(items, selected_id, nil, theme)
+    # raise the dropdown
+    |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
+    |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
   end
 end

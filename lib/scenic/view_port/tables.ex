@@ -1,5 +1,5 @@
 #
-#  Created by Boyd Multerer on 04/13/18.
+#  Created by Boyd Multerer on 2018-04-13.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 
@@ -47,10 +47,12 @@ defmodule Scenic.ViewPort.Tables do
   @doc false
   # internal function. Called from within a scene's internal init processes
   def get_scene_pid(scene_or_graph_key) do
-    with {:ok, {pid, _, _}} <- get_scene_registration(scene_or_graph_key) do
-      {:ok, pid}
-    else
-      _ -> {:error, :not_found}
+    case get_scene_registration(scene_or_graph_key) do
+      {:ok, {pid, _, _}} ->
+        {:ok, pid}
+
+      _ ->
+        {:error, :not_found}
     end
   end
 

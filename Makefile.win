@@ -10,6 +10,7 @@ CC=cl
 LINK=link
 NMAKE = nmake /$(MAKEFLAGS)
 
+STATIC = priv\static
 SRC_DIR = c_src
 
 # Scenic.Math.Line.parallel({{1,2},{3,4}}, 4)
@@ -17,7 +18,7 @@ SRC_DIR = c_src
 calling_from_make:
 	mix compile
 
-all: clean priv Makefile.auto.win NIF
+all: clean priv $(STATIC) Makefile.auto.win NIF
 
 clean:
 	del /Q /F priv
@@ -25,10 +26,14 @@ clean:
 priv:
 	mkdir priv
 
+$(STATIC):
+	mkdir $(STATIC)
+	xcopy /S /E /Y static $(STATIC)
+
 Makefile.auto.win:
 	erl -eval "io:format(\"~s~n\", [lists:concat([\"ERTS_INCLUDE_PATH=\", code:root_dir(), \"/erts-\", erlang:system_info(version), \"/include\"])])" -s init stop -noshell > $@
 
-NIF: priv\line.dll priv\matrix.dll
+NIF: priv\line.dll priv\matrix.dll priv\texture.dll
 
 !IFDEF ERTS_INCLUDE_PATH
 priv\line.obj:
@@ -36,6 +41,12 @@ priv\line.obj:
 
 priv\line.dll: priv\line.obj
 	$(LINK) /DLL /OUT:priv\line.dll priv\line.obj
+
+priv\texture.obj:
+	$(CC) -c $(ERL_CFLAGS) $(CFLAGS) /I"$(ERTS_INCLUDE_PATH)" /LD /MD /Fo: $@ $(SRC_DIR)\texture.c
+
+priv\texture.dll: priv\texture.obj
+	$(LINK) /DLL /OUT:priv\texture.dll priv\texture.obj
 
 priv\matrix.obj:
 	$(CC) -c $(ERL_CFLAGS) $(CFLAGS) /I"$(ERTS_INCLUDE_PATH)" /LD /MD /Fo: $@ $(SRC_DIR)\matrix.c
@@ -47,4 +58,6 @@ priv\line.dll: Makefile.auto.win
 	$(NMAKE) /F Makefile.win priv\line.dll
 priv\matrix.dll: Makefile.auto.win
 	$(NMAKE) /F Makefile.win priv\matrix.dll
+priv\texture.dll: Makefile.auto.win
+	$(NMAKE) /F Makefile.win priv\texture.dll
 !ENDIF

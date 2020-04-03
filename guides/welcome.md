@@ -8,6 +8,10 @@ and more.
 Scenic is primarily aimed at fixed screen connected devices (IoT), but can also
 be used to build portable applications.
 
+## Upgrading to v0.10
+
+If you have used versions before v0.10, please see the [Upgrading to v0.10 Guide](upgrading_to_v0-10.html).
+
 ## How to get started?
 
 If you are new to Scenic, then you should read the following guides.
@@ -15,6 +19,7 @@ If you are new to Scenic, then you should read the following guides.
 * [Install Dependencies](install_dependencies.html)
 * [General Overview](overview_general.html)
 * [Getting Started](getting_started.html)
+* [Getting Started with Nerves (IoT)](getting_started_nerves.html)
 * [Structure of a Scene](overview_scene.html)
 * [Life-cycle of a Scene](scene_lifecycle.html)
 * [Graph Overview](overview_graph.html)

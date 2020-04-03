@@ -1,5 +1,53 @@
 defmodule Scenic.Component.Input.Checkbox do
-  @moduledoc false
+  @moduledoc """
+  Add a checkbox to a graph
+
+  ## Data
+
+  `{text, checked?}`
+
+  * `text` - must be a bitstring
+  * `checked?` - must be a boolean and indicates if the checkbox is set.
+
+  ## Messages
+
+  When the state of the checkbox, it sends an event message to the host scene
+  in the form of:
+
+  `{:value_changed, id, checked?}`
+
+  ## Styles
+
+  Buttons honor the following standard styles
+
+  * `:hidden` - If `false` the component is rendered. If `true`, it is skipped.
+  The default is `false`.
+  * `:theme` - The color set used to draw. See below. The default is `:dark`
+
+  ## Theme
+
+  Checkboxes work well with the following predefined themes: `:light`, `:dark`
+
+  To pass in a custom theme, supply a map with at least the following entries:
+
+  * `:text` - the color of the text in the button
+  * `:background` - the background of the box
+  * `:border` - the border of the box
+  * `:active` - the border of the box while the button is pressed
+  * `:thumb` - the color of the check mark itself
+
+  ## Usage
+
+  You should add/modify components via the helper functions in
+  [`Scenic.Components`](Scenic.Components.html#checkbox/3)
+
+  ### Examples
+
+  The following example creates a checkbox and positions it on the screen.
+
+      graph
+      |> checkbox({"Example", true}, id: :checkbox_id, translate: {20, 20})
+  """
 
   use Scenic.Component, has_children: false
 
@@ -18,7 +66,8 @@ defmodule Scenic.Component.Input.Checkbox do
   # @default_height    16
   # @default_radius    3
 
-  #  #--------------------------------------------------------
+  # --------------------------------------------------------
+  @doc false
   def info(data) do
     """
     #{IO.ANSI.red()}Checkbox data must be: {text, checked?}
@@ -28,6 +77,7 @@ defmodule Scenic.Component.Input.Checkbox do
   end
 
   # --------------------------------------------------------
+  @doc false
   def verify({text, checked} = data) when is_bitstring(text) and is_boolean(checked) do
     {:ok, data}
   end
@@ -35,6 +85,7 @@ defmodule Scenic.Component.Input.Checkbox do
   def verify(_), do: :invalid_data
 
   # --------------------------------------------------------
+  @doc false
   def init({text, checked?}, opts) do
     id = opts[:id]
     styles = opts[:styles]
@@ -44,21 +95,25 @@ defmodule Scenic.Component.Input.Checkbox do
       (styles[:theme] || Theme.preset(:primary))
       |> Theme.normalize()
 
-    # get button specific styles
-    # width = styles[:width] || @default_width
-    # height = styles[:height] || @default_height
-    # radius = styles[:radius] || @default_radius
-    # font = styles[:component_font] || @default_font
-    # font_size = styles[:component_font_size] || @default_font_size
-    # alignment = styles[:component_align] || @default_alignment
+    # font related info
+    fm = Scenic.Cache.Static.FontMetrics.get!(@default_font)
+    ascent = FontMetrics.ascent(@default_font_size, fm)
+    fm_width = FontMetrics.width(text, @default_font_size, fm)
+    space_width = FontMetrics.width(' ', @default_font_size, fm)
+    box_width = fm_width + ascent + space_width * 2
+    box_height = trunc(ascent) + 1
 
     graph =
       Graph.build(font: @default_font, font_size: @default_font_size)
       |> group(
         fn graph ->
           graph
-          |> rect({140, 16}, fill: :clear, translate: {-2, -2})
-          |> rrect({16, 16, 3},
+          |> rect(
+            {box_width, box_height},
+            fill: :clear,
+            translate: {-2, -2}
+          )
+          |> rrect({box_height, box_height, 3},
             fill: theme.background,
             stroke: {2, theme.border},
             id: :box,
@@ -84,7 +139,7 @@ defmodule Scenic.Component.Input.Checkbox do
         end,
         translate: {0, -11}
       )
-      |> text(text, fill: theme.text, translate: {20, 0})
+      |> text(text, fill: theme.text, translate: {box_height + space_width, 0})
 
     state = %{
       graph: graph,
@@ -95,23 +150,22 @@ defmodule Scenic.Component.Input.Checkbox do
       id: id
     }
 
-    push_graph(graph)
-
-    {:ok, state}
+    {:ok, state, push: graph}
   end
 
   # --------------------------------------------------------
+  @doc false
   def handle_input({:cursor_enter, _uid}, _, %{pressed: true} = state) do
     state = Map.put(state, :contained, true)
     graph = update_graph(state)
-    {:noreply, %{state | graph: graph}}
+    {:noreply, %{state | graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
   def handle_input({:cursor_exit, _uid}, _, %{pressed: true} = state) do
     state = Map.put(state, :contained, false)
     graph = update_graph(state)
-    {:noreply, %{state | graph: graph}}
+    {:noreply, %{state | graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -125,7 +179,7 @@ defmodule Scenic.Component.Input.Checkbox do
 
     ViewPort.capture_input(context, [:cursor_button, :cursor_pos])
 
-    {:noreply, %{state | graph: graph}}
+    {:noreply, %{state | graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -152,7 +206,7 @@ defmodule Scenic.Component.Input.Checkbox do
 
     graph = update_graph(state)
 
-    {:noreply, %{state | graph: graph}}
+    {:noreply, %{state | graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -187,6 +241,5 @@ defmodule Scenic.Component.Input.Checkbox do
       false ->
         Graph.modify(graph, :chx, &Primitive.put_style(&1, :hidden, true))
     end
-    |> push_graph()
   end
 end

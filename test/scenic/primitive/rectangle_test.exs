@@ -1,5 +1,6 @@
 #
-#  Created by Boyd Multerer on 5/8/17. Re-written on 11/01/17
+#  Created by Boyd Multerer on 2017-05-08.
+#  Re-written on 11/01/17
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
@@ -44,7 +45,7 @@ defmodule Scenic.Primitive.RectangleTest do
   # styles
 
   test "valid_styles works" do
-    assert Rectangle.valid_styles() == [:hidden, :fill, :stroke]
+    assert Rectangle.valid_styles() == [:hidden, :fill, :stroke, :join, :miter_limit]
   end
 
   # ============================================================================

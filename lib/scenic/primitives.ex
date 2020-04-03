@@ -1,5 +1,5 @@
 #
-#  Created by Boyd Multerer April 30, 2018.
+#  Created by Boyd Multerer 2018-04-30.
 #  Copyright © 2018 Kry10 Industries. All rights reserved.
 #
 
@@ -7,10 +7,31 @@
 # this module should be updated as new primitives are added
 
 defmodule Scenic.Primitives do
-  alias Scenic.Primitive
   alias Scenic.Graph
   alias Scenic.Math
+  alias Scenic.Primitive
 
+  @typep width_and_height :: {
+           width :: number,
+           height :: number
+         }
+
+  @typep width_height_and_radius :: {
+           width :: number,
+           height :: number,
+           radius :: number
+         }
+
+  @typep scene_ref ::
+           {:graph, reference, any}
+           | {module :: atom, init_data :: any}
+           | (scene_name :: atom)
+
+  @typep sector :: {
+           radius :: number,
+           start :: number,
+           finish :: number
+         }
   # import IEx
 
   @moduledoc """
@@ -18,11 +39,26 @@ defmodule Scenic.Primitives do
   a graph.
 
   In general, each helper function is of the form
+
       def name_of_primitive( graph, data, opts \\\\ [] )
+
+  or
+
+      def name_of_primitive_spec( data, opts \\\\ [] )
+
+
+  The first form builds the primitive immediately and adds it to the
+  graph that is passed in. The second form creates a specification for
+  the primitive (basically, a data structure describing how to draw it).
+  You then add this to a graph at some later time.
+
+  Let's start by looking at the immediate versions.
+
+  ## Immediate Primitive Helpers
 
   When adding primitives to a graph, each helper function accepts a
   graph as the first parameter and returns the transformed graph. This
-  makes is very easy to build a complex graph by piping helper functions
+  makes it very easy to build a complex graph by piping helper functions
   together.
 
       @graph Graph.build()
@@ -45,8 +81,8 @@ defmodule Scenic.Primitives do
 
   In each case, the second parameter is a data term that is specific
   to the primitive being acted on. See the documentation below. If you
-  pass in invalid data for the second parameter an error will be
-  thrown along with some explanation of what it expected.
+  pass in invalid data for the second parameter, an error will be
+  thrown, along with some explanation of what it expected.
 
   The third parameter is a keyword list of options that are to be
   applied to the primitive. This includes setting the id, styles,
@@ -57,13 +93,92 @@ defmodule Scenic.Primitives do
       |> rectangle( {100, 200}, translate: {10, 30}, fill: :yellow)
       |> line( {{10,20}, {100, 20}}, id: :a_line, stroke: {4, :green})
 
+  ## Deferred Primitive Helpers
+
+  Each immediate primitive helper has a corresponding deferred helper.
+  The deferred variant does not add the primitive to a graph. Instead,
+  the deferred helper returns a function. You can then call that
+  function, passing it a graph, and the primitive will be added to that
+  graph.
+
+      text = text_spec( "Hello World" )
+      rect = rectangle_spec( {100, 200} )
+      line = line_spec( {{10,20}, {100, 20}})
+
+      g = Graph.build()
+      g = text.(g)
+      g = rect.(g)
+      g = line.(g)
+
+  Written like this, the deferred helpers aren't compelling. But we
+  could also write
+
+      items = [
+        text_spec( "Hello World" ),
+        rectangle_spec( {100, 200} ),
+        line_spec( {{10,20}, {100, 20}}),
+      ]
+
+      g = items
+          |> Enum.reduce(Graph.build(), fn item, g -> item.(g) end)
+
+  Deferred helpers let us express primitives as data. This
+  makes it easier to define display graphs at compile time, particularly
+  when we use the `group_spec/2` helper to express the grouping of
+  components:
+
+      @line {{0, 0}, {60, 60}}
+
+      @lines [
+        line_spec(@line, stroke: {4, :red}),
+        line_spec(@line, stroke: {20, :green}, cap: :butt, t: {60, 0}),
+        line_spec(@line, stroke: {20, :yellow}, cap: :round, t: {120, 0}),
+      ]
+
+      @text [
+        text_spec("Hello", translate: {0, 40}),
+        text_spec("World", translate: {90, 40}, fill: :yellow),
+      ]
+
+      @drawing Graph.build() |> add_specs_to_graph([ @lines, @text ])
+
+  If you wanted to put the lines into one group and the text into
+  another, simply interpose the `group_spec/2` helper:
+
+      @drawing Graph.build()
+               |> add_specs_to_graph([
+                 group_spec(@lines, t: [100, 50]),
+                 group_spec(@text, t: [150, 50])
+               ])
+
+  If you have a smaller graph or just like to see everything in one
+  place, you might prefer using `group_spec_r/2`:
+
+      @line {{0, 0}, {60, 60}}
+
+      @drawing Graph.build()
+               |> add_specs_to_graph([
+                 group_spec_r([t: {100, 50}], [
+                   line_spec(@line, stroke: {4, :red}),
+                   line_spec(@line, stroke: {20, :green}, cap: :butt, t: {60, 0}),
+                   line_spec(@line, stroke: {20, :yellow}, cap: :round, t: {120, 0})
+                 ]),
+                 group_spec_r([t: {150, 50}], [
+                   text_spec("Hello", translate: {0, 40}),
+                   text_spec("World", translate: {90, 40}, fill: :yellow),
+                 ])
+               ])
+
+  These examples use `add_specs_to_graph/2`, a simple helper that
+  converts specs into primitives and adds them to a graph.
+
   ### Style options
 
   Style options affect the way primitives are drawn. They include options such
-  as :fill, :stroke, :font and many more. See the Styles documentation
+  as `:fill`, `:stroke`, `:font` and many more. See the Styles documentation
   for the full list. Style options are inherited down the graph. In other words,
   if you set a style on the root of the graph like this:
-  Graph.build( font_size: 24, then all text items in all groups will be
+  `Graph.build(font_size: 24)`, then all text items in all groups will be
   rendered with a point size of 24 unless they set a different size.
 
   Not every primitive accepts every style. For example, it doesn't make much
@@ -79,7 +194,7 @@ defmodule Scenic.Primitives do
 
   Transform options affect the size, position and rotation of elements in the
   graph. Any transform you can express as a 4x4 matrix of floats, you can apply
-  to any primitive in the graph, including groups and scene_refs.
+  to any primitive in the graph, including groups and SceneRefs.
 
   Transform options are applied on the element they are specified on. If
   you specify a transform on a group, then it is applied to everything
@@ -103,8 +218,8 @@ defmodule Scenic.Primitives do
 
   ## SceneRef primitives
 
-  The scene_ref/3 helper creates/modifies a SceneRef primitive. This is
-  the other special case primitive. Instead of drawing anything directly
+  The `scene_ref/3` helper creates/modifies a SceneRef primitive. This is
+  the other special case primitive. Instead of drawing anything directly,
   it says something like, "render the graph from another scene here".
 
   The SceneRef allows you to compose together components made of other
@@ -112,6 +227,45 @@ defmodule Scenic.Primitives do
 
   The SceneRef follows the same style/transform inheritance as the Group.
   """
+
+  # --------------------------------------------------------
+  @doc """
+  Given a graph and a list of deferred primitive specifications,
+  run the specs in order, adding the primitives to the graph.
+
+  Example:
+
+      items = [
+        text_spec("hello "),
+        text_spec("world")
+      ]
+
+      graph = graph |> add_specs_to_graph(items)
+
+  If given a third parameter, the specs are wrapped in a group, and that
+  parameter is used as the group's options.
+
+      graph = graph |> add_specs_to_graph(items, t: {100,100})
+
+  """
+
+  @spec add_specs_to_graph(Graph.t(), [Graph.deferred(), ...]) :: Graph.t()
+
+  def add_specs_to_graph(g, list) when is_list(list) do
+    Enum.reduce(list, g, fn item, g -> item.(g) end)
+  end
+
+  @spec add_specs_to_graph(Graph.t(), [Graph.deferred(), ...], keyword()) :: Graph.t()
+
+  def add_specs_to_graph(g, list, options) when is_list(list) do
+    display_list = fn g ->
+      list
+      |> List.flatten()
+      |> Enum.reduce(g, fn item, g -> item.(g) end)
+    end
+
+    group(g, display_list, options)
+  end
 
   # --------------------------------------------------------
   @doc """
@@ -142,13 +296,13 @@ defmodule Scenic.Primitives do
 
   Arcs honor the following styles
 
-  * `:hidden` - If true the primitive is rendered. If false, it is skipped. The default
-    is true.
+  * `:hidden` - If `true`, the outline is rendered. If `false`, it is skipped.
+    Default: `false`.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
     default is to not draw anything in the interior. This is similar to specifying
-    fill: :clear, except optimized out to do nothing.
+    `fill: :clear`, but optimized.
   * `:stroke` - Draws the outline with the specified width and paint. The default
-    if not set is `{1, :white}`
+    if not set is `{1, :white}`.
 
   Example:
 
@@ -174,14 +328,32 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
-  Add a Circle to a graph
+  Create the specification that adds an arc to a graph.
 
-  Circles are defined by a radius
-  Data:
+  See the documentation for `arc/3` for details.
 
-      100
+  Example:
 
-  The following example will draw circle.
+      arc = arc_spec( {100, 0, 0.4}, stroke: {4, :blue} )
+      graph = arc.(graph)
+  """
+
+  @spec arc_spec(
+          arc :: {radius :: number, start :: number, finish :: number},
+          options :: list
+        ) :: Graph.deferred()
+
+  def arc_spec(arc_params, opts \\ []) do
+    fn g -> arc(g, arc_params, opts) end
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Add a Circle to a graph.
+
+  Circles are defined by a radius.
+
+  The following example will draw circle with radius 100.
 
       graph
       |> circle( 100 )
@@ -190,13 +362,13 @@ defmodule Scenic.Primitives do
 
   Circles honor the following styles
 
-  * `:hidden` - If true the primitive is rendered. If false, it is skipped. The default
-    is to render the primitive if hidden is not set.
+  * `:hidden` - If `true`, the outline is rendered. If `false`, it is skipped.
+    Default: `false`.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
     default is to not draw anything in the interior. This is similar to specifying
-    fill: :clear, except optimized out to do nothing.
+    `fill: :clear`, but more optimized.
   * `:stroke` - The width and paint to draw the outline with. If the stroke is not
-    specified then the default stroke is `{1, :white}`
+    specified, the default stroke is `{1, :white}`.
 
   Example:
 
@@ -226,13 +398,30 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
-  Add an Ellipse to a graph
+  Create the specification that adds a circle to a graph.
+
+  See the documentation for `circle/3` for details.
+
+  Example:
+
+      circle = circle_spec( 40, stroke: {4, :blue} )
+      graph = circle.(graph)
+  """
+
+  @spec circle_spec(
+          radius :: number,
+          options :: list
+        ) :: Graph.deferred()
+
+  def circle_spec(radius, opts \\ []) do
+    fn g -> circle(g, radius, opts) end
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Add an Ellipse to a graph.
 
   Ellipses are defined by two radii.
-
-  Data:
-
-      {100, 140}
 
   The following example will draw an ellipse.
 
@@ -245,13 +434,13 @@ defmodule Scenic.Primitives do
 
   Ellipses honor the following styles
 
-  * `:hidden` - If true the outline is rendered. If false, it is skipped. The default
-    is to render the primitive if hidden is not set.
+  * `:hidden` - If `true`, the outline is rendered. If `false`, it is skipped.
+    Default: `false`.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
     default is to not draw anything in the interior. This is similar to specifying
-    fill: :clear, except optimized out to do nothing.
+    `fill: :clear`, but optimized.
   * `:stroke` - The width and paint to draw the outline with. If the stroke is not
-    specified then the default stroke is `{1, :white}`
+    specified, the default stroke is `{1, :white}`
 
   Example:
 
@@ -277,7 +466,28 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
-  Create a new branch in a Graph
+  Create the specification that adds an ellipse to a graph.
+
+  See the documentation for `ellipse/3` for details.
+
+  Example:
+
+      ellipse = ellipse_spec( { 40, 60 }, stroke: {4, :blue} )
+      graph = ellipse.(graph)
+  """
+
+  @spec ellipse_spec(
+          radii :: Math.vector2(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def ellipse_spec(radii, opts \\ []) do
+    fn g -> ellipse(g, radii, opts) end
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Create a new branch in a Graph.
 
   The Group primitive creates a new branch in the Graph's tree. The data field
   you pass in is a function callback, which allows you to add more
@@ -290,23 +500,26 @@ defmodule Scenic.Primitives do
       |> text( "Hello World" )
       |> group(fn(g) ->
         g
-        |> text( "Im in the Group" )
+        |> text( "I'm in the Group" )
       end, translate: {40,200})
+
+  NOTE: Unlike other primitives, `group/3` currently only takes a graph and not
+  an existing group primitive.
 
   ### Styles
 
   Groups will accept all styles. They don't use the styles directly, but
   any styles you set on a group become the new defaults for all primitives
   you add to that group's branch in the graph. Note: styles are not
-  inherited across scene_refs. (see below)
+  inherited across SceneRefs (see `scene_ref/3`).
 
-  The `:hidden` is particularly effective when applied to a group as it
+  The `:hidden` style is particularly effective when applied to a group as it
   causes that entire branch to be drawn, or not.
 
   ### Transforms
 
   Any transforms you apply to a group are added into the render matrix stack and
-  are applied to all items in that branch, including crossing scene_refs.
+  are applied to all items in that branch, including crossing SceneRefs.
   """
   @spec group(
           source :: Graph.t(),
@@ -314,7 +527,7 @@ defmodule Scenic.Primitives do
           options :: list
         ) :: Graph.t()
 
-  def group(graph_or_primitive, builder, opts \\ [])
+  def group(graph, builder, opts \\ [])
 
   def group(%Graph{} = graph, builder, opts) when is_function(builder, 1) do
     Primitive.Group.add_to_graph(graph, builder, opts)
@@ -322,7 +535,105 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
-  Add a line to a graph
+  Bundle a list of specifications together, and return a function that,
+  when called, will add those specs as a group to a graph.
+
+  The options are the same as for `group/3`
+
+  Example:
+
+      line = {{0, 0}, {60, 60}}
+
+      lines = [
+        line_spec(@line, stroke: {4, :red}),
+        line_spec(@line, stroke: {20, :green}, cap: :butt, t: {60, 0}),
+        line_spec(@line, stroke: {20, :yellow}, cap: :round, t: {120, 0}),
+      ]
+
+      line_group = group_spec(lines, t: [ 100, 100 ])
+
+      graph = line_group.(graph)
+
+  You can also pass in a single primitive spec:
+
+      line = line_spec({{0, 0}, {60, 60}}, stroke: {4, :red}),
+      line_group = group_spec(line, t: [ 100, 100 ])
+
+      graph = line_group.(graph)
+
+  """
+
+  @spec group_spec(
+          items :: Group.deferred() | [Group.deferred(), ...],
+          options :: list
+        ) :: Graph.deferred()
+
+  def group_spec(list, opts) when is_list(list) do
+    fn g ->
+      content = fn g ->
+        Enum.reduce(list, g, fn element, g -> element.(g) end)
+      end
+
+      group(g, content, opts)
+    end
+  end
+
+  def group_spec(item, opts) do
+    group_spec([item], opts)
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Bundle a list of specifications together, and return a function that,
+  when called, will add those specs as a group to a graph.
+
+  The options are the same as for `group_spec/2`, but reversed, making
+  it suitable to use when declaring graph specs as big literals due to
+  the increased readability.
+
+  Example:
+
+      line = {{0, 0}, {60, 60}}
+
+      line_group = group_spec_r([t: {100, 100}], [
+        line_spec(@line, stroke: {4, :red}),
+        line_spec(@line, stroke: {20, :green}, cap: :butt, t: {60, 0}),
+        line_spec(@line, stroke: {20, :yellow}, cap: :round, t: {120, 0}),
+      ])
+
+      graph = line_group.(graph)
+
+  You can also pass in a single primitive spec:
+
+      line = line_spec({{0, 0}, {60, 60}}, stroke: {4, :red}),
+      line_group = group_spec_r([t: {100, 100}], line)
+
+      graph = line_group.(graph)
+
+  """
+
+  @spec group_spec_r(
+          options :: list,
+          items :: Group.deferred() | [Group.deferred(), ...]
+        ) :: Graph.deferred()
+
+  def group_spec_r(opts, list) when is_list(list) do
+    fn g ->
+      content = fn g ->
+        Enum.reduce(list, g, fn element, g -> element.(g) end)
+      end
+
+      group(g, content, opts)
+    end
+  end
+
+  def group_spec_r(opts, item) do
+    group_spec_r(opts, [item])
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Add a line to a graph.
 
   Lines are pretty simple. They start at one point and go to another.
 
@@ -340,12 +651,12 @@ defmodule Scenic.Primitives do
 
   Lines honor the following styles
 
-  * `:hidden` - If true the line is rendered. If false, it is skipped. The default
-    is to render the primitive if hidden is not set.
+  * `:hidden` - If `true`, the outline is rendered. If `false`, it is skipped.
+    Default: `false`.
   * `:stroke` - The width and paint to draw the line with. If the stroke is not
-    specified then the default stroke is `{1, :white}`
+    specified, the default stroke is `{1, :white}`.
   * `:cap` - Specifies the shape of the ends of the line. Can be one of `:round`,
-    `:butt`, or `:square`. If cap is not specified, then the default is `:butt`
+    `:butt`, or `:square`. If cap is not specified, then the default is `:butt`.
 
   Example:
 
@@ -371,13 +682,34 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
-  Add custom, complex shape to a graph
+  Create the specification that adds a line to a graph.
+
+  See the documentation for `line/3` for details.
+
+  Example:
+
+      ellipse = ellipse_spec( { 40, 60 }, stroke: {4, :blue} )
+      graph = ellipse.(graph)
+  """
+
+  @spec line_spec(
+          line :: Math.line(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def line_spec(line_params, opts \\ []) do
+    fn g -> line(g, line_params, opts) end
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Add custom, complex shape to a graph.
 
   A custom path is defined by a list of actions that the renderer
   can follow. This is about as close as Scenic gets to immediate
   mode rendering.
 
-  See the Path primitive for details.
+  See `Scenic.Primitive.Path` for details.
 
       graph
       |> path( [
@@ -411,7 +743,39 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
-  Add a Quadrilateral (quad) to a graph
+  Create the specification that adds a path to a graph.
+
+  See the documentation for `path/3` for details.
+
+  Example:
+
+      path = path_spec( [
+          :begin,
+          {:move_to, 10, 20},
+          {:line_to, 30, 40},
+          {:bezier_to, 10, 11, 20, 21, 30, 40},
+          {:quadratic_to, 10, 11, 50, 60},
+          {:arc_to, 70, 80, 90, 100, 20},
+          :close_path,
+        ],
+        stroke: {4, :blue}, cap: :round
+      )
+
+      graph = path.(graph)
+  """
+
+  @spec path_spec(
+          elements :: list,
+          options :: list
+        ) :: Graph.deferred()
+
+  def path_spec(elements, opts \\ []) do
+    fn g -> path(g, elements, opts) end
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Add a Quadrilateral (quad) to a graph.
 
   Quads are defined by four points on the screen.
 
@@ -428,8 +792,8 @@ defmodule Scenic.Primitives do
 
   Quads honor the following styles
 
-  * `:hidden` - If true the primitive is rendered. If false, it is skipped. The default
-    is to render the primitive if hidden is not set.
+  * `:hidden` - If `true`, the outline is rendered. If `false`, it is skipped.
+    Default: `false`.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
     default is to not draw anything in the interior. This is similar to specifying
     fill: :clear, except optimized out to do nothing.
@@ -442,7 +806,6 @@ defmodule Scenic.Primitives do
     is very shallow, the pointy bit might extend out far beyond the joint.
     Specifying `:miter_limit` puts a limit on the joint and bevels it if
     it goes out too far.
-
 
   Example:
 
@@ -469,13 +832,38 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
+  Create the specification that adds a quad to a graph.
+
+  See the documentation for `quad/3` for details.
+
+  Example:
+
+      quad = quad_spec(
+        {{10,20}, {100,20}, {90, 120}, {15, 70}},
+        fill, :red, stroke: {3, :blue}, join: :round
+      )
+
+      graph = quad.(graph)
+  """
+
+  @spec quad_spec(
+          corners :: Math.quad(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def quad_spec(corners, opts \\ []) do
+    fn g -> quad(g, corners, opts) end
+  end
+
+  # --------------------------------------------------------
+  @doc """
   Shortcut to the `rectangle/3` function.
 
   `rect/3` is the same as calling `rectangle/3`
   """
   @spec rect(
           source :: Graph.t() | Primitive.t(),
-          rect :: {width :: number, height :: number},
+          rect :: width_and_height(),
           options :: list
         ) :: Graph.t() | Primitive.t()
 
@@ -483,8 +871,33 @@ defmodule Scenic.Primitives do
     rectangle(graph_or_primitive, rect, opts)
   end
 
+  # --------------------------------------------------------
   @doc """
-  Add a rectangle to a graph
+  Create the specification that adds a rectangle to a graph.
+
+  See the documentation for `rectangle/3` for details.
+
+  Example:
+
+      rect = rect_spec(
+        {{10,20}, {100,20}},
+        fill, :red, stroke: {3, :blue}, join: :round
+      )
+
+      graph = rect.(graph)
+  """
+
+  @spec rect_spec(
+          dims :: width_and_height(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def rect_spec(dims, opts \\ []) do
+    fn g -> rectangle(g, dims, opts) end
+  end
+
+  @doc """
+  Add a rectangle to a graph.
 
   Rectangles are defined by a width and height.
 
@@ -501,8 +914,8 @@ defmodule Scenic.Primitives do
 
   Rectangles honor the following styles
 
-  * `:hidden` - If true the primitive is rendered. If false, it is skipped. The default
-    is to render the primitive if hidden is not set.
+  * `:hidden` - If `true`, the outline is rendered. If `false`, it is skipped.
+    Default: `false`.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
     default is to not draw anything in the interior. This is similar to specifying
     fill: :clear, except optimized out to do nothing.
@@ -542,13 +955,38 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
+  Create the specification that adds a rectangle to a graph.
+
+  See the documentation for `rectangle/3` for details.
+
+  Example:
+
+      rect = rectangle_spec(
+        {{10,20}, {100,20}},
+        fill, :red, stroke: {3, :blue}, join: :round
+      )
+
+      graph = rect.(graph)
+  """
+
+  @spec rectangle_spec(
+          dims :: width_and_height(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def rectangle_spec(dims, opts \\ []) do
+    fn g -> rectangle(g, dims, opts) end
+  end
+
+  # --------------------------------------------------------
+  @doc """
   Shortcut to the `rounded_rectangle/3` function.
 
   `rrect/3` is the same as calling `rounded_rectangle/3`
   """
   @spec rrect(
           source :: Graph.t() | Primitive.t(),
-          rrect :: {width :: number, height :: number, radius :: number},
+          rrect :: width_height_and_radius(),
           options :: list
         ) :: Graph.t() | Primitive.t()
 
@@ -556,8 +994,33 @@ defmodule Scenic.Primitives do
     rounded_rectangle(graph_or_primitive, rrect, opts)
   end
 
+  # --------------------------------------------------------
   @doc """
-  Add a rounded rectangle to a graph
+  Create the specification that adds a rounded rectangle to a graph.
+
+  See the documentation for `rounded_rectangle/3` for details.
+
+  Example:
+
+      rect = rrect_spec(
+        {{10,20}, {100,20}},
+        fill, :red, stroke: {3, :blue}, join: :round
+      )
+
+      graph = rect.(graph)
+  """
+
+  @spec rrect_spec(
+          dims :: width_height_and_radius(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def rrect_spec(dims, opts \\ []) do
+    fn g -> rounded_rectangle(g, dims, opts) end
+  end
+
+  @doc """
+  Add a rounded rectangle to a graph.
 
   Rounded rectangles are defined by a width, height, and radius.
 
@@ -574,8 +1037,8 @@ defmodule Scenic.Primitives do
 
   Rounded rectangles honor the following styles
 
-  * `:hidden` - If true the primitive is rendered. If false, it is skipped. The default
-    is to render the primitive if hidden is not set.
+  * `:hidden` - If `true`, the outline is rendered. If `false`, it is skipped.
+    Default: `false`.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
     default is to not draw anything in the interior. This is similar to specifying
     fill: :clear, except optimized out to do nothing.
@@ -607,20 +1070,45 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
+  Create the specification that adds a rounded rectangle to a graph.
+
+  See the documentation for `rounded_rectangle/3` for details.
+
+  Example:
+
+      rect = rounded_rectangle_spec(
+        {{10,20}, {100,20}},
+        fill, :red, stroke: {3, :blue}, join: :round
+      )
+
+      graph = rect.(graph)
+  """
+
+  @spec rounded_rectangle_spec(
+          dims :: width_height_and_radius(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def rounded_rectangle_spec(dims, opts \\ []) do
+    fn g -> rounded_rectangle(g, dims, opts) end
+  end
+
+  # --------------------------------------------------------
+  @doc """
   Reference another scene or graph from within a graph.
 
-  The SceneRef allows you to next other graphs inside a graph. This means
+  The SceneRef allows you to nest other graphs inside a graph. This means
   you can build smaller components that you can compose into a larger image.
 
   *Typically you do not specify SceneRefs yourself.* These get added
-  for you when you add components to you graph. Examples: Buttons,
-  Sliders, checkboxes, etc.
+  for you when you add components to your graph. Examples include Buttons,
+  Sliders, checkboxes, and so on.
 
   Usually, the graph you reference is controlled by another scene, but
   it doesn't have to be. A single scene could create multiple graphs
   and reference them into each other.
 
-  **See the SceneRef primitive for details.**
+  **See `Scenic.Primitive.SceneRef` for details.**
 
   Be careful not to create circular references. That won't work well.
 
@@ -632,14 +1120,11 @@ defmodule Scenic.Primitives do
   ### Transforms
 
   Any transforms you apply to a group are added into the render matrix stack and
-  are applied to all items in that branch, including crossing scene_refs.
+  are applied to all items in that branch, including crossing SceneRefs.
   """
   @spec scene_ref(
           source :: Graph.t() | Primitive.t(),
-          ref ::
-            {:graph, reference, any}
-            | {module :: atom, init_data :: any}
-            | (scene_name :: atom),
+          ref :: scene_ref(),
           options :: list
         ) :: Graph.t() | Primitive.t()
 
@@ -655,11 +1140,32 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
+  Create the specification that adds a scene ref to a graph.
+
+  See the documentation for `scene_ref/3` for details.
+
+  Example:
+
+      ref = scene_ref_spec(:my_scene)
+      graph = ref.(graph)
+  """
+
+  @spec scene_ref_spec(
+          ref :: scene_ref(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def scene_ref_spec(ref, opts \\ []) do
+    fn g -> scene_ref(g, ref, opts) end
+  end
+
+  # --------------------------------------------------------
+  @doc """
   Add a sector to a graph
 
   A sector looks like a piece of pie. It is wedge shaped with a pointy
   bit on one side and a rounded bit on the other. It has a radius, a
-  start angle and an ending angle. The angles are specified in radians.
+  start angle and a finish angle. The angles are specified in radians.
 
   Data:
 
@@ -677,8 +1183,8 @@ defmodule Scenic.Primitives do
 
   Sectors honor the following styles
 
-  * `:hidden` - If true the outline is rendered. If false, it is skipped. The default
-    is true.
+  * `:hidden` - If `true`, the outline is rendered. If `false`, it is skipped.
+    Default: `false`.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
     default is to not draw anything in the interior. This is similar to specifying
     fill: :clear, except optimized out to do nothing.
@@ -705,7 +1211,7 @@ defmodule Scenic.Primitives do
   """
   @spec sector(
           source :: Graph.t() | Primitive.t(),
-          sector :: {radius :: number, start :: number, finish :: number},
+          sector :: sector(),
           options :: list
         ) :: Graph.t() | Primitive.t()
 
@@ -721,13 +1227,30 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
-  Adds text to a graph
+  Create the specification that adds a sector ref to a graph.
 
-  Text pretty simple. Specify the string you would like drawn.
+  See the documentation for `sector/3` for details.
 
-  Data:
+  Example:
 
-      "Draw this string on the screen"
+      sector = sector_spec( {100, 0, 0.4}, fill: :red )
+      graph  = sector.(graph)
+  """
+
+  @spec sector_spec(
+          params :: sector(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def sector_spec(params, opts \\ []) do
+    fn g -> sector(g, params, opts) end
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Adds text to a graph.
+
+  Text is pretty simple. Specify the string you would like drawn.
 
   The following example will draw some text on the screen.
 
@@ -738,20 +1261,20 @@ defmodule Scenic.Primitives do
 
   Text honors the following styles
 
-  * `:hidden` - If true the primitive is rendered. If false, it is skipped.
-    The default is to render the primitive if hidden is not set.
+  * `:hidden` - If `true`, the outline is rendered. If `false`, it is skipped.
+    Default: `false`.
   * `:fill` - The paint to color the text with. If not specified, the default
     is :white. Note: Text can only be filled with solid colors at this time.
   * `:font` - Specifies font family to draw the text with. The built-in system
-    fonts are `:roboto`, `:roboto_mono`, and `:roboto_slab`. If not specified, the
-    default is `:roboto`. You can also load your own font into the Scenic.Cache,
+    fonts are `:roboto` and `:roboto_mono`. If not specified, the
+    default is `:roboto`. You can also load your own font into the `Scenic.Cache`,
     then specify its key for the font.
   * `:font_blur` - Draw the text with a blur effect. If you draw text with blur,
     then draw it again without blur, slightly offset, you get a nice drop shadow
     effect. The default is to draw with no blur.
   * `:text_align` - Specify the alignment of the text you are drawing. You will
-    usually specify one of: :left, :center, or :right. You can also specify
-    vertical alignment. See the TextAlign docs for details.
+    usually specify one of: `:left`, `:center`, or `:right`. You can also specify
+    vertical alignment. See `Scenic.Primitive.Style.TextAlign` for details.
   * `:text_height` - Specify the vertical spacing between rows of text.
 
 
@@ -759,7 +1282,7 @@ defmodule Scenic.Primitives do
 
       graph
       |> text( "Hello World", fill: :yellow, font: :roboto_mono
-        flont_blur: 2.0, text_align: :center )
+          font_blur: 2.0, text_align: :center )
 
   """
   @spec text(
@@ -780,7 +1303,28 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
-  Add a Triangle to a graph
+  Create the specification that adds text to a graph.
+
+  See the documentation for `text/3` for details.
+
+  Example:
+
+      text  = text_spec( "a wombat is a marsupial", fill: :red )
+      graph = text.(graph)
+  """
+
+  @spec text_spec(
+          string :: String.t(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def text_spec(string, opts \\ []) do
+    fn g -> text(g, string, opts) end
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Add a Triangle to a graph.
 
   Triangles are defined by three points on the screen.
 
@@ -797,16 +1341,16 @@ defmodule Scenic.Primitives do
 
   Triangles honor the following styles
 
-  * `:hidden` - If true the primitive is rendered. If false, it is skipped. The default
-    is to render the primitive if hidden is not set.
+  * `:hidden` - If `true`, the outline is rendered. If `false`, it is skipped.
+    Default: `false`.
   * `:fill` - Fills in the interior with the specified paint. If not set, the
     default is to not draw anything in the interior. This is similar to specifying
-    fill: :clear, except optimized out to do nothing.
+    `fill: :clear`, but optimized.
   * `:stroke` - The width and paint to draw the outline with. If the stroke is not
-    specified then the default stroke is `{1, :white}`
+    specified, the default stroke is `{1, :white}`.
   * `:join` - Specifies how the lines are joined together where they meet. Can be
     one of `:miter`, `:round`, or `:bevel`. If join is not specified, then
-    the default is `:miter`
+    the default is `:miter`.
   * `:miter_limit` - Apply an optional miter limit to the joints. If the angle
     is very shallow, the pointy bit might extend out far beyond the joint.
     Specifying `:miter_limit` puts a limit on the joint and bevels it if
@@ -838,13 +1382,34 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
+  Create the specification that adds a triangle to a graph.
+
+  See the documentation for `triangle/3` for details.
+
+  Example:
+
+      triangle = triangle_spec({{10,20}, {100,20}, {50, 120}}, fill: :red )
+      graph    = triangle.(graph)
+  """
+
+  @spec triangle_spec(
+          corners :: Math.triangle(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def triangle_spec(corners, opts \\ []) do
+    fn g -> triangle(g, corners, opts) end
+  end
+
+  # --------------------------------------------------------
+  @doc """
   Update the options of a primitive without changing its data.
 
-  This is not used during graph creation. Only when modifying it later.
+  This is not used during graph creation - only when modifying it later.
 
   All the primitive-specific helpers require you to specify the
   data for the primitive. If you only want to modify a transform
-  or add a style, then use update_opts.
+  or add a style, then use this function.
 
   Example:
 
@@ -862,7 +1427,7 @@ defmodule Scenic.Primitives do
           options :: list
         ) :: Primitive.t()
 
-  def update_opts(p, opts), do: Primitive.put_opts(p, opts)
+  def update_opts(p, opts), do: Primitive.merge_opts(p, opts)
 
   # ============================================================================
   # generic workhorse versions

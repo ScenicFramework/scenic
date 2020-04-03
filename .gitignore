@@ -1,5 +1,3 @@
-priv/
-
 # The directory Mix will write compiled artifacts to.
 /_build
 
@@ -28,8 +26,9 @@ erl_crash.dump
 # ignore office temp files
 ~*.xlsx
 
-mix.lock
-
 # generally ignore object files
 *.o
 *.so
+
+# vscode
+/.elixir_ls/

@@ -1,5 +1,5 @@
 #
-#  Created by Boyd Multerer on 10/07/17.
+#  Created by Boyd Multerer on 2017-10-07.
 #  Copyright © 2017 Kry10 Industries. All rights reserved.
 #
 
@@ -33,7 +33,7 @@ defmodule Scenic.ViewPort.Supervisor do
   end
 
   def init(config) do
-    # seperate the drivers from the rest of the config
+    # separate the drivers from the rest of the config
     drivers = config.drivers
     config = Map.delete(config, :drivers)
 

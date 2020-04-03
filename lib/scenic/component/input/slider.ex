@@ -1,5 +1,70 @@
 defmodule Scenic.Component.Input.Slider do
-  @moduledoc false
+  @moduledoc """
+  Add a slider to a graph
+
+  ## Data
+
+  `{ extents, initial_value}`
+
+  * `extents` gives the range of values. It can take several forms...
+    * `{min, max}` If `min` and `max` are integers, then the slider value will
+    be an integer.
+    * `{min, max}` If `min` and `max` are floats, then the slider value will be
+    an float.
+    * `[a, b, c]` A list of terms. The value will be one of the terms
+  * `initial_value` Sets the initial value (and position) of the slider. It
+  must make sense with the extents you passed in.
+
+  ## Messages
+
+  When the state of the slider changes, it sends an event message to the host
+  scene in the form of:
+
+  `{:value_changed, id, value}`
+
+  ### Options
+
+  Sliders honor the following list of options.
+
+  ## Styles
+
+  Sliders honor the following styles
+
+  * `:hidden` - If `false` the component is rendered. If `true`, it is skipped.
+  The default is `false`.
+  * `:theme` - The color set used to draw. See below. The default is `:dark`
+
+  ## Theme
+
+  Sliders work well with the following predefined themes: `:light`, `:dark`
+
+  To pass in a custom theme, supply a map with at least the following entries:
+
+  * `:border` - the color of the slider line
+  * `:thumb` - the color of slider thumb
+
+  ## Usage
+
+  You should add/modify components via the helper functions in
+  [`Scenic.Components`](Scenic.Components.html#slider/3)
+
+  ## Examples
+
+  The following example creates a numeric slider and positions it on the screen.
+
+      graph
+      |> slider({{0,100}, 0}, id: :num_slider, translate: {20,20})
+
+  The following example creates a list slider and positions it on the screen.
+
+      graph
+      |> slider({[
+          :white,
+          :cornflower_blue,
+          :green,
+          :chartreuse
+        ], :cornflower_blue}, id: :slider_id, translate: {20,20})
+  """
 
   use Scenic.Component, has_children: false
 
@@ -22,6 +87,7 @@ defmodule Scenic.Component.Input.Slider do
   # setup
 
   # --------------------------------------------------------
+  @doc false
   def info(data) do
     """
     #{IO.ANSI.red()}Slider data must be: {extents, initial_value}
@@ -38,6 +104,7 @@ defmodule Scenic.Component.Input.Slider do
   end
 
   # --------------------------------------------------------
+  @doc false
   def verify({ext, initial} = data) do
     verify_initial(ext, initial)
     |> case do
@@ -62,6 +129,7 @@ defmodule Scenic.Component.Input.Slider do
   defp verify_initial(_, _), do: false
 
   # --------------------------------------------------------
+  @doc false
   def init({extents, value}, opts) do
     id = opts[:id]
     styles = opts[:styles]
@@ -90,14 +158,13 @@ defmodule Scenic.Component.Input.Slider do
       tracking: false
     }
 
-    push_graph(graph)
-
-    {:ok, state}
+    {:ok, state, push: graph}
   end
 
   # ============================================================================
 
   # --------------------------------------------------------
+  @doc false
   def handle_input({:cursor_button, {:left, :press, _, {x, _}}}, context, state) do
     state =
       state
@@ -107,8 +174,7 @@ defmodule Scenic.Component.Input.Slider do
 
     ViewPort.capture_input(context, [:cursor_button, :cursor_pos])
 
-    # %{state | graph: graph}}
-    {:noreply, state}
+    {:noreply, state, push: state.graph}
   end
 
   # --------------------------------------------------------
@@ -117,14 +183,13 @@ defmodule Scenic.Component.Input.Slider do
 
     ViewPort.release_input(context, [:cursor_button, :cursor_pos])
 
-    # %{state | graph: graph}}
-    {:noreply, state}
+    {:noreply, state, push: state.graph}
   end
 
   # --------------------------------------------------------
   def handle_input({:cursor_pos, {x, _}}, _context, %{tracking: true} = state) do
     state = update_slider(x, state)
-    {:noreply, state}
+    {:noreply, state, push: state.graph}
   end
 
   # --------------------------------------------------------
@@ -177,7 +242,6 @@ defmodule Scenic.Component.Input.Slider do
     Graph.modify(graph, :thumb, fn p ->
       update_opts(p, translate: {new_x, 0})
     end)
-    |> push_graph()
   end
 
   # --------------------------------------------------------
