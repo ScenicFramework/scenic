@@ -840,7 +840,7 @@ defmodule Scenic.Primitives do
 
       quad = quad_spec(
         {{10,20}, {100,20}, {90, 120}, {15, 70}},
-        fill, :red, stroke: {3, :blue}, join: :round
+        fill: :red, stroke: {3, :blue}, join: :round
       )
 
       graph = quad.(graph)
@@ -881,7 +881,7 @@ defmodule Scenic.Primitives do
 
       rect = rect_spec(
         {{10,20}, {100,20}},
-        fill, :red, stroke: {3, :blue}, join: :round
+        fill: :red, stroke: {3, :blue}, join: :round
       )
 
       graph = rect.(graph)
@@ -934,7 +934,7 @@ defmodule Scenic.Primitives do
 
       graph
       |> rectangle( {100, 200},
-        fill, :red, stroke: {3, :blue}, join: :round )
+        fill: :red, stroke: {3, :blue}, join: :round )
 
   """
   @spec rectangle(
@@ -963,7 +963,7 @@ defmodule Scenic.Primitives do
 
       rect = rectangle_spec(
         {{10,20}, {100,20}},
-        fill, :red, stroke: {3, :blue}, join: :round
+        fill: :red, stroke: {3, :blue}, join: :round
       )
 
       graph = rect.(graph)
@@ -1004,7 +1004,7 @@ defmodule Scenic.Primitives do
 
       rect = rrect_spec(
         {{10,20}, {100,20}},
-        fill, :red, stroke: {3, :blue}, join: :round
+        fill: :red, stroke: {3, :blue}, join: :round
       )
 
       graph = rect.(graph)
@@ -1049,7 +1049,7 @@ defmodule Scenic.Primitives do
 
       graph
       |> rounded_rectangle( {100, 200, 8},
-        fill, :red, stroke: {3, :blue} )
+        fill: :red, stroke: {3, :blue} )
 
   """
   @spec rounded_rectangle(
@@ -1078,7 +1078,7 @@ defmodule Scenic.Primitives do
 
       rect = rounded_rectangle_spec(
         {{10,20}, {100,20}},
-        fill, :red, stroke: {3, :blue}, join: :round
+        fill: :red, stroke: {3, :blue}, join: :round
       )
 
       graph = rect.(graph)
