@@ -651,7 +651,7 @@ defmodule Scenic.Primitives do
 
   Lines honor the following styles
 
-  * `:hidden` - If `true`, the outline is rendered. If `false`, it is skipped.
+  * `:hidden` - If `true`, the line is skipped. If `false`, the line is rendered.
     Default: `false`.
   * `:stroke` - The width and paint to draw the line with. If the stroke is not
     specified, the default stroke is `{1, :white}`.

@@ -30,7 +30,7 @@ defmodule Scenic.Graph do
         |> rounded_rectangle( {400, 30}, stroke: {2, :blue})
       end, translate: {20, 100}, text_align: :center)
 
-  There is a fair amount going on in the example above, we we will break it down.
+  There is a fair amount going on in the example above, we will break it down line by line.
   The first line
 
       @graph  Scenic.Graph.build()
