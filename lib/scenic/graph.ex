@@ -9,7 +9,7 @@ defmodule Scenic.Graph do
 
   ## What is a Graph
 
-  There are many types of graphs in the world of computer science. There are graphs that
+  There are many types of graphs in the field of Computer Science. There are graphs that
   show data to a user. There are graphs that give access to databases. Graphs that link
   people to a social network.
 
@@ -40,7 +40,7 @@ defmodule Scenic.Graph do
   time and will be very fast to access later during runtime.
 
   The empty graph that is returned from `build()` is then passed to `text(...)`, which
-  adds a text primitive to the root group. The resulting graph from that call is then
+  adds a text primitive to the root group. The graph returned from that call is then
   passed again into the `group(...)` call. This creates a new group and then calls an
   anonymous function that you can use to add primitives to the newly created group.
 
@@ -108,7 +108,7 @@ defmodule Scenic.Graph do
 
   ## Accessing Primitives
 
-  When using a Graph, it is extremely common to access and modify primitives. They way
+  When using a Graph, it is extremely common to access and modify primitives. The way
   you do this is by putting an id on the primitives you care about in a graph.
 
       @graph Graph.build()
@@ -151,11 +151,11 @@ defmodule Scenic.Graph do
   @type key :: {:graph, Scenic.Scene.ref(), any}
 
   # ===========================================================================
-  # define a policy error here - not found or something like that
+  # TODO: define a policy error here - not found or something like that
   defmodule Error do
     @moduledoc false
     defexception message: "Graph was unable to perform the operation",
-                 # expecting more appropriate messages when raising this
+                 # TODO: expecting more appropriate messages when raising this
                  primitive: nil,
                  style: nil
   end
@@ -202,12 +202,12 @@ defmodule Scenic.Graph do
   @doc """
   Add a pre-built primitive to the current group in the graph.
 
-  This is usually called during graph construction. When add a new Group primitive
-  to a Graph, it marks the new group as the current one before calling the group's
-  builder function. This is what allows you to add primitives to the right place
+  This is usually called during graph construction. When a new Group primitive
+  is added to a Graph, it marks the new group as the current one before calling the group's
+  builder function. This is what allows you to add primitives to the correct place
   in the new Group.
 
-  Note that all primitives added to a group are appended to the draw order.
+  Note: All primitives added to a group are appended to the draw order.
   """
   @spec add(graph :: t(), primitive :: Primitive.t()) :: t()
   def add(graph, primitive)
@@ -221,12 +221,12 @@ defmodule Scenic.Graph do
   @doc """
   Build and add a primitive to the current group in the graph.
 
-  This is usually called during graph construction. When add a new Group primitive
-  to a Graph, it marks the new group as the current one before calling the group's
-  builder function. This is what allows you to add primitives to the right place
+  This is usually called during graph construction. When a new Group primitive
+  is added to a Graph, it marks the new group as the current one before calling the group's
+  builder function. This is what allows you to add primitives to the correct place
   in the new Group.
 
-  Note that all primitives added to a group are appended to the draw order.
+  Note: All primitives added to a group are appended to the draw order.
   """
   @spec add(graph :: t(), module :: atom, data :: any, opts :: keyword) :: t()
   def add(graph, primitive_module, primitive_data, opts \\ [])
@@ -294,8 +294,8 @@ defmodule Scenic.Graph do
     |> Map.put(:ids, ids)
   end
 
-  # if the thing we're deleting is a group, find all descendants of the
-  # grop so they can be deleted, too
+  # If the thing we're deleting is a group, find all descendants of the
+  # group so they can also be deleted.
   defp children_to_remove(prims, Group, children) do
     ([children] ++
        Enum.reduce(children, [], fn child, acc ->
@@ -309,7 +309,7 @@ defmodule Scenic.Graph do
 
   defp children_to_remove(_prims, _, _children), do: []
 
-  # remove all the descendants of the group that was just deleted
+  # Remove all the descendants of the group that was just deleted.
   defp remove_group_children(children, prims, ids) do
     Enum.reduce(children, {prims, ids}, fn child, {prims, ids} ->
       id = Map.get(prims[child], :id, nil)
@@ -335,7 +335,7 @@ defmodule Scenic.Graph do
   Add to a specified group in a graph.
 
   Similar to adding a group during graph construction, the `add_to` function accepts
-  a builder function that adds to a a graph under the identified group.
+  a builder function that adds to a graph under the identified group.
 
   Primitives with the `id` that are not groups are ignored.
 
@@ -552,7 +552,7 @@ defmodule Scenic.Graph do
     primitives = Map.put(primitives, uid, primitive)
     graph = Map.put(graph, :primitives, primitives)
 
-    # if a parent is requested, reference the element from the parent at the right position
+    # if a parent is requested, reference the element from the parent at the [sic]right/correct position
     graph =
       case parent_uid do
         -1 ->
@@ -895,7 +895,7 @@ defmodule Scenic.Graph do
   with an accumulator. The return value of the callback is the new accumulator.
 
   This is extremely similar in behaviour to Elixir's Enum.reduce function, except
-  that it understands now to navigate the tree structure of a Graph.
+  that it understands how to navigate the tree structure of a Graph.
   """
 
   # reduce a graph via traversal from the root node
@@ -912,7 +912,7 @@ defmodule Scenic.Graph do
   function with an accumulator.
 
   This is extremely similar in behaviour to Elixir's Enum.reduce function, except
-  that it understands now to navigate the tree structure of a Graph.
+  that it understands how to navigate the tree structure of a Graph.
   """
   @spec reduce(graph :: t(), id :: any, acc :: any, action :: function) :: any
   def reduce(%__MODULE__{} = graph, id, acc, action) when is_function(action, 2) do
