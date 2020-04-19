@@ -264,7 +264,6 @@ defmodule Scenic.Component.Input.Slider do
 
   # --------------------------------------------------------
   # calculate the position if the extents is a list of arbitrary values
-  defp calc_slider_position(width, extents, value)
 
   defp calc_slider_position(width, ext, value) when is_list(ext) do
     max_index = Enum.count(ext) - 1

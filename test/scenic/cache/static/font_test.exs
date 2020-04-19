@@ -46,10 +46,10 @@ defmodule Scenic.Cache.Static.FontTest do
     assert Font.fetch("missing") == {:error, :not_found}
   end
 
-  test "put is NOT mapped in" do
-    # static caches only get put_new...
-    assert_raise UndefinedFunctionError, fn -> Font.put("hash", :data) end
-  end
+  # test "put is NOT mapped in" do
+  #   # static caches only get put_new...
+  #   assert_raise UndefinedFunctionError, fn -> Font.put("hash", :data) end
+  # end
 
   test "put_new is mapped in" do
     assert Font.put_new("hash", :data) == {:ok, "hash"}
