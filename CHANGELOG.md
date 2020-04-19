@@ -3,7 +3,9 @@
 ## 0.10.3
 * Fix bug allowing handle_continue to be overridden by scene. Thank you @lmarlow
 * Fix bug where font in a style map wasn't being honored during graph build
-* add group_spec_r to primitives.ex. Thank you @nyaray
+* Add group_spec_r to primitives.ex. Thank you @nyaray
+* Numerous documentation fixes by @grahamhay
+* Clean up warnings, timing issues in test
 
 
 ## 0.10.2
