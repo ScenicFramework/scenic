@@ -76,6 +76,7 @@ defmodule Scenic.Component.Button do
 
   * `:text` - the color of the text in the button
   * `:background` - the normal background of the button
+  * `:border` - the border of the button
   * `:active` - the background while the button is pressed
 
   ## Usage
