@@ -347,7 +347,7 @@ defmodule Scenic.Primitive do
   Returns the primitive with the updated styles.
   """
   @spec put_styles(primitive :: Primitive.t(), styles :: map) :: Primitive.t()
-  def put_styles(primitve, styles)
+  def put_styles(primitive, styles)
   def put_styles(%Primitive{} = p, nil), do: Map.delete(p, :styles)
   def put_styles(%Primitive{} = p, s) when s == %{}, do: Map.delete(p, :styles)
 
@@ -454,7 +454,7 @@ defmodule Scenic.Primitive do
   Returns the primitive with the updated transforms.
   """
   @spec put_transforms(primitive :: Primitive.t(), transforms :: map) :: Primitive.t()
-  def put_transforms(primitve, transforms)
+  def put_transforms(primitive, transforms)
   def put_transforms(%Primitive{} = p, nil), do: Map.delete(p, :transforms)
   def put_transforms(%Primitive{} = p, t) when t == %{}, do: Map.delete(p, :transforms)
 

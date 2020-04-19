@@ -269,7 +269,7 @@ defmodule Scenic.ViewPort.InputTest do
           root_graph_key: graph_key,
           input_captures: %{},
           max_depth: 10,
-          hover_primitve: nil
+          hover_primitive: nil
         }
       )
 
@@ -289,7 +289,7 @@ defmodule Scenic.ViewPort.InputTest do
           root_graph_key: graph_key,
           input_captures: %{},
           max_depth: 10,
-          hover_primitve: nil
+          hover_primitive: nil
         }
       )
 
@@ -316,7 +316,7 @@ defmodule Scenic.ViewPort.InputTest do
           root_graph_key: graph_key,
           input_captures: %{},
           max_depth: 10,
-          hover_primitve: nil
+          hover_primitive: nil
         }
       )
 
@@ -342,7 +342,7 @@ defmodule Scenic.ViewPort.InputTest do
           root_graph_key: graph_key,
           input_captures: %{},
           max_depth: 10,
-          hover_primitve: {1, graph_key}
+          hover_primitive: {1, graph_key}
         }
       )
 
@@ -368,7 +368,7 @@ defmodule Scenic.ViewPort.InputTest do
           root_graph_key: graph_key,
           input_captures: %{},
           max_depth: 10,
-          hover_primitve: {1, graph_key}
+          hover_primitive: {1, graph_key}
         }
       )
 
@@ -391,7 +391,7 @@ defmodule Scenic.ViewPort.InputTest do
           root_graph_key: graph_key,
           input_captures: %{},
           max_depth: 10,
-          hover_primitve: {1, graph_key}
+          hover_primitive: {1, graph_key}
         }
       )
 
@@ -645,7 +645,7 @@ defmodule Scenic.ViewPort.InputTest do
           root_graph_key: graph_key,
           input_captures: %{cursor_pos: context},
           max_depth: 10,
-          hover_primitve: nil
+          hover_primitive: nil
         }
       )
 
@@ -670,7 +670,7 @@ defmodule Scenic.ViewPort.InputTest do
           root_graph_key: graph_key,
           input_captures: %{cursor_pos: context},
           max_depth: 10,
-          hover_primitve: nil
+          hover_primitive: nil
         }
       )
 
@@ -695,7 +695,7 @@ defmodule Scenic.ViewPort.InputTest do
           root_graph_key: graph_key,
           input_captures: %{cursor_pos: context},
           max_depth: 10,
-          hover_primitve: nil
+          hover_primitive: nil
         }
       )
 
@@ -723,7 +723,7 @@ defmodule Scenic.ViewPort.InputTest do
           root_graph_key: graph_key,
           input_captures: %{cursor_pos: context},
           max_depth: 10,
-          hover_primitve: {1, graph_key1}
+          hover_primitive: {1, graph_key1}
         }
       )
 
