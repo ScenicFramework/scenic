@@ -16,7 +16,7 @@ defmodule Scenic.ViewPort do
   ## Overview
 
   The job of the `ViewPort` is to coordinate the flow of information between
-  the scenes and the drivers. Scene's and Drivers should not know anything
+  the scenes and the drivers. Scenes and Drivers should not know anything
   about each other. An app should work identically from its point of view
   no matter if there is one, multiple, or no drivers currently running.
 
@@ -25,20 +25,20 @@ defmodule Scenic.ViewPort do
   only care about graphs and should not need to know anything about the
   logic or state encapsulated in Scenes.
 
-  The goal is to isolate app data & logic from render data & logic. The
-  ViewPort is the choke point between them that makes sense of the flow
+  The goal is to isolate app data and logic from render data and logic. The
+  ViewPort is the connection between them that makes sense of the flow
   of information.
 
   ## OUTPUT
 
   Practically speaking, the `ViewPort` is the owner of the ETS tables that
-  carry the graphs (and any other necessary support info). If the VP
-  crashes, then all that information needs to be rebuilt. The VP monitors
+  carry the graphs (and any other necessary support info). If the ViewPort
+  crashes, then all that information needs to be rebuilt. The ViewPort monitors
   all running scenes and does the appropriate cleanup when any of them
   goes DOWN.
 
   The scene is responsible for generating graphs and writing them to
-  the graph ETS table. (Also tried casting the graph to the ViewPort
+  the graph ETS table. (**Note:** We also tried casting the graph to the ViewPort
   so that the table could be non-public, but that had issues)
 
   The drivers should only read from the graph tables.
@@ -47,8 +47,8 @@ defmodule Scenic.ViewPort do
 
   When user input happens, the drivers send it to the `ViewPort`.
   Input that does not depend on screen position (key presses, audio
-  window events, etc.) Are sent to the root scene unless some other
-  scene has captured that type of input (see captured input) below.
+  window events, etc.) is sent to the root scene unless some other
+  scene has captured that type of input (see captured input below).
 
   If the input event does depend on position (cursor position, cursor
   button presses, scrolling, etc.) then the ViewPort needs to
@@ -74,8 +74,8 @@ defmodule Scenic.ViewPort do
   but I wouldn't really recommend it.
 
   Any scene can cancel the current capture. This would probably
-  leave the scene that thinks it has "captured" the input in a
-  weird state, so I wouldn't recommend it.
+  leave the scene that thinks it has "captured" the input in an inconsistent
+  state, so this is not recommended.
 
   """
 
