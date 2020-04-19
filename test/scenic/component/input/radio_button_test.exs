@@ -4,7 +4,7 @@
 #
 
 defmodule Scenic.Component.Input.RadioButtonTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   doctest Scenic
 
   # alias Scenic.Component

@@ -42,10 +42,10 @@ defmodule Scenic.Cache.Static.FontMetricsTest do
     assert Static.FontMetrics.fetch("missing") == {:error, :not_found}
   end
 
-  test "put is NOT mapped in" do
-    # static caches only get put_new...
-    assert_raise UndefinedFunctionError, fn -> Static.FontMetrics.put("hash", :data) end
-  end
+  # test "put is NOT mapped in" do
+  #   # static caches only get put_new...
+  #   assert_raise UndefinedFunctionError, fn -> Static.FontMetrics.put("hash", :data) end
+  # end
 
   test "put_new is mapped in" do
     assert Static.FontMetrics.put_new("hash", :data) == {:ok, "hash"}

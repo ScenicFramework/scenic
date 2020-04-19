@@ -39,10 +39,10 @@ defmodule Scenic.Cache.Static.TextureTest do
     assert Texture.fetch("missing") == {:error, :not_found}
   end
 
-  test "put is NOT mapped in" do
-    # static caches only get put_new...
-    assert_raise UndefinedFunctionError, fn -> Texture.put("hash", :data) end
-  end
+  # test "put is NOT mapped in" do
+  #   # static caches only get put_new...
+  #   assert_raise UndefinedFunctionError, fn -> Texture.put("hash", :data) end
+  # end
 
   test "put_new is mapped in" do
     assert Texture.put_new("hash", :data) == {:ok, "hash"}
