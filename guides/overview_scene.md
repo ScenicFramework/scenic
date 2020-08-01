@@ -52,7 +52,7 @@ whose helper function is imported from the `Scenic.Components` module.
 
         @graph Graph.build()
           |> text("Hello World", font_size: 22, translate: {20, 80})
-          |> button({"Do Something", :btn_something}, translate: {20, 180})
+          |> button("Do Something", translate: {20, 180})
 
         def init( _scene_args, _options ) do
           {:ok, @graph, push: @graph}
