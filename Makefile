@@ -21,8 +21,9 @@ STATIC = $(PREFIX)/static
 ERL_CFLAGS ?= -I$(ERL_EI_INCLUDE_DIR)
 ERL_LDFLAGS ?= -L$(ERL_EI_LIBDIR)
 
-LDFLAGS += -fPIC -shared  -dynamiclib
-CFLAGS ?= -fPIC -O2 -Wall -Wextra -Wno-unused-parameter -std=c99
+LDFLAGS += -shared  -dynamiclib
+CFLAGS += -fPIC
+CFLAGS ?= -O2 -Wall -Wextra -Wno-unused-parameter -std=c99
 
 ifeq ($(CROSSCOMPILE),)
 ifeq ($(shell uname),Darwin)
