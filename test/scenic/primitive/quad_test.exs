@@ -12,6 +12,7 @@ defmodule Scenic.Primitive.QuadTest do
   alias Scenic.Primitive.Quad
 
   @convex {{100, 300}, {300, 180}, {400, 310}, {300, 520}}
+
   # @concave      {{100,300},{300,180},{400,310},{300,200}}
   # @complex      {{100,300},{400,100},{400,300},{100,100}}
 
