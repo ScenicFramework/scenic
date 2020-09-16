@@ -36,7 +36,7 @@ defmodule Scenic.Primitive do
   versions of the drivers.
 
   * [`Arc`](Scenic.Primitive.Arc.html) draws an arc. This would be a line cut out of a part of the edge of a circle. If you want a shape that looks like a piece of pie, then you should use the [`Sector`](Scenic.Primitive.Sector.html).
-  * [`Circle`](Scenic.Primitive.Circle.html) draws a circle. 
+  * [`Circle`](Scenic.Primitive.Circle.html) draws a circle.
   * [`Ellipse`](Scenic.Primitive.Ellipse.html) draws an ellipse.
   * [`Group`](Scenic.Primitive.Group.html) doesn't draw anything. Instead, it creates a node in the graph that you can insert more primitives into. Any styles or transforms you apply to the Group are inherited by all the primitives below it.
   * [`Line`](Scenic.Primitive.Line.html) draws a line.
@@ -74,6 +74,7 @@ defmodule Scenic.Primitive do
   @not_styles [
     :module,
     :id,
+    :name,
     :parent_uid,
     :builder,
     :data,
@@ -88,7 +89,7 @@ defmodule Scenic.Primitive do
 
   @transform_types [:pin, :rotate, :matrix, :scale, :translate]
 
-  @standard_options [:id]
+  @standard_options [:id, :name]
 
   # note: the following fields are all optional on a primitive.
   # :id, :tags, :event_filter, :state, :styles, :transforms
@@ -239,8 +240,8 @@ defmodule Scenic.Primitive do
 
     # enumerate and apply each of the standard opts
     Enum.reduce(opts, p, fn
-      {:id, v}, p ->
-        Map.put(p, :id, v)
+      {opt, v}, p ->
+        Map.put(p, opt, v)
     end)
   end
 
