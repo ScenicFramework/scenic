@@ -1394,6 +1394,7 @@ defmodule Scenic.Scene do
               nil -> [styles: styles, id: id]
               vp -> [viewport: vp, styles: styles, id: id]
             end
+
           init_opts =
             case name do
               nil -> init_opts

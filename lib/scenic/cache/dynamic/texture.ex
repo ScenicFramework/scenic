@@ -5,6 +5,7 @@
 
 defmodule Scenic.Cache.Dynamic.Texture do
   use Scenic.Cache.Base, name: "texture", static: false
+
   # alias Scenic.Cache.Support
 
   # import IEx

@@ -5,6 +5,7 @@
 
 defmodule Scenic.Cache.Dynamic.TextureTest do
   use ExUnit.Case, async: false
+
   # doctest Scenic.Cache.Dynamic.Texture
 
   alias Scenic.Utilities
