@@ -109,7 +109,7 @@ defmodule Scenic.Scene do
   immediate control. You update that graph by calling `push_graph`
   again.
 
-  **Note: ** The use of `push_graph` when returning from a scene update 
+  **Note: ** The use of `push_graph` when returning from a scene update
   has been deprecated. The use of `push: graph` in the return value is preferred.
 
   This does mean you could maintain two separate graphs
@@ -664,6 +664,12 @@ defmodule Scenic.Scene do
       # child spec that really starts up scene, with this module as an option
       @doc false
       def child_spec({args, opts}) when is_list(opts) do
+        opts =
+          case unquote(using_opts)[:name] do
+            mod when is_atom(mod) -> Keyword.put_new(opts, :name, mod)
+            _ -> opts
+          end
+
         %{
           id: make_ref(),
           start: {Scenic.Scene, :start_link, [__MODULE__, args, opts]},
@@ -1394,6 +1400,7 @@ defmodule Scenic.Scene do
               nil -> [styles: styles, id: id]
               vp -> [viewport: vp, styles: styles, id: id]
             end
+
           init_opts =
             case name do
               nil -> init_opts

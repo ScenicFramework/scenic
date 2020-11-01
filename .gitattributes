@@ -1,0 +1,6 @@
+
+# Tests using this test data assert on the hashes so checking them out with
+# Windows line endings causes test failures.
+test/test_data/*            text eol=lf
+test/artifacts/sample_file  text eol=lf
+test/artifacts/text_file    text eol=lf

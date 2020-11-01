@@ -49,6 +49,19 @@ defmodule Scenic.Component do
   should do some basic validation that the data being set up is valid, then provide
   feedback if it isn't.
 
+  ## Optional: Named Component
+
+  Whether you override one or more message handlers, like `handle_info/2`,
+  you might want to use registered name as
+  [`Process.dest()`](https://hexdocs.pm/elixir/Process.html?#t:dest/0).
+  For this to be possible, you might pass `name:` keyword argument in a call
+  to `use Scenic.Component`.
+
+      use Scenic.Component, name: __MODULE__
+
+  Once passed, it limits the usage of this particular component to
+  a single instance, because two processes cannot be registered under the same name.
+
   ## Optional: No Children
 
   There is an optimization you can use. If you know for certain that your component

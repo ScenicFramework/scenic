@@ -32,6 +32,7 @@ defmodule Scenic.Primitives do
            start :: number,
            finish :: number
          }
+
   # import IEx
 
   @moduledoc """

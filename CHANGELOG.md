@@ -6,6 +6,9 @@
 * Add group_spec_r to primitives.ex. Thank you @nyaray
 * Numerous documentation fixes by @grahamhay
 * Clean up warnings, timing issues in test
+* Fix compiler options for ARM. PR #198 Thank you Justin! @mobileoverlord
+* Fix examples in docs. PR #196. Thank you @nschulzke
+* Add :name option to components. PR #185. Thank you @tiger808
 
 
 ## 0.10.2
