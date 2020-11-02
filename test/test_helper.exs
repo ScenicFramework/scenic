@@ -1,5 +1,5 @@
 Registry.start_link(keys: :duplicate, name: :viewport_registry)
 Registry.start_link(keys: :duplicate, name: :input_registry)
 Registry.start_link(keys: :duplicate, name: :driver_registry)
-Scenic.Cache.Support.Supervisor.start_link()
+Scenic.Cache.Support.Supervisor.start_link(nil)
 ExUnit.start()

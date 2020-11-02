@@ -17,6 +17,16 @@ defmodule Scenic.ViewPort.SupervisorTop do
   # ============================================================================
   # setup the viewport supervisor
 
+  def child_spec(viewports) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, viewports},
+      type: :supervisor,
+      restart: :permanent,
+      shutdown: 500
+    }
+  end
+
   def start_link(viewports) do
     Supervisor.start_link(__MODULE__, viewports)
   end
