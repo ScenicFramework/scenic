@@ -415,7 +415,7 @@ defmodule Scenic.ViewPort.InputTest do
         }
       )
 
-    assert_received({:"$gen_cast", {:input, {:viewport_enter, :viewport_enter_input}, context}})
+    assert_received({:"$gen_cast", {:input, {:viewport_enter, :viewport_enter_input}, _}})
   end
 
   test "input viewport_exit", %{graph_key: graph_key} do
@@ -429,7 +429,7 @@ defmodule Scenic.ViewPort.InputTest do
         }
       )
 
-    assert_received({:"$gen_cast", {:input, {:viewport_exit, :viewport_exit_input}, context}})
+    assert_received({:"$gen_cast", {:input, {:viewport_exit, :viewport_exit_input}, _}})
   end
 
   test "input other", %{graph_key: graph_key} do
@@ -443,7 +443,7 @@ defmodule Scenic.ViewPort.InputTest do
         }
       )
 
-    assert_received({:"$gen_cast", {:input, {:other, 123}, context}})
+    assert_received({:"$gen_cast", {:input, {:other, 123}, _}})
   end
 
   # ============================================================================
@@ -727,7 +727,7 @@ defmodule Scenic.ViewPort.InputTest do
         }
       )
 
-    assert_received({:"$gen_cast", {:input, {:cursor_pos, {1.0, 1.0}}, context}})
+    assert_received({:"$gen_cast", {:input, {:cursor_pos, {1.0, 1.0}}, _}})
     assert_received({:"$gen_cast", {:input, {:cursor_exit, 1}, _}})
     refute_received({:"$gen_cast", {:input, {:cursor_enter, _}, _}})
   end

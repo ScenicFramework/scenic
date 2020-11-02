@@ -1121,7 +1121,7 @@ defmodule Scenic.Cache.Base do
         GenServer.cast(pid, {module, type, target})
       catch
         kind, reason ->
-          formatted = Exception.format(kind, reason, System.stacktrace())
+          formatted = Exception.format(kind, reason, __STACKTRACE__)
           IO.puts("dispatch_notification/3 failed with #{formatted}")
       end
     end

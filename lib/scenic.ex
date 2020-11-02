@@ -85,7 +85,7 @@ defmodule Scenic do
   defp do_init([]) do
     [
       {Scenic.ViewPort.Tables, nil},
-      supervisor(Scenic.Cache.Support.Supervisor, []),
+      {Scenic.Cache.Support.Supervisor, [nil]},
       {DynamicSupervisor, name: @viewports, strategy: :one_for_one}
     ]
     |> Supervisor.init(strategy: :one_for_one)
@@ -96,8 +96,8 @@ defmodule Scenic do
   defp do_init(viewports) do
     [
       {Scenic.ViewPort.Tables, nil},
-      supervisor(Scenic.Cache.Support.Supervisor, []),
-      supervisor(Scenic.ViewPort.SupervisorTop, [viewports]),
+      {Scenic.Cache.Support.Supervisor, [nil]},
+      {Scenic.ViewPort.SupervisorTop, [viewports]},
       {DynamicSupervisor, name: @viewports, strategy: :one_for_one}
     ]
     |> Supervisor.init(strategy: :one_for_one)

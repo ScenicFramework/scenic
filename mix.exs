@@ -36,10 +36,7 @@ defmodule Scenic.Mixfile do
   end
 
   def application do
-    [
-      # mod: {Scenic, []},
-      extra_applications: [:logger]
-    ]
+    [extra_applications: [:logger, :crypto, :iex]]
   end
 
   defp deps do

@@ -11,10 +11,20 @@ defmodule Scenic.Cache.Support.Supervisor do
 
   #  import IEx
 
+  def child_spec() do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, nil},
+      type: :supervisor,
+      restart: :permanent,
+      shutdown: 500
+    }
+  end
+
   # ============================================================================
   # setup the viewport supervisor
 
-  def start_link() do
+  def start_link(_) do
     Supervisor.start_link(__MODULE__, :ok)
   end
 
