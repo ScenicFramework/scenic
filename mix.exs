@@ -36,11 +36,7 @@ defmodule Scenic.Mixfile do
   end
 
   def application do
-    case Mix.env() do
-      :dev ->[extra_applications: [:logger, :iex]]
-      :test ->[extra_applications: [:logger, :iex]]
-      _ -> [extra_applications: [:logger]]
-    end
+    [extra_applications: [:logger, :crypto, :iex]]
   end
 
   defp deps do
