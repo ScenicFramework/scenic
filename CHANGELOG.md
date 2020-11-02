@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.4
+* Can pass in a :name option to scenes/components @am-kantox
+* Clean up warnings under Elixir 1.11
+* Tell git not to mangle line endings on test data - part of getting Windows support working. @trejkaz
+
+
 ## 0.10.3
 * Fix bug allowing handle_continue to be overridden by scene. Thank you @lmarlow
 * Fix bug where font in a style map wasn't being honored during graph build
