@@ -666,6 +666,7 @@ defmodule Scenic.Scene do
       def child_spec({args, opts}) when is_list(opts) do
         opts =
           case unquote(using_opts)[:name] do
+            nil -> opts
             mod when is_atom(mod) -> Keyword.put_new(opts, :name, mod)
             _ -> opts
           end
