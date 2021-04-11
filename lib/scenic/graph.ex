@@ -762,9 +762,9 @@ defmodule Scenic.Graph do
   Examples:
 
       graph
-      |> Graph.modify( :explicit_id, &text("Updated Text 1") )
-      |> Graph.modify( {:id, 123}, &text("Updated Text 2") )
-      |> Graph.modify( &match?({:id,_},&1), &text("Updated Text 3") )
+      |> Graph.modify( :explicit_id, &text(&1, "Updated Text 1") )
+      |> Graph.modify( {:id, 123}, &text(&1, "Updated Text 2") )
+      |> Graph.modify( &match?({:id,_},&1), &text(&1, "Updated Text 3") )
   """
 
   @spec modify(
