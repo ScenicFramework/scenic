@@ -333,7 +333,6 @@ nif_clear_g(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
 static ERL_NIF_TERM
 nif_clear_ga(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   ErlNifBinary  pixels;
-  unsigned int  size;
   unsigned int  g;
   unsigned int  a;
 
@@ -355,7 +354,6 @@ nif_clear_ga(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
 static ERL_NIF_TERM
 nif_clear_rgb(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   ErlNifBinary  pixels;
-  unsigned int  size;
   unsigned int  r;
   unsigned int  g;
   unsigned int  b;
@@ -380,7 +378,6 @@ nif_clear_rgb(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
 static ERL_NIF_TERM
 nif_clear_rgba(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   ErlNifBinary  pixels;
-  unsigned int  size;
   unsigned int  r;
   unsigned int  g;
   unsigned int  b;
