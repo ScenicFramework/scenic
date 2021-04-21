@@ -333,7 +333,6 @@ nif_clear_g(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
 static ERL_NIF_TERM
 nif_clear_ga(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   ErlNifBinary  pixels;
-  unsigned int  size;
   unsigned int  g;
   unsigned int  a;
 
@@ -343,8 +342,7 @@ nif_clear_ga(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   if ( !enif_get_uint(env, argv[2], &a) )      {return enif_make_badarg(env);}  
 
   // clear the pixels
-  size = pixels.size / 2;
-  for( unsigned int i = 0; i < size; i += 2) {
+  for( unsigned int i = 0; i < pixels.size; i += 2) {
     pixels.data[i] = g;
     pixels.data[i+1] = a;
   }
@@ -356,7 +354,6 @@ nif_clear_ga(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
 static ERL_NIF_TERM
 nif_clear_rgb(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   ErlNifBinary  pixels;
-  unsigned int  size;
   unsigned int  r;
   unsigned int  g;
   unsigned int  b;
@@ -368,8 +365,7 @@ nif_clear_rgb(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   if ( !enif_get_uint(env, argv[3], &b) )      {return enif_make_badarg(env);}
 
   // clear the pixels
-  size = pixels.size / 3;
-  for( unsigned int i = 0; i < size; i += 3) {
+  for( unsigned int i = 0; i < pixels.size; i += 3) {
     pixels.data[i] = r;
     pixels.data[i+1] = g;
     pixels.data[i+2] = b;
@@ -382,7 +378,6 @@ nif_clear_rgb(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
 static ERL_NIF_TERM
 nif_clear_rgba(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   ErlNifBinary  pixels;
-  unsigned int  size;
   unsigned int  r;
   unsigned int  g;
   unsigned int  b;
@@ -396,8 +391,7 @@ nif_clear_rgba(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   if ( !enif_get_uint(env, argv[4], &a) )      {return enif_make_badarg(env);}
 
   // clear the pixels
-  size = pixels.size / 4;
-  for( unsigned int i = 0; i < size; i += 4) {
+  for( unsigned int i = 0; i < pixels.size; i += 4) {
     pixels.data[i] = r;
     pixels.data[i+1] = g;
     pixels.data[i+2] = b;

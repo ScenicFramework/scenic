@@ -255,6 +255,7 @@ defmodule Scenic.Utilities.TextureTest do
     tex = Texture.clear!(tex, 4)
     assert Texture.get(tex, 1, 1) == 4
     assert Texture.get(tex, 1, 2) == 4
+    assert Texture.get(tex, 10, 12) == 4
   end
 
   test "clear! works with g textures uses black by default" do
@@ -262,14 +263,17 @@ defmodule Scenic.Utilities.TextureTest do
       Texture.build!(:g, @width, @height)
       |> Texture.put!(1, 1, 7)
       |> Texture.put!(1, 2, 9)
+      |> Texture.put!(10, 12, 11)
 
     assert Texture.get(tex, 1, 1) == 7
     assert Texture.get(tex, 1, 2) == 9
+    assert Texture.get(tex, 10, 12) == 11
     assert Texture.get(tex, 1, 3) == 0
 
     tex = Texture.clear!(tex)
     assert Texture.get(tex, 1, 1) == 0
     assert Texture.get(tex, 1, 2) == 0
+    assert Texture.get(tex, 10, 12) == 0
     assert Texture.get(tex, 1, 3) == 0
   end
 
@@ -278,14 +282,17 @@ defmodule Scenic.Utilities.TextureTest do
       Texture.build!(:g, @width, @height, clear: :dark_khaki)
       |> Texture.put!(1, 1, 7)
       |> Texture.put!(1, 2, 9)
+      |> Texture.put!(10, 12, 11)
 
     assert Texture.get(tex, 1, 1) == 7
     assert Texture.get(tex, 1, 2) == 9
+    assert Texture.get(tex, 10, 12) == 11
     assert Texture.get(tex, 1, 3) == 159
 
     tex = Texture.clear!(tex)
     assert Texture.get(tex, 1, 1) == 159
     assert Texture.get(tex, 1, 2) == 159
+    assert Texture.get(tex, 10, 12) == 159
     assert Texture.get(tex, 1, 3) == 159
   end
 
@@ -293,10 +300,12 @@ defmodule Scenic.Utilities.TextureTest do
     {:ok, tex} = Texture.build(:ga, @width, @height, clear: {3, 7})
     assert Texture.get(tex, 1, 1) == {3, 7}
     assert Texture.get(tex, 1, 2) == {3, 7}
+    assert Texture.get(tex, 10, 12) == {3, 7}
 
     tex = Texture.clear!(tex, {4, 8})
     assert Texture.get(tex, 1, 1) == {4, 8}
     assert Texture.get(tex, 1, 2) == {4, 8}
+    assert Texture.get(tex, 10, 12) == {4, 8}
   end
 
   test "clear! works with ga textures uses black by default" do
@@ -304,14 +313,17 @@ defmodule Scenic.Utilities.TextureTest do
       Texture.build!(:ga, @width, @height)
       |> Texture.put!(1, 1, {3, 7})
       |> Texture.put!(1, 2, {4, 8})
+      |> Texture.put!(10, 12, {6, 9})
 
     assert Texture.get(tex, 1, 1) == {3, 7}
     assert Texture.get(tex, 1, 2) == {4, 8}
+    assert Texture.get(tex, 10, 12) == {6, 9}
     assert Texture.get(tex, 1, 3) == {0, 0xFF}
 
     tex = Texture.clear!(tex)
     assert Texture.get(tex, 1, 1) == {0, 0xFF}
     assert Texture.get(tex, 1, 2) == {0, 0xFF}
+    assert Texture.get(tex, 10, 12) == {0, 0xFF}
   end
 
   test "clear! works with ga textures uses texture clear by default" do
@@ -319,24 +331,29 @@ defmodule Scenic.Utilities.TextureTest do
       Texture.build!(:ga, @width, @height, clear: :dark_khaki)
       |> Texture.put!(1, 1, {3, 7})
       |> Texture.put!(1, 2, {4, 8})
+      |> Texture.put!(10, 12, {6, 9})
 
     assert Texture.get(tex, 1, 1) == {3, 7}
     assert Texture.get(tex, 1, 2) == {4, 8}
+    assert Texture.get(tex, 10, 12) == {6, 9}
     assert Texture.get(tex, 1, 3) == {159, 0xFF}
 
     tex = Texture.clear!(tex)
     assert Texture.get(tex, 1, 1) == {159, 0xFF}
     assert Texture.get(tex, 1, 2) == {159, 0xFF}
+    assert Texture.get(tex, 10, 12) == {159, 0xFF}
   end
 
   test "clear! works with rgb textures" do
     {:ok, tex} = Texture.build(:rgb, @width, @height, clear: {3, 7, 11})
     assert Texture.get(tex, 1, 1) == {3, 7, 11}
     assert Texture.get(tex, 1, 2) == {3, 7, 11}
+    assert Texture.get(tex, 10, 12) == {3, 7, 11}
 
     tex = Texture.clear!(tex, {4, 8, 12})
     assert Texture.get(tex, 1, 1) == {4, 8, 12}
     assert Texture.get(tex, 1, 2) == {4, 8, 12}
+    assert Texture.get(tex, 10, 12) == {4, 8, 12}
   end
 
   test "clear! works with rgb textures uses black by default" do
@@ -344,14 +361,17 @@ defmodule Scenic.Utilities.TextureTest do
       Texture.build!(:rgb, @width, @height)
       |> Texture.put!(1, 1, {3, 7, 11})
       |> Texture.put!(1, 2, {4, 8, 12})
+      |> Texture.put!(10, 12, {6, 9, 11})
 
     assert Texture.get(tex, 1, 1) == {3, 7, 11}
     assert Texture.get(tex, 1, 2) == {4, 8, 12}
+    assert Texture.get(tex, 10, 12) == {6, 9, 11}
     assert Texture.get(tex, 1, 3) == {0, 0, 0}
 
     tex = Texture.clear!(tex)
     assert Texture.get(tex, 1, 1) == {0, 0, 0}
     assert Texture.get(tex, 1, 2) == {0, 0, 0}
+    assert Texture.get(tex, 10, 12) == {0, 0, 0}
     assert Texture.get(tex, 1, 3) == {0, 0, 0}
   end
 
@@ -360,14 +380,17 @@ defmodule Scenic.Utilities.TextureTest do
       Texture.build!(:rgb, @width, @height, clear: :dark_khaki)
       |> Texture.put!(1, 1, {3, 7, 11})
       |> Texture.put!(1, 2, {4, 8, 12})
+      |> Texture.put!(10, 12, {6, 9, 11})
 
     assert Texture.get(tex, 1, 1) == {3, 7, 11}
     assert Texture.get(tex, 1, 2) == {4, 8, 12}
+    assert Texture.get(tex, 10, 12) == {6, 9, 11}
     assert Texture.get(tex, 1, 3) == {189, 183, 107}
 
     tex = Texture.clear!(tex)
     assert Texture.get(tex, 1, 1) == {189, 183, 107}
     assert Texture.get(tex, 1, 2) == {189, 183, 107}
+    assert Texture.get(tex, 10, 12) == {189, 183, 107}
     assert Texture.get(tex, 1, 3) == {189, 183, 107}
   end
 
@@ -375,10 +398,12 @@ defmodule Scenic.Utilities.TextureTest do
     {:ok, tex} = Texture.build(:rgba, @width, @height, clear: {3, 7, 11, 13})
     assert Texture.get(tex, 1, 1) == {3, 7, 11, 13}
     assert Texture.get(tex, 1, 2) == {3, 7, 11, 13}
+    assert Texture.get(tex, 10, 12) == {3, 7, 11, 13}
 
     tex = Texture.clear!(tex, {4, 8, 12, 14})
     assert Texture.get(tex, 1, 1) == {4, 8, 12, 14}
     assert Texture.get(tex, 1, 2) == {4, 8, 12, 14}
+    assert Texture.get(tex, 10, 12) == {4, 8, 12, 14}
   end
 
   test "clear! works with rgba textures uses black by default" do
@@ -386,14 +411,17 @@ defmodule Scenic.Utilities.TextureTest do
       Texture.build!(:rgba, @width, @height)
       |> Texture.put!(1, 1, {3, 7, 11, 13})
       |> Texture.put!(1, 2, {4, 8, 12, 14})
+      |> Texture.put!(10, 12, {6, 9, 11, 13})
 
     assert Texture.get(tex, 1, 1) == {3, 7, 11, 13}
     assert Texture.get(tex, 1, 2) == {4, 8, 12, 14}
+    assert Texture.get(tex, 10, 12) == {6, 9, 11, 13}
     assert Texture.get(tex, 1, 3) == {0, 0, 0, 0xFF}
 
     tex = Texture.clear!(tex)
     assert Texture.get(tex, 1, 1) == {0, 0, 0, 0xFF}
     assert Texture.get(tex, 1, 2) == {0, 0, 0, 0xFF}
+    assert Texture.get(tex, 10, 12) == {0, 0, 0, 0xFF}
     assert Texture.get(tex, 1, 3) == {0, 0, 0, 0xFF}
   end
 
@@ -402,14 +430,17 @@ defmodule Scenic.Utilities.TextureTest do
       Texture.build!(:rgba, @width, @height, clear: :dark_khaki)
       |> Texture.put!(1, 1, {3, 7, 11, 13})
       |> Texture.put!(1, 2, {4, 8, 12, 14})
+      |> Texture.put!(10, 12, {6, 9, 11, 13})
 
     assert Texture.get(tex, 1, 1) == {3, 7, 11, 13}
     assert Texture.get(tex, 1, 2) == {4, 8, 12, 14}
+    assert Texture.get(tex, 10, 12) == {6, 9, 11, 13}
     assert Texture.get(tex, 1, 3) == {189, 183, 107, 255}
 
     tex = Texture.clear!(tex)
     assert Texture.get(tex, 1, 1) == {189, 183, 107, 255}
     assert Texture.get(tex, 1, 2) == {189, 183, 107, 255}
+    assert Texture.get(tex, 10, 12) == {189, 183, 107, 255}
     assert Texture.get(tex, 1, 3) == {189, 183, 107, 255}
   end
 
