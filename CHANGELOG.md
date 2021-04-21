@@ -4,6 +4,7 @@
 * Can pass in a :name option to scenes/components @am-kantox
 * Clean up warnings under Elixir 1.11
 * Tell git not to mangle line endings on test data - part of getting Windows support working. @trejkaz
+* Fix Texture.clear() bug so it now clears the entire texture. @shritesh
 
 
 ## 0.10.3
