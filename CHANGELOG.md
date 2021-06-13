@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.10.5
+* tighten requirement for font_metrics to 0.3.0. Thank you @wojtekmach
+
 ## 0.10.4
 * Can pass in a :name option to scenes/components @am-kantox
 * Clean up warnings under Elixir 1.11
