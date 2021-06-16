@@ -1,6 +1,6 @@
 # Core Scenic Library
 
-[![Build Status](https://travis-ci.org/boydm/scenic.svg?branch=master)](https://travis-ci.org/boydm/scenic)
+[![Build Status](https://travis-ci.com/boydm/scenic.svg?branch=master)](https://travis-ci.com/boydm/scenic)
 [![Codecov](https://codecov.io/gh/boydm/scenic/branch/master/graph/badge.svg)](https://codecov.io/gh/boydm/scenic)
 
 Scenic is a client application library written directly on the
