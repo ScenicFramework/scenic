@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-05-11.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Style.Hidden do
@@ -24,20 +24,19 @@ defmodule Scenic.Primitive.Style.Hidden do
   use Scenic.Primitive.Style
 
   # ============================================================================
-  # data verification and serialization
 
-  # --------------------------------------------------------
-  @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be either true or false
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
-      #{IO.ANSI.default_color()}
-    """
+  def validate( true ), do: {:ok, true}
+  def validate( false ), do: {:ok, false}
+  def validate( data )  do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Hidden specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The :hidden style must be either true or false#{IO.ANSI.default_color()}
+      """
+    }
+  end
 
-  # --------------------------------------------------------
-  @doc false
-  def verify(true), do: true
-  def verify(false), do: true
-  def verify(_), do: false
 end

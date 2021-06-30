@@ -1,16 +1,16 @@
 #
 #  Created by Boyd Multerer on 2018-06-29.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Copyright © 2018 - 2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.ArcTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive.Arc
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Arc
 
-  @data {100, 0.0, 1.4}
+  @data {100, 1.4}
 
   # ============================================================================
   # build / add
@@ -22,26 +22,38 @@ defmodule Scenic.Primitive.ArcTest do
   end
 
   # ============================================================================
-  # verify
 
-  test "info works" do
-    assert Arc.info(:test_data) =~ ":test_data"
+  test "validate accepts valid data" do
+    assert Arc.validate({100, 1.4}) == {:ok, {100, 1.4}}
   end
 
-  test "verify passes valid data" do
-    assert Arc.verify(@data) == {:ok, @data}
+  test "validate rejects the old format - with help" do
+    {:error, msg} = Arc.validate({100, 1.4, 6})
+    assert msg =~ "Arc has changed"
   end
 
-  test "verify fails invalid data" do
-    assert Arc.verify({:atom, 0.0, 1.4}) == :invalid_data
-    assert Arc.verify(:banana) == :invalid_data
+  test "validate rejects bad data" do
+    {:error, msg} = Arc.validate({100, "1.4"})
+    assert msg =~ "Invalid Arc"
+
+    {:error, msg} = Arc.validate( :banana )
+    assert msg =~ "Invalid Arc"
   end
+
 
   # ============================================================================
   # styles
 
   test "valid_styles works" do
-    assert Arc.valid_styles() == [:hidden, :fill, :stroke]
+    assert Arc.valid_styles() == [:hidden, :fill, :stroke_width, :stroke_fill, :cap]
+  end
+
+  # ============================================================================
+  # compile
+
+  test "compile works" do
+    p = Arc.build(@data )
+    assert Arc.compile(p, %{stroke_fill: :blue}) == [{:draw_arc, {100, 1.4, :stroke}}]
   end
 
   # ============================================================================

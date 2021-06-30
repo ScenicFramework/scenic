@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-05-06.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Style do
@@ -29,10 +29,12 @@ defmodule Scenic.Primitive.Style do
   * [`FontSize`](Scenic.Primitive.Style.FontSize.html) sets the point size text.
   * [`Hidden`](Scenic.Primitive.Style.Hidden.html) a flag that sets if a primitive is drawn at all.
   * [`Join`](Scenic.Primitive.Style.Join.html) sets how to render the intersection of two lines. Works on the intersections of other primitives as well.
+  * [`LineHeight`](Scenic.Primitive.Style.LineHeight.html) sets the vertical spacing between lines of text
   * [`MiterLimit`](Scenic.Primitive.Style.MiterLimit.html) sets whether or not to miter a joint if the intersection of two lines is very sharp.
   * [`Scissor`](Scenic.Primitive.Style.Scissor.html) defines a rectangle that drawing will be clipped to.
   * [`Stroke`](Scenic.Primitive.Style.Stroke.html) defines how to draw the edge of a primitive. Specifies both a width and a [paint style](overview_styles.html#primitive-paint-styles).
-  * [`TextAlign`](Scenic.Primitive.Style.TextAlign.html) sets the alignment of text relative to the starting point. Examples: :left, :center, or :right
+  * [`TextAlign`](Scenic.Primitive.Style.TextAlign.html) sets the horizontal alignment of text. Examples: :left, :center, or :right
+  * [`TextBase`](Scenic.Primitive.Style.TextAlign.html) sets the vertical alignment of text 
   * [`Theme`](Scenic.Primitive.Style.Theme.html) a collection of default colors. Usually passed to components, telling them how to draw in your preferred color scheme.
 
   ## Primitive Paint Styles
@@ -41,9 +43,9 @@ defmodule Scenic.Primitive.Style do
 
   There is a fixed set of paint types that the drivers know how to render.
 
-  * [`BoxGradient`](Scenic.Primitive.Style.Paint.BoxGradient.html) fills a primitive with a box gradient.
   * [`Color`](Scenic.Primitive.Style.Paint.Color.html) fills a primitive with a solid color. 
-  * [`Image`](Scenic.Primitive.Style.Paint.Image.html) fills a primitive with an image that is loaded into `Scenic.Cache`.
+  * [`Image`](Scenic.Primitive.Style.Paint.Image.html) fills a primitive with an image that is loaded into `Scenic.Assets.Static`.
+  * [`Dynamic`](Scenic.Primitive.Style.Paint.Dynamic.html) fills a primitive with an texture that is loaded into `Scenic.Assets.Dynamic`.
   * [`LinearGradient`](Scenic.Primitive.Style.Paint.LinearGradient.html) fills a primitive with a linear gradient.
   * [`RadialGradient`](Scenic.Primitive.Style.Paint.RadialGradient.html) fills a primitive with a radial gradient.
 
@@ -72,46 +74,53 @@ defmodule Scenic.Primitive.Style do
 
   # import IEx
 
-  @style_name_map %{
+  @type m :: %{ atom => any }
+
+  @opts_map %{
+    :input => Style.Input,
     :hidden => Style.Hidden,
-    :clear_color => Style.ClearColor,
     :texture_wrap => Style.TextureWrap,
     :texture_filter => Style.TextureFilter,
     :fill => Style.Fill,
     :stroke => Style.Stroke,
     :join => Style.Join,
     :cap => Style.Cap,
+    :line_height => Style.LineHeight,
     :miter_limit => Style.MiterLimit,
     :font => Style.Font,
     :font_blur => Style.FontBlur,
     :font_size => Style.FontSize,
     :text_align => Style.TextAlign,
-    :text_height => Style.TextHeight,
+    :text_base => Style.TextBase,
+    # :text_height => Style.TextHeight,
     :scissor => Style.Scissor,
     :theme => Style.Theme
   }
 
-  @primitive_styles [
-    :hidden,
-    :clear_color,
-    :texture_wrap,
-    :texture_filter,
-    :fill,
-    :stroke,
-    :join,
-    :cap,
-    :miter_limit,
-    :font,
-    :font_blur,
-    :font_size,
-    :text_align,
-    :text_height,
-    :scissor,
-    :theme
+
+  @opts_schema [
+    input: [type: {:custom, Style.Input, :validate, []}],
+    hidden: [type: {:custom, Style.Hidden, :validate, []}],
+    fill: [type: {:custom, Style.Fill, :validate, []}],
+    stroke: [type: {:custom, Style.Stroke, :validate, []}],
+    join: [type: {:custom, Style.Join, :validate, []}],
+    cap: [type: {:custom, Style.Cap, :validate, []}],
+    line_height: [type: {:custom, Style.LineHeight, :validate, []}],
+    miter_limit: [type: {:custom, Style.MiterLimit, :validate, []}],
+    font: [type: {:custom, Style.Font, :validate, []}],
+    font_size: [type: {:custom, Style.FontSize, :validate, []}],
+    text_align: [type: {:custom, Style.TextAlign, :validate, []}],
+    text_base: [type: {:custom, Style.TextBase, :validate, []}],
+    # text_height: [type: {:custom, Style.TextHeight, :validate, []}],
+    scissor: [type: {:custom, Style.Scissor, :validate, []}],
+    theme: [type: {:custom, Style.Theme, :validate, []}],
   ]
 
-  @callback info(data :: any) :: bitstring
-  @callback verify(any) :: boolean
+
+  @callback validate(data::any) :: {:ok, data::any} | {:error, String.t()} 
+
+  def opts_map(), do: @opts_map
+  def opts_schema(), do: @opts_schema
 
   # ===========================================================================
   defmodule FormatError do
@@ -123,96 +132,7 @@ defmodule Scenic.Primitive.Style do
   defmacro __using__(_opts) do
     quote do
       @behaviour Scenic.Primitive.Style
-
-      @doc false
-      def verify!(data) do
-        case verify(data) do
-          true ->
-            data
-
-          false ->
-            raise FormatError, message: info(data), module: __MODULE__, data: data
-        end
-      end
-
-      @doc false
-      def normalize(data), do: data
-
-      # --------------------------------------------------------
-      defoverridable normalize: 1
-    end
-
-    # quote
-  end
-
-  # defmacro
-
-  # ===========================================================================
-  @doc false
-  def verify(style_key, style_data) do
-    case Map.get(@style_name_map, style_key) do
-      # don't verify non-primitives
-      nil -> true
-      module -> module.verify(style_data)
     end
   end
 
-  # ===========================================================================
-  @doc false
-  def verify!(style_key, style_data) do
-    case Map.get(@style_name_map, style_key) do
-      nil -> style_data
-      module -> module.verify!(style_data)
-    end
-  end
-
-  # ===========================================================================
-  # normalize the format of the style data
-  @doc false
-  def normalize(style_type, data)
-
-  def normalize(style_type, data) do
-    case Map.get(@style_name_map, style_type) do
-      nil ->
-        nil
-
-      mod ->
-        mod.verify!(data)
-        mod.normalize(data)
-    end
-  end
-
-  # ===========================================================================
-  # transform a style map so only the primitive types remain
-  @doc false
-  def primitives(style_map)
-
-  def primitives(style_map) do
-    Enum.reduce(@primitive_styles, %{}, fn
-      # only send direct font refs to the drivers
-      :font, acc ->
-        case Map.get(style_map, :font) do
-          nil ->
-            acc
-
-          {type, hash} ->
-            Map.put(acc, :font, {type, hash})
-
-          fm_hash ->
-            case Scenic.Cache.Static.FontMetrics.get(fm_hash) do
-              %FontMetrics{source: %{font_type: type, signature: hash}} ->
-                Map.put(acc, :font, {type, hash})
-
-              _ ->
-                acc
-            end
-        end
-
-      k, acc ->
-        case Map.get(style_map, k) do
-          nil -> acc
-          v -> Map.put(acc, k, normalize(k, v))
-        end
-    end)
-  end
 end

@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-10-02.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Transform do
@@ -38,53 +38,59 @@ defmodule Scenic.Primitive.Transform do
   alias Scenic.Math.Vector2
   alias Scenic.Primitive.Transform
 
-  @callback info(data :: any) :: bitstring
-  @callback verify(any) :: boolean
+  @callback validate(data::any) :: {:ok, data::any} | {:error, String.t()}
 
   # ===========================================================================
-  defmodule FormatError do
-    @moduledoc false
 
-    defexception message: nil, module: nil, data: nil
-  end
-
-  @style_name_map %{
+  @opts_map %{
     :pin => Transform.Pin,
     :scale => Transform.Scale,
     :rotate => Transform.Rotate,
     :translate => Transform.Translate,
-    :matrix => Transform.Matrix
+    :matrix => Transform.Matrix,
+
+    :s => Transform.Scale,
+    :r => Transform.Rotate,
+    :t => Transform.Translate,
   }
+
+  @opts_schema [
+    translate: [type: {:custom, Transform.Translate, :validate, []}],
+    scale: [ type: {:custom, Transform.Scale, :validate, []}],
+    rotate: [type: {:custom, Transform.Rotate, :validate, []}],
+    pin: [type: {:custom, Transform.Pin, :validate, []}],
+    matrix: [type: {:custom, Transform.Matrix, :validate, []}],
+
+    t: [rename_to: :translate],
+    s: [rename_to: :scale],
+    r: [rename_to: :rotate]
+  ]
+
+
+
+  @primitive_transforms [
+    :pin,
+    :scale,
+    :rotate,
+    :translate,
+    :matrix
+  ]
+
+
+  def opts_map(), do: @opts_map
+  def opts_schema(), do: @opts_schema
+
 
   # ===========================================================================
   #  defmacro __using__([type_code: type_code]) when is_integer(type_code) do
   defmacro __using__(_opts) do
     quote do
       @behaviour Scenic.Primitive.Transform
-
-      @doc false
-      def verify!(data) do
-        case verify(data) do
-          true ->
-            data
-
-          false ->
-            raise FormatError, message: info(data), module: __MODULE__, data: data
-        end
-      end
-    end
-
-    # quote
-  end
-
-  # ===========================================================================
-  @doc false
-  def verify!(tx_key, tx_data) do
-    case Map.get(@style_name_map, tx_key) do
-      nil -> raise FormatError, message: "Unknown transform", module: tx_key, data: tx_data
-      module -> module.verify!(tx_data)
     end
   end
+
+  def valid(), do: @primitive_transforms
+
 
   # ============================================================================
   # transform helper functions
@@ -140,7 +146,7 @@ defmodule Scenic.Primitive.Transform do
 
   # --------------------------------------------------------
   defp rotate_and_scale(mx, txs) do
-    # don't do any work if neight rotate nor scale are set
+    # don't do any work if neither otate nor scale are set
     # don't need to translate twice for no reason
     case txs[:rotate] || txs[:scale] do
       nil ->

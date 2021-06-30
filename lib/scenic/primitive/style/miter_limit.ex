@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-05-12.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Style.MiterLimit do
@@ -25,27 +25,17 @@ defmodule Scenic.Primitive.Style.MiterLimit do
   # ============================================================================
   # data verification and serialization
 
-  # --------------------------------------------------------
-  @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be a number greater than 0
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
-      #{IO.ANSI.default_color()}
-    """
-
-  # --------------------------------------------------------
-  @doc false
-  def verify(stroke) do
-    try do
-      normalize(stroke)
-      true
-    rescue
-      _ -> false
-    end
+  def validate( size ) when is_number(size) and size > 0, do: {:ok, size}
+  def validate( data )  do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid MiterLimit specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The :miter_limit style must be a positive number#{IO.ANSI.default_color()}
+      """
+    }
   end
 
-  # --------------------------------------------------------
-  @doc false
-  def normalize(limit) when is_number(limit) and limit > 0, do: limit
 end

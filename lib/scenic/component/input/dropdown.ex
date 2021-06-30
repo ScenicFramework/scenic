@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer 2018-07-15.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Copyright © 2018 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Component.Input.Dropdown do
@@ -83,9 +83,10 @@ defmodule Scenic.Component.Input.Dropdown do
   use Scenic.Component, has_children: false
 
   alias Scenic.Graph
-  alias Scenic.ViewPort
+  alias Scenic.Scene
   alias Scenic.Primitive.Style.Theme
   import Scenic.Primitives
+  alias Scenic.Assets.Static
 
   # import IEx
 
@@ -97,56 +98,102 @@ defmodule Scenic.Component.Input.Dropdown do
   @drop_click_window_ms 400
 
   @caret {{0, 0}, {12, 0}, {6, 6}}
-  @text_id :__dropbox_text__
-  @caret_id :__caret__
-  @dropbox_id :__dropbox__
-  @button_id :__dropbox_btn__
+  @text_id :_dropbox_text_
+  @caret_id :_caret_
+  @dropbox_id :_dropbox_
+  @button_id :_dropbox_btn_
 
   @rotate_neutral :math.pi() / 2
   @rotate_down 0
   @rotate_up :math.pi()
 
-  # --------------------------------------------------------
-  @doc false
-  def info(data) do
-    """
-    #{IO.ANSI.red()}Dropdown data must be: {items, initial}
-    #{IO.ANSI.yellow()}Received: #{inspect(data)}
-    #{IO.ANSI.default_color()}
-    """
-  end
+  @border_width 2
+
 
   # --------------------------------------------------------
-  @doc false
-  def verify({items, initial} = data) when is_list(items) do
-    (Enum.all?(items, &verify_item(&1)) &&
-       Enum.find_value(items, false, fn {_, id} -> id == initial end))
+  @impl Scenic.Component
+  def validate( {items, _} = data ) when is_list(items) do
+
+    # confirm all the entries
+    Enum.reduce( items, {:ok, data}, fn
+      _, {:error, _} = error -> error
+
+      {text, _}, acc when is_bitstring(text) -> acc
+
+      item, _ -> err_bad_item( item, data )
+    end)
     |> case do
-      true -> {:ok, data}
-      _ -> :invalid_data
+      {:error, _} = err -> err
+      {:ok, {items, initial}} ->
+        # confirm that initial is in the items list
+        items
+        |> Enum.any?( fn{_, id} -> id == initial end )
+        |> case do
+          true -> {:ok, data}
+          false -> err_initial(data)
+        end
     end
   end
 
-  def verify(_), do: :invalid_data
+  def validate( data ) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Dropdown specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      Dropdown data must formed like: {[{text, id}], initial_id}
 
-  # --------------------------------------------------------
-  defp verify_item({text, _}) when is_bitstring(text), do: true
-  defp verify_item(_), do: false
+      This is a list of text/id pairs, and the id of the pair that is initially selected.#{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  defp err_bad_item( item, data ) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Dropdown specification
+      Received: #{inspect(data)}
+      Invalid Item: #{inspect(item)}
+      #{IO.ANSI.yellow()}
+      Dropdown data must formed like: {[{text, id}], initial_id}
+
+      This is a list of text/id pairs, and the id of the pair that is initially selected.#{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  defp err_initial( {_, initial} = data ) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Dropdown specification
+      Received: #{inspect(data)}
+      The initial id #{inspect(initial)} is not in the listed items
+      #{IO.ANSI.yellow()}
+      Dropdown data must formed like: {[{text, id}], initial_id}
+
+      This is a list of text/id pairs, and the id of the pair that is initially selected.#{IO.ANSI.default_color()}
+      """
+    }
+  end
+
 
   # --------------------------------------------------------
   @doc false
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
-  def init({items, initial_id}, opts) do
+  @impl Scenic.Scene
+  def init(scene, {items, initial_id}, opts) do
     id = opts[:id]
-    styles = opts[:styles]
 
     # theme is passed in as an inherited style
     theme =
-      (styles[:theme] || Theme.preset(:dark))
+      (opts[:theme] || Theme.preset(:dark))
       |> Theme.normalize()
 
     # font related info
-    fm = Scenic.Cache.Static.FontMetrics.get!(@default_font)
+    {:ok, {:font, fm}} = Static.fetch( @default_font )
     ascent = FontMetrics.ascent(@default_font_size, fm)
     descent = FontMetrics.descent(@default_font_size, fm)
 
@@ -159,14 +206,14 @@ defmodule Scenic.Component.Input.Dropdown do
       end)
 
     width =
-      case styles[:width] || opts[:w] do
+      case opts[:width] || opts[:w] do
         nil -> fm_width + ascent * 3
         :auto -> fm_width + ascent * 3
         width when is_number(width) and width > 0 -> width
       end
 
     height =
-      case styles[:height] || opts[:h] do
+      case opts[:height] || opts[:h] do
         nil -> @default_font_size + ascent
         :auto -> @default_font_size + ascent
         height when is_number(height) and height > 0 -> height
@@ -184,7 +231,7 @@ defmodule Scenic.Component.Input.Dropdown do
     drop_height = item_count * height
 
     # get the drop direction
-    direction = styles[:direction] || @default_direction
+    direction = opts[:direction] || @default_direction
 
     # calculate the where to put the drop box. Depends on the direction
     translate_menu =
@@ -202,9 +249,18 @@ defmodule Scenic.Component.Input.Dropdown do
 
     text_vpos = height / 2 + ascent / 2 + descent / 3
 
+    # tune the final position
+    dx = @border_width / 2
+    dy = @border_width / 2
+
     graph =
-      Graph.build(font: @default_font, font_size: @default_font_size)
-      |> rect({width, height}, fill: theme.background, stroke: {2, theme.border})
+      Graph.build(font: @default_font, font_size: @default_font_size, t: {dx,dy})
+      |> rect(
+        {width, height},
+        fill: theme.background,
+        stroke: {@border_width, theme.border},
+        id: @button_id, input: true
+      )
       |> text(initial_text,
         fill: theme.text,
         translate: {8, text_vpos},
@@ -220,7 +276,7 @@ defmodule Scenic.Component.Input.Dropdown do
       )
 
       # an invisible rect for hit-test purposes
-      |> rect({width, height}, id: @button_id)
+      # |> rect({width, height}, id: @button_id, input: true)
 
       # the drop box itself
       |> group(
@@ -243,7 +299,8 @@ defmodule Scenic.Component.Input.Dropdown do
                         else
                           theme.background
                         end,
-                      id: id
+                      id: id,
+                      input: true
                     )
                     |> text(text,
                       fill: theme.text,
@@ -264,19 +321,23 @@ defmodule Scenic.Component.Input.Dropdown do
         hidden: true
       )
 
-    state = %{
-      graph: graph,
-      selected_id: initial_id,
-      theme: theme,
-      id: id,
-      down: false,
-      hover_id: nil,
-      items: items,
-      drop_time: 0,
-      rotate_caret: rotate_caret
-    }
+    scene =
+      scene
+      |> assign([
+        graph: graph,
+        selected_id: initial_id,
+        theme: theme,
+        id: id,
+        down: false,
+        hover_id: nil,
+        items: items,
+        drop_time: 0,
+        rotate_caret: rotate_caret
+      ])
+      |> push_graph( graph )
 
-    {:ok, state, push: graph}
+
+    {:ok, scene}
   end
 
   # ============================================================================
@@ -284,23 +345,63 @@ defmodule Scenic.Component.Input.Dropdown do
 
   # --------------------------------------------------------
   @doc false
-  def handle_input({:cursor_enter, _uid}, %{id: id}, %{down: false} = state) do
-    {:noreply, %{state | hover_id: id}}
+  @impl Scenic.Scene
+  # --------------------------------------------------------
+  # mouse is moving around
+  def handle_input(
+        {:cursor_pos, _}, nil,
+        %Scene{assigns: %{down: true, items: items, graph: graph, selected_id: selected_id, theme: theme}} = scene
+      ) do
+    # set the appropriate hilighting for each of the items
+    graph = update_highlighting(graph, items, selected_id, nil, theme)
+
+    scene = 
+      scene
+      |> assign( [hover_id: nil, graph: graph] ) 
+      |> push_graph(graph)
+
+    {:noreply, scene}
   end
 
-  # --------------------------------------------------------
-  def handle_input({:cursor_exit, _uid}, _context, %{down: false} = state) do
-    {:noreply, %{state | hover_id: nil}}
+  # over the @button_id
+  def handle_input(
+        {:cursor_pos, _}, @button_id,
+        %Scene{assigns: %{down: true, items: items, graph: graph, selected_id: selected_id, theme: theme}} = scene
+      ) do
+    # set the appropriate hilighting for each of the items
+    graph = update_highlighting(graph, items, selected_id, nil, theme)
+
+    scene =
+      scene
+      |> assign( [hover_id: nil, graph: graph] ) 
+      |> push_graph( graph )
+
+    {:noreply, scene}
+  end
+
+  # over an item
+  def handle_input(
+        {:cursor_pos, _}, id,
+        %Scene{assigns: %{down: true, items: items, graph: graph, selected_id: selected_id, theme: theme}} = scene
+      ) do
+    # set the appropriate hilighting for each of the items
+    graph = update_highlighting(graph, items, selected_id, id, theme)
+
+    scene = 
+      scene
+      |> assign( [hover_id: nil, graph: graph] ) 
+      |> push_graph(graph)
+
+    {:noreply, scene}
   end
 
   # --------------------------------------------------------
   def handle_input(
-        {:cursor_button, {:left, :press, _, _}},
-        %{id: @button_id} = context,
-        %{down: false, graph: graph, rotate_caret: rotate_caret} = state
+        {:cursor_button, {0, :press, _, _}}, @button_id,
+        %Scene{assigns: %{down: false, graph: graph, rotate_caret: rotate_caret}} = scene
       ) do
     # capture input
-    ViewPort.capture_input(context, [:cursor_button, :cursor_pos])
+    :ok = capture_input(scene, [:cursor_button, :cursor_pos])
 
     # drop the menu
     graph =
@@ -308,80 +409,57 @@ defmodule Scenic.Component.Input.Dropdown do
       |> Graph.modify(@caret_id, &update_opts(&1, rotate: rotate_caret))
       |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: false))
 
-    state =
-      state
-      |> Map.put(:down, true)
-      |> Map.put(:drop_time, :os.system_time(:milli_seconds))
-      |> Map.put(:graph, graph)
-
-    {:noreply, state, push: graph}
+    scene =
+      scene
+      |> assign( [down: true, graph: graph, drop_time: :os.system_time(:milli_seconds)] ) 
+      |> push_graph( graph )
+# IO.inspect(scene, label: "Press IN")
+    {:noreply, scene}
   end
 
-  # ============================================================================
-  # tracking when the dropdown is DOWN
-
-  # --------------------------------------------------------
+  # pressing the button when down, raises it back up without doing anything else
   def handle_input(
-        {:cursor_enter, _uid},
-        %{id: id},
-        %{down: true, items: items, graph: graph, selected_id: selected_id, theme: theme} = state
-      ) do
-    # set the appropriate hilighting for each of the items
-    graph = update_highlighting(graph, items, selected_id, id, theme)
-
-    {:noreply, %{state | hover_id: id, graph: graph}, push: graph}
-  end
-
-  # --------------------------------------------------------
-  def handle_input(
-        {:cursor_exit, _uid},
-        _context,
-        %{down: true, items: items, graph: graph, selected_id: selected_id, theme: theme} = state
-      ) do
-    # set the appropriate hilighting for each of the items
-    graph = update_highlighting(graph, items, selected_id, nil, theme)
-
-    {:noreply, %{state | hover_id: nil, graph: graph}, push: graph}
-  end
-
-  # --------------------------------------------------------
-  # the mouse is pressed outside of the dropdown when it is down.
-  # immediately close the dropdown and allow the event to continue
-  def handle_input(
-        {:cursor_button, {:left, :press, _, _}},
-        %{id: nil} = context,
-        %{
+        {:cursor_button, {0, :press, _, _}}, @button_id,
+        %Scene{assigns: %{
           down: true,
-          items: items,
           theme: theme,
-          selected_id: selected_id
-        } = state
+          items: items,
+          graph: graph,
+          selected_id: selected_id,
+        }} = scene
       ) do
-    # release the input capture
-    ViewPort.release_input(context, [:cursor_button, :cursor_pos])
+      # we are outside the window, raise it back up
+      graph =
+        graph
+        |> update_highlighting(items, selected_id, nil, theme)
+        |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
+        |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
 
-    graph = handle_cursor_button(state.graph, items, selected_id, theme)
+      :ok = release_input( scene )
 
-    {:noreply, %{state | down: false, graph: graph}, push: graph}
+      scene =
+        scene
+        |> assign( [down: false, hover_id: nil, graph: graph] )
+        |> push_graph( graph )
+
+      {:noreply, scene}
   end
 
-  # --------------------------------------------------------
-  # clicking the button when down, raises it back up without doing anything else
+  # releasing the button when down, raises it back up without doing anything else
   def handle_input(
-        {:cursor_button, {:left, :release, _, _}},
-        %{id: @button_id} = context,
-        %{
+        {:cursor_button, {0, :release, _, _}}, @button_id,
+        %Scene{assigns: %{
           down: true,
           drop_time: drop_time,
           theme: theme,
           items: items,
           graph: graph,
-          selected_id: selected_id
-        } = state
+          selected_id: selected_id,
+        }} = scene
       ) do
     if :os.system_time(:milli_seconds) - drop_time <= @drop_click_window_ms do
       # we are still in the click window, leave the menu down.
-      {:noreply, state}
+      {:noreply, scene}
     else
       # we are outside the window, raise it back up
       graph =
@@ -390,73 +468,83 @@ defmodule Scenic.Component.Input.Dropdown do
         |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
         |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
 
-      # release the input capture
-      ViewPort.release_input(context, [:cursor_button, :cursor_pos])
+      :ok = release_input( scene )
 
-      {:noreply, %{state | down: false, hover_id: nil, graph: graph}, push: graph}
+      scene =
+        scene
+        |> assign( [down: false, hover_id: nil, graph: graph] )
+        |> push_graph( graph )
+
+      {:noreply, scene}
     end
   end
 
   # --------------------------------------------------------
-  # the button is released outside the dropdown space
+  # the button is pressed or released over an item with the drop open
   def handle_input(
-        {:cursor_button, {:left, :release, _, _}},
-        %{id: nil} = context,
-        %{
-          down: true,
-          items: items,
-          theme: theme,
-          selected_id: selected_id
-        } = state
-      ) do
-    # release the input capture
-    ViewPort.release_input(context, [:cursor_button, :cursor_pos])
-
-    graph = handle_cursor_button(state.graph, items, selected_id, theme)
-
-    {:noreply, %{state | down: false, graph: graph}, push: graph}
-  end
-
-  # --------------------------------------------------------
-  # the button is realeased over an item in dropdown
-  def handle_input(
-        {:cursor_button, {:left, :release, _, _}},
-        %{id: item_id} = context,
-        %{
+        {:cursor_button, {0, _, _, _}}, item_id,
+        %Scene{assigns: %{
           down: true,
           id: id,
           items: items,
-          theme: theme
-        } = state
-      ) do
-    # release the input capture
-    ViewPort.release_input(context, [:cursor_button, :cursor_pos])
-
+          theme: theme,
+          graph: graph
+        }} = scene
+      ) when item_id != nil do
     # send the value_changed message
-    send_event({:value_changed, id, item_id})
+    send_parent_event(scene, {:value_changed, id, item_id})
 
     # find the newly selected item's text
     {text, _} = Enum.find(items, fn {_, id} -> id == item_id end)
 
     graph =
-      state.graph
+      graph
       # update the main button text
-      |> Graph.modify(@text_id, &text(&1, text))
+      |> Graph.modify( @text_id, &text(&1, text) )
       # restore standard highliting
       |> update_highlighting(items, item_id, nil, theme)
       # raise the dropdown
       |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
       |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
 
-    {:noreply, %{state | down: false, graph: graph, selected_id: item_id}, push: graph}
+    :ok = release_input( scene )
+
+    scene =
+      scene
+      |> assign( [down: false, graph: graph, selected_id: item_id] )
+      |> push_graph( graph )
+
+    {:noreply, scene}
   end
 
-  # ============================================================================
-  # unhandled input
-
   # --------------------------------------------------------
-  def handle_input(_event, _context, state) do
-    {:noreply, state}
+  # the button is pressed or released outside the dropdown space
+  def handle_input(
+        {:cursor_button, {0, _, _, _}}, _,
+        %Scene{assigns: %{
+          # down: true,
+          items: items,
+          theme: theme,
+          selected_id: selected_id,
+          graph: graph,
+        }} = scene
+      ) do
+
+    graph = handle_cursor_button( graph, items, selected_id, theme)
+
+    :ok = release_input( scene )
+
+    scene =
+      scene
+      |> assign( [down: false, graph: graph] )
+      |> push_graph( graph )
+
+    {:noreply, scene}
+  end
+
+  # ignore other button press events
+  def handle_input({:cursor_button, {_, _, _, _}}, _id, scene ) do
+    {:noreply, scene}
   end
 
   # ============================================================================
@@ -487,4 +575,55 @@ defmodule Scenic.Component.Input.Dropdown do
     |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
     |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
   end
+
+
+
+  # --------------------------------------------------------
+  @impl GenServer
+  @doc false
+  def handle_call( :fetch, _, %{assigns: %{selected_id: selected_id}} = scene ) do
+    {:reply, {:ok, selected_id}, scene }
+  end
+
+  def handle_call( {:put, id}, _, %{assigns: %{items: items}} = scene) do
+    Enum.find(items, fn
+      {_, ^id} -> true
+      _ -> false
+    end)
+    |> case do
+      {text, id} -> {:reply, :ok, do_put(text, id, scene) }
+      _ -> {:reply, {:error, :invalid}, scene }
+    end
+  end
+
+  defp do_put( text, item_id, %Scene{assigns: %{
+          items: items,
+          theme: theme,
+          graph: graph,
+          hover_id: hover_id
+        }} = scene ) do
+    graph =
+      graph
+      # update the main button text
+      |> Graph.modify( @text_id, &text(&1, text) )
+      |> update_highlighting( items, item_id, hover_id, theme )
+
+    scene
+    |> assign( [graph: graph, selected_id: item_id] )
+    |> push_graph( graph )
+  end
+
 end
+
+
+
+
+
+
+
+
+
+
+
+
+

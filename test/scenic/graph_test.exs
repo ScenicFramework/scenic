@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-05-06.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.GraphTest do
@@ -85,35 +85,12 @@ defmodule Scenic.GraphTest do
     assert graph.ids == %{_root_: [0]}
   end
 
-  test "build accepts and uses a builder callback" do
-    assert Graph.build(
-             builder: fn {graph, parent_id} ->
-               assert graph == @graph_empty
-               assert parent_id == @root_uid
-               {graph, parent_id}
-             end
-           ) == @graph_empty
-  end
-
-  test "build injects default values for font and font size" do
-    graph = Graph.build()
-
-    assert graph.primitives[@root_uid]
-           |> Primitive.get_styles() == %{font: :roboto, font_size: 24}
-  end
-
-  test "build gives higher priority to user options" do
-    graph = Graph.build(font_size: 20)
-
-    assert graph.primitives[@root_uid]
-           |> Primitive.get_styles() == %{font: :roboto, font_size: 20}
-  end
-
   test "build puts styles on the root node" do
-    color = :dark_slate_blue
-    graph = Graph.build(clear_color: color)
+    graph = Graph.build(fill: :dark_slate_blue)
 
-    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:clear_color) == color
+    assert graph.primitives[@root_uid]
+      |> Primitive.get_styles()
+      |> Map.get(:fill) == {:color, {:color_rgba, {72, 61, 139, 255}}}
   end
 
   test "build puts transforms on the root node" do
@@ -123,39 +100,21 @@ defmodule Scenic.GraphTest do
            |> Primitive.get_transforms() == %{rotate: 1.3}
   end
 
+  test "build puts other options on the root node" do
+    graph = Graph.build(non_standard: "abc")
+
+    assert graph.primitives[@root_uid]
+           |> Map.get(:opts) == [non_standard: "abc"]
+  end
+
   test "build accepts the :max_depth option" do
     graph = Graph.build(max_depth: 1)
     assert Map.get(graph, :max_depth) == 1
   end
 
-  test "build uses default font and font_size" do
-    graph = Graph.build()
-    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font) == :roboto
-    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font_size) == 24
-  end
-
   test "build honors fonts and font_sizes set directly" do
-    graph = Graph.build(font: :roboto_mono, font_size: 12)
-    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font) == :roboto_mono
-    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font_size) == 12
-  end
-
-  test "build honors fonts and font_sizes set in styles" do
-    styles = %{font: :roboto_mono, font_size: 12}
-    graph = Graph.build(styles: styles)
-    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font) == :roboto_mono
-    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font_size) == 12
-  end
-
-  test "build honors font info set in styles and directly by order" do
-    styles = %{font: :roboto_mono, font_size: 12}
-    graph = Graph.build(styles: styles, font_size: 13)
-    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font) == :roboto_mono
-    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font_size) == 13
-
-    styles = %{font: :roboto_mono, font_size: 12}
-    graph = Graph.build(font_size: 13, styles: styles)
-    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font) == :roboto_mono
+    graph = Graph.build(font: "fonts/roboto.ttf", font_size: 12)
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font) == "fonts/roboto.ttf"
     assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font_size) == 12
   end
 
@@ -323,211 +282,6 @@ defmodule Scenic.GraphTest do
            ]
   end
 
-  # ============================================================================
-  # insert_at(graph_and_parent, index, element, opts \\ [])
-  # test "insert_at inserts an element at the root with just a graph passed in and assigns a new uid - no id" do
-  #   # insert - returns transformed graph and assigned uid
-  #   {graph, uid} = Graph.insert_at(@graph_empty, -1, @empty_group)
-
-  #   # check that the uid is the next uid
-  #   assert uid == 1
-
-  #   # extract the graph
-  #   %Graph{primitives: p_map, next_uid: next_uid} = graph
-
-  #   #check that it was added
-  #   p = Map.get(p_map, uid)
-  #   # assert Primitive.get_parent_uid(p) == 0
-  #   assert Primitive.get_module(p) == Group
-
-  #   # check that the item's uid was updated
-  #   # assert Primitive.get_uid(p) == uid
-
-  #   # check that the next_uid was incremented
-  #   assert next_uid == 2
-
-  #   # check that the root now includes it as a child
-  #   assert Primitive.get( Graph.get_root(graph) ) == [uid]
-
-  #   # check that no ids was set
-  #   assert graph.ids == %{}
-  # end
-
-  # test "insert_at inserts an element at the root with just a graph passed in and assigns a new uid and sets id" do
-  #   # insert - returns transformed graph and assigned uid
-  #   empty_group = Primitive.put_id( @empty_group, :test_id )
-  #   {graph, uid} = Graph.insert_at(@graph_empty, -1, empty_group)
-
-  #   #check that it was added
-  #   p = graph.primitives[uid]
-  #   # assert Primitive.get_parent_uid(p) == 0
-  #   assert Primitive.get_module(p) == Group
-
-  #   # check that the item's uid was updated
-  #   # assert Primitive.get_uid(p) == uid
-
-  #   # check that the id map was added
-  #   assert graph.ids == %{test_id: [uid]}
-  # end
-
-  # test "insert_at inserts an element with parent_uid of -1, which means it is in the map but not the tree" do
-  #   # insert - returns transformed graph and assigned uid
-  #   empty_group = Primitive.put_id(@empty_group, :test_id)
-  #   {graph, uid} = Graph.insert_at({@graph_empty, -1}, -1, empty_group)
-
-  #   #check that it was added
-  #   p = graph.primitives[uid]
-  #   # assert Primitive.get_parent_uid(p) == -1
-  #   assert Primitive.get_module(p) == Group
-
-  #   # check that the item's uid was updated
-  #   # assert Primitive.get_uid(p) == uid
-
-  #   # check that the id map was added
-  #   assert graph.ids == %{test_id: [uid]}
-
-  #   # check that it is not in the root
-  #   assert graph.primitives[0]== @empty_root
-  # end
-
-  # test "insert_at inserts an element at the root with a :root id passed in" do
-  #   graph = @graph_empty
-
-  #   # insert - returns transformed graph and assigned uid
-  #   {graph, uid} = Graph.insert_at({graph, @root_uid}, -1, @empty_group)
-
-  #   # check that the uid is the next uid
-  #   assert uid == 1
-
-  #   #check that it was added
-  #   p = graph.primitives[uid]
-  #   # assert Primitive.get_parent_uid(p) == 0
-  #   assert Primitive.get_module(p) == Group
-
-  #   # check that the item's uid was updated
-  #   # assert Primitive.get_uid(p) == uid
-
-  #   # check that the root now includes it as a child
-  #   assert Primitive.get( Graph.get_root(graph) ) == [uid]
-
-  #   # check that no ids was set
-  #   assert graph.ids == %{}
-  # end
-
-  # test "insert_at inserts an element into a nested node indicated by the parent uid" do
-  #   {graph, parent_uid} = Graph.insert_at(@graph_empty, -1, @empty_group)
-
-  #   #check that the setup is ok
-  #   assert parent_uid == 1
-  #   p = graph.primitives[parent_uid]
-  #   # assert Primitive.get_parent_uid(p) == 0
-  #   assert Primitive.get_module(p) == Group
-
-  #   # insert the div - returns transformed graph and assigned uid
-  #   {graph, uid} = Graph.insert_at({graph, parent_uid}, -1, @empty_group)
-
-  #   #check that it was added
-  #   p = graph.primitives[uid]
-  #   # assert Primitive.get_parent_uid(p) == parent_uid
-  #   assert Primitive.get_module(p) == Group
-
-  #   # check that the item's uid was updated
-  #   # assert Primitive.get_uid(p) == uid
-
-  #   # check that the parent references the new element
-  #   p = graph.primitives[parent_uid]
-  #   assert Primitive.get(p) == [uid]
-
-  #   # check that no id map was set
-  #   assert graph.ids == %{}
-  # end
-
-  # test "insert_at inserts an element into a nested node indicated by the parent uid and sets id" do
-  #   {graph, parent_uid} = Graph.insert_at(@graph_empty, -1, @empty_group)
-
-  #   #check that the setup is ok
-  #   assert parent_uid == 1
-  #   p = graph.primitives[parent_uid]
-  #   # assert Primitive.get_parent_uid(p) == 0
-  #   assert Primitive.get_module(p) == Group
-
-  #   # insert the div - returns transformed graph and assigned uid
-  #   empty_group = Primitive.put_id(@empty_group, :test_id)
-  #   {graph, uid} = Graph.insert_at({graph, parent_uid}, -1, empty_group)
-
-  #   #check that it was added
-  #   p = graph.primitives[uid]
-  #   # assert Primitive.get_parent_uid(p) == parent_uid
-  #   assert Primitive.get_module(p) == Group
-
-  #   # check that the item's uid was updated
-  #   # assert Primitive.get_uid(p) == uid
-
-  #   # check that the parent references the new element
-  #   p = graph.primitives[parent_uid]
-  #   assert Primitive.get(p) == [uid]
-
-  #   # check that the id map was added
-  #   assert graph.ids == %{test_id: [uid]}
-  # end
-
-  # #============================================================================
-  # test "insert_at inserts a graph into a graph (this makes templates work)" do
-  #   # create a simple graph to receive the incoming template
-  #   graph = Graph.build()
-  #   {graph, parent_uid} = Graph.insert_at(graph, -1, @empty_group)
-
-  #   # give the parent graph a single input request
-  #   # graph = Graph.request_input(graph, [:key, :char])
-
-  #   #check that the setup is ok
-  #   assert Graph.count(graph) == 2
-  #   assert Graph.get_next_uid(graph) == 2
-
-  #   # create the "template" graph to insert
-  #   empty_group_with_id = Primitive.put_id(@empty_group, :t_tree)
-
-  #   graph_t =           Graph.build(id: :template)
-  #   {graph_t, _} =      Graph.insert_at(graph_t, -1, @empty_group)
-  #   {graph_t, uid_1} =  Graph.insert_at(graph_t, -1, empty_group_with_id)
-  #   {graph_t, _} =      Graph.insert_at({graph_t, uid_1}, -1, @empty_group)
-  #   {graph_t, _} =      Graph.insert_at(graph_t, -1, @empty_group)
-
-  #   # add a request for input
-  #   # graph_t = Graph.request_input(graph_t, [:key, :cursor_down])
-
-  #   #check that the setup is ok
-  #   assert Graph.count(graph_t, -1) == 5
-  #   assert Graph.get_next_uid(graph_t) == 5
-
-  #   #insert the template
-  #   {merged, uid} = Graph.insert_at({graph, parent_uid}, -1, graph_t, id: :test_id)
-
-  #   #check the result
-  #   assert Graph.count(merged, -1) == 7
-
-  #   [t_uid] = Graph.resolve_id(merged, :template)
-  #   assert t_uid == uid
-  #   assert t_uid == 2
-  #   assert Graph.count(merged, t_uid) == 5
-  #   assert Graph.resolve_id(merged, :test_id) == [t_uid]
-
-  #   # check that the template group's internal id was updated
-  #   p = Graph.get(merged, uid)
-  #   assert Primitive.get_uid(p) == uid
-
-  #   [t_tree_uid] = Graph.resolve_id(merged, :t_tree)
-  #   assert Graph.count(merged, t_tree_uid) == 2
-
-  #   assert Graph.get_next_uid(merged) == 7
-
-  #   # make sure the added tree is referenced by its new parent
-  #   assert Primitive.get( Graph.get(merged, parent_uid) ) == [t_uid]
-  #   assert Primitive.get_parent_uid( Graph.get(merged, t_uid) ) == parent_uid
-
-  #   # make sure the template's input request was merged in without duplicates
-  #   # assert Map.get(merged, :input) == [:key, :char, :cursor_down]
-  # end
 
   # ============================================================================
   # add
@@ -624,7 +378,7 @@ defmodule Scenic.GraphTest do
 
   test "modify transforms a single primitive by developer id" do
     # confirm setup
-    assert Map.get(Graph.get!(@graph_find, :inner_text), :transforms) == nil
+    assert Map.get(Graph.get!(@graph_find, :inner_text), :transforms) == %{}
 
     # modify the element by assigning a transform to it
     graph =
@@ -645,8 +399,8 @@ defmodule Scenic.GraphTest do
     [uid_0, uid_1] = graph.ids[:text]
 
     # confirm setup
-    assert Map.get(graph.primitives[uid_0], :transforms) == nil
-    assert Map.get(graph.primitives[uid_1], :transforms) == nil
+    assert Map.get(graph.primitives[uid_0], :transforms) == %{}
+    assert Map.get(graph.primitives[uid_1], :transforms) == %{}
 
     # modify the element by assigning a transform to it
     graph =
@@ -684,12 +438,14 @@ defmodule Scenic.GraphTest do
 
     graph =
       Graph.modify(graph, :rect, fn p ->
-        Primitive.put_style(p, :stroke, {10, :blue})
+        Primitive.put_style(p, :stroke, {2, :blue})
       end)
 
     rect = graph.primitives[uid]
-    assert Primitive.get_styles(rect) == %{fill: :red, stroke: {10, :blue}}
+    assert Primitive.get_styles(rect) ==
+      %{fill: {:color, {:color_rgba, {255, 0, 0, 255}}}, stroke: {2, {:color, {:color_rgba, {0, 0, 255, 255}}}}}
   end
+
 
   test "modify transforms a via a match function" do
     graph =
@@ -707,7 +463,7 @@ defmodule Scenic.GraphTest do
     # confirm result
     assert Map.get(Graph.get!(graph, {:a, :one}), :transforms) == @transform
     assert Map.get(Graph.get!(graph, {:a, :two}), :transforms) == @transform
-    refute Map.get(Graph.get!(graph, {:b, :three}), :transforms)
+    assert Map.get(Graph.get!(graph, {:b, :three}), :transforms) == %{}
   end
 
   # ============================================================================
@@ -768,7 +524,7 @@ defmodule Scenic.GraphTest do
   test "map recurses over entire tree" do
     # confirm setup
     assert Graph.reduce(@graph_find, true, fn p, f ->
-             f && Map.get(p, :transforms) == nil
+             f && Map.get(p, :transforms) == %{}
            end)
 
     graph =
@@ -822,9 +578,9 @@ defmodule Scenic.GraphTest do
     [other] = graph.ids[:other_text]
 
     # confirm setup
-    assert Map.get(graph.primitives[t0], :transforms) == nil
-    assert Map.get(graph.primitives[t1], :transforms) == nil
-    assert Map.get(graph.primitives[other], :transforms) == nil
+    assert Map.get(graph.primitives[t0], :transforms) == %{}
+    assert Map.get(graph.primitives[t1], :transforms) == %{}
+    assert Map.get(graph.primitives[other], :transforms) == %{}
 
     graph =
       Graph.map(graph, :text, fn p ->
@@ -834,7 +590,7 @@ defmodule Scenic.GraphTest do
     # confirm result
     assert Map.get(graph.primitives[t0], :transforms) == @transform
     assert Map.get(graph.primitives[t1], :transforms) == @transform
-    assert Map.get(graph.primitives[other], :transforms) == nil
+    assert Map.get(graph.primitives[other], :transforms) == %{}
   end
 
   test "style_stack returns an empty map for invalid uid" do

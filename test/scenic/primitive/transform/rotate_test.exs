@@ -1,37 +1,28 @@
 #
 #  Created by Boyd Multerer on 2017-11-02.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Transform.RotateTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive.Transform.Rotate
 
   alias Scenic.Primitive.Transform.Rotate
 
-  test "info works" do
-    assert Rotate.info(:test_data) =~ ":test_data"
+  test "validate accepts valid data" do
+    assert Rotate.validate(1) == {:ok, 1}
+    assert Rotate.validate(1.5) == {:ok, 1.5}
   end
 
-  test "verify passes valid data" do
-    assert Rotate.verify(1.0) == true
-  end
+  test "validate rejects bad data" do
+    {:error, msg} = Rotate.validate({1.5, 2})
+    assert msg =~ "Invalid Rotation"
 
-  test "verify fails invalid data" do
-    assert Rotate.verify({1.1, 1.2}) == false
-    assert Rotate.verify({1.1, 1.2, 1.3, 1.4}) == false
-    assert Rotate.verify({1.1, 1.2, :banana}) == false
-    assert Rotate.verify(:banana) == false
-  end
+    {:error, msg} = Rotate.validate("1.5")
+    assert msg =~ "Invalid Rotation"
 
-  test "normalize" do
-    assert Rotate.normalize(1) == 1
-    assert Rotate.normalize(1.1) == 1.1
+    {:error, msg} = Rotate.validate( :banana )
+    assert msg =~ "Invalid Rotation"
   end
-
-  test "normalize raises on bad data" do
-    assert_raise FunctionClauseError, fn ->
-      assert Rotate.normalize(:banana)
-    end
-  end
+  
 end

@@ -10,7 +10,8 @@ For example, to use the style defined in the module Scenic.Primitive.Style.Font 
 
     graph =
       Graph.build
-      |> text( "Styled Text", font: :roboto_slab )
+      |> text( "Styled Text", font: :roboto_mono )
+      |> text( "Custom Text", font: "fonts/my_font.ttf" )
 
 ## Primitive Styles
 

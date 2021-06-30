@@ -1,12 +1,12 @@
 #
 #  Created by Boyd Multerer on 2017-05-08.
 #  Re-written on 11/02/17
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.TriangleTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive.Triangle
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Triangle
@@ -23,27 +23,42 @@ defmodule Scenic.Primitive.TriangleTest do
   end
 
   # ============================================================================
-  # verify
 
-  test "info works" do
-    assert Triangle.info(:test_data) =~ ":test_data"
+  test "validate accepts valid data" do
+    assert Triangle.validate(@data) == {:ok, @data}
   end
 
-  test "verify passes valid data" do
-    assert Triangle.verify(@data) == {:ok, @data}
+  test "validate rejects bad data" do
+    {:error, msg} = Triangle.validate({{20, 300}, {400, 300}, {400, "0"}})
+    assert msg =~ "Invalid Triangle"
+
+    {:error, msg} = Triangle.validate( :banana )
+    assert msg =~ "Invalid Triangle"
   end
 
-  test "verify fails invalid data" do
-    assert Triangle.verify({{20, 300}, {400, 300}, 400, 0}) == :invalid_data
-    assert Triangle.verify({{20, 300}, {400, 300}, {400, :banana}}) == :invalid_data
-    assert Triangle.verify(:banana) == :invalid_data
-  end
+
+
+  # # ============================================================================
+  # # styles
+
+  # test "valid_styles works" do
+  #   assert Triangle.valid_styles() == [:hidden, :fill, :stroke, :join, :miter_limit]
+  # end
 
   # ============================================================================
   # styles
 
   test "valid_styles works" do
-    assert Triangle.valid_styles() == [:hidden, :fill, :stroke, :join, :miter_limit]
+    assert Triangle.valid_styles() == [:hidden, :fill, :stroke_width, :stroke_fill, :join, :miter_limit]
+  end
+
+  # ============================================================================
+  # compile
+
+  test "compile works" do
+    p = Triangle.build(@data )
+    assert Triangle.compile(p, %{stroke_fill: :blue}) ==
+      [{:draw_triangle, {20, 300, 400, 300, 400, 0, :stroke}}]
   end
 
   # ============================================================================

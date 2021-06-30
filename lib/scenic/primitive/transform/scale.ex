@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-10-02.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Transform.Scale do
@@ -33,32 +33,21 @@ defmodule Scenic.Primitive.Transform.Scale do
   # ============================================================================
   # data verification and serialization
 
-  # --------------------------------------------------------
-  @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be either a single number or a vector
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
-
-      If you supply a single number, then scale is that percentage on both the X and Y axes.
-
-      If you supply a vector {px, py}, the scale is different on the two axes.
-
-      #{IO.ANSI.default_color()}
-    """
-
-  # --------------------------------------------------------
-  @doc false
-  def verify(percent) do
-    normalize(percent)
-    true
-  rescue
-    _ -> false
+  def validate( s ) when is_number(s), do: validate( {s,s} )
+  def validate( {x,y} ) when is_number(x) and is_number(y) and x >= 0 and y >= 0 do
+    {:ok, {x,y}}
+  end
+  def validate( data )  do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Scale
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The :scale / :s option must be a percentage or {x, y} percentages.
+      These must be postitive nubmers#{IO.ANSI.default_color()}
+      """
+    }
   end
 
-  # --------------------------------------------------------
-  @doc false
-  @spec normalize(number() | {number(), number()}) :: {number(), number()}
-  def normalize(pct) when is_number(pct), do: {pct, pct}
-  def normalize({px, py}) when is_number(px) and is_number(py), do: {px, py}
 end

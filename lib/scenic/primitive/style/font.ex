@@ -1,6 +1,6 @@
 #
 #  Re-Created by Boyd Multerer on 2017-11-30.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Style.Font do
@@ -14,7 +14,7 @@ defmodule Scenic.Primitive.Style.Font do
 
   ## Data
       
-  You can choose one of the three named system fonts, or one you've loaded into the cache.
+  You can choose one of the named system fonts, or one you've loaded into the cache.
 
   * `:roboto` - The standard [Roboto](https://fonts.google.com/specimen/Roboto) sans-serif font.
   * `:roboto_mono` - The standard [Roboto Mono](https://fonts.google.com/specimen/Roboto+Mono) mono-spaced font.
@@ -51,38 +51,99 @@ defmodule Scenic.Primitive.Style.Font do
 
   use Scenic.Primitive.Style
 
+  alias Scenic.Assets.Static
+
   # import IEx
 
   # ============================================================================
   # data verification and serialization
 
-  # --------------------------------------------------------
-  @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be a cache key or an atom
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
 
-      "Examples:
-      :roboto             # system font
-      \"w29afwkj23ry8\"   # key of font in the cache
 
-      #{IO.ANSI.default_color()}
-    """
-
-  # --------------------------------------------------------
-  @doc false
-  def verify(font) do
-    try do
-      normalize(font)
-      true
-    rescue
-      _ -> false
+  def validate(id) when is_atom(id) or is_bitstring(id) do
+    with {:ok, id_str} <- Static.resolve_alias(id),
+    {:ok, {:font, _}} <- Static.fetch( id_str ) do
+      {:ok, id_str}
+    else
+      {:ok, {:image, _}} -> err_is_an_image(id)
+      {:error, :not_mapped} -> err_not_mapped(id)
+      :error -> err_missing(id)
     end
   end
+  def validate(invalid), do: err_invalid( invalid )
 
-  # --------------------------------------------------------
-  @doc false
-  def normalize(name) when is_atom(name), do: name
-  def normalize(key) when is_bitstring(key), do: key
+
+  defp err_is_an_image(id) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Font specification
+      Received: #{inspect(id)}
+      This is an image!!
+      #{IO.ANSI.yellow()}
+      The :font style must be an id that names an font in your Scenic.Assets.Static library#{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  defp err_not_mapped(id) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Font specification
+      Received: #{inspect(id)}
+      The alias #{inspect(id)} is not mapped to an asset path
+      #{IO.ANSI.yellow()}
+      The :font style must be an id that names an font in your Scenic.Assets.Static library
+
+      To resolve this, make sure the alias mapped to a file path in your config.
+        config :scenic, :assets,
+          module: MyApplication.Assets,
+          alias: [
+            my_font: "fonts/my_font.ttf"
+          ]#{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  defp err_missing(id) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Font specification
+      Received: #{inspect(id)}
+      The asset #{inspect(id)} could not be found.
+      #{IO.ANSI.yellow()}
+      The :font style must be an id that names an font in your Scenic.Assets.Static library
+      
+      To resolve this do the following checks.
+        1) Confirm that the file exists in your assets folder.
+
+        2) Make sure the font file is being compiled into your asset library.
+          If this file is new, you may need to "touch" your asset library module to cause it to recompile.
+          Maybe somebody will help add a filesystem watcher to do this automatically. (hint hint...)
+
+        3) Check that and that the asset module is defined in your config.
+          config :scenic, :assets,
+            module: MyApplication.Assets #{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  def err_invalid( invalid ) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Font specification
+      Received: #{inspect(invalid)}
+      #{IO.ANSI.yellow()}
+      The :font style must be an id that names an font in your Scenic.Assets.Static library
+      
+      Examples:
+        font: "fonts/my_font.ttf"
+        font: :my_font{IO.ANSI.default_color()}
+      """
+    }
+  end
+
 end

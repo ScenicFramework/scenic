@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-05-06.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Group do
@@ -30,49 +30,61 @@ defmodule Scenic.Primitive.Group do
   """
 
   use Scenic.Primitive
+  alias Scenic.Script
   alias Scenic.Primitive
+  alias Scenic.Primitive.Style
 
   #  import IEx
+
+  @type t :: [pos_integer]
+  @type styles_t :: [:hidden | atom]
+
+  @styles [:hidden]
 
   # ============================================================================
   # data verification and serialization
 
-  # --------------------------------------------------------
-  @doc false
-  def build(nil, opts), do: build([], opts)
+  @impl Primitive
+  @spec validate( ids::[pos_integer] ) ::
+    {:ok, ids::[pos_integer]} | {:error, String.t()}
+  def validate( ids ) when is_list(ids) do
+    case Enum.all?(ids, fn(n) -> is_integer(n) && n >= 0 end) do
+      true -> {:ok, ids}
+      false -> err_validation(ids)
+    end
+  end
+  def validate( data ), do: err_validation(data)
 
-  def build(ids, opts) do
-    verify!(ids)
-    Primitive.build(__MODULE__, ids, opts)
+  defp err_validation(data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Group specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The data for an Group is a list of primitive ids.#{IO.ANSI.default_color()}
+      """
+    }
   end
 
   # --------------------------------------------------------
-  @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be a list of valid uids of other elements in the graph.
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
-      #{IO.ANSI.default_color()}
-    """
-
-  # --------------------------------------------------------
-  @doc false
-  def verify(ids) when is_list(ids) do
-    if Enum.all?(ids, &is_integer/1), do: {:ok, ids}, else: :invalid_data
-  end
-
-  def verify(_), do: :invalid_data
-
-  # ============================================================================
-  # filter and gather styles
-
   @doc """
   Returns a list of styles recognized by this primitive.
   """
-  @spec valid_styles() :: [:all, ...]
-  def valid_styles(), do: [:all]
+  @impl Primitive
+  @spec valid_styles() :: [:hidden, ...]
+  def valid_styles(), do: @styles
 
-  def filter_styles(styles) when is_map(styles), do: styles
+
+  # --------------------------------------------------------
+  # compiling a group is a special case and is handled in Scenic.ViewPort.GraphCompiler
+  @doc false
+  @impl Primitive
+  @spec compile( primitive::Primitive.t(), styles::Style.m() ) :: Script.t()
+  def compile( %Primitive{module: __MODULE__}, _styles) do
+    raise "compiling a group is a special case and is handled in Scenic.ViewPort.GraphCompiler"
+  end
+
 
   # ============================================================================
   # apis to manipulate the list of child ids

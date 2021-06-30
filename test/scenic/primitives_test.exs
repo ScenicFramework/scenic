@@ -1,11 +1,12 @@
 #
 #  Created by Boyd Multerer on 2018-04-30.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Copyright © 2018 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.PrimitivesTest do
   use ExUnit.Case, async: true
   doctest Scenic.Primitives
+  
   alias Scenic.Graph
   # alias Scenic.Primitive
   alias Scenic.Primitives
@@ -18,30 +19,30 @@ defmodule Scenic.PrimitivesTest do
 
   # ============================================================================
   test "arc adds to a graph - default opts" do
-    g = Primitives.arc(@graph, {0, 1, 20})
+    g = Primitives.arc(@graph, {10, 20})
     p = g.primitives[1]
 
     assert p.module == Scenic.Primitive.Arc
-    assert p.data == {0, 1, 20}
+    assert p.data == {10, 20}
   end
 
   test "arc adds to a graph" do
     p =
-      Primitives.arc(@graph, {0, 1, 20}, id: :arc)
+      Primitives.arc(@graph, {10, 20}, id: :arc)
       |> Graph.get!(:arc)
 
     assert p.module == Scenic.Primitive.Arc
-    assert p.data == {0, 1, 20}
+    assert p.data == {10, 20}
     assert p.id == :arc
   end
 
   test "arc modifies primitive data" do
     p =
-      Primitives.arc(@graph, {0, 1, 20}, id: :arc)
+      Primitives.arc(@graph, {10, 20}, id: :arc)
       |> Graph.get!(:arc)
-      |> Primitives.arc({0, 1.5, 200}, id: :modified)
+      |> Primitives.arc({11, 200}, id: :modified)
 
-    assert p.data == {0, 1.5, 200}
+    assert p.data == {11, 200}
     assert p.id == :modified
   end
 
@@ -49,13 +50,23 @@ defmodule Scenic.PrimitivesTest do
     p =
       @graph
       |> Primitives.add_specs_to_graph([
-        Primitives.arc_spec({0, 1, 20}, id: :arc)
+        Primitives.arc_spec({10, 20}, id: :arc)
       ])
       |> Graph.get!(:arc)
 
     assert p.module == Scenic.Primitive.Arc
-    assert p.data == {0, 1, 20}
+    assert p.data == {10, 20}
     assert p.id == :arc
+  end
+
+  test "arc rejects old format" do
+    assert_raise FunctionClauseError, fn ->
+      @graph
+      |> Primitives.add_specs_to_graph([
+        Primitives.arc_spec({10, 11, 20}, id: :arc)
+      ])
+      |> Graph.get!(:arc)
+    end
   end
 
   # ============================================================================
@@ -160,17 +171,6 @@ defmodule Scenic.PrimitivesTest do
     assert p.data == []
     assert p.id == :group
   end
-
-  # test "group modifies primitive" do
-  #   p = Primitives.group(@graph, fn(g) -> g end, id: :group)
-  #   |> Graph.get!(1)
-  #   |> Primitives.group(fn(g) ->
-  #     Primitives.ellipse(g, {20,30})
-  #   end, id: :modified)
-  #   assert p.module == Scenic.Primitive.Group
-  #   assert Enum.count(p.data) == 1
-  #   assert p.id == :group
-  # end
 
   test "group adds via spec" do
     p =
@@ -318,6 +318,7 @@ defmodule Scenic.PrimitivesTest do
     assert p.data == actions
     assert p.id == :path
   end
+
 
   # ============================================================================
   test "quad adds to a graph - default opts" do
@@ -530,127 +531,169 @@ defmodule Scenic.PrimitivesTest do
   end
 
   # ============================================================================
-  test "scene_ref adds to a graph - default opts" do
-    key = {:graph, make_ref(), 123}
+  # test "scene_ref adds to a graph - default opts" do
+  #   key = {:graph, make_ref(), 123}
 
-    g = Primitives.scene_ref(@graph, key)
+  #   g = Primitives.scene_ref(@graph, key)
+  #   p = g.primitives[1]
+
+  #   assert p.module == Scenic.Primitive.SceneRef
+  #   assert p.data == key
+  # end
+
+  # test "scene_ref adds graph key reference to a graph" do
+  #   key = {:graph, make_ref(), 123}
+
+  #   p =
+  #     Primitives.scene_ref(@graph, key, id: :ref)
+  #     |> Graph.get!(:ref)
+
+  #   assert p.module == Scenic.Primitive.SceneRef
+  #   assert p.data == key
+  #   assert p.id == :ref
+  # end
+
+  # test "scene_ref adds named scene reference to a graph" do
+  #   p =
+  #     Primitives.scene_ref(@graph, :scene_name, id: :ref)
+  #     |> Graph.get!(:ref)
+
+  #   assert p.module == Scenic.Primitive.SceneRef
+  #   assert p.data == :scene_name
+  #   assert p.id == :ref
+  # end
+
+  # test "scene_ref adds pid scene reference to a graph" do
+  #   p =
+  #     Primitives.scene_ref(@graph, self(), id: :ref)
+  #     |> Graph.get!(:ref)
+
+  #   assert p.module == Scenic.Primitive.SceneRef
+  #   assert p.data == {self(), nil}
+  #   assert p.id == :ref
+  # end
+
+  # test "scene_ref adds named scene with id reference to a graph" do
+  #   p =
+  #     Primitives.scene_ref(@graph, {:scene_name, 123}, id: :ref)
+  #     |> Graph.get!(:ref)
+
+  #   assert p.module == Scenic.Primitive.SceneRef
+  #   assert p.data == {:scene_name, 123}
+  #   assert p.id == :ref
+  # end
+
+  # test "scene_ref adds pid with id reference to a graph" do
+  #   p =
+  #     Primitives.scene_ref(@graph, {self(), 123}, id: :ref)
+  #     |> Graph.get!(:ref)
+
+  #   assert p.module == Scenic.Primitive.SceneRef
+  #   assert p.data == {self(), 123}
+  #   assert p.id == :ref
+  # end
+
+  # test "scene_ref adds dynamic reference to a graph" do
+  #   p =
+  #     Primitives.scene_ref(@graph, {{:mod, "abc"}, 123}, id: :ref)
+  #     |> Graph.get!(:ref)
+
+  #   assert p.module == Scenic.Primitive.SceneRef
+  #   assert p.data == {{:mod, "abc"}, 123}
+  #   assert p.id == :ref
+  # end
+
+  # test "scene_ref modifies primitive" do
+  #   p =
+  #     Primitives.scene_ref(@graph, {{:mod, "abc"}, 123}, id: :ref)
+  #     |> Graph.get!(:ref)
+  #     |> Primitives.scene_ref({{:new_mod, "abcd"}, 456}, id: :modified)
+
+  #   assert p.data == {{:new_mod, "abcd"}, 456}
+  #   assert p.id == :modified
+  # end
+
+  # test "scene_ref adds via spec" do
+  #   p =
+  #     @graph
+  #     |> Primitives.add_specs_to_graph([
+  #       Primitives.scene_ref_spec({self(), 123}, id: :scene_ref)
+  #     ])
+  #     |> Graph.get!(:scene_ref)
+
+  #   assert p.module == Scenic.Primitive.SceneRef
+  #   assert p.data == {self(), 123}
+  #   assert p.id == :scene_ref
+  # end
+
+  # ============================================================================
+  test "script adds a script to a graph - default opts" do
+    g = Primitives.script(@graph, "some_script_name")
     p = g.primitives[1]
 
-    assert p.module == Scenic.Primitive.SceneRef
-    assert p.data == key
+    assert p.module == Scenic.Primitive.Script
+    assert p.data == "some_script_name"
   end
 
-  test "scene_ref adds graph key reference to a graph" do
-    key = {:graph, make_ref(), 123}
-
+  test "script adds a script to a graph" do
     p =
-      Primitives.scene_ref(@graph, key, id: :ref)
-      |> Graph.get!(:ref)
+      Primitives.script(@graph, "some_script_name", id: :script)
+      |> Graph.get!(:script)
 
-    assert p.module == Scenic.Primitive.SceneRef
-    assert p.data == key
-    assert p.id == :ref
+    assert p.module == Scenic.Primitive.Script
+    assert p.data == "some_script_name"
+    assert p.id == :script
   end
 
-  test "scene_ref adds named scene reference to a graph" do
+  test "script modifies primitive" do
     p =
-      Primitives.scene_ref(@graph, :scene_name, id: :ref)
-      |> Graph.get!(:ref)
+      Primitives.script(@graph, "some_script_name", id: :script)
+      |> Graph.get!(:script)
+      |> Primitives.script("some_other_name", id: :modified)
 
-    assert p.module == Scenic.Primitive.SceneRef
-    assert p.data == :scene_name
-    assert p.id == :ref
-  end
-
-  test "scene_ref adds pid scene reference to a graph" do
-    p =
-      Primitives.scene_ref(@graph, self(), id: :ref)
-      |> Graph.get!(:ref)
-
-    assert p.module == Scenic.Primitive.SceneRef
-    assert p.data == {self(), nil}
-    assert p.id == :ref
-  end
-
-  test "scene_ref adds named scene with id reference to a graph" do
-    p =
-      Primitives.scene_ref(@graph, {:scene_name, 123}, id: :ref)
-      |> Graph.get!(:ref)
-
-    assert p.module == Scenic.Primitive.SceneRef
-    assert p.data == {:scene_name, 123}
-    assert p.id == :ref
-  end
-
-  test "scene_ref adds pid with id reference to a graph" do
-    p =
-      Primitives.scene_ref(@graph, {self(), 123}, id: :ref)
-      |> Graph.get!(:ref)
-
-    assert p.module == Scenic.Primitive.SceneRef
-    assert p.data == {self(), 123}
-    assert p.id == :ref
-  end
-
-  test "scene_ref adds dynamic reference to a graph" do
-    p =
-      Primitives.scene_ref(@graph, {{:mod, "abc"}, 123}, id: :ref)
-      |> Graph.get!(:ref)
-
-    assert p.module == Scenic.Primitive.SceneRef
-    assert p.data == {{:mod, "abc"}, 123}
-    assert p.id == :ref
-  end
-
-  test "scene_ref modifies primitive" do
-    p =
-      Primitives.scene_ref(@graph, {{:mod, "abc"}, 123}, id: :ref)
-      |> Graph.get!(:ref)
-      |> Primitives.scene_ref({{:new_mod, "abcd"}, 456}, id: :modified)
-
-    assert p.data == {{:new_mod, "abcd"}, 456}
+    assert p.data == "some_other_name"
     assert p.id == :modified
   end
 
-  test "scene_ref adds via spec" do
+  test "script adds via spec" do
     p =
       @graph
       |> Primitives.add_specs_to_graph([
-        Primitives.scene_ref_spec({self(), 123}, id: :scene_ref)
+        Primitives.script_spec("some_script_name", id: :script)
       ])
-      |> Graph.get!(:scene_ref)
+      |> Graph.get!(:script)
 
-    assert p.module == Scenic.Primitive.SceneRef
-    assert p.data == {self(), 123}
-    assert p.id == :scene_ref
+    assert p.module == Scenic.Primitive.Script
+    assert p.data == "some_script_name"
+    assert p.id == :script
   end
 
   # ============================================================================
   test "sector adds to a graph - default opts" do
-    g = Primitives.sector(@graph, {0, 1, 20})
+    g = Primitives.sector(@graph, {10, 20})
     p = g.primitives[1]
 
     assert p.module == Scenic.Primitive.Sector
-    assert p.data == {0, 1, 20}
+    assert p.data == {10, 20}
   end
 
   test "sector adds to a graph" do
     p =
-      Primitives.sector(@graph, {0, 1, 20}, id: :sector)
+      Primitives.sector(@graph, {10, 20}, id: :sector)
       |> Graph.get!(:sector)
 
     assert p.module == Scenic.Primitive.Sector
-    assert p.data == {0, 1, 20}
+    assert p.data == {10, 20}
     assert p.id == :sector
   end
 
   test "sector modifies primitive" do
     p =
-      Primitives.sector(@graph, {1, 1, 20}, id: :sector)
+      Primitives.sector(@graph, {10, 20}, id: :sector)
       |> Graph.get!(:sector)
-      |> Primitives.sector({1, 1.5, 22}, id: :modified)
+      |> Primitives.sector({15, 22}, id: :modified)
 
-    assert p.data == {1, 1.5, 22}
+    assert p.data == {15, 22}
     assert p.id == :modified
   end
 
@@ -658,13 +701,23 @@ defmodule Scenic.PrimitivesTest do
     p =
       @graph
       |> Primitives.add_specs_to_graph([
-        Primitives.sector_spec({1, 1.5, 22}, id: :sector)
+        Primitives.sector_spec({15, 22}, id: :sector)
       ])
       |> Graph.get!(:sector)
 
     assert p.module == Scenic.Primitive.Sector
-    assert p.data == {1, 1.5, 22}
+    assert p.data == {15, 22}
     assert p.id == :sector
+  end
+
+  test "sector rejects old format" do
+    assert_raise FunctionClauseError, fn ->
+      @graph
+      |> Primitives.add_specs_to_graph([
+        Primitives.sector_spec({1, 1.5, 22}, id: :sector)
+      ])
+      |> Graph.get!(:sector)
+    end
   end
 
   # ============================================================================
@@ -754,22 +807,22 @@ defmodule Scenic.PrimitivesTest do
   # ============================================================================
   test "test update_opts" do
     p =
-      Primitives.arc(@graph, {0, 1, 20}, id: :arc)
-      |> Graph.get!(:arc)
+      Primitives.rect(@graph, {10, 20}, id: :rect)
+      |> Graph.get!(:rect)
       |> Primitives.update_opts(id: :modified)
 
-    assert p.data == {0, 1, 20}
+    assert p.data == {10, 20}
     assert p.id == :modified
   end
 
   test "test update_opts is additive to existing opts" do
     p =
-      Primitives.arc(@graph, {0, 1, 20}, id: :arc, translate: {1, 2})
-      |> Graph.get!(:arc)
+      Primitives.rect(@graph, {10, 20}, id: :rect, translate: {1, 2})
+      |> Graph.get!(:rect)
       |> Primitives.update_opts(rotate: 1)
 
-    assert p.data == {0, 1, 20}
-    assert p.id == :arc
+    assert p.data == {10, 20}
+    assert p.id == :rect
     assert p.transforms == %{rotate: 1, translate: {1, 2}}
   end
 end

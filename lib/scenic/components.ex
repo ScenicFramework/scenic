@@ -1,15 +1,14 @@
 #
 #  Created by Boyd Multerer 2018-04-30.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Copyright © 2018 Kry10 Limited. All rights reserved.
 #
 
 # convenience functions for adding basic components to a graph.
 # this module should be updated as new base components are added
 
 defmodule Scenic.Components do
-  alias Scenic.Component
   alias Scenic.Primitive
-  alias Scenic.Primitive.SceneRef
+  alias Scenic.Component
   alias Scenic.Graph
 
   # import IEx
@@ -187,9 +186,13 @@ defmodule Scenic.Components do
     add_to_graph(g, Component.Button, data, options)
   end
 
-  def button(%Primitive{module: SceneRef} = p, data, options) do
-    modify(p, Component.Button, data, options)
+  def button(
+    %Primitive{module: Primitive.Component, data: {Component.Button, _, _}} = p,
+    data, options
+  ) do
+    modify(p, data, options)
   end
+
 
   @doc """
   Generate an uninstantiated button spec, parallel to the concept of
@@ -255,9 +258,13 @@ defmodule Scenic.Components do
     add_to_graph(g, Component.Input.Checkbox, data, options)
   end
 
-  def checkbox(%Primitive{module: SceneRef} = p, data, options) do
-    modify(p, Component.Input.Checkbox, data, options)
+  def checkbox(
+    %Primitive{module: Primitive.Component, data: {Component.Input.Checkbox, _, _}} = p,
+    data, options
+  ) do
+    modify(p, data, options)
   end
+
 
   @doc """
   Generate an uninstantiated checkbox spec, parallel to the concept of
@@ -350,9 +357,13 @@ defmodule Scenic.Components do
     add_to_graph(g, Component.Input.Dropdown, data, options)
   end
 
-  def dropdown(%Primitive{module: SceneRef} = p, data, options) do
-    modify(p, Component.Input.Dropdown, data, options)
+  def dropdown(
+    %Primitive{module: Primitive.Component, data: {Component.Input.Dropdown, _, _}} = p,
+    data, options
+  ) do
+    modify(p, data, options)
   end
+
 
   @doc """
   Generate an uninstantiated dropdown spec, parallel to the concept of
@@ -439,9 +450,13 @@ defmodule Scenic.Components do
     add_to_graph(g, Component.Input.RadioGroup, data, options)
   end
 
-  def radio_group(%Primitive{module: SceneRef} = p, data, options) do
-    modify(p, Component.Input.RadioGroup, data, options)
+  def radio_group(
+    %Primitive{module: Primitive.Component, data: {Component.Input.RadioGroup, _, _}} = p,
+    data, options
+  ) do
+    modify(p, data, options)
   end
+
 
   @doc """
   Generate an uninstantiated radio_group spec, parallel to the concept of
@@ -524,9 +539,14 @@ defmodule Scenic.Components do
     add_to_graph(g, Component.Input.Slider, data, options)
   end
 
-  def slider(%Primitive{module: SceneRef} = p, data, options) do
-    modify(p, Component.Input.Slider, data, options)
+  def slider(
+    %Primitive{module: Primitive.Component, data: {Component.Input.Slider, _, _}} = p,
+    data, options
+  ) do
+    modify(p, data, options)
   end
+
+
 
   @doc """
   Generate an uninstantiated slider spec, parallel to the concept of
@@ -612,9 +632,13 @@ defmodule Scenic.Components do
     add_to_graph(g, Component.Input.TextField, data, options)
   end
 
-  def text_field(%Primitive{module: SceneRef} = p, data, options) do
-    modify(p, Component.Input.TextField, data, options)
+  def text_field(
+    %Primitive{module: Primitive.Component, data: {Component.Input.TextField, _, _}} = p,
+    data, options
+  ) do
+    modify(p, data, options)
   end
+
 
   @doc """
   Generate an uninstantiated text_field spec, parallel to the concept of
@@ -677,8 +701,11 @@ defmodule Scenic.Components do
     add_to_graph(g, Component.Input.Toggle, data, options)
   end
 
-  def toggle(%Primitive{module: SceneRef} = p, data, options) do
-    modify(p, Component.Input.Toggle, data, options)
+  def toggle(
+    %Primitive{module: Primitive.Component, data: {Component.Input.Toggle, _, _}} = p,
+    data, options
+  ) do
+    modify(p, data, options)
   end
 
   @doc """
@@ -690,13 +717,24 @@ defmodule Scenic.Components do
   # ============================================================================
   # generic workhorse versions
 
+# import IEx
   defp add_to_graph(%Graph{} = g, mod, data, options) do
-    mod.verify!(data)
+# pry()
+#     data = case mod.validate(data) do
+#       {:ok, data} -> {mod, data}
+#       {:error, msg} -> raise msg
+#     end
+# pry()
     mod.add_to_graph(g, data, options)
   end
 
-  defp modify(%Primitive{module: SceneRef} = p, mod, data, options) do
-    mod.verify!(data)
-    Primitive.put(p, {mod, data}, options)
+  defp modify(%Primitive{module: Primitive.Component, data: {mod, _, id}} = p, data, options) do
+    data = case mod.validate(data) do
+      {:ok, data} -> data
+      {:error, msg} -> raise msg
+    end
+    Primitive.put(p, {mod, data, id}, options)
   end
+
 end
+

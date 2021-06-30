@@ -69,7 +69,6 @@ defmodule Scenic.Component.Input.Slider do
   use Scenic.Component, has_children: false
 
   alias Scenic.Graph
-  alias Scenic.ViewPort
   alias Scenic.Primitive.Style.Theme
   import Scenic.Primitives, only: [{:rect, 3}, {:line, 3}, {:rrect, 3}, {:update_opts, 2}]
 
@@ -83,118 +82,178 @@ defmodule Scenic.Component.Input.Slider do
 
   @default_width 300
 
-  # ============================================================================
-  # setup
-
   # --------------------------------------------------------
-  @doc false
-  def info(data) do
-    """
-    #{IO.ANSI.red()}Slider data must be: {extents, initial_value}
-    #{IO.ANSI.yellow()}Received: #{inspect(data)}
-    The initial_value must make sense with the extents
+  @impl Scenic.Component
 
-    Examples:
-    {{0,100}, 0}
-    {{0.0, 1.57}, 0.3}
-    {[:red, :green, :blue, :orange], :green}
 
-    #{IO.ANSI.default_color()}
-    """
-  end
-
-  # --------------------------------------------------------
-  @doc false
-  def verify({ext, initial} = data) do
-    verify_initial(ext, initial)
-    |> case do
+  def validate( {{min, max}, initial} = data )
+  when is_number(min) and is_number(max) and is_number(initial) do
+    cond do
+      min > max -> err_min_max(data)
+      initial < min -> err_min(data)
+      initial > max -> err_max(data)
       true -> {:ok, data}
-      _ -> :invalid_data
     end
   end
 
-  def verify(_), do: :invalid_data
+  def validate( {values, initial} = data ) when is_list(values) do
+    case Enum.member?(values, initial) do
+      true -> {:ok, data}
+      false -> err_initial_value(data)
+    end
+  end
 
-  # --------------------------------------------------------
-  defp verify_initial({min, max}, init)
-       when is_integer(min) and is_integer(max) and is_integer(init) and init >= min and
-              init <= max,
-       do: true
+  def validate(data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Slider specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The data for a Slider is {extents, initial}
 
-  defp verify_initial({min, max}, init)
-       when is_float(min) and is_float(max) and is_number(init) and init >= min and init <= max,
-       do: true
+      The extents can be either a list of values or a {min, max} tuple.
 
-  defp verify_initial(list_ext, init) when is_list(list_ext), do: Enum.member?(list_ext, init)
-  defp verify_initial(_, _), do: false
+      If this is a numerical slider, then min <= initial <= max.
+
+      If this is a list slider, then the initial value must be in the list of values.#{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  defp err_min_max({{min, max}, _} = data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Slider specification
+      Received: #{inspect(data)}
+      The initial min value #{inspect(min)} is above the max of #{inspect(max)}.
+      #{IO.ANSI.yellow()}
+      The data for a numerical Slider is {{min, max}, initial}
+
+      The values must follow: min <= initial <= max.#{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  defp err_min({{min, _}, initial} = data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Slider specification
+      Received: #{inspect(data)}
+      The initial value #{inspect(initial)} is below the min of #{inspect(min)}.
+      #{IO.ANSI.yellow()}
+      The data for a numerical Slider is {{min, max}, initial}
+
+      The values must follow: min <= initial <= max.#{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  defp err_max({{_, max}, initial} = data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Slider specification
+      Received: #{inspect(data)}
+      The initial value #{inspect(initial)} is above the max of #{inspect(max)}.
+      #{IO.ANSI.yellow()}
+      The data for a numerical Slider is {{min, max}, initial}
+
+      The values must follow: min <= initial <= max.#{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  defp err_initial_value({_values, initial} = data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Slider specification
+      Received: #{inspect(data)}
+      The initial value #{inspect(initial)} is not in the list of values.
+      #{IO.ANSI.yellow()}
+      The data for a list of values Slider is {values, initial_value}
+
+      The initial value must be in the list of values.#{IO.ANSI.default_color()}
+      """
+    }
+  end
 
   # --------------------------------------------------------
   @doc false
-  def init({extents, value}, opts) do
+  @impl Scenic.Scene
+  def init(scene, {extents, value}, opts) do
     id = opts[:id]
-    styles = opts[:styles]
+
+    request_input( scene, :cursor_button )
 
     # theme is passed in as an inherited style
     theme =
-      (styles[:theme] || Theme.preset(:primary))
+      (opts[:theme] || Theme.preset(:primary))
       |> Theme.normalize()
 
     # get button specific styles
-    width = styles[:width] || @default_width
+    width = opts[:width] || @default_width
 
     graph =
       Graph.build()
-      |> rect({width, @height}, fill: :clear, t: {0, -1})
+      |> rect({width, @height}, fill: :clear, t: {0, -1}, id: :hit_rect, input: true)
       |> line({{0, @mid_height}, {width, @mid_height}}, stroke: {@line_width, theme.border})
       |> rrect({@btn_size, @btn_size, @radius}, fill: theme.thumb, id: :thumb, t: {0, 1})
       |> update_slider_position(value, extents, width)
 
-    state = %{
-      graph: graph,
-      value: value,
-      extents: extents,
-      width: width,
-      id: id,
-      tracking: false
-    }
+    scene =
+      scene
+      |> assign([
+        graph: graph,
+        value: value,
+        extents: extents,
+        width: width,
+        id: id,
+        tracking: false
+      ])
+      |> push_graph( graph )
 
-    {:ok, state, push: graph}
+    {:ok, scene}
   end
 
   # ============================================================================
 
   # --------------------------------------------------------
   @doc false
-  def handle_input({:cursor_button, {:left, :press, _, {x, _}}}, context, state) do
-    state =
-      state
-      |> Map.put(:tracking, true)
+  @impl Scenic.Scene
+  def handle_input( {:cursor_button, {0, :press, _, {x, _}}},  :hit_rect, scene ) do
+    :ok = capture_input(scene, [:cursor_button, :cursor_pos, :viewport])
 
-    state = update_slider(x, state)
+    scene =
+      scene
+      |> assign( :tracking, true )
+      |> update_slider( x )
 
-    ViewPort.capture_input(context, [:cursor_button, :cursor_pos])
-
-    {:noreply, state, push: state.graph}
+    {:noreply, scene}
   end
 
-  # --------------------------------------------------------
-  def handle_input({:cursor_button, {:left, :release, _, _}}, context, state) do
-    state = Map.put(state, :tracking, false)
-
-    ViewPort.release_input(context, [:cursor_button, :cursor_pos])
-
-    {:noreply, state, push: state.graph}
+  def handle_input( {:cursor_button, {0, :release, _, _xy}}, _id, scene ) do
+    scene = assign(scene, :tracking, false)
+    release_input( scene )
+    {:noreply, scene}
   end
 
-  # --------------------------------------------------------
-  def handle_input({:cursor_pos, {x, _}}, _context, %{tracking: true} = state) do
-    state = update_slider(x, state)
-    {:noreply, state, push: state.graph}
+  def handle_input({:cursor_pos, {x, _}}, _id, %{ assigns: %{tracking: true} } = scene) do
+    {:noreply, update_slider(scene, x) }
   end
 
-  # --------------------------------------------------------
-  def handle_input(_event, _context, state) do
-    {:noreply, state}
+  def handle_input({:viewport, {:exit, _}}, _id, %{ assigns: %{tracking: true} } = scene ) do
+    scene = assign(scene, :tracking, false)
+    release_input( scene )
+    {:noreply, scene}
+  end
+
+  # ignore other button press events
+  def handle_input({:cursor_button, {_, _, _, _}}, _id, scene ) do
+    {:noreply, scene}
   end
 
   # ============================================================================
@@ -202,15 +261,14 @@ defmodule Scenic.Component.Input.Slider do
   # {text_color, box_background, border_color, pressed_color, checkmark_color}
 
   defp update_slider(
-         x,
-         %{
+         %{ assigns: %{
            graph: graph,
            value: old_value,
            extents: extents,
            width: width,
-           id: id,
-           tracking: true
-         } = state
+           id: id
+         }} = scene,
+         x
        ) do
     # pin x to be inside the width
     x =
@@ -227,10 +285,12 @@ defmodule Scenic.Component.Input.Slider do
     graph = update_slider_position(graph, new_value, extents, width)
 
     if new_value != old_value do
-      send_event({:value_changed, id, new_value})
+      send_parent_event(scene, {:value_changed, id, new_value})
     end
 
-    %{state | graph: graph, value: new_value}
+    scene
+    |> push_graph( graph )
+    |> assign( graph: graph, value: new_value )
   end
 
   # --------------------------------------------------------
@@ -294,4 +354,34 @@ defmodule Scenic.Component.Input.Slider do
     index = round(max_index * percent)
     Enum.at(extents, index)
   end
+
+
+  # --------------------------------------------------------
+  @doc false
+  @impl GenServer
+  def handle_call( :fetch, _, %{assigns: %{value: value}} = scene ) do
+    {:reply, {:ok, value}, scene }
+  end
+
+  def handle_call( {:put, value}, _, %{assigns: %{extents: extents}} = scene) when is_list(extents) do
+    case Enum.member?( extents, value ) do
+      true -> {:reply, :ok, do_put(value, extents, scene) } 
+      false -> {:reply, {:error, :invalid}, scene }
+    end
+  end
+
+  def handle_call( {:put, value}, _, %{assigns: %{extents: {min, max}}} = scene) when is_number(value) do
+    case value >= min && value <= max do
+      true -> {:reply, :ok, do_put(value, {min, max}, scene) } 
+      false -> {:reply, {:error, :invalid}, scene }
+    end
+  end
+
+  defp do_put( new_value, extents, %{assigns: %{graph: graph, width: width}} = scene ) do
+    graph = update_slider_position( graph, new_value, extents, width )
+    scene
+    |> assign( graph: graph, value: new_value )
+    |> push_graph( graph )
+  end
+
 end

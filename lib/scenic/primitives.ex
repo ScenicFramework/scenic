@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer 2018-04-30.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Copyright © 2018 Kry10 Limited. All rights reserved.
 #
 
 # convenience functions for adding basic primitives to a graph.
@@ -22,10 +22,10 @@ defmodule Scenic.Primitives do
            radius :: number
          }
 
-  @typep scene_ref ::
-           {:graph, reference, any}
-           | {module :: atom, init_data :: any}
-           | (scene_name :: atom)
+  # @typep scene_ref ::
+  #          {:graph, reference, any}
+  #          | {module :: atom, init_data :: any}
+  #          | (scene_name :: atom)
 
   @typep sector :: {
            radius :: number,
@@ -216,17 +216,6 @@ defmodule Scenic.Primitives do
       @graph Graph.build( font: {:roboto, 20} )
       |> rect( {100, 200}, color: :blue )
       |> text( "Hello World", id: :hello, translate: {10, 10} )
-
-  ## SceneRef primitives
-
-  The `scene_ref/3` helper creates/modifies a SceneRef primitive. This is
-  the other special case primitive. Instead of drawing anything directly,
-  it says something like, "render the graph from another scene here".
-
-  The SceneRef allows you to compose together components made of other
-  pre-made scenes, or independently supervised scenes, into a single image.
-
-  The SceneRef follows the same style/transform inheritance as the Group.
   """
 
   # --------------------------------------------------------
@@ -478,7 +467,7 @@ defmodule Scenic.Primitives do
   """
 
   @spec ellipse_spec(
-          radii :: Math.vector2(),
+          radii :: Math.vector_2(),
           options :: list
         ) :: Graph.deferred()
 
@@ -511,8 +500,7 @@ defmodule Scenic.Primitives do
 
   Groups will accept all styles. They don't use the styles directly, but
   any styles you set on a group become the new defaults for all primitives
-  you add to that group's branch in the graph. Note: styles are not
-  inherited across SceneRefs (see `scene_ref/3`).
+  you add to that group's branch in the graph.
 
   The `:hidden` style is particularly effective when applied to a group as it
   causes that entire branch to be drawn, or not.
@@ -565,7 +553,7 @@ defmodule Scenic.Primitives do
   """
 
   @spec group_spec(
-          items :: Group.deferred() | [Group.deferred(), ...],
+          items :: Graph.deferred() | [Graph.deferred(), ...],
           options :: list
         ) :: Graph.deferred()
 
@@ -615,7 +603,7 @@ defmodule Scenic.Primitives do
 
   @spec group_spec_r(
           options :: list,
-          items :: Group.deferred() | [Group.deferred(), ...]
+          items :: Graph.deferred() | [Graph.deferred(), ...]
         ) :: Graph.deferred()
 
   def group_spec_r(opts, list) when is_list(list) do
@@ -774,6 +762,7 @@ defmodule Scenic.Primitives do
     fn g -> path(g, elements, opts) end
   end
 
+  
   # --------------------------------------------------------
   @doc """
   Add a Quadrilateral (quad) to a graph.
@@ -1096,72 +1085,6 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
-  Reference another scene or graph from within a graph.
-
-  The SceneRef allows you to nest other graphs inside a graph. This means
-  you can build smaller components that you can compose into a larger image.
-
-  *Typically you do not specify SceneRefs yourself.* These get added
-  for you when you add components to your graph. Examples include Buttons,
-  Sliders, checkboxes, and so on.
-
-  Usually, the graph you reference is controlled by another scene, but
-  it doesn't have to be. A single scene could create multiple graphs
-  and reference them into each other.
-
-  **See `Scenic.Primitive.SceneRef` for details.**
-
-  Be careful not to create circular references. That won't work well.
-
-  ### Styles
-
-  The only style that has any meaning on a SceneRef is `:hidden`. The
-  rest are ignored and are not inherited across to the referenced scene.
-
-  ### Transforms
-
-  Any transforms you apply to a group are added into the render matrix stack and
-  are applied to all items in that branch, including crossing SceneRefs.
-  """
-  @spec scene_ref(
-          source :: Graph.t() | Primitive.t(),
-          ref :: scene_ref(),
-          options :: list
-        ) :: Graph.t() | Primitive.t()
-
-  def scene_ref(graph_or_primitive, ref, opts \\ [])
-
-  def scene_ref(%Graph{} = g, data, opts) do
-    add_to_graph(g, Primitive.SceneRef, data, opts)
-  end
-
-  def scene_ref(%Primitive{module: Primitive.SceneRef} = p, data, opts) do
-    modify(p, data, opts)
-  end
-
-  # --------------------------------------------------------
-  @doc """
-  Create the specification that adds a scene ref to a graph.
-
-  See the documentation for `scene_ref/3` for details.
-
-  Example:
-
-      ref = scene_ref_spec(:my_scene)
-      graph = ref.(graph)
-  """
-
-  @spec scene_ref_spec(
-          ref :: scene_ref(),
-          options :: list
-        ) :: Graph.deferred()
-
-  def scene_ref_spec(ref, opts \\ []) do
-    fn g -> scene_ref(g, ref, opts) end
-  end
-
-  # --------------------------------------------------------
-  @doc """
   Add a sector to a graph
 
   A sector looks like a piece of pie. It is wedge shaped with a pointy
@@ -1402,6 +1325,126 @@ defmodule Scenic.Primitives do
     fn g -> triangle(g, corners, opts) end
   end
 
+
+
+  # --------------------------------------------------------
+  @doc """
+  Add a named script to a graph.
+
+  Scripts are defined by a name, which can be an atom, string, pid or reference.
+
+  NOTE: this doesn't add the script itself. Only places a reference to it in
+  the graph. You still need to add the script to the ViewPort via
+  `ViewPort.put_script'.
+
+  Data:
+
+      name
+
+  ### Styles
+
+  Setting styles on a script is similar to setting styles on a group
+
+  Example:
+
+      graph
+      |> script( :my_script )
+
+  """
+  @spec script(
+          source :: Graph.t() | Primitive.t(),
+          name :: atom | String.t | pid | reference,
+          options :: list
+        ) :: Graph.t() | Primitive.t()
+
+  def script(graph_or_primitive, name, opts \\ [])
+
+  def script(%Graph{} = g, name, opts) do
+    add_to_graph(g, Primitive.Script, name, opts)
+  end
+
+  def script(%Primitive{module: Primitive.Script} = p, name, opts) do
+    modify(p, name, opts)
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Create the specification that adds a script to a graph.
+
+  See the documentation for `script/3` for details.
+
+  Example:
+
+      script = script_spec("script_name", translate: {20,30} )
+  """
+
+  @spec script_spec(
+          name :: any,
+          options :: list
+        ) :: Graph.deferred()
+
+  def script_spec(name, opts \\ []) do
+    fn g -> script(g, name, opts) end
+  end
+
+
+
+
+
+
+
+
+
+
+  # --------------------------------------------------------
+  @doc """
+  Add a sprites list a graph.
+  """
+  @spec sprites(
+          source :: Graph.t() | Primitive.t(),
+          Primitive.Sprites.t(),
+          options :: list
+        ) :: Graph.t() | Primitive.t()
+
+  def sprites(graph_or_primitive, sprites, opts \\ [])
+
+  def sprites(%Graph{} = g, sprites, opts) do
+    add_to_graph(g, Primitive.Sprites, sprites, opts)
+  end
+
+  def sprites(%Primitive{module: Primitive.Sprites} = p, sprites, opts) do
+    modify(p, sprites, opts)
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Create the specification that adds a sprites list to a graph.
+
+  See the documentation for `sprites/3` for details.
+
+  Example:
+
+      sprites = sprites_spec({:static, "source_texure"}, translate: {20,30} )
+  """
+
+  @spec sprites_spec(
+          sprites :: Primitive.Sprites.t(),
+          options :: list
+        ) :: Graph.deferred()
+
+  def sprites_spec(sprites, opts \\ []) do
+    fn g -> sprites(g, sprites, opts) end
+  end
+
+
+
+
+
+
+
+
+
+
   # --------------------------------------------------------
   @doc """
   Update the options of a primitive without changing its data.
@@ -1434,12 +1477,18 @@ defmodule Scenic.Primitives do
   # generic workhorse versions
 
   defp add_to_graph(%Graph{} = g, mod, data, opts) do
-    mod.verify!(data)
+    data = case mod.validate(data) do
+      {:ok, data} -> data
+      {:error, error} -> raise Exception.message(error)
+    end
     mod.add_to_graph(g, data, opts)
   end
 
   defp modify(%Primitive{module: mod} = p, data, opts) do
-    mod.verify!(data)
+    data = case mod.validate(data) do
+      {:ok, data} -> data
+      {:error, error} -> raise Exception.message(error)
+    end
     Primitive.put(p, data, opts)
   end
 end

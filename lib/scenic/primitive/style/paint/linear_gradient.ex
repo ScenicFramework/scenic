@@ -1,30 +1,43 @@
 #
 #  Created by Boyd Multerer on 2018-06-04.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Style.Paint.LinearGradient do
   @moduledoc """
   Fill a primitive with a linear gradient
 
-  ## Full Format
+  ## Format
 
   `{:linear, {start_x, start_y, end_x, end_y, color_start, color_end}}`
   """
 
   alias Scenic.Primitive.Style.Paint.Color
 
-  # --------------------------------------------------------
-  @doc false
-  def normalize({sx, sy, ex, ey, color_start, color_end})
-      when is_number(sx) and is_number(sy) and is_number(ex) and is_number(ey) do
+
+  def validate({:linear, {sx, sy, ex, ey, color_start, color_end}})
+  when is_number(sx) and is_number(sy) and is_number(ex) and is_number(ey) do
+    with {:ok, color_start} <- Color.validate(color_start),
+    {:ok, color_end} <- Color.validate(color_end) do
+      {:ok, {:linear, {sx, sy, ex, ey, color_start, color_end}}}
+    else
+      {:error, msg} -> {:error, msg}
+    end
+  end
+  def validate(_), do: err_invalid()
+
+  defp err_invalid() do
     {
-      sx,
-      sy,
-      ex,
-      ey,
-      Color.normalize(color_start),
-      Color.normalize(color_end)
+      :error,
+      """
+      #{IO.ANSI.yellow()}
+      LinearGradient is specified in the form of
+      {:linear, {start_x, start_y, end_x, end_y, color_start, color_end}}
+
+      start_x, start_y, end_x, and end_y are all numbers representing positions.
+      color_start and color_end must be valid color specifications.#{IO.ANSI.default_color()}
+      """
     }
   end
+
 end

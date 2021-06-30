@@ -1,7 +1,7 @@
 defmodule Scenic.Utilities.MapTest do
   use ExUnit.Case, async: true
-  doctest Scenic
-
+  doctest Scenic.Utilities.Map
+  
   alias Scenic.Utilities
 
   @map_1 %{a: 1, b: 2, c: 3, d: 4}
@@ -116,4 +116,20 @@ defmodule Scenic.Utilities.MapTest do
     assert Utilities.Map.delete_in(map, [:a, :g, :e]) == map
     assert Utilities.Map.delete_in(map, [:g, :c]) == map
   end
+
+  # ============================================================================
+  # put_set
+
+  test "put_set puts a truthy value" do
+    assert Utilities.Map.put_set( %{}, :value, 123 ) == %{value: 123}
+  end
+
+  test "put_set accepts a false value" do
+    assert Utilities.Map.put_set( %{}, :value, false ) == %{value: false}
+  end
+
+  test "put_set ignores a nil value" do
+    assert Utilities.Map.put_set( %{}, :value, nil ) == %{}
+  end
+
 end

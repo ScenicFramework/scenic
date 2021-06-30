@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-05-06.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Graph do
@@ -132,9 +132,6 @@ defmodule Scenic.Graph do
 
   @default_max_depth 128
 
-  @default_font :roboto
-  @default_font_size 24
-
   @root_id :_root_
 
   defstruct primitives: %{}, ids: %{}, next_uid: 1, add_to: 0, animations: []
@@ -147,8 +144,6 @@ defmodule Scenic.Graph do
         }
 
   @type deferred :: (t -> t)
-
-  @type key :: {:graph, Scenic.Scene.ref(), any}
 
   # ===========================================================================
   # TODO: define a policy error here - not found or something like that
@@ -188,10 +183,8 @@ defmodule Scenic.Graph do
   """
   @spec build(opts :: keyword) :: t()
   def build(opts \\ []) do
-    opts = handle_options(opts)
-
     []
-    |> Group.build(opts)
+    |> Group.build( Keyword.put(opts, :id, @root_id) )
     |> new()
     |> set_id(opts[:id])
     |> set_max_depth(opts[:max_depth])
@@ -381,28 +374,6 @@ defmodule Scenic.Graph do
     end
   end
 
-  # handle options helper
-  defp handle_options(opts) do
-    {font, font_size} =
-      Enum.reduce(opts, {@default_font, @default_font_size}, fn
-        {:font, font}, {_, size} ->
-          {font, size}
-
-        {:font_size, size}, {font, _} ->
-          {font, size}
-
-        {:styles, styles}, {f, s} ->
-          font = styles[:font] || f
-          size = styles[:font_size] || s
-          {font, size}
-
-        _, info ->
-          info
-      end)
-
-    Keyword.merge(opts, font: font, font_size: font_size)
-  end
-
   # new
   defp new(root) do
     %__MODULE__{
@@ -579,105 +550,6 @@ defmodule Scenic.Graph do
     {Map.put(graph, :next_uid, next_uid + 1), uid}
   end
 
-  # KEEP THIS AROUND FOR NOW
-  # In case I want to reintroduce templates.
-  #   #--------------------------------------------------------
-  #   # insert a template, which is a graph that has relative uids
-  #   # can't just merge the various maps. map the incoming graph into an id space that
-  #   # starts with next_uid, then bump up next_uid to account for everything in the updated graph
-  #   defp insert_at({%Graph{primitives: p_map, ids: ids, next_uid: next_uid} = graph, parent_uid},
-  #       index,
-  #       %Graph{primitives: t_p_map, ids: t_ids, next_uid: t_next_uid} = t_graph,
-  #       opts) when is_integer(index) do
-  # IO.puts "insert_at template"
-  #     # uid for the new item
-  #     uid = next_uid
-
-  #     # start by mapping and adding the primitives to the receiver
-  #     p_map = Enum.reduce(t_p_map, p_map, fn({uid, primitive}, acc_g) ->
-  #       # map the uid
-  #       uid = uid + next_uid
-
-  #       # map the parent id
-  #       primitive = case Primitive.get_parent_uid(primitive) do
-  #         -1 -> primitive              # not in the tree. no change
-  #         parent_id -> Primitive.put_parent_uid(primitive, parent_id + next_uid)
-  #       end
-
-  #       # if this is a group, increment its children's references
-  #       primitive = case Primitive.get_module(primitive) do
-  #         Group ->  Group.increment( primitive, next_uid )
-  #         _ ->      primitive           # not a Group, do nothing.
-  #       end
-
-  #       # finally, update the internal uid of the primitive
-  #       primitive = Primitive.put_uid( primitive, uid )
-
-  #       # add the mapped primitive to the receiver's p_map
-  #       Map.put(acc_g, uid, primitive)
-  #     end)
-
-  #     # if the incoming tree was requested to be inserted into an existing group, then fix that up too
-  #     p_map = if (parent_uid >= 0) do
-  #       # we know the root of the added tree is at next_uid
-  #       p_map = Map.get(p_map, next_uid)
-  #       |> Primitive.put_parent_uid( parent_uid )
-  #       |> ( &Map.put(p_map, next_uid, &1) ).()
-
-  #       # also need to add the tree as a child to the parent
-  #       Map.get( p_map, parent_uid )
-  #       |> Group.insert_at(index, next_uid)
-  #       |> ( &Map.put(p_map, parent_uid, &1) ).()
-  #     else
-  #       p_map       # do nothing
-  #     end
-
-  #     # offset the t_ids, mapping into ids as we go
-  #     ids = Enum.reduce(t_ids, ids, fn({id,uid_list}, acc_idm) ->
-  #       Enum.reduce(uid_list, acc_idm, fn(uid, acc_acc_idm) ->
-  #         do_map_id_to_uid( acc_acc_idm, id, uid + next_uid)
-  #       end)
-  #     end)
-
-  #     # if an id was given, map it to the uid
-  #     ids = case opts[:id] do
-  #       nil ->  ids
-  #       id ->   do_map_id_to_uid(ids, id, uid)
-  #     end
-
-  #     # merge any requested inputs - is optional, so must work if not actually there
-  #     input = [
-  #       Map.get(graph, :input, []),
-  #       Map.get(t_graph, :input, []),
-  #     ]
-  #     |> List.flatten()
-  #     |> Enum.uniq()
-
-  #     # offset the next_uid
-  #     next_uid = next_uid + t_next_uid
-
-  #     # return the merged graph
-  #     graph = graph
-  #     |> Map.put(:primitives, p_map)
-  #     |> Map.put(:ids, ids)
-  #     |> Map.put(:next_uid, next_uid)
-  #     # |> calculate_transforms( uid )
-
-  #     # add the input in only if there is some to add in
-  #     graph = case input do
-  #       []    -> Map.delete(graph, :input)
-  #       input -> Map.put(graph, :input, input)
-  #     end
-
-  #     {graph, uid}
-  #   end
-
-  # --------------------------------------------------------
-  # insert at the root - graph itself passed in
-  # defp insert_at(%Graph{} = graph, index, element, opts) do
-  #   insert_at({graph, @root_uid}, index, element, opts)
-  # end
-
   # ============================================================================
 
   @doc """
@@ -723,24 +595,12 @@ defmodule Scenic.Graph do
       p_original ->
         case action.(p_original) do
           # no change. do nothing
-          ^p_original ->
-            graph
+          ^p_original -> graph
 
-          # change. record it
-          %Primitive{module: mod} = p_modified ->
-            # filter the styles
-            styles =
-              p_modified
-              |> Map.get(:styles, %{})
-              |> mod.filter_styles()
+          # changed. record it
+          %Primitive{} = p_modified -> put_by_uid(graph, uid, p_modified)
 
-            p_modified = Map.put(p_modified, :styles, styles)
-
-            graph
-            |> put_by_uid(uid, p_modified)
-
-          _ ->
-            raise Error, message: "Action must return a valid primitive"
+          _ -> raise Error, message: "Action must return a valid primitive"
         end
     end
   end
@@ -762,9 +622,9 @@ defmodule Scenic.Graph do
   Examples:
 
       graph
-      |> Graph.modify( :explicit_id, &text(&1, "Updated Text 1") )
-      |> Graph.modify( {:id, 123}, &text(&1, "Updated Text 2") )
-      |> Graph.modify( &match?({:id,_},&1), &text(&1, "Updated Text 3") )
+      |> Graph.modify( :explicit_id, &text("Updated Text 1") )
+      |> Graph.modify( {:id, 123}, &text("Updated Text 2") )
+      |> Graph.modify( &match?({:id,_},&1), &text("Updated Text 3") )
   """
 
   @spec modify(
@@ -789,27 +649,6 @@ defmodule Scenic.Graph do
     |> resolve_id(id)
     |> Enum.reduce(graph, &modify_by_uid(&2, &1, action))
   end
-
-  # @doc """
-  # Modify one or more primitives in a graph via a match pattern.
-
-  # Retrieves the primitive (or primitives) that match a pattern and passes them to
-  # a callback function. The result of the callback function is stored as the new
-  # version of that primitive in the graph.
-
-  # If multiple primitives match the specified id, then each is passed, in turn,
-  # to the callback function.
-  # """
-
-  # @spec modify_match(graph :: t(), pattern :: any, action :: (... -> Primitive.t())) :: t()
-  # def modify_match(graph, pattern, action)
-
-  # # pass in an atom based id, and it will transform all mapped uids
-  # def modify_match(%__MODULE__{} = graph, pattern, action) do
-  #   graph
-  #   |> find(pattern)
-  #   |> Enum.reduce(graph, &modify_by_uid(&2, &1, action))
-  # end
 
   # ============================================================================
   # map a graph via traversal from the root node
@@ -978,4 +817,5 @@ defmodule Scenic.Graph do
         |> Map.merge(Primitive.get_styles(p))
     end
   end
+
 end

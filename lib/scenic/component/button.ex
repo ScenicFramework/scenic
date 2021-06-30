@@ -20,7 +20,7 @@ defmodule Scenic.Component.Button do
       {:click, id}
 
   These messages can be received and handled in your scene via
-  `c:Scenic.Scene.filter_event/3`. For example:
+  `Scenic.Scene.handle_event/3`. For example:
 
   ```
   ...
@@ -37,7 +37,7 @@ defmodule Scenic.Component.Button do
   end
 
   @impl Scenic.Scene
-  def filter_event({:click, :sample_btn_id}, _from, state) do
+  def handle_event({:click, :sample_btn_id}, _from, state) do
     IO.puts("Sample button was clicked!")
     {:cont, event, state}
   end
@@ -100,9 +100,10 @@ defmodule Scenic.Component.Button do
   use Scenic.Component, has_children: false
 
   alias Scenic.Graph
-  alias Scenic.Primitive
-  alias Scenic.ViewPort
+  alias Scenic.Scene
   alias Scenic.Primitive.Style.Theme
+  alias Scenic.Assets.Static
+
   import Scenic.Primitives, only: [{:rrect, 3}, {:text, 3}, {:update_opts, 2}]
 
   # import IEx
@@ -113,79 +114,82 @@ defmodule Scenic.Component.Button do
   @default_font_size 20
   @default_alignment :center
 
-  # --------------------------------------------------------
-  @doc false
-  def info(data) do
-    """
-    #{IO.ANSI.red()}Button data must be a bitstring: initial_text
-    #{IO.ANSI.yellow()}Received: #{inspect(data)}
-    #{IO.ANSI.default_color()}
-    """
+
+  @impl Scenic.Component
+  def validate( text ) when is_bitstring(text) do
+    {:ok, text}
+  end
+  def validate(data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Button specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The data for a button is just the text string to be displayed in the button.#{IO.ANSI.default_color()}
+      """
+    }
   end
 
   # --------------------------------------------------------
   @doc false
-  def verify(text) when is_bitstring(text), do: {:ok, text}
-  def verify(_), do: :invalid_data
-
-  # --------------------------------------------------------
-  @doc false
-  def init(text, opts) when is_bitstring(text) and is_list(opts) do
+  @impl Scenic.Scene
+  def init( scene, text, opts ) when is_bitstring(text) and is_list(opts) do
     id = opts[:id]
-    styles = opts[:styles]
 
     # theme is passed in as an inherited style
     theme =
-      (styles[:theme] || Theme.preset(:primary))
+      (opts[:theme] || Theme.preset(:primary))
       |> Theme.normalize()
 
     # font related info
     font = @default_font
-    font_size = styles[:button_font_size] || @default_font_size
-    fm = Scenic.Cache.Static.FontMetrics.get!(font)
+    {:ok, {:font, fm}} = Static.fetch( font )
+    font_size = opts[:button_font_size] || @default_font_size
+
     ascent = FontMetrics.ascent(font_size, fm)
     descent = FontMetrics.descent(font_size, fm)
     fm_width = FontMetrics.width(text, font_size, fm)
 
     width =
-      case styles[:width] || opts[:w] do
+      case opts[:width] || opts[:w] do
         nil -> fm_width + ascent + ascent
         :auto -> fm_width + ascent + ascent
         width when is_number(width) and width > 0 -> width
       end
 
     height =
-      case styles[:height] || opts[:h] do
+      case opts[:height] || opts[:h] do
         nil -> font_size + ascent
         :auto -> font_size + ascent
         height when is_number(height) and height > 0 -> height
       end
 
-    radius = styles[:radius] || @default_radius
-    alignment = styles[:alignment] || @default_alignment
+    radius = opts[:radius] || @default_radius
+    alignment = opts[:alignment] || @default_alignment
 
     vpos = height / 2 + ascent / 2 + descent / 3
 
     # build the graph
     graph =
       Graph.build(font: font, font_size: font_size)
-      |> rrect({width, height, radius}, fill: theme.background, id: :btn)
+      |> rrect( {width, height, radius}, fill: theme.background, id: :btn, input: true )
       |> do_aligned_text(alignment, text, theme.text, width, vpos)
+      # special case the dark and light themes to show an outline
+      |> do_special_theme_outline(theme, theme.border)
 
-    # special case the dark and light themes to show an outline
-    graph = do_special_theme_outline(styles[:theme], graph, theme.border)
+    scene =
+      scene
+      |> assign(
+        vpos: vpos,
+        graph: graph,
+        theme: theme,
+        pressed: false,
+        id: id
+      )
+      |> push_graph( graph )
 
-    state = %{
-      vpos: vpos,
-      graph: graph,
-      theme: theme,
-      pressed: false,
-      contained: false,
-      align: alignment,
-      id: id
-    }
-
-    {:ok, state, push: graph}
+    {:ok, scene}
   end
 
   defp do_aligned_text(graph, :center, text, fill, width, vpos) do
@@ -215,107 +219,97 @@ defmodule Scenic.Component.Button do
     )
   end
 
-  defp do_special_theme_outline(:dark, graph, border) do
+  defp do_special_theme_outline(graph, :dark, border) do
     Graph.modify(graph, :btn, &update_opts(&1, stroke: {1, border}))
   end
 
-  defp do_special_theme_outline(:light, graph, border) do
+  defp do_special_theme_outline(graph, :light, border) do
     Graph.modify(graph, :btn, &update_opts(&1, stroke: {1, border}))
   end
 
-  defp do_special_theme_outline(_, graph, _border) do
+  defp do_special_theme_outline(graph, _, _border) do
     graph
   end
 
   # --------------------------------------------------------
-  @doc false
+  # pressed in the button
+  @impl Scenic.Scene
+  def handle_input( {:cursor_button, {0, :press, _, _}}, :btn, scene ) do
+    :ok = capture_input( scene, :cursor_button )
+
+    scene = 
+      scene
+      |> update_color( true, true )
+      |> assign( pressed: true )
+
+    {:noreply, scene}
+  end
+
+  # --------------------------------------------------------
+  # pressed outside the button
+  # only happens when input is captured
+  # could happen when reconnecting to a driver...
   def handle_input(
-        {:cursor_enter, _uid},
-        _context,
-        %{
-          pressed: true
-        } = state
-      ) do
-    state = Map.put(state, :contained, true)
-    {:noreply, state, push: update_color(state)}
+    {:cursor_button, {0, :press, _, _}}, _id, scene
+  ) do
+    :ok = release_input( scene )
+    scene = 
+      scene
+      |> update_color( false, false )
+      |> assign( pressed: false )
+
+    {:noreply, scene}
   end
 
   # --------------------------------------------------------
+  # released inside the button
   def handle_input(
-        {:cursor_exit, _uid},
-        _context,
-        %{
-          pressed: true
-        } = state
+        {:cursor_button, {0, :release, _, _}}, :btn,
+        %Scene{assigns: %{pressed: true, id: id}} = scene
       ) do
-    state = Map.put(state, :contained, false)
-    {:noreply, state, push: update_color(state)}
+    :ok = release_input( scene )
+    :ok = send_parent_event( scene, {:click, id} )
+
+    scene = 
+      scene
+      |> update_color( false, true )
+      |> assign( pressed: false )
+
+    {:noreply, scene}
   end
 
   # --------------------------------------------------------
-  def handle_input({:cursor_button, {:left, :press, _, _}}, context, state) do
-    state =
-      state
-      |> Map.put(:pressed, true)
-      |> Map.put(:contained, true)
-
-    update_color(state)
-
-    ViewPort.capture_input(context, [:cursor_button, :cursor_pos])
-
-    {:noreply, state, push: update_color(state)}
-  end
-
-  # --------------------------------------------------------
+  # released outside the button
+  # only happens when input is captured
   def handle_input(
-        {:cursor_button, {:left, :release, _, _}},
-        context,
-        %{pressed: pressed, contained: contained, id: id} = state
+        {:cursor_button, {0, :release, _, _}}, _id, scene
       ) do
-    state = Map.put(state, :pressed, false)
-    update_color(state)
+    :ok = release_input( scene )
 
-    ViewPort.release_input(context, [:cursor_button, :cursor_pos])
+    scene = 
+      scene
+      |> update_color( false, true )
+      |> assign( pressed: false )
 
-    if pressed && contained do
-      send_event({:click, id})
-    end
-
-    {:noreply, state, push: update_color(state)}
+    {:noreply, scene}
   end
 
-  # --------------------------------------------------------
-  def handle_input(_event, _context, state) do
-    {:noreply, state}
+  # ignore other button press events
+  def handle_input({:cursor_button, {_, _, _, _}}, _id, scene ) do
+    {:noreply, scene}
   end
 
   # ============================================================================
   # internal utilities
 
-  defp update_color(%{graph: graph, theme: theme, pressed: false, contained: false}) do
-    Graph.modify(graph, :btn, fn p ->
-      p
-      |> Primitive.put_style(:fill, theme.background)
-    end)
+  defp update_color(%Scene{assigns: %{graph: graph, theme: theme}} = scene, true, true) do
+    graph = Graph.modify( graph, :btn, &update_opts(&1, fill: theme.active) )    
+    push_graph(scene, graph)
   end
 
-  defp update_color(%{graph: graph, theme: theme, pressed: false, contained: true}) do
-    Graph.modify(graph, :btn, fn p ->
-      p
-      |> Primitive.put_style(:fill, theme.background)
-    end)
+  defp update_color(%Scene{assigns: %{graph: graph, theme: theme}} = scene, _, _) do
+    graph = Graph.modify( graph, :btn, &update_opts(&1, fill: theme.background) )    
+    push_graph(scene, graph)
   end
 
-  defp update_color(%{graph: graph, theme: theme, pressed: true, contained: false}) do
-    Graph.modify(graph, :btn, fn p ->
-      p
-      |> Primitive.put_style(:fill, theme.background)
-    end)
-  end
-
-  defp update_color(%{graph: graph, theme: theme, pressed: true, contained: true}) do
-    Graph.modify(graph, :btn, fn p ->
-      Primitive.put_style(p, :fill, theme.active)
-    end)
-  end
 end

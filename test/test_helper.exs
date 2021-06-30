@@ -1,5 +1,13 @@
-Registry.start_link(keys: :duplicate, name: :viewport_registry)
-Registry.start_link(keys: :duplicate, name: :input_registry)
-Registry.start_link(keys: :duplicate, name: :driver_registry)
-Scenic.Cache.Support.Supervisor.start_link(nil)
+# dynamically update the config to point to the test assets
+Application.put_env(:scenic, :assets,
+  [
+    module: Scenic.Test.Assets,
+    alias: [
+      roboto_mono: "fonts/roboto_mono.ttf",
+      test_roboto: "fonts/roboto.ttf",
+      test_parrot: "images/parrot.png"
+    ]
+  ]
+)
+
 ExUnit.start()

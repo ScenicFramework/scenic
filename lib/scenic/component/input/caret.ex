@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer 2018-08-06.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Copyright © 2018 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Component.Input.Caret do
@@ -35,45 +35,52 @@ defmodule Scenic.Component.Input.Caret do
     ]
 
   alias Scenic.Graph
-  alias Scenic.Primitive.Style.Paint.Color
+  alias Scenic.Primitive.Style.Theme
 
   @width 2
   @inset_v 4
 
   # caret blink speed in hertz
-  @caret_hz 1.5
-  @caret_ms trunc(@caret_hz * 500)
+  @caret_hz 0.5
+  @caret_ms trunc(1000 / @caret_hz / 2)
 
   # ============================================================================
   # setup
 
+
   # --------------------------------------------------------
-  @doc false
-  def info(data) do
-    """
-    #{IO.ANSI.red()}Caret data must be: {height, color}
-    #{IO.ANSI.yellow()}Received: #{inspect(data)}
-    #{IO.ANSI.default_color()}
-    """
+  @impl Scenic.Component
+  def validate( height ) when is_number(height) and height >= 0 do
+    {:ok, height}
+  end
+  def validate(data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Caret specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The data for a Caret is the height of the caret line.
+      This height must be >= 0#{IO.ANSI.default_color()}
+      """
+    }
   end
 
   # --------------------------------------------------------
   @doc false
-  @spec verify(any()) :: :invalid_data | {:ok, {number(), any()}}
-  def verify({height, color} = data)
-      when is_number(height) and height > 0 do
-    case Color.verify(color) do
-      true -> {:ok, data}
-      _ -> :invalid_data
+  @impl Scenic.Scene
+  def init(scene, height, opts) do
+    color = case opts[:color] do
+      nil ->
+        opts[:theme]
+        |> Theme.normalize()
+        |> Map.get(:highlight)
+      c -> c
     end
-  end
 
-  def verify(_), do: :invalid_data
-
-  # --------------------------------------------------------
-  @doc false
-  def init({height, color}, _opts) do
     # build the graph, initially not showing
+    # the height and the color are variable, which means it can't be
+    # built at compile time
     graph =
       Graph.build()
       |> line(
@@ -82,31 +89,40 @@ defmodule Scenic.Component.Input.Caret do
         hidden: true,
         id: :caret
       )
+    
+    scene =
+      scene
+      |> assign(
+        graph: graph,
+        hidden: true,
+        timer: nil,
+        focused: false
+      )
+      |> push_graph( graph )
 
-    state = %{
-      graph: graph,
-      hidden: true,
-      timer: nil,
-      focused: false
-    }
-
-    {:ok, state, push: graph}
+    {:ok, scene}
   end
 
   # --------------------------------------------------------
   @doc false
-  def handle_cast(:start_caret, %{graph: graph, timer: nil} = state) do
-    # turn on the caret
-    graph = Graph.modify(graph, :caret, &update_opts(&1, hidden: false))
-
+  @impl GenServer
+  def handle_cast(:start_caret, %{assigns: %{graph: graph, timer: nil}} = scene) do
     # start the timer
     {:ok, timer} = :timer.send_interval(@caret_ms, :blink)
 
-    {:noreply, %{state | graph: graph, hidden: false, timer: timer, focused: true}, push: graph}
+    # show the caret
+    graph = Graph.modify(graph, :caret, &update_opts(&1, hidden: false))
+
+    scene =
+      scene
+      |> assign( graph: graph, hidden: false, timer: timer, focused: true )
+      |> push_graph( graph )
+
+    {:noreply, scene}
   end
 
   # --------------------------------------------------------
-  def handle_cast(:stop_caret, %{graph: graph, timer: timer} = state) do
+  def handle_cast(:stop_caret, %{assigns: %{graph: graph, timer: timer}} = scene) do
     # hide the caret
     graph = Graph.modify(graph, :caret, &update_opts(&1, hidden: true))
 
@@ -116,38 +132,50 @@ defmodule Scenic.Component.Input.Caret do
       timer -> :timer.cancel(timer)
     end
 
-    {:noreply, %{state | graph: graph, hidden: true, timer: nil, focused: false}, push: graph}
+    scene =
+      scene
+      |> assign( graph: graph, hidden: true, timer: nil, focused: false )
+      |> push_graph( graph )
+
+    {:noreply, scene}
   end
 
   # --------------------------------------------------------
   def handle_cast(
         :reset_caret,
-        %{graph: graph, timer: timer, focused: true} = state
+        %{assigns: %{graph: graph, timer: timer, focused: true}} = scene
       ) do
     # show the caret
     graph = Graph.modify(graph, :caret, &update_opts(&1, hidden: false))
 
     # stop the timer
     if timer, do: :timer.cancel(timer)
-
     # restart the timer
     {:ok, timer} = :timer.send_interval(@caret_ms, :blink)
 
-    {:noreply, %{state | graph: graph, hidden: false, timer: timer}, push: graph}
+    scene =
+      scene
+      |> assign( graph: graph, hidden: false, timer: timer )
+      |> push_graph( graph )
+
+    {:noreply, scene}
   end
 
   # --------------------------------------------------------
   # throw away unknown messages
-  def handle_cast(_, state), do: {:noreply, state}
+  # def handle_cast(_, scene), do: {:noreply, scene}
 
   # --------------------------------------------------------
   @doc false
-  def handle_info(:blink, %{graph: graph, hidden: hidden} = state) do
-    # invert the hidden flag
-    hidden = !hidden
+  @impl GenServer
+  def handle_info(:blink, %{assigns: %{graph: graph, hidden: hidden}} = scene) do
+    graph = Graph.modify(graph, :caret, &update_opts(&1, hidden: !hidden))
 
-    graph = Graph.modify(graph, :caret, &update_opts(&1, hidden: hidden))
+    scene =
+      scene
+      |> assign( graph: graph, hidden: !hidden )
+      |> push_graph( graph )
 
-    {:noreply, %{state | graph: graph, hidden: hidden}, push: graph}
+    {:noreply, scene}
   end
 end

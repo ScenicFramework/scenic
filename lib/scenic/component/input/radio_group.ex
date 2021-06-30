@@ -75,110 +75,156 @@ defmodule Scenic.Component.Input.RadioGroup do
   use Scenic.Component, has_children: true
 
   alias Scenic.Graph
-  alias Scenic.Scene
+  # alias Scenic.Scene
   alias Scenic.Component.Input.RadioButton
   import Scenic.Primitives, only: [{:group, 2}]
 
-  #  import IEx
+   # import IEx
 
   @line_height 24
 
   # --------------------------------------------------------
-  @doc false
-  def info(data) do
-    """
-    #{IO.ANSI.red()}RadioGroup data must be a list of items
-    #{IO.ANSI.yellow()}Received: #{inspect(data)}
-    Each item in the list must be valid data for Scenic.Component.Input.RadioButton
+  @impl Scenic.Component
+  def validate( {items, _} = data ) when is_list(items) do
 
-    Example:
-    [
-      {"Radio A", :radio_a},
-      {"Radio B", :radio_b, true},
-      {"Radio C", :radio_c, false}
-    ]
+    # confirm all the entries
+    Enum.reduce( items, {:ok, data}, fn
+      _, {:error, _} = error -> error
 
-    #{IO.ANSI.default_color()}
-    """
-  end
+      {text, _}, acc when is_bitstring(text) -> acc
 
-  # --------------------------------------------------------
-  @doc false
-  def verify(items) when is_list(items) do
-    items
-    |> Enum.all?(fn item ->
-      case RadioButton.verify(item) do
-        {:ok, _} -> true
-        _ -> false
-      end
+      item, _ -> err_bad_item( item, data )
     end)
     |> case do
-      true -> {:ok, items}
-      _ -> :invalid_data
+      {:error, _} = err -> err
+      {:ok, {items, initial}} ->
+        # confirm that initial is in the items list
+        items
+        |> Enum.any?( fn{_, id} -> id == initial end )
+        |> case do
+          true -> {:ok, data}
+          false -> err_initial(data)
+        end
     end
   end
 
-  def verify(_), do: :invalid_data
+  def validate( data ) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid RadioGroup specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      RadioGroup data must formed like: {[{text, id}], initial_id}
+
+      This is a list of text/id pairs, and the id of the pair that is initially selected.
+
+      NOTE: This has changed from v.10 and prior. You used to specify the selected radio inside
+      the list, but now the current id has moved out into a tuple.
+      #{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  defp err_bad_item( item, data ) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid RadioGroup specification
+      Received: #{inspect(data)}
+      Invalid Item: #{inspect(item)}
+      #{IO.ANSI.yellow()}
+      RadioGroup data must formed like: {[{text, id}], initial_id}
+
+      This is a list of text/id pairs, and the id of the pair that is initially selected.#{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  defp err_initial( {_, initial} = data ) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid RadioGroup specification
+      Received: #{inspect(data)}
+      The initial id #{inspect(initial)} is not in the listed items
+      #{IO.ANSI.yellow()}
+      RadioGroup data must formed like: {[{text, id}], initial_id}
+
+      This is a list of text/id pairs, and the id of the pair that is initially selected.#{IO.ANSI.default_color()}
+      """
+    }
+  end
 
   # --------------------------------------------------------
   @doc false
-  def init(items, opts) when is_list(items) do
+  @impl Scenic.Scene
+  def init(scene, {items, initial_id}, opts) when is_list(items) do
     id = opts[:id]
-    styles = opts[:styles]
-
-    # font related info
 
     graph =
       Graph.build()
       |> group(fn graph ->
         {graph, _} =
           Enum.reduce(items, {graph, 0}, fn
-            {t, m}, {g, voffset} ->
-              g =
-                RadioButton.add_to_graph(g, {t, m, false}, translate: {0, voffset}, styles: styles)
-
-              {g, voffset + @line_height}
-
-            {t, m, v}, {g, voffset} ->
-              g = RadioButton.add_to_graph(g, {t, m, v}, translate: {0, voffset}, styles: styles)
+            {t, i}, {g, voffset} ->
+              g = RadioButton.add_to_graph(
+                g, {t, i, i == initial_id},
+                Keyword.put(opts, :translate, {0, voffset})
+              )
               {g, voffset + @line_height}
           end)
 
         graph
       end)
 
-    value =
-      Enum.find_value(items, fn
-        {_t, _m} -> nil
-        {_t, _m, false} -> nil
-        {_t, m, true} -> m
-      end)
+    scene =
+      scene
+      |> push_graph( graph )
+      |> assign([
+        value: initial_id,
+        items: items,
+        id: id
+      ])
 
-    state = %{
-      graph: graph,
-      value: value,
-      id: id
-    }
-
-    {:ok, state, push: graph}
+    {:ok, scene}
   end
 
-  # # --------------------------------------------------------
-  # def handle_cast({:set_value, new_value}, state) do
-  #   {:noreply, %{state | value: new_value}}
-  # end
 
   # ============================================================================
 
   @doc false
-  def filter_event({:click, btn_id}, _from, %{id: id} = state) do
-    Scene.cast_to_refs(nil, {:set_to_msg, btn_id})
-
-    send_event({:value_changed, id, btn_id})
-    {:halt, %{state | value: btn_id}}
+  @impl Scenic.Scene
+  def handle_event({:click, btn_id}, _from, %{assigns: %{id: id}} = scene) do
+    :ok = cast_children( scene, {:set_to_msg, btn_id} )
+    :ok = send_parent_event( scene, {:value_changed, id, btn_id} )
+    {:halt, assign( scene, value: btn_id) }
   end
 
-  def filter_event(msg, _from, state) do
-    {:cont, msg, state}
+
+
+  # --------------------------------------------------------
+  @doc false
+  @impl GenServer
+  def handle_call( :fetch, _, %{assigns: %{value: value}} = scene ) do
+    {:reply, {:ok, value}, scene }
   end
+
+  def handle_call( {:put, id}, _, %{assigns: %{items: items}} = scene) do
+    Enum.any?(items, fn
+      {_, ^id} -> true
+      _ -> false
+    end)
+    |> case do
+      true -> {:reply, :ok, do_put(id, scene) }
+      false -> {:reply, {:error, :invalid}, scene }
+    end
+  end
+
+  defp do_put( id, scene ) do
+    :ok = cast_children( scene, {:set_to_msg, id} )
+    assign( scene, value: id )
+  end
+
 end
+

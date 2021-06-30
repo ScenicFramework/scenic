@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-10-02.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Transform.Matrix do
@@ -29,20 +29,22 @@ defmodule Scenic.Primitive.Transform.Matrix do
   # ============================================================================
   # data verification and serialization
 
-  # --------------------------------------------------------
-  @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be a binary containing 16 32-bit floats
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
+  def validate( <<_::binary-size(@matrix_byte_size)>> = mx ) do
+    {:ok, mx}
+  end
 
-      Please use the Scenic.Math.Matrix module to build this data.
+  def validate( data ) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Matrix
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      Matrix data must be a binary containing 16 32-bit floats
 
-      #{IO.ANSI.default_color()}
-    """
+      Please use the Scenic.Math.Matrix API to build this data.#{IO.ANSI.default_color()}
+      """
+    }
+  end
 
-  # --------------------------------------------------------
-  @doc false
-  def verify(<<_::binary-size(@matrix_byte_size)>>), do: true
-  def verify(_), do: false
 end

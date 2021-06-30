@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on June 5, 2018.2017-05-06.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Triangle do
@@ -33,35 +33,57 @@ defmodule Scenic.Primitive.Triangle do
 
   use Scenic.Primitive
   alias Scenic.Math
+  alias Scenic.Script
+  alias Scenic.Primitive
+  alias Scenic.Primitive.Style
 
-  @styles [:hidden, :fill, :stroke, :join, :miter_limit]
+  @type t :: {{x0::number, y0::number}, {x1::number, y1::number}, {x2::number, y2::number}}
+  @type styles_t :: [:hidden | :fill | :stroke_width | :stroke_fill | :join | :miter_limit]
 
-  # ===========================================================================
-  # data verification and serialization
+  @styles [:hidden, :fill, :stroke_width, :stroke_fill, :join, :miter_limit]
+
+
+  @impl Primitive
+  @spec validate( t() ) :: {:ok, t()} | {:error, String.t()}
+  def validate( {{x0,y0}, {x1,y1}, {x2,y2}} = data ) when
+  is_number(x0) and is_number(y0) and
+  is_number(x1) and is_number(y1) and
+  is_number(x2) and is_number(y2)do
+    {:ok, data}
+  end
+
+  def validate( data ) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Triangle specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The data for a Triangle is {{x0, y0}, {x1, y1}, {x2, y2}}
+      Each x/y pair represents a corner in the Triangle.#{IO.ANSI.default_color()}
+      """
+    }
+  end
 
   # --------------------------------------------------------
-  @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be three points: {{x0,y0}, {x1,y1}, {x2,y2}}
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
-      #{IO.ANSI.default_color()}
-    """
-
-  @doc false
-  def verify({{x0, y0}, {x1, y1}, {x2, y2}} = data)
-      when is_number(x0) and is_number(y0) and is_number(x1) and is_number(y1) and is_number(x2) and
-             is_number(y2),
-      do: {:ok, data}
-
-  def verify(_), do: :invalid_data
-
-  # ============================================================================
   @doc """
   Returns a list of styles recognized by this primitive.
   """
-  @spec valid_styles() :: [:fill | :hidden | :stroke, ...]
+  @impl Primitive
+  @spec valid_styles() :: styles_t()
   def valid_styles(), do: @styles
+
+
+  # --------------------------------------------------------
+  @doc """
+  Compile the data for this primitive into a mini script. This can be combined with others to
+  generate a larger script and is called when a graph is compiled.
+  """
+  @spec compile( primitive::Primitive.t(), styles::Style.m() ) :: Script.t()
+  @impl Primitive
+  def compile( %Primitive{module: __MODULE__, data: {{x0,y0}, {x1,y1}, {x2,y2}}}, styles) do
+    Script.draw_triangle( [], x0, y0, x1, y1, x2, y2, Script.draw_flag(styles) )
+  end
 
   # --------------------------------------------------------
   def default_pin(data), do: centroid(data)

@@ -1,153 +1,101 @@
 #
-#  Created by Boyd Multerer on 2018-07-15.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Created by Boyd Multerer on 2018-07-15
+#  Rewritten by Boyd Multerer on 2021-05-16
+#  Copyright © 2018-2021 Kry10 Limited. All rights reserved.
 #
+
+# re-writing it for version 0.11 to take advantage of the new scene struct
+# and be more end-to-end in style
 
 defmodule Scenic.Component.ButtonTest do
   use ExUnit.Case, async: false
-  doctest Scenic
+  doctest Scenic.Component.Button
 
-  # alias Scenic.Component
   alias Scenic.Graph
-  alias Scenic.Primitive
-  alias Scenic.ViewPort
-  alias Scenic.Component.Button
+  alias Scenic.Scene
+  alias Scenic.ViewPort.Input
 
-  @state %{
-    graph: Graph.build(),
-    theme: Primitive.Style.Theme.preset(:primary),
-    pressed: false,
-    contained: false,
-    align: :center,
-    id: :test_id
-  }
+# import IEx
 
-  # ============================================================================
-  # info
+  @press_in     { :cursor_button, {0, :press, 0, {20, 20}} }
+  @release_in   { :cursor_button, {0, :release, 0, {20, 20}} }
 
-  test "info works" do
-    assert is_bitstring(Button.info(:bad_data))
-    assert Button.info(:bad_data) =~ ":bad_data"
+  @press_out    { :cursor_button, {0, :press, 0, {1000, 1000}} }
+  @release_out  { :cursor_button, {0, :release, 0, {1000, 1000}} }
+
+
+  defmodule TestScene do
+    use Scenic.Scene
+    import Scenic.Components
+
+    def graph() do
+      Graph.build()
+        |> button("Test Button", id: :test_btn)
+    end
+
+    @impl Scenic.Scene
+    def init(scene, pid, _opts) do
+      scene =
+        scene
+        |> assign( pid: pid )
+        |> push_graph( graph() )
+      Process.send( pid, {:up, scene}, [] )
+      {:ok, scene}
+    end
+
+    @impl Scenic.Scene
+    def handle_event( event, _from, %{assigns: %{pid: pid}} = scene ) do
+      send( pid, {:fwd_event, event} )
+      {:noreply, scene}
+    end
+
   end
 
-  # ============================================================================
-  # verify
+  setup do
+    out = Scenic.Test.ViewPort.start({TestScene, self()})
+    # wait for a signal that the scene is up before proceeding
+    {:ok, scene} = receive do {:up, scene} -> {:ok, scene} end
+    # make sure the button is up
+    {:ok, [{_id,pid}]} = Scene.children(scene)
+    :_pong_ = GenServer.call( pid, :_ping_ )
 
-  test "verify passes valid data" do
-    assert Button.verify("Button") == {:ok, "Button"}
+    # needed to give time for the pid and vp to close
+    on_exit(fn -> Process.sleep(1) end)
+
+    out
+  end
+  
+  test "validate passes valid data" do
+    assert Scenic.Component.Button.validate("Text") == {:ok, "Text"}
   end
 
-  test "verify fails invalid data" do
-    assert Button.verify(:banana) == :invalid_data
+  test "validate rejects initial value outside the extents" do
+    {:error, msg} = Scenic.Component.Button.validate(123)
+    assert msg =~ "Invalid Button"
   end
 
-  # ============================================================================
-  # init
-
-  test "init works with simple data" do
-    {:ok, state, push: graph} = Button.init("Button", styles: %{}, id: :button_id)
-    %Graph{} = state.graph
-    assert is_map(state.theme)
-    assert state.contained == false
-    assert state.pressed == false
-    assert state.align == :center
-    assert state.id == :button_id
-    assert graph == state.graph
+  test "ignores non-main button clicks", %{vp: vp}  do
+    Input.send( vp, { :cursor_button, {1, :press, 0, {20, 20}} } )
+    Input.send( vp, { :cursor_button, {2, :press, 0, {20, 20}} } )
+    refute_receive( _, 10)
   end
 
-  test "init works with various alignments" do
-    {:ok, state, push: graph} = Button.init("Button", [])
-    %Primitive{styles: %{text_align: :center}} = Graph.get!(state.graph, :title)
-    assert graph == state.graph
-
-    {:ok, state, push: graph} = Button.init("Button", styles: %{alignment: :left}, id: :button_id)
-    %Primitive{styles: %{text_align: :left}} = Graph.get!(state.graph, :title)
-    assert graph == state.graph
-
-    {:ok, state, push: graph} =
-      Button.init("Button", styles: %{alignment: :center}, id: :button_id)
-
-    %Primitive{styles: %{text_align: :center}} = Graph.get!(state.graph, :title)
-    assert graph == state.graph
-
-    {:ok, state, push: graph} =
-      Button.init("Button", styles: %{alignment: :right}, id: :button_id)
-
-    %Primitive{styles: %{text_align: :right}} = Graph.get!(state.graph, :title)
-    assert graph == state.graph
+  test "Press in and release in sends the event", %{vp: vp} do
+    Input.send( vp, @press_in )
+    Input.send( vp, @release_in )
+    assert_receive( {:fwd_event, {:click, :test_btn}}, 200)
   end
 
-  # ============================================================================
-  # handle_input
-
-  test "handle_input {:cursor_enter, _uid} sets contained" do
-    {:noreply, state, push: graph} =
-      Button.handle_input({:cursor_enter, 1}, %{}, %{@state | pressed: true})
-
-    assert state.contained
-    assert graph == state.graph
+  test "Press in and release out does not send the event", %{vp: vp} do
+    Input.send( vp, @press_in )
+    Input.send( vp, @release_out )
+    refute_receive( _, 10)
   end
 
-  test "handle_input {:cursor_exit, _uid} clears contained" do
-    {:noreply, state, push: graph} =
-      Button.handle_input({:cursor_exit, 1}, %{}, %{@state | pressed: true})
-
-    refute state.contained
-    assert graph == state.graph
+  test "Press out and release in does not send the event", %{vp: vp} do
+    Input.send( vp, @press_out )
+    Input.send( vp, @release_in )
+    refute_receive( _, 10)
   end
 
-  test "handle_input {:cursor_button, :press" do
-    context = %ViewPort.Context{viewport: self()}
-
-    {:noreply, state, push: graph} =
-      Button.handle_input({:cursor_button, {:left, :press, nil, nil}}, context, %{
-        @state
-        | pressed: false,
-          contained: true
-      })
-
-    assert state.pressed
-    assert graph == state.graph
-
-    # confirm the input was captured
-    assert_receive({:"$gen_cast", {:capture_input, ^context, [:cursor_button, :cursor_pos]}})
-  end
-
-  test "handle_input {:cursor_button, :release" do
-    context = %ViewPort.Context{viewport: self()}
-
-    {:noreply, state, push: graph} =
-      Button.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
-        @state
-        | pressed: true,
-          contained: true
-      })
-
-    refute state.pressed
-    assert graph == state.graph
-
-    # confirm the input was released
-    assert_receive({:"$gen_cast", {:release_input, [:cursor_button, :cursor_pos]}})
-  end
-
-  test "handle_input {:cursor_button, :release sends a message if contained" do
-    self = self()
-    Process.put(:parent_pid, self)
-    context = %ViewPort.Context{viewport: self()}
-
-    {:noreply, state, push: graph} =
-      Button.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
-        @state
-        | pressed: true,
-          contained: true
-      })
-
-    assert graph == state.graph
-  end
-
-  test "handle_input does nothing on unknown input" do
-    context = %ViewPort.Context{viewport: self()}
-    {:noreply, state} = Button.handle_input(:unknown, context, @state)
-    assert state == @state
-  end
 end

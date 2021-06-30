@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2018-03-26.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Copyright © 2018 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Component do
@@ -79,45 +79,19 @@ defmodule Scenic.Component do
 
   alias Scenic.Primitive
 
-  @optional_callbacks add_to_graph: 3, info: 1
+  # @optional_callbacks add_to_graph: 3, info: 1
 
   @doc """
   Add this component to a `Scenic.Graph`
   """
-  @callback add_to_graph(graph :: Scenic.Graph.t(), data :: any, opts :: list) :: Scenic.Graph.t()
+  @callback add_to_graph(graph :: Scenic.Graph.t(), data :: any, opts :: Keyword.t) :: Scenic.Graph.t()
+
 
   @doc """
-  Verify that this the data for this component is valid.
-
-  Return an `{:ok, data}` tuple if the data is valid and any other term if the data is
-  not valid. Here is an example implementation that checks if the input is a
-  valid binary:
-
-      @impl Scenic.Component
-      def verify(data) do
-        if is_binary(data) do
-          {:ok, data}
-        else
-          :invalid_data
-        end
-      end
+  Validate that the data for a component is correctly formed
   """
-  @callback verify(data :: any) :: {:ok, any} | any
+  @callback validate( data :: any ) :: {:ok, data::any} | {:error, String.t()}
 
-  @doc """
-  Provide an info string about what was wrong with the provided data.
-
-  This string will typically be displayed in the terminal. Example implementation:
-
-      def info(data) do
-      \"""
-      \#{IO.ANSI.red()}Button data must be a binary
-      \#{IO.ANSI.yellow()}Received: \#{inspect(data)}
-      \#{IO.ANSI.default_color()}
-      \"""
-      end
-  """
-  @callback info(data :: any) :: String.t()
 
   #  import IEx
 
@@ -128,6 +102,7 @@ defmodule Scenic.Component do
     defexception message: nil, error: nil, data: nil
   end
 
+
   # ===========================================================================
   defmacro __using__(opts) do
     quote do
@@ -135,39 +110,62 @@ defmodule Scenic.Component do
 
       use Scenic.Scene, unquote(opts)
 
-      @spec add_to_graph(graph :: Scenic.Graph.t(), data :: any, opts :: list) :: Scenic.Graph.t()
-      def add_to_graph(graph, data \\ nil, opts \\ [])
-
+      def add_to_graph(graph, data, opts \\ [])
       def add_to_graph(%Scenic.Graph{} = graph, data, opts) do
-        verify!(data)
-        Primitive.SceneRef.add_to_graph(graph, {__MODULE__, data}, opts)
+        Primitive.Component.add_to_graph(graph, {__MODULE__, data}, opts)
       end
-
-      @doc false
-      @spec info(data :: any) :: String.t()
-      def info(data) do
-        """
-        #{inspect(__MODULE__)} invalid add_to_graph data
-        Received: #{inspect(data)}
-        """
-      end
-
-      @doc false
-      @spec verify!(data :: any) :: any
-      def verify!(data) do
-        case verify(data) do
-          {:ok, data} -> data
-          err -> raise Error, message: info(data), error: err, data: data
-        end
-      end
-
+      
       # --------------------------------------------------------
-      defoverridable add_to_graph: 3,
-                     info: 1
+      defoverridable add_to_graph: 3
     end
 
     # quote
   end
 
   # defmacro
+
+
+  @filter_out [
+    :input,
+    :hidden,
+    :fill,
+    :stroke,
+    :stroke_width,
+    :join,
+    :cap,
+    :miter_limit,
+    :font,
+    :font_size,
+    :text_align,
+    :text_base,
+    :text_height,
+    :scissor,
+    :translate,
+    :scale,
+    :rotate,
+    :pin,
+    :matrix
+  ]
+
+
+  # prepare the list of opts to send to a component as it is being started up
+  # the main task is to remove styles that have already been consumed or don't make
+  # sense, while leaving any opts/styles that are intended for the component itself.
+  # also, add the viewport as an option.
+  @doc false
+  def filter_opts( opts ) when is_list(opts) do
+    Enum.reject(opts, fn({key,_}) -> Enum.member?(@filter_out, key) end)
+  end
+
+
+  @spec fetch( component_pid :: pid ) :: {:ok, any} | {:error, atom}
+  def fetch( component_pid ) do
+    GenServer.call( component_pid, :fetch )
+  end
+
+  @spec put( component_pid :: pid, value :: any ) :: :ok | {:error, atom}
+  def put( component_pid, value ) do
+    GenServer.call( component_pid, {:put, value}, 5000000 )
+  end
+
 end

@@ -1,17 +1,16 @@
 #
 #  Created by Boyd Multerer on 2018-06-29.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Copyright © 2018 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.SectorTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive.Sector
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Sector
 
-  # @data     {{10, 20}, 100, 0.0, 1.4}
-  @data {100, 0.0, 1.4}
+  @data {100, 1.4}
 
   # ============================================================================
   # build / add
@@ -23,26 +22,38 @@ defmodule Scenic.Primitive.SectorTest do
   end
 
   # ============================================================================
-  # verify
 
-  test "info works" do
-    assert Sector.info(:test_data) =~ ":test_data"
+  test "validate accepts valid data" do
+    assert Sector.validate(@data) == {:ok, @data}
   end
 
-  test "verify passes valid data" do
-    assert Sector.verify(@data) == {:ok, @data}
+  test "validate rejects the old format - with help" do
+    {:error, msg} = Sector.validate({100, 1.4, 6})
+    assert msg =~ "Sector has changed"
   end
 
-  test "verify fails invalid data" do
-    assert Sector.verify({:atom, 0.0, 1.4}) == :invalid_data
-    assert Sector.verify(:banana) == :invalid_data
+  test "validate rejects bad data" do
+    {:error, msg} = Sector.validate({100, "1.4"})
+    assert msg =~ "Invalid Sector"
+
+    {:error, msg} = Sector.validate( :banana )
+    assert msg =~ "Invalid Sector"
   end
+
 
   # ============================================================================
   # styles
 
   test "valid_styles works" do
-    assert Sector.valid_styles() == [:hidden, :fill, :stroke]
+    assert Sector.valid_styles() == [:hidden, :fill, :stroke_width, :stroke_fill, :join, :miter_limit]
+  end
+
+  # ============================================================================
+  # compile
+
+  test "compile works" do
+    p = Sector.build(@data )
+    assert Sector.compile(p, %{stroke_fill: :blue}) == [{:draw_sector, {100, 1.4, :stroke}}]
   end
 
   # ============================================================================
@@ -62,16 +73,16 @@ defmodule Scenic.Primitive.SectorTest do
   end
 
   test "contains_point? works (counter-clockwise)" do
-    data = {100, 1.4, 0.0}
-    assert Sector.contains_point?(data, {20, 32}) == true
-    assert Sector.contains_point?(data, {-20, 32}) == false
-    assert Sector.contains_point?(data, {30, 60}) == true
-    assert Sector.contains_point?(data, {130, 280}) == false
+    data = {100, -1.4}
+    assert Sector.contains_point?(data, {20, -32}) == true
+    assert Sector.contains_point?(data, {-20, -32}) == false
+    assert Sector.contains_point?(data, {30, -60}) == true
+    assert Sector.contains_point?(data, {130, -280}) == false
   end
 
   test "contains_point? straight up and down" do
     # make it big enough to catch the straight down case
-    data = {100, 0.0, 2}
+    data = {100, 2}
     # straight up or down is a degenerate case
     assert Sector.contains_point?(data, {0, -10}) == false
     assert Sector.contains_point?(data, {0, 10}) == true

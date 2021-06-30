@@ -1,38 +1,27 @@
 #
 #  Created by Boyd Multerer on 2017-05-12.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Style.FontSizeTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive.Style.FontSize
 
-  alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.FontSize
 
-  test "info works" do
-    assert FontSize.info(:test_data) =~ ":test_data"
+  test "validate accepts valid data" do
+    assert FontSize.validate(12) == {:ok, 12}
+    assert FontSize.validate(16.5) == {:ok, 16.5}
   end
 
-  # ============================================================================
-  # verify - various forms
-
-  test "verfy works" do
-    assert FontSize.verify(10)
-    assert FontSize.verify(255)
+  test "validate rejects negative numbers" do
+    {:error, msg} = FontSize.validate(-12)
+    assert msg =~ "must be a positive number"
   end
 
-  test "verify rejects out of bounds values" do
-    refute FontSize.verify(5)
+  test "validate rejects invalid data" do
+    {:error, msg} = FontSize.validate("way off")
+    assert msg =~ "must be a positive number"
   end
 
-  test "verify! works" do
-    assert FontSize.verify!(10)
-  end
-
-  test "verify! raises an error" do
-    assert_raise Style.FormatError, fn ->
-      FontSize.verify!("banana")
-    end
-  end
 end

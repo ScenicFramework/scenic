@@ -1,41 +1,25 @@
 #
 #  Created by Boyd Multerer on 2017-11-02.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Transform.TranslateTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive.Transform.Translate
 
   alias Scenic.Primitive.Transform.Translate
 
-  # ============================================================================
-  # verify
-
-  test "info works" do
-    assert Translate.info(:test_data) =~ ":test_data"
+  test "validate accepts valid data" do
+    assert Translate.validate({1, 2}) == {:ok, {1, 2}}
+    assert Translate.validate({1, 2.5}) == {:ok, {1, 2.5}}
   end
 
-  test "verify passes valid data" do
-    assert Translate.verify({1.0, 2.0}) == true
+  test "validate rejects bad data" do
+    {:error, msg} = Translate.validate({"1.5", 2})
+    assert msg =~ "Invalid Translation"
+
+    {:error, msg} = Translate.validate( :banana )
+    assert msg =~ "Invalid Translation"
   end
 
-  test "verify fails invalid data" do
-    assert Translate.verify(1.1) == false
-    assert Translate.verify({1.1}) == false
-    assert Translate.verify({1.1, 1.2, 1.3}) == false
-    assert Translate.verify({1.1, :banana}) == false
-    assert Translate.verify(:banana) == false
-  end
-
-  test "normalize works" do
-    assert Translate.normalize({1, 2}) == {1, 2}
-    assert Translate.normalize({1.1, 2.2}) == {1.1, 2.2}
-  end
-
-  test "normalize raises on bad data" do
-    assert_raise FunctionClauseError, fn ->
-      assert Translate.normalize(:banana)
-    end
-  end
 end

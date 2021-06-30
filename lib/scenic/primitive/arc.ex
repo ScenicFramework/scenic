@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2018-06-06.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Copyright © 2018 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Arc do
@@ -18,12 +18,12 @@ defmodule Scenic.Primitive.Arc do
 
   ## Data
 
-  `{radius, start, finish}`
+  `{radius, angle}`
 
-  The data for an arc is a three-tuple.
+  The data for an arc is a tuple.
   * `radius` - the radius of the arc
-  * `start` - the starting angle in radians
-  * `finish` - end ending angle in radians
+  * `angle` - the angle the arc is swept through
+
 
   ## Styles
 
@@ -39,60 +39,82 @@ defmodule Scenic.Primitive.Arc do
   """
 
   use Scenic.Primitive
+  alias Scenic.Script
+  alias Scenic.Primitive
+  alias Scenic.Primitive.Style
   alias Scenic.Primitive.Sector
   alias Scenic.Primitive.Triangle
 
-  @styles [:hidden, :fill, :stroke]
+  @type t :: {radius::number, angle::number}
+  @type styles_t :: [:hidden | :fill | :stroke_width | :stroke_fill | :cap]
 
-  # ============================================================================
-  # data verification and serialization
+  @styles [:hidden, :fill, :stroke_width, :stroke_fill, :cap]
 
-  # --------------------------------------------------------
-  @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be: {radius, start, finish}
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
-      #{IO.ANSI.default_color()}
-    """
+  @impl Primitive
+  @spec validate( t() ) ::
+    {:ok, {radius::number, angle::number}} | {:error, String.t()}
 
-  # --------------------------------------------------------
-  @doc false
-  def verify(data) do
-    normalize(data)
-    {:ok, data}
-  rescue
-    _ -> :invalid_data
+  def validate( {radius, angle} ) when is_number(radius) and is_number(angle) do
+    {:ok, {radius, angle}}
+  end
+  
+  def validate( {r, a1, a2} = old ) when is_number(r) and is_number(a1) and is_number(a2) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Arc specification
+      Received: #{inspect(old)}
+      #{IO.ANSI.yellow()}
+      The data for an Arc has changed and is now {radius, angle}
+
+      The old format went from a start angle to an end angle. You can achieve
+      the same thing with just a single angle and a rotate transform.#{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  def validate( data ) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Arc specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The data for an Arc is {radius, angle}
+      The radius must be >= 0#{IO.ANSI.default_color()}
+      """
+    }
   end
 
   # --------------------------------------------------------
-  @doc false
-  @spec normalize({number(), number(), number()}) :: {number(), number(), number()}
-  def normalize({radius, start, finish} = data)
-      when is_number(start) and is_number(finish) and is_number(radius),
-      do: data
-
-  # ============================================================================
   @doc """
   Returns a list of styles recognized by this primitive.
   """
-  @spec valid_styles() :: [:fill | :hidden | :stroke]
+  @spec valid_styles() :: styles_t()
+  @impl Primitive
   def valid_styles(), do: @styles
 
   # --------------------------------------------------------
-  def contains_point?({radius, start, finish} = data, pt) do
+  @doc """
+  Compile the data for this primitive into a mini script. This can be combined with others to
+  generate a larger script and is called when a graph is compiled.
+  """
+  @spec compile( primitive::Primitive.t(), styles::Style.m() ) :: Script.t()
+  @impl Primitive
+  def compile( %Primitive{module: __MODULE__, data: {radius, angle}}, styles) do
+    Script.draw_arc( [], radius, angle, Script.draw_flag(styles) )
+  end
+
+  # --------------------------------------------------------
+  def contains_point?({radius, angle} = data, pt) do
     # first, see if it is in the sector described by the arc data
     if Sector.contains_point?(data, pt) do
       # See if it is NOT in the triangle part of sector.
       # If it isn't in the triangle, then it must be in the arc part.
-      p1 = {
-        radius * :math.cos(start),
-        radius * :math.sin(start)
-      }
-
+      p1 = { radius, 0 }
       p2 = {
-        radius * :math.cos(finish),
-        radius * :math.sin(finish)
+        radius * :math.cos(angle),
+        radius * :math.sin(angle)
       }
 
       !Triangle.contains_point?({{0, 0}, p1, p2}, pt)

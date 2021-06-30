@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2018-06-04.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Style.Cap do
@@ -23,30 +23,19 @@ defmodule Scenic.Primitive.Style.Cap do
   # ============================================================================
   # data verification and serialization
 
-  # --------------------------------------------------------
-  @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be one of :butt, :round, :square
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
-      #{IO.ANSI.default_color()}
-    """
-
-  # --------------------------------------------------------
-  # named color
-  @doc false
-  def verify(stroke) do
-    try do
-      normalize(stroke)
-      true
-    rescue
-      _ -> false
-    end
+  def validate( :butt ), do: { :ok, :butt }
+  def validate( :round ), do: { :ok, :round }
+  def validate( :square ), do: { :ok, :square }
+  def validate(data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Cap specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The :cap style must be must be one of :butt, :round, or :square#{IO.ANSI.default_color()}
+      """
+    }
   end
 
-  # --------------------------------------------------------
-  @doc false
-  def normalize(:butt), do: :butt
-  def normalize(:round), do: :round
-  def normalize(:square), do: :square
 end

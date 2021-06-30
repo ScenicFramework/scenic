@@ -1,39 +1,27 @@
 #
 #  Created by Boyd Multerer on 2017-05-12.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Style.MiterLimitTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive.Style.MiterLimit
 
-  alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.MiterLimit
 
-  test "info works" do
-    assert MiterLimit.info(:test_data) =~ ":test_data"
+  test "validate accepts valid data" do
+    assert MiterLimit.validate(12) == {:ok, 12}
+    assert MiterLimit.validate(16.5) == {:ok, 16.5}
   end
 
-  # ============================================================================
-  # verify - various forms
-
-  test "verfy works" do
-    assert MiterLimit.verify(10)
-    assert MiterLimit.verify(1)
-    assert MiterLimit.verify(255)
+  test "validate rejects negative numbers" do
+    {:error, msg} = MiterLimit.validate(-12)
+    assert msg =~ "must be a positive number"
   end
 
-  test "verify rejects out of bounds values" do
-    refute MiterLimit.verify(-1)
+  test "validate rejects invalid data" do
+    {:error, msg} = MiterLimit.validate("way off")
+    assert msg =~ "must be a positive number"
   end
 
-  test "verify! works" do
-    assert MiterLimit.verify!(10)
-  end
-
-  test "verify! raises an error" do
-    assert_raise Style.FormatError, fn ->
-      MiterLimit.verify!("banana")
-    end
-  end
 end

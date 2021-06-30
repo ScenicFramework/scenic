@@ -8,9 +8,13 @@ and more.
 Scenic is primarily aimed at fixed screen connected devices (IoT), but can also
 be used to build portable applications.
 
-## Upgrading to v0.10
+## __IMPORTANT__ - Upgrading to v0.11
 
-If you have used versions before v0.10, please see the [Upgrading to v0.10 Guide](upgrading_to_v0-10.html).
+If you have used versions before v0.11, please see the [Upgrading to v0.11 Guide](upgrading_to_v0-11.html).
+
+## Docs are out of date
+
+This is a build of v0.11, which is in progress. Expect the docs to be out of date. Read the upgrade guide for an overview of changes.
 
 ## How to get started?
 

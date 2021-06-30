@@ -1,11 +1,11 @@
 #
 #  Created by Boyd Multerer on 2017-11-02.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Transform.MatrixTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive.Transform.Matrix
 
   alias Scenic.Primitive.Transform.Matrix
 
@@ -28,16 +28,16 @@ defmodule Scenic.Primitive.Transform.MatrixTest do
     4.3::float-size(32)-native
   >>
 
-  test "info works" do
-    assert Matrix.info(:test_data) =~ ":test_data"
+  test "validate accepts valid data" do
+    assert Matrix.validate(@data) == {:ok, @data}
   end
 
-  test "verify passes valid data" do
-    assert Matrix.verify(@data) == true
+  test "validate rejects bad data" do
+    {:error, msg} = Matrix.validate(@data <> <<5.0::float-size(32)-native>>)
+    assert msg =~ "Invalid Matrix"
+
+    {:error, msg} = Matrix.validate( :banana )
+    assert msg =~ "Invalid Matrix"
   end
 
-  test "verify fails invalid data" do
-    assert Matrix.verify(@data <> <<0>>) == false
-    assert Matrix.verify(:banana) == false
-  end
 end

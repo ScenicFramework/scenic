@@ -1,11 +1,11 @@
 #
 #  Created by Boyd Multerer on 2017-07-08.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.TransformTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive.Transform
 
   #  import IEx
 
@@ -28,19 +28,6 @@ defmodule Scenic.Primitive.TransformTest do
     translate: @translate,
     matrix: @mx
   }
-
-  # ============================================================================
-  # verify!
-
-  test "verify! works" do
-    assert Transform.verify!(:pin, {1, 1})
-  end
-
-  test "verify! rejects invalid transform types" do
-    assert_raise Scenic.Primitive.Transform.FormatError, fn ->
-      assert Transform.verify!(:invalid, {1, 1})
-    end
-  end
 
   # ============================================================================
   # calculate the local matrix

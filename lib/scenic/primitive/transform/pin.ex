@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-10-03.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Transform.Pin do
@@ -24,15 +24,17 @@ defmodule Scenic.Primitive.Transform.Pin do
   # ============================================================================
   # data verification and serialization
 
-  # --------------------------------------------------------
-  @doc false
-  defdelegate info(data), to: Scenic.Primitive.Transform.Translate
+  def validate( {x,y} ) when is_number(x) and is_number(y), do: {:ok, {x,y}}
+  def validate( data )  do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Pin
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The :pin option must be {x, y}#{IO.ANSI.default_color()}
+      """
+    }
+  end
 
-  # --------------------------------------------------------
-  @doc false
-  defdelegate verify(percent), to: Scenic.Primitive.Transform.Translate
-
-  # --------------------------------------------------------
-  @doc false
-  defdelegate normalize(v2), to: Scenic.Primitive.Transform.Translate
 end

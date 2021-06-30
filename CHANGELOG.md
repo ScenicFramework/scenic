@@ -1,13 +1,14 @@
 # Changelog
 
-## 0.10.5
-* tighten requirement for font_metrics to 0.3.0. Thank you @wojtekmach
+##0.11.0
+* This is a __MAJOR__ update. As Connor Rigby put it in a call... "What hasn't changed?"
+* See the v.11 upgrade guide for an overview.
 
 ## 0.10.4
 * Can pass in a :name option to scenes/components @am-kantox
 * Clean up warnings under Elixir 1.11
 * Tell git not to mangle line endings on test data - part of getting Windows support working. @trejkaz
-* Fix Texture.clear() bug so it now clears the entire texture. @shritesh
+* Now requires Elixir 1.9 or higher.
 
 
 ## 0.10.3

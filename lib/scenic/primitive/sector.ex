@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on June 5, 2018.2017-10-29.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Sector do
@@ -11,12 +11,11 @@ defmodule Scenic.Primitive.Sector do
 
   ## Data
 
-  `{radius, start, finish}`
+  `{radius, angle}`
 
-  The data for a sector is a three-tuple.
-  * `radius` - the radius of the arc
-  * `start` - the starting angle in radians
-  * `finish` - end ending angle in radians
+  The data for an Sector is a tuple.
+  * `radius` - the radius of the Sector
+  * `angle` - the angle the Sector is swept through
 
   ## Styles
 
@@ -32,48 +31,77 @@ defmodule Scenic.Primitive.Sector do
   """
 
   use Scenic.Primitive
+  alias Scenic.Script
+  alias Scenic.Primitive
+  alias Scenic.Primitive.Style
 
   # import IEx
 
-  @styles [:hidden, :fill, :stroke]
+  @type t :: {radius::number, angle::number}
+  @type styles_t :: [:hidden | :fill | :stroke_width | :stroke_fill | :join | :miter_limit]
 
-  # ============================================================================
-  # data verification and serialization
+  @styles [:hidden, :fill, :stroke_width, :stroke_fill, :join, :miter_limit]
 
-  # --------------------------------------------------------
-  @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be: {radius, start_angle, end_angle}
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
-      #{IO.ANSI.default_color()}
-    """
 
-  # --------------------------------------------------------
-  @doc false
-  def verify(data) do
-    normalize(data)
-    {:ok, data}
-  rescue
-    _ -> :invalid_data
+  @impl Primitive
+  @spec validate( t() ) :: {:ok, t()} | {:error, String.t()}
+  def validate( {radius, angle} ) when is_number(radius) and is_number(angle) do
+    {:ok, {radius, angle}}
+  end
+  
+  def validate( {r, a1, a2} = old ) when is_number(r) and is_number(a1) and is_number(a2) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Sector specification
+      Received: #{inspect(old)}
+      #{IO.ANSI.yellow()}
+      The data for an Sector has changed and is now {radius, angle}
+
+      The old format went from a start angle to an end angle. You can achieve
+      the same thing with just a single angle and a rotate transform.#{IO.ANSI.default_color()}
+      """
+    }
+  end
+  
+  def validate( data ) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Sector specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The data for an Sector is {radius, angle}
+      The radius must be >= 0#{IO.ANSI.default_color()}
+      """
+    }
   end
 
-  # --------------------------------------------------------
-  @doc false
-  @spec normalize({number(), number(), number()}) :: {number(), number(), number()}
-  def normalize({radius, start, finish} = data)
-      when is_number(start) and is_number(finish) and is_number(radius),
-      do: data
 
-  # ============================================================================
+  # --------------------------------------------------------
   @doc """
   Returns a list of styles recognized by this primitive.
   """
-  @spec valid_styles() :: [:fill | :hidden | :stroke, ...]
+  @impl Primitive
+  @spec valid_styles() :: styles_t()
   def valid_styles(), do: @styles
 
+
   # --------------------------------------------------------
-  def contains_point?({radius, start, finish}, {xp, yp}) do
+  @doc """
+  Compile the data for this primitive into a mini script. This can be combined with others to
+  generate a larger script and is called when a graph is compiled.
+  """
+  @spec compile( primitive::Primitive.t(), styles::Style.m() ) :: Script.t()
+  @impl Primitive
+  def compile( %Primitive{module: __MODULE__, data: {radius, angle}}, styles) do
+    Script.draw_sector( [], radius, angle, Script.draw_flag(styles) )
+  end
+
+
+
+  # --------------------------------------------------------
+  def contains_point?({radius, angle}, {xp, yp}) do
     # using polar coordinates...
     point_angle = :math.atan2(yp, xp)
     point_radius_sqr = xp * xp + yp * yp
@@ -85,12 +113,12 @@ defmodule Scenic.Primitive.Sector do
     sy = radius * :math.sin(point_angle)
     sector_radius_sqr = sx * sx + sy * sy
 
-    if start <= finish do
+    if 0 <= angle do
       # clockwise winding
-      point_angle >= start && point_angle <= finish && point_radius_sqr <= sector_radius_sqr
+      point_angle >= 0 && point_angle <= angle && point_radius_sqr <= sector_radius_sqr
     else
       # counter-clockwise winding
-      point_angle <= start && point_angle >= finish && point_radius_sqr <= sector_radius_sqr
+      point_angle <= 0 && point_angle >= angle && point_radius_sqr <= sector_radius_sqr
     end
   end
 end

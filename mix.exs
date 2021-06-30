@@ -3,9 +3,9 @@ defmodule Scenic.Mixfile do
 
   @app_name :scenic
 
-  @version "0.10.5"
+  @version "0.11.0"
 
-  @elixir_version "~> 1.8"
+  @elixir_version "~> 1.11"
   @github "https://github.com/boydm/scenic"
 
   def project do
@@ -25,9 +25,14 @@ defmodule Scenic.Mixfile do
       package: package(),
       dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex]],
       test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: cli_env()
+      preferred_cli_env: cli_env(),
+      elixirc_paths: elixirc_paths(Mix.env())
     ]
   end
+
+  # Specifies which paths to compile per environment.
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
 
   defp description do
     """
@@ -41,15 +46,19 @@ defmodule Scenic.Mixfile do
 
   defp deps do
     [
-      {:font_metrics, "~> 0.3.0"},
+      {:font_metrics, "~> 0.5.0"},
+      {:nimble_options, "~> 0.3"},
+
       {:elixir_make, "~> 0.6.2", runtime: false},
+      {:truetype_metrics, "~> 0.5", only: [:dev, :test], runtime: false},
+      {:ex_image_info, "~> 0.2.4", only: [:dev, :test], runtime: false},
 
       # Tools
       {:ex_doc, ">= 0.0.0", only: :dev},
       {:credo, ">= 0.0.0", only: [:dev, :test], runtime: false},
       {:excoveralls, ">= 0.0.0", only: :test, runtime: false},
       {:inch_ex, "~> 2.0", only: [:dev, :docs], runtime: false},
-      {:dialyxir, "~> 0.5", only: :dev, runtime: false}
+      {:dialyxir, "~> 1.1", only: :dev, runtime: false}
     ]
   end
 
@@ -100,7 +109,7 @@ defmodule Scenic.Mixfile do
 
   defp doc_guides do
     [
-      "guides/upgrading_to_v0.10.md",
+      "guides/upgrading_to_v0.11.md",
       "guides/welcome.md",
       "guides/install_dependencies.md",
       "guides/overview_general.md",

@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-11-02.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Math.Quad do

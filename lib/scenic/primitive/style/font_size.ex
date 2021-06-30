@@ -1,6 +1,6 @@
 #
 #  Re-Created by Boyd Multerer on 2017-11-30.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Style.FontSize do
@@ -25,29 +25,17 @@ defmodule Scenic.Primitive.Style.FontSize do
   # ============================================================================
   # data verification and serialization
 
-  # --------------------------------------------------------
-  @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be a positive number >= 6
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
-      #{IO.ANSI.default_color()}
-    """
-
-  # --------------------------------------------------------
-  @doc false
-  def verify(font) do
-    try do
-      normalize(font)
-      true
-    rescue
-      _ -> false
-    end
+  def validate( size ) when is_number(size) and size > 0, do: {:ok, size}
+  def validate( size )  do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid FontSize specification
+      Received: #{inspect(size)}#{IO.ANSI.default_color()}
+      #{IO.ANSI.yellow()}
+      The :font_size style must be a positive number
+      """
+    }
   end
 
-  # --------------------------------------------------------
-  @doc false
-  def normalize(point_size) when is_number(point_size) and point_size >= 6 do
-    point_size
-  end
 end

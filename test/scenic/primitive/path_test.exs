@@ -1,11 +1,11 @@
 #
 #  Created by Boyd Multerer on 2018-06-29.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Copyright © 2018 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.PathTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive.Path
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Path
@@ -17,9 +17,7 @@ defmodule Scenic.Primitive.PathTest do
     {:bezier_to, 10, 11, 20, 21, 30, 40},
     {:quadratic_to, 10, 11, 50, 60},
     {:arc_to, 70, 80, 90, 100, 20},
-    :close_path,
-    :solid,
-    :hole
+    :close_path
   ]
 
   # ============================================================================
@@ -32,52 +30,86 @@ defmodule Scenic.Primitive.PathTest do
   end
 
   # ============================================================================
-  # verify
 
-  test "info works" do
-    assert Path.info(:test_data) =~ ":test_data"
+  test "validate accepts valid data" do
+    assert Path.validate(@data) == {:ok, @data}
   end
 
-  test "verify passes valid data" do
-    assert Path.verify(@data) == {:ok, @data}
+  test "rejects :solid as deprecated" do
+    {:error, msg} = Path.validate( [:solid] )
+    assert msg =~ ":solid command is deprecated"
   end
 
-  test "verify fails invalid data" do
-    assert Path.verify(:banana) == :invalid_data
+  test "rejects :hole as deprecated" do
+    {:error, msg} = Path.validate( [:hole] )
+    assert msg =~ ":hole command is deprecated"
   end
 
-  test "verify fails unknown action" do
-    assert Path.verify([:banana]) == :invalid_data
+  test "rejects malformed move_to" do
+    {:error, msg} = Path.validate( [{:move_to, "10", 20}] )
+    assert msg =~ "operation is invalid"
   end
 
-  test "verify fails invalid move_to" do
-    assert Path.verify([{:move_to, 10}]) == :invalid_data
-    assert Path.verify([{:move_to, 10, 20, 30}]) == :invalid_data
+  test "rejects malformed line_to" do
+    {:error, msg} = Path.validate( [{:line_to, "10", 20}] )
+    assert msg =~ "operation is invalid"
   end
 
-  test "verify fails invalid line_to" do
-    assert Path.verify([{:line_to, 10}]) == :invalid_data
-    assert Path.verify([{:line_to, 10, 20, 30}]) == :invalid_data
+  test "rejects malformed bezier_to" do
+    {:error, msg} = Path.validate( [{:bezier_to, 10, "11", 20, 21, 30, 40}] )
+    assert msg =~ "operation is invalid"
   end
 
-  test "verify fails invalid bezier_to" do
-    assert Path.verify([{:bezier_to, 10, 20, 30}]) == :invalid_data
+  test "rejects malformed quadratic_to" do
+    {:error, msg} = Path.validate( [{:quadratic_to, 10, 11, "50", 60}] )
+    assert msg =~ "operation is invalid"
   end
 
-  test "verify fails invalid quadratic_to" do
-    assert Path.verify([{:quadratic_to, 10, 20, 30}]) == :invalid_data
+  test "rejects malformed arc_to" do
+    {:error, msg} = Path.validate( [{:arc_to, 70, 80, 90, "100", 20}] )
+    assert msg =~ "operation is invalid"
   end
 
-  test "verify fails invalid arc_to" do
-    assert Path.verify([{:arc_to, 10, 20, 30}]) == :invalid_data
+  test "rejects totally wrong commands" do
+    {:error, msg} = Path.validate( ["Not even close"] )
+    assert msg =~ "operation is invalid"
   end
+
+  test "validate rejects bad data" do
+    {:error, msg} = Path.validate( :banana )
+    assert msg =~ "Invalid Path"
+  end
+
+
 
   # ============================================================================
   # styles
 
   test "valid_styles works" do
-    assert Path.valid_styles() == [:hidden, :fill, :stroke, :cap, :join, :miter_limit]
+    assert Path.valid_styles() == [:hidden, :fill, :stroke_width, :stroke_fill, :cap, :join, :miter_limit]
   end
+
+  # ============================================================================
+  # compile
+
+  # NOTE: The compiled script is backwards. This is an inline script, which means
+  # Script.finish() is called on it later as part of the graph compile process.
+  test "compile works" do
+    p = Path.build(@data )
+    assert Path.compile(p, %{stroke_fill: :blue}) ==
+      [
+        :stroke_path,
+        :close_path,
+        {:arc_to, {70, 80, 90, 100, 20}},
+        {:quadratic_to, {10, 11, 50, 60}},
+        {:bezier_to, {10, 11, 20, 21, 30, 40}},
+        {:line_to, {30, 40}},
+        {:move_to, {10, 20}},
+        :begin_path
+      ]
+  end
+
+
 
   # ============================================================================
   # transform helpers

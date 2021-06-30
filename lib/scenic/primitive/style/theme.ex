@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2018-08-18.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Copyright © 2018 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Style.Theme do
@@ -44,7 +44,8 @@ defmodule Scenic.Primitive.Style.Theme do
     border: :dark_grey,
     active: {215, 215, 215},
     thumb: :cornflower_blue,
-    focus: :blue
+    focus: :blue,
+    highlight: :saddle_brown
   }
 
   @theme_dark %{
@@ -53,7 +54,8 @@ defmodule Scenic.Primitive.Style.Theme do
     border: :light_grey,
     active: {40, 40, 40},
     thumb: :cornflower_blue,
-    focus: :cornflower_blue
+    focus: :cornflower_blue,
+    highlight: :sandy_brown
   }
 
   # specialty themes
@@ -77,34 +79,97 @@ defmodule Scenic.Primitive.Style.Theme do
     text: @text
   }
 
+  def valid_themes(), do: @themes
+
   # ============================================================================
   # data verification and serialization
 
-  # --------------------------------------------------------
-  @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must either a preset theme or a map of named colors
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
 
-      The predefined themes are:
-      :dark, :light, :primary, :secondary, :success, :danger, :warning, :info, :text
 
-      If you pass in a map of colors, the common ones used in the controls are:
-      :text, :background, :border, :active, :thumb, :focus
-
+  def validate( :light ), do: {:ok, :light}
+  def validate( :dark ), do: {:ok, :dark}
+  def validate( :primary ), do: {:ok, :primary}
+  def validate( :secondary ), do: {:ok, :secondary}
+  def validate( :success ), do: {:ok, :success}
+  def validate( :danger ), do: {:ok, :danger}
+  def validate( :warning ), do: {:ok, :warning}
+  def validate( :info ), do: {:ok, :info}
+  def validate( :text ), do: {:ok, :text}
+  def validate( %{
+    text: _,
+    background: _,
+    border: _,
+    active: _,
+    thumb: _,
+    focus: _
+  } = theme ) do
+    # we know all the required colors are there.
+    # now make sure they are all valid colors, including any custom added ones.
+    theme
+    |> Enum.reduce({:ok, theme}, fn
+        _, {:error, msg} -> {:error, msg}
+        {key, color}, {:ok,_} = acc -> 
+          case Color.validate(color) do
+            {:ok, _} -> acc
+            {:error, msg} -> err_color( key, msg )
+          end
+    end)
+  end
+  def validate( name ) when is_atom(name) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid theme name
+      Received: #{inspect(name)}
+      #{IO.ANSI.yellow()}
+      Named themes must be from the following list:
+        :light, :dark, :primary, :secondary, :success, :danger, :warning, :info, :text#{IO.ANSI.default_color()}
+      """
+    }
+  end
+  def validate( %{} = map ) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid theme specification
+      Received: #{inspect(map)}
+      #{IO.ANSI.yellow()}
+      You passed in a map, but it didn't include all the required color specifications.
+      It must contain a valid color for each of the following entries.
+        :text, :background, :border, :active, :thumb, :focus
       #{IO.ANSI.default_color()}
-    """
-
-  # --------------------------------------------------------
-  @doc false
-  def verify(name) when is_atom(name), do: Map.has_key?(@themes, name)
-
-  def verify(custom) when is_map(custom) do
-    Enum.all?(custom, fn {_, color} -> Color.verify(color) end)
+      """
+    }
   end
 
-  def verify(_), do: false
+  def validate( data )  do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid theme specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      Themes can be a name from this list:
+        :light, :dark, :primary, :secondary, :success, :danger, :warning, :info, :text
+
+      Or it may also be a map defining colors for the values of
+          :text, :background, :border, :active, :thumb, :focus
+
+      If you pass in a map, you may add your own colors in addition to the required ones.#{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  defp err_color( key, msg ) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid color in map
+      Map entry: #{inspect(key)}
+      #{msg}
+      """
+    }
+  end
 
   # --------------------------------------------------------
   @doc false

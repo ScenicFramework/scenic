@@ -1,534 +1,318 @@
 #
 #  Created by Boyd Multerer on 2018-09-18.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Rewritten by Boyd Multerer on 2021-05-23
+#  Copyright © 2018-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Component.Input.TextFieldTest do
   use ExUnit.Case, async: false
-  doctest Scenic
+  doctest Scenic.Component.Input.TextField
 
-  # alias Scenic.Component
   alias Scenic.Graph
-  alias Scenic.Primitive
-  alias Scenic.ViewPort
-  alias Scenic.Component.Input.TextField
+  alias Scenic.Scene
+  alias Scenic.ViewPort.Input
+  alias Scenic.Component
+
+  # import IEx
 
   @initial_value "Initial value"
-  @initial_password "*************"
-  @hint "Hint String"
+  # @initial_password "*************"
+  # @hint "Hint String"
 
-  @state %{
-    graph: Graph.build() |> Scenic.Primitives.text("text", id: :text),
-    theme: Primitive.Style.Theme.preset(:primary),
-    width: 200,
-    height: 30,
-    value: @initial_value,
-    display: @initial_value,
-    hint: @hint,
-    index: 2,
-    char_width: 12,
-    focused: false,
-    type: :text,
-    filter: :all,
-    id: :test_id
-  }
 
-  # ============================================================================
-  # info
+  @press_in     { :cursor_button, {0, :press, 0, {14, 10}} }
+  @press_move     { :cursor_button, {0, :press, 0, {43, 10}} }
+  @press_out    { :cursor_button, {0, :press, 0, {1000, 1000}} }
 
-  test "info works" do
-    assert is_bitstring(TextField.info(:bad_data))
-    assert TextField.info(:bad_data) =~ ":bad_data"
+  @cp_k  {:codepoint, {"k", 0}}
+  @cp_l  {:codepoint, {"l", 0}}
+
+  @key_right  {:key, {"right", :press, 0}}
+  @key_left  {:key, {"left", :press, 0}}
+  @key_page_up  {:key, {"page_up", :press, 0}}
+  @key_page_down  {:key, {"page_down", :press, 0}}
+  @key_home  {:key, {"home", :press, 0}}
+  @key_end  {:key, {"end", :press, 0}}
+  @key_backspace  {:key, {"backspace", :press, 0}}
+  @key_delete  {:key, {"delete", :press, 0}}
+
+
+  defmodule TestScene do
+    use Scenic.Scene
+    import Scenic.Components
+
+    def graph(text) do
+      Graph.build()
+        |> text_field( text, id: :text_field, hint: "Hint" )
+        |> text_field( "", id: :number_field, filter: :number, t: {0, 40} )
+        |> text_field( "", id: :integer_field, filter: :integer, t: {0, 80} )
+        |> text_field( "", id: :abcdefg_field, filter: "abcdefg", t: {0, 120} )
+        |> text_field( "", id: :fn_field, t: {0, 160}, filter: fn(char) -> "hjkl" =~ char end)
+        |> text_field( "", id: :password_field, t: {0, 200}, type: :password)
+    end
+
+    @impl Scenic.Scene
+    def init(scene, {pid, text}, _opts) do
+      scene =
+        scene
+        |> assign( pid: pid )
+        |> push_graph( graph(text) )
+      Process.send( pid, {:up, scene}, [] )
+      {:ok, scene}
+    end
+
+    @impl Scenic.Scene
+    def handle_event( event, _from, %{assigns: %{pid: pid}} = scene ) do
+      send( pid, {:fwd_event, event} )
+      {:noreply, scene}
+    end
   end
 
-  # ============================================================================
-  # verify
 
-  test "verify passes valid data" do
-    assert TextField.verify("Title") == {:ok, "Title"}
+  setup do
+    out = Scenic.Test.ViewPort.start({TestScene, {self(), @initial_value}})
+    # wait for a signal that the scene is up before proceeding
+    {:ok, scene} = receive do {:up, scene} -> {:ok, scene} end
+    # make sure the button is up
+    {:ok, [pid]} = Scene.child(scene, :text_field)
+    :_pong_ = GenServer.call( pid, :_ping_ )
+
+    # needed to give time for the pid and vp to close
+    on_exit(fn -> Process.sleep(1) end)
+
+    out
+    |> Map.put(:scene, scene)
+    |> Map.put(:pid, pid)
   end
 
-  test "verify fails invalid data" do
-    assert TextField.verify(:banana) == :invalid_data
+  defp force_sync( vp_pid, scene_pid ) do
+    :_pong_ = GenServer.call( vp_pid, :_ping_ )
+    :_pong_ = GenServer.call( scene_pid, :_ping_ )
+    :_pong_ = GenServer.call( vp_pid, :_ping_ )
   end
 
-  # ============================================================================
-  # init
 
-  test "init works with simple data" do
-    {:ok, state, push: graph} = TextField.init(@initial_value, styles: %{}, id: :test_id)
-    %Graph{} = state.graph
-    assert is_map(state.theme)
-    assert state.graph == graph
-    assert state.value == @initial_value
-    assert state.display == @initial_value
-    assert state.focused == false
-    assert state.type == :text
-    assert state.id == :test_id
+  test "press_in captures and starts editing", %{vp: vp, pid: pid} do
+    assert Input.fetch_captures!(vp) == {:ok, []}
+    Input.send( vp, @press_in )
+    force_sync( vp.pid, pid )
+    assert Input.fetch_captures!(vp) == {:ok, [:codepoint, :cursor_button, :key]}
 
-    {:ok, state, push: graph} = TextField.init(@initial_value, styles: %{type: :password})
-    assert state.value == @initial_value
-    assert state.display == @initial_password
-    assert state.type == :password
-    assert state.graph == graph
+    Input.send( vp, @cp_k )
+    assert_receive( {:fwd_event, {:value_changed, :text_field, "kInitial value"}}, 200)
   end
 
-  test "init works with text field style options" do
-    {:ok, state, push: graph} =
-      TextField.init(@initial_value,
-        styles: %{
-          type: :password,
-          width: 11,
-          height: 13,
-          hint: "hint string",
-          filter: :test_filter
-        },
-        id: :test_id
-      )
+  test "press_out releases and ends editing", %{vp: vp, pid: pid} do
+    Input.send( vp, @press_in )
+    force_sync( vp.pid, pid )
+    assert Input.fetch_captures!(vp) == {:ok, [:codepoint, :cursor_button, :key]}
 
-    assert state.graph == graph
-    assert state.type == :password
-    assert state.width == 11
-    assert state.height == 13
-    assert state.hint == "hint string"
-    assert state.filter == :test_filter
+    Input.send( vp, @press_out )
+    force_sync( vp.pid, pid )
+    assert Input.fetch_captures!(vp) == {:ok, []}
+
+    Input.send( vp, @cp_k )
+    refute_receive( _, 10)
   end
 
-  # ============================================================================
-  # handle_input
+  test "pressing in the field moves the cursor to the nearst character gap", %{vp: vp, pid: pid} do
+    Input.send( vp, @press_in )
+    force_sync( vp.pid, pid )
 
-  # ============================================================================
-  # control keys
+    Input.send( vp, @cp_k )
+    assert_receive( {:fwd_event, {:value_changed, :text_field, "kInitial value"}}, 200)
 
-  test "handle_input {:key \"left\" moves the cursor to the left" do
-    self = self()
-    scene_ref = make_ref()
-    Process.put(:parent_pid, self)
-    Process.put(:scene_ref, scene_ref)
-    {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
-    context = %ViewPort.Context{viewport: self}
-
-    assert @state.index == 2
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:key, {"left", :press, 0}}, context, @state)
-
-    assert state.index == 1
-    assert state.graph == graph
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:key, {"left", :press, 0}}, context, state)
-
-    assert state.index == 0
-    assert state.graph == graph
-
-    # does not keep going below 0
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:key, {"left", :press, 0}}, context, state)
-
-    assert state.index == 0
-    assert state.graph == graph
-
-    # cleanup
-    Process.exit(tables_pid, :shutdown)
+    Input.send( vp, @press_move )
+    Input.send( vp, @cp_l )
+    assert_receive( {:fwd_event, {:value_changed, :text_field, "kInlitial value"}}, 200)
   end
 
-  test "handle_input {:key \"right\" moves the cursor to the right" do
-    self = self()
-    scene_ref = make_ref()
-    Process.put(:parent_pid, self)
-    Process.put(:scene_ref, scene_ref)
-    {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
-    context = %ViewPort.Context{viewport: self}
+  test "right arrow moves the cursor to the right", %{vp: vp, pid: pid} do
+    Input.send( vp, @press_in )
+    force_sync( vp.pid, pid )
 
-    length = String.length(@initial_value)
-    state = %{@state | index: length - 2}
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:key, {"right", :press, 0}}, context, state)
-
-    assert state.graph == graph
-    assert state.index == length - 1
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:key, {"right", :press, 0}}, context, state)
-
-    assert state.index == length
-    assert state.graph == graph
-
-    # does not keep going past the end
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:key, {"right", :press, 0}}, context, state)
-
-    assert state.index == length
-    assert state.graph == graph
-
-    # cleanup
-    Process.exit(tables_pid, :shutdown)
+    Input.send( vp, @key_right )
+    Input.send( vp, @cp_k )
+    assert_receive( {:fwd_event, {:value_changed, :text_field, "Iknitial value"}}, 200)
   end
 
-  test "handle_input {:key \"home\" and \"page_up\" move the cursor all the way to the left" do
-    self = self()
-    scene_ref = make_ref()
-    Process.put(:parent_pid, self)
-    Process.put(:scene_ref, scene_ref)
-    {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
-    context = %ViewPort.Context{viewport: self}
+  test "right arrow won't move past the end", %{vp: vp, pid: pid} do
+    Input.send( vp, @press_in )
+    force_sync( vp.pid, pid )
 
-    state = %{@state | index: 4}
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:key, {"home", :press, 0}}, context, state)
-
-    assert state.graph == graph
-    assert state.index == 0
-
-    state = %{@state | index: 4}
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:key, {"page_up", :press, 0}}, context, state)
-
-    assert state.graph == graph
-    assert state.index == 0
-
-    # cleanup
-    Process.exit(tables_pid, :shutdown)
+    Enum.each(1..20, fn(_) -> Input.send( vp, @key_right ) end)
+    Input.send( vp, @cp_k )
+    assert_receive( {:fwd_event, {:value_changed, :text_field, "Initial valuek"}}, 200)
   end
 
-  test "handle_input {:key \"end\" and \"page_down\" move the cursor all the way to the right" do
-    self = self()
-    scene_ref = make_ref()
-    Process.put(:parent_pid, self)
-    Process.put(:scene_ref, scene_ref)
-    {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
-    context = %ViewPort.Context{viewport: self}
+  test "left arrow moves the cursor left", %{vp: vp, pid: pid} do
+    Input.send( vp, @press_in )
+    force_sync( vp.pid, pid )
 
-    length = String.length(@initial_value)
-
-    state = %{@state | index: 4}
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:key, {"end", :press, 0}}, context, state)
-
-    assert state.graph == graph
-    assert state.index == length
-
-    state = %{@state | index: 4}
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:key, {"page_down", :press, 0}}, context, state)
-
-    assert state.graph == graph
-    assert state.index == length
-
-    # cleanup
-    Process.exit(tables_pid, :shutdown)
+    Enum.each(1..5, fn(_) -> Input.send( vp, @key_right ) end)
+    Input.send( vp, @key_left )
+    Input.send( vp, @cp_k )
+    assert_receive( {:fwd_event, {:value_changed, :text_field, "Initkial value"}}, 200)
   end
 
-  test "handle_input {:key \"backspace\" deletes to the left" do
-    self = self()
-    scene_ref = make_ref()
-    Process.put(:parent_pid, self)
-    Process.put(:scene_ref, scene_ref)
-    {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
-    context = %ViewPort.Context{viewport: self}
+  test "left arrow won't move past the start", %{vp: vp, pid: pid} do
+    Input.send( vp, @press_in )
+    force_sync( vp.pid, pid )
 
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:key, {"backspace", :press, 0}}, context, @state)
-
-    assert state.graph == graph
-    assert state.index == 1
-    assert state.value == "Iitial value"
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:key, {"backspace", :press, 0}}, context, state)
-
-    assert state.index == 0
-    assert state.value == "itial value"
-    assert state.graph == graph
-
-    # does nothing if already at position 0
-    {:noreply, state} = TextField.handle_input({:key, {"backspace", :press, 0}}, context, state)
-    assert state.index == 0
-    assert state.value == "itial value"
-
-    # cleanup
-    Process.exit(tables_pid, :shutdown)
+    Enum.each(1..20, fn(_) -> Input.send( vp, @key_left ) end)
+    Input.send( vp, @cp_k )
+    assert_receive( {:fwd_event, {:value_changed, :text_field, "kInitial value"}}, 200)
   end
 
-  test "handle_input {:key \"delete\" deletes to the right" do
-    self = self()
-    scene_ref = make_ref()
-    Process.put(:parent_pid, self)
-    Process.put(:scene_ref, scene_ref)
-    {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
-    context = %ViewPort.Context{viewport: self}
+  test "home and end move to the extends of the field", %{vp: vp, pid: pid} do
+    Input.send( vp, @press_in )
+    force_sync( vp.pid, pid )
 
-    length = String.length(@initial_value)
-    pos = length - 2
-    state = %{@state | index: pos}
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:key, {"delete", :press, 0}}, context, state)
-
-    assert state.graph == graph
-    assert state.index == pos
-    assert state.value == "Initial vale"
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:key, {"delete", :press, 0}}, context, state)
-
-    assert state.index == pos
-    assert state.value == "Initial val"
-    assert state.graph == graph
-
-    # does nothing if already at position 0
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:key, {"delete", :press, 0}}, context, state)
-
-    assert state.index == pos
-    assert state.value == "Initial val"
-    assert state.graph == graph
-
-    # cleanup
-    Process.exit(tables_pid, :shutdown)
+    Input.send( vp, @key_end )
+    Input.send( vp, @cp_k )
+    Input.send( vp, @key_home )
+    Input.send( vp, @cp_l )
+    assert_receive( {:fwd_event, {:value_changed, :text_field, "lInitial valuek"}}, 200)
   end
 
-  test "handle_input {:codepoint adds and moves cursor to right" do
-    self = self()
-    scene_ref = make_ref()
-    Process.put(:parent_pid, self)
-    Process.put(:scene_ref, scene_ref)
-    {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
-    context = %ViewPort.Context{viewport: self}
+  test "page_up and page_down move to the extends of the field", %{vp: vp, pid: pid} do
+    Input.send( vp, @press_in )
+    force_sync( vp.pid, pid )
 
-    state = %{@state | index: 2}
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:codepoint, {"a", 0}}, context, state)
-
-    assert state.graph == graph
-    assert state.index == 3
-    assert state.value == "Inaitial value"
-    assert state.display == "Inaitial value"
-
-    # can also add strings
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:codepoint, {".com", 0}}, context, state)
-
-    assert state.index == 7
-    assert state.value == "Ina.comitial value"
-    assert state.graph == graph
-
-    # cleanup
-    Process.exit(tables_pid, :shutdown)
+    Input.send( vp, @key_page_down )
+    Input.send( vp, @cp_k )
+    Input.send( vp, @key_page_up )
+    Input.send( vp, @cp_l )
+    assert_receive( {:fwd_event, {:value_changed, :text_field, "lInitial valuek"}}, 200)
   end
 
-  test "handle_input {:codepoint displays password * chars" do
-    self = self()
-    scene_ref = make_ref()
-    Process.put(:parent_pid, self)
-    Process.put(:scene_ref, scene_ref)
-    {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
-    context = %ViewPort.Context{viewport: self}
+  test "backspace removes characters backwards", %{vp: vp, pid: pid} do
+    Input.send( vp, @press_in )
+    force_sync( vp.pid, pid )
 
-    state = %{@state | index: 2, type: :password, display: @initial_password}
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:codepoint, {"a", 0}}, context, state)
-
-    assert state.graph == graph
-    assert state.index == 3
-    assert state.value == "Inaitial value"
-    assert state.display == @initial_password <> "*"
-
-    # cleanup
-    Process.exit(tables_pid, :shutdown)
+    Enum.each(1..5, fn(_) -> Input.send( vp, @key_right ) end)
+    Input.send( vp, @key_backspace )
+    assert_receive( {:fwd_event, {:value_changed, :text_field, "Inital value"}}, 200)
   end
 
-  test "handle_input {:codepoint filters input" do
-    self = self()
-    scene_ref = make_ref()
-    Process.put(:parent_pid, self)
-    Process.put(:scene_ref, scene_ref)
-    {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
-    context = %ViewPort.Context{viewport: self}
+  test "backspace does nothing at the start of the string", %{vp: vp, pid: pid} do
+    Input.send( vp, @press_in )
+    force_sync( vp.pid, pid )
 
-    # filters to integers
-    state = %{@state | index: 2, value: "Initial value"}
-    state = %{state | filter: :integer}
-    {:noreply, state} = TextField.handle_input({:codepoint, {".", 0}}, context, state)
-    assert state.index == 2
-    assert state.value == "Initial value"
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:codepoint, {"2", 0}}, context, state)
-
-    assert state.index == 3
-    assert state.value == "In2itial value"
-    assert state.graph == graph
-
-    # filters to floats
-    state = %{@state | index: 2, value: "Initial value"}
-    state = %{state | filter: :number}
-    {:noreply, state} = TextField.handle_input({:codepoint, {"a", 0}}, context, state)
-    assert state.index == 2
-    assert state.value == "Initial value"
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:codepoint, {".", 0}}, context, state)
-
-    assert state.index == 3
-    assert state.value == "In.itial value"
-    assert state.graph == graph
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:codepoint, {"2", 0}}, context, state)
-
-    assert state.index == 4
-    assert state.value == "In.2itial value"
-    assert state.graph == graph
-
-    # filters to char string
-    state = %{@state | index: 2, value: "Initial value"}
-    state = %{state | filter: "abcd"}
-    {:noreply, state} = TextField.handle_input({:codepoint, {"f", 0}}, context, state)
-    assert state.index == 2
-    assert state.value == "Initial value"
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:codepoint, {"d", 0}}, context, state)
-
-    assert state.index == 3
-    assert state.value == "Inditial value"
-    assert state.graph == graph
-
-    # filters to function
-    state = %{@state | index: 2, value: "Initial value"}
-    state = %{state | filter: fn ch -> ch == "k" end}
-    {:noreply, state} = TextField.handle_input({:codepoint, {"f", 0}}, context, state)
-    assert state.index == 2
-    assert state.value == "Initial value"
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:codepoint, {"k", 0}}, context, state)
-
-    assert state.index == 3
-    assert state.value == "Inkitial value"
-    assert state.graph == graph
-
-    # cleanup
-    Process.exit(tables_pid, :shutdown)
+    Input.send( vp, @key_backspace )
+    refute_receive( _, 10)
   end
 
-  test "handle_input {:key handles repeats" do
-    self = self()
-    scene_ref = make_ref()
-    Process.put(:parent_pid, self)
-    Process.put(:scene_ref, scene_ref)
-    {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
-    context = %ViewPort.Context{viewport: self}
+  test "delete removes characters forwards", %{vp: vp, pid: pid} do
+    Input.send( vp, @press_in )
+    force_sync( vp.pid, pid )
 
-    state = %{@state | index: 4}
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:key, {"left", :repeat, 0}}, context, state)
-
-    assert state.graph == graph
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:key, {"left", :repeat, 0}}, context, state)
-
-    assert state.graph == graph
-    {:noreply, state} = TextField.handle_input({:key, {"", :repeat, 0}}, context, state)
-
-    assert state.index == 2
-    assert state.value == "Initial value"
-    assert state.display == "Initial value"
-
-    # cleanup
-    Process.exit(tables_pid, :shutdown)
+    Input.send( vp, @key_delete )
+    assert_receive( {:fwd_event, {:value_changed, :text_field, "nitial value"}}, 200)
   end
 
-  test "shows the hint when the value goes to an empty string" do
-    self = self()
-    scene_ref = make_ref()
-    Process.put(:parent_pid, self)
-    Process.put(:scene_ref, scene_ref)
-    {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
-    context = %ViewPort.Context{viewport: self}
+  test "delete does nothing at the end of the field", %{vp: vp, pid: pid} do
+    Input.send( vp, @press_in )
+    force_sync( vp.pid, pid )
 
-    state = %{@state | index: 2, value: "ab", display: "ab"}
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:key, {"backspace", :repeat, 0}}, context, state)
-
-    assert state.graph == graph
-
-    {:noreply, state, push: graph} =
-      TextField.handle_input({:key, {"backspace", :repeat, 0}}, context, state)
-
-    assert state.graph == graph
-
-    assert state.index == 0
-    assert state.value == ""
-    assert state.display == ""
-
-    %Primitive{data: @hint} = Graph.get!(state.graph, :text)
-
-    # cleanup
-    Process.exit(tables_pid, :shutdown)
+    Input.send( vp, @key_end )
+    Input.send( vp, @key_delete )
+    refute_receive( _, 10)
   end
 
-  test "moves the cursor when a click happens inside the text field" do
-    self = self()
-    scene_ref = make_ref()
-    Process.put(:parent_pid, self)
-    Process.put(:scene_ref, scene_ref)
-    {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
-    context = %ViewPort.Context{viewport: self, id: :border}
-    state = %{@state | index: 2, focused: true}
+  test "filter :number works", %{vp: vp, scene: scene} do
+    {:ok, [pid]} = Scene.child(scene, :number_field)
+    :_pong_ = GenServer.call( pid, :_ping_ )
 
-    {:noreply, state, push: graph} =
-      TextField.handle_input(
-        {:cursor_button, {:left, :press, 0, {100, 0}}},
-        context,
-        state
-      )
+    Input.send( vp, {:cursor_button, {0, :press, 0, {20, 60}}} )
+    force_sync( vp.pid, pid )
 
-    assert state.index == 9
-    assert state.graph == graph
-
-    # cleanup
-    Process.exit(tables_pid, :shutdown)
+    Input.send( vp, {:codepoint, {"a", 0}} )
+    refute_receive( _, 10)
+    Input.send( vp, {:codepoint, {"1", 0}} )
+    assert_receive( {:fwd_event, {:value_changed, :number_field, "1"}}, 200)
+    Input.send( vp, {:codepoint, {"v", 0}} )
+    refute_receive( _, 10)
+    Input.send( vp, {:codepoint, {".", 0}} )
+    assert_receive( {:fwd_event, {:value_changed, :number_field, "1."}}, 200)
+    Input.send( vp, {:codepoint, {"2", 0}} )
+    assert_receive( {:fwd_event, {:value_changed, :number_field, "1.2"}}, 200)
   end
 
-  test "don't move the cursor when a click happens in the current index location" do
-    self = self()
-    scene_ref = make_ref()
-    Process.put(:parent_pid, self)
-    Process.put(:scene_ref, scene_ref)
-    {:ok, tables_pid} = Scenic.ViewPort.Tables.start_link(nil)
-    context = %ViewPort.Context{viewport: self, id: :border}
-    state = %{@state | index: 2, focused: true}
+  test "filter :integer works", %{vp: vp, scene: scene} do
+    {:ok, [pid]} = Scene.child(scene, :integer_field)
+    :_pong_ = GenServer.call( pid, :_ping_ )
 
-    {:noreply, state, push: graph} =
-      TextField.handle_input(
-        {:cursor_button, {:left, :press, 0, {30, 0}}},
-        context,
-        state
-      )
+    Input.send( vp, {:cursor_button, {0, :press, 0, {14, 86}}} )
+    force_sync( vp.pid, pid )
 
-    assert state.index == 2
-    assert state.graph == graph
-
-    # cleanup
-    Process.exit(tables_pid, :shutdown)
+    Input.send( vp, {:codepoint, {"a", 0}} )
+    refute_receive( _, 10)
+    Input.send( vp, {:codepoint, {"1", 0}} )
+    assert_receive( {:fwd_event, {:value_changed, :integer_field, "1"}}, 200)
+    Input.send( vp, {:codepoint, {"v", 0}} )
+    refute_receive( _, 10)
+    Input.send( vp, {:codepoint, {".", 0}} )
+    refute_receive( _, 10)
+    Input.send( vp, {:codepoint, {"2", 0}} )
+    assert_receive( {:fwd_event, {:value_changed, :integer_field, "12"}}, 200)
   end
 
-  test "handle_input does nothing on unknown input" do
-    context = %ViewPort.Context{viewport: self()}
-    {:noreply, state} = TextField.handle_input(:unknown, context, @state)
-    assert state == @state
+  test "filter \"abcdefg\" works", %{vp: vp, scene: scene} do
+    {:ok, [pid]} = Scene.child(scene, :abcdefg_field)
+    :_pong_ = GenServer.call( pid, :_ping_ )
+
+    Input.send( vp, { :cursor_button, {0, :press, 0, {14, 121}}} )
+    force_sync( vp.pid, pid )
+
+    Input.send( vp, {:codepoint, {"a", 0}} )
+    assert_receive( {:fwd_event, {:value_changed, :abcdefg_field, "a"}}, 200)
+    Input.send( vp, {:codepoint, {"1", 0}} )
+    refute_receive( _, 10)
+    Input.send( vp, {:codepoint, {"v", 0}} )
+    refute_receive( _, 10)
+    Input.send( vp, {:codepoint, {"f", 0}} )
+    assert_receive( {:fwd_event, {:value_changed, :abcdefg_field, "af"}}, 200)
   end
+
+  test "filter fn works", %{vp: vp, scene: scene} do
+    {:ok, [pid]} = Scene.child(scene, :fn_field)
+    :_pong_ = GenServer.call( pid, :_ping_ )
+
+    Input.send( vp, { :cursor_button, {0, :press, 0, {14, 171}}} )
+    force_sync( vp.pid, pid )
+
+    Input.send( vp, {:codepoint, {"a", 0}} )
+    refute_receive( _, 10)
+    Input.send( vp, {:codepoint, {"h", 0}} )
+    assert_receive( {:fwd_event, {:value_changed, :fn_field, "h"}}, 200)
+  end
+
+  test "password field", %{vp: vp, scene: scene} do
+    {:ok, [pid]} = Scene.child(scene, :password_field)
+    :_pong_ = GenServer.call( pid, :_ping_ )
+
+    Input.send( vp, {:cursor_button, {0, :press, 0, {14, 214}}} )
+    force_sync( vp.pid, pid )
+
+    Input.send( vp, {:codepoint, {"a", 0}} )
+    assert_receive( {:fwd_event, {:value_changed, :password_field, "a"}}, 200)
+    Input.send( vp, {:codepoint, {"2", 0}} )
+    assert_receive( {:fwd_event, {:value_changed, :password_field, "a2"}}, 200)
+  end
+
+  test "ignores non-main button clicks", %{vp: vp}  do
+    Input.send( vp, { :cursor_button, {1, :press, 0, {14, 10}} } )
+    Input.send( vp, { :cursor_button, {2, :press, 0, {14, 10}} } )
+    refute_receive( _, 10)
+  end
+
+  test "implements put/fetch", %{pid: pid} do    
+    assert Component.fetch( pid ) == { :ok, "Initial value" }
+    assert Component.put( pid, "Something Else" ) == :ok
+    assert Component.fetch( pid ) == { :ok, "Something Else" }
+    assert Component.put( pid, 3 ) == {:error, :invalid}
+    assert Component.fetch( pid ) == { :ok, "Something Else" }
+  end
+
 end

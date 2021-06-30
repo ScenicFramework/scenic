@@ -3,8 +3,8 @@
 #
 
 defmodule Scenic.Math.MatrixTest do
-  use ExUnit.Case
-  doctest Scenic.Math
+  use ExUnit.Case, async: true
+  doctest Scenic.Math.Matrix
   alias Scenic.Math.Matrix
   alias Scenic.Math.Matrix.Utils
 

@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2018-06-06.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Ellipse do
@@ -32,43 +32,55 @@ defmodule Scenic.Primitive.Ellipse do
   """
 
   use Scenic.Primitive
+  alias Scenic.Script
+  alias Scenic.Primitive
+  alias Scenic.Primitive.Style
 
-  @styles [:hidden, :fill, :stroke]
+  @type t :: {radius_1::number, radius_2::number}
+  @type styles_t :: [:hidden | :fill | :stroke_width | :stroke_fill]
 
-  # ============================================================================
-  # data verification and serialization
+  @styles [:hidden, :fill, :stroke_width, :stroke_fill]
 
-  # --------------------------------------------------------
-  @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be: {radius_1, radius_2}
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
-      #{IO.ANSI.default_color()}
-    """
-
-  # --------------------------------------------------------
-  @doc false
-  def verify(data) do
-    normalize(data)
-    {:ok, data}
-  rescue
-    _ -> :invalid_data
+  @impl Primitive
+  @spec validate( {radius_1::number, radius_2::number} ) ::
+    {:ok, {radius_1::number, radius_2::number}} | {:error, String.t()}
+  def validate( {r1, r2} ) when is_number(r1) and is_number(r2) and
+  r1 >=0 and r2 >= 0 do
+    {:ok, {r1, r2}}
+  end
+  def validate( data ) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Ellipse specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The data for an Arc is {radius_1, radius_2}
+      The radii must be >= 0#{IO.ANSI.default_color()}
+      """
+    }
   end
 
   # --------------------------------------------------------
-  @doc false
-  @spec normalize({number(), number()}) :: {number(), number()}
-  def normalize({r1, r2} = data) when is_number(r1) and is_number(r2) do
-    data
-  end
-
-  # ============================================================================
   @doc """
   Returns a list of styles recognized by this primitive.
   """
-  @spec valid_styles() :: [:fill | :hidden | :stroke, ...]
+  @impl Primitive
+  @spec valid_styles() :: styles_t()
   def valid_styles(), do: @styles
+
+  # --------------------------------------------------------
+  @doc """
+  Compile the data for this primitive into a mini script. This can be combined with others to
+  generate a larger script and is called when a graph is compiled.
+  """
+  @impl Primitive
+  @spec compile( primitive::Primitive.t(), styles::Style.m() ) :: Script.t()
+  def compile( %Primitive{module: __MODULE__, data: {radius_1, radius_2}}, styles) do
+    Script.draw_ellipse( [], radius_1, radius_2, Script.draw_flag(styles) )
+  end
+
+
 
   # --------------------------------------------------------
   def contains_point?({r1, r2}, {xp, yp}) do

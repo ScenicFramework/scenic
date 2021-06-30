@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2018-06-05.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Copyright © 2018-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Style.Fill do
@@ -23,29 +23,18 @@ defmodule Scenic.Primitive.Style.Fill do
   # ============================================================================
   # data verification and serialization
 
-  # --------------------------------------------------------
-  @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be a valid paint type
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
-      #{IO.ANSI.default_color()}
-    """
-
-  # --------------------------------------------------------
-  @doc false
-  def verify(paint) do
-    try do
-      normalize(paint)
-      true
-    rescue
-      _ -> false
+  def validate( paint ) do
+    case Paint.validate(paint) do
+      {:ok, paint} -> { :ok, paint }
+      {:error, error_str} -> {
+        :error,
+        """
+        #{IO.ANSI.red()}Invalid Fill specification - must be a valid paint
+        Received: #{inspect(paint)}
+        #{error_str}
+        """
+      }
     end
   end
 
-  # --------------------------------------------------------
-  @doc false
-  def normalize(paint) do
-    Paint.normalize(paint)
-  end
 end
