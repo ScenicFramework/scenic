@@ -47,12 +47,12 @@ defmodule Scenic.Component.Input.Caret do
   # ============================================================================
   # setup
 
-
   # --------------------------------------------------------
   @impl Scenic.Component
-  def validate( height ) when is_number(height) and height >= 0 do
+  def validate(height) when is_number(height) and height >= 0 do
     {:ok, height}
   end
+
   def validate(data) do
     {
       :error,
@@ -70,13 +70,16 @@ defmodule Scenic.Component.Input.Caret do
   @doc false
   @impl Scenic.Scene
   def init(scene, height, opts) do
-    color = case opts[:color] do
-      nil ->
-        opts[:theme]
-        |> Theme.normalize()
-        |> Map.get(:highlight)
-      c -> c
-    end
+    color =
+      case opts[:color] do
+        nil ->
+          opts[:theme]
+          |> Theme.normalize()
+          |> Map.get(:highlight)
+
+        c ->
+          c
+      end
 
     # build the graph, initially not showing
     # the height and the color are variable, which means it can't be
@@ -89,7 +92,7 @@ defmodule Scenic.Component.Input.Caret do
         hidden: true,
         id: :caret
       )
-    
+
     scene =
       scene
       |> assign(
@@ -98,7 +101,7 @@ defmodule Scenic.Component.Input.Caret do
         timer: nil,
         focused: false
       )
-      |> push_graph( graph )
+      |> push_graph(graph)
 
     {:ok, scene}
   end
@@ -115,8 +118,8 @@ defmodule Scenic.Component.Input.Caret do
 
     scene =
       scene
-      |> assign( graph: graph, hidden: false, timer: timer, focused: true )
-      |> push_graph( graph )
+      |> assign(graph: graph, hidden: false, timer: timer, focused: true)
+      |> push_graph(graph)
 
     {:noreply, scene}
   end
@@ -134,8 +137,8 @@ defmodule Scenic.Component.Input.Caret do
 
     scene =
       scene
-      |> assign( graph: graph, hidden: true, timer: nil, focused: false )
-      |> push_graph( graph )
+      |> assign(graph: graph, hidden: true, timer: nil, focused: false)
+      |> push_graph(graph)
 
     {:noreply, scene}
   end
@@ -155,8 +158,8 @@ defmodule Scenic.Component.Input.Caret do
 
     scene =
       scene
-      |> assign( graph: graph, hidden: false, timer: timer )
-      |> push_graph( graph )
+      |> assign(graph: graph, hidden: false, timer: timer)
+      |> push_graph(graph)
 
     {:noreply, scene}
   end
@@ -173,8 +176,8 @@ defmodule Scenic.Component.Input.Caret do
 
     scene =
       scene
-      |> assign( graph: graph, hidden: !hidden )
-      |> push_graph( graph )
+      |> assign(graph: graph, hidden: !hidden)
+      |> push_graph(graph)
 
     {:noreply, scene}
   end

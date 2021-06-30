@@ -14,16 +14,16 @@ defmodule Scenic.Primitive.Style.Paint.LinearGradient do
 
   alias Scenic.Primitive.Style.Paint.Color
 
-
   def validate({:linear, {sx, sy, ex, ey, color_start, color_end}})
-  when is_number(sx) and is_number(sy) and is_number(ex) and is_number(ey) do
+      when is_number(sx) and is_number(sy) and is_number(ex) and is_number(ey) do
     with {:ok, color_start} <- Color.validate(color_start),
-    {:ok, color_end} <- Color.validate(color_end) do
+         {:ok, color_end} <- Color.validate(color_end) do
       {:ok, {:linear, {sx, sy, ex, ey, color_start, color_end}}}
     else
       {:error, msg} -> {:error, msg}
     end
   end
+
   def validate(_), do: err_invalid()
 
   defp err_invalid() do
@@ -39,5 +39,4 @@ defmodule Scenic.Primitive.Style.Paint.LinearGradient do
       """
     }
   end
-
 end

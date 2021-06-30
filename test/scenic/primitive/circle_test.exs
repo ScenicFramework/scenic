@@ -32,10 +32,9 @@ defmodule Scenic.Primitive.CircleTest do
     {:error, msg} = Circle.validate("40.5")
     assert msg =~ "Invalid Circle"
 
-    {:error, msg} = Circle.validate( :banana )
+    {:error, msg} = Circle.validate(:banana)
     assert msg =~ "Invalid Circle"
   end
-
 
   # ============================================================================
   # styles
@@ -48,10 +47,9 @@ defmodule Scenic.Primitive.CircleTest do
   # compile
 
   test "compile works" do
-    p = Circle.build(@data )
+    p = Circle.build(@data)
     assert Circle.compile(p, %{stroke_fill: :blue}) == [{:draw_circle, {100, :stroke}}]
   end
-
 
   # ============================================================================
   # transform helpers

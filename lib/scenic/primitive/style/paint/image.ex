@@ -16,7 +16,7 @@ defmodule Scenic.Primitive.Style.Paint.Image do
 
   def validate({:image, id}) when is_atom(id) or is_bitstring(id) do
     with {:ok, id_str} <- Static.resolve_alias(id),
-    {:ok, {:image, _}} <- Static.fetch( id_str ) do
+         {:ok, {:image, _}} <- Static.fetch(id_str) do
       {:ok, {:image, id_str}}
     else
       {:ok, {:font, _}} -> err_is_a_font(id)
@@ -24,8 +24,8 @@ defmodule Scenic.Primitive.Style.Paint.Image do
       :error -> err_missing(id)
     end
   end
-  def validate(invalid), do: err_invalid( invalid )
 
+  def validate(invalid), do: err_invalid(invalid)
 
   defp err_is_a_font(_) do
     {
@@ -84,7 +84,7 @@ defmodule Scenic.Primitive.Style.Paint.Image do
       """
       #{IO.ANSI.yellow()}
       Image fills must be an id that names an image in your Scenic.Assets.Static library.
-      
+
       Valid image ids can be the path or an alias to a file in your assets library.
 
       Examples:
@@ -93,5 +93,4 @@ defmodule Scenic.Primitive.Style.Paint.Image do
       """
     }
   end
-
 end

@@ -24,8 +24,9 @@ defmodule Scenic.Primitive.Transform.Pin do
   # ============================================================================
   # data verification and serialization
 
-  def validate( {x,y} ) when is_number(x) and is_number(y), do: {:ok, {x,y}}
-  def validate( data )  do
+  def validate({x, y}) when is_number(x) and is_number(y), do: {:ok, {x, y}}
+
+  def validate(data) do
     {
       :error,
       """
@@ -36,5 +37,4 @@ defmodule Scenic.Primitive.Transform.Pin do
       """
     }
   end
-
 end

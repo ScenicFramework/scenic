@@ -18,18 +18,17 @@ defmodule Scenic.Component.Input.DropdownTest do
 
   # import IEx
 
-  @press_in     { :cursor_button, {0, :press, 0, {20, 20}} }
-  @release_in   { :cursor_button, {0, :release, 0, {20, 20}} }
+  @press_in {:cursor_button, {0, :press, 0, {20, 20}}}
+  @release_in {:cursor_button, {0, :release, 0, {20, 20}}}
 
-  @press_a     { :cursor_button, {0, :press, 0, {20, 50}} }
-  @release_a   { :cursor_button, {0, :release, 0, {20, 50}} }
+  @press_a {:cursor_button, {0, :press, 0, {20, 50}}}
+  @release_a {:cursor_button, {0, :release, 0, {20, 50}}}
 
-  @press_b     { :cursor_button, {0, :press, 0, {20, 80}} }
-  @release_b   { :cursor_button, {0, :release, 0, {20, 80}} }
+  @press_b {:cursor_button, {0, :press, 0, {20, 80}}}
+  @release_b {:cursor_button, {0, :release, 0, {20, 80}}}
 
-  @press_out    { :cursor_button, {0, :press, 0, {1000, 1000}} }
-  @release_out  { :cursor_button, {0, :release, 0, {1000, 1000}} }
-
+  @press_out {:cursor_button, {0, :press, 0, {1000, 1000}}}
+  @release_out {:cursor_button, {0, :release, 0, {1000, 1000}}}
 
   defmodule TestScene do
     use Scenic.Scene
@@ -37,35 +36,38 @@ defmodule Scenic.Component.Input.DropdownTest do
 
     def graph() do
       Graph.build()
-        |> dropdown({[{"Option One",1}, {"Option Two",2}],2}, id: :dropdown)
+      |> dropdown({[{"Option One", 1}, {"Option Two", 2}], 2}, id: :dropdown)
     end
 
     @impl Scenic.Scene
     def init(scene, pid, _opts) do
       scene =
         scene
-        |> assign( pid: pid )
-        |> push_graph( graph() )
-      Process.send( pid, {:up, scene}, [] )
+        |> assign(pid: pid)
+        |> push_graph(graph())
+
+      Process.send(pid, {:up, scene}, [])
       {:ok, scene}
     end
 
     @impl Scenic.Scene
-    def handle_event( event, _from, %{assigns: %{pid: pid}} = scene ) do
-      send( pid, {:fwd_event, event} )
+    def handle_event(event, _from, %{assigns: %{pid: pid}} = scene) do
+      send(pid, {:fwd_event, event})
       {:noreply, scene}
     end
-
   end
-
 
   setup do
     out = Scenic.Test.ViewPort.start({TestScene, self()})
     # wait for a signal that the scene is up before proceeding
-    {:ok, scene} = receive do {:up, scene} -> {:ok, scene} end
+    {:ok, scene} =
+      receive do
+        {:up, scene} -> {:ok, scene}
+      end
+
     # make sure the button is up
-    {:ok, [{_id,pid}]} = Scene.children(scene)
-    :_pong_ = GenServer.call( pid, :_ping_ )
+    {:ok, [{_id, pid}]} = Scene.children(scene)
+    :_pong_ = GenServer.call(pid, :_ping_)
 
     # needed to give time for the pid and vp to close
     on_exit(fn -> Process.sleep(1) end)
@@ -75,89 +77,85 @@ defmodule Scenic.Component.Input.DropdownTest do
     |> Map.put(:comp_pid, pid)
   end
 
-  defp force_sync( vp_pid, scene_pid ) do
-    :_pong_ = GenServer.call( vp_pid, :_ping_ )
-    :_pong_ = GenServer.call( scene_pid, :_ping_ )
-    :_pong_ = GenServer.call( vp_pid, :_ping_ )
+  defp force_sync(vp_pid, scene_pid) do
+    :_pong_ = GenServer.call(vp_pid, :_ping_)
+    :_pong_ = GenServer.call(scene_pid, :_ping_)
+    :_pong_ = GenServer.call(vp_pid, :_ping_)
   end
 
-
   test "press_in and release_a sends the event", %{vp: vp, comp_pid: comp_pid} do
-    Input.send( vp, @press_in )
-    force_sync( vp.pid, comp_pid )
-    Input.send( vp, @release_a )
+    Input.send(vp, @press_in)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @release_a)
 
-    assert_receive( {:fwd_event, {:value_changed, :dropdown, 1}}, 100)
+    assert_receive({:fwd_event, {:value_changed, :dropdown, 1}}, 100)
   end
 
   test "press_in/release_in/press_in does nothing", %{vp: vp, comp_pid: comp_pid} do
-    Input.send( vp, @press_in )
-    force_sync( vp.pid, comp_pid )
-    Input.send( vp, @release_in)
-    force_sync( vp.pid, comp_pid )
-    Input.send( vp, @press_in )
+    Input.send(vp, @press_in)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @release_in)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @press_in)
 
-    refute_receive( _, 10)
+    refute_receive(_, 10)
   end
 
   test "press_in and release_b sends the event", %{vp: vp, comp_pid: comp_pid} do
-    Input.send( vp, @press_in )
-    force_sync( vp.pid, comp_pid )
-    Input.send( vp, @release_b )
+    Input.send(vp, @press_in)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @release_b)
 
-    assert_receive( {:fwd_event, {:value_changed, :dropdown, 2}}, 100)
+    assert_receive({:fwd_event, {:value_changed, :dropdown, 2}}, 100)
   end
 
-  test "ignores non-main button clicks", %{vp: vp}  do
-    Input.send( vp, { :cursor_button, {1, :press, 0, {20, 20}} } )
-    Input.send( vp, { :cursor_button, {2, :press, 0, {20, 20}} } )
-    refute_receive( _, 10)
+  test "ignores non-main button clicks", %{vp: vp} do
+    Input.send(vp, {:cursor_button, {1, :press, 0, {20, 20}}})
+    Input.send(vp, {:cursor_button, {2, :press, 0, {20, 20}}})
+    refute_receive(_, 10)
   end
-
 
   test "open press_a sends the event", %{vp: vp, comp_pid: comp_pid} do
-    Input.send( vp, @press_in )
-    force_sync( vp.pid, comp_pid )
-    Input.send( vp, @release_in )
-    force_sync( vp.pid, comp_pid )
-    Input.send( vp, @press_a )
-    assert_receive( {:fwd_event, {:value_changed, :dropdown, 1}}, 100)
+    Input.send(vp, @press_in)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @release_in)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @press_a)
+    assert_receive({:fwd_event, {:value_changed, :dropdown, 1}}, 100)
   end
 
   test "open press_b sends the event", %{vp: vp, comp_pid: comp_pid} do
-    Input.send( vp, @press_in )
-    force_sync( vp.pid, comp_pid )
-    Input.send( vp, @release_in )
-    force_sync( vp.pid, comp_pid )
-    Input.send( vp, @press_b )
-    assert_receive( {:fwd_event, {:value_changed, :dropdown, 2}}, 100)
+    Input.send(vp, @press_in)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @release_in)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @press_b)
+    assert_receive({:fwd_event, {:value_changed, :dropdown, 2}}, 100)
   end
 
   test "Press in and release out does not send the event", %{vp: vp, comp_pid: comp_pid} do
-    Input.send( vp, @press_in )
-    force_sync( vp.pid, comp_pid )
-    Input.send( vp, @release_out )
+    Input.send(vp, @press_in)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @release_out)
 
-    refute_receive( _, 10)
+    refute_receive(_, 10)
   end
 
   test "Press out and release in does not send the event", %{vp: vp, comp_pid: comp_pid} do
-    Input.send( vp, @press_out )
-    force_sync( vp.pid, comp_pid )
-    Input.send( vp, @release_in )
+    Input.send(vp, @press_out)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @release_in)
 
-    refute_receive( _, 10)
+    refute_receive(_, 10)
   end
-  
 
   test "implements put/fetch", %{scene: scene} do
-    {:ok, [pid]} = Scene.child( scene, :dropdown )
-    
-    assert Component.fetch( pid ) == { :ok, 2 }
-    assert Component.put( pid, 1 ) == :ok
-    assert Component.fetch( pid ) == { :ok, 1 }
-    assert Component.put( pid, 3 ) == {:error, :invalid}
-    assert Component.fetch( pid ) == { :ok, 1 }
-  end
+    {:ok, [pid]} = Scene.child(scene, :dropdown)
 
+    assert Component.fetch(pid) == {:ok, 2}
+    assert Component.put(pid, 1) == :ok
+    assert Component.fetch(pid) == {:ok, 1}
+    assert Component.put(pid, 3) == {:error, :invalid}
+    assert Component.fetch(pid) == {:ok, 1}
+  end
 end

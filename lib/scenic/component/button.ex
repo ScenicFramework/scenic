@@ -114,11 +114,11 @@ defmodule Scenic.Component.Button do
   @default_font_size 20
   @default_alignment :center
 
-
   @impl Scenic.Component
-  def validate( text ) when is_bitstring(text) do
+  def validate(text) when is_bitstring(text) do
     {:ok, text}
   end
+
   def validate(data) do
     {
       :error,
@@ -134,7 +134,7 @@ defmodule Scenic.Component.Button do
   # --------------------------------------------------------
   @doc false
   @impl Scenic.Scene
-  def init( scene, text, opts ) when is_bitstring(text) and is_list(opts) do
+  def init(scene, text, opts) when is_bitstring(text) and is_list(opts) do
     id = opts[:id]
 
     # theme is passed in as an inherited style
@@ -144,7 +144,7 @@ defmodule Scenic.Component.Button do
 
     # font related info
     font = @default_font
-    {:ok, {:font, fm}} = Static.fetch( font )
+    {:ok, {:font, fm}} = Static.fetch(font)
     font_size = opts[:button_font_size] || @default_font_size
 
     ascent = FontMetrics.ascent(font_size, fm)
@@ -173,7 +173,7 @@ defmodule Scenic.Component.Button do
     # build the graph
     graph =
       Graph.build(font: font, font_size: font_size)
-      |> rrect( {width, height, radius}, fill: theme.background, id: :btn, input: true )
+      |> rrect({width, height, radius}, fill: theme.background, id: :btn, input: true)
       |> do_aligned_text(alignment, text, theme.text, width, vpos)
       # special case the dark and light themes to show an outline
       |> do_special_theme_outline(theme, theme.border)
@@ -187,7 +187,7 @@ defmodule Scenic.Component.Button do
         pressed: false,
         id: id
       )
-      |> push_graph( graph )
+      |> push_graph(graph)
 
     {:ok, scene}
   end
@@ -234,13 +234,13 @@ defmodule Scenic.Component.Button do
   # --------------------------------------------------------
   # pressed in the button
   @impl Scenic.Scene
-  def handle_input( {:cursor_button, {0, :press, _, _}}, :btn, scene ) do
-    :ok = capture_input( scene, :cursor_button )
+  def handle_input({:cursor_button, {0, :press, _, _}}, :btn, scene) do
+    :ok = capture_input(scene, :cursor_button)
 
-    scene = 
+    scene =
       scene
-      |> update_color( true, true )
-      |> assign( pressed: true )
+      |> update_color(true, true)
+      |> assign(pressed: true)
 
     {:noreply, scene}
   end
@@ -250,13 +250,16 @@ defmodule Scenic.Component.Button do
   # only happens when input is captured
   # could happen when reconnecting to a driver...
   def handle_input(
-    {:cursor_button, {0, :press, _, _}}, _id, scene
-  ) do
-    :ok = release_input( scene )
-    scene = 
+        {:cursor_button, {0, :press, _, _}},
+        _id,
+        scene
+      ) do
+    :ok = release_input(scene)
+
+    scene =
       scene
-      |> update_color( false, false )
-      |> assign( pressed: false )
+      |> update_color(false, false)
+      |> assign(pressed: false)
 
     {:noreply, scene}
   end
@@ -264,16 +267,17 @@ defmodule Scenic.Component.Button do
   # --------------------------------------------------------
   # released inside the button
   def handle_input(
-        {:cursor_button, {0, :release, _, _}}, :btn,
+        {:cursor_button, {0, :release, _, _}},
+        :btn,
         %Scene{assigns: %{pressed: true, id: id}} = scene
       ) do
-    :ok = release_input( scene )
-    :ok = send_parent_event( scene, {:click, id} )
+    :ok = release_input(scene)
+    :ok = send_parent_event(scene, {:click, id})
 
-    scene = 
+    scene =
       scene
-      |> update_color( false, true )
-      |> assign( pressed: false )
+      |> update_color(false, true)
+      |> assign(pressed: false)
 
     {:noreply, scene}
   end
@@ -282,20 +286,22 @@ defmodule Scenic.Component.Button do
   # released outside the button
   # only happens when input is captured
   def handle_input(
-        {:cursor_button, {0, :release, _, _}}, _id, scene
+        {:cursor_button, {0, :release, _, _}},
+        _id,
+        scene
       ) do
-    :ok = release_input( scene )
+    :ok = release_input(scene)
 
-    scene = 
+    scene =
       scene
-      |> update_color( false, true )
-      |> assign( pressed: false )
+      |> update_color(false, true)
+      |> assign(pressed: false)
 
     {:noreply, scene}
   end
 
   # ignore other button press events
-  def handle_input({:cursor_button, {_, _, _, _}}, _id, scene ) do
+  def handle_input({:cursor_button, {_, _, _, _}}, _id, scene) do
     {:noreply, scene}
   end
 
@@ -303,13 +309,12 @@ defmodule Scenic.Component.Button do
   # internal utilities
 
   defp update_color(%Scene{assigns: %{graph: graph, theme: theme}} = scene, true, true) do
-    graph = Graph.modify( graph, :btn, &update_opts(&1, fill: theme.active) )    
+    graph = Graph.modify(graph, :btn, &update_opts(&1, fill: theme.active))
     push_graph(scene, graph)
   end
 
   defp update_color(%Scene{assigns: %{graph: graph, theme: theme}} = scene, _, _) do
-    graph = Graph.modify( graph, :btn, &update_opts(&1, fill: theme.background) )    
+    graph = Graph.modify(graph, :btn, &update_opts(&1, fill: theme.background))
     push_graph(scene, graph)
   end
-
 end

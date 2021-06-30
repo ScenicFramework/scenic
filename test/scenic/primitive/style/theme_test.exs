@@ -36,6 +36,7 @@ defmodule Scenic.Primitive.Style.ThemeTest do
       focus: :yellow,
       my_color: :black
     }
+
     assert Theme.validate(color_map) == {:ok, color_map}
   end
 
@@ -49,6 +50,7 @@ defmodule Scenic.Primitive.Style.ThemeTest do
       focus: :yellow,
       my_color: :black
     }
+
     {:error, msg} = Theme.validate(color_map)
     assert msg =~ "Map entry: :border"
     assert msg =~ "Invalid Color specification: :invalid"
@@ -63,5 +65,4 @@ defmodule Scenic.Primitive.Style.ThemeTest do
   test "verify rejects  invalid values" do
     {:error, _msg} = Theme.validate("totally wrong")
   end
-
 end

@@ -23,7 +23,6 @@ defmodule Scenic.Primitive.GroupTest do
     assert Primitive.get(p) == @data
   end
 
-
   # ============================================================================
   # child management
   test "insert_at works" do
@@ -74,7 +73,6 @@ defmodule Scenic.Primitive.GroupTest do
 
   # ============================================================================
 
-
   test "validate accepts valid data" do
     assert Group.validate(@data) == {:ok, @data}
   end
@@ -90,7 +88,6 @@ defmodule Scenic.Primitive.GroupTest do
     assert msg =~ "Invalid Group"
   end
 
-
   # ============================================================================
   # styles
 
@@ -102,7 +99,7 @@ defmodule Scenic.Primitive.GroupTest do
   # compile
 
   test "compile raises - it is a special case" do
-    p = Group.build( [1,2,3] )
+    p = Group.build([1, 2, 3])
     assert_raise RuntimeError, fn -> Group.compile(p, %{}) end
   end
 

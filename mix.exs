@@ -48,7 +48,6 @@ defmodule Scenic.Mixfile do
     [
       {:font_metrics, "~> 0.5.0"},
       {:nimble_options, "~> 0.3"},
-
       {:elixir_make, "~> 0.6.2", runtime: false},
       {:truetype_metrics, "~> 0.5", only: [:dev, :test], runtime: false},
       {:ex_image_info, "~> 0.2.4", only: [:dev, :test], runtime: false},

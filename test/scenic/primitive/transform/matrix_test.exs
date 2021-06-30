@@ -36,8 +36,7 @@ defmodule Scenic.Primitive.Transform.MatrixTest do
     {:error, msg} = Matrix.validate(@data <> <<5.0::float-size(32)-native>>)
     assert msg =~ "Invalid Matrix"
 
-    {:error, msg} = Matrix.validate( :banana )
+    {:error, msg} = Matrix.validate(:banana)
     assert msg =~ "Invalid Matrix"
   end
-
 end

@@ -14,5 +14,4 @@ defmodule Scenic.Primitive.Style.Paint.StreamTest do
     {:error, err_str} = Stream.validate({:stream, :invalid})
     assert is_bitstring(err_str)
   end
-
 end

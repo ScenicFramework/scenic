@@ -23,5 +23,4 @@ defmodule Scenic.Primitive.Style.FontSizeTest do
     {:error, msg} = FontSize.validate("way off")
     assert msg =~ "must be a positive number"
   end
-
 end

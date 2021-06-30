@@ -32,11 +32,9 @@ defmodule Scenic.Primitive.TriangleTest do
     {:error, msg} = Triangle.validate({{20, 300}, {400, 300}, {400, "0"}})
     assert msg =~ "Invalid Triangle"
 
-    {:error, msg} = Triangle.validate( :banana )
+    {:error, msg} = Triangle.validate(:banana)
     assert msg =~ "Invalid Triangle"
   end
-
-
 
   # # ============================================================================
   # # styles
@@ -49,16 +47,24 @@ defmodule Scenic.Primitive.TriangleTest do
   # styles
 
   test "valid_styles works" do
-    assert Triangle.valid_styles() == [:hidden, :fill, :stroke_width, :stroke_fill, :join, :miter_limit]
+    assert Triangle.valid_styles() == [
+             :hidden,
+             :fill,
+             :stroke_width,
+             :stroke_fill,
+             :join,
+             :miter_limit
+           ]
   end
 
   # ============================================================================
   # compile
 
   test "compile works" do
-    p = Triangle.build(@data )
+    p = Triangle.build(@data)
+
     assert Triangle.compile(p, %{stroke_fill: :blue}) ==
-      [{:draw_triangle, {20, 300, 400, 300, 400, 0, :stroke}}]
+             [{:draw_triangle, {20, 300, 400, 300, 400, 0, :stroke}}]
   end
 
   # ============================================================================

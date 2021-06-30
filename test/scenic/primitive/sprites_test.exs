@@ -10,13 +10,11 @@ defmodule Scenic.Primitive.SpritesTest do
   alias Scenic.Primitive
   alias Scenic.Primitive.Sprites
 
-
-  @id   "images/parrot.png"
+  @id "images/parrot.png"
   @cmds [
-      { {0,1}, {10, 11}, {2,3}, {12, 13} },
-      { {2,3}, {10, 11}, {4,5}, {12, 13} }
-    ]
-
+    {{0, 1}, {10, 11}, {2, 3}, {12, 13}},
+    {{2, 3}, {10, 11}, {4, 5}, {12, 13}}
+  ]
 
   # ============================================================================
   # build / add
@@ -34,20 +32,20 @@ defmodule Scenic.Primitive.SpritesTest do
   end
 
   test "validate rejects bad data" do
-    {:error, msg} = Sprites.validate( {@id, "cmds"} )
+    {:error, msg} = Sprites.validate({@id, "cmds"})
     assert msg =~ "Invalid Sprites"
 
-    {:error, msg} = Sprites.validate( :banana )
+    {:error, msg} = Sprites.validate(:banana)
     assert msg =~ "Invalid Sprites"
   end
 
   test "validate rejects unknown image files" do
-    {:error, msg} = Sprites.validate( {"images/missing.jpg", @cmds} )
+    {:error, msg} = Sprites.validate({"images/missing.jpg", @cmds})
     assert msg =~ "Invalid Sprites"
   end
 
   test "validate rejects fonts" do
-    {:error, msg} = Sprites.validate( {"fonts/roboto.ttf", @cmds} )
+    {:error, msg} = Sprites.validate({"fonts/roboto.ttf", @cmds})
     assert msg =~ "is a font"
   end
 
@@ -62,11 +60,7 @@ defmodule Scenic.Primitive.SpritesTest do
   # compile
 
   test "compile works" do
-    p = Sprites.build({@id, @cmds} )
+    p = Sprites.build({@id, @cmds})
     assert Sprites.compile(p, %{stroke_fill: :blue}) == [{:draw_sprites, {@id, @cmds}}]
   end
-
-
 end
-
-

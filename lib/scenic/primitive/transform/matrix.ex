@@ -29,11 +29,11 @@ defmodule Scenic.Primitive.Transform.Matrix do
   # ============================================================================
   # data verification and serialization
 
-  def validate( <<_::binary-size(@matrix_byte_size)>> = mx ) do
+  def validate(<<_::binary-size(@matrix_byte_size)>> = mx) do
     {:ok, mx}
   end
 
-  def validate( data ) do
+  def validate(data) do
     {
       :error,
       """
@@ -46,5 +46,4 @@ defmodule Scenic.Primitive.Transform.Matrix do
       """
     }
   end
-
 end

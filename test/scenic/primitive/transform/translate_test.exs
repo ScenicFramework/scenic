@@ -18,8 +18,7 @@ defmodule Scenic.Primitive.Transform.TranslateTest do
     {:error, msg} = Translate.validate({"1.5", 2})
     assert msg =~ "Invalid Translation"
 
-    {:error, msg} = Translate.validate( :banana )
+    {:error, msg} = Translate.validate(:banana)
     assert msg =~ "Invalid Translation"
   end
-
 end

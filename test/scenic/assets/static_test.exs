@@ -9,22 +9,19 @@ defmodule Scenic.Assets.StaticTest do
 
   alias Scenic.Assets.Static
 
-  @roboto_hash <<243, 145, 76, 95, 149, 49, 167, 23, 114, 99, 197, 95,
-     239, 40, 165, 67, 253, 202, 42, 117, 16, 198, 39, 218, 236, 72, 219, 150,
-     94, 195, 187, 33>>
+  @roboto_hash <<243, 145, 76, 95, 149, 49, 167, 23, 114, 99, 197, 95, 239, 40, 165, 67, 253, 202,
+                 42, 117, 16, 198, 39, 218, 236, 72, 219, 150, 94, 195, 187, 33>>
   @roboto_hash_str "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"
 
-  @parrot_hash <<86, 245, 144, 22, 54, 229, 35, 4, 198, 178, 241,
-     177, 243, 174, 173, 240, 194, 6, 217, 204, 214, 200, 135, 60, 111, 46, 151,
-     115, 207, 0, 58, 123>>
+  @parrot_hash <<86, 245, 144, 22, 54, 229, 35, 4, 198, 178, 241, 177, 243, 174, 173, 240, 194, 6,
+                 217, 204, 214, 200, 135, 60, 111, 46, 151, 115, 207, 0, 58, 123>>
   @parrot_hash_str "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"
-
 
   # test can get metadata for the 
   test "The Asset library was built and configured correctly" do
     assert Scenic.Test.Assets.otp_app() == :scenic
     %{} = lib = Scenic.Test.Assets.library()
-    
+
     {@roboto_hash, @roboto_hash_str, {:font, %FontMetrics{}}} = lib["fonts/roboto.ttf"]
     {@parrot_hash, @parrot_hash_str, {:image, {62, 114, "image/png"}}} = lib["images/parrot.png"]
     refute lib["missing.png"]
@@ -82,5 +79,4 @@ defmodule Scenic.Assets.StaticTest do
     assert Static.find_hash("missing", :bin_hash) == {:error, :not_found}
     assert Static.find_hash("missing", :str_hash) == {:error, :not_found}
   end
-
 end

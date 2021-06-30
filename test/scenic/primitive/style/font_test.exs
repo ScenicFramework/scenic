@@ -36,5 +36,4 @@ defmodule Scenic.Primitive.Style.FontTest do
     {:error, msg} = Font.validate("totally wrong")
     assert msg =~ ":font style must be an id that names an font"
   end
-
 end

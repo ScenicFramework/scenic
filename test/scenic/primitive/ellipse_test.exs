@@ -32,10 +32,9 @@ defmodule Scenic.Primitive.EllipseTest do
     {:error, msg} = Ellipse.validate({100, "1.4"})
     assert msg =~ "Invalid Ellipse"
 
-    {:error, msg} = Ellipse.validate( :banana )
+    {:error, msg} = Ellipse.validate(:banana)
     assert msg =~ "Invalid Ellipse"
   end
-
 
   # ============================================================================
   # styles
@@ -48,7 +47,7 @@ defmodule Scenic.Primitive.EllipseTest do
   # compile
 
   test "compile works" do
-    p = Ellipse.build(@data )
+    p = Ellipse.build(@data)
     assert Ellipse.compile(p, %{stroke_fill: :blue}) == [{:draw_ellipse, {100, 200, :stroke}}]
   end
 

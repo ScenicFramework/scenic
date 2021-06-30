@@ -46,20 +46,18 @@ defmodule Scenic.Primitive.Script do
   alias Scenic.Primitive
   alias Scenic.Primitive.Style
 
-
   @type styles_t :: [:hidden]
   @styles [:hidden]
 
-
   @impl Primitive
-  @spec validate( script_id :: Scenic.Script.id()  ) ::
-    {:ok, script_id :: Scenic.Script.id()} | {:error, String.t()}
-    
-  def validate( id ) when is_atom(id) or is_bitstring(id) or is_reference(id) or is_pid(id) do
+  @spec validate(script_id :: Scenic.Script.id()) ::
+          {:ok, script_id :: Scenic.Script.id()} | {:error, String.t()}
+
+  def validate(id) when is_atom(id) or is_bitstring(id) or is_reference(id) or is_pid(id) do
     {:ok, id}
   end
 
-  def validate( data ) do
+  def validate(data) do
     {
       :error,
       """
@@ -75,7 +73,6 @@ defmodule Scenic.Primitive.Script do
     }
   end
 
-
   # --------------------------------------------------------
   # filter and gather styles
 
@@ -86,14 +83,12 @@ defmodule Scenic.Primitive.Script do
   @spec valid_styles() :: styles_t()
   def valid_styles(), do: @styles
 
-
   # --------------------------------------------------------
   # compiling a script is a special case and is handled in Scenic.ViewPort.GraphCompiler
   @doc false
   @impl Primitive
-  @spec compile( primitive::Primitive.t(), styles::Style.m() ) :: Script.t()
-  def compile( %Primitive{module: __MODULE__}, _styles) do
+  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
+  def compile(%Primitive{module: __MODULE__}, _styles) do
     raise "compiling a Script is a special case and is handled in Scenic.ViewPort.GraphCompiler"
   end
-
 end

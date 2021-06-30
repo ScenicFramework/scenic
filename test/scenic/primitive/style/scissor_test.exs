@@ -17,5 +17,4 @@ defmodule Scenic.Primitive.Style.ScissorTest do
     {:error, msg} = Scissor.validate("way off")
     assert msg =~ "must be {width, height}"
   end
-
 end

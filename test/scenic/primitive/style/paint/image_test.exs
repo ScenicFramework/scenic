@@ -32,5 +32,4 @@ defmodule Scenic.Primitive.Style.Paint.ImageTest do
     assert msg =~ "Valid image ids can be"
     assert msg =~ "Examples:"
   end
-
 end

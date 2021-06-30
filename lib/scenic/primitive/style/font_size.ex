@@ -25,8 +25,9 @@ defmodule Scenic.Primitive.Style.FontSize do
   # ============================================================================
   # data verification and serialization
 
-  def validate( size ) when is_number(size) and size > 0, do: {:ok, size}
-  def validate( size )  do
+  def validate(size) when is_number(size) and size > 0, do: {:ok, size}
+
+  def validate(size) do
     {
       :error,
       """
@@ -37,5 +38,4 @@ defmodule Scenic.Primitive.Style.FontSize do
       """
     }
   end
-
 end

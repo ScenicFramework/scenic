@@ -6,7 +6,7 @@
 defmodule Scenic.ComponentsTest do
   use ExUnit.Case, async: true
   doctest Scenic.Components
-  
+
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.Components
@@ -71,6 +71,7 @@ defmodule Scenic.ComponentsTest do
     p =
       Components.checkbox(@graph, {"Name", true}, id: :checkbox)
       |> Graph.get!(:checkbox)
+
     assert p.module == Primitive.Component
     assert {Scenic.Component.Input.Checkbox, {"Name", true}, _} = p.data
     assert p.id == :checkbox
@@ -78,6 +79,7 @@ defmodule Scenic.ComponentsTest do
     p =
       Components.checkbox(@graph, {"Name", false}, id: :checkbox)
       |> Graph.get!(:checkbox)
+
     assert {Scenic.Component.Input.Checkbox, {"Name", false}, _} = p.data
   end
 
@@ -222,6 +224,7 @@ defmodule Scenic.ComponentsTest do
     p =
       Components.slider(@graph, @slider_int_data, id: :slider)
       |> Graph.get!(:slider)
+
     assert p.module == Primitive.Component
     assert {Scenic.Component.Input.Slider, @slider_int_data, _} = p.data
     assert p.id == :slider
@@ -229,11 +232,13 @@ defmodule Scenic.ComponentsTest do
     p =
       Components.slider(@graph, @slider_float_data, id: :slider)
       |> Graph.get!(:slider)
+
     assert {Scenic.Component.Input.Slider, @slider_float_data, _} = p.data
 
     p =
       Components.slider(@graph, @slider_list_data, id: :slider)
       |> Graph.get!(:slider)
+
     assert {Scenic.Component.Input.Slider, @slider_list_data, _} = p.data
   end
 
@@ -250,6 +255,7 @@ defmodule Scenic.ComponentsTest do
       Components.slider(@graph, @slider_list_data, id: :slider)
       |> Graph.get!(:slider)
       |> Components.slider(mod_data, id: :modified)
+
     assert {Scenic.Component.Input.Slider, ^mod_data, _} = p.data
     assert p.id == :modified
   end
@@ -276,6 +282,7 @@ defmodule Scenic.ComponentsTest do
     p =
       Components.text_field(@graph, "Name", id: :text_field)
       |> Graph.get!(:text_field)
+
     assert p.module == Primitive.Component
     assert {Scenic.Component.Input.TextField, "Name", _} = p.data
     assert p.id == :text_field
@@ -292,6 +299,7 @@ defmodule Scenic.ComponentsTest do
       Components.text_field(@graph, "Name", id: :text_field)
       |> Graph.get!(:text_field)
       |> Components.text_field("Modified", id: :modified)
+
     assert {Scenic.Component.Input.TextField, "Modified", _} = p.data
     assert p.id == :modified
   end
@@ -319,6 +327,7 @@ defmodule Scenic.ComponentsTest do
     p =
       Components.toggle(@graph, true, id: :toggle)
       |> Graph.get!(:toggle)
+
     assert p.module == Primitive.Component
     assert {Scenic.Component.Input.Toggle, true, _} = p.data
     assert p.id == :toggle
@@ -326,6 +335,7 @@ defmodule Scenic.ComponentsTest do
     p =
       Components.toggle(@graph, false, id: :toggle)
       |> Graph.get!(:toggle)
+
     assert {Scenic.Component.Input.Toggle, false, _} = p.data
   end
 
@@ -340,6 +350,7 @@ defmodule Scenic.ComponentsTest do
       Components.toggle(@graph, true, id: :toggle)
       |> Graph.get!(:toggle)
       |> Components.toggle(false, id: :modified)
+
     assert {Scenic.Component.Input.Toggle, false, _} = p.data
     assert p.id == :modified
   end
@@ -353,5 +364,4 @@ defmodule Scenic.ComponentsTest do
       Components.toggle(p, 123)
     end
   end
-
 end

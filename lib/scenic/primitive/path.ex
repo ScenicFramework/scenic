@@ -50,24 +50,24 @@ defmodule Scenic.Primitive.Path do
   #  import IEx
 
   @type cmd ::
-    :begin |
-    :close_path |
-    {:move_to, x::number, y::number} |
-    {:line_to, x::number, y::number} |
-    {:bezier_to, c1x::number, c1y::number, c2x::number, c2y::number, x::number, y::number} |
-    {:quadratic_to, cx::number, cy::number, x::number, y::number} |
-    {:arc_to, x1::number, y1::number, x2::number, y2::number, radius::number}
+          :begin
+          | :close_path
+          | {:move_to, x :: number, y :: number}
+          | {:line_to, x :: number, y :: number}
+          | {:bezier_to, c1x :: number, c1y :: number, c2x :: number, c2y :: number, x :: number,
+             y :: number}
+          | {:quadratic_to, cx :: number, cy :: number, x :: number, y :: number}
+          | {:arc_to, x1 :: number, y1 :: number, x2 :: number, y2 :: number, radius :: number}
 
   @type t :: [cmd]
-  @type styles_t :: [:hidden | :fill | :stroke_width | :stroke_fill | :cap | :join | :miter_limit ]
+  @type styles_t :: [:hidden | :fill | :stroke_width | :stroke_fill | :cap | :join | :miter_limit]
 
   @styles [:hidden, :fill, :stroke_width, :stroke_fill, :cap, :join, :miter_limit]
 
-
   @impl Primitive
-  @spec validate( commands::t() ) :: {:ok, commands::t()} | {:error, String.t()}
-  def validate( commands ) when is_list(commands) do
-    Enum.reduce( commands, {:ok, commands}, fn
+  @spec validate(commands :: t()) :: {:ok, commands :: t()} | {:error, String.t()}
+  def validate(commands) when is_list(commands) do
+    Enum.reduce(commands, {:ok, commands}, fn
       _, {:error, error} ->
         {:error, error}
 
@@ -83,28 +83,28 @@ defmodule Scenic.Primitive.Path do
       {:line_to, x, y}, ok when is_number(x) and is_number(y) ->
         ok
 
-      {:bezier_to, c1x, c1y, c2x, c2y, x, y}, ok when
-      is_number(c1x) and is_number(c1y) and
-      is_number(c2x) and is_number(c2y) and
-      is_number(x) and is_number(y) ->
+      {:bezier_to, c1x, c1y, c2x, c2y, x, y}, ok
+      when is_number(c1x) and is_number(c1y) and
+             is_number(c2x) and is_number(c2y) and
+             is_number(x) and is_number(y) ->
         ok
 
-      {:quadratic_to, cx, cy, x, y}, ok when
-      is_number(cx) and is_number(cy) and
-      is_number(x) and is_number(y) ->
+      {:quadratic_to, cx, cy, x, y}, ok
+      when is_number(cx) and is_number(cy) and
+             is_number(x) and is_number(y) ->
         ok
 
-      {:arc_to, x1, y1, x2, y2, radius}, ok when
-        is_number(x1) and is_number(y1) and
-        is_number(x2) and is_number(y2) and is_number(radius) ->
-          ok
+      {:arc_to, x1, y1, x2, y2, radius}, ok
+      when is_number(x1) and is_number(y1) and
+             is_number(x2) and is_number(y2) and is_number(radius) ->
+        ok
 
       cmd, _ ->
-        err_cmd( cmd, commands )
+        err_cmd(cmd, commands)
     end)
   end
 
-  def validate( data ) do
+  def validate(data) do
     {
       :error,
       """
@@ -123,7 +123,7 @@ defmodule Scenic.Primitive.Path do
     }
   end
 
-  defp err_cmd( :solid, commands ) do
+  defp err_cmd(:solid, commands) do
     {
       :error,
       """
@@ -143,7 +143,7 @@ defmodule Scenic.Primitive.Path do
     }
   end
 
-  defp err_cmd( :hole, commands ) do
+  defp err_cmd(:hole, commands) do
     {
       :error,
       """
@@ -163,7 +163,7 @@ defmodule Scenic.Primitive.Path do
     }
   end
 
-  defp err_cmd( cmd, commands ) do
+  defp err_cmd(cmd, commands) do
     {
       :error,
       """
@@ -182,7 +182,6 @@ defmodule Scenic.Primitive.Path do
       """
     }
   end
-
 
   # --------------------------------------------------------
   @doc """
@@ -206,39 +205,50 @@ defmodule Scenic.Primitive.Path do
   Script.finish() will be called on that later.
   """
   @impl Primitive
-  @spec compile( primitive::Primitive.t(), styles::Style.m() ) :: Script.t()
-  def compile( %Primitive{module: __MODULE__, data: commands}, styles ) do
-    ops = Enum.reduce(commands, [], fn
-      :begin, acc -> Script.begin_path( acc )
-      
-      :close_path, acc -> Script.close_path( acc )
+  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
+  def compile(%Primitive{module: __MODULE__, data: commands}, styles) do
+    ops =
+      Enum.reduce(commands, [], fn
+        :begin, acc ->
+          Script.begin_path(acc)
 
-      {:move_to, x, y}, acc -> Script.move_to( acc, x, y )
+        :close_path, acc ->
+          Script.close_path(acc)
 
-      {:line_to, x, y}, acc -> Script.line_to( acc, x, y )
+        {:move_to, x, y}, acc ->
+          Script.move_to(acc, x, y)
 
-      {:bezier_to, c1x, c1y, c2x, c2y, x, y}, acc ->
-        Script.bezier_to( acc, c1x, c1y, c2x, c2y, x, y )
+        {:line_to, x, y}, acc ->
+          Script.line_to(acc, x, y)
 
-      {:quadratic_to, cx, cy, x, y}, acc ->
-        Script.quadratic_to( acc, cx, cy, x, y )
+        {:bezier_to, c1x, c1y, c2x, c2y, x, y}, acc ->
+          Script.bezier_to(acc, c1x, c1y, c2x, c2y, x, y)
 
-      {:arc_to, x1, y1, x2, y2, radius}, acc ->
-        Script.arc_to( acc, x1, y1, x2, y2, radius )
+        {:quadratic_to, cx, cy, x, y}, acc ->
+          Script.quadratic_to(acc, cx, cy, x, y)
 
-        _, acc -> acc
-    end)
+        {:arc_to, x1, y1, x2, y2, radius}, acc ->
+          Script.arc_to(acc, x1, y1, x2, y2, radius)
+
+        _, acc ->
+          acc
+      end)
 
     # finish by appending a fill/stroke command
     case Script.draw_flag(styles) do
-      nil -> ops
-      :fill -> Script.fill_path(ops)
-      :stroke -> Script.stroke_path(ops)
+      nil ->
+        ops
+
+      :fill ->
+        Script.fill_path(ops)
+
+      :stroke ->
+        Script.stroke_path(ops)
+
       :fill_stroke ->
         ops
         |> Script.fill_path()
         |> Script.stroke_path()
     end
   end
-
 end

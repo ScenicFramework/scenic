@@ -68,9 +68,10 @@ defmodule Scenic.Component.Input.Checkbox do
 
   # --------------------------------------------------------
   @impl Scenic.Component
-  def validate( {text, checked} ) when is_bitstring(text) and is_boolean(checked) do
+  def validate({text, checked}) when is_bitstring(text) and is_boolean(checked) do
     {:ok, {text, checked}}
   end
+
   def validate(data) do
     {
       :error,
@@ -95,7 +96,7 @@ defmodule Scenic.Component.Input.Checkbox do
       |> Theme.normalize()
 
     # font related info
-    {:ok, {:font, fm}} = Static.fetch( @default_font )
+    {:ok, {:font, fm}} = Static.fetch(@default_font)
     ascent = FontMetrics.ascent(@default_font_size, fm)
     fm_width = FontMetrics.width(text, @default_font_size, fm)
     space_width = FontMetrics.width(' ', @default_font_size, fm)
@@ -106,20 +107,21 @@ defmodule Scenic.Component.Input.Checkbox do
 
     # build the checkmark script
     # I'd build it at compile time if it weren't for the theme.thumb color...
-    chx_script = Script.start()
-    |> Script.join( :round )
-    |> Script.push_state()
-    |> Script.stroke_width( @border_width + 1 )
-    |> Script.stroke_color( theme.thumb )
-    |> Script.begin_path()
-    |> Script.move_to( 0, 8 )
-    |> Script.line_to( 5, 13 )
-    |> Script.line_to( 12, 1 )
-    |> Script.stroke_path()
-    |> Script.pop_state()
-    |> Script.finish()
+    chx_script =
+      Script.start()
+      |> Script.join(:round)
+      |> Script.push_state()
+      |> Script.stroke_width(@border_width + 1)
+      |> Script.stroke_color(theme.thumb)
+      |> Script.begin_path()
+      |> Script.move_to(0, 8)
+      |> Script.line_to(5, 13)
+      |> Script.line_to(12, 1)
+      |> Script.stroke_path()
+      |> Script.pop_state()
+      |> Script.finish()
 
-    scene = push_script( scene, chx_script, :__check_mark )
+    scene = push_script(scene, chx_script, :__check_mark)
 
     # tune final position
     dx = @border_width / 2
@@ -127,26 +129,26 @@ defmodule Scenic.Component.Input.Checkbox do
 
     graph =
       Graph.build(font: @default_font, font_size: @default_font_size, t: {dx, dy})
-      |> group(
-        fn graph ->
-          graph
-          |> rect(
-            {box_width, box_height},
-            id: :btn,
-            input: true
-          )
-          |> rrect({box_height, box_height, 3},
-            fill: theme.background,
-            stroke: {@border_width, theme.border},
-            id: :box
-          )
-          |> script( :__check_mark, id: :chx, hidden: !checked?, t: {3, 2} )
-        end
+      |> group(fn graph ->
+        graph
+        |> rect(
+          {box_width, box_height},
+          id: :btn,
+          input: true
+        )
+        |> rrect({box_height, box_height, 3},
+          fill: theme.background,
+          stroke: {@border_width, theme.border},
+          id: :box
+        )
+        |> script(:__check_mark, id: :chx, hidden: !checked?, t: {3, 2})
+      end)
+      |> text(text,
+        fill: theme.text,
+        translate: {box_height + space_width + @border_width, ascent - @border_width}
       )
-      |> text(text, fill: theme.text, translate: {box_height + space_width + @border_width, ascent - @border_width})
-      
 
-    scene = 
+    scene =
       scene
       |> assign(
         graph: graph,
@@ -155,120 +157,128 @@ defmodule Scenic.Component.Input.Checkbox do
         checked: checked?,
         id: id
       )
-      |> push_graph( graph )
+      |> push_graph(graph)
 
     {:ok, scene}
   end
 
-
   # --------------------------------------------------------
   # pressed in the button
   @impl Scenic.Scene
-  def handle_input( {:cursor_button, {0, :press, _, _}}, :btn,
-    %{assigns: %{graph: graph, theme: theme}} = scene
-  ) do
-    :ok = capture_input(scene, :cursor_button )
+  def handle_input(
+        {:cursor_button, {0, :press, _, _}},
+        :btn,
+        %{assigns: %{graph: graph, theme: theme}} = scene
+      ) do
+    :ok = capture_input(scene, :cursor_button)
 
-    graph = Graph.modify( graph, :box, &Primitive.put_style(&1, :fill, theme.active))
+    graph = Graph.modify(graph, :box, &Primitive.put_style(&1, :fill, theme.active))
 
     scene =
       scene
-      |> assign( graph: graph, pressed: true )
-      |> push_graph( graph )
+      |> assign(graph: graph, pressed: true)
+      |> push_graph(graph)
 
-    {:noreply, scene }
+    {:noreply, scene}
   end
 
   # --------------------------------------------------------
   # pressed outside the button
   # only happens when input is captured
   # could happen when reconnecting to a driver...
-  def handle_input( {:cursor_button, {0, :press, _, _}}, _id,
-    %{assigns: %{graph: graph, theme: theme}} = scene
-  ) do
-    :ok = release_input( scene )
+  def handle_input(
+        {:cursor_button, {0, :press, _, _}},
+        _id,
+        %{assigns: %{graph: graph, theme: theme}} = scene
+      ) do
+    :ok = release_input(scene)
 
-    graph = Graph.modify( graph, :box, &Primitive.put_style(&1, :fill, theme.background))
+    graph = Graph.modify(graph, :box, &Primitive.put_style(&1, :fill, theme.background))
 
     scene =
       scene
-      |> assign( graph: graph, pressed: false )
-      |> push_graph( graph )
+      |> assign(graph: graph, pressed: false)
+      |> push_graph(graph)
 
-    {:noreply, scene }
+    {:noreply, scene}
   end
 
   # --------------------------------------------------------
   # released inside the button while pressed
   def handle_input(
-    {:cursor_button, {0, :release, _, _}}, :btn,
-    %{assigns: %{
-      pressed: true, id: id,
-      graph: graph,
-      checked: checked,
-      theme: theme
-    }} = scene
-  ) do
-    :ok = release_input( scene )
+        {:cursor_button, {0, :release, _, _}},
+        :btn,
+        %{
+          assigns: %{
+            pressed: true,
+            id: id,
+            graph: graph,
+            checked: checked,
+            theme: theme
+          }
+        } = scene
+      ) do
+    :ok = release_input(scene)
     send_parent_event(scene, {:value_changed, id, !checked})
 
     graph =
       graph
-      |> Graph.modify( :box, &Primitive.put_style(&1, :fill, theme.background))
-      |> Graph.modify( :chx, &Primitive.put_style(&1, :hidden, checked) )
+      |> Graph.modify(:box, &Primitive.put_style(&1, :fill, theme.background))
+      |> Graph.modify(:chx, &Primitive.put_style(&1, :hidden, checked))
 
     scene =
       scene
-      |> assign( graph: graph, checked: !checked, pressed: false )
-      |> push_graph( graph )
+      |> assign(graph: graph, checked: !checked, pressed: false)
+      |> push_graph(graph)
 
-    {:noreply, scene }
+    {:noreply, scene}
   end
 
   # --------------------------------------------------------
   # released either outside the button or when not pressed
   # only happens when input is captured
-  def handle_input( {:cursor_button, {0, :release, _, _}}, _id,
-    %{assigns: %{graph: graph, theme: theme}} = scene
-  ) do
-    :ok = release_input( scene )
+  def handle_input(
+        {:cursor_button, {0, :release, _, _}},
+        _id,
+        %{assigns: %{graph: graph, theme: theme}} = scene
+      ) do
+    :ok = release_input(scene)
 
-    graph = Graph.modify( graph, :box, &Primitive.put_style(&1, :fill, theme.background))
+    graph = Graph.modify(graph, :box, &Primitive.put_style(&1, :fill, theme.background))
 
     scene =
       scene
-      |> assign( graph: graph, pressed: false )
-      |> push_graph( graph )
+      |> assign(graph: graph, pressed: false)
+      |> push_graph(graph)
 
-    {:noreply, scene }
+    {:noreply, scene}
   end
 
   # ignore other button press events
-  def handle_input({:cursor_button, {_, _, _, _}}, _id, scene ) do
+  def handle_input({:cursor_button, {_, _, _, _}}, _id, scene) do
     {:noreply, scene}
   end
 
   # --------------------------------------------------------
   @doc false
   @impl GenServer
-  def handle_call( :fetch, _, %{assigns: %{checked: checked?}} = scene ) do
-    {:reply, {:ok, checked?}, scene }
+  def handle_call(:fetch, _, %{assigns: %{checked: checked?}} = scene) do
+    {:reply, {:ok, checked?}, scene}
   end
 
-  def handle_call( {:put, checked?}, _, %{assigns: %{graph: graph}} = scene
- ) when is_boolean(checked?) do
-    graph = Graph.modify( graph, :chx, &Primitive.put_style(&1, :hidden, checked?) )
+  def handle_call({:put, checked?}, _, %{assigns: %{graph: graph}} = scene)
+      when is_boolean(checked?) do
+    graph = Graph.modify(graph, :chx, &Primitive.put_style(&1, :hidden, checked?))
 
     scene =
       scene
-      |> assign( graph: graph, checked: checked? )
-      |> push_graph( graph )
+      |> assign(graph: graph, checked: checked?)
+      |> push_graph(graph)
 
-    {:reply, :ok, scene }
+    {:reply, :ok, scene}
   end
 
-  def handle_call( {:put, _}, _, scene ) do
-    {:reply, {:error, :invalid}, scene }    
+  def handle_call({:put, _}, _, scene) do
+    {:reply, {:error, :invalid}, scene}
   end
-
 end

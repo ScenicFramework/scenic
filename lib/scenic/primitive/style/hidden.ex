@@ -25,9 +25,10 @@ defmodule Scenic.Primitive.Style.Hidden do
 
   # ============================================================================
 
-  def validate( true ), do: {:ok, true}
-  def validate( false ), do: {:ok, false}
-  def validate( data )  do
+  def validate(true), do: {:ok, true}
+  def validate(false), do: {:ok, false}
+
+  def validate(data) do
     {
       :error,
       """
@@ -38,5 +39,4 @@ defmodule Scenic.Primitive.Style.Hidden do
       """
     }
   end
-
 end

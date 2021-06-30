@@ -16,7 +16,6 @@ defmodule Scenic.PrimitiveTest do
     def get(_), do: :test_style_getter
   end
 
-
   @tx_pin {10, 11}
   @tx_rotate 0.1
   @transforms %{pin: @tx_pin, rotate: @tx_rotate}
@@ -185,7 +184,6 @@ defmodule Scenic.PrimitiveTest do
     end
   end
 
-
   # ============================================================================
   # transform field
 
@@ -267,7 +265,7 @@ defmodule Scenic.PrimitiveTest do
       |> Primitive.put_style(:fill, :cornsilk)
 
     assert Primitive.get_styles(p) ==
-      %{fill: {:color, {:color_rgba, {255, 248, 220, 255}}}, line_height: 3}
+             %{fill: {:color, {:color_rgba, {255, 248, 220, 255}}}, line_height: 3}
   end
 
   test "delete_style removes a style in the style list" do
@@ -277,11 +275,12 @@ defmodule Scenic.PrimitiveTest do
 
   test "merge_opts sets a list of styles" do
     p = Primitive.merge_opts(@primitive, fill: :magenta, stroke: {2, :green})
+
     assert Primitive.get_styles(p) == %{
-      fill: {:color, {:color_rgba, {255, 0, 255, 255}}},
-      stroke: {2, {:color, {:color_rgba, {0, 128, 0, 255}}}},
-      line_height: 2
-    }
+             fill: {:color, {:color_rgba, {255, 0, 255, 255}}},
+             stroke: {2, {:color, {:color_rgba, {0, 128, 0, 255}}}},
+             line_height: 2
+           }
   end
 
   test "merge_opts sets a list of transforms" do
@@ -305,5 +304,4 @@ defmodule Scenic.PrimitiveTest do
     p = Primitive.put(@primitive, new_data)
     assert Primitive.get(p) == new_data
   end
-
 end

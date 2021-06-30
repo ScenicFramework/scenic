@@ -31,31 +31,32 @@ defmodule Scenic.Primitive.TextTest do
     {:error, msg} = Text.validate({100, "1.4"})
     assert msg =~ "Invalid Text"
 
-    {:error, msg} = Text.validate( :banana )
+    {:error, msg} = Text.validate(:banana)
     assert msg =~ "Invalid Text"
   end
-
 
   # ============================================================================
   # styles
 
   test "valid_styles works" do
     assert Text.valid_styles() == [
-             :hidden, :font, :font_size, :line_height,
-             :text_align, :text_base, :line_height
+             :hidden,
+             :font,
+             :font_size,
+             :line_height,
+             :text_align,
+             :text_base,
+             :line_height
            ]
   end
-
 
   # ============================================================================
   # compile
 
   test "compile raises - it is a special case" do
-    p = Text.build( @data )
+    p = Text.build(@data)
     assert_raise RuntimeError, fn -> Text.compile(p, %{}) end
   end
-
-
 
   # ============================================================================
   # transform helpers

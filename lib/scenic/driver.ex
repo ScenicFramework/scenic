@@ -29,19 +29,19 @@ defmodule Scenic.Driver do
   # ============================================================================
   # callback definitions
 
-  @callback validate_opts( opts :: Keyword.t ) :: { :ok, any }
-    | { :error, String.t }
-    | { :error, NimbleOptions.ValidationError.t }
+  @callback validate_opts(opts :: Keyword.t()) ::
+              {:ok, any}
+              | {:error, String.t()}
+              | {:error, NimbleOptions.ValidationError.t()}
 
   @callback init(
               vp_info :: Scenic.ViewPort.t(),
-              opts :: Keyword.t
+              opts :: Keyword.t()
             ) :: {:ok, any}
 
   # @callback build_assets(
   #             src_dir :: String.t()
   #           ) :: :ok | :error
-
 
   # ===========================================================================
   defmodule Error do
@@ -55,37 +55,40 @@ defmodule Scenic.Driver do
       use GenServer
       @behaviour Scenic.Driver
 
-      def validate_opts( opts ), do: {:ok, opts}
+      def validate_opts(opts), do: {:ok, opts}
 
-      def init( {vp_info, opts} ) do
-        GenServer.cast( vp_info.pid, {:register_driver, self()} )
-        {:ok, nil, {:continue, {:__init__, vp_info, opts}} }
+      def init({vp_info, opts}) do
+        GenServer.cast(vp_info.pid, {:register_driver, self()})
+        {:ok, nil, {:continue, {:__init__, vp_info, opts}}}
       end
 
-      def build_assets( _src_dir ), do: :ok
+      def build_assets(_src_dir), do: :ok
 
-      def start_link( {vp_info, opts} ) do
-        opts = Keyword.delete( opts, :module )
+      def start_link({vp_info, opts}) do
+        opts = Keyword.delete(opts, :module)
+
         case opts[:name] do
-          nil ->  GenServer.start_link(__MODULE__, {vp_info, opts})
+          nil -> GenServer.start_link(__MODULE__, {vp_info, opts})
           name -> GenServer.start_link(__MODULE__, {vp_info, opts}, name: name)
         end
       end
 
-      def handle_continue( {:__init__, vp_info, opts}, nil ) do
+      def handle_continue({:__init__, vp_info, opts}, nil) do
         assets = opts[:assets]
+
         opts =
           opts
-          |> Keyword.delete( :module )
-          |> Keyword.delete( :name )
-        {:ok, state} = init( vp_info, opts )
+          |> Keyword.delete(:module)
+          |> Keyword.delete(:name)
+
+        {:ok, state} = init(vp_info, opts)
         {:noreply, state}
       end
 
       # --------------------------------------------------------
       defoverridable validate_opts: 1,
-        handle_continue: 2,
-        build_assets: 1
+                     handle_continue: 2,
+                     build_assets: 1
     end
 
     # quote
@@ -98,34 +101,36 @@ defmodule Scenic.Driver do
   ]
 
   @doc false
-  def validate( [] ), do: {:ok, []}
-  def validate( drivers ) do
-    case Enum.reduce(drivers, [], &do_validate(&1, &2) ) do
+  def validate([]), do: {:ok, []}
+
+  def validate(drivers) do
+    case Enum.reduce(drivers, [], &do_validate(&1, &2)) do
       opts when is_list(opts) -> {:ok, Enum.reverse(opts)}
       err -> err
     end
   end
 
-  defp do_validate( opts, drivers ) do
-    core_opts = []
-    |> put_set( :module, opts[:module] )
-    |> put_set( :name, opts[:name] )
-    driver_opts = opts
-    |> Keyword.delete( :module )
-    |> Keyword.delete( :name )
+  defp do_validate(opts, drivers) do
+    core_opts =
+      []
+      |> put_set(:module, opts[:module])
+      |> put_set(:name, opts[:name])
 
-    with {:ok, core} <- NimbleOptions.validate( core_opts, @opts_schema ),
-    {:ok, opts} <- core[:module].validate_opts( driver_opts ) do
-      [ core ++ opts | drivers ]
+    driver_opts =
+      opts
+      |> Keyword.delete(:module)
+      |> Keyword.delete(:name)
+
+    with {:ok, core} <- NimbleOptions.validate(core_opts, @opts_schema),
+         {:ok, opts} <- core[:module].validate_opts(driver_opts) do
+      [core ++ opts | drivers]
     else
       {:error, %NimbleOptions.ValidationError{} = error} ->
-        raise Exception.message( error )
-      # err -> err
+        raise Exception.message(error)
+        # err -> err
     end
   end
 
-  defp put_set( opts, _, nil ), do: opts
-  defp put_set( opts, key, value ), do: Keyword.put(opts, key, value)
-
-
+  defp put_set(opts, _, nil), do: opts
+  defp put_set(opts, key, value), do: Keyword.put(opts, key, value)
 end

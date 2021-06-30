@@ -20,5 +20,4 @@ defmodule Scenic.Primitive.Style.TextBaseTest do
     {:error, msg} = TextBase.validate(:invalid)
     assert msg =~ "one of :top, :middle, :alphabetic, or :bottom"
   end
-
 end

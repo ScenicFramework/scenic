@@ -37,11 +37,12 @@ defmodule Scenic.Primitive.Style.TextBase do
   # ============================================================================
   # data verification and serialization
 
-  def validate( :top ), do: {:ok, :top}
-  def validate( :middle ), do: {:ok, :middle}
-  def validate( :alphabetic ), do: {:ok, :alphabetic}
-  def validate( :bottom ), do: {:ok, :bottom}
-  def validate( data )  do
+  def validate(:top), do: {:ok, :top}
+  def validate(:middle), do: {:ok, :middle}
+  def validate(:alphabetic), do: {:ok, :alphabetic}
+  def validate(:bottom), do: {:ok, :bottom}
+
+  def validate(data) do
     {
       :error,
       """
@@ -54,5 +55,4 @@ defmodule Scenic.Primitive.Style.TextBase do
       """
     }
   end
-
 end

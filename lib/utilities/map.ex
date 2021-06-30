@@ -162,9 +162,7 @@ defmodule Scenic.Utilities.Map do
     end)
   end
 
-
   # --------------------------------------------------------
-  def put_set( map, _, nil ), do: map
-  def put_set( map, key, value ), do: Map.put(map, key, value)
-
+  def put_set(map, _, nil), do: map
+  def put_set(map, key, value), do: Map.put(map, key, value)
 end

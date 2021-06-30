@@ -8,6 +8,4 @@ defmodule Scenic.Primitive.StyleTest do
   doctest Scenic.Primitive.Style
 
   # alias Scenic.Primitive.Style
-
-
 end

@@ -19,5 +19,4 @@ defmodule Scenic.Primitive.Style.JoinTest do
     {:error, msg} = Join.validate(:invalid)
     assert msg =~ "one of :miter, :round, or :bevel"
   end
-
 end

@@ -42,10 +42,10 @@ defmodule Scenic.Primitive.RoundedRectangle do
   @styles [:hidden, :fill, :stroke_width, :stroke_fill]
 
   @impl Primitive
-  @spec validate( t() ) :: {:ok, t()} | {:error, String.t()}
-    
-  def validate( {width, height, radius} )
-  when is_number(width) and is_number(height) and is_number(radius) do
+  @spec validate(t()) :: {:ok, t()} | {:error, String.t()}
+
+  def validate({width, height, radius})
+      when is_number(width) and is_number(height) and is_number(radius) do
     w = abs(width)
     h = abs(height)
 
@@ -61,7 +61,7 @@ defmodule Scenic.Primitive.RoundedRectangle do
     {:ok, {width, height, radius}}
   end
 
-  def validate( data ) do
+  def validate(data) do
     {
       :error,
       """
@@ -89,12 +89,10 @@ defmodule Scenic.Primitive.RoundedRectangle do
   generate a larger script and is called when a graph is compiled.
   """
   @impl Primitive
-  @spec compile( primitive::Primitive.t(), styles::Style.m() ) :: Script.t()
-  def compile( %Primitive{module: __MODULE__, data: {width, height, radius}}, styles ) do
-    Script.draw_rounded_rectangle([], width, height, radius, Script.draw_flag(styles) )
+  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
+  def compile(%Primitive{module: __MODULE__, data: {width, height, radius}}, styles) do
+    Script.draw_rounded_rectangle([], width, height, radius, Script.draw_flag(styles))
   end
-
-  
 
   # --------------------------------------------------------
   def default_pin(data), do: centroid(data)

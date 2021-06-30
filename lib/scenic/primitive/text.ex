@@ -36,19 +36,20 @@ defmodule Scenic.Primitive.Text do
   alias Scenic.Primitive
   alias Scenic.Primitive.Style
 
-
   @type t :: String.t()
-  @type styles_t :: [:hidden | :font | :font_size | :line_height | :text_align | :text_base | :line_height]
+  @type styles_t :: [
+          :hidden | :font | :font_size | :line_height | :text_align | :text_base | :line_height
+        ]
 
   @styles [:hidden, :font, :font_size, :line_height, :text_align, :text_base, :line_height]
 
   @impl Primitive
-  @spec validate( text :: t() ) :: {:ok, t()} | {:error, String.t()}
-  def validate( text ) when is_bitstring(text) do
+  @spec validate(text :: t()) :: {:ok, t()} | {:error, String.t()}
+  def validate(text) when is_bitstring(text) do
     {:ok, text}
   end
 
-  def validate( data ) do
+  def validate(data) do
     {
       :error,
       """
@@ -59,8 +60,6 @@ defmodule Scenic.Primitive.Text do
       """
     }
   end
-
-
 
   # --------------------------------------------------------
   @doc """
@@ -74,9 +73,8 @@ defmodule Scenic.Primitive.Text do
   # compiling Text is a special case and is handled in Scenic.ViewPort.GraphCompiler
   @doc false
   @impl Primitive
-  @spec compile( primitive::Primitive.t(), styles::Style.m() ) :: Script.t()
-  def compile( %Primitive{module: __MODULE__}, _styles) do
+  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
+  def compile(%Primitive{module: __MODULE__}, _styles) do
     raise "compiling Text is a special case and is handled in Scenic.ViewPort.GraphCompiler"
   end
-
 end

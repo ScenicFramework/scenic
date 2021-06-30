@@ -762,7 +762,6 @@ defmodule Scenic.Primitives do
     fn g -> path(g, elements, opts) end
   end
 
-  
   # --------------------------------------------------------
   @doc """
   Add a Quadrilateral (quad) to a graph.
@@ -1325,8 +1324,6 @@ defmodule Scenic.Primitives do
     fn g -> triangle(g, corners, opts) end
   end
 
-
-
   # --------------------------------------------------------
   @doc """
   Add a named script to a graph.
@@ -1353,7 +1350,7 @@ defmodule Scenic.Primitives do
   """
   @spec script(
           source :: Graph.t() | Primitive.t(),
-          name :: atom | String.t | pid | reference,
+          name :: atom | String.t() | pid | reference,
           options :: list
         ) :: Graph.t() | Primitive.t()
 
@@ -1386,15 +1383,6 @@ defmodule Scenic.Primitives do
   def script_spec(name, opts \\ []) do
     fn g -> script(g, name, opts) end
   end
-
-
-
-
-
-
-
-
-
 
   # --------------------------------------------------------
   @doc """
@@ -1436,15 +1424,6 @@ defmodule Scenic.Primitives do
     fn g -> sprites(g, sprites, opts) end
   end
 
-
-
-
-
-
-
-
-
-
   # --------------------------------------------------------
   @doc """
   Update the options of a primitive without changing its data.
@@ -1477,18 +1456,22 @@ defmodule Scenic.Primitives do
   # generic workhorse versions
 
   defp add_to_graph(%Graph{} = g, mod, data, opts) do
-    data = case mod.validate(data) do
-      {:ok, data} -> data
-      {:error, error} -> raise Exception.message(error)
-    end
+    data =
+      case mod.validate(data) do
+        {:ok, data} -> data
+        {:error, error} -> raise Exception.message(error)
+      end
+
     mod.add_to_graph(g, data, opts)
   end
 
   defp modify(%Primitive{module: mod} = p, data, opts) do
-    data = case mod.validate(data) do
-      {:ok, data} -> data
-      {:error, error} -> raise Exception.message(error)
-    end
+    data =
+      case mod.validate(data) do
+        {:ok, data} -> data
+        {:error, error} -> raise Exception.message(error)
+      end
+
     Primitive.put(p, data, opts)
   end
 end

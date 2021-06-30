@@ -21,8 +21,7 @@ defmodule Scenic.Primitive.Transform.RotateTest do
     {:error, msg} = Rotate.validate("1.5")
     assert msg =~ "Invalid Rotation"
 
-    {:error, msg} = Rotate.validate( :banana )
+    {:error, msg} = Rotate.validate(:banana)
     assert msg =~ "Invalid Rotation"
   end
-  
 end

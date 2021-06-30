@@ -6,7 +6,7 @@
 defmodule Scenic.PrimitivesTest do
   use ExUnit.Case, async: true
   doctest Scenic.Primitives
-  
+
   alias Scenic.Graph
   # alias Scenic.Primitive
   alias Scenic.Primitives
@@ -318,7 +318,6 @@ defmodule Scenic.PrimitivesTest do
     assert p.data == actions
     assert p.id == :path
   end
-
 
   # ============================================================================
   test "quad adds to a graph - default opts" do

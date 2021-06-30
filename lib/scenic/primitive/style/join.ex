@@ -29,11 +29,11 @@ defmodule Scenic.Primitive.Style.Join do
   # ============================================================================
   # data verification and serialization
 
+  def validate(:miter), do: {:ok, :miter}
+  def validate(:round), do: {:ok, :round}
+  def validate(:bevel), do: {:ok, :bevel}
 
-  def validate( :miter ), do: {:ok, :miter}
-  def validate( :round ), do: {:ok, :round}
-  def validate( :bevel ), do: {:ok, :bevel}
-  def validate( data )  do
+  def validate(data) do
     {
       :error,
       """
@@ -44,5 +44,4 @@ defmodule Scenic.Primitive.Style.Join do
       """
     }
   end
-
 end

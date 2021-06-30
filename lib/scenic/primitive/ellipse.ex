@@ -36,19 +36,21 @@ defmodule Scenic.Primitive.Ellipse do
   alias Scenic.Primitive
   alias Scenic.Primitive.Style
 
-  @type t :: {radius_1::number, radius_2::number}
+  @type t :: {radius_1 :: number, radius_2 :: number}
   @type styles_t :: [:hidden | :fill | :stroke_width | :stroke_fill]
 
   @styles [:hidden, :fill, :stroke_width, :stroke_fill]
 
   @impl Primitive
-  @spec validate( {radius_1::number, radius_2::number} ) ::
-    {:ok, {radius_1::number, radius_2::number}} | {:error, String.t()}
-  def validate( {r1, r2} ) when is_number(r1) and is_number(r2) and
-  r1 >=0 and r2 >= 0 do
+  @spec validate({radius_1 :: number, radius_2 :: number}) ::
+          {:ok, {radius_1 :: number, radius_2 :: number}} | {:error, String.t()}
+  def validate({r1, r2})
+      when is_number(r1) and is_number(r2) and
+             r1 >= 0 and r2 >= 0 do
     {:ok, {r1, r2}}
   end
-  def validate( data ) do
+
+  def validate(data) do
     {
       :error,
       """
@@ -75,12 +77,10 @@ defmodule Scenic.Primitive.Ellipse do
   generate a larger script and is called when a graph is compiled.
   """
   @impl Primitive
-  @spec compile( primitive::Primitive.t(), styles::Style.m() ) :: Script.t()
-  def compile( %Primitive{module: __MODULE__, data: {radius_1, radius_2}}, styles) do
-    Script.draw_ellipse( [], radius_1, radius_2, Script.draw_flag(styles) )
+  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
+  def compile(%Primitive{module: __MODULE__, data: {radius_1, radius_2}}, styles) do
+    Script.draw_ellipse([], radius_1, radius_2, Script.draw_flag(styles))
   end
-
-
 
   # --------------------------------------------------------
   def contains_point?({r1, r2}, {xp, yp}) do

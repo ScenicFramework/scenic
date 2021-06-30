@@ -184,7 +184,7 @@ defmodule Scenic.Graph do
   @spec build(opts :: keyword) :: t()
   def build(opts \\ []) do
     []
-    |> Group.build( Keyword.put(opts, :id, @root_id) )
+    |> Group.build(Keyword.put(opts, :id, @root_id))
     |> new()
     |> set_id(opts[:id])
     |> set_max_depth(opts[:max_depth])
@@ -596,10 +596,8 @@ defmodule Scenic.Graph do
         case action.(p_original) do
           # no change. do nothing
           ^p_original -> graph
-
           # changed. record it
           %Primitive{} = p_modified -> put_by_uid(graph, uid, p_modified)
-
           _ -> raise Error, message: "Action must return a valid primitive"
         end
     end
@@ -817,5 +815,4 @@ defmodule Scenic.Graph do
         |> Map.merge(Primitive.get_styles(p))
     end
   end
-
 end

@@ -63,7 +63,6 @@ defmodule Scenic.Component.Input.Toggle do
   alias Scenic.ViewPort
 
   import Scenic.Primitives
-  
 
   # import IEx
 
@@ -104,9 +103,10 @@ defmodule Scenic.Component.Input.Toggle do
 
   # --------------------------------------------------------
   @impl Scenic.Component
-  def validate( on? ) when is_boolean(on?) do
+  def validate(on?) when is_boolean(on?) do
     {:ok, on?}
   end
+
   def validate(data) do
     {
       :error,
@@ -122,7 +122,7 @@ defmodule Scenic.Component.Input.Toggle do
   # --------------------------------------------------------
   @doc false
   @impl Scenic.Scene
-  @spec init( scene :: Scene.t, param :: any, Keyword.t() ) :: {:ok, Scene.t()}
+  @spec init(scene :: Scene.t(), param :: any, Keyword.t()) :: {:ok, Scene.t()}
   def init(scene, on?, opts) do
     id = opts[:id]
 
@@ -189,10 +189,9 @@ defmodule Scenic.Component.Input.Toggle do
         translate: {dx, dy}
       )
 
-
     scene =
       scene
-      |> assign([
+      |> assign(
         id: id,
         graph: graph,
         on?: on?,
@@ -200,31 +199,31 @@ defmodule Scenic.Component.Input.Toggle do
         theme: theme,
         thumb_translate: thumb_translate,
         color: color
-      ])
-      |> push_graph( graph )
+      )
+      |> push_graph(graph)
 
     {:ok, scene}
   end
-
 
   # --------------------------------------------------------
   # pressed in the button
   @doc false
   @impl Scenic.Scene
   def handle_input(
-    {:cursor_button, {0, :press, _, _}}, :track,
-    %{assigns: %{graph: graph, color: color}} = scene
-  ) do
-    graph = update_highlight(graph, true, true, color )
+        {:cursor_button, {0, :press, _, _}},
+        :track,
+        %{assigns: %{graph: graph, color: color}} = scene
+      ) do
+    graph = update_highlight(graph, true, true, color)
 
-    :ok = capture_input(scene, :cursor_button )
+    :ok = capture_input(scene, :cursor_button)
 
     scene =
       scene
-      |> assign([pressed?: true])
-      |> push_graph( graph )
+      |> assign(pressed?: true)
+      |> push_graph(graph)
 
-    {:noreply, scene }
+    {:noreply, scene}
   end
 
   # --------------------------------------------------------
@@ -232,119 +231,125 @@ defmodule Scenic.Component.Input.Toggle do
   # only happens when input is captured
   # could happen when reconnecting to a driver...
   def handle_input(
-    {:cursor_button, {0, :press, _, _}}, _id,
-    %{assigns: %{graph: graph, color: color}} = scene
-  ) do
-    graph = update_highlight(graph, true, false, color )
+        {:cursor_button, {0, :press, _, _}},
+        _id,
+        %{assigns: %{graph: graph, color: color}} = scene
+      ) do
+    graph = update_highlight(graph, true, false, color)
 
-    :ok = release_input( scene )
+    :ok = release_input(scene)
 
     scene =
       scene
-      |> assign([pressed?: false])
-      |> push_graph( graph )
+      |> assign(pressed?: false)
+      |> push_graph(graph)
 
-    {:noreply, scene }
+    {:noreply, scene}
   end
 
   # --------------------------------------------------------
   # released inside the button
   def handle_input(
-    {:cursor_button, {0, :release, _, _}}, :track,
-    %{assigns: %{
-      pressed?: true, id: id, graph: graph,
-      on?: on?, color: color
-    }} = scene
-  ) do
+        {:cursor_button, {0, :release, _, _}},
+        :track,
+        %{
+          assigns: %{
+            pressed?: true,
+            id: id,
+            graph: graph,
+            on?: on?,
+            color: color
+          }
+        } = scene
+      ) do
     send_parent_event(scene, {:value_changed, id, !on?})
 
-    :ok = release_input( scene )
+    :ok = release_input(scene)
 
     graph =
       graph
       |> update_check(!on?, scene.assigns)
-      |> update_highlight( false, true, color )
+      |> update_highlight(false, true, color)
 
     scene =
       scene
-      |> assign([graph: graph, on?: !on?, pressed?: false])
-      |> push_graph( graph )
+      |> assign(graph: graph, on?: !on?, pressed?: false)
+      |> push_graph(graph)
 
-    {:noreply, scene }
+    {:noreply, scene}
   end
 
   # --------------------------------------------------------
   # released, but not in the button
   def handle_input(
-        {:cursor_button, {0, :release, _, _}}, _id,
+        {:cursor_button, {0, :release, _, _}},
+        _id,
         %{assigns: %{graph: graph, color: color}} = scene
       ) do
-    graph = update_highlight(graph, false, false, color )
+    graph = update_highlight(graph, false, false, color)
 
-    :ok = release_input( scene )
+    :ok = release_input(scene)
 
     scene =
       scene
-      |> assign([pressed?: false])
-      |> push_graph( graph )
+      |> assign(pressed?: false)
+      |> push_graph(graph)
 
-    {:noreply, scene }
+    {:noreply, scene}
   end
 
   # ignore other button press events
-  def handle_input({:cursor_button, {_, _, _, _}}, _id, scene ) do
+  def handle_input({:cursor_button, {_, _, _, _}}, _id, scene) do
     {:noreply, scene}
   end
 
   # --------------------------------------------------------
-  defp update_highlight(graph, pressed?, contained, color )
+  defp update_highlight(graph, pressed?, contained, color)
 
   defp update_highlight(graph, true, true, color) do
-    Graph.modify( graph, :thumb, &Primitive.put_style(&1, :fill, color.thumb.pressed?) )
+    Graph.modify(graph, :thumb, &Primitive.put_style(&1, :fill, color.thumb.pressed?))
   end
 
   defp update_highlight(graph, _, _, color) do
-    Graph.modify( graph, :thumb, &Primitive.put_style(&1, :fill, color.thumb.default) )
+    Graph.modify(graph, :thumb, &Primitive.put_style(&1, :fill, color.thumb.default))
   end
 
-
-  defp update_check( graph, true, %{color: color, thumb_translate: thumb } ) do
+  defp update_check(graph, true, %{color: color, thumb_translate: thumb}) do
     graph
-    |> Graph.modify( :track, &Primitive.put_style(&1, :fill, color.track.on) )
-    |> Graph.modify( :thumb, &Primitive.put_transform(&1, :translate, thumb.on) )
+    |> Graph.modify(:track, &Primitive.put_style(&1, :fill, color.track.on))
+    |> Graph.modify(:thumb, &Primitive.put_transform(&1, :translate, thumb.on))
   end
 
-  defp update_check( graph, false, %{color: color, thumb_translate: thumb } ) do
+  defp update_check(graph, false, %{color: color, thumb_translate: thumb}) do
     graph
-    |> Graph.modify( :track, &Primitive.put_style(&1, :fill, color.track.off) )
-    |> Graph.modify( :thumb, &Primitive.put_transform(&1, :translate, thumb.off) )
+    |> Graph.modify(:track, &Primitive.put_style(&1, :fill, color.track.off))
+    |> Graph.modify(:thumb, &Primitive.put_transform(&1, :translate, thumb.off))
   end
-
 
   # --------------------------------------------------------
   @doc false
   @impl GenServer
-  def handle_call( :fetch, _, %{assigns: %{on?: on?}} = scene ) do
-    {:reply, {:ok, on?}, scene }
+  def handle_call(:fetch, _, %{assigns: %{on?: on?}} = scene) do
+    {:reply, {:ok, on?}, scene}
   end
 
-  def handle_call( {:put, on?}, _, %{assigns: %{graph: graph, thumb_translate: thumb}} = scene
- ) when is_boolean(on?) do
-    graph = case on? do
-      true -> Graph.modify( graph, :thumb, &Primitive.put_transform(&1, :translate, thumb.on) )
-      false -> Graph.modify( graph, :thumb, &Primitive.put_transform(&1, :translate, thumb.off) )
-    end
+  def handle_call({:put, on?}, _, %{assigns: %{graph: graph, thumb_translate: thumb}} = scene)
+      when is_boolean(on?) do
+    graph =
+      case on? do
+        true -> Graph.modify(graph, :thumb, &Primitive.put_transform(&1, :translate, thumb.on))
+        false -> Graph.modify(graph, :thumb, &Primitive.put_transform(&1, :translate, thumb.off))
+      end
 
     scene =
       scene
-      |> assign( graph: graph, on?: on? )
-      |> push_graph( graph )
+      |> assign(graph: graph, on?: on?)
+      |> push_graph(graph)
 
-    {:reply, :ok, scene }
+    {:reply, :ok, scene}
   end
 
-  def handle_call( {:put, _}, _, scene ) do
-    {:reply, {:error, :invalid}, scene }    
+  def handle_call({:put, _}, _, scene) do
+    {:reply, {:error, :invalid}, scene}
   end
-
 end

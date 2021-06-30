@@ -58,11 +58,9 @@ defmodule Scenic.Primitive.Style.Font do
   # ============================================================================
   # data verification and serialization
 
-
-
   def validate(id) when is_atom(id) or is_bitstring(id) do
     with {:ok, id_str} <- Static.resolve_alias(id),
-    {:ok, {:font, _}} <- Static.fetch( id_str ) do
+         {:ok, {:font, _}} <- Static.fetch(id_str) do
       {:ok, id_str}
     else
       {:ok, {:image, _}} -> err_is_an_image(id)
@@ -70,8 +68,8 @@ defmodule Scenic.Primitive.Style.Font do
       :error -> err_missing(id)
     end
   end
-  def validate(invalid), do: err_invalid( invalid )
 
+  def validate(invalid), do: err_invalid(invalid)
 
   defp err_is_an_image(id) do
     {
@@ -115,7 +113,7 @@ defmodule Scenic.Primitive.Style.Font do
       The asset #{inspect(id)} could not be found.
       #{IO.ANSI.yellow()}
       The :font style must be an id that names an font in your Scenic.Assets.Static library
-      
+
       To resolve this do the following checks.
         1) Confirm that the file exists in your assets folder.
 
@@ -130,7 +128,7 @@ defmodule Scenic.Primitive.Style.Font do
     }
   end
 
-  def err_invalid( invalid ) do
+  def err_invalid(invalid) do
     {
       :error,
       """
@@ -138,12 +136,11 @@ defmodule Scenic.Primitive.Style.Font do
       Received: #{inspect(invalid)}
       #{IO.ANSI.yellow()}
       The :font style must be an id that names an font in your Scenic.Assets.Static library
-      
+
       Examples:
         font: "fonts/my_font.ttf"
         font: :my_font{IO.ANSI.default_color()}
       """
     }
   end
-
 end

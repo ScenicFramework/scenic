@@ -187,12 +187,12 @@ defmodule Scenic.Components do
   end
 
   def button(
-    %Primitive{module: Primitive.Component, data: {Component.Button, _, _}} = p,
-    data, options
-  ) do
+        %Primitive{module: Primitive.Component, data: {Component.Button, _, _}} = p,
+        data,
+        options
+      ) do
     modify(p, data, options)
   end
-
 
   @doc """
   Generate an uninstantiated button spec, parallel to the concept of
@@ -259,12 +259,12 @@ defmodule Scenic.Components do
   end
 
   def checkbox(
-    %Primitive{module: Primitive.Component, data: {Component.Input.Checkbox, _, _}} = p,
-    data, options
-  ) do
+        %Primitive{module: Primitive.Component, data: {Component.Input.Checkbox, _, _}} = p,
+        data,
+        options
+      ) do
     modify(p, data, options)
   end
-
 
   @doc """
   Generate an uninstantiated checkbox spec, parallel to the concept of
@@ -358,12 +358,12 @@ defmodule Scenic.Components do
   end
 
   def dropdown(
-    %Primitive{module: Primitive.Component, data: {Component.Input.Dropdown, _, _}} = p,
-    data, options
-  ) do
+        %Primitive{module: Primitive.Component, data: {Component.Input.Dropdown, _, _}} = p,
+        data,
+        options
+      ) do
     modify(p, data, options)
   end
-
 
   @doc """
   Generate an uninstantiated dropdown spec, parallel to the concept of
@@ -451,12 +451,12 @@ defmodule Scenic.Components do
   end
 
   def radio_group(
-    %Primitive{module: Primitive.Component, data: {Component.Input.RadioGroup, _, _}} = p,
-    data, options
-  ) do
+        %Primitive{module: Primitive.Component, data: {Component.Input.RadioGroup, _, _}} = p,
+        data,
+        options
+      ) do
     modify(p, data, options)
   end
-
 
   @doc """
   Generate an uninstantiated radio_group spec, parallel to the concept of
@@ -540,13 +540,12 @@ defmodule Scenic.Components do
   end
 
   def slider(
-    %Primitive{module: Primitive.Component, data: {Component.Input.Slider, _, _}} = p,
-    data, options
-  ) do
+        %Primitive{module: Primitive.Component, data: {Component.Input.Slider, _, _}} = p,
+        data,
+        options
+      ) do
     modify(p, data, options)
   end
-
-
 
   @doc """
   Generate an uninstantiated slider spec, parallel to the concept of
@@ -633,12 +632,12 @@ defmodule Scenic.Components do
   end
 
   def text_field(
-    %Primitive{module: Primitive.Component, data: {Component.Input.TextField, _, _}} = p,
-    data, options
-  ) do
+        %Primitive{module: Primitive.Component, data: {Component.Input.TextField, _, _}} = p,
+        data,
+        options
+      ) do
     modify(p, data, options)
   end
-
 
   @doc """
   Generate an uninstantiated text_field spec, parallel to the concept of
@@ -702,9 +701,10 @@ defmodule Scenic.Components do
   end
 
   def toggle(
-    %Primitive{module: Primitive.Component, data: {Component.Input.Toggle, _, _}} = p,
-    data, options
-  ) do
+        %Primitive{module: Primitive.Component, data: {Component.Input.Toggle, _, _}} = p,
+        data,
+        options
+      ) do
     modify(p, data, options)
   end
 
@@ -717,24 +717,24 @@ defmodule Scenic.Components do
   # ============================================================================
   # generic workhorse versions
 
-# import IEx
+  # import IEx
   defp add_to_graph(%Graph{} = g, mod, data, options) do
-# pry()
-#     data = case mod.validate(data) do
-#       {:ok, data} -> {mod, data}
-#       {:error, msg} -> raise msg
-#     end
-# pry()
+    # pry()
+    #     data = case mod.validate(data) do
+    #       {:ok, data} -> {mod, data}
+    #       {:error, msg} -> raise msg
+    #     end
+    # pry()
     mod.add_to_graph(g, data, options)
   end
 
   defp modify(%Primitive{module: Primitive.Component, data: {mod, _, id}} = p, data, options) do
-    data = case mod.validate(data) do
-      {:ok, data} -> data
-      {:error, msg} -> raise msg
-    end
+    data =
+      case mod.validate(data) do
+        {:ok, data} -> data
+        {:error, msg} -> raise msg
+      end
+
     Primitive.put(p, {mod, data, id}, options)
   end
-
 end
-

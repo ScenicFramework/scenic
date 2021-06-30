@@ -34,8 +34,9 @@ defmodule Scenic.Primitive.Style.LineHeight do
   # ============================================================================
   # data verification and serialization
 
-  def validate( size ) when is_number(size), do: {:ok, size}
-  def validate( data )  do
+  def validate(size) when is_number(size), do: {:ok, size}
+
+  def validate(data) do
     {
       :error,
       """
@@ -46,5 +47,4 @@ defmodule Scenic.Primitive.Style.LineHeight do
       """
     }
   end
-
 end

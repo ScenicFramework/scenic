@@ -1,8 +1,9 @@
 defmodule Scenic.Utilities.Validators do
   @moduledoc false
 
-  def validate_xy( {x,y}, _ ) when is_number(x) and is_number(y), do: {:ok, {x,y}}
-  def validate_xy( data, name )  do
+  def validate_xy({x, y}, _) when is_number(x) and is_number(y), do: {:ok, {x, y}}
+
+  def validate_xy(data, name) do
     {
       :error,
       """
@@ -13,8 +14,9 @@ defmodule Scenic.Utilities.Validators do
     }
   end
 
-  def validate_wh( {w,h}, _ ) when is_number(w) and is_number(h), do: {:ok, {w,h}}
-  def validate_wh( data, name )  do
+  def validate_wh({w, h}, _) when is_number(w) and is_number(h), do: {:ok, {w, h}}
+
+  def validate_wh(data, name) do
     {
       :error,
       """
@@ -25,9 +27,10 @@ defmodule Scenic.Utilities.Validators do
     }
   end
 
-  def validate_scene( mod, _ ) when is_atom(mod), do: {:ok, {mod, nil}}
-  def validate_scene( {mod, param}, _ ) when is_atom(mod), do: {:ok, {mod, param}}
-  def validate_scene( data, name )  do
+  def validate_scene(mod, _) when is_atom(mod), do: {:ok, {mod, nil}}
+  def validate_scene({mod, param}, _) when is_atom(mod), do: {:ok, {mod, param}}
+
+  def validate_scene(data, name) do
     {
       :error,
       """
@@ -38,8 +41,9 @@ defmodule Scenic.Utilities.Validators do
     }
   end
 
-  def validate_vp( %Scenic.ViewPort{} = vp, _ ), do: {:ok, vp}
-  def validate_vp( data, name )  do
+  def validate_vp(%Scenic.ViewPort{} = vp, _), do: {:ok, vp}
+
+  def validate_vp(data, name) do
     {
       :error,
       """
@@ -49,6 +53,4 @@ defmodule Scenic.Utilities.Validators do
       """
     }
   end
-
-
 end

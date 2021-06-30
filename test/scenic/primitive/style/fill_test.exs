@@ -23,18 +23,21 @@ defmodule Scenic.Primitive.Style.FillTest do
   end
 
   test "validate accepts linear graient paint" do
-    assert Fill.validate({:linear, {1,2,3,4,:red,:green}}) ==
-      {:ok, {:linear, {1, 2, 3, 4, {:color_rgba, {255, 0, 0, 255}}, {:color_rgba, {0, 128, 0, 255}}}}}
+    assert Fill.validate({:linear, {1, 2, 3, 4, :red, :green}}) ==
+             {:ok,
+              {:linear,
+               {1, 2, 3, 4, {:color_rgba, {255, 0, 0, 255}}, {:color_rgba, {0, 128, 0, 255}}}}}
   end
 
   test "validate accepts radial graient paint" do
-    assert Fill.validate({:radial, {1,2,3,4,:red,:green}}) ==
-      {:ok, {:radial, {1, 2, 3, 4, {:color_rgba, {255, 0, 0, 255}}, {:color_rgba, {0, 128, 0, 255}}}}}
+    assert Fill.validate({:radial, {1, 2, 3, 4, :red, :green}}) ==
+             {:ok,
+              {:radial,
+               {1, 2, 3, 4, {:color_rgba, {255, 0, 0, 255}}, {:color_rgba, {0, 128, 0, 255}}}}}
   end
 
   test "validate rejects bad data" do
     {:error, msg} = Fill.validate(:invalid)
     assert msg =~ "must be a valid paint"
   end
-
 end

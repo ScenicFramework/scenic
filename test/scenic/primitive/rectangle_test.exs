@@ -36,7 +36,7 @@ defmodule Scenic.Primitive.RectangleTest do
     {:error, msg} = Rectangle.validate({40, "80"})
     assert msg =~ "Invalid Rectangle"
 
-    {:error, msg} = Rectangle.validate( :banana )
+    {:error, msg} = Rectangle.validate(:banana)
     assert msg =~ "Invalid Rectangle"
   end
 
@@ -45,18 +45,18 @@ defmodule Scenic.Primitive.RectangleTest do
 
   test "valid_styles works" do
     assert Rectangle.valid_styles() ==
-      [:hidden, :fill, :stroke_width, :stroke_fill, :join, :miter_limit]
+             [:hidden, :fill, :stroke_width, :stroke_fill, :join, :miter_limit]
   end
 
   # ============================================================================
   # compile
 
   test "compile works" do
-    p = Rectangle.build(@data )
-    assert Rectangle.compile(p, %{stroke_fill: :blue}) ==
-      [{:draw_rect, {40, 80, :stroke}}]
-  end
+    p = Rectangle.build(@data)
 
+    assert Rectangle.compile(p, %{stroke_fill: :blue}) ==
+             [{:draw_rect, {40, 80, :stroke}}]
+  end
 
   # ============================================================================
   # transform helpers

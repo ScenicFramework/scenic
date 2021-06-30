@@ -33,7 +33,7 @@ defmodule Scenic.Primitive.LineTest do
     {:error, msg} = Line.validate({{"10.5", 12}, {40, 80}})
     assert msg =~ "Invalid Line"
 
-    {:error, msg} = Line.validate( :banana )
+    {:error, msg} = Line.validate(:banana)
     assert msg =~ "Invalid Line"
   end
 
@@ -48,10 +48,9 @@ defmodule Scenic.Primitive.LineTest do
   # compile
 
   test "compile works" do
-    p = Line.build(@data )
+    p = Line.build(@data)
     assert Line.compile(p, %{stroke_fill: :blue}) == [{:draw_line, {10, 12, 40, 80, :stroke}}]
   end
-
 
   # ============================================================================
   # transform helpers

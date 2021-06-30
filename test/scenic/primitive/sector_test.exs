@@ -36,23 +36,29 @@ defmodule Scenic.Primitive.SectorTest do
     {:error, msg} = Sector.validate({100, "1.4"})
     assert msg =~ "Invalid Sector"
 
-    {:error, msg} = Sector.validate( :banana )
+    {:error, msg} = Sector.validate(:banana)
     assert msg =~ "Invalid Sector"
   end
-
 
   # ============================================================================
   # styles
 
   test "valid_styles works" do
-    assert Sector.valid_styles() == [:hidden, :fill, :stroke_width, :stroke_fill, :join, :miter_limit]
+    assert Sector.valid_styles() == [
+             :hidden,
+             :fill,
+             :stroke_width,
+             :stroke_fill,
+             :join,
+             :miter_limit
+           ]
   end
 
   # ============================================================================
   # compile
 
   test "compile works" do
-    p = Sector.build(@data )
+    p = Sector.build(@data)
     assert Sector.compile(p, %{stroke_fill: :blue}) == [{:draw_sector, {100, 1.4, :stroke}}]
   end
 

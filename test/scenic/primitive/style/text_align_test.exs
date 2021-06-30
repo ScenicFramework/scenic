@@ -19,5 +19,4 @@ defmodule Scenic.Primitive.Style.TextAlignTest do
     {:error, msg} = TextAlign.validate(:invalid)
     assert msg =~ "one of :left, :center, or :right"
   end
-
 end

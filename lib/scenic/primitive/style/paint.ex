@@ -37,7 +37,6 @@ defmodule Scenic.Primitive.Style.Paint do
   # ============================================================================
   # data verification and serialization
 
-
   def validate({:color, _} = opt), do: Paint.Color.validate(opt)
   def validate({:linear, _} = opt), do: Paint.LinearGradient.validate(opt)
   def validate({:radial, _} = opt), do: Paint.RadialGradient.validate(opt)
@@ -50,5 +49,4 @@ defmodule Scenic.Primitive.Style.Paint do
       err -> err
     end
   end
-
 end

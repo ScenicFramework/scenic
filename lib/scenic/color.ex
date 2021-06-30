@@ -226,28 +226,29 @@ defmodule Scenic.Color do
 
   """
 
-# import IEx
+  # import IEx
 
-  @g  :color_g
-  @ga  :color_ga
-  @rgb  :color_rgb
-  @rgba  :color_rgba
-  @hsv  :color_hsv
-
+  @g :color_g
+  @ga :color_ga
+  @rgb :color_rgb
+  @rgba :color_rgba
+  @hsv :color_hsv
 
   @type implied_n :: atom
-  @type implied_na :: {name::atom, a::pos_integer}
-  @type implied_g :: grey::pos_integer
+  @type implied_na :: {name :: atom, a :: pos_integer}
+  @type implied_g :: grey :: pos_integer
   @type implied_ga :: {grey :: pos_integer, alpha :: pos_integer}
   @type implied_rgb :: {red :: pos_integer, green :: pos_integer, blue :: pos_integer}
-  @type implied_rgba :: {red :: pos_integer, green :: pos_integer, blue :: pos_integer, alpha :: pos_integer}
+  @type implied_rgba ::
+          {red :: pos_integer, green :: pos_integer, blue :: pos_integer, alpha :: pos_integer}
   @type implied :: implied_n | implied_na | implied_g | implied_ga | implied_rgb | implied_rgba
 
-
-  @type g :: {:color_g, grey::pos_integer}
+  @type g :: {:color_g, grey :: pos_integer}
   @type ga :: {:color_ga, {grey :: pos_integer, alpha :: pos_integer}}
   @type rgb :: {:color_rgb, {red :: pos_integer, green :: pos_integer, blue :: pos_integer}}
-  @type rgba :: {:color_rgba, {red :: pos_integer, green :: pos_integer, blue :: pos_integer, alpha :: pos_integer}}
+  @type rgba ::
+          {:color_rgba,
+           {red :: pos_integer, green :: pos_integer, blue :: pos_integer, alpha :: pos_integer}}
   @type hsv :: {:color_hsv, {hue :: number, saturation :: number, value :: number}}
   @type explicit :: g | ga | rgb | rgba
 
@@ -259,7 +260,7 @@ defmodule Scenic.Color do
   @doc false
   defguard is_uint8(x) when is_integer(x) and x >= 0 and x <= 255
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Convert a specified color to G format (just grayscale)
 
@@ -267,187 +268,217 @@ defmodule Scenic.Color do
   """
   @spec to_g(color :: t()) :: g()
   def to_g(g) when is_uint8(g), do: {@g, g}
-  def to_g({g,a}) when is_uint8(g) and is_uint8(a), do: {@g, g}
-  def to_g({r,g,b}) when is_uint8(r) and is_uint8(g) and is_uint8(b) do
-    {@g, do_rgb_to_g({r,g,b})}
+  def to_g({g, a}) when is_uint8(g) and is_uint8(a), do: {@g, g}
+
+  def to_g({r, g, b}) when is_uint8(r) and is_uint8(g) and is_uint8(b) do
+    {@g, do_rgb_to_g({r, g, b})}
   end
-  def to_g({r,g,b,a})
-  when is_uint8(r) and is_uint8(g) and is_uint8(b) and is_uint8(a) do
-    {@g, do_rgb_to_g({r,g,b})}
+
+  def to_g({r, g, b, a})
+      when is_uint8(r) and is_uint8(g) and is_uint8(b) and is_uint8(a) do
+    {@g, do_rgb_to_g({r, g, b})}
   end
 
   def to_g({@g, g}), do: {@g, g}
-  def to_g({@ga, {g,_a}}), do: {@g, g}
+  def to_g({@ga, {g, _a}}), do: {@g, g}
   def to_g({@rgb, rgb}), do: {@g, do_rgb_to_g(rgb)}
-  def to_g({@rgba, {r,g,b,_a}}), do: {@g, do_rgb_to_g({r,g,b})}
+  def to_g({@rgba, {r, g, b, _a}}), do: {@g, do_rgb_to_g({r, g, b})}
+
   def to_g({@hsv, hsv}) do
     g =
       hsv
       |> do_hsv_to_rgb()
       |> do_rgb_to_g()
+
     {@g, g}
   end
 
   def to_g(name) when is_atom(name), do: {@g, name_to_rgb(name) |> do_rgb_to_g()}
-  def to_g({name,_a}) when is_atom(name), do: {@g, name_to_rgb(name) |> do_rgb_to_g()}
+  def to_g({name, _a}) when is_atom(name), do: {@g, name_to_rgb(name) |> do_rgb_to_g()}
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Convert a specified color to GA format
   """
   @spec to_ga(color :: t()) :: ga()
   def to_ga(g) when is_uint8(g), do: {@ga, {g, 0xFF}}
-  def to_ga({g,a}) when is_uint8(g) and is_uint8(a), do: {@ga, {g,a}}
-  def to_ga({r,g,b}) when is_uint8(r) and is_uint8(g) and is_uint8(b) do
-    {@ga, {do_rgb_to_g({r,g,b}), 0xFF}}
+  def to_ga({g, a}) when is_uint8(g) and is_uint8(a), do: {@ga, {g, a}}
+
+  def to_ga({r, g, b}) when is_uint8(r) and is_uint8(g) and is_uint8(b) do
+    {@ga, {do_rgb_to_g({r, g, b}), 0xFF}}
   end
-  def to_ga({r,g,b,a})
-  when is_uint8(r) and is_uint8(g) and is_uint8(b) and is_uint8(a) do
-    {@ga, {do_rgb_to_g({r,g,b}), a}}
+
+  def to_ga({r, g, b, a})
+      when is_uint8(r) and is_uint8(g) and is_uint8(b) and is_uint8(a) do
+    {@ga, {do_rgb_to_g({r, g, b}), a}}
   end
 
   def to_ga({@g, g}), do: {@ga, {g, 0xFF}}
   def to_ga({@ga, ga}), do: {@ga, ga}
   def to_ga({@rgb, rgb}), do: {@ga, {do_rgb_to_g(rgb), 0xFF}}
-  def to_ga({@rgba, {r,g,b,a}}), do: {@ga, {do_rgb_to_g({r,g,b}), a}}
+  def to_ga({@rgba, {r, g, b, a}}), do: {@ga, {do_rgb_to_g({r, g, b}), a}}
+
   def to_ga({@hsv, hsv}) do
     g =
       hsv
       |> do_hsv_to_rgb()
       |> do_rgb_to_g()
-    {@ga, {g,0xFF}}
+
+    {@ga, {g, 0xFF}}
   end
 
   def to_ga(name) when is_atom(name) do
     {@ga, {name_to_rgb(name) |> do_rgb_to_g(), 0xFF}}
   end
-  def to_ga({name,a}) when is_atom(name) and is_uint8(a) do
+
+  def to_ga({name, a}) when is_atom(name) and is_uint8(a) do
     {@ga, {name_to_rgb(name) |> do_rgb_to_g(), a}}
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Convert a specified color to RGB format
   """
   @spec to_rgb(color :: t()) :: rgb()
-  def to_rgb(g) when is_uint8(g), do: {@rgb, {g,g,g}}
-  def to_rgb({g,a}) when is_uint8(g) and is_uint8(a), do: {@rgb, {g,g,g}}
-  def to_rgb({r,g,b}) when is_uint8(r) and is_uint8(g) and is_uint8(b) do
-    {@rgb, {r,g,b}}
-  end
-  def to_rgb({r,g,b,a})
-  when is_uint8(r) and is_uint8(g) and is_uint8(b) and is_uint8(a) do
-    {@rgb, {r,g,b}}
+  def to_rgb(g) when is_uint8(g), do: {@rgb, {g, g, g}}
+  def to_rgb({g, a}) when is_uint8(g) and is_uint8(a), do: {@rgb, {g, g, g}}
+
+  def to_rgb({r, g, b}) when is_uint8(r) and is_uint8(g) and is_uint8(b) do
+    {@rgb, {r, g, b}}
   end
 
-  def to_rgb({@g, g}), do: {@rgb, {g,g,g}}
-  def to_rgb({@ga, {g,_}}), do: {@rgb, {g,g,g}}
+  def to_rgb({r, g, b, a})
+      when is_uint8(r) and is_uint8(g) and is_uint8(b) and is_uint8(a) do
+    {@rgb, {r, g, b}}
+  end
+
+  def to_rgb({@g, g}), do: {@rgb, {g, g, g}}
+  def to_rgb({@ga, {g, _}}), do: {@rgb, {g, g, g}}
   def to_rgb({@rgb, rgb}), do: {@rgb, rgb}
-  def to_rgb({@rgba, {r,g,b,_}}), do: {@rgb, {r,g,b}}
+  def to_rgb({@rgba, {r, g, b, _}}), do: {@rgb, {r, g, b}}
+
   def to_rgb({@hsv, hsv}) do
     {@rgb, do_hsv_to_rgb(hsv)}
   end
 
   def to_rgb(name) when is_atom(name), do: {@rgb, name_to_rgb(name)}
-  def to_rgb({name,a}) when is_atom(name) and is_uint8(a) do
+
+  def to_rgb({name, a}) when is_atom(name) and is_uint8(a) do
     {@rgb, name_to_rgb(name)}
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   @doc """
   Convert a specified color to RGBA format
   """
   @spec to_rgba(color :: t()) :: rgba()
-  def to_rgba(g) when is_uint8(g), do: {@rgba, {g,g,g, 0xFF}}
-  def to_rgba({g,a}) when is_uint8(g) and is_uint8(a), do: {@rgba, {g,g,g, a}}
-  def to_rgba({r,g,b}) when is_uint8(r) and is_uint8(g) and is_uint8(b) do
-    {@rgba, {r,g,b, 0xFF}}
-  end
-  def to_rgba({r,g,b,a})
-  when is_uint8(r) and is_uint8(g) and is_uint8(b) and is_uint8(a) do
-    {@rgba, {r,g,b,a}}
+  def to_rgba(g) when is_uint8(g), do: {@rgba, {g, g, g, 0xFF}}
+  def to_rgba({g, a}) when is_uint8(g) and is_uint8(a), do: {@rgba, {g, g, g, a}}
+
+  def to_rgba({r, g, b}) when is_uint8(r) and is_uint8(g) and is_uint8(b) do
+    {@rgba, {r, g, b, 0xFF}}
   end
 
-  def to_rgba({@g, g}), do: {@rgba, {g,g,g, 0xFF}}
-  def to_rgba({@ga, {g,a}}), do: {@rgba, {g,g,g, a}}
-  def to_rgba({@rgb, {r,g,b}}), do: {@rgba, {r,g,b,0xFF}}
-  def to_rgba({@rgba, {r,g,b,a}}), do: {@rgba, {r,g,b,a}}
+  def to_rgba({r, g, b, a})
+      when is_uint8(r) and is_uint8(g) and is_uint8(b) and is_uint8(a) do
+    {@rgba, {r, g, b, a}}
+  end
+
+  def to_rgba({@g, g}), do: {@rgba, {g, g, g, 0xFF}}
+  def to_rgba({@ga, {g, a}}), do: {@rgba, {g, g, g, a}}
+  def to_rgba({@rgb, {r, g, b}}), do: {@rgba, {r, g, b, 0xFF}}
+  def to_rgba({@rgba, {r, g, b, a}}), do: {@rgba, {r, g, b, a}}
+
   def to_rgba({@hsv, hsv}) do
-    {r,g,b} = do_hsv_to_rgb(hsv)
-    {@rgba, {r,g,b,0xFF}}
+    {r, g, b} = do_hsv_to_rgb(hsv)
+    {@rgba, {r, g, b, 0xFF}}
   end
 
-  def to_rgba(:clear), do: {@rgba, {0,0,0,0}}
-  def to_rgba(:transparent), do: {@rgba, {0,0,0,0}}
+  def to_rgba(:clear), do: {@rgba, {0, 0, 0, 0}}
+  def to_rgba(:transparent), do: {@rgba, {0, 0, 0, 0}}
+
   def to_rgba(name) when is_atom(name) do
-    {r,g,b} = name_to_rgb(name)
-    {@rgba, {r,g,b, 0xFF}}
-  end
-  def to_rgba({name,a}) when is_atom(name) and is_uint8(a) do
-    {r,g,b} = name_to_rgb(name)
-    {@rgba, {r,g,b,a}}
+    {r, g, b} = name_to_rgb(name)
+    {@rgba, {r, g, b, 0xFF}}
   end
 
-  #--------------------------------------------------------
+  def to_rgba({name, a}) when is_atom(name) and is_uint8(a) do
+    {r, g, b} = name_to_rgb(name)
+    {@rgba, {r, g, b, a}}
+  end
+
+  # --------------------------------------------------------
   @doc """
   Convert a color to the HSV color space
   """
   @spec to_hsv(color :: t()) :: hsv()
   def to_hsv({@hsv, hsv}), do: {@hsv, hsv}
+
   def to_hsv(color) do
     {@rgb, rgb} = to_rgb(color)
     {@hsv, do_rgb_to_hsv(rgb)}
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # internal helpers
 
-  #------------------------------------
-  defp do_rgb_to_g( {r, g, b} ) do
-    round( (r + g + b) / 3 )
+  # ------------------------------------
+  defp do_rgb_to_g({r, g, b}) do
+    round((r + g + b) / 3)
   end
 
-  #------------------------------------
-  def do_rgb_to_hsv( {0, 0, 0} ), do: {0, 0, 0}
-  def do_rgb_to_hsv( {r, g, b} ) do
+  # ------------------------------------
+  def do_rgb_to_hsv({0, 0, 0}), do: {0, 0, 0}
+
+  def do_rgb_to_hsv({r, g, b}) do
     # convert to range of 0 to 1
     r = r / 255
     g = g / 255
     b = b / 255
 
     # prep
-    min = min( r, g ) |> min( b )
-    max = max( r, g ) |> max( b )
+    min = min(r, g) |> min(b)
+    max = max(r, g) |> max(b)
     delta = max - min
 
     # calculate hsv
-    h = cond do
-      delta == 0 -> 0
-      r == max -> (g - b) / delta   # between yellow and magenta
-      g == max -> 2.0 + (b - r) / delta   # between cyan and yellow
-      b == max -> 4.0 + (r - g) / delta   # between magenta and cyan
-    end
-    |> Kernel.*(60.0)  # convert to degrees
+    h =
+      cond do
+        delta == 0 -> 0
+        # between yellow and magenta
+        r == max -> (g - b) / delta
+        # between cyan and yellow
+        g == max -> 2.0 + (b - r) / delta
+        # between magenta and cyan
+        b == max -> 4.0 + (r - g) / delta
+      end
+      # convert to degrees
+      |> Kernel.*(60.0)
+
     # make sure it is positive
-    h = case h < 0.0 do
-      true -> h + 360.0
-      false -> h
-    end
+    h =
+      case h < 0.0 do
+        true -> h + 360.0
+        false -> h
+      end
 
     s = delta / max
     v = max
 
-    {h,s,v}
+    {h, s, v}
   end
 
-  #------------------------------------
-  def do_hsv_to_rgb( {_, 0, v} ), do: {v, v, v}
-  def do_hsv_to_rgb( {h, s, v} ) do
+  # ------------------------------------
+  def do_hsv_to_rgb({_, 0, v}), do: {v, v, v}
+
+  def do_hsv_to_rgb({h, s, v}) do
     # prep hue
     h =
       h
-      |>rem_f(360.0)
-      |> Kernel./(60.0)  # convert away from degrees
+      |> rem_f(360.0)
+      # convert away from degrees
+      |> Kernel./(60.0)
+
     i = trunc(h)
     f = h - i
 
@@ -456,14 +487,15 @@ defmodule Scenic.Color do
     q = v * (1.0 - s * f)
     t = v * (1.0 - s * (1.0 - f))
 
-    {r,g,b} = case i do
-      0 -> {v, t, p}
-      1 -> {q, v, p}
-      2 -> {p, v, t}
-      3 -> {p, q, v}
-      4 -> {t, p, v}
-      _ -> {v, p, q}
-    end
+    {r, g, b} =
+      case i do
+        0 -> {v, t, p}
+        1 -> {q, v, p}
+        2 -> {p, v, t}
+        3 -> {p, q, v}
+        4 -> {t, p, v}
+        _ -> {v, p, q}
+      end
 
     # rgb is in 0 to 255 space
     {
@@ -473,20 +505,19 @@ defmodule Scenic.Color do
     }
   end
 
-
   # similar to rem, but works with floats
-  defp rem_f( num, base )
-  when is_number(num) and is_number(base)
-  and num >= 0 and base >= 0 do
+  defp rem_f(num, base)
+       when is_number(num) and is_number(base) and
+              num >= 0 and base >= 0 do
     num - trunc(num / base) * base
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # @doc """
   # Convert a named color to RGB format
   # """
-  @spec name_to_rgb(name :: atom) :: {red :: pos_integer, green :: pos_integer, blue :: pos_integer}
+  @spec name_to_rgb(name :: atom) ::
+          {red :: pos_integer, green :: pos_integer, blue :: pos_integer}
   defp name_to_rgb(name)
   defp name_to_rgb(:alice_blue), do: {0xF0, 0xF8, 0xFF}
   defp name_to_rgb(:antique_white), do: {0xFA, 0xEB, 0xD7}

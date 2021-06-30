@@ -38,7 +38,7 @@ defmodule Scenic.Primitive.Transform do
   alias Scenic.Math.Vector2
   alias Scenic.Primitive.Transform
 
-  @callback validate(data::any) :: {:ok, data::any} | {:error, String.t()}
+  @callback validate(data :: any) :: {:ok, data :: any} | {:error, String.t()}
 
   # ===========================================================================
 
@@ -48,25 +48,21 @@ defmodule Scenic.Primitive.Transform do
     :rotate => Transform.Rotate,
     :translate => Transform.Translate,
     :matrix => Transform.Matrix,
-
     :s => Transform.Scale,
     :r => Transform.Rotate,
-    :t => Transform.Translate,
+    :t => Transform.Translate
   }
 
   @opts_schema [
     translate: [type: {:custom, Transform.Translate, :validate, []}],
-    scale: [ type: {:custom, Transform.Scale, :validate, []}],
+    scale: [type: {:custom, Transform.Scale, :validate, []}],
     rotate: [type: {:custom, Transform.Rotate, :validate, []}],
     pin: [type: {:custom, Transform.Pin, :validate, []}],
     matrix: [type: {:custom, Transform.Matrix, :validate, []}],
-
     t: [rename_to: :translate],
     s: [rename_to: :scale],
     r: [rename_to: :rotate]
   ]
-
-
 
   @primitive_transforms [
     :pin,
@@ -76,10 +72,8 @@ defmodule Scenic.Primitive.Transform do
     :matrix
   ]
 
-
   def opts_map(), do: @opts_map
   def opts_schema(), do: @opts_schema
-
 
   # ===========================================================================
   #  defmacro __using__([type_code: type_code]) when is_integer(type_code) do
@@ -90,7 +84,6 @@ defmodule Scenic.Primitive.Transform do
   end
 
   def valid(), do: @primitive_transforms
-
 
   # ============================================================================
   # transform helper functions

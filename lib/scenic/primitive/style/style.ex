@@ -74,7 +74,7 @@ defmodule Scenic.Primitive.Style do
 
   # import IEx
 
-  @type m :: %{ atom => any }
+  @type m :: %{atom => any}
 
   @opts_map %{
     :input => Style.Input,
@@ -97,7 +97,6 @@ defmodule Scenic.Primitive.Style do
     :theme => Style.Theme
   }
 
-
   @opts_schema [
     input: [type: {:custom, Style.Input, :validate, []}],
     hidden: [type: {:custom, Style.Hidden, :validate, []}],
@@ -113,11 +112,10 @@ defmodule Scenic.Primitive.Style do
     text_base: [type: {:custom, Style.TextBase, :validate, []}],
     # text_height: [type: {:custom, Style.TextHeight, :validate, []}],
     scissor: [type: {:custom, Style.Scissor, :validate, []}],
-    theme: [type: {:custom, Style.Theme, :validate, []}],
+    theme: [type: {:custom, Style.Theme, :validate, []}]
   ]
 
-
-  @callback validate(data::any) :: {:ok, data::any} | {:error, String.t()} 
+  @callback validate(data :: any) :: {:ok, data :: any} | {:error, String.t()}
 
   def opts_map(), do: @opts_map
   def opts_schema(), do: @opts_schema
@@ -134,5 +132,4 @@ defmodule Scenic.Primitive.Style do
       @behaviour Scenic.Primitive.Style
     end
   end
-
 end

@@ -26,8 +26,9 @@ defmodule Scenic.Scene.Supervisor do
   def init(opts) when is_list(opts) do
     opts =
       opts
-      |> Keyword.put( :stop_pid, self() )
-      |> Keyword.put( :supervisor, self() )
+      |> Keyword.put(:stop_pid, self())
+      |> Keyword.put(:supervisor, self())
+
     [
       {DynamicSupervisor, strategy: :one_for_one},
       {Scenic.Scene, [opts]}

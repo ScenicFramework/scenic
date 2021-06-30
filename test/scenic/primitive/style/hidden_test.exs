@@ -18,5 +18,4 @@ defmodule Scenic.Primitive.Style.HiddenTest do
     {:error, msg} = Hidden.validate("way off")
     assert msg =~ "true or false"
   end
-  
 end

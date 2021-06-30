@@ -41,12 +41,12 @@ defmodule Scenic.Primitive.Rectangle do
   @styles [:hidden, :fill, :stroke_width, :stroke_fill, :join, :miter_limit]
 
   @impl Primitive
-  @spec validate( t() ) :: {:ok, t()} | {:error, String.t()}
-  def validate( {width, height} ) when is_number(width) and is_number(height) do
+  @spec validate(t()) :: {:ok, t()} | {:error, String.t()}
+  def validate({width, height}) when is_number(width) and is_number(height) do
     {:ok, {width, height}}
   end
 
-  def validate( data ) do
+  def validate(data) do
     {
       :error,
       """
@@ -58,7 +58,6 @@ defmodule Scenic.Primitive.Rectangle do
     }
   end
 
-
   # --------------------------------------------------------
   @doc """
   Returns a list of styles recognized by this primitive.
@@ -67,21 +66,16 @@ defmodule Scenic.Primitive.Rectangle do
   @spec valid_styles() :: styles_t()
   def valid_styles(), do: @styles
 
-
   # --------------------------------------------------------
   @doc """
   Compile the data for this primitive into a mini script. This can be combined with others to
   generate a larger script and is called when a graph is compiled.
   """
   @impl Primitive
-  @spec compile( primitive::Primitive.t(), styles::Style.m() ) :: Script.t()
-  def compile( %Primitive{module: __MODULE__, data: {width, height}}, styles ) do
-    Script.draw_rectangle([], width, height, Script.draw_flag(styles) )
+  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
+  def compile(%Primitive{module: __MODULE__, data: {width, height}}, styles) do
+    Script.draw_rectangle([], width, height, Script.draw_flag(styles))
   end
-
-
-
-
 
   # --------------------------------------------------------
   def default_pin(data), do: centroid(data)

@@ -109,25 +109,23 @@ defmodule Scenic.Component.Input.Dropdown do
 
   @border_width 2
 
-
   # --------------------------------------------------------
   @impl Scenic.Component
-  def validate( {items, _} = data ) when is_list(items) do
-
+  def validate({items, _} = data) when is_list(items) do
     # confirm all the entries
-    Enum.reduce( items, {:ok, data}, fn
+    Enum.reduce(items, {:ok, data}, fn
       _, {:error, _} = error -> error
-
       {text, _}, acc when is_bitstring(text) -> acc
-
-      item, _ -> err_bad_item( item, data )
+      item, _ -> err_bad_item(item, data)
     end)
     |> case do
-      {:error, _} = err -> err
+      {:error, _} = err ->
+        err
+
       {:ok, {items, initial}} ->
         # confirm that initial is in the items list
         items
-        |> Enum.any?( fn{_, id} -> id == initial end )
+        |> Enum.any?(fn {_, id} -> id == initial end)
         |> case do
           true -> {:ok, data}
           false -> err_initial(data)
@@ -135,7 +133,7 @@ defmodule Scenic.Component.Input.Dropdown do
     end
   end
 
-  def validate( data ) do
+  def validate(data) do
     {
       :error,
       """
@@ -149,7 +147,7 @@ defmodule Scenic.Component.Input.Dropdown do
     }
   end
 
-  defp err_bad_item( item, data ) do
+  defp err_bad_item(item, data) do
     {
       :error,
       """
@@ -164,7 +162,7 @@ defmodule Scenic.Component.Input.Dropdown do
     }
   end
 
-  defp err_initial( {_, initial} = data ) do
+  defp err_initial({_, initial} = data) do
     {
       :error,
       """
@@ -179,7 +177,6 @@ defmodule Scenic.Component.Input.Dropdown do
     }
   end
 
-
   # --------------------------------------------------------
   @doc false
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
@@ -193,7 +190,7 @@ defmodule Scenic.Component.Input.Dropdown do
       |> Theme.normalize()
 
     # font related info
-    {:ok, {:font, fm}} = Static.fetch( @default_font )
+    {:ok, {:font, fm}} = Static.fetch(@default_font)
     ascent = FontMetrics.ascent(@default_font_size, fm)
     descent = FontMetrics.descent(@default_font_size, fm)
 
@@ -254,12 +251,13 @@ defmodule Scenic.Component.Input.Dropdown do
     dy = @border_width / 2
 
     graph =
-      Graph.build(font: @default_font, font_size: @default_font_size, t: {dx,dy})
+      Graph.build(font: @default_font, font_size: @default_font_size, t: {dx, dy})
       |> rect(
         {width, height},
         fill: theme.background,
         stroke: {@border_width, theme.border},
-        id: @button_id, input: true
+        id: @button_id,
+        input: true
       )
       |> text(initial_text,
         fill: theme.text,
@@ -323,7 +321,7 @@ defmodule Scenic.Component.Input.Dropdown do
 
     scene =
       scene
-      |> assign([
+      |> assign(
         graph: graph,
         selected_id: initial_id,
         theme: theme,
@@ -333,9 +331,8 @@ defmodule Scenic.Component.Input.Dropdown do
         items: items,
         drop_time: 0,
         rotate_caret: rotate_caret
-      ])
-      |> push_graph( graph )
-
+      )
+      |> push_graph(graph)
 
     {:ok, scene}
   end
@@ -349,15 +346,24 @@ defmodule Scenic.Component.Input.Dropdown do
   # --------------------------------------------------------
   # mouse is moving around
   def handle_input(
-        {:cursor_pos, _}, nil,
-        %Scene{assigns: %{down: true, items: items, graph: graph, selected_id: selected_id, theme: theme}} = scene
+        {:cursor_pos, _},
+        nil,
+        %Scene{
+          assigns: %{
+            down: true,
+            items: items,
+            graph: graph,
+            selected_id: selected_id,
+            theme: theme
+          }
+        } = scene
       ) do
     # set the appropriate hilighting for each of the items
     graph = update_highlighting(graph, items, selected_id, nil, theme)
 
-    scene = 
+    scene =
       scene
-      |> assign( [hover_id: nil, graph: graph] ) 
+      |> assign(hover_id: nil, graph: graph)
       |> push_graph(graph)
 
     {:noreply, scene}
@@ -365,31 +371,49 @@ defmodule Scenic.Component.Input.Dropdown do
 
   # over the @button_id
   def handle_input(
-        {:cursor_pos, _}, @button_id,
-        %Scene{assigns: %{down: true, items: items, graph: graph, selected_id: selected_id, theme: theme}} = scene
+        {:cursor_pos, _},
+        @button_id,
+        %Scene{
+          assigns: %{
+            down: true,
+            items: items,
+            graph: graph,
+            selected_id: selected_id,
+            theme: theme
+          }
+        } = scene
       ) do
     # set the appropriate hilighting for each of the items
     graph = update_highlighting(graph, items, selected_id, nil, theme)
 
     scene =
       scene
-      |> assign( [hover_id: nil, graph: graph] ) 
-      |> push_graph( graph )
+      |> assign(hover_id: nil, graph: graph)
+      |> push_graph(graph)
 
     {:noreply, scene}
   end
 
   # over an item
   def handle_input(
-        {:cursor_pos, _}, id,
-        %Scene{assigns: %{down: true, items: items, graph: graph, selected_id: selected_id, theme: theme}} = scene
+        {:cursor_pos, _},
+        id,
+        %Scene{
+          assigns: %{
+            down: true,
+            items: items,
+            graph: graph,
+            selected_id: selected_id,
+            theme: theme
+          }
+        } = scene
       ) do
     # set the appropriate hilighting for each of the items
     graph = update_highlighting(graph, items, selected_id, id, theme)
 
-    scene = 
+    scene =
       scene
-      |> assign( [hover_id: nil, graph: graph] ) 
+      |> assign(hover_id: nil, graph: graph)
       |> push_graph(graph)
 
     {:noreply, scene}
@@ -397,7 +421,8 @@ defmodule Scenic.Component.Input.Dropdown do
 
   # --------------------------------------------------------
   def handle_input(
-        {:cursor_button, {0, :press, _, _}}, @button_id,
+        {:cursor_button, {0, :press, _, _}},
+        @button_id,
         %Scene{assigns: %{down: false, graph: graph, rotate_caret: rotate_caret}} = scene
       ) do
     # capture input
@@ -411,51 +436,58 @@ defmodule Scenic.Component.Input.Dropdown do
 
     scene =
       scene
-      |> assign( [down: true, graph: graph, drop_time: :os.system_time(:milli_seconds)] ) 
-      |> push_graph( graph )
-# IO.inspect(scene, label: "Press IN")
+      |> assign(down: true, graph: graph, drop_time: :os.system_time(:milli_seconds))
+      |> push_graph(graph)
+
+    # IO.inspect(scene, label: "Press IN")
     {:noreply, scene}
   end
 
   # pressing the button when down, raises it back up without doing anything else
   def handle_input(
-        {:cursor_button, {0, :press, _, _}}, @button_id,
-        %Scene{assigns: %{
-          down: true,
-          theme: theme,
-          items: items,
-          graph: graph,
-          selected_id: selected_id,
-        }} = scene
+        {:cursor_button, {0, :press, _, _}},
+        @button_id,
+        %Scene{
+          assigns: %{
+            down: true,
+            theme: theme,
+            items: items,
+            graph: graph,
+            selected_id: selected_id
+          }
+        } = scene
       ) do
-      # we are outside the window, raise it back up
-      graph =
-        graph
-        |> update_highlighting(items, selected_id, nil, theme)
-        |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
-        |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
+    # we are outside the window, raise it back up
+    graph =
+      graph
+      |> update_highlighting(items, selected_id, nil, theme)
+      |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
+      |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
 
-      :ok = release_input( scene )
+    :ok = release_input(scene)
 
-      scene =
-        scene
-        |> assign( [down: false, hover_id: nil, graph: graph] )
-        |> push_graph( graph )
+    scene =
+      scene
+      |> assign(down: false, hover_id: nil, graph: graph)
+      |> push_graph(graph)
 
-      {:noreply, scene}
+    {:noreply, scene}
   end
 
   # releasing the button when down, raises it back up without doing anything else
   def handle_input(
-        {:cursor_button, {0, :release, _, _}}, @button_id,
-        %Scene{assigns: %{
-          down: true,
-          drop_time: drop_time,
-          theme: theme,
-          items: items,
-          graph: graph,
-          selected_id: selected_id,
-        }} = scene
+        {:cursor_button, {0, :release, _, _}},
+        @button_id,
+        %Scene{
+          assigns: %{
+            down: true,
+            drop_time: drop_time,
+            theme: theme,
+            items: items,
+            graph: graph,
+            selected_id: selected_id
+          }
+        } = scene
       ) do
     if :os.system_time(:milli_seconds) - drop_time <= @drop_click_window_ms do
       # we are still in the click window, leave the menu down.
@@ -468,12 +500,12 @@ defmodule Scenic.Component.Input.Dropdown do
         |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
         |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
 
-      :ok = release_input( scene )
+      :ok = release_input(scene)
 
       scene =
         scene
-        |> assign( [down: false, hover_id: nil, graph: graph] )
-        |> push_graph( graph )
+        |> assign(down: false, hover_id: nil, graph: graph)
+        |> push_graph(graph)
 
       {:noreply, scene}
     end
@@ -482,15 +514,19 @@ defmodule Scenic.Component.Input.Dropdown do
   # --------------------------------------------------------
   # the button is pressed or released over an item with the drop open
   def handle_input(
-        {:cursor_button, {0, _, _, _}}, item_id,
-        %Scene{assigns: %{
-          down: true,
-          id: id,
-          items: items,
-          theme: theme,
-          graph: graph
-        }} = scene
-      ) when item_id != nil do
+        {:cursor_button, {0, _, _, _}},
+        item_id,
+        %Scene{
+          assigns: %{
+            down: true,
+            id: id,
+            items: items,
+            theme: theme,
+            graph: graph
+          }
+        } = scene
+      )
+      when item_id != nil do
     # send the value_changed message
     send_parent_event(scene, {:value_changed, id, item_id})
 
@@ -500,19 +536,19 @@ defmodule Scenic.Component.Input.Dropdown do
     graph =
       graph
       # update the main button text
-      |> Graph.modify( @text_id, &text(&1, text) )
+      |> Graph.modify(@text_id, &text(&1, text))
       # restore standard highliting
       |> update_highlighting(items, item_id, nil, theme)
       # raise the dropdown
       |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
       |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
 
-    :ok = release_input( scene )
+    :ok = release_input(scene)
 
     scene =
       scene
-      |> assign( [down: false, graph: graph, selected_id: item_id] )
-      |> push_graph( graph )
+      |> assign(down: false, graph: graph, selected_id: item_id)
+      |> push_graph(graph)
 
     {:noreply, scene}
   end
@@ -520,30 +556,32 @@ defmodule Scenic.Component.Input.Dropdown do
   # --------------------------------------------------------
   # the button is pressed or released outside the dropdown space
   def handle_input(
-        {:cursor_button, {0, _, _, _}}, _,
-        %Scene{assigns: %{
-          # down: true,
-          items: items,
-          theme: theme,
-          selected_id: selected_id,
-          graph: graph,
-        }} = scene
+        {:cursor_button, {0, _, _, _}},
+        _,
+        %Scene{
+          assigns: %{
+            # down: true,
+            items: items,
+            theme: theme,
+            selected_id: selected_id,
+            graph: graph
+          }
+        } = scene
       ) do
+    graph = handle_cursor_button(graph, items, selected_id, theme)
 
-    graph = handle_cursor_button( graph, items, selected_id, theme)
-
-    :ok = release_input( scene )
+    :ok = release_input(scene)
 
     scene =
       scene
-      |> assign( [down: false, graph: graph] )
-      |> push_graph( graph )
+      |> assign(down: false, graph: graph)
+      |> push_graph(graph)
 
     {:noreply, scene}
   end
 
   # ignore other button press events
-  def handle_input({:cursor_button, {_, _, _, _}}, _id, scene ) do
+  def handle_input({:cursor_button, {_, _, _, _}}, _id, scene) do
     {:noreply, scene}
   end
 
@@ -576,54 +614,44 @@ defmodule Scenic.Component.Input.Dropdown do
     |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
   end
 
-
-
   # --------------------------------------------------------
   @impl GenServer
   @doc false
-  def handle_call( :fetch, _, %{assigns: %{selected_id: selected_id}} = scene ) do
-    {:reply, {:ok, selected_id}, scene }
+  def handle_call(:fetch, _, %{assigns: %{selected_id: selected_id}} = scene) do
+    {:reply, {:ok, selected_id}, scene}
   end
 
-  def handle_call( {:put, id}, _, %{assigns: %{items: items}} = scene) do
+  def handle_call({:put, id}, _, %{assigns: %{items: items}} = scene) do
     Enum.find(items, fn
       {_, ^id} -> true
       _ -> false
     end)
     |> case do
-      {text, id} -> {:reply, :ok, do_put(text, id, scene) }
-      _ -> {:reply, {:error, :invalid}, scene }
+      {text, id} -> {:reply, :ok, do_put(text, id, scene)}
+      _ -> {:reply, {:error, :invalid}, scene}
     end
   end
 
-  defp do_put( text, item_id, %Scene{assigns: %{
-          items: items,
-          theme: theme,
-          graph: graph,
-          hover_id: hover_id
-        }} = scene ) do
+  defp do_put(
+         text,
+         item_id,
+         %Scene{
+           assigns: %{
+             items: items,
+             theme: theme,
+             graph: graph,
+             hover_id: hover_id
+           }
+         } = scene
+       ) do
     graph =
       graph
       # update the main button text
-      |> Graph.modify( @text_id, &text(&1, text) )
-      |> update_highlighting( items, item_id, hover_id, theme )
+      |> Graph.modify(@text_id, &text(&1, text))
+      |> update_highlighting(items, item_id, hover_id, theme)
 
     scene
-    |> assign( [graph: graph, selected_id: item_id] )
-    |> push_graph( graph )
+    |> assign(graph: graph, selected_id: item_id)
+    |> push_graph(graph)
   end
-
 end
-
-
-
-
-
-
-
-
-
-
-
-
-

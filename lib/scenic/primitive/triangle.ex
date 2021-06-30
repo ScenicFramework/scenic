@@ -37,22 +37,23 @@ defmodule Scenic.Primitive.Triangle do
   alias Scenic.Primitive
   alias Scenic.Primitive.Style
 
-  @type t :: {{x0::number, y0::number}, {x1::number, y1::number}, {x2::number, y2::number}}
+  @type t ::
+          {{x0 :: number, y0 :: number}, {x1 :: number, y1 :: number},
+           {x2 :: number, y2 :: number}}
   @type styles_t :: [:hidden | :fill | :stroke_width | :stroke_fill | :join | :miter_limit]
 
   @styles [:hidden, :fill, :stroke_width, :stroke_fill, :join, :miter_limit]
 
-
   @impl Primitive
-  @spec validate( t() ) :: {:ok, t()} | {:error, String.t()}
-  def validate( {{x0,y0}, {x1,y1}, {x2,y2}} = data ) when
-  is_number(x0) and is_number(y0) and
-  is_number(x1) and is_number(y1) and
-  is_number(x2) and is_number(y2)do
+  @spec validate(t()) :: {:ok, t()} | {:error, String.t()}
+  def validate({{x0, y0}, {x1, y1}, {x2, y2}} = data)
+      when is_number(x0) and is_number(y0) and
+             is_number(x1) and is_number(y1) and
+             is_number(x2) and is_number(y2) do
     {:ok, data}
   end
 
-  def validate( data ) do
+  def validate(data) do
     {
       :error,
       """
@@ -73,16 +74,15 @@ defmodule Scenic.Primitive.Triangle do
   @spec valid_styles() :: styles_t()
   def valid_styles(), do: @styles
 
-
   # --------------------------------------------------------
   @doc """
   Compile the data for this primitive into a mini script. This can be combined with others to
   generate a larger script and is called when a graph is compiled.
   """
-  @spec compile( primitive::Primitive.t(), styles::Style.m() ) :: Script.t()
+  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
   @impl Primitive
-  def compile( %Primitive{module: __MODULE__, data: {{x0,y0}, {x1,y1}, {x2,y2}}}, styles) do
-    Script.draw_triangle( [], x0, y0, x1, y1, x2, y2, Script.draw_flag(styles) )
+  def compile(%Primitive{module: __MODULE__, data: {{x0, y0}, {x1, y1}, {x2, y2}}}, styles) do
+    Script.draw_triangle([], x0, y0, x1, y1, x2, y2, Script.draw_flag(styles))
   end
 
   # --------------------------------------------------------

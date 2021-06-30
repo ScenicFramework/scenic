@@ -15,7 +15,6 @@ defmodule Scenic.Scene do
 
   alias Scenic.Utilities.Validators
 
-
   require Logger
 
   # import IEx
@@ -257,7 +256,6 @@ defmodule Scenic.Scene do
   For example, the Button component sets `has_children` to `false`.
   """
 
-
   @type t :: %Scene{
           viewport: ViewPort.t(),
           pid: pid,
@@ -272,17 +270,16 @@ defmodule Scenic.Scene do
           stop_pid: pid
         }
   defstruct viewport: nil,
-    pid: nil, 
-    module: nil,
-    theme: nil,
-    id: nil,
-    parent: nil,
-    children: nil,
-    child_supervisor: nil,
-    assigns: %{},
-    supervisor: nil,
-    stop_pid: nil
-
+            pid: nil,
+            module: nil,
+            theme: nil,
+            id: nil,
+            parent: nil,
+            children: nil,
+            child_supervisor: nil,
+            assigns: %{},
+            supervisor: nil,
+            stop_pid: nil
 
   @type response_opts ::
           list(
@@ -303,130 +300,128 @@ defmodule Scenic.Scene do
   # @doc """
   # """
 
-  @spec get( scene :: Scene.t, key :: any, default :: any ) :: any
-  def get( %Scene{assigns: assigns}, key, default \\ nil ) do
-    Map.get( assigns, key, default )
+  @spec get(scene :: Scene.t(), key :: any, default :: any) :: any
+  def get(%Scene{assigns: assigns}, key, default \\ nil) do
+    Map.get(assigns, key, default)
   end
 
-  @spec fetch( scene :: Scene.t, key :: any ) :: {:ok, any} | :error
-  def fetch( %Scene{assigns: assigns}, key ) do
-    Map.fetch( assigns, key )
+  @spec fetch(scene :: Scene.t(), key :: any) :: {:ok, any} | :error
+  def fetch(%Scene{assigns: assigns}, key) do
+    Map.fetch(assigns, key)
   end
 
-  @spec assign( scene :: Scene.t, key_list :: Keyword.t ) :: Scene.t
-  def assign( %Scene{} = scene, key_list ) when is_list(key_list) do
-    Enum.reduce( key_list, scene, fn({k,v}, acc) -> assign(acc, k, v) end)
+  @spec assign(scene :: Scene.t(), key_list :: Keyword.t()) :: Scene.t()
+  def assign(%Scene{} = scene, key_list) when is_list(key_list) do
+    Enum.reduce(key_list, scene, fn {k, v}, acc -> assign(acc, k, v) end)
   end
 
-  @spec assign( scene :: Scene.t, key :: any, value :: any ) :: Scene.t
-  def assign( %Scene{assigns: assigns} = scene, key, value ) do
-    %{ scene | assigns: Map.put(assigns, key, value) }
+  @spec assign(scene :: Scene.t(), key :: any, value :: any) :: Scene.t()
+  def assign(%Scene{assigns: assigns} = scene, key, value) do
+    %{scene | assigns: Map.put(assigns, key, value)}
   end
 
-  @spec parent( scene :: Scene.t ) :: {:ok, parent::pid}
-  def parent( %Scene{parent: parent} ), do: {:ok, parent}
+  @spec parent(scene :: Scene.t()) :: {:ok, parent :: pid}
+  def parent(%Scene{parent: parent}), do: {:ok, parent}
 
-  @spec children( scene :: Scene.t ) ::
-    {:ok, [{id :: any, child_pid :: pid}]} |
-    {:error, :no_children}
-  def children( %Scene{children: nil} ), do: {:error, :no_children}
-  def children( %Scene{children: children} ) do
-    { :ok, Enum.map(children, fn({_, {_, pid, id}}) -> {id, pid} end) }
+  @spec children(scene :: Scene.t()) ::
+          {:ok, [{id :: any, child_pid :: pid}]}
+          | {:error, :no_children}
+  def children(%Scene{children: nil}), do: {:error, :no_children}
+
+  def children(%Scene{children: children}) do
+    {:ok, Enum.map(children, fn {_, {_, pid, id}} -> {id, pid} end)}
   end
 
-  @spec child( scene :: Scene.t, id :: any ) ::
-    {:ok, [child_pid :: pid]} | {:error, :no_children}
-  def child( %Scene{children: nil}, _ ), do: {:error, :no_children}
-  def child( %Scene{children: children}, id ) do
+  @spec child(scene :: Scene.t(), id :: any) ::
+          {:ok, [child_pid :: pid]} | {:error, :no_children}
+  def child(%Scene{children: nil}, _), do: {:error, :no_children}
+
+  def child(%Scene{children: children}, id) do
     {
       :ok,
       children
-      |> Enum.reduce( [], fn
+      |> Enum.reduce([], fn
         {_, {_, pid, ^id}}, acc -> [pid | acc]
         _, acc -> acc
-      end )
+      end)
     }
   end
 
-  @spec get_transform( scene :: Scene.t ) :: Math.matrix()
-  def get_transform( %Scene{viewport: %ViewPort{pid: pid}, id: id} ) do
-    case GenServer.call( pid, {:fetch_scene_tx, id} ) do
+  @spec get_transform(scene :: Scene.t()) :: Math.matrix()
+  def get_transform(%Scene{viewport: %ViewPort{pid: pid}, id: id}) do
+    case GenServer.call(pid, {:fetch_scene_tx, id}) do
       {:ok, tx} -> tx
       _ -> Math.Matrix.identity()
     end
   end
 
-  @spec fetch_transform( scene :: Scene.t ) ::
-    {:ok, Math.matrix()} | {:error, :not_found}
-  def fetch_transform( %Scene{viewport: %ViewPort{pid: pid}, id: id} ) do
-    GenServer.call( pid, {:fetch_scene_tx, id} )
+  @spec fetch_transform(scene :: Scene.t()) ::
+          {:ok, Math.matrix()} | {:error, :not_found}
+  def fetch_transform(%Scene{viewport: %ViewPort{pid: pid}, id: id}) do
+    GenServer.call(pid, {:fetch_scene_tx, id})
   end
 
-  @spec local_to_global( scene :: Scene.t, Math.point ) :: Math.point
-  def local_to_global( scene, {x,y} ) do
+  @spec local_to_global(scene :: Scene.t(), Math.point()) :: Math.point()
+  def local_to_global(scene, {x, y}) do
     scene
     |> get_transform()
-    |> Scenic.Math.Matrix.project_vector( {x,y} )
+    |> Scenic.Math.Matrix.project_vector({x, y})
   end
 
-  @spec global_to_local( scene :: Scene.t, Math.point ) :: Math.point
-  def global_to_local( scene, {x,y} ) do
+  @spec global_to_local(scene :: Scene.t(), Math.point()) :: Math.point()
+  def global_to_local(scene, {x, y}) do
     scene
     |> get_transform()
     |> Scenic.Math.Matrix.invert()
-    |> Scenic.Math.Matrix.project_vector( {x,y} )
+    |> Scenic.Math.Matrix.project_vector({x, y})
   end
-
 
   @doc "Send a message to a scene's parent"
-  def send_event( _event_msg ) do
-    IO.warn(
-      """
-      send_event/1 from within a scene is deprecated.
-      Use send_parent_event/2 instead
+  def send_event(_event_msg) do
+    IO.warn("""
+    send_event/1 from within a scene is deprecated.
+    Use send_parent_event/2 instead
 
-      Example: send_parent_event( scene, :my_event )
+    Example: send_parent_event( scene, :my_event )
 
-      send_event/1 was unclear who it was sending to and needed to access hidden state
-      that is now explicitly stored in the %Scene{} struct.
-      """
-    )
+    send_event/1 was unclear who it was sending to and needed to access hidden state
+    that is now explicitly stored in the %Scene{} struct.
+    """)
   end
 
-
-  @spec send_parent_event( scene :: Scene.t, event :: any ) :: :ok
-  def send_parent_event( %Scene{parent: parent_pid, pid: scene_pid}, event_msg ) do
-    Process.send( parent_pid, {:_event, event_msg, scene_pid}, [] )
+  @spec send_parent_event(scene :: Scene.t(), event :: any) :: :ok
+  def send_parent_event(%Scene{parent: parent_pid, pid: scene_pid}, event_msg) do
+    Process.send(parent_pid, {:_event, event_msg, scene_pid}, [])
   end
 
-  @spec send_parent( scene :: Scene.t, msg :: any ) :: :ok
-  def send_parent( %Scene{parent: pid}, msg ) do
-    Process.send( pid, msg, [] )
+  @spec send_parent(scene :: Scene.t(), msg :: any) :: :ok
+  def send_parent(%Scene{parent: pid}, msg) do
+    Process.send(pid, msg, [])
   end
 
-  @spec cast_parent( scene :: Scene.t, msg :: any ) :: :ok
-  def cast_parent( %Scene{parent: pid}, msg ) do
-    GenServer.cast( pid, msg )
+  @spec cast_parent(scene :: Scene.t(), msg :: any) :: :ok
+  def cast_parent(%Scene{parent: pid}, msg) do
+    GenServer.cast(pid, msg)
   end
 
-  @spec send_children( scene :: Scene.t, msg :: any ) :: :ok | {:error, :no_children}
-  def send_children( %Scene{children: nil}, _msg ), do: {:error, :no_children}
-  def send_children( %Scene{children: kids}, msg ) do
-    Enum.each( kids, fn({_, {_, pid, _}}) -> Process.send(pid, msg, []) end)
+  @spec send_children(scene :: Scene.t(), msg :: any) :: :ok | {:error, :no_children}
+  def send_children(%Scene{children: nil}, _msg), do: {:error, :no_children}
+
+  def send_children(%Scene{children: kids}, msg) do
+    Enum.each(kids, fn {_, {_, pid, _}} -> Process.send(pid, msg, []) end)
   end
 
-  @spec cast_children( scene :: Scene.t, msg :: any ) :: :ok | {:error, :no_children}
-  def cast_children( %Scene{children: nil}, _msg ), do: {:error, :no_children}
-  def cast_children( %Scene{children: kids}, msg ) do
-    Enum.each( kids, fn({_, {_, pid, _}}) -> GenServer.cast(pid, msg) end)
+  @spec cast_children(scene :: Scene.t(), msg :: any) :: :ok | {:error, :no_children}
+  def cast_children(%Scene{children: nil}, _msg), do: {:error, :no_children}
+
+  def cast_children(%Scene{children: kids}, msg) do
+    Enum.each(kids, fn {_, {_, pid, _}} -> GenServer.cast(pid, msg) end)
   end
 
-  @spec stop( scene :: Scene.t ) :: :ok
-  def stop( %Scene{supervisor: supervisor, stop_pid: stop_pid} ) do
-    DynamicSupervisor.terminate_child( supervisor, stop_pid )
+  @spec stop(scene :: Scene.t()) :: :ok
+  def stop(%Scene{supervisor: supervisor, stop_pid: stop_pid}) do
+    DynamicSupervisor.terminate_child(supervisor, stop_pid)
   end
-
-
 
   # --------------------------------------------------------
   @doc """
@@ -445,13 +440,12 @@ defmodule Scenic.Scene do
           scene :: Scene.t(),
           input_class :: ViewPort.Input.class() | [ViewPort.Input.class()]
         ) :: :ok | {:error, atom}
-  def request_input( scene, input_class )
-  def request_input( scene, input ) when is_atom(input), do: request_input( scene, [input] )
-  def request_input( %Scene{viewport: vp, pid: pid}, inputs ) when is_list( inputs ) do
-    ViewPort.Input.request( vp, inputs, pid )
+  def request_input(scene, input_class)
+  def request_input(scene, input) when is_atom(input), do: request_input(scene, [input])
+
+  def request_input(%Scene{viewport: vp, pid: pid}, inputs) when is_list(inputs) do
+    ViewPort.Input.request(vp, inputs, pid)
   end
-
-
 
   # --------------------------------------------------------
   @doc """
@@ -459,27 +453,28 @@ defmodule Scenic.Scene do
 
   This is intended be called by a Scene process, but doesn't need to be.
   """
-  @spec unrequest_input( scene :: Scene.t(),
+  @spec unrequest_input(
+          scene :: Scene.t(),
           input_class :: ViewPort.Input.class() | [ViewPort.Input.class()] | :all
         ) :: :ok | {:error, atom}
-  def unrequest_input( scene, input_class \\ :all )
-  def unrequest_input( %Scene{viewport: vp, pid: pid}, input_class )  do
-    ViewPort.Input.unrequest( vp, input_class, pid )
+  def unrequest_input(scene, input_class \\ :all)
+
+  def unrequest_input(%Scene{viewport: vp, pid: pid}, input_class) do
+    ViewPort.Input.unrequest(vp, input_class, pid)
   end
 
-  
   # --------------------------------------------------------
   @doc """
   Fetch a list of input requested by the given scene.
 
   This is intended be called by a Scene process, but doesn't need to be.
   """
-  @spec fetch_requests( scene :: Scene.t() ) :: {:ok, [ViewPort.Input.class()]} | {:error, atom}
-  def fetch_requests( scene )
-  def fetch_requests( %Scene{viewport: vp, pid: pid} )  do
-    ViewPort.Input.fetch_requests( vp, pid )
-  end
+  @spec fetch_requests(scene :: Scene.t()) :: {:ok, [ViewPort.Input.class()]} | {:error, atom}
+  def fetch_requests(scene)
 
+  def fetch_requests(%Scene{viewport: vp, pid: pid}) do
+    ViewPort.Input.fetch_requests(vp, pid)
+  end
 
   # --------------------------------------------------------
   @doc """
@@ -498,13 +493,12 @@ defmodule Scenic.Scene do
           scene :: Scene.t(),
           input_class :: ViewPort.Input.class() | [ViewPort.Input.class()]
         ) :: :ok | {:error, atom}
-  def capture_input( scene, input_class )
-  def capture_input( scene, input ) when is_atom(input), do: capture_input( scene, [input] )
-  def capture_input( %Scene{viewport: vp, pid: pid}, inputs ) when is_list( inputs ) do
-    ViewPort.Input.capture( vp, inputs, pid )
+  def capture_input(scene, input_class)
+  def capture_input(scene, input) when is_atom(input), do: capture_input(scene, [input])
+
+  def capture_input(%Scene{viewport: vp, pid: pid}, inputs) when is_list(inputs) do
+    ViewPort.Input.capture(vp, inputs, pid)
   end
-
-
 
   # --------------------------------------------------------
   @doc """
@@ -512,12 +506,14 @@ defmodule Scenic.Scene do
 
   This is intended be called by a Scene process, but doesn't need to be.
   """
-  @spec release_input( scene :: Scene.t(),
+  @spec release_input(
+          scene :: Scene.t(),
           input_class :: ViewPort.Input.class() | [ViewPort.Input.class()] | :all
         ) :: :ok | {:error, atom}
-  def release_input( scene, input_class \\ :all )
-  def release_input( %Scene{viewport: vp, pid: pid}, input_class )  do
-    ViewPort.Input.release( vp, input_class, pid )
+  def release_input(scene, input_class \\ :all)
+
+  def release_input(%Scene{viewport: vp, pid: pid}, input_class) do
+    ViewPort.Input.release(vp, input_class, pid)
   end
 
   # --------------------------------------------------------
@@ -526,14 +522,12 @@ defmodule Scenic.Scene do
 
   This is intended be called by a Scene process, but doesn't need to be.
   """
-  @spec fetch_captures( scene :: Scene.t() ) :: {:ok, [ViewPort.Input.class()]} | {:error, atom}
-  def fetch_captures( scene )
-  def fetch_captures( %Scene{viewport: vp, pid: pid} )  do
-    ViewPort.Input.fetch_captures( vp, pid )
+  @spec fetch_captures(scene :: Scene.t()) :: {:ok, [ViewPort.Input.class()]} | {:error, atom}
+  def fetch_captures(scene)
+
+  def fetch_captures(%Scene{viewport: vp, pid: pid}) do
+    ViewPort.Input.fetch_captures(vp, pid)
   end
-  
-
-
 
   # def push_graph( %Scene{} = scene, %Graph{} = graph, name \\ nil ) do
   #   scene_state = Scene.push_graph( graph, name, Process.get(:scene_state) )
@@ -542,40 +536,53 @@ defmodule Scenic.Scene do
   #   graph
   # end
 
-  @spec push_script( scene :: Scene.t, script :: Scenic.Script.t, name :: any, opts :: Keyword.t ) :: Scene.t
-  def push_script( %Scene{viewport: vp} = scene, script, name, opts \\ [] ) do
-    ViewPort.put_script( vp, name, script, opts )
+  @spec push_script(
+          scene :: Scene.t(),
+          script :: Scenic.Script.t(),
+          name :: any,
+          opts :: Keyword.t()
+        ) :: Scene.t()
+  def push_script(%Scene{viewport: vp} = scene, script, name, opts \\ []) do
+    ViewPort.put_script(vp, name, script, opts)
     scene
   end
 
+  @spec push_graph(scene :: Scene.t(), graph :: Graph.t(), name :: any) :: Scene.t()
+  def push_graph(scene, graph, id \\ nil)
 
-  @spec push_graph( scene :: Scene.t, graph :: Graph.t, name :: any ) :: Scene.t
-  def push_graph( scene, graph, id \\ nil )
-  def push_graph( %Scene{id: id} = scene, %Graph{} = graph, nil ) do
-    push_graph( scene, graph, id ) 
+  def push_graph(%Scene{id: id} = scene, %Graph{} = graph, nil) do
+    push_graph(scene, graph, id)
   end
-  def push_graph( %Scene{
-    viewport: viewport,
-    id: scene_id,
-    theme: theme,
-    children: children
-    } = scene, %Graph{} = graph, id
-  ) do
-    id = case id do
-      nil -> scene_id
-      id -> id
-    end
+
+  def push_graph(
+        %Scene{
+          viewport: viewport,
+          id: scene_id,
+          theme: theme,
+          children: children
+        } = scene,
+        %Graph{} = graph,
+        id
+      ) do
+    id =
+      case id do
+        nil -> scene_id
+        id -> id
+      end
 
     # if the graph does not have a theme set at the root, then
     # set the default theme for this scene automatically
-    graph = case graph.primitives[0].styles[:theme] do
-      nil ->
-        Graph.modify(graph, :_root_, &Primitive.merge_opts(&1, theme: theme) )
-      _ -> graph
-    end
+    graph =
+      case graph.primitives[0].styles[:theme] do
+        nil ->
+          Graph.modify(graph, :_root_, &Primitive.merge_opts(&1, theme: theme))
+
+        _ ->
+          graph
+      end
 
     # put the graph to the ViewPort
-    ViewPort.put_graph( viewport, id, graph )
+    ViewPort.put_graph(viewport, id, graph)
 
     # manage the child components
     case children do
@@ -584,84 +591,86 @@ defmodule Scenic.Scene do
     end
   end
 
-
   # manage the components running on a scene
   # meant to be called internally
   @doc false
   defp manage_children(
-    %Graph{} = graph, graph_name,
-    %Scene{
-      viewport: viewport,
-      children: children,
-      child_supervisor: child_supervisor
-    }
-  ) do
+         %Graph{} = graph,
+         graph_name,
+         %Scene{
+           viewport: viewport,
+           children: children,
+           child_supervisor: child_supervisor
+         }
+       ) do
     # scan the graph and extract a list of component data
-    components = Graph.reduce(graph, [], fn
-      %{ module: Primitive.Component, data: {mod, param, name}, opts: opts} = p, acc ->
+    components =
+      Graph.reduce(graph, [], fn
+        %{module: Primitive.Component, data: {mod, param, name}, opts: opts} = p, acc ->
+          # special case theme. Is the only style that inherits down to components
+          # this is tricky as it could, in turn be inherited by a parent
+          opts =
+            case find_theme(graph, p) do
+              {:ok, theme} -> Keyword.put(opts, :theme, theme)
+              _ -> opts
+            end
 
-        # special case theme. Is the only style that inherits down to components
-        # this is tricky as it could, in turn be inherited by a parent
-        opts = case find_theme(graph, p) do
-          {:ok, theme} -> Keyword.put( opts, :theme, theme )
-          _ -> opts
-        end
+          [{name, {mod, param}, Map.get(p, :id), opts} | acc]
 
-        [ {name, {mod, param}, Map.get(p, :id), opts} | acc ]
-
-      _, acc -> acc
-    end)
+        _, acc ->
+          acc
+      end)
 
     # the currently running children could have come from multiple graphs.
     # extract the ones that relate to this graph.
-    running_children = Enum.filter( children, fn({{gname,_}, _}) -> gname == graph_name end)
+    running_children = Enum.filter(children, fn {{gname, _}, _} -> gname == graph_name end)
 
     # find the components that are not already running
-    start_children = Enum.reject(components, fn({sn, _, _, _}) ->
-      Enum.any?(running_children, fn({{_, rn},_}) -> rn == sn end)
-    end)
-    
-    # find components that are running, but are no longer in the graph
-    stop_children = Enum.reject(running_children, fn({{_, rn},_}) ->
-      Enum.any?(components, fn({sn, _, _, _}) -> rn == sn end)
-    end)
+    start_children =
+      Enum.reject(components, fn {sn, _, _, _} ->
+        Enum.any?(running_children, fn {{_, rn}, _} -> rn == sn end)
+      end)
 
+    # find components that are running, but are no longer in the graph
+    stop_children =
+      Enum.reject(running_children, fn {{_, rn}, _} ->
+        Enum.any?(components, fn {sn, _, _, _} -> rn == sn end)
+      end)
 
     # start the components that need to be started
-    children = Enum.reduce( start_children, children, fn({name, {mod, param}, id, opts}, acc) ->
+    children =
+      Enum.reduce(start_children, children, fn {name, {mod, param}, id, opts}, acc ->
+        opts =
+          opts
+          |> Component.filter_opts()
 
-      opts = opts
-      |> Component.filter_opts()
-      opts = case id do
-        nil -> opts
-        id -> Keyword.put( opts, :id, id )
-      end
+        opts =
+          case id do
+            nil -> opts
+            id -> Keyword.put(opts, :id, id)
+          end
 
-      {:ok, top, scene} = Scene.start([
-        name: name,
-        module: mod,
-        parent: self(),
-        param: param,
-        viewport: viewport,
-        root_sup: child_supervisor,
-        opts: opts
-      ])
-      Map.put( acc, {graph_name,name}, {top, scene, id} )
-    end)
+        {:ok, top, scene} =
+          Scene.start(
+            name: name,
+            module: mod,
+            parent: self(),
+            param: param,
+            viewport: viewport,
+            root_sup: child_supervisor,
+            opts: opts
+          )
+
+        Map.put(acc, {graph_name, name}, {top, scene, id})
+      end)
 
     # stop the components that need to be stopped
     # returns the updated children
-    Enum.reduce( stop_children, children, fn({key, {pid, _, _}}, acc) ->
-      DynamicSupervisor.terminate_child( child_supervisor, pid )
-      Map.delete( acc, key )
+    Enum.reduce(stop_children, children, fn {key, {pid, _, _}}, acc ->
+      DynamicSupervisor.terminate_child(child_supervisor, pid)
+      Map.delete(acc, key)
     end)
   end
-
-
-
-
-
-
 
   # ============================================================================
   # callback definitions
@@ -690,7 +699,7 @@ defmodule Scenic.Scene do
 
   This has replaced push_graph() as the preferred way to push a graph.
   """
-  @callback handle_input(input :: Scenic.ViewPort.Input.t(), id:: any, scene :: Scene.t) ::
+  @callback handle_input(input :: Scenic.ViewPort.Input.t(), id :: any, scene :: Scene.t()) ::
               {:noreply, scene}
               | {:noreply, scene}
               | {:noreply, scene, timeout}
@@ -705,7 +714,7 @@ defmodule Scenic.Scene do
               | {:cont, input, scene, :hibernate}
               | {:cont, input, scene, opts :: response_opts()}
               | {:stop, reason, scene}
-            when scene: Scene.t, reason: term, input: term
+            when scene: Scene.t(), reason: term, input: term
 
   @doc """
   Invoked when the `Scene` receives an event from another scene.
@@ -731,7 +740,7 @@ defmodule Scenic.Scene do
 
   This has replaced push_graph() as the preferred way to push a graph.
   """
-  @callback handle_event(event :: term, from :: pid, scene :: Scene.t) ::
+  @callback handle_event(event :: term, from :: pid, scene :: Scene.t()) ::
               {:noreply, scene}
               | {:noreply, scene}
               | {:noreply, scene, timeout}
@@ -746,7 +755,7 @@ defmodule Scenic.Scene do
               | {:cont, event, scene, :hibernate}
               | {:cont, event, scene, opts :: response_opts()}
               | {:stop, reason, scene}
-            when scene: Scene.t, reason: term, event: term
+            when scene: Scene.t(), reason: term, event: term
 
   @doc """
   Invoked when the `Scene` is started.
@@ -775,7 +784,7 @@ defmodule Scenic.Scene do
   to the ViewPort. This is preferable to the old push_graph() function.
   """
 
-  @callback init(scene :: Scene.t, args :: term, options :: list) ::
+  @callback init(scene :: Scene.t(), args :: term, options :: list) ::
               {:ok, new_state}
               | {:ok, new_state, timeout :: non_neg_integer}
               | {:ok, new_state, :hibernate}
@@ -784,10 +793,8 @@ defmodule Scenic.Scene do
               | {:stop, reason :: any}
             when new_state: any
 
-
   @optional_callbacks handle_event: 3,
                       handle_input: 3
-
 
   # ============================================================================
   # using macro
@@ -815,7 +822,7 @@ defmodule Scenic.Scene do
         unquote(
           case using_opts[:has_children] do
             false -> false
-            _  -> true
+            _ -> true
           end
         )
       end
@@ -841,6 +848,7 @@ defmodule Scenic.Scene do
       defoverridable terminate: 2,
                      handle_event: 3,
                      handle_input: 3
+
       # quote
     end
 
@@ -858,36 +866,36 @@ defmodule Scenic.Scene do
     # if function_exported?(scene_module, :child_spec, 1) do
     #   scene_module.child_spec({args, opts})
     # else
-      %{
-        id: make_ref(),
-        start: {__MODULE__, :start_link, opts},
-        type: :worker,
-        restart: :permanent,
-        shutdown: 500
-      }
+    %{
+      id: make_ref(),
+      start: {__MODULE__, :start_link, opts},
+      type: :worker,
+      restart: :permanent,
+      shutdown: 500
+    }
+
     # end
   end
 
   # ============================================================================
   # internal server api
   @doc false
-  def start_link( args ) do
-    GenServer.start_link( __MODULE__, args )
+  def start_link(args) do
+    GenServer.start_link(__MODULE__, args)
   end
-
 
   # --------------------------------------------------------
   @doc false
-  def init( opts ) do
+  def init(opts) do
     vp = opts[:viewport]
-    GenServer.cast( vp.pid, {:register_scene, self(), opts[:name], opts[:parent]} )
+    GenServer.cast(vp.pid, {:register_scene, self(), opts[:name], opts[:parent]})
     {:ok, nil, {:continue, {:_init, opts}}}
   end
 
   # ============================================================================
   # terminate
 
-  def terminate( reason, %Scene{module: module} = scene ) do
+  def terminate(reason, %Scene{module: module} = scene) do
     module.terminate(reason, scene)
   end
 
@@ -899,19 +907,20 @@ defmodule Scenic.Scene do
   # handle_continue
 
   # --------------------------------------------------------
-  def handle_continue( {:_init, opts}, nil ) do
+  def handle_continue({:_init, opts}, nil) do
     module = opts[:module]
     has_children = module._has_children?()
     viewport = opts[:viewport]
     param = opts[:param]
     id = opts[:name]
 
-    theme = with {:ok, st} <- Keyword.fetch( opts, :opts ),
-    {:ok, theme} <- Keyword.fetch( st, :theme ) do
-      theme
-    else
-      err -> raise "Theme not set on scene. Should not happen. #{inspect(err)}"
-    end
+    theme =
+      with {:ok, st} <- Keyword.fetch(opts, :opts),
+           {:ok, theme} <- Keyword.fetch(st, :theme) do
+        theme
+      else
+        err -> raise "Theme not set on scene. Should not happen. #{inspect(err)}"
+      end
 
     # set up the state that is always set
     scene = %Scene{
@@ -922,43 +931,47 @@ defmodule Scenic.Scene do
       theme: theme,
       id: id,
       supervisor: opts[:root_sup],
-      stop_pid: opts[:stop_pid] || self(),
+      stop_pid: opts[:stop_pid] || self()
     }
 
     # if this scene as children, find the child supervisor
-    scene = case has_children do
-      true ->
-        [_, {_, child_sup, :supervisor, [DynamicSupervisor]}] = opts[:supervisor]
-          |> Supervisor.which_children()
-        %{ scene | children: %{}, child_supervisor: child_sup }
+    scene =
+      case has_children do
+        true ->
+          [_, {_, child_sup, :supervisor, [DynamicSupervisor]}] =
+            opts[:supervisor]
+            |> Supervisor.which_children()
 
-      false ->
-        scene
-    end
+          %{scene | children: %{}, child_supervisor: child_sup}
+
+        false ->
+          scene
+      end
 
     # default input is just the cursor_button
-    request_input( scene, :cursor_button )
+    request_input(scene, :cursor_button)
 
     # start up the scene
-    response = case module.init( scene, param, opts[:opts] || [] ) do
-      {:ok, %Scene{} = state} ->
-        { :noreply, state }
+    response =
+      case module.init(scene, param, opts[:opts] || []) do
+        {:ok, %Scene{} = state} ->
+          {:noreply, state}
 
-      {:ok, _other} ->
-        raise "Invalid response from #{module}.init/3 State must be a %Scene{}"
+        {:ok, _other} ->
+          raise "Invalid response from #{module}.init/3 State must be a %Scene{}"
 
-      {:ok, %Scene{} = state, opt} ->
-        { :noreply, state, opt }
+        {:ok, %Scene{} = state, opt} ->
+          {:noreply, state, opt}
 
-      {:ok, _other, _opt} ->
-        raise "Invalid response from #{module}.init/3 State must be a %Scene{}"
+        {:ok, _other, _opt} ->
+          raise "Invalid response from #{module}.init/3 State must be a %Scene{}"
 
-      :ignore ->
-        :ignore
+        :ignore ->
+          :ignore
 
-      {:stop, reason} ->
-        {:stop, reason}
-    end
+        {:stop, reason} ->
+          {:stop, reason}
+      end
 
     # signal the vp that the scene is done starting up
     GenServer.cast(viewport.pid, {:scene_complete, id})
@@ -966,14 +979,13 @@ defmodule Scenic.Scene do
     response
   end
 
-
   # --------------------------------------------------------
   # generic handle_continue. give the scene a chance to handle it
   @doc false
-  def handle_continue( msg, %Scene{module: module} = scene ) do
+  def handle_continue(msg, %Scene{module: module} = scene) do
     case module.handle_continue(msg, scene) do
-      {:noreply, %Scene{} = scene} -> { :noreply, scene }
-      {:noreply, %Scene{} = scene, opts} -> { :noreply, scene, opts }
+      {:noreply, %Scene{} = scene} -> {:noreply, scene}
+      {:noreply, %Scene{} = scene, opts} -> {:noreply, scene, opts}
       response -> response
     end
   end
@@ -987,31 +999,45 @@ defmodule Scenic.Scene do
         %Scene{module: module, viewport: %{pid: vp_pid}} = scene
       ) do
     case module.handle_input(input, id, scene) do
-      {:noreply, %Scene{} = scene} -> { :noreply, scene }
-      {:noreply, %Scene{} = scene, opts} -> { :noreply, scene, opts }
-      {:halt, %Scene{} = scene} -> { :noreply, scene }
-      {:halt, %Scene{} = scene, opts} -> { :noreply, scene, opts }
+      {:noreply, %Scene{} = scene} ->
+        {:noreply, scene}
+
+      {:noreply, %Scene{} = scene, opts} ->
+        {:noreply, scene, opts}
+
+      {:halt, %Scene{} = scene} ->
+        {:noreply, scene}
+
+      {:halt, %Scene{} = scene, opts} ->
+        {:noreply, scene, opts}
 
       {:cont, scene} ->
         GenServer.cast(vp_pid, {:continue_input, raw_input})
-        { :noreply, scene }
+        {:noreply, scene}
 
       {:cont, scene, opts} ->
         GenServer.cast(vp_pid, {:continue_input, raw_input})
-        { :noreply, scene, opts }
+        {:noreply, scene, opts}
 
-      response -> response
+      response ->
+        response
     end
   end
 
   # --------------------------------------------------------
-  def handle_info( {:_event, event, from}, %Scene{module: module} = scene ) do
-
+  def handle_info({:_event, event, from}, %Scene{module: module} = scene) do
     case module.handle_event(event, from, scene) do
-      {:noreply, %Scene{} = scene} -> { :noreply, scene }
-      {:noreply, %Scene{} = scene, opts} -> { :noreply, scene, opts }
-      {:halt, %Scene{} = scene} -> {:noreply, scene}
-      {:halt, %Scene{} = scene, opts} -> {:noreply, scene, opts}
+      {:noreply, %Scene{} = scene} ->
+        {:noreply, scene}
+
+      {:noreply, %Scene{} = scene, opts} ->
+        {:noreply, scene, opts}
+
+      {:halt, %Scene{} = scene} ->
+        {:noreply, scene}
+
+      {:halt, %Scene{} = scene, opts} ->
+        {:noreply, scene, opts}
 
       {:cont, event, %Scene{parent: parent} = scene} ->
         GenServer.cast(parent, {:_event, event, from})
@@ -1021,7 +1047,8 @@ defmodule Scenic.Scene do
         GenServer.cast(parent, {:_event, event, from})
         {:noreply, scene, opts}
 
-      response -> response
+      response ->
+        response
     end
   end
 
@@ -1030,12 +1057,11 @@ defmodule Scenic.Scene do
   @doc false
   def handle_info(msg, %Scene{module: module} = scene) do
     case module.handle_info(msg, scene) do
-      {:noreply, %Scene{} = scene} -> { :noreply, scene }
-      {:noreply, %Scene{} = scene, opts} -> { :noreply, scene, opts }
+      {:noreply, %Scene{} = scene} -> {:noreply, scene}
+      {:noreply, %Scene{} = scene, opts} -> {:noreply, scene, opts}
       response -> response
     end
   end
-
 
   # ============================================================================
   # handle_call
@@ -1043,17 +1069,17 @@ defmodule Scenic.Scene do
   # --------------------------------------------------------
   # A way to test for alive?, but also to force synchronization
   def handle_call(:_ping_, _from, %Scene{} = scene) do
-    { :reply, :_pong_, scene }
+    {:reply, :_pong_, scene}
   end
 
   # --------------------------------------------------------
   # generic handle_call. give the scene a chance to handle it
   def handle_call(msg, from, %Scene{module: module} = scene) do
     case module.handle_call(msg, from, scene) do
-      {:noreply, %Scene{} = scene} -> { :noreply, scene }
-      {:noreply, %Scene{} = scene, opts} -> { :noreply, scene, opts }
-      {:reply, reply, %Scene{} = scene} -> { :reply, reply, scene }
-      {:reply, reply, %Scene{} = scene, opts} -> { :reply, reply, scene, opts }
+      {:noreply, %Scene{} = scene} -> {:noreply, scene}
+      {:noreply, %Scene{} = scene, opts} -> {:noreply, scene, opts}
+      {:reply, reply, %Scene{} = scene} -> {:reply, reply, scene}
+      {:reply, reply, %Scene{} = scene, opts} -> {:reply, reply, scene, opts}
       response -> response
     end
   end
@@ -1067,8 +1093,8 @@ defmodule Scenic.Scene do
   # generic handle_cast. give the scene a chance to handle it
   def handle_cast(msg, %Scene{module: module} = scene) do
     case module.handle_cast(msg, scene) do
-      {:noreply, %Scene{} = scene} -> { :noreply, scene }
-      {:noreply, %Scene{} = scene, opts} -> { :noreply, scene, opts }
+      {:noreply, %Scene{} = scene} -> {:noreply, scene}
+      {:noreply, %Scene{} = scene, opts} -> {:noreply, scene, opts}
       response -> response
     end
   end
@@ -1076,36 +1102,37 @@ defmodule Scenic.Scene do
   # ============================================================================
   # Scene management
 
-
   @start_schema [
-    name: [required: true, type: :any ],
+    name: [required: true, type: :any],
     module: [required: true, type: :atom],
     parent: [required: true, type: :pid],
     viewport: [required: true, type: {:custom, Validators, :validate_vp, [:viewport]}],
     root_sup: [required: true, type: :pid],
     stop_pid: [type: :pid],
-    param: [type: :any, default: nil ],
-    child_supervisor: [ type: {:or, [:pid, :atom]}, default: nil ],
-    opts: [ type: :keyword_list, default: [] ]
+    param: [type: :any, default: nil],
+    child_supervisor: [type: {:or, [:pid, :atom]}, default: nil],
+    opts: [type: :keyword_list, default: []]
   ]
 
   # --------------------------------------------------------
   # this a root-level dynamic scene
   @doc false
-  def start( opts ) do
+  def start(opts) do
     root_sup = opts[:root_sup]
 
     # make invalid opts really obvious by crashing
-    opts = case NimbleOptions.validate( opts, @start_schema ) do
-      {:ok, opts} -> opts
-      {:error, error} -> raise Exception.message( error )
-    end
+    opts =
+      case NimbleOptions.validate(opts, @start_schema) do
+        {:ok, opts} -> opts
+        {:error, error} -> raise Exception.message(error)
+      end
 
     # signal the VP that the scene is starting up
     vp = opts[:viewport]
     GenServer.cast(vp.pid, {:scene_start, opts[:name]})
 
     module = opts[:module]
+
     try do
       module._has_children?()
     rescue
@@ -1116,30 +1143,32 @@ defmodule Scenic.Scene do
     |> case do
       # has children. Start intermediate fixed supervisor
       true ->
-        {:ok, sup} = DynamicSupervisor.start_child( root_sup, {Scene.Supervisor, [opts]} )
+        {:ok, sup} = DynamicSupervisor.start_child(root_sup, {Scene.Supervisor, [opts]})
         # find the pid of the actual scene and return it with the direct supervisor
-        pid = sup
-        |> Supervisor.which_children()
-        |> Enum.find_value(fn
-          {_, pid, :worker, [Scene]} -> pid
-          _ -> false
-        end)
+        pid =
+          sup
+          |> Supervisor.which_children()
+          |> Enum.find_value(fn
+            {_, pid, :worker, [Scene]} -> pid
+            _ -> false
+          end)
+
         # the immediate child is the new supervisor, the pid is the scene
         {:ok, sup, pid}
 
       # no children, start it directly
       false ->
-        {:ok, pid} = DynamicSupervisor.start_child( root_sup, {Scene, [opts]} )
+        {:ok, pid} = DynamicSupervisor.start_child(root_sup, {Scene, [opts]})
         # there is no supervisor, so pid and child are the same thing
         {:ok, pid, pid}
     end
   end
 
-  defp find_theme(_g, %Primitive{styles: %{theme: theme}} ), do: {:ok, theme}
-  defp find_theme(_, %Primitive{parent_uid: -1} ), do: {:error, :not_found}
+  defp find_theme(_g, %Primitive{styles: %{theme: theme}}), do: {:ok, theme}
+  defp find_theme(_, %Primitive{parent_uid: -1}), do: {:error, :not_found}
+
   defp find_theme(g, %Primitive{parent_uid: p_uid}) do
     # try the parent
-    find_theme( g, g.primitives[p_uid] )
+    find_theme(g, g.primitives[p_uid])
   end
-
 end

@@ -33,16 +33,14 @@ defmodule Scenic.Primitive.Style.Stroke do
   # ============================================================================
   # data verification and serialization
 
-
-  def validate( {width, paint} = data ) when is_number(width) and width >= 0 do
+  def validate({width, paint} = data) when is_number(width) and width >= 0 do
     case Paint.validate(paint) do
       {:ok, paint} -> {:ok, {width, paint}}
-      {:error, msg} -> err_paint( data, msg )
+      {:error, msg} -> err_paint(data, msg)
     end
   end
-  def validate( data ), do: err_invalid(data)
 
-
+  def validate(data), do: err_invalid(data)
 
   defp err_paint(data, msg) do
     {
@@ -69,5 +67,4 @@ defmodule Scenic.Primitive.Style.Stroke do
       """
     }
   end
-
 end

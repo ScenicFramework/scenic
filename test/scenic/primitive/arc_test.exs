@@ -36,10 +36,9 @@ defmodule Scenic.Primitive.ArcTest do
     {:error, msg} = Arc.validate({100, "1.4"})
     assert msg =~ "Invalid Arc"
 
-    {:error, msg} = Arc.validate( :banana )
+    {:error, msg} = Arc.validate(:banana)
     assert msg =~ "Invalid Arc"
   end
-
 
   # ============================================================================
   # styles
@@ -52,7 +51,7 @@ defmodule Scenic.Primitive.ArcTest do
   # compile
 
   test "compile works" do
-    p = Arc.build(@data )
+    p = Arc.build(@data)
     assert Arc.compile(p, %{stroke_fill: :blue}) == [{:draw_arc, {100, 1.4, :stroke}}]
   end
 

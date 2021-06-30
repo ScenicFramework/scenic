@@ -89,8 +89,8 @@ defmodule Scenic.GraphTest do
     graph = Graph.build(fill: :dark_slate_blue)
 
     assert graph.primitives[@root_uid]
-      |> Primitive.get_styles()
-      |> Map.get(:fill) == {:color, {:color_rgba, {72, 61, 139, 255}}}
+           |> Primitive.get_styles()
+           |> Map.get(:fill) == {:color, {:color_rgba, {72, 61, 139, 255}}}
   end
 
   test "build puts transforms on the root node" do
@@ -114,7 +114,10 @@ defmodule Scenic.GraphTest do
 
   test "build honors fonts and font_sizes set directly" do
     graph = Graph.build(font: "fonts/roboto.ttf", font_size: 12)
-    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font) == "fonts/roboto.ttf"
+
+    assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font) ==
+             "fonts/roboto.ttf"
+
     assert graph.primitives[@root_uid] |> Primitive.get_styles() |> Map.get(:font_size) == 12
   end
 
@@ -282,7 +285,6 @@ defmodule Scenic.GraphTest do
            ]
   end
 
-
   # ============================================================================
   # add
 
@@ -442,10 +444,13 @@ defmodule Scenic.GraphTest do
       end)
 
     rect = graph.primitives[uid]
-    assert Primitive.get_styles(rect) ==
-      %{fill: {:color, {:color_rgba, {255, 0, 0, 255}}}, stroke: {2, {:color, {:color_rgba, {0, 0, 255, 255}}}}}
-  end
 
+    assert Primitive.get_styles(rect) ==
+             %{
+               fill: {:color, {:color_rgba, {255, 0, 0, 255}}},
+               stroke: {2, {:color, {:color_rgba, {0, 0, 255, 255}}}}
+             }
+  end
 
   test "modify transforms a via a match function" do
     graph =

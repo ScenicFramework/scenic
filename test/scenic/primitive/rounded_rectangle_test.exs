@@ -36,11 +36,9 @@ defmodule Scenic.Primitive.RoundedRectangleTest do
     {:error, msg} = RoundedRectangle.validate({40, "80"})
     assert msg =~ "Invalid Rounded Rectangle"
 
-    {:error, msg} = RoundedRectangle.validate( :banana )
+    {:error, msg} = RoundedRectangle.validate(:banana)
     assert msg =~ "Invalid Rounded Rectangle"
   end
-
-
 
   # ============================================================================
   # styles
@@ -53,12 +51,11 @@ defmodule Scenic.Primitive.RoundedRectangleTest do
   # compile
 
   test "compile works" do
-    p = RoundedRectangle.build(@data )
+    p = RoundedRectangle.build(@data)
+
     assert RoundedRectangle.compile(p, %{stroke_fill: :blue}) ==
-      [{:draw_rrect, {40, 80, 10, :stroke}}]
+             [{:draw_rrect, {40, 80, 10, :stroke}}]
   end
-
-
 
   # ============================================================================
   # transform helpers

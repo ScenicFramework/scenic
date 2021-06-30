@@ -85,9 +85,8 @@ defmodule Scenic.Component.Input.Slider do
   # --------------------------------------------------------
   @impl Scenic.Component
 
-
-  def validate( {{min, max}, initial} = data )
-  when is_number(min) and is_number(max) and is_number(initial) do
+  def validate({{min, max}, initial} = data)
+      when is_number(min) and is_number(max) and is_number(initial) do
     cond do
       min > max -> err_min_max(data)
       initial < min -> err_min(data)
@@ -96,7 +95,7 @@ defmodule Scenic.Component.Input.Slider do
     end
   end
 
-  def validate( {values, initial} = data ) when is_list(values) do
+  def validate({values, initial} = data) when is_list(values) do
     case Enum.member?(values, initial) do
       true -> {:ok, data}
       false -> err_initial_value(data)
@@ -187,7 +186,7 @@ defmodule Scenic.Component.Input.Slider do
   def init(scene, {extents, value}, opts) do
     id = opts[:id]
 
-    request_input( scene, :cursor_button )
+    request_input(scene, :cursor_button)
 
     # theme is passed in as an inherited style
     theme =
@@ -206,15 +205,15 @@ defmodule Scenic.Component.Input.Slider do
 
     scene =
       scene
-      |> assign([
+      |> assign(
         graph: graph,
         value: value,
         extents: extents,
         width: width,
         id: id,
         tracking: false
-      ])
-      |> push_graph( graph )
+      )
+      |> push_graph(graph)
 
     {:ok, scene}
   end
@@ -224,35 +223,35 @@ defmodule Scenic.Component.Input.Slider do
   # --------------------------------------------------------
   @doc false
   @impl Scenic.Scene
-  def handle_input( {:cursor_button, {0, :press, _, {x, _}}},  :hit_rect, scene ) do
+  def handle_input({:cursor_button, {0, :press, _, {x, _}}}, :hit_rect, scene) do
     :ok = capture_input(scene, [:cursor_button, :cursor_pos, :viewport])
 
     scene =
       scene
-      |> assign( :tracking, true )
-      |> update_slider( x )
+      |> assign(:tracking, true)
+      |> update_slider(x)
 
     {:noreply, scene}
   end
 
-  def handle_input( {:cursor_button, {0, :release, _, _xy}}, _id, scene ) do
+  def handle_input({:cursor_button, {0, :release, _, _xy}}, _id, scene) do
     scene = assign(scene, :tracking, false)
-    release_input( scene )
+    release_input(scene)
     {:noreply, scene}
   end
 
-  def handle_input({:cursor_pos, {x, _}}, _id, %{ assigns: %{tracking: true} } = scene) do
-    {:noreply, update_slider(scene, x) }
+  def handle_input({:cursor_pos, {x, _}}, _id, %{assigns: %{tracking: true}} = scene) do
+    {:noreply, update_slider(scene, x)}
   end
 
-  def handle_input({:viewport, {:exit, _}}, _id, %{ assigns: %{tracking: true} } = scene ) do
+  def handle_input({:viewport, {:exit, _}}, _id, %{assigns: %{tracking: true}} = scene) do
     scene = assign(scene, :tracking, false)
-    release_input( scene )
+    release_input(scene)
     {:noreply, scene}
   end
 
   # ignore other button press events
-  def handle_input({:cursor_button, {_, _, _, _}}, _id, scene ) do
+  def handle_input({:cursor_button, {_, _, _, _}}, _id, scene) do
     {:noreply, scene}
   end
 
@@ -261,13 +260,15 @@ defmodule Scenic.Component.Input.Slider do
   # {text_color, box_background, border_color, pressed_color, checkmark_color}
 
   defp update_slider(
-         %{ assigns: %{
-           graph: graph,
-           value: old_value,
-           extents: extents,
-           width: width,
-           id: id
-         }} = scene,
+         %{
+           assigns: %{
+             graph: graph,
+             value: old_value,
+             extents: extents,
+             width: width,
+             id: id
+           }
+         } = scene,
          x
        ) do
     # pin x to be inside the width
@@ -289,8 +290,8 @@ defmodule Scenic.Component.Input.Slider do
     end
 
     scene
-    |> push_graph( graph )
-    |> assign( graph: graph, value: new_value )
+    |> push_graph(graph)
+    |> assign(graph: graph, value: new_value)
   end
 
   # --------------------------------------------------------
@@ -355,33 +356,34 @@ defmodule Scenic.Component.Input.Slider do
     Enum.at(extents, index)
   end
 
-
   # --------------------------------------------------------
   @doc false
   @impl GenServer
-  def handle_call( :fetch, _, %{assigns: %{value: value}} = scene ) do
-    {:reply, {:ok, value}, scene }
+  def handle_call(:fetch, _, %{assigns: %{value: value}} = scene) do
+    {:reply, {:ok, value}, scene}
   end
 
-  def handle_call( {:put, value}, _, %{assigns: %{extents: extents}} = scene) when is_list(extents) do
-    case Enum.member?( extents, value ) do
-      true -> {:reply, :ok, do_put(value, extents, scene) } 
-      false -> {:reply, {:error, :invalid}, scene }
+  def handle_call({:put, value}, _, %{assigns: %{extents: extents}} = scene)
+      when is_list(extents) do
+    case Enum.member?(extents, value) do
+      true -> {:reply, :ok, do_put(value, extents, scene)}
+      false -> {:reply, {:error, :invalid}, scene}
     end
   end
 
-  def handle_call( {:put, value}, _, %{assigns: %{extents: {min, max}}} = scene) when is_number(value) do
+  def handle_call({:put, value}, _, %{assigns: %{extents: {min, max}}} = scene)
+      when is_number(value) do
     case value >= min && value <= max do
-      true -> {:reply, :ok, do_put(value, {min, max}, scene) } 
-      false -> {:reply, {:error, :invalid}, scene }
+      true -> {:reply, :ok, do_put(value, {min, max}, scene)}
+      false -> {:reply, {:error, :invalid}, scene}
     end
   end
 
-  defp do_put( new_value, extents, %{assigns: %{graph: graph, width: width}} = scene ) do
-    graph = update_slider_position( graph, new_value, extents, width )
-    scene
-    |> assign( graph: graph, value: new_value )
-    |> push_graph( graph )
-  end
+  defp do_put(new_value, extents, %{assigns: %{graph: graph, width: width}} = scene) do
+    graph = update_slider_position(graph, new_value, extents, width)
 
+    scene
+    |> assign(graph: graph, value: new_value)
+    |> push_graph(graph)
+  end
 end

@@ -280,14 +280,16 @@ defmodule Scenic.PubSub do
 
       {:error, :already_registered}
   """
-  @spec register( source_id :: atom, opts :: Keyword.t() ) ::
-        {:ok, atom} | {:error, :already_registered}
+  @spec register(source_id :: atom, opts :: Keyword.t()) ::
+          {:ok, atom} | {:error, :already_registered}
   def register(source_id, opts \\ []) when is_atom(source_id) do
     case NimbleOptions.validate(opts, @register_opts_schema) do
       {:ok, opts} -> opts
       {:error, error} -> raise Exception.message(error)
     end
-    opts = Keyword.put(opts, :registered_at, :os.system_time(:micro_seconds) )
+
+    opts = Keyword.put(opts, :registered_at, :os.system_time(:micro_seconds))
+
     GenServer.call(
       @name,
       {:register, source_id, opts, self()}
@@ -347,10 +349,9 @@ defmodule Scenic.PubSub do
   # timestamp should be from :os.system_time(:micro_seconds)
   def handle_info({:put_data, source_id, data, timestamp}, state) do
     :ets.insert(@table, {source_id, data, timestamp})
-    send_subs( source_id, @data, {source_id, data, timestamp}, state )
+    send_subs(source_id, @data, {source_id, data, timestamp}, state)
     {:noreply, state}
   end
-
 
   # --------------------------------------------------------
   @doc false
@@ -390,7 +391,7 @@ defmodule Scenic.PubSub do
 
     # send the already-set value if one is set
     case get(source_id) do
-      {:ok, data} -> send( pid, {@data, data} )
+      {:ok, data} -> send(pid, {@data, data})
       _ -> :ok
     end
 
@@ -434,7 +435,7 @@ defmodule Scenic.PubSub do
     # link the data source
     Process.link(pid)
     # alert the subscribers
-    send_subs( source_id, @registered, {source_id, opts}, state )
+    send_subs(source_id, @registered, {source_id, opts}, state)
     # reply is sent back to the data source
     {{:ok, source_id}, state}
   end
@@ -447,7 +448,7 @@ defmodule Scenic.PubSub do
     case :ets.lookup(@table, reg_key) do
       [{_, _, ^pid}] ->
         # alert the subscribers
-        send_subs( source_id, @unregistered, source_id, state )
+        send_subs(source_id, @unregistered, source_id, state)
 
         # delete the table entries
         :ets.delete(@table, reg_key)
@@ -546,9 +547,10 @@ defmodule Scenic.PubSub do
   # --------------------------------------------------------
   defp send_subs(source_id, verb, msg, %{subs_id: subs}) do
     msg = {verb, msg}
+
     subs
-    |> Map.get( source_id, [] )
-    |> Enum.each( &send(&1, msg) )
+    |> Map.get(source_id, [])
+    |> Enum.each(&send(&1, msg))
   end
 
   # --------------------------------------------------------

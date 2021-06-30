@@ -23,18 +23,20 @@ defmodule Scenic.Primitive.Style.Fill do
   # ============================================================================
   # data verification and serialization
 
-  def validate( paint ) do
+  def validate(paint) do
     case Paint.validate(paint) do
-      {:ok, paint} -> { :ok, paint }
-      {:error, error_str} -> {
-        :error,
-        """
-        #{IO.ANSI.red()}Invalid Fill specification - must be a valid paint
-        Received: #{inspect(paint)}
-        #{error_str}
-        """
-      }
+      {:ok, paint} ->
+        {:ok, paint}
+
+      {:error, error_str} ->
+        {
+          :error,
+          """
+          #{IO.ANSI.red()}Invalid Fill specification - must be a valid paint
+          Received: #{inspect(paint)}
+          #{error_str}
+          """
+        }
     end
   end
-
 end

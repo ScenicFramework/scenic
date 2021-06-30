@@ -13,7 +13,7 @@ defmodule Scenic.Primitive.Style.Paint.Stream do
   """
 
   def validate({:stream, key}) when is_bitstring(key) do
-     { :ok, {:stream, key} }
+    {:ok, {:stream, key}}
   end
 
   def validate(_) do
@@ -22,11 +22,10 @@ defmodule Scenic.Primitive.Style.Paint.Stream do
       """
       #{IO.ANSI.yellow()}
       Streaming texture fills must be a string that names a texture published into Scenic.ViewPort.Stream
-      
+
       The texture does not need to be published when it is reference.
       However, it will not draw until it is. #{IO.ANSI.default_color()}
       """
     }
   end
-
 end

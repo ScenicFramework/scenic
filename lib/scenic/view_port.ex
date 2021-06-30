@@ -16,7 +16,6 @@ defmodule Scenic.ViewPort do
   alias Scenic.Primitive
   alias Scenic.ViewPort.GraphCompiler
 
-
   # alias Scenic.Utilities
   alias Scenic.Utilities.Validators
   alias Scenic.Color
@@ -25,7 +24,6 @@ defmodule Scenic.ViewPort do
   require Logger
 
   # import IEx
-
 
   @moduledoc """
 
@@ -103,10 +101,10 @@ defmodule Scenic.ViewPort do
           size: {number, number}
         }
   defstruct name: nil,
-    pid: nil,
-    name_table: nil,
-    script_table: nil,
-    size: nil
+            pid: nil,
+            name_table: nil,
+            script_table: nil,
+            size: nil
 
   @viewports :scenic_viewports
 
@@ -116,18 +114,23 @@ defmodule Scenic.ViewPort do
     name: [type: :atom],
     title: [type: :string],
     size: [required: true, type: {:custom, Validators, :validate_wh, [:size]}],
-    default_scene: [required: true, type: {:custom, Validators, :validate_scene, [:default_scene]}],
+    default_scene: [
+      required: true,
+      type: {:custom, Validators, :validate_scene, [:default_scene]}
+    ],
     theme: [type: {:custom, Theme, :validate, []}, default: :dark],
     drivers: [type: {:custom, Scenic.Driver, :validate, []}, default: []],
     input_filter: [type: {:custom, __MODULE__, :validate_input_filter, []}, default: :all],
-    opts: [type: :keyword_list, keys: Scenic.Primitive.Style.opts_schema() ++ Scenic.Primitive.Transform.opts_schema()],
+    opts: [
+      type: :keyword_list,
+      keys: Scenic.Primitive.Style.opts_schema() ++ Scenic.Primitive.Transform.opts_schema()
+    ]
   ]
 
   @main_graph :_main_
   @root_graph :_root_
 
-  @first_open_graph_id  2
-
+  @first_open_graph_id 2
 
   @input_types [
     :cursor_button,
@@ -139,19 +142,19 @@ defmodule Scenic.ViewPort do
   ]
 
   @doc false
-  def validate_input_filter( :all ), do: { :ok, :all }
-  def validate_input_filter( input ) when is_list(input) do
+  def validate_input_filter(:all), do: {:ok, :all}
+
+  def validate_input_filter(input) when is_list(input) do
     valid_input = input_types()
-    case Enum.all?( input, &Enum.member?(valid_input, &1) ) do
-      true ->     { :ok, input }
-      false -> { :error, :invalid }
+
+    case Enum.all?(input, &Enum.member?(valid_input, &1)) do
+      true -> {:ok, input}
+      false -> {:error, :invalid}
     end
   end
 
-
   @doc false
   def opts_schema(), do: @opts_schema
-
 
   @doc """
   Returns a list of the valid input types
@@ -161,7 +164,6 @@ defmodule Scenic.ViewPort do
   # ============================================================================
   # client api
 
-
   # --------------------------------------------------------
   @doc """
   Start a new ViewPort
@@ -169,42 +171,42 @@ defmodule Scenic.ViewPort do
   # the ViewPort has it's own supervision tree under the ViewPorts node
   # first create it's dynamic supervisor. Then start the ViewPort
   # process underneath, passing it's supervisor in as an parameter.
-  @spec start(opts :: Keyword.t) :: {:ok, ViewPort.t}
+  @spec start(opts :: Keyword.t()) :: {:ok, ViewPort.t()}
   def start(opts) do
-    with {:ok, opts} <- NimbleOptions.validate( opts, opts_schema() ),
-    {:ok, pid} <- DynamicSupervisor.start_child( @viewports, {ViewPort, opts} ) do
+    with {:ok, opts} <- NimbleOptions.validate(opts, opts_schema()),
+         {:ok, pid} <- DynamicSupervisor.start_child(@viewports, {ViewPort, opts}) do
       GenServer.call(pid, :query_info)
     else
-      {:error, error} -> raise Exception.message( error )
+      {:error, error} -> raise Exception.message(error)
     end
- end
-
+  end
 
   # --------------------------------------------------------
   @doc """
   Stop a running viewport
   """
-  @spec stop( viewport :: ViewPort.t ) :: :ok
-  def stop( %ViewPort{pid: pid} ) do
-    DynamicSupervisor.terminate_child( @viewports, pid )
+  @spec stop(viewport :: ViewPort.t()) :: :ok
+  def stop(%ViewPort{pid: pid}) do
+    DynamicSupervisor.terminate_child(@viewports, pid)
   end
 
   # --------------------------------------------------------
   @doc """
   Retrieve a %ViewPort{} struct given just the viewport's pid
   """
-  @spec info( pid :: ViewPort.t | GenServer.server ) :: map
-  def info( %ViewPort{pid: pid} ), do: info( pid )
-  def info( pid ) when is_pid(pid) or is_atom(pid) do
-    GenServer.call( pid, :query_info )
-  end
+  @spec info(pid :: ViewPort.t() | GenServer.server()) :: map
+  def info(%ViewPort{pid: pid}), do: info(pid)
 
+  def info(pid) when is_pid(pid) or is_atom(pid) do
+    GenServer.call(pid, :query_info)
+  end
 
   # --------------------------------------------------------
   @doc false
-  @spec register_script_name(viewport :: ViewPort.t, name :: any) :: {:ok, integer}
-  def register_script_name( viewport, name )
-  def register_script_name( %ViewPort{name_table: table, pid: pid}, name ) do
+  @spec register_script_name(viewport :: ViewPort.t(), name :: any) :: {:ok, integer}
+  def register_script_name(viewport, name)
+
+  def register_script_name(%ViewPort{name_table: table, pid: pid}, name) do
     case :ets.lookup(table, name) do
       # if the name already exists, return its numerical id
       [{_, id, _}] -> {:ok, id}
@@ -217,10 +219,11 @@ defmodule Scenic.ViewPort do
   @doc """
   look up an id for a name. Does not register the name if it is missing
   """
-  @spec name_to_id(viewport :: ViewPort.t, name :: any) ::
-    {:ok, non_neg_integer} | {:error, :not_found}
-  def name_to_id( viewport, name )
-  def name_to_id( %ViewPort{name_table: table}, name ) do
+  @spec name_to_id(viewport :: ViewPort.t(), name :: any) ::
+          {:ok, non_neg_integer} | {:error, :not_found}
+  def name_to_id(viewport, name)
+
+  def name_to_id(%ViewPort{name_table: table}, name) do
     case :ets.lookup(table, name) do
       [{_, id, _}] -> {:ok, id}
       [] -> {:error, :not_found}
@@ -233,9 +236,9 @@ defmodule Scenic.ViewPort do
 
   Used by drivers, which aren't exposed to the name
   """
-  @spec get_script_by_id( viewport :: ViewPort.t, id :: non_neg_integer ) ::
-    {:ok, Script.t()} | {:error, :not_found}
-  def get_script_by_id( %ViewPort{script_table: table}, id ) when is_integer(id) and id >= 0 do
+  @spec get_script_by_id(viewport :: ViewPort.t(), id :: non_neg_integer) ::
+          {:ok, Script.t()} | {:error, :not_found}
+  def get_script_by_id(%ViewPort{script_table: table}, id) when is_integer(id) and id >= 0 do
     case :ets.lookup(table, id) do
       [{_, bin, _}] -> {:ok, bin}
       [] -> {:error, :not_found}
@@ -248,19 +251,18 @@ defmodule Scenic.ViewPort do
 
   Not usable by drivers, which use the numeric id.
   """
-  @spec get_script_by_name( viewport :: ViewPort.t, name :: any ) ::
-    {:ok, Script.t()} | {:error, :not_found}
-  def get_script_by_name( viewport, name ) do
+  @spec get_script_by_name(viewport :: ViewPort.t(), name :: any) ::
+          {:ok, Script.t()} | {:error, :not_found}
+  def get_script_by_name(viewport, name) do
     case name_to_id(viewport, name) do
       {:ok, id} -> get_script_by_id(viewport, id)
       err -> err
     end
   end
 
-
   @doc false
   defp put_x_opts_schema() do
-    [ owner: [type: :pid, default: self()] ]
+    [owner: [type: :pid, default: self()]]
   end
 
   @doc """
@@ -268,17 +270,24 @@ defmodule Scenic.ViewPort do
 
   returns {:ok, id}
   """
-  @spec put_script( viewport :: ViewPort.t, name :: any, script :: Script.t(), opts :: Keyword.t ) ::
-    {:ok, non_neg_integer} | {:error, atom}
-  def put_script( %ViewPort{pid: pid} = viewport, name, script, opts \\ [] ) when is_list(script) do
-    opts = case NimbleOptions.validate( opts, put_x_opts_schema() ) do
-      {:ok, opts} -> opts
-      {:error, error} -> raise Exception.message( error )
-    end
+  @spec put_script(
+          viewport :: ViewPort.t(),
+          name :: any,
+          script :: Script.t(),
+          opts :: Keyword.t()
+        ) ::
+          {:ok, non_neg_integer} | {:error, atom}
+  def put_script(%ViewPort{pid: pid} = viewport, name, script, opts \\ []) when is_list(script) do
+    opts =
+      case NimbleOptions.validate(opts, put_x_opts_schema()) do
+        {:ok, opts} -> opts
+        {:error, error} -> raise Exception.message(error)
+      end
 
     owner = opts[:owner]
-    with {:ok, id} <- register_script_name( viewport, name ),
-    :ok <- put_script_by_id( viewport, id, script, owner ) do
+
+    with {:ok, id} <- register_script_name(viewport, name),
+         :ok <- put_script_by_id(viewport, id, script, owner) do
       GenServer.cast(pid, {:put_scripts, [id], owner})
       {:ok, id}
     else
@@ -286,14 +295,14 @@ defmodule Scenic.ViewPort do
     end
   end
 
-
   # internal - put by id
-  defp put_script_by_id( %ViewPort{script_table: table}, id, script, owner )
-  when is_integer(id) and id >= 0 do
-
+  defp put_script_by_id(%ViewPort{script_table: table}, id, script, owner)
+       when is_integer(id) and id >= 0 do
     case :ets.lookup(table, id) do
       # do nothing if the script is in the table and has not changed
-      [{_, ^script, ^owner}] -> :no_change
+      [{_, ^script, ^owner}] ->
+        :no_change
+
       # it isn't there or has changed
       _ ->
         true = :ets.insert(table, {id, script, owner})
@@ -306,76 +315,76 @@ defmodule Scenic.ViewPort do
 
   Also unregisters the name/id pairing
   """
-  @spec del_script( viewport :: ViewPort.t, name :: any ) :: :ok | {:error, :not_found}
-  def del_script( viewport, name )
-  def del_script( %ViewPort{pid: pid}, name ) do
+  @spec del_script(viewport :: ViewPort.t(), name :: any) :: :ok | {:error, :not_found}
+  def del_script(viewport, name)
+
+  def del_script(%ViewPort{pid: pid}, name) do
     GenServer.cast(pid, {:del_script, name})
   end
-
 
   @doc """
   Retrieves a list of all registered script ids.
   """
-  @spec all_script_ids( viewport :: ViewPort.t ) :: list
-  def all_script_ids( %ViewPort{script_table: table} ) do
-    do_all_script_ids( table, :ets.first(table) )
-  end
-  defp do_all_script_ids( table, id, ids \\ [] )
-  defp do_all_script_ids( _, :"$end_of_table", ids ), do: ids
-  defp do_all_script_ids( table, id, ids ) do
-    do_all_script_ids( table, :ets.next(table, id), [id | ids] )
+  @spec all_script_ids(viewport :: ViewPort.t()) :: list
+  def all_script_ids(%ViewPort{script_table: table}) do
+    do_all_script_ids(table, :ets.first(table))
   end
 
+  defp do_all_script_ids(table, id, ids \\ [])
+  defp do_all_script_ids(_, :"$end_of_table", ids), do: ids
+
+  defp do_all_script_ids(table, id, ids) do
+    do_all_script_ids(table, :ets.next(table, id), [id | ids])
+  end
 
   @doc """
   Put a graph by name.
 
   This compiles the graph to a collection of scripts
-  """  
+  """
   @spec put_graph(
-    viewport :: ViewPort.t,
-    name :: any,
-    graph :: Graph.t,
-    opts :: Keyword.t
-  ) :: {:ok, id::any}
-  def put_graph( %ViewPort{pid: pid} = viewport, name, %Graph{} = graph, opts \\ [] ) do
-    opts = case NimbleOptions.validate( opts, put_x_opts_schema() ) do
-      {:ok, opts} -> opts
-      {:error, error} -> raise Exception.message( error )
-    end
+          viewport :: ViewPort.t(),
+          name :: any,
+          graph :: Graph.t(),
+          opts :: Keyword.t()
+        ) :: {:ok, id :: any}
+  def put_graph(%ViewPort{pid: pid} = viewport, name, %Graph{} = graph, opts \\ []) do
+    opts =
+      case NimbleOptions.validate(opts, put_x_opts_schema()) do
+        {:ok, opts} -> opts
+        {:error, error} -> raise Exception.message(error)
+      end
 
-    with {:ok, id} <- register_script_name( viewport, name ),
-    {:ok, script} <- GraphCompiler.compile( viewport, graph ),
-    {:ok, input_list} <- compile_input( graph ) do
+    with {:ok, id} <- register_script_name(viewport, name),
+         {:ok, script} <- GraphCompiler.compile(viewport, graph),
+         {:ok, input_list} <- compile_input(graph) do
       # write the script - but only if it has actually changed
       if {:ok, script} != get_script_by_id(viewport, id) do
         owner = opts[:owner]
-    
+
         # write the script to the table
-        put_script_by_id( viewport, id, script, owner )
+        put_script_by_id(viewport, id, script, owner)
 
         # notify the drivers
-        GenServer.cast(pid, {:put_scripts, [id], owner}) 
+        GenServer.cast(pid, {:put_scripts, [id], owner})
 
         # send the input list to the viewport
-        GenServer.cast(pid, {:input_list, input_list, name, owner})     
+        GenServer.cast(pid, {:input_list, input_list, name, owner})
       end
 
-      { :ok, id }
+      {:ok, id}
     else
       err -> err
     end
   end
-
 
   @doc """
   Delete a graph by name.
 
   Same as del_script/2
   """
-  @spec del_graph( viewport :: ViewPort.t, name :: any ) :: :ok
-  def del_graph( %ViewPort{} = viewport, name ), do: del_script( viewport, name )
-
+  @spec del_graph(viewport :: ViewPort.t(), name :: any) :: :ok
+  def del_graph(%ViewPort{} = viewport, name), do: del_script(viewport, name)
 
   # --------------------------------------------------------
   @doc """
@@ -383,12 +392,13 @@ defmodule Scenic.ViewPort do
 
   WARNING: this will restart the current root scene
   """
-  @spec set_theme( viewport :: ViewPort.t, theme :: atom | map ) :: :ok
-  def set_theme( viewport, theme )
-  def set_theme( %ViewPort{pid: pid}, theme ) do
-    case Theme.validate( theme ) do
+  @spec set_theme(viewport :: ViewPort.t(), theme :: atom | map) :: :ok
+  def set_theme(viewport, theme)
+
+  def set_theme(%ViewPort{pid: pid}, theme) do
+    case Theme.validate(theme) do
       # {:ok, theme} -> GenServer.cast( pid, {:set_theme, theme} )
-      {:ok, theme} -> GenServer.call( pid, {:set_theme, theme} )
+      {:ok, theme} -> GenServer.call(pid, {:set_theme, theme})
       err -> err
     end
   end
@@ -401,13 +411,14 @@ defmodule Scenic.ViewPort do
   Then it starts the new scene including all of it's child components.
   """
   @spec set_root(
-          viewport :: ViewPort.t,
+          viewport :: ViewPort.t(),
           scene :: atom,
           args :: any
         ) :: :ok
   def set_root(viewport, scene, args \\ nil)
+
   def set_root(%ViewPort{pid: pid}, scene, args) when is_atom(scene) do
-    GenServer.call(pid, {:set_root, scene, args} )
+    GenServer.call(pid, {:set_root, scene, args})
   end
 
   # --------------------------------------------------------
@@ -421,38 +432,36 @@ defmodule Scenic.ViewPort do
   See the [input docs](Scenic.ViewPort.Input.html#t:t/0) for the input formats you can send.
   """
   @spec input(
-          viewport :: ViewPort.t,
+          viewport :: ViewPort.t(),
           input :: ViewPort.Input.t()
         ) :: :ok
   defdelegate input(vp, input_event), to: ViewPort.Input, as: :send
-
 
   # --------------------------------------------------------
   @doc """
   Find a scene_pid/primitive under the given point in global coordinates
   """
-  @spec find_point( viewport :: ViewPort.t, global_point :: Scenic.Math.point() ) ::
-    {:ok, scene_pid::pid, id::any} | {:error, :not_found}
-  def find_point( %ViewPort{pid: pid}, global_point ) do
+  @spec find_point(viewport :: ViewPort.t(), global_point :: Scenic.Math.point()) ::
+          {:ok, scene_pid :: pid, id :: any} | {:error, :not_found}
+  def find_point(%ViewPort{pid: pid}, global_point) do
     GenServer.call(pid, {:find_point, global_point})
   end
 
   @spec start_driver(
           viewport :: ViewPort.t(),
           opts :: list
-        ) :: {:ok, pid :: GenServer.server} | :error
-  def start_driver( %ViewPort{pid: pid}, opts ) when is_list(opts) do
-    GenServer.call( pid, { :start_driver, opts } )
+        ) :: {:ok, pid :: GenServer.server()} | :error
+  def start_driver(%ViewPort{pid: pid}, opts) when is_list(opts) do
+    GenServer.call(pid, {:start_driver, opts})
   end
 
   @spec stop_driver(
-          viewport :: ViewPort.t,
-          driver_pid :: GenServer.server
+          viewport :: ViewPort.t(),
+          driver_pid :: GenServer.server()
         ) :: :ok
-  def stop_driver( %ViewPort{pid: pid}, driver_pid ) do
-    GenServer.cast( pid, { :stop_driver, driver_pid } )
+  def stop_driver(%ViewPort{pid: pid}, driver_pid) do
+    GenServer.cast(pid, {:stop_driver, driver_pid})
   end
-
 
   # --------------------------------------------------------
   @doc false
@@ -470,8 +479,8 @@ defmodule Scenic.ViewPort do
 
     # name_table = :ets.new( make_ref(), [:protected] )
     # script_table = :ets.new( make_ref(), [:public, {:read_concurrency, true}] )
-    name_table = :ets.new( :_vp_name_table_, [:protected] )
-    script_table = :ets.new( :_vp_script_table_, [:public, {:read_concurrency, true}] )
+    name_table = :ets.new(:_vp_name_table_, [:protected])
+    script_table = :ets.new(:_vp_script_table_, [:public, {:read_concurrency, true}])
 
     state = %{
       # simple metadata about the ViewPort
@@ -490,7 +499,6 @@ defmodule Scenic.ViewPort do
       # to make sure pids that need to get clean up when they go down are monitored,
       # but only monitored once.
       monitors: %{},
-
 
       # when switching to a new scene, we want to be able to signal the drivers that
       # the scene bring-up process has started, and then signal again when it has ended.
@@ -548,21 +556,22 @@ defmodule Scenic.ViewPort do
 
       # Keep track of the pid for the current root scene
       # this is used to shutdown the current scene when a new one is set
-      root_pid: nil,
+      root_pid: nil
     }
 
     # in case of an error starting a new root scene, we want to be able to go back to the default
-    state = case opts[:default_scene] do
-      {mod, param} ->
-        state
-        |> Map.put( :default_scene, mod )
-        |> Map.put( :default_param, param )
+    state =
+      case opts[:default_scene] do
+        {mod, param} ->
+          state
+          |> Map.put(:default_scene, mod)
+          |> Map.put(:default_param, param)
 
-      mod when is_atom(mod) ->
-        state
-        |> Map.put( :default_scene, mod )
-        |> Map.put( :default_param, nil )
-    end
+        mod when is_atom(mod) ->
+          state
+          |> Map.put(:default_scene, mod)
+          |> Map.put(:default_param, nil)
+      end
 
     {:ok, state, {:continue, {:init, opts}}}
   end
@@ -570,29 +579,27 @@ defmodule Scenic.ViewPort do
   # --------------------------------------------------------
   @doc false
   def handle_continue(
-    {:init, opts},
-    %{
-      # supervisor: supervisor,
-      name_table: name_table
-    } = state
-  ) do
-
+        {:init, opts},
+        %{
+          # supervisor: supervisor,
+          name_table: name_table
+        } = state
+      ) do
     # create the supervisor for the drivers - this is expected to work
-    {:ok, driver_sup} = DynamicSupervisor.start_link( strategy: :one_for_one )
+    {:ok, driver_sup} = DynamicSupervisor.start_link(strategy: :one_for_one)
 
     # create the supervisor for the scenes - this is expected to work
-    {:ok, scene_sup} = DynamicSupervisor.start_link( strategy: :one_for_one )
+    {:ok, scene_sup} = DynamicSupervisor.start_link(strategy: :one_for_one)
 
     # start the drivers
     info = gen_info(state)
     # Enum.each( opts[:drivers], &do_start_driver(driver_sup, &1, info) )
-    Enum.each( opts[:drivers], fn( driver_opts ) ->
+    Enum.each(opts[:drivers], fn driver_opts ->
       DynamicSupervisor.start_child(
         driver_sup,
         {driver_opts[:module], {info, driver_opts}}
       )
-    end )
-
+    end)
 
     # insert the root name into the name table
     # this is startup, so can just slam it in
@@ -603,7 +610,8 @@ defmodule Scenic.ViewPort do
     background = Theme.normalize(theme).background
 
     # build the main graph. The graph itself doesn't need to be saved in state
-    main_graph = Graph.build(opts[:opts] || [])
+    main_graph =
+      Graph.build(opts[:opts] || [])
       |> Scenic.Primitives.rect(
         opts[:size],
         id: :background,
@@ -612,370 +620,368 @@ defmodule Scenic.ViewPort do
       # not a real component. never managed by a scene
       # this is to get input to hook up correctly to the root scene
       # needs to be a Component and NOT a Script so that it shows up in the main input list
-      |> Scenic.Primitive.Component.add_to_graph( {@root_graph, nil, @root_graph} )
+      |> Scenic.Primitive.Component.add_to_graph({@root_graph, nil, @root_graph})
 
     # record the root transform of the main graph
-    main_tx = main_graph.primitives[0].transforms
+    main_tx =
+      main_graph.primitives[0].transforms
       |> Scenic.Primitive.Transform.calculate_local()
-    state = Map.put(state, :main_tx, main_tx )
+
+    state = Map.put(state, :main_tx, main_tx)
 
     # insert the main script to the scripts table
     # can slam it in as we are in startup
     # {:ok, main_script} = ViewPort.Graph.compile( main_graph, info )
     # :ets.insert(script_table, {0, main_script, :main})
     # put the main graph. This compiles it and adds it's input list to state
-    state = internal_put_graph( main_graph, @main_graph, 0, state )
+    state = internal_put_graph(main_graph, @main_graph, 0, state)
 
     # start the default scene
-    scene = case opts[:default_scene] do
-      scene when is_atom(scene) ->
-        GenServer.cast( self(), {:set_root, scene, nil} )
-        {scene, nil}
-      {scene, param} when is_atom(scene) ->
-        GenServer.cast( self(), {:set_root, scene, param} )
-        {scene, param}
-    end
+    scene =
+      case opts[:default_scene] do
+        scene when is_atom(scene) ->
+          GenServer.cast(self(), {:set_root, scene, nil})
+          {scene, nil}
+
+        {scene, param} when is_atom(scene) ->
+          GenServer.cast(self(), {:set_root, scene, param})
+          {scene, param}
+      end
 
     # save the various info
-    state = state
-    |> Map.put( :theme, theme )
-    |> Map.put( :main_graph, main_graph )
-    |> Map.put( :scene, scene )
-    |> Map.put( :scene_sup, scene_sup )
-    |> Map.put( :driver_sup, driver_sup )
+    state =
+      state
+      |> Map.put(:theme, theme)
+      |> Map.put(:main_graph, main_graph)
+      |> Map.put(:scene, scene)
+      |> Map.put(:scene_sup, scene_sup)
+      |> Map.put(:driver_sup, driver_sup)
 
     {:noreply, state}
   end
-
-
-
 
   # ============================================================================
   # handle_info
   @doc false
 
   # when a scene or a driver goes down, clean it up
-   def handle_info(
-      {:DOWN, _monitor_ref, :process, pid, _reason},
-      %{
-        driver_pids: driver_pids,
-        input_lists: input_lists,
-        scene_transforms: scene_transforms,
-
-        name_table: name_table,
-        script_table: script_table,
-
-        scenes_by_pid: scenes_by_pid,
-        scenes_by_id: scenes_by_id,
-
-        monitors: monitors
-      } = old_state
-    ) do
+  def handle_info(
+        {:DOWN, _monitor_ref, :process, pid, _reason},
+        %{
+          driver_pids: driver_pids,
+          input_lists: input_lists,
+          scene_transforms: scene_transforms,
+          name_table: name_table,
+          script_table: script_table,
+          scenes_by_pid: scenes_by_pid,
+          scenes_by_id: scenes_by_id,
+          monitors: monitors
+        } = old_state
+      ) do
     # cleanup scripts & names tables
-    :ets.match_delete( name_table, {:_, :_, pid} )
-    :ets.match_delete( script_table, {:_, :_, pid} )
+    :ets.match_delete(name_table, {:_, :_, pid})
+    :ets.match_delete(script_table, {:_, :_, pid})
 
     # clean up any input requested by the pid
-    state = input_pid_down( pid, old_state )
+    state = input_pid_down(pid, old_state)
 
     # remove from driver list (does nothing it if isn't a driver)
-    driver_pids = Enum.reject( driver_pids, &Kernel.==(&1, pid) )
+    driver_pids = Enum.reject(driver_pids, &Kernel.==(&1, pid))
     state = %{state | driver_pids: driver_pids}
 
     # remove from tracked scenes
-    state = case Map.fetch( scenes_by_pid, pid ) do
-      :error -> state
-      {:ok, {id, _}} ->
-        scenes_by_pid = Map.delete( scenes_by_pid, pid )
-        state = %{ state | scenes_by_pid: scenes_by_pid }
+    state =
+      case Map.fetch(scenes_by_pid, pid) do
+        :error ->
+          state
 
-        # make sure the id hasn't been claimed by a new scene
-        # if not, clean up scenes_by_id, input lists, etc...
-        case Map.fetch( scenes_by_id, id ) do
-          {:ok, {^pid, _}} ->
-            state
-            |> Map.put( :scenes_by_id, Map.delete(scenes_by_id, id) )
-            |> Map.put( :input_lists, Map.delete(input_lists, id) )
-            |> Map.put( :scene_transforms, Map.delete(scene_transforms, id) )
+        {:ok, {id, _}} ->
+          scenes_by_pid = Map.delete(scenes_by_pid, pid)
+          state = %{state | scenes_by_pid: scenes_by_pid}
 
-          _ ->
-            state
-        end
-        
-    end
+          # make sure the id hasn't been claimed by a new scene
+          # if not, clean up scenes_by_id, input lists, etc...
+          case Map.fetch(scenes_by_id, id) do
+            {:ok, {^pid, _}} ->
+              state
+              |> Map.put(:scenes_by_id, Map.delete(scenes_by_id, id))
+              |> Map.put(:input_lists, Map.delete(input_lists, id))
+              |> Map.put(:scene_transforms, Map.delete(scene_transforms, id))
+
+            _ ->
+              state
+          end
+      end
 
     # if the requests changed, then tell the remaining drivers.
-    do_update_driver_input( old_state, state )
+    do_update_driver_input(old_state, state)
 
     # clean up the monitor tracker
-    state = %{ state | monitors: Map.delete(monitors, pid) }
+    state = %{state | monitors: Map.delete(monitors, pid)}
 
-    { :noreply, state }
+    {:noreply, state}
   end
 
   # quietly drop unhandled _input messages that make it to the ViewPort
-  def handle_info( {:_input, _, _, _}, state ) do
-    { :noreply, state }    
+  def handle_info({:_input, _, _, _}, state) do
+    {:noreply, state}
   end
 
   # quietly unhandled drop events that make it to the ViewPort
-  def handle_info( {:_event, _, _}, state ) do
-    { :noreply, state }    
+  def handle_info({:_event, _, _}, state) do
+    {:noreply, state}
   end
 
+  def handle_info(invalid, %{name: name} = state) do
+    Logger.error("""
+    ViewPort #{inspect(name || self())} ignored bad info
+    message: #{inspect(invalid)}
+    """)
 
-  def handle_info( invalid, %{name: name} = state ) do
-    Logger.error(
-      """
-      ViewPort #{inspect(name || self())} ignored bad info
-      message: #{inspect(invalid)}
-      """
-    )
-    { :noreply, state }
+    {:noreply, state}
   end
 
   # ============================================================================
   # handle_cast
   @doc false
 
-  #--------------------------
+  # --------------------------
   # stop drivers cleanly
   def handle_cast(
-    { :stop_driver, driver_pid },
-    %{driver_sup: driver_sup} = state
-  ) do
-    DynamicSupervisor.terminate_child( driver_sup, driver_pid )
+        {:stop_driver, driver_pid},
+        %{driver_sup: driver_sup} = state
+      ) do
+    DynamicSupervisor.terminate_child(driver_sup, driver_pid)
     # drivers are monitored, so that will do the cleanup work.
-    { :noreply, state }
+    {:noreply, state}
   end
 
-  #--------------------------
+  # --------------------------
   # casts from scenes
 
   # a new scene has come up
   def handle_cast(
-    {:register_scene, pid, id, parent_pid},
-    %{scenes_by_pid: sbp, scenes_by_id: sbi} = state
-  ) do
+        {:register_scene, pid, id, parent_pid},
+        %{scenes_by_pid: sbp, scenes_by_id: sbi} = state
+      ) do
     # monitor the scene
-    state = ensure_monitor( pid, state )
+    state = ensure_monitor(pid, state)
 
     # get the parent's id from the parent_pid
-    parent_id = case Map.fetch(sbp, parent_pid) do
-      {:ok, {_id, parent_id}} -> parent_id
-      :error -> nil
-    end
+    parent_id =
+      case Map.fetch(sbp, parent_pid) do
+        {:ok, {_id, parent_id}} -> parent_id
+        :error -> nil
+      end
 
     # track the scene
-    sbp = Map.put( sbp, pid, {id, parent_id} )
-    sbi = Map.put( sbi, id, {pid, parent_pid} )
+    sbp = Map.put(sbp, pid, {id, parent_id})
+    sbi = Map.put(sbi, id, {pid, parent_pid})
 
     {:noreply, %{state | scenes_by_pid: sbp, scenes_by_id: sbi}}
   end
 
   def handle_cast(
-    {:input_list, input, name, caller},
-    %{input_lists: lists, scene_transforms: txs} = state
-  ) do
-    input_lists = Map.put( lists, name, {input, caller} )
+        {:input_list, input, name, caller},
+        %{input_lists: lists, scene_transforms: txs} = state
+      ) do
+    input_lists = Map.put(lists, name, {input, caller})
 
     # scan the incoming input list and extract any scene transforms
-    txs = Enum.reduce( input, txs, fn
-      {Scenic.Primitive.Component, script_id, local_tx, _pid, _uid, _local_id}, acc ->
-        Map.put( acc, script_id, {local_tx, name})
-      
-      _, acc ->
-        acc
-    end)
+    txs =
+      Enum.reduce(input, txs, fn
+        {Scenic.Primitive.Component, script_id, local_tx, _pid, _uid, _local_id}, acc ->
+          Map.put(acc, script_id, {local_tx, name})
 
-    { :noreply, %{state | input_lists:  input_lists, scene_transforms: txs} }
+        _, acc ->
+          acc
+      end)
+
+    {:noreply, %{state | input_lists: input_lists, scene_transforms: txs}}
   end
 
-  def handle_cast( {:put_scripts, ids, owner}, state ) do
+  def handle_cast({:put_scripts, ids, owner}, state) do
     # tell the drivers
-    cast_drivers( state, {:put_scripts, ids} )  
-    {:noreply, ensure_monitor(owner, state) }
+    cast_drivers(state, {:put_scripts, ids})
+    {:noreply, ensure_monitor(owner, state)}
   end
-
 
   def handle_cast(
-    {:del_script, name},
-    %{name_table: name_table, script_table: script_table} = state
-  ) do
+        {:del_script, name},
+        %{name_table: name_table, script_table: script_table} = state
+      ) do
     case :ets.lookup(name_table, name) do
       [{_, id, _}] ->
-        cast_drivers( state, {:del_script, id} )
+        cast_drivers(state, {:del_script, id})
         :ets.delete(script_table, id)
         :ets.delete(name_table, name)
+
       _ ->
         nil
     end
+
     {:noreply, state}
   end
 
-
-
-  #--------------------------
+  # --------------------------
   # casts from drivers
 
   # a new driver has come up
   def handle_cast(
-    {:register_driver, pid},
-    %{driver_pids: driver_pids, _input_requests: reqs, _input_captures: capts} = state
-  ) do
+        {:register_driver, pid},
+        %{driver_pids: driver_pids, _input_requests: reqs, _input_captures: capts} = state
+      ) do
     # monitor the driver
-    state = ensure_monitor( pid, state )
+    state = ensure_monitor(pid, state)
 
     # track the driver pid
     driver_pids = [pid | driver_pids]
 
     # send the driver all the current script ids
     ids = all_script_ids(gen_info(state))
-    GenServer.cast( pid, { :put_scripts, ids } )
+    GenServer.cast(pid, {:put_scripts, ids})
 
     # send the driver all the current requested inputs
     input_keys =
-      Map.keys(capts) ++ Map.keys(reqs)
+      (Map.keys(capts) ++ Map.keys(reqs))
       |> Enum.uniq()
       |> Enum.sort()
 
-    GenServer.cast( pid, { :request_input, input_keys } )
+    GenServer.cast(pid, {:request_input, input_keys})
 
     {:noreply, %{state | driver_pids: driver_pids}}
   end
 
-  #--------------------------
+  # --------------------------
   # change the main theme
   def handle_cast(
-    {:set_theme, theme},
-    %{
-      scene: {scene, param},
-      main_graph: main_graph
-    } = state
-  ) do
+        {:set_theme, theme},
+        %{
+          scene: {scene, param},
+          main_graph: main_graph
+        } = state
+      ) do
     # get the background from the theme
-    background = theme
+    background =
+      theme
       |> Theme.normalize()
-      |> Map.get( :background )
+      |> Map.get(:background)
 
     # update the main graph, which draws the background...
     main_graph =
       main_graph
-      |> Graph.modify(:background, &Primitive.merge_opts(&1, fill: background) )
+      |> Graph.modify(:background, &Primitive.merge_opts(&1, fill: background))
 
     # insert the main script to the scripts table
-    state = internal_put_graph( main_graph, @main_graph, 0, state )
+    state = internal_put_graph(main_graph, @main_graph, 0, state)
 
     # tell the drivers the background changed
-    cast_drivers( state, :reset )
-    cast_drivers( state, {:put_scripts, [0]} )  
+    cast_drivers(state, :reset)
+    cast_drivers(state, {:put_scripts, [0]})
 
     # update the state
     state =
       state
-      |> Map.put( :theme, theme )
-      |> Map.put( :main_graph, main_graph )
-      # |> Map.put( :starting_scenes, [] )
+      |> Map.put(:theme, theme)
+      |> Map.put(:main_graph, main_graph)
+
+    # |> Map.put( :starting_scenes, [] )
 
     # restart the current scene directly
-    handle_cast( {:set_root, scene, param}, state )
+    handle_cast({:set_root, scene, param}, state)
   end
 
-  #--------------------------
+  # --------------------------
   # start a new root scene
-  def handle_cast( {:set_root, scene, param}, state ) do
-    {:ok, state} = do_set_root( scene, param, state )
-    { :noreply, state }
+  def handle_cast({:set_root, scene, param}, state) do
+    {:ok, state} = do_set_root(scene, param, state)
+    {:noreply, state}
   end
 
-
-  def handle_cast( {:scene_start, scene_id}, %{starting_scenes: []} = state ) do
-      cast_drivers( state, :gate_start )
-    { :noreply, %{state | starting_scenes: [scene_id] } }
+  def handle_cast({:scene_start, scene_id}, %{starting_scenes: []} = state) do
+    cast_drivers(state, :gate_start)
+    {:noreply, %{state | starting_scenes: [scene_id]}}
   end
-  def handle_cast( {:scene_start, scene_id}, %{starting_scenes: starting_scenes} = state ) do
+
+  def handle_cast({:scene_start, scene_id}, %{starting_scenes: starting_scenes} = state) do
     starting_scenes = [scene_id | starting_scenes] |> Enum.uniq()
-    { :noreply, %{state | starting_scenes: starting_scenes } }
+    {:noreply, %{state | starting_scenes: starting_scenes}}
   end
 
-  def handle_cast( {:scene_complete, _}, %{starting_scenes: []} = state ) do
-    { :noreply, state }
-  end
-  def handle_cast( {:scene_complete, scene_id}, %{starting_scenes: starting_scenes} = state ) do
-    starting_scenes = case Enum.reject(starting_scenes, &Kernel.==(&1, scene_id)) do
-      [] ->
-        # starting_scenes has gone to an empty list. We are done.
-        # tell the drivers the reset is complete
-        cast_drivers( state, :gate_complete )
-        []
-
-      scenes_ids ->
-        scenes_ids
-    end
-    { :noreply, %{state | starting_scenes: starting_scenes } }
+  def handle_cast({:scene_complete, _}, %{starting_scenes: []} = state) do
+    {:noreply, state}
   end
 
+  def handle_cast({:scene_complete, scene_id}, %{starting_scenes: starting_scenes} = state) do
+    starting_scenes =
+      case Enum.reject(starting_scenes, &Kernel.==(&1, scene_id)) do
+        [] ->
+          # starting_scenes has gone to an empty list. We are done.
+          # tell the drivers the reset is complete
+          cast_drivers(state, :gate_complete)
+          []
 
+        scenes_ids ->
+          scenes_ids
+      end
 
-  #--------------------------
+    {:noreply, %{state | starting_scenes: starting_scenes}}
+  end
+
+  # --------------------------
   # input handlint
 
-
-  def handle_cast( {:input, input}, state ) do
-    handle_input( input, state )
+  def handle_cast({:input, input}, state) do
+    handle_input(input, state)
   end
 
-  def handle_cast( {:continue_input, raw_input}, state ) do
-    handle_continue_input( raw_input, state )
+  def handle_cast({:continue_input, raw_input}, state) do
+    handle_continue_input(raw_input, state)
   end
 
-
-  def handle_cast( {:_capture_input, inputs, caller}, state ) do
-    handle_capture( inputs, caller, state )
+  def handle_cast({:_capture_input, inputs, caller}, state) do
+    handle_capture(inputs, caller, state)
   end
 
-  def handle_cast( {:_release_input, inputs, caller}, state ) do
-    handle_release( inputs, caller, state )
+  def handle_cast({:_release_input, inputs, caller}, state) do
+    handle_release(inputs, caller, state)
   end
 
-  def handle_cast( {:_release_input!, inputs}, state ) do
-    handle_release!( inputs, state )
+  def handle_cast({:_release_input!, inputs}, state) do
+    handle_release!(inputs, state)
   end
 
-  def handle_cast( {:_request_input, inputs, caller}, state ) do
-    handle_request( inputs, caller, state )
+  def handle_cast({:_request_input, inputs, caller}, state) do
+    handle_request(inputs, caller, state)
   end
 
-  def handle_cast( {:_unrequest_input, inputs, caller}, state ) do
-    handle_unrequest( inputs, caller, state )
+  def handle_cast({:_unrequest_input, inputs, caller}, state) do
+    handle_unrequest(inputs, caller, state)
   end
 
+  def handle_cast(invalid, %{name: name} = state) do
+    Logger.error("""
+    ViewPort #{inspect(name || self())} ignored bad cast
+    message: #{inspect(invalid)}
+    """)
 
-  def handle_cast( invalid, %{name: name} = state ) do
-    Logger.error(
-      """
-      ViewPort #{inspect(name || self())} ignored bad cast
-      message: #{inspect(invalid)}
-      """
-    )
-    { :noreply, state }
+    {:noreply, state}
   end
-
-
 
   # ============================================================================
   # handle_call
   @doc false
 
   # query metadata about the ViewPort
-  def handle_call( :query_info, _from, state ) do
+  def handle_call(:query_info, _from, state) do
     {:reply, {:ok, gen_info(state)}, state}
   end
 
   def handle_call(
-    {:script_id, name, caller}, _from,
-    %{name_table: name_table, next_id: next_id} = state
-  ) do
+        {:script_id, name, caller},
+        _from,
+        %{name_table: name_table, next_id: next_id} = state
+      ) do
     case :ets.lookup(name_table, name) do
       # if the script_id exists, return the numerical id
       [{_, id, ^caller}] ->
@@ -988,200 +994,199 @@ defmodule Scenic.ViewPort do
     end
   end
 
-
   # --------------------------------------------------------
-  def handle_call( {:find_point, {x,y}}, _from, state )
-  when is_number(x) and is_number(y) do
-    { :reply, find_gxy_hit( {x,y}, state ), state }
+  def handle_call({:find_point, {x, y}}, _from, state)
+      when is_number(x) and is_number(y) do
+    {:reply, find_gxy_hit({x, y}, state), state}
   end
 
   # --------------------------------------------------------
-  def handle_call( {:fetch_scene_tx, scene_id}, _, state ) do
-    {:reply, scene_tx(scene_id, state), state }
+  def handle_call({:fetch_scene_tx, scene_id}, _, state) do
+    {:reply, scene_tx(scene_id, state), state}
   end
 
-
   # --------------------------------------------------------
-  def handle_call( {:set_root, scene, param}, _from, state ) do
-    {:ok, state} = do_set_root( scene, param, state )
-    { :reply, :ok, state }
+  def handle_call({:set_root, scene, param}, _from, state) do
+    {:ok, state} = do_set_root(scene, param, state)
+    {:reply, :ok, state}
   end
 
   # --------------------------------------------------------
   def handle_call(
-    {:set_theme, theme}, from,
-    %{
-      scene: {scene, param},
-      main_graph: main_graph
-    } = state
-  ) do
+        {:set_theme, theme},
+        from,
+        %{
+          scene: {scene, param},
+          main_graph: main_graph
+        } = state
+      ) do
     # get the background from the theme
-    background = theme
+    background =
+      theme
       |> Theme.normalize()
-      |> Map.get( :background )
+      |> Map.get(:background)
 
     # update the main graph, which draws the background...
     main_graph =
       main_graph
-      |> Graph.modify(:background, &Primitive.merge_opts(&1, fill: background) )
+      |> Graph.modify(:background, &Primitive.merge_opts(&1, fill: background))
 
     # insert the main script to the scripts table
-    state = internal_put_graph( main_graph, @main_graph, 0, state )
+    state = internal_put_graph(main_graph, @main_graph, 0, state)
 
     # tell the drivers the background changed
-    cast_drivers( state, :reset )
-    cast_drivers( state, {:put_scripts, [0]} )  
+    cast_drivers(state, :reset)
+    cast_drivers(state, {:put_scripts, [0]})
 
     # update the state
     state =
       state
-      |> Map.put( :theme, theme )
-      |> Map.put( :main_graph, main_graph )
-      # |> Map.put( :reset_scenes, [] )
+      |> Map.put(:theme, theme)
+      |> Map.put(:main_graph, main_graph)
+
+    # |> Map.put( :reset_scenes, [] )
 
     # restart the current scene directly
     # handle_cast( {:set_root, scene, param}, state )
-    handle_call( {:set_root, scene, param}, from, state )
+    handle_call({:set_root, scene, param}, from, state)
   end
 
-
-  #--------------------------
+  # --------------------------
   # start drivers cleanly
   def handle_call(
-    {:start_driver, opts}, _from,
-    %{driver_sup: driver_sup} = state
-  ) do
+        {:start_driver, opts},
+        _from,
+        %{driver_sup: driver_sup} = state
+      ) do
     info = gen_info(state)
-    case DynamicSupervisor.start_child( driver_sup, {opts[:module], {info, opts}} ) do
+
+    case DynamicSupervisor.start_child(driver_sup, {opts[:module], {info, opts}}) do
       {:ok, pid} ->
         # adding the pid to the driver list happens later when the driver registers itself.
-        { :reply, {:ok, pid}, state }
+        {:reply, {:ok, pid}, state}
 
       err ->
-        { :reply, err, state }
+        {:reply, err, state}
     end
   end
 
-
-  def handle_call( {:_fetch_input_captures, from}, _, state ) do
-    handle_fetch_captures( from, state )
+  def handle_call({:_fetch_input_captures, from}, _, state) do
+    handle_fetch_captures(from, state)
   end
 
-  def handle_call( :_fetch_input_captures!, _, state ) do
-    handle_fetch_captures!( state )
+  def handle_call(:_fetch_input_captures!, _, state) do
+    handle_fetch_captures!(state)
   end
 
-  def handle_call({ :_fetch_input_requests, from}, _, state ) do
-    handle_fetch_requests( from, state )
+  def handle_call({:_fetch_input_requests, from}, _, state) do
+    handle_fetch_requests(from, state)
   end
 
-  def handle_call( :_fetch_input_requests!, _, state ) do
-    handle_fetch_requests!( state )
+  def handle_call(:_fetch_input_requests!, _, state) do
+    handle_fetch_requests!(state)
   end
-
 
   # --------------------------------------------------------
   # A way to test for alive?, but also to force synchronization
-  def handle_call( :_ping_, _from, scene ) do
+  def handle_call(:_ping_, _from, scene) do
     {:reply, :_pong_, scene}
   end
 
-  def handle_call( invalid, from, %{name: name} = state ) do
-    Logger.error(
-      """
-      ViewPort #{inspect(name || self())} ignored bad call
-      message: #{inspect(invalid)},
-      from: #{inspect(from)}
-      """
-    )
-    { :noreply, state }
+  def handle_call(invalid, from, %{name: name} = state) do
+    Logger.error("""
+    ViewPort #{inspect(name || self())} ignored bad call
+    message: #{inspect(invalid)},
+    from: #{inspect(from)}
+    """)
+
+    {:noreply, state}
   end
-
-
-
 
   # --------------------------------------------------------
-  defp scene_tx( scene_pid, %{scenes_by_pid: sbp} = state ) when is_pid(scene_pid) do
-    case Map.fetch( sbp, scene_pid ) do
+  defp scene_tx(scene_pid, %{scenes_by_pid: sbp} = state) when is_pid(scene_pid) do
+    case Map.fetch(sbp, scene_pid) do
       :error -> {:error, :not_found}
-      {:ok, {id, _parent_id}} -> scene_tx( id, state )
+      {:ok, {id, _parent_id}} -> scene_tx(id, state)
     end
   end
-  defp scene_tx( scene_id, %{scene_transforms: txs} ) do
-    case Map.fetch( txs, scene_id ) do
+
+  defp scene_tx(scene_id, %{scene_transforms: txs}) do
+    case Map.fetch(txs, scene_id) do
       :error -> {:error, :not_found}
-      {:ok, {tx, parent_id}} -> { :ok, do_scene_tx(parent_id, txs, [tx]) }
+      {:ok, {tx, parent_id}} -> {:ok, do_scene_tx(parent_id, txs, [tx])}
     end
   end
-  defp do_scene_tx(parent_id, txs, tx_list ) do
+
+  defp do_scene_tx(parent_id, txs, tx_list) do
     case Map.fetch(txs, parent_id) do
       {:ok, {tx, parent_id}} ->
-        do_scene_tx(parent_id, txs, [tx | tx_list] )
+        do_scene_tx(parent_id, txs, [tx | tx_list])
 
       :error ->
         # there that was the last one
-        Scenic.Math.Matrix.mul( tx_list )
+        Scenic.Math.Matrix.mul(tx_list)
     end
   end
-
 
   # ==================================================================
   # do set the root
 
   defp do_set_root(
-    scene, param,
-    %{
-      theme: theme,
-      scene_sup: scene_sup,
-      root_pid: old_root,
-      input_lists: ils
-    } = state
-  ) do
+         scene,
+         param,
+         %{
+           theme: theme,
+           scene_sup: scene_sup,
+           root_pid: old_root,
+           input_lists: ils
+         } = state
+       ) do
     # tell the drivers to reset the scene
-    cast_drivers( state, :reset )
+    cast_drivers(state, :reset)
 
     # if there is already a root running, kill it and reset the tables
     case old_root do
-      nil -> :ok
+      nil ->
+        :ok
+
       pid when is_pid(pid) ->
-        DynamicSupervisor.terminate_child( scene_sup, old_root )
+        DynamicSupervisor.terminate_child(scene_sup, old_root)
     end
 
     # start the new scene
-    {:ok, new_pid, _ } = Scene.start( 
-      name: @root_graph,
-      module: scene,
-      parent: self(),
-      param: param,
-      viewport: gen_info(state),
-      root_sup: scene_sup,
-      opts: [theme: theme]
-    )
+    {:ok, new_pid, _} =
+      Scene.start(
+        name: @root_graph,
+        module: scene,
+        parent: self(),
+        param: param,
+        viewport: gen_info(state),
+        root_sup: scene_sup,
+        opts: [theme: theme]
+      )
 
     # update state
     state =
       state
-      |> Map.put( :root_pid, new_pid )
-      |> Map.put( :scene, {scene, param} )
-      |> Map.put( :input_lists, %{ @main_graph => ils[@main_graph] } )
-      |> Map.put( :next_id, @first_open_graph_id )
-      # |> Map.put( :reset_scenes, [] )
+      |> Map.put(:root_pid, new_pid)
+      |> Map.put(:scene, {scene, param})
+      |> Map.put(:input_lists, %{@main_graph => ils[@main_graph]})
+      |> Map.put(:next_id, @first_open_graph_id)
 
-    {:ok, state }
+    # |> Map.put( :reset_scenes, [] )
+
+    {:ok, state}
   end
-
 
   # ============================================================================
   # internal utilities
 
-  defp gen_info(
-    %{
-      name: name,
-      name_table: name_table,
-      script_table: script_table,
-      size: size
-    }
-  ) do
+  defp gen_info(%{
+         name: name,
+         name_table: name_table,
+         script_table: script_table,
+         size: size
+       }) do
     %ViewPort{
       pid: self(),
       name: name,
@@ -1191,148 +1196,147 @@ defmodule Scenic.ViewPort do
     }
   end
 
-
-  defp cast_drivers( %{driver_pids: pids}, msg ) do
-    Enum.each( pids, &GenServer.cast(&1,msg) )
+  defp cast_drivers(%{driver_pids: pids}, msg) do
+    Enum.each(pids, &GenServer.cast(&1, msg))
   end
-
 
   # only called from inside the viewport
   defp internal_put_graph(
-    %Graph{} = graph,
-    name, id,
-    %{input_lists: ils, script_table: script_table} = state
-  ) do
-    vp = gen_info( state )
-    state = with {:ok, script} <- GraphCompiler.compile( vp, graph ),
-    {:ok, input_list} <- compile_input( graph ) do
+         %Graph{} = graph,
+         name,
+         id,
+         %{input_lists: ils, script_table: script_table} = state
+       ) do
+    vp = gen_info(state)
 
-      # write the script to the table
-      case :ets.lookup(script_table, id) do
-        # do nothing if the script is in the table and has not changed
-        [{_, ^script, :viewport}] -> :no_change
-        # it isn't there or has changed
-        _ ->
-          true = :ets.insert(script_table, {id, script, :viewport})
-          :ok
+    state =
+      with {:ok, script} <- GraphCompiler.compile(vp, graph),
+           {:ok, input_list} <- compile_input(graph) do
+        # write the script to the table
+        case :ets.lookup(script_table, id) do
+          # do nothing if the script is in the table and has not changed
+          [{_, ^script, :viewport}] ->
+            :no_change
+
+          # it isn't there or has changed
+          _ ->
+            true = :ets.insert(script_table, {id, script, :viewport})
+            :ok
+        end
+
+        # add the input list to the state
+        %{state | input_lists: Map.put(ils, name, {input_list, nil})}
+      else
+        _ -> state
       end
-
-      # add the input list to the state
-      %{state | input_lists: Map.put(ils, name, {input_list, nil}) }
-    else
-      _ -> state
-    end
 
     state
   end
 
-
-
-
-
-  #============================================================================
-  #============================================================================
-  #============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
   # input handling
 
-    # if the requested input changed, then tell the drivers. BUT...
-    # we aren't comparing the whole map. just the keys. Did
-    # the keys change? That's what triggers a driver update
+  # if the requested input changed, then tell the drivers. BUT...
+  # we aren't comparing the whole map. just the keys. Did
+  # the keys change? That's what triggers a driver update
   # defp do_update_driver_input( %{} = old_reqs, %{_input_requests: new_reqs} = state ) do
   defp do_update_driver_input(
-    %{_input_requests: old_reqs, _input_captures: old_capts},
-    %{_input_requests: new_reqs, _input_captures: new_capts} = state
-  ) do
-
+         %{_input_requests: old_reqs, _input_captures: old_capts},
+         %{_input_requests: new_reqs, _input_captures: new_capts} = state
+       ) do
     old_keys =
-      Map.keys(old_capts) ++ Map.keys(old_reqs)
+      (Map.keys(old_capts) ++ Map.keys(old_reqs))
       |> Enum.uniq()
       |> Enum.sort()
 
     new_keys =
-      Map.keys(new_capts) ++ Map.keys(new_reqs)
+      (Map.keys(new_capts) ++ Map.keys(new_reqs))
       |> Enum.uniq()
       |> Enum.sort()
 
     if Enum.sort(new_keys) != Enum.sort(old_keys) do
-      cast_drivers( state, {:request_input, new_keys} )
+      cast_drivers(state, {:request_input, new_keys})
     end
-
   end
 
-  #--------------------------------------------------------
-  defp handle_capture( inputs, caller, old_state ) do
-    new_state = Enum.reduce( inputs, old_state, fn(input, %{_input_captures: capts} = st) ->
-      with {:ok, pids} <- Map.fetch( capts, input ),
-      nil <- Enum.find(pids, &Kernel.==(&1, caller) ) do
-        do_capture( input, caller, st )
-      else
-        :error -> do_capture( input, caller, st )
-        _ -> st
-      end
-    end)
+  # --------------------------------------------------------
+  defp handle_capture(inputs, caller, old_state) do
+    new_state =
+      Enum.reduce(inputs, old_state, fn input, %{_input_captures: capts} = st ->
+        with {:ok, pids} <- Map.fetch(capts, input),
+             nil <- Enum.find(pids, &Kernel.==(&1, caller)) do
+          do_capture(input, caller, st)
+        else
+          :error -> do_capture(input, caller, st)
+          _ -> st
+        end
+      end)
 
     # if the requests changed, then tell the drivers.
-    do_update_driver_input( old_state, new_state )
+    do_update_driver_input(old_state, new_state)
 
-    {:noreply, ensure_monitor(caller, new_state) }
+    {:noreply, ensure_monitor(caller, new_state)}
   end
-  defp do_capture( input, caller, %{_input_captures: captures} = state ) do
-    pids = [ caller | Map.get(captures, input, []) ]
+
+  defp do_capture(input, caller, %{_input_captures: captures} = state) do
+    pids = [caller | Map.get(captures, input, [])]
     captures = Map.put(captures, input, pids)
     %{state | _input_captures: captures}
   end
 
-
-  #--------------------------------------------------------
-  defp handle_release( [:all], caller, %{_input_captures: captures} = state ) do
+  # --------------------------------------------------------
+  defp handle_release([:all], caller, %{_input_captures: captures} = state) do
     captures
     |> Map.keys()
-    |> handle_release( caller, state )
+    |> handle_release(caller, state)
   end
-  defp handle_release( inputs, caller, old_state ) do
-    new_state = Enum.reduce(inputs, old_state, &do_release(&1, caller, &2) )
+
+  defp handle_release(inputs, caller, old_state) do
+    new_state = Enum.reduce(inputs, old_state, &do_release(&1, caller, &2))
 
     # if the requests changed, then tell the drivers.
-    do_update_driver_input( old_state, new_state )
+    do_update_driver_input(old_state, new_state)
 
-    {:noreply, new_state }
+    {:noreply, new_state}
   end
 
-  defp do_release( input, caller, %{_input_captures: captures} = state ) do
-    case Map.fetch( captures, input ) do
-      :error -> state
+  defp do_release(input, caller, %{_input_captures: captures} = state) do
+    case Map.fetch(captures, input) do
+      :error ->
+        state
+
       {:ok, [^caller]} ->
         captures = Map.delete(captures, input)
         %{state | _input_captures: captures}
 
       {:ok, pids} ->
-        captures = Map.put(captures, input, List.delete(pids, caller) )
+        captures = Map.put(captures, input, List.delete(pids, caller))
         %{state | _input_captures: captures}
     end
   end
 
-
-  #--------------------------------------------------------
-  defp handle_release!( [:all], %{_input_captures: captures} = state ) do
+  # --------------------------------------------------------
+  defp handle_release!([:all], %{_input_captures: captures} = state) do
     captures
     |> Map.keys()
-    |> handle_release!( state )
+    |> handle_release!(state)
   end
 
-  defp handle_release!( inputs, old_state ) do
-    new_state = Enum.reduce( inputs, old_state, &do_release!(&1, &2) )
+  defp handle_release!(inputs, old_state) do
+    new_state = Enum.reduce(inputs, old_state, &do_release!(&1, &2))
 
     # if the requests changed, then tell the drivers.
-    do_update_driver_input( old_state, new_state )
+    do_update_driver_input(old_state, new_state)
 
-    {:noreply, new_state }
+    {:noreply, new_state}
   end
 
-  defp do_release!( input, %{_input_captures: captures} = state ) do
-    case Map.fetch( captures, input ) do
+  defp do_release!(input, %{_input_captures: captures} = state) do
+    case Map.fetch(captures, input) do
       {:ok, _pids} ->
-        captures = Map.delete( captures, input )
+        captures = Map.delete(captures, input)
         %{state | _input_captures: captures}
 
       :error ->
@@ -1340,176 +1344,190 @@ defmodule Scenic.ViewPort do
     end
   end
 
+  # --------------------------------------------------------
+  defp handle_fetch_captures(pid, %{_input_captures: captures} = state) do
+    inputs =
+      Enum.reduce(captures, [], fn {inpt, pids}, acc ->
+        case Enum.member?(pids, pid) do
+          true -> [inpt | acc]
+          false -> acc
+        end
+      end)
 
-  #--------------------------------------------------------
-  defp handle_fetch_captures( pid, %{_input_captures: captures} = state ) do
-    inputs = Enum.reduce( captures, [], fn( {inpt,pids}, acc ) ->
-      case Enum.member?( pids, pid ) do
-        true -> [inpt | acc]
-        false -> acc
-      end
-    end)
     {:reply, {:ok, inputs}, state}
   end
 
-
-  #--------------------------------------------------------
-  defp handle_fetch_captures!( %{_input_captures: captures} = state ) do
+  # --------------------------------------------------------
+  defp handle_fetch_captures!(%{_input_captures: captures} = state) do
     {:reply, {:ok, Map.keys(captures)}, state}
   end
 
-  #--------------------------------------------------------
-  defp handle_request( inputs, caller, old_state ) 
-  when is_list(inputs) do
-    new_state = Enum.reduce( inputs, old_state, &do_request(&1, caller, &2) )
+  # --------------------------------------------------------
+  defp handle_request(inputs, caller, old_state)
+       when is_list(inputs) do
+    new_state = Enum.reduce(inputs, old_state, &do_request(&1, caller, &2))
 
     # if the requests changed, then tell the drivers.
-    do_update_driver_input( old_state, new_state )
+    do_update_driver_input(old_state, new_state)
 
-    {:noreply, ensure_monitor(caller, new_state) }
+    {:noreply, ensure_monitor(caller, new_state)}
   end
-  defp do_request( input, caller, %{_input_requests: requests} = state ) do
-    pids = [ caller | Map.get(requests, input, []) ]
-    requests = Map.put( requests, input, pids )
+
+  defp do_request(input, caller, %{_input_requests: requests} = state) do
+    pids = [caller | Map.get(requests, input, [])]
+    requests = Map.put(requests, input, pids)
     %{state | _input_requests: requests}
   end
 
-
-  #--------------------------------------------------------
-  defp handle_unrequest( [:all], caller, %{_input_requests: old_reqs} = state ) do
+  # --------------------------------------------------------
+  defp handle_unrequest([:all], caller, %{_input_requests: old_reqs} = state) do
     old_reqs
     |> Map.keys()
-    |> handle_unrequest( caller, state )
+    |> handle_unrequest(caller, state)
   end
-  defp handle_unrequest( inputs, caller, old_state ) do
-    new_state = Enum.reduce( inputs, old_state, &do_unrequest(&1, caller, &2) )
+
+  defp handle_unrequest(inputs, caller, old_state) do
+    new_state = Enum.reduce(inputs, old_state, &do_unrequest(&1, caller, &2))
 
     # if the requests changed, then tell the drivers.
-    do_update_driver_input( old_state, new_state )
+    do_update_driver_input(old_state, new_state)
 
-    {:noreply, new_state }
+    {:noreply, new_state}
   end
 
-  defp do_unrequest( input, caller, %{_input_requests: requests} = state ) do
-    requests = case Map.fetch( requests, input ) do
-      :error -> requests
-      {:ok, [^caller]} -> Map.delete(requests, input)
-      {:ok, pids} -> Map.put(requests, input, List.delete(pids, caller) )
-    end
-    %{ state | _input_requests: requests }
-  end
-
-
-  #--------------------------------------------------------
-  defp handle_fetch_requests( pid, %{_input_requests: requests} = state ) do
-    inputs = Enum.reduce( requests, [], fn( {inpt,pids}, acc ) ->
-      case Enum.member?( pids, pid ) do
-        true -> [inpt | acc]
-        false -> acc
+  defp do_unrequest(input, caller, %{_input_requests: requests} = state) do
+    requests =
+      case Map.fetch(requests, input) do
+        :error -> requests
+        {:ok, [^caller]} -> Map.delete(requests, input)
+        {:ok, pids} -> Map.put(requests, input, List.delete(pids, caller))
       end
-    end)
+
+    %{state | _input_requests: requests}
+  end
+
+  # --------------------------------------------------------
+  defp handle_fetch_requests(pid, %{_input_requests: requests} = state) do
+    inputs =
+      Enum.reduce(requests, [], fn {inpt, pids}, acc ->
+        case Enum.member?(pids, pid) do
+          true -> [inpt | acc]
+          false -> acc
+        end
+      end)
+
     {:reply, {:ok, inputs}, state}
   end
 
-  
-  #--------------------------------------------------------
-  defp handle_fetch_requests!( %{_input_requests: requests} = state ) do
+  # --------------------------------------------------------
+  defp handle_fetch_requests!(%{_input_requests: requests} = state) do
     {:reply, {:ok, Map.keys(requests)}, state}
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # receive input from a driver and cast it to a scene
-  defp handle_input( {input_type, _} = input, %{_input_captures: captures, _input_requests: requests} = state ) do
+  defp handle_input(
+         {input_type, _} = input,
+         %{_input_captures: captures, _input_requests: requests} = state
+       ) do
     case Map.fetch(captures, input_type) do
       {:ok, pids} ->
-        do_captured_input( input, pids, state )
+        do_captured_input(input, pids, state)
+
       :error ->
         case Map.fetch(requests, input_type) do
           {:ok, pids} ->
-            do_requested_input( input, pids, state )
-          :error -> :ok
+            do_requested_input(input, pids, state)
+
+          :error ->
+            :ok
         end
     end
 
-    { :noreply, state }
+    {:noreply, state}
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # a scene decided to let others continue processing the input
-  def handle_continue_input( raw_input, state ) do
-    handle_input( raw_input, state )
-  end
-
-
-  # --------------------------------------------------------
-    # captured should always be sent to the capturing scene
-    # in the coordinate space of that scene. Also want to indicate if it is over an
-    # item in that scene. This requires several steps.
-    # 1: transform the gxy into the coordinates of the scene
-    # 2: find out if there it is over an item
-    # 3: send the event with the local coords and the found item
-
-  defp do_captured_input( {:cursor_button, {button, action, mods, gxy}} = input, [pid|_], state ) do
-    # prep the gxy. Throw away the input if it doesn't succeed
-    with {:ok, xy, id} <- prep_gxy_input( gxy, pid, state ) do
-      send( pid, {:_input, {:cursor_button, {button, action, mods, xy}}, input, id } )
-    end
-  end
-
-  defp do_captured_input( {:cursor_pos, gxy} = input, [pid|_], state ) do
-    # prep the gxy. Throw away the input if it doesn't succeed
-    with {:ok, xy, id} <- prep_gxy_input( gxy, pid, state ) do
-      send( pid, {:_input, {:cursor_pos, xy}, input, id } )
-    end
-  end
-
-  defp do_captured_input( input, [pid|_], _state ) do
-    Process.send( pid, {:_input, input, input, nil }, [] )
+  def handle_continue_input(raw_input, state) do
+    handle_input(raw_input, state)
   end
 
   # --------------------------------------------------------
-  defp do_requested_input( {:cursor_button, {button, action, mods, gxy}} = input, pids, state ) do
+  # captured should always be sent to the capturing scene
+  # in the coordinate space of that scene. Also want to indicate if it is over an
+  # item in that scene. This requires several steps.
+  # 1: transform the gxy into the coordinates of the scene
+  # 2: find out if there it is over an item
+  # 3: send the event with the local coords and the found item
+
+  defp do_captured_input({:cursor_button, {button, action, mods, gxy}} = input, [pid | _], state) do
+    # prep the gxy. Throw away the input if it doesn't succeed
+    with {:ok, xy, id} <- prep_gxy_input(gxy, pid, state) do
+      send(pid, {:_input, {:cursor_button, {button, action, mods, xy}}, input, id})
+    end
+  end
+
+  defp do_captured_input({:cursor_pos, gxy} = input, [pid | _], state) do
+    # prep the gxy. Throw away the input if it doesn't succeed
+    with {:ok, xy, id} <- prep_gxy_input(gxy, pid, state) do
+      send(pid, {:_input, {:cursor_pos, xy}, input, id})
+    end
+  end
+
+  defp do_captured_input(input, [pid | _], _state) do
+    Process.send(pid, {:_input, input, input, nil}, [])
+  end
+
+  # --------------------------------------------------------
+  defp do_requested_input({:cursor_button, {button, action, mods, gxy}} = input, pids, state) do
     # send the input to each requesting pid. But... needs to be in the local
     # coord space and indicate if it was over an input
-    Enum.each( pids, fn(pid) ->
-      case prep_gxy_input( gxy, pid, state ) do
+    Enum.each(pids, fn pid ->
+      case prep_gxy_input(gxy, pid, state) do
+        {:ok, _xy, nil} ->
+          :ok
+
+        {:ok, xy, id} ->
+          send(pid, {:_input, {:cursor_button, {button, action, mods, xy}}, input, id})
+
+        _ ->
+          :ok
+      end
+    end)
+  end
+
+  defp do_requested_input({:cursor_pos, gxy} = input, pids, state) do
+    # send the input to each requesting pid. But... needs to be in the local
+    # coord space and indicate if it was over an input
+    Enum.each(pids, fn pid ->
+      case prep_gxy_input(gxy, pid, state) do
         {:ok, _xy, nil} -> :ok
-        {:ok, xy, id} -> send( pid, {:_input, {:cursor_button, {button, action, mods, xy}}, input, id } )
+        {:ok, xy, id} -> send(pid, {:_input, {:cursor_pos, xy}, input, id})
         _ -> :ok
       end
     end)
   end
 
-  defp do_requested_input( {:cursor_pos, gxy} = input, pids, state ) do
-    # send the input to each requesting pid. But... needs to be in the local
-    # coord space and indicate if it was over an input
-    Enum.each( pids, fn(pid) ->
-      case prep_gxy_input( gxy, pid, state ) do
-        {:ok, _xy, nil} -> :ok
-        {:ok, xy, id} -> send( pid, {:_input, {:cursor_pos, xy}, input, id} )
-        _ -> :ok
-      end
-    end)
-  end
-
-  defp do_requested_input( input, pids, _state ) do
-    Enum.each( pids, &Process.send(&1, {:_input, input, input, nil }, []) )
+  defp do_requested_input(input, pids, _state) do
+    Enum.each(pids, &Process.send(&1, {:_input, input, input, nil}, []))
   end
 
   # --------------------------------------------------------
-  defp prep_gxy_input( gxy, pid, state ) do
-    with {:ok, tx} <- scene_tx(pid, state ) do
+  defp prep_gxy_input(gxy, pid, state) do
+    with {:ok, tx} <- scene_tx(pid, state) do
       # see if there is a hit item
-      id = case find_gxy_hit( gxy, state ) do
-        {:ok, ^pid, id} -> id
-        _ -> nil
-      end
+      id =
+        case find_gxy_hit(gxy, state) do
+          {:ok, ^pid, id} -> id
+          _ -> nil
+        end
 
       # project gxy into local coordinate space
-      xy = tx
-      |> Math.Matrix.invert()
-      |> Math.Matrix.project_vector( gxy )
+      xy =
+        tx
+        |> Math.Matrix.invert()
+        |> Math.Matrix.project_vector(gxy)
 
       {:ok, xy, id}
     else
@@ -1518,113 +1536,118 @@ defmodule Scenic.ViewPort do
   end
 
   # --------------------------------------------------------
-  defp find_gxy_hit( gxy, %{input_lists: ils} ) do
-    case input_find_hit( ils, @main_graph, gxy ) do
-      {:ok, pid, _xy, _inv_tx, id} -> {:ok, pid, id }
-      _ -> {:error, :not_found }
+  defp find_gxy_hit(gxy, %{input_lists: ils}) do
+    case input_find_hit(ils, @main_graph, gxy) do
+      {:ok, pid, _xy, _inv_tx, id} -> {:ok, pid, id}
+      _ -> {:error, :not_found}
     end
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # a monitored pid has gone down. Clean up any input in state for it
-  defp input_pid_down( pid, %{_input_captures: captures, _input_requests: requests} = state ) do
-    state = captures
-    |> Map.keys()
-    |> Enum.reduce( state, &do_release(&1, pid, &2) )
+  defp input_pid_down(pid, %{_input_captures: captures, _input_requests: requests} = state) do
+    state =
+      captures
+      |> Map.keys()
+      |> Enum.reduce(state, &do_release(&1, pid, &2))
 
     requests
     |> Map.keys()
-    |> Enum.reduce( state, &do_unrequest(&1, pid, &2) )
+    |> Enum.reduce(state, &do_unrequest(&1, pid, &2))
   end
 
+  # --------------------------------------------------------
+  defp ensure_monitor(pid, %{monitors: monitors} = state) do
+    case Map.fetch(monitors, pid) do
+      :error ->
+        monitors = Map.put(monitors, pid, Process.monitor(pid))
+        %{state | monitors: monitors}
 
-  #--------------------------------------------------------
-  defp ensure_monitor( pid, %{monitors: monitors} = state ) do
-    case Map.fetch( monitors, pid ) do
-     :error ->
-        monitors = Map.put( monitors, pid, Process.monitor(pid) )
-        %{ state | monitors: monitors }
-      _ -> state
+      _ ->
+        state
     end
   end
 
-
-
-
-  #============================================================================
-  #============================================================================
-  #============================================================================
+  # ============================================================================
+  # ============================================================================
+  # ============================================================================
   alias Scenic.Primitive.Transform
-
 
   # compile the input list for a graph
 
   # compile a graph into a list of input directives -> [{id,script}|...]
   # the output is already a reversed list.
-  #i.e. the last thing draw, is the first thing tested
-  @spec compile_input( graph :: Graph.t ) :: {:ok, binary}
-  defp compile_input( graph )
-  defp compile_input( %Graph{primitives: primitives} ) do
+  # i.e. the last thing draw, is the first thing tested
+  @spec compile_input(graph :: Graph.t()) :: {:ok, binary}
+  defp compile_input(graph)
 
-    input = comp_input_prim( [], 0, primitives[0], primitives, Math.Matrix.identity() )
+  defp compile_input(%Graph{primitives: primitives}) do
+    input = comp_input_prim([], 0, primitives[0], primitives, Math.Matrix.identity())
 
-    { :ok, input }
+    {:ok, input}
   end
 
-
-  defp comp_input_prim( input, uid, primitive, primitives, tx )
+  defp comp_input_prim(input, uid, primitive, primitives, tx)
 
   # skip anything hidden
-  defp comp_input_prim( input, _uid, %Primitive{styles: %{hidden: true}}, _, _tx ), do: input
+  defp comp_input_prim(input, _uid, %Primitive{styles: %{hidden: true}}, _, _tx), do: input
 
   # skip script primitives - no input handlers there
-  defp comp_input_prim( input, _uid, %Primitive{module: Primitive.Script}, _, _tx ), do: input
-
+  defp comp_input_prim(input, _uid, %Primitive{module: Primitive.Script}, _, _tx), do: input
 
   # it is a group. Calc the local transform if there one, but doesn't go into the 
   # list as a component itself...
   defp comp_input_prim(
-    input, _uid,
-    %Primitive{module: Primitive.Group, data: ids, transforms: txs},
-    primitives, tx
-  ) do
+         input,
+         _uid,
+         %Primitive{module: Primitive.Group, data: ids, transforms: txs},
+         primitives,
+         tx
+       ) do
     # calculate the graph-local transform
-    local_tx = local_tx( txs, tx )
+    local_tx = local_tx(txs, tx)
     # reduce the group
-    Enum.reduce(ids, input, fn(id, inpt) ->
-      comp_input_prim( inpt, id, primitives[id], primitives, local_tx )
+    Enum.reduce(ids, input, fn id, inpt ->
+      comp_input_prim(inpt, id, primitives[id], primitives, local_tx)
     end)
   end
 
   # components get a call out to another input list
   defp comp_input_prim(
-    input, uid,
-    %Primitive{module: Primitive.Component, data: {_,_,name}, transforms: txs},
-    _, tx
-  ) do
+         input,
+         uid,
+         %Primitive{module: Primitive.Component, data: {_, _, name}, transforms: txs},
+         _,
+         tx
+       ) do
     # calculate the graph-local transform
-    local_tx = local_tx( txs, tx )
-    [ {Primitive.Component, name, local_tx, self(), uid, nil} | input ]
+    local_tx = local_tx(txs, tx)
+    [{Primitive.Component, name, local_tx, self(), uid, nil} | input]
   end
 
   # items that have input set on them
   defp comp_input_prim(
-    input, uid,
-    %Primitive{
-      id: id, module: module, data: data, transforms: txs, styles: %{input: true}
-    },
-    _, tx
-  ) do
+         input,
+         uid,
+         %Primitive{
+           id: id,
+           module: module,
+           data: data,
+           transforms: txs,
+           styles: %{input: true}
+         },
+         _,
+         tx
+       ) do
     # calculate the graph-local transform
-    local_tx = local_tx( txs, tx )
-    [ {module, data, local_tx, self(), uid, id} | input ]
+    local_tx = local_tx(txs, tx)
+    [{module, data, local_tx, self(), uid, id} | input]
   end
 
   # primitives that don't have input set are skipped
-  defp comp_input_prim( input, _uid, _primitive, _, _tx ), do: input
+  defp comp_input_prim(input, _uid, _primitive, _, _tx), do: input
 
-  defp local_tx( txs, tx_parent ) do
+  defp local_tx(txs, tx_parent) do
     cond do
       txs == %{} ->
         # there is no local transform set
@@ -1632,56 +1655,63 @@ defmodule Scenic.ViewPort do
 
       txs ->
         # multiply the local txs into the tx_parent
-        Math.Matrix.mul( tx_parent, Transform.calculate_local(txs) )
+        Math.Matrix.mul(tx_parent, Transform.calculate_local(txs))
     end
   end
-  
 
-  #============================================================================
+  # ============================================================================
   # walk an input list and look for hits
   @doc false
-  defp input_find_hit( lists, name, global_point, parent_tx \\ nil )
-  defp input_find_hit( lists, name, global_point, nil ) do
-    input_find_hit( lists, name, global_point, Math.Matrix.identity() ) 
+  defp input_find_hit(lists, name, global_point, parent_tx \\ nil)
+
+  defp input_find_hit(lists, name, global_point, nil) do
+    input_find_hit(lists, name, global_point, Math.Matrix.identity())
   end
-  defp input_find_hit( lists, name, global_point, parent_tx ) do
+
+  defp input_find_hit(lists, name, global_point, parent_tx) do
     case Map.fetch(lists, name) do
-      {:ok, {in_list, _}} -> do_find_hit( in_list, global_point, lists, name, parent_tx )
+      {:ok, {in_list, _}} -> do_find_hit(in_list, global_point, lists, name, parent_tx)
       _ -> :not_found
     end
   end
 
-  defp do_find_hit( input_list, global_point, lists, name, parent_tx )
-  defp do_find_hit( [], _, _, _, _ ), do: :not_found
+  defp do_find_hit(input_list, global_point, lists, name, parent_tx)
+  defp do_find_hit([], _, _, _, _), do: :not_found
 
   # components recurse
   defp do_find_hit(
-    [ {Primitive.Component, data, local_tx, _pid, _uid, _id} | tail ],
-    global_point, lists, name, parent_tx
-  ) do
+         [{Primitive.Component, data, local_tx, _pid, _uid, _id} | tail],
+         global_point,
+         lists,
+         name,
+         parent_tx
+       ) do
     # calculate the local matrix, which becomes the parent of the component
-    local_tx = Math.Matrix.mul( parent_tx, local_tx )
+    local_tx = Math.Matrix.mul(parent_tx, local_tx)
 
     # recurse to test the component
-    case input_find_hit( lists, data, global_point, local_tx ) do
+    case input_find_hit(lists, data, global_point, local_tx) do
       {:ok, _, _, _, _} = hit ->
         # Rhere was a hit inside the component. Return result as we are done.
         hit
 
       :not_found ->
         # if not found, keep going
-        do_find_hit( tail, global_point, lists, name, parent_tx )
+        do_find_hit(tail, global_point, lists, name, parent_tx)
     end
   end
 
   # actual thing to test against
   defp do_find_hit(
-    [ {module, data, local_tx, pid, _uid, id} | tail ],
-    {gx, gy} = gp, lists, name, parent_tx
-  ) do
+         [{module, data, local_tx, pid, _uid, id} | tail],
+         {gx, gy} = gp,
+         lists,
+         name,
+         parent_tx
+       ) do
     # calculate the inverse maxtrix of parent_tx x local_tx
-    local_tx = Math.Matrix.mul( parent_tx, local_tx )
-    invert_tx = Math.Matrix.invert( local_tx )
+    local_tx = Math.Matrix.mul(parent_tx, local_tx)
+    invert_tx = Math.Matrix.invert(local_tx)
 
     # project the global point by the inverse matrix
     {x, y} = Math.Vector2.project({gx, gy}, invert_tx)
@@ -1689,8 +1719,9 @@ defmodule Scenic.ViewPort do
     case module.contains_point?(data, {x, y}) do
       true ->
         # return the xy in parent coordinate space
-        inv = Math.Matrix.invert( parent_tx )
-        pxy = Math.Vector2.project( {gx, gy}, inv )
+        inv = Math.Matrix.invert(parent_tx)
+        pxy = Math.Vector2.project({gx, gy}, inv)
+
         {
           :ok,
           pid,
@@ -1701,9 +1732,7 @@ defmodule Scenic.ViewPort do
 
       # No hit here. Keep going
       false ->
-        do_find_hit( tail, gp, lists, name, parent_tx )
+        do_find_hit(tail, gp, lists, name, parent_tx)
     end
   end
-
-
 end

@@ -38,25 +38,25 @@ defmodule Scenic.Primitive.Quad do
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Triangle
 
-
   @type t :: {
-    {x0::number, y0::number}, {x1::number, y1::number},
-    {x2::number, y2::number}, {x3::number, y3::number}
-  }
+          {x0 :: number, y0 :: number},
+          {x1 :: number, y1 :: number},
+          {x2 :: number, y2 :: number},
+          {x3 :: number, y3 :: number}
+        }
   @type styles_t :: [:hidden | :fill | :stroke_width | :stroke_fill | :join | :miter_limit]
 
   @styles [:hidden, :fill, :stroke_width, :stroke_fill, :join, :miter_limit]
 
-
   @impl Primitive
-  @spec validate( t() ) :: {:ok, t()} | {:error, String.t()}  
-  def validate( {{x0,y0}, {x1,y1}, {x2,y2}, {x3,y3}} = data ) when
-  is_number(x0) and is_number(y0) and is_number(x1) and is_number(y1) and
-  is_number(x2) and is_number(y2) and is_number(x3) and is_number(y3) do
+  @spec validate(t()) :: {:ok, t()} | {:error, String.t()}
+  def validate({{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}} = data)
+      when is_number(x0) and is_number(y0) and is_number(x1) and is_number(y1) and
+             is_number(x2) and is_number(y2) and is_number(x3) and is_number(y3) do
     {:ok, data}
   end
 
-  def validate( data ) do
+  def validate(data) do
     {
       :error,
       """
@@ -68,8 +68,6 @@ defmodule Scenic.Primitive.Quad do
       """
     }
   end
-
-
 
   # --------------------------------------------------------
   @doc """
@@ -85,14 +83,13 @@ defmodule Scenic.Primitive.Quad do
   generate a larger script and is called when a graph is compiled.
   """
   @impl Primitive
-  @spec compile( primitive::Primitive.t(), styles::Style.m() ) :: Script.t()
+  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
   def compile(
-    %Primitive{module: __MODULE__, data: {{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}}},
-    styles
-  ) do
-    Script.draw_quad([], x0, y0, x1, y1, x2, y2, x3, y3, Script.draw_flag(styles) )
+        %Primitive{module: __MODULE__, data: {{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}}},
+        styles
+      ) do
+    Script.draw_quad([], x0, y0, x1, y1, x2, y2, x3, y3, Script.draw_flag(styles))
   end
-
 
   # --------------------------------------------------------
   def default_pin(data)

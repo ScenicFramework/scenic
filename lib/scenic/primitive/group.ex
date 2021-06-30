@@ -45,15 +45,16 @@ defmodule Scenic.Primitive.Group do
   # data verification and serialization
 
   @impl Primitive
-  @spec validate( ids::[pos_integer] ) ::
-    {:ok, ids::[pos_integer]} | {:error, String.t()}
-  def validate( ids ) when is_list(ids) do
-    case Enum.all?(ids, fn(n) -> is_integer(n) && n >= 0 end) do
+  @spec validate(ids :: [pos_integer]) ::
+          {:ok, ids :: [pos_integer]} | {:error, String.t()}
+  def validate(ids) when is_list(ids) do
+    case Enum.all?(ids, fn n -> is_integer(n) && n >= 0 end) do
       true -> {:ok, ids}
       false -> err_validation(ids)
     end
   end
-  def validate( data ), do: err_validation(data)
+
+  def validate(data), do: err_validation(data)
 
   defp err_validation(data) do
     {
@@ -75,16 +76,14 @@ defmodule Scenic.Primitive.Group do
   @spec valid_styles() :: [:hidden, ...]
   def valid_styles(), do: @styles
 
-
   # --------------------------------------------------------
   # compiling a group is a special case and is handled in Scenic.ViewPort.GraphCompiler
   @doc false
   @impl Primitive
-  @spec compile( primitive::Primitive.t(), styles::Style.m() ) :: Script.t()
-  def compile( %Primitive{module: __MODULE__}, _styles) do
+  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
+  def compile(%Primitive{module: __MODULE__}, _styles) do
     raise "compiling a group is a special case and is handled in Scenic.ViewPort.GraphCompiler"
   end
-
 
   # ============================================================================
   # apis to manipulate the list of child ids

@@ -38,7 +38,7 @@ defmodule Scenic.Primitive.QuadTest do
     {:error, msg} = Quad.validate({{100, 300}, {300, 180}, {"400", 310}, {300, 520}})
     assert msg =~ "Invalid Quad"
 
-    {:error, msg} = Quad.validate( :banana )
+    {:error, msg} = Quad.validate(:banana)
     assert msg =~ "Invalid Quad"
   end
 
@@ -46,18 +46,25 @@ defmodule Scenic.Primitive.QuadTest do
   # styles
 
   test "valid_styles works" do
-    assert Quad.valid_styles() == [:hidden, :fill, :stroke_width, :stroke_fill, :join, :miter_limit]
+    assert Quad.valid_styles() == [
+             :hidden,
+             :fill,
+             :stroke_width,
+             :stroke_fill,
+             :join,
+             :miter_limit
+           ]
   end
 
   # ============================================================================
   # compile
 
   test "compile works" do
-    p = Quad.build(@convex )
-    assert Quad.compile(p, %{stroke_fill: :blue}) ==
-      [{:draw_quad, {100, 300, 300, 180, 400, 310, 300, 520, :stroke}}]
-  end
+    p = Quad.build(@convex)
 
+    assert Quad.compile(p, %{stroke_fill: :blue}) ==
+             [{:draw_quad, {100, 300, 300, 180, 400, 310, 300, 520, :stroke}}]
+  end
 
   # ============================================================================
   # transform helpers
@@ -88,5 +95,4 @@ defmodule Scenic.Primitive.QuadTest do
     assert Quad.contains_point?(@convex, {400, 520}) == false
     assert Quad.contains_point?(@convex, {100, 520}) == false
   end
-
 end

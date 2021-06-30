@@ -19,5 +19,4 @@ defmodule Scenic.Primitive.Style.CapTest do
     {:error, msg} = Cap.validate(:invalid)
     assert msg =~ "one of :butt, :round, or :square"
   end
-
 end

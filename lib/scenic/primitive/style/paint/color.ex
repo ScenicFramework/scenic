@@ -41,7 +41,7 @@ defmodule Scenic.Primitive.Style.Paint.Color do
   # ============================================================================
   # data verification and serialization
 
-  defp error_msg( {:color, color}) do
+  defp error_msg({:color, color}) do
     """
     Invalid Color specification: #{inspect(color)}
     #{IO.ANSI.yellow()}
@@ -63,7 +63,7 @@ defmodule Scenic.Primitive.Style.Paint.Color do
     """
   end
 
-  defp error_msg( color ) do
+  defp error_msg(color) do
     """
     Invalid Color specification: #{inspect(color)}
     #{IO.ANSI.yellow()}
@@ -78,25 +78,23 @@ defmodule Scenic.Primitive.Style.Paint.Color do
     """
   end
 
-
   # --------------------------------------------------------
   @doc """
   Validate the format of a color or a color paint
   """
   def validate({:color, color}) do
     try do
-      { :ok, {:color, Scenic.Color.to_rgba(color)} }
+      {:ok, {:color, Scenic.Color.to_rgba(color)}}
     rescue
-      _ -> { :error, error_msg( {:color, color} ) }
+      _ -> {:error, error_msg({:color, color})}
     end
   end
 
   def validate(color) do
     try do
-      { :ok, Scenic.Color.to_rgba(color) }
+      {:ok, Scenic.Color.to_rgba(color)}
     rescue
-      _ -> { :error, error_msg( color ) }
+      _ -> {:error, error_msg(color)}
     end
   end
-
 end

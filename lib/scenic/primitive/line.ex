@@ -35,22 +35,22 @@ defmodule Scenic.Primitive.Line do
 
   #  import IEx
 
-  @type t :: {{x0::number, y0::number}, {x1::number, y1::number}}
+  @type t :: {{x0 :: number, y0 :: number}, {x1 :: number, y1 :: number}}
   @type styles_t :: [:hidden | :stroke_width | :stroke_fill | :cap]
 
   @styles [:hidden, :stroke_width, :stroke_fill, :cap]
 
-
   @impl Primitive
-  @spec validate( t() ) ::
-    {:ok, {{x0::number, y0::number}, {x1::number, y1::number}}} | {:error, String.t()}
-    
-  def validate( {{x0, y0}, {x1, y1}} = data )
-  when is_number(x0) and is_number(y0) and is_number(x1) and is_number(y1) do
+  @spec validate(t()) ::
+          {:ok, {{x0 :: number, y0 :: number}, {x1 :: number, y1 :: number}}}
+          | {:error, String.t()}
+
+  def validate({{x0, y0}, {x1, y1}} = data)
+      when is_number(x0) and is_number(y0) and is_number(x1) and is_number(y1) do
     {:ok, data}
   end
 
-  def validate( data ) do
+  def validate(data) do
     {
       :error,
       """
@@ -62,7 +62,6 @@ defmodule Scenic.Primitive.Line do
     }
   end
 
-
   # --------------------------------------------------------
   @doc """
   Returns a list of styles recognized by this primitive.
@@ -71,18 +70,18 @@ defmodule Scenic.Primitive.Line do
   @spec valid_styles() :: styles_t()
   def valid_styles(), do: @styles
 
-
   # --------------------------------------------------------
   @doc """
   Compile the data for this primitive into a mini script. This can be combined with others to
   generate a larger script and is called when a graph is compiled.
   """
   @impl Primitive
-  @spec compile( primitive::Primitive.t(), styles::Style.m() ) :: Script.t()
-  def compile( %Primitive{module: __MODULE__, data: {{x0, y0}, {x1, y1}}}, %{stroke_fill: _}) do
-    Script.draw_line( [], x0, y0, x1, y1, :stroke )
+  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
+  def compile(%Primitive{module: __MODULE__, data: {{x0, y0}, {x1, y1}}}, %{stroke_fill: _}) do
+    Script.draw_line([], x0, y0, x1, y1, :stroke)
   end
-  def compile( %Primitive{module: __MODULE__}, _styles), do: []
+
+  def compile(%Primitive{module: __MODULE__}, _styles), do: []
 
   # ============================================================================
 

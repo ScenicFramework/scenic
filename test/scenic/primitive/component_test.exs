@@ -40,10 +40,9 @@ defmodule Scenic.Primitive.ComponentTest do
     {:error, msg} = Component.validate({100, "1.4"})
     assert msg =~ "Invalid Component"
 
-    {:error, msg} = Component.validate( :banana )
+    {:error, msg} = Component.validate(:banana)
     assert msg =~ "Invalid Component"
   end
-
 
   # ============================================================================
   # styles
@@ -56,7 +55,7 @@ defmodule Scenic.Primitive.ComponentTest do
   # compile
 
   test "compile raises - it is a special case" do
-    p = Component.build( {Button, "button", "named_button"} )
+    p = Component.build({Button, "button", "named_button"})
     assert_raise RuntimeError, fn -> Component.compile(p, %{}) end
   end
 

@@ -32,18 +32,19 @@ defmodule Scenic.Primitive.Circle do
   alias Scenic.Primitive
   alias Scenic.Primitive.Style
 
-  @type t :: radius::number
+  @type t :: radius :: number
   @type styles_t :: [:hidden | :fill | :stroke_width | :stroke_fill | :cap]
 
   @styles [:hidden, :fill, :stroke_width, :stroke_fill]
 
   @impl Primitive
-  @spec validate( t() ) :: {:ok, radius::number} | {:error, String.t()}
-  def validate( radius )
-  when is_number(radius) do
+  @spec validate(t()) :: {:ok, radius :: number} | {:error, String.t()}
+  def validate(radius)
+      when is_number(radius) do
     {:ok, radius}
   end
-  def validate( data ) do
+
+  def validate(data) do
     {
       :error,
       """
@@ -68,10 +69,10 @@ defmodule Scenic.Primitive.Circle do
   Compile the data for this primitive into a mini script. This can be combined with others to
   generate a larger script and is called when a graph is compiled.
   """
-  @spec compile( primitive::Primitive.t(), styles::Style.m() ) :: Script.t()
+  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
   @impl Primitive
-  def compile( %Primitive{module: __MODULE__, data: radius}, styles) do
-    Script.draw_circle( [], radius, Script.draw_flag(styles) )
+  def compile(%Primitive{module: __MODULE__, data: radius}, styles) do
+    Script.draw_circle([], radius, Script.draw_flag(styles))
   end
 
   # ============================================================================
@@ -101,7 +102,6 @@ defmodule Scenic.Primitive.Circle do
   # def normalize(radius) when is_number(radius) do
   #   radius
   # end
-
 
   # --------------------------------------------------------
   def contains_point?(radius, {xp, yp}) do

@@ -84,14 +84,13 @@ defmodule Scenic.Component do
   @doc """
   Add this component to a `Scenic.Graph`
   """
-  @callback add_to_graph(graph :: Scenic.Graph.t(), data :: any, opts :: Keyword.t) :: Scenic.Graph.t()
-
+  @callback add_to_graph(graph :: Scenic.Graph.t(), data :: any, opts :: Keyword.t()) ::
+              Scenic.Graph.t()
 
   @doc """
   Validate that the data for a component is correctly formed
   """
-  @callback validate( data :: any ) :: {:ok, data::any} | {:error, String.t()}
-
+  @callback validate(data :: any) :: {:ok, data :: any} | {:error, String.t()}
 
   #  import IEx
 
@@ -102,7 +101,6 @@ defmodule Scenic.Component do
     defexception message: nil, error: nil, data: nil
   end
 
-
   # ===========================================================================
   defmacro __using__(opts) do
     quote do
@@ -111,10 +109,11 @@ defmodule Scenic.Component do
       use Scenic.Scene, unquote(opts)
 
       def add_to_graph(graph, data, opts \\ [])
+
       def add_to_graph(%Scenic.Graph{} = graph, data, opts) do
         Primitive.Component.add_to_graph(graph, {__MODULE__, data}, opts)
       end
-      
+
       # --------------------------------------------------------
       defoverridable add_to_graph: 3
     end
@@ -123,7 +122,6 @@ defmodule Scenic.Component do
   end
 
   # defmacro
-
 
   @filter_out [
     :input,
@@ -147,25 +145,22 @@ defmodule Scenic.Component do
     :matrix
   ]
 
-
   # prepare the list of opts to send to a component as it is being started up
   # the main task is to remove styles that have already been consumed or don't make
   # sense, while leaving any opts/styles that are intended for the component itself.
   # also, add the viewport as an option.
   @doc false
-  def filter_opts( opts ) when is_list(opts) do
-    Enum.reject(opts, fn({key,_}) -> Enum.member?(@filter_out, key) end)
+  def filter_opts(opts) when is_list(opts) do
+    Enum.reject(opts, fn {key, _} -> Enum.member?(@filter_out, key) end)
   end
 
-
-  @spec fetch( component_pid :: pid ) :: {:ok, any} | {:error, atom}
-  def fetch( component_pid ) do
-    GenServer.call( component_pid, :fetch )
+  @spec fetch(component_pid :: pid) :: {:ok, any} | {:error, atom}
+  def fetch(component_pid) do
+    GenServer.call(component_pid, :fetch)
   end
 
-  @spec put( component_pid :: pid, value :: any ) :: :ok | {:error, atom}
-  def put( component_pid, value ) do
-    GenServer.call( component_pid, {:put, value}, 5000000 )
+  @spec put(component_pid :: pid, value :: any) :: :ok | {:error, atom}
+  def put(component_pid, value) do
+    GenServer.call(component_pid, {:put, value}, 5_000_000)
   end
-
 end

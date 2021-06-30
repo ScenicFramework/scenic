@@ -17,14 +17,15 @@ defmodule Scenic.Primitive.Style.Paint.RadialGradient do
   # --------------------------------------------------------
   @doc false
   def validate({:radial, {cx, cy, i_r, o_r, color_start, color_end}})
-  when is_number(cx) and is_number(cy) and is_number(i_r) and is_number(o_r) do
+      when is_number(cx) and is_number(cy) and is_number(i_r) and is_number(o_r) do
     with {:ok, color_start} <- Color.validate(color_start),
-    {:ok, color_end} <- Color.validate(color_end) do
+         {:ok, color_end} <- Color.validate(color_end) do
       {:ok, {:radial, {cx, cy, i_r, o_r, color_start, color_end}}}
     else
       {:error, msg} -> {:error, msg}
     end
   end
+
   def validate(_), do: err_invalid()
 
   defp err_invalid() do
@@ -41,7 +42,4 @@ defmodule Scenic.Primitive.Style.Paint.RadialGradient do
       """
     }
   end
-
-
-
 end

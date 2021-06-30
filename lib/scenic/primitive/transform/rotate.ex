@@ -34,8 +34,9 @@ defmodule Scenic.Primitive.Transform.Rotate do
   # ============================================================================
   # data verification and serialization
 
-  def validate( radians ) when is_number(radians), do: {:ok, radians}
-  def validate( data )  do
+  def validate(radians) when is_number(radians), do: {:ok, radians}
+
+  def validate(data) do
     {
       :error,
       """
@@ -46,5 +47,4 @@ defmodule Scenic.Primitive.Transform.Rotate do
       """
     }
   end
-
 end

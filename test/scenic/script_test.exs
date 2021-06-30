@@ -6,25 +6,25 @@
 defmodule Scenic.ScriptTest do
   use ExUnit.Case, async: true
   doctest Scenic.Script
-  
+
   alias Scenic.Script
   alias Scenic.Color
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
 
   test "start returns an empty binary" do
     assert Script.start() == []
   end
 
   test "finish reverses the list" do
-    assert Script.finish([2,1]) == [1,2]
+    assert Script.finish([2, 1]) == [1, 2]
   end
 
   test "finish optimizes the list" do
     assert Script.finish([2, :push_state, :pop_state, 1]) == [1, :pop_push_state, 2]
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # control commands
   test "push_state works" do
     expected = [:push_state]
@@ -44,7 +44,7 @@ defmodule Scenic.ScriptTest do
     assert expected == Script.serialize(expected) |> Script.deserialize()
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # draw primitives
   test "draw_line works" do
     expected = [draw_line: {0.0, 1.0, 2.0, 3.0, :stroke}]
@@ -56,6 +56,7 @@ defmodule Scenic.ScriptTest do
     assert_raise FunctionClauseError, fn ->
       Script.draw_line([], 0, 1, 2, 3, :fill)
     end
+
     assert_raise FunctionClauseError, fn ->
       Script.draw_line([], 0, 1, 2, 3, :fill_stroke)
     end
@@ -66,11 +67,11 @@ defmodule Scenic.ScriptTest do
     assert Script.draw_triangle([], 0, 1, 2, 3, 4, 5, :fill) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
 
-    assert Script.draw_triangle([], 0, 1, 2, 3, 4, 5, :stroke) == 
-      [{:draw_triangle, {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, :stroke}}]
+    assert Script.draw_triangle([], 0, 1, 2, 3, 4, 5, :stroke) ==
+             [{:draw_triangle, {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, :stroke}}]
 
-    assert Script.draw_triangle([], 0, 1, 2, 3, 4, 5, :fill_stroke) == 
-      [{:draw_triangle, {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, :fill_stroke}}]
+    assert Script.draw_triangle([], 0, 1, 2, 3, 4, 5, :fill_stroke) ==
+             [{:draw_triangle, {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, :fill_stroke}}]
   end
 
   test "draw_quad works" do
@@ -78,11 +79,11 @@ defmodule Scenic.ScriptTest do
     assert Script.draw_quad([], 0, 1, 2, 3, 4, 5, 6, 7, :fill) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
 
-    assert Script.draw_quad([], 0, 1, 2, 3, 4, 5, 6, 7, :stroke) == 
-      [{:draw_quad, {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, :stroke}}]
+    assert Script.draw_quad([], 0, 1, 2, 3, 4, 5, 6, 7, :stroke) ==
+             [{:draw_quad, {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, :stroke}}]
 
-    assert Script.draw_quad([], 0, 1, 2, 3, 4, 5, 6, 7, :fill_stroke) == 
-      [{:draw_quad, {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, :fill_stroke}}]
+    assert Script.draw_quad([], 0, 1, 2, 3, 4, 5, 6, 7, :fill_stroke) ==
+             [{:draw_quad, {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, :fill_stroke}}]
   end
 
   test "draw_rectangle works" do
@@ -90,11 +91,11 @@ defmodule Scenic.ScriptTest do
     assert Script.draw_rectangle([], 10, 11, :fill) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
 
-    assert Script.draw_rectangle([], 10, 11, :stroke) == 
-      [{:draw_rect, {10.0, 11.0, :stroke}}]
+    assert Script.draw_rectangle([], 10, 11, :stroke) ==
+             [{:draw_rect, {10.0, 11.0, :stroke}}]
 
-    assert Script.draw_rectangle([], 10, 11, :fill_stroke) == 
-      [{:draw_rect, {10.0, 11.0, :fill_stroke}}]
+    assert Script.draw_rectangle([], 10, 11, :fill_stroke) ==
+             [{:draw_rect, {10.0, 11.0, :fill_stroke}}]
   end
 
   test "draw_rounded_rectangle works" do
@@ -102,19 +103,19 @@ defmodule Scenic.ScriptTest do
     assert Script.draw_rounded_rectangle([], 10, 11, 3, :fill) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
 
-    assert Script.draw_rounded_rectangle([], 10, 11, 3, :stroke) == 
-      [{:draw_rrect, {10.0, 11.0, 3.0, :stroke}}]
+    assert Script.draw_rounded_rectangle([], 10, 11, 3, :stroke) ==
+             [{:draw_rrect, {10.0, 11.0, 3.0, :stroke}}]
 
-    assert Script.draw_rounded_rectangle([], 10, 11, 3, :fill_stroke) == 
-      [{:draw_rrect, {10.0, 11.0, 3.0, :fill_stroke}}]
+    assert Script.draw_rounded_rectangle([], 10, 11, 3, :fill_stroke) ==
+             [{:draw_rrect, {10.0, 11.0, 3.0, :fill_stroke}}]
   end
 
   test "draw_rounded_rectangle shrinks radius if too big" do
-    assert Script.draw_rounded_rectangle([], 10, 12, 30, :fill) == 
-      [{:draw_rrect, {10.0, 12.0, 5.0, :fill}}]
+    assert Script.draw_rounded_rectangle([], 10, 12, 30, :fill) ==
+             [{:draw_rrect, {10.0, 12.0, 5.0, :fill}}]
 
-    assert Script.draw_rounded_rectangle([], 13, 12, 30, :stroke) == 
-      [{:draw_rrect, {13.0, 12.0, 6.0, :stroke}}]
+    assert Script.draw_rounded_rectangle([], 13, 12, 30, :stroke) ==
+             [{:draw_rrect, {13.0, 12.0, 6.0, :stroke}}]
   end
 
   test "draw_sector works" do
@@ -122,11 +123,11 @@ defmodule Scenic.ScriptTest do
     assert Script.draw_sector([], 10, 3, :fill) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
 
-    assert Script.draw_sector([], 10, 3, :stroke) == 
-      [{:draw_sector, {10.0, 3.0, :stroke}}]
+    assert Script.draw_sector([], 10, 3, :stroke) ==
+             [{:draw_sector, {10.0, 3.0, :stroke}}]
 
-    assert Script.draw_sector([], 10, 3, :fill_stroke) == 
-      [{:draw_sector, {10.0, 3.0, :fill_stroke}}]
+    assert Script.draw_sector([], 10, 3, :fill_stroke) ==
+             [{:draw_sector, {10.0, 3.0, :fill_stroke}}]
   end
 
   test "draw_arc works" do
@@ -134,11 +135,11 @@ defmodule Scenic.ScriptTest do
     assert Script.draw_arc([], 10, 3, :fill) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
 
-    assert Script.draw_arc([], 10, 3, :stroke) == 
-      [{:draw_arc, {10.0, 3.0, :stroke}}]
+    assert Script.draw_arc([], 10, 3, :stroke) ==
+             [{:draw_arc, {10.0, 3.0, :stroke}}]
 
-    assert Script.draw_arc([], 10, 3, :fill_stroke) == 
-      [{:draw_arc, {10.0, 3.0, :fill_stroke}}]
+    assert Script.draw_arc([], 10, 3, :fill_stroke) ==
+             [{:draw_arc, {10.0, 3.0, :fill_stroke}}]
   end
 
   test "draw_circle works" do
@@ -146,24 +147,23 @@ defmodule Scenic.ScriptTest do
     assert Script.draw_circle([], 10, :fill) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
 
-    assert Script.draw_circle([], 10, :stroke) == 
-      [{:draw_circle, {10.0, :stroke}}]
+    assert Script.draw_circle([], 10, :stroke) ==
+             [{:draw_circle, {10.0, :stroke}}]
 
-    assert Script.draw_circle([], 10, :fill_stroke) == 
-      [{:draw_circle, {10.0, :fill_stroke}}]
+    assert Script.draw_circle([], 10, :fill_stroke) ==
+             [{:draw_circle, {10.0, :fill_stroke}}]
   end
-
 
   test "draw_ellipse works" do
     expected = [{:draw_ellipse, {10.0, 20.0, :fill}}]
     assert Script.draw_ellipse([], 10, 20, :fill) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
 
-    assert Script.draw_ellipse([], 10, 20, :stroke) == 
-      [{:draw_ellipse, {10.0, 20.0, :stroke}}]
+    assert Script.draw_ellipse([], 10, 20, :stroke) ==
+             [{:draw_ellipse, {10.0, 20.0, :stroke}}]
 
-    assert Script.draw_ellipse([], 10, 20, :fill_stroke) == 
-      [{:draw_ellipse, {10.0, 20.0, :fill_stroke}}]
+    assert Script.draw_ellipse([], 10, 20, :fill_stroke) ==
+             [{:draw_ellipse, {10.0, 20.0, :fill_stroke}}]
   end
 
   test "draw_text works and pads correctly" do
@@ -174,45 +174,59 @@ defmodule Scenic.ScriptTest do
     assert byte_size(bin) == 8
     assert Script.deserialize(bin) == expected
 
-    bin = Script.draw_text([], "")
+    bin =
+      Script.draw_text([], "")
       |> Script.serialize()
       |> IO.iodata_to_binary()
+
     assert byte_size(bin) == 4
     assert Script.deserialize(bin) == [{:draw_text, ""}]
 
-    bin = Script.draw_text([], "t")
+    bin =
+      Script.draw_text([], "t")
       |> Script.serialize()
       |> IO.iodata_to_binary()
+
     assert byte_size(bin) == 8
     assert Script.deserialize(bin) == [{:draw_text, "t"}]
 
-    bin = Script.draw_text([], "te")
+    bin =
+      Script.draw_text([], "te")
       |> Script.serialize()
       |> IO.iodata_to_binary()
+
     assert byte_size(bin) == 8
     assert Script.deserialize(bin) == [{:draw_text, "te"}]
 
-    bin = Script.draw_text([], "tes")
+    bin =
+      Script.draw_text([], "tes")
       |> Script.serialize()
       |> IO.iodata_to_binary()
+
     assert byte_size(bin) == 8
     assert Script.deserialize(bin) == [{:draw_text, "tes"}]
 
-    bin = Script.draw_text([], "testt")
+    bin =
+      Script.draw_text([], "testt")
       |> Script.serialize()
       |> IO.iodata_to_binary()
+
     assert byte_size(bin) == 12
     assert Script.deserialize(bin) == [{:draw_text, "testt"}]
 
-    bin = Script.draw_text([], "testtt")
+    bin =
+      Script.draw_text([], "testtt")
       |> Script.serialize()
       |> IO.iodata_to_binary()
+
     assert byte_size(bin) == 12
     assert Script.deserialize(bin) == [{:draw_text, "testtt"}]
 
-    bin = Script.draw_text([], "testttt")
+    bin =
+      Script.draw_text([], "testttt")
       |> Script.serialize()
       |> IO.iodata_to_binary()
+
     assert byte_size(bin) == 12
     assert Script.deserialize(bin) == [{:draw_text, "testttt"}]
   end
@@ -226,11 +240,11 @@ defmodule Scenic.ScriptTest do
   test "draw_sprites works" do
     cmds = [{{10, 11}, {30, 40}, {2, 3}, {60, 70}}]
     expected = [{:draw_sprites, {"images/parrot.png", cmds}}]
-    assert Script.draw_sprites( [], "images/parrot.png", cmds ) == expected
+    assert Script.draw_sprites([], "images/parrot.png", cmds) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # path commands
 
   test "begin_path works" do
@@ -287,7 +301,6 @@ defmodule Scenic.ScriptTest do
     assert expected == Script.serialize(expected) |> Script.deserialize()
   end
 
-
   test "triangle works" do
     expected = [triangle: {0.0, 1.0, 2.0, 3.0, 4.0, 5.0}]
     assert Script.triangle([], 0, 1, 2, 3, 4, 5) == expected
@@ -313,11 +326,11 @@ defmodule Scenic.ScriptTest do
   end
 
   test "rounded_rectangle shrinks radius if too big" do
-    assert Script.rounded_rectangle([], 10, 12, 30) == 
-      [{:rrect, {10.0, 12.0, 5.0}}]
+    assert Script.rounded_rectangle([], 10, 12, 30) ==
+             [{:rrect, {10.0, 12.0, 5.0}}]
 
-    assert Script.rounded_rectangle([], 13, 12, 30) == 
-      [{:rrect, {13.0, 12.0, 6.0}}]
+    assert Script.rounded_rectangle([], 13, 12, 30) ==
+             [{:rrect, {13.0, 12.0, 6.0}}]
   end
 
   test "sector works" do
@@ -332,16 +345,13 @@ defmodule Scenic.ScriptTest do
     assert expected == Script.serialize(expected) |> Script.deserialize()
   end
 
-
   test "ellipse works" do
     expected = [{:ellipse, {10.0, 20.0}}]
     assert Script.ellipse([], 10, 20) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
   end
 
-
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # transform commands
 
   test "scale works" do
@@ -368,7 +378,7 @@ defmodule Scenic.ScriptTest do
     assert expected == Script.serialize(expected) |> Script.deserialize()
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # fill styles
 
   test "fill_color works" do
@@ -376,11 +386,11 @@ defmodule Scenic.ScriptTest do
     assert Script.fill_color([], :red) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
 
-    expected = [{:fill_color, Color.to_rgba({0,1,2})}]
-    assert Script.fill_color([], {0,1,2}) == expected
+    expected = [{:fill_color, Color.to_rgba({0, 1, 2})}]
+    assert Script.fill_color([], {0, 1, 2}) == expected
 
-    expected = [{:fill_color, Color.to_rgba({0,1,2,3})}]
-    assert Script.fill_color([], {0,1,2,3}) == expected
+    expected = [{:fill_color, Color.to_rgba({0, 1, 2, 3})}]
+    assert Script.fill_color([], {0, 1, 2, 3}) == expected
   end
 
   test "fill_linear works" do
@@ -397,25 +407,28 @@ defmodule Scenic.ScriptTest do
 
   test "fill_image works with string image paths" do
     intermediate = [{:fill_image, "images/parrot.png"}]
-    assert Script.fill_image([], "images/parrot.png" ) == intermediate
-    assert Script.serialize(intermediate) |> Script.deserialize() == [{:fill_image, "images/parrot.png"}]
+    assert Script.fill_image([], "images/parrot.png") == intermediate
+
+    assert Script.serialize(intermediate) |> Script.deserialize() == [
+             {:fill_image, "images/parrot.png"}
+           ]
   end
 
   test "fill_image converts atom aliases into paths" do
     expected = [{:fill_image, "images/parrot.png"}]
-    assert Script.fill_image([], :test_parrot ) == expected
+    assert Script.fill_image([], :test_parrot) == expected
+
     assert Script.serialize(expected) |> Script.deserialize() ==
-      [{:fill_image, "images/parrot.png"}]
+             [{:fill_image, "images/parrot.png"}]
   end
 
   test "fill_stream works" do
     expected = [{:fill_stream, "test_tex"}]
-    assert Script.fill_stream( [],"test_tex" ) == expected
+    assert Script.fill_stream([], "test_tex") == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # stroke styles
 
   test "stroke_color works" do
@@ -423,48 +436,56 @@ defmodule Scenic.ScriptTest do
     assert Script.stroke_color([], :red) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
 
-    expected = [{:stroke_color, Color.to_rgba({0,1,2})}]
-    assert Script.stroke_color([], {0,1,2}) == expected
+    expected = [{:stroke_color, Color.to_rgba({0, 1, 2})}]
+    assert Script.stroke_color([], {0, 1, 2}) == expected
 
-    expected = [{:stroke_color, Color.to_rgba({0,1,2,3})}]
-    assert Script.stroke_color([], {0,1,2,3}) == expected
+    expected = [{:stroke_color, Color.to_rgba({0, 1, 2, 3})}]
+    assert Script.stroke_color([], {0, 1, 2, 3}) == expected
   end
 
   test "stroke_linear works" do
-    expected = [{:stroke_linear, {1.0, 2.0, 3.0, 4.0, Color.to_rgba(:red), Color.to_rgba(:green)}}]
+    expected = [
+      {:stroke_linear, {1.0, 2.0, 3.0, 4.0, Color.to_rgba(:red), Color.to_rgba(:green)}}
+    ]
+
     assert Script.stroke_linear([], 1, 2, 3, 4, :red, :green) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
   end
 
   test "stroke_radial works" do
-    expected = [{:stroke_radial, {1.0, 2.0, 3.0, 4.0, Color.to_rgba(:red), Color.to_rgba(:green)}}]
+    expected = [
+      {:stroke_radial, {1.0, 2.0, 3.0, 4.0, Color.to_rgba(:red), Color.to_rgba(:green)}}
+    ]
+
     assert Script.stroke_radial([], 1, 2, 3, 4, :red, :green) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
   end
 
   test "stroke_image works with string image keys" do
     intermediate = [{:stroke_image, "images/parrot.png"}]
-    assert Script.stroke_image([], "images/parrot.png" ) == intermediate
+    assert Script.stroke_image([], "images/parrot.png") == intermediate
+
     assert Script.serialize(intermediate) |> Script.deserialize() ==
-      [{:stroke_image, "images/parrot.png"}]
+             [{:stroke_image, "images/parrot.png"}]
   end
 
   test "stroke_image converts atom aliases into paths" do
     expected = [{:stroke_image, "images/parrot.png"}]
-    assert Script.stroke_image([], :test_parrot ) == expected
+    assert Script.stroke_image([], :test_parrot) == expected
+
     assert Script.serialize(expected) |> Script.deserialize() ==
-      [{:stroke_image, "images/parrot.png"}]
+             [{:stroke_image, "images/parrot.png"}]
   end
 
   test "stroke_image works with paths" do
     expected = [{:stroke_image, "images/parrot.png"}]
-    assert Script.stroke_image( [],"images/parrot.png" ) == expected
+    assert Script.stroke_image([], "images/parrot.png") == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
   end
 
   test "stroke_stream works" do
     expected = [{:stroke_stream, "test_tex"}]
-    assert Script.stroke_stream( [],"test_tex" ) == expected
+    assert Script.stroke_stream([], "test_tex") == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
   end
 
@@ -474,7 +495,7 @@ defmodule Scenic.ScriptTest do
     assert expected == Script.serialize(expected) |> Script.deserialize()
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # line styles
 
   test "cap works - with all three params" do
@@ -482,11 +503,11 @@ defmodule Scenic.ScriptTest do
     assert Script.cap([], :butt) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
 
-    assert Script.cap([], :round) == 
-      [{:cap, :round}]
+    assert Script.cap([], :round) ==
+             [{:cap, :round}]
 
-    assert Script.cap([], :square) == 
-      [{:cap, :square}]
+    assert Script.cap([], :square) ==
+             [{:cap, :square}]
   end
 
   test "join works - with all three params" do
@@ -494,11 +515,11 @@ defmodule Scenic.ScriptTest do
     assert Script.join([], :bevel) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
 
-    assert Script.join([], :round) == 
-      [{:join, :round}]
+    assert Script.join([], :round) ==
+             [{:join, :round}]
 
-    assert Script.join([], :miter) == 
-      [{:join, :miter}]
+    assert Script.join([], :miter) ==
+             [{:join, :miter}]
   end
 
   test "miter_limit works" do
@@ -513,23 +534,25 @@ defmodule Scenic.ScriptTest do
     assert expected == Script.serialize(expected) |> Script.deserialize()
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # font/text styles
 
   test "font converts alias atoms to strings" do
     expected = [{:font, "fonts/roboto.ttf"}]
     assert Script.font([], :test_roboto) == expected
+
     assert Script.serialize(expected) |> Script.deserialize() == [
-      font: "fonts/roboto.ttf"
-    ]
+             font: "fonts/roboto.ttf"
+           ]
   end
 
   test "font works by path" do
     expected = [{:font, "fonts/roboto.ttf"}]
     assert Script.font([], "fonts/roboto.ttf") == [{:font, "fonts/roboto.ttf"}]
+
     assert Script.serialize(expected) |> Script.deserialize() == [
-      font: "fonts/roboto.ttf"
-    ]
+             font: "fonts/roboto.ttf"
+           ]
   end
 
   test "font_size works" do
@@ -543,11 +566,11 @@ defmodule Scenic.ScriptTest do
     assert Script.text_align([], :left) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
 
-    assert Script.text_align([], :center) == 
-      [{:text_align, :center}]
+    assert Script.text_align([], :center) ==
+             [{:text_align, :center}]
 
-    assert Script.text_align([], :right) == 
-      [{:text_align, :right}]
+    assert Script.text_align([], :right) ==
+             [{:text_align, :right}]
   end
 
   test "text_base works" do
@@ -555,95 +578,101 @@ defmodule Scenic.ScriptTest do
     assert Script.text_base([], :top) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
 
-    assert Script.text_base([], :middle) == 
-      [{:text_base, :middle}]
+    assert Script.text_base([], :middle) ==
+             [{:text_base, :middle}]
 
-    assert Script.text_base([], :alphabetic) == 
-      [{:text_base, :alphabetic}]
+    assert Script.text_base([], :alphabetic) ==
+             [{:text_base, :alphabetic}]
 
-    assert Script.text_base([], :bottom) == 
-      [{:text_base, :bottom}]
+    assert Script.text_base([], :bottom) ==
+             [{:text_base, :bottom}]
   end
 
-
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # media extraction into IDs
 
   test "media extractor finds fonts" do
-    script = Script.start()
+    script =
+      Script.start()
       |> Script.font("fonts/roboto.ttf")
       |> Script.font("fonts/roboto.ttf")
       |> Script.finish()
 
     assert Script.media(script, :id) == %{
-      fonts: ["fonts/roboto.ttf"]
-    }
+             fonts: ["fonts/roboto.ttf"]
+           }
   end
 
   test "media extractor finds images in fill_image" do
-    script = Script.start()
+    script =
+      Script.start()
       |> Script.fill_image("images/parrot.png")
       |> Script.fill_image("images/parrot.png")
       |> Script.finish()
 
     assert Script.media(script, :id) == %{
-      images: ["images/parrot.png"]
-    }
+             images: ["images/parrot.png"]
+           }
   end
 
   test "media extractor finds images in stroke_image" do
-    script = Script.start()
+    script =
+      Script.start()
       |> Script.stroke_image("images/parrot.png")
       |> Script.stroke_image("images/parrot.png")
       |> Script.finish()
 
     assert Script.media(script, :id) == %{
-      images: ["images/parrot.png"]
-    }
+             images: ["images/parrot.png"]
+           }
   end
 
   test "media extractor finds images in draw_sprites" do
-    script = Script.start()
-      |> Script.draw_sprites( "images/parrot.png", [] )
-      |> Script.draw_sprites( "images/parrot.png", [] )
+    script =
+      Script.start()
+      |> Script.draw_sprites("images/parrot.png", [])
+      |> Script.draw_sprites("images/parrot.png", [])
       |> Script.finish()
 
     assert Script.media(script, :id) == %{
-      images: ["images/parrot.png"]
-    }
+             images: ["images/parrot.png"]
+           }
   end
 
   test "media extractor finds streams fill_stream" do
-    script = Script.start()
+    script =
+      Script.start()
       |> Script.fill_stream("test_stream")
       |> Script.fill_stream("test_stream")
       |> Script.finish()
 
     assert Script.media(script, :id) == %{
-      streams: ["test_stream"]
-    }
+             streams: ["test_stream"]
+           }
   end
 
   test "media extractor finds streams stroke_stream" do
-    script = Script.start()
+    script =
+      Script.start()
       |> Script.stroke_stream("test_stream")
       |> Script.stroke_stream("test_stream")
       |> Script.finish()
 
     assert Script.media(script, :id) == %{
-      streams: ["test_stream"]
-    }
+             streams: ["test_stream"]
+           }
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   # media extraction into hashes
 
   test "media extractor extracts into string hashes" do
-    script = Script.start()
+    script =
+      Script.start()
       |> Script.font("fonts/roboto.ttf")
       |> Script.fill_image("images/parrot.png")
       |> Script.stroke_image("images/parrot.png")
-      |> Script.draw_sprites( "images/parrot.png", [] )
+      |> Script.draw_sprites("images/parrot.png", [])
       |> Script.fill_stream("test_stream")
       |> Script.stroke_stream("test_stream")
       |> Script.finish()
@@ -652,18 +681,19 @@ defmodule Scenic.ScriptTest do
     {:ok, _, parrot_hash} = Scenic.Assets.Static.to_hash("images/parrot.png")
 
     assert Script.media(script, :str_hash) == %{
-      fonts: [roboto_hash],
-      images: [parrot_hash],
-      streams: ["test_stream"]
-    }
+             fonts: [roboto_hash],
+             images: [parrot_hash],
+             streams: ["test_stream"]
+           }
   end
 
   test "media extractor extracts into binary hashes" do
-    script = Script.start()
+    script =
+      Script.start()
       |> Script.font("fonts/roboto.ttf")
       |> Script.fill_image("images/parrot.png")
       |> Script.stroke_image("images/parrot.png")
-      |> Script.draw_sprites( "images/parrot.png", [] )
+      |> Script.draw_sprites("images/parrot.png", [])
       |> Script.fill_stream("test_stream")
       |> Script.stroke_stream("test_stream")
       |> Script.finish()
@@ -672,23 +702,9 @@ defmodule Scenic.ScriptTest do
     {:ok, parrot_hash, _} = Scenic.Assets.Static.to_hash("images/parrot.png")
 
     assert Script.media(script, :bin_hash) == %{
-      fonts: [roboto_hash],
-      images: [parrot_hash],
-      streams: ["test_stream"]
-    }
+             fonts: [roboto_hash],
+             images: [parrot_hash],
+             streams: ["test_stream"]
+           }
   end
-
 end
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -45,20 +45,20 @@ defmodule Scenic.Primitive.Arc do
   alias Scenic.Primitive.Sector
   alias Scenic.Primitive.Triangle
 
-  @type t :: {radius::number, angle::number}
+  @type t :: {radius :: number, angle :: number}
   @type styles_t :: [:hidden | :fill | :stroke_width | :stroke_fill | :cap]
 
   @styles [:hidden, :fill, :stroke_width, :stroke_fill, :cap]
 
   @impl Primitive
-  @spec validate( t() ) ::
-    {:ok, {radius::number, angle::number}} | {:error, String.t()}
+  @spec validate(t()) ::
+          {:ok, {radius :: number, angle :: number}} | {:error, String.t()}
 
-  def validate( {radius, angle} ) when is_number(radius) and is_number(angle) do
+  def validate({radius, angle}) when is_number(radius) and is_number(angle) do
     {:ok, {radius, angle}}
   end
-  
-  def validate( {r, a1, a2} = old ) when is_number(r) and is_number(a1) and is_number(a2) do
+
+  def validate({r, a1, a2} = old) when is_number(r) and is_number(a1) and is_number(a2) do
     {
       :error,
       """
@@ -73,7 +73,7 @@ defmodule Scenic.Primitive.Arc do
     }
   end
 
-  def validate( data ) do
+  def validate(data) do
     {
       :error,
       """
@@ -99,10 +99,10 @@ defmodule Scenic.Primitive.Arc do
   Compile the data for this primitive into a mini script. This can be combined with others to
   generate a larger script and is called when a graph is compiled.
   """
-  @spec compile( primitive::Primitive.t(), styles::Style.m() ) :: Script.t()
+  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
   @impl Primitive
-  def compile( %Primitive{module: __MODULE__, data: {radius, angle}}, styles) do
-    Script.draw_arc( [], radius, angle, Script.draw_flag(styles) )
+  def compile(%Primitive{module: __MODULE__, data: {radius, angle}}, styles) do
+    Script.draw_arc([], radius, angle, Script.draw_flag(styles))
   end
 
   # --------------------------------------------------------
@@ -111,7 +111,8 @@ defmodule Scenic.Primitive.Arc do
     if Sector.contains_point?(data, pt) do
       # See if it is NOT in the triangle part of sector.
       # If it isn't in the triangle, then it must be in the arc part.
-      p1 = { radius, 0 }
+      p1 = {radius, 0}
+
       p2 = {
         radius * :math.cos(angle),
         radius * :math.sin(angle)

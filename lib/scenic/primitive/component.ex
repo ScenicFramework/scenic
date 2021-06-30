@@ -13,41 +13,48 @@ defmodule Scenic.Primitive.Component do
   alias Scenic.Primitive
   alias Scenic.Primitive.Style
 
-  @type t :: {mod::module, param::any, name::atom | String.t()}
+  @type t :: {mod :: module, param :: any, name :: atom | String.t()}
   @type styles_t :: [:hidden]
   @styles [:hidden]
 
   # longer names use more memory, but have a lower chance of collision.
   # 16 should still have a very very very low chance of collision
   # (16 * 8) = 128 bits of randomness
-  @name_length  16
+  @name_length 16
 
   # ============================================================================
   # data verification and serialization
 
   @impl Primitive
-  @spec validate( {mod::module,param::any} | {mod::module, param::any, name::pid|atom|String.t()} ) ::
-    {:ok, {mod::module, param::any, name::pid|atom|String.t()}} | {:error, String.t()}
-  def validate( {mod,param} ) do
-    name = 
+  @spec validate(
+          {mod :: module, param :: any}
+          | {mod :: module, param :: any, name :: pid | atom | String.t()}
+        ) ::
+          {:ok, {mod :: module, param :: any, name :: pid | atom | String.t()}}
+          | {:error, String.t()}
+  def validate({mod, param}) do
+    name =
       @name_length
       |> :crypto.strong_rand_bytes()
-      |> Base.url_encode64( padding: false )
-    validate( {mod, param, name} )
+      |> Base.url_encode64(padding: false)
+
+    validate({mod, param, name})
   end
 
   # special case the root
 
-  def validate( {:_root_, nil, :_root_} ), do: {:ok, {:_root_, nil, :_root_}}
+  def validate({:_root_, nil, :_root_}), do: {:ok, {:_root_, nil, :_root_}}
 
-  def validate( {mod, param, name} ) when is_atom(mod) and mod != nil and
-  (is_pid(name) or is_atom(name) or is_bitstring(name)) and name != nil do
+  def validate({mod, param, name})
+      when is_atom(mod) and mod != nil and
+             (is_pid(name) or is_atom(name) or is_bitstring(name)) and name != nil do
     case mod.validate(param) do
       {:ok, data} -> {:ok, {mod, data, name}}
       err -> err
     end
   end
-  def validate( data ) do
+
+  def validate(data) do
     {
       :error,
       """
@@ -68,18 +75,15 @@ defmodule Scenic.Primitive.Component do
   Returns a list of styles recognized by this primitive.
   """
   @impl Primitive
-  @spec valid_styles() :: styles::styles_t()
+  @spec valid_styles() :: styles :: styles_t()
   def valid_styles(), do: @styles
-
 
   # --------------------------------------------------------
   # compiling a component is a special case and is handled in Scenic.ViewPort.GraphCompiler
   @doc false
   @impl Primitive
-  @spec compile( primitive::Primitive.t(), styles::Style.m() ) :: Script.t()
-  def compile( %Primitive{module: __MODULE__}, _styles) do
+  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
+  def compile(%Primitive{module: __MODULE__}, _styles) do
     raise "compiling a Component is a special case and is handled in Scenic.ViewPort.GraphCompiler"
   end
-
-
 end

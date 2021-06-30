@@ -27,8 +27,7 @@ defmodule Scenic.Primitive.Transform.ScaleTest do
     {:error, msg} = Scale.validate("1.5")
     assert msg =~ "Invalid Scale"
 
-    {:error, msg} = Scale.validate( :banana )
+    {:error, msg} = Scale.validate(:banana)
     assert msg =~ "Invalid Scale"
   end
-
 end

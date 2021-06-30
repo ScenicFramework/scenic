@@ -84,38 +84,42 @@ defmodule Scenic.Primitive.Style.Theme do
   # ============================================================================
   # data verification and serialization
 
+  def validate(:light), do: {:ok, :light}
+  def validate(:dark), do: {:ok, :dark}
+  def validate(:primary), do: {:ok, :primary}
+  def validate(:secondary), do: {:ok, :secondary}
+  def validate(:success), do: {:ok, :success}
+  def validate(:danger), do: {:ok, :danger}
+  def validate(:warning), do: {:ok, :warning}
+  def validate(:info), do: {:ok, :info}
+  def validate(:text), do: {:ok, :text}
 
-
-  def validate( :light ), do: {:ok, :light}
-  def validate( :dark ), do: {:ok, :dark}
-  def validate( :primary ), do: {:ok, :primary}
-  def validate( :secondary ), do: {:ok, :secondary}
-  def validate( :success ), do: {:ok, :success}
-  def validate( :danger ), do: {:ok, :danger}
-  def validate( :warning ), do: {:ok, :warning}
-  def validate( :info ), do: {:ok, :info}
-  def validate( :text ), do: {:ok, :text}
-  def validate( %{
-    text: _,
-    background: _,
-    border: _,
-    active: _,
-    thumb: _,
-    focus: _
-  } = theme ) do
+  def validate(
+        %{
+          text: _,
+          background: _,
+          border: _,
+          active: _,
+          thumb: _,
+          focus: _
+        } = theme
+      ) do
     # we know all the required colors are there.
     # now make sure they are all valid colors, including any custom added ones.
     theme
     |> Enum.reduce({:ok, theme}, fn
-        _, {:error, msg} -> {:error, msg}
-        {key, color}, {:ok,_} = acc -> 
-          case Color.validate(color) do
-            {:ok, _} -> acc
-            {:error, msg} -> err_color( key, msg )
-          end
+      _, {:error, msg} ->
+        {:error, msg}
+
+      {key, color}, {:ok, _} = acc ->
+        case Color.validate(color) do
+          {:ok, _} -> acc
+          {:error, msg} -> err_color(key, msg)
+        end
     end)
   end
-  def validate( name ) when is_atom(name) do
+
+  def validate(name) when is_atom(name) do
     {
       :error,
       """
@@ -127,7 +131,8 @@ defmodule Scenic.Primitive.Style.Theme do
       """
     }
   end
-  def validate( %{} = map ) do
+
+  def validate(%{} = map) do
     {
       :error,
       """
@@ -142,7 +147,7 @@ defmodule Scenic.Primitive.Style.Theme do
     }
   end
 
-  def validate( data )  do
+  def validate(data) do
     {
       :error,
       """
@@ -160,7 +165,7 @@ defmodule Scenic.Primitive.Style.Theme do
     }
   end
 
-  defp err_color( key, msg ) do
+  defp err_color(key, msg) do
     {
       :error,
       """

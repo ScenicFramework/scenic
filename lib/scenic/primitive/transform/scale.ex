@@ -33,11 +33,13 @@ defmodule Scenic.Primitive.Transform.Scale do
   # ============================================================================
   # data verification and serialization
 
-  def validate( s ) when is_number(s), do: validate( {s,s} )
-  def validate( {x,y} ) when is_number(x) and is_number(y) and x >= 0 and y >= 0 do
-    {:ok, {x,y}}
+  def validate(s) when is_number(s), do: validate({s, s})
+
+  def validate({x, y}) when is_number(x) and is_number(y) and x >= 0 and y >= 0 do
+    {:ok, {x, y}}
   end
-  def validate( data )  do
+
+  def validate(data) do
     {
       :error,
       """
@@ -49,5 +51,4 @@ defmodule Scenic.Primitive.Transform.Scale do
       """
     }
   end
-
 end

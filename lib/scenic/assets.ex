@@ -4,7 +4,6 @@
 #
 
 defmodule Scenic.Assets do
-
   require Logger
 
   @moduledoc """
@@ -21,10 +20,9 @@ defmodule Scenic.Assets do
           | :rgba
 
   @type image_meta ::
-          { :image, {width::integer, height::integer, format::image_format()} }
+          {:image, {width :: integer, height :: integer, format :: image_format()}}
 
-
-  @type font_meta :: { :font, meta::map }
+  @type font_meta :: {:font, meta :: map}
 
   @type static_meta :: font_meta | image_meta
 end

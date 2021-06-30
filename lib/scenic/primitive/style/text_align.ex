@@ -31,11 +31,11 @@ defmodule Scenic.Primitive.Style.TextAlign do
   # ============================================================================
   # data verification and serialization
 
+  def validate(:left), do: {:ok, :left}
+  def validate(:center), do: {:ok, :center}
+  def validate(:right), do: {:ok, :right}
 
-  def validate( :left ), do: {:ok, :left}
-  def validate( :center ), do: {:ok, :center}
-  def validate( :right ), do: {:ok, :right}
-  def validate( data )  do
+  def validate(data) do
     {
       :error,
       """
@@ -46,5 +46,4 @@ defmodule Scenic.Primitive.Style.TextAlign do
       """
     }
   end
-
 end

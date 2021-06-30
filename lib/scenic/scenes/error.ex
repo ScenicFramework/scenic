@@ -41,7 +41,7 @@ defmodule Scenic.Scenes.Error do
     # Get the viewport width
     {width, _} = scene.viewport.size
 
-    {:ok, {:font, fm}} = Static.fetch( @default_font )
+    {:ok, {:font, fm}} = Static.fetch(@default_font)
     wrap_width = width - @margin_h * 2
 
     head_msg = module_msg <> @mod_header
@@ -64,17 +64,18 @@ defmodule Scenic.Scenes.Error do
     err_v = args_v + msg_height(args_msg, @size) + @v_spacing
     stack_v = err_v + msg_height(err_msg, @size) + @v_spacing
 
-    graph = Graph.build(font: @default_font, font_size: @size, translate: {@margin_h, @margin_v})
-    |> button("Try Again", id: :try_again, theme: :warning)
-    |> text(head_msg, translate: {0, head_v}, font_size: @size + 4)
-    |> text(args_msg, translate: {0, args_v}, fill: @args_color)
-    |> text(err_msg, translate: {0, err_v}, fill: @error_color)
-    |> text(stack_msg, translate: {0, stack_v}, fill: @error_color)
+    graph =
+      Graph.build(font: @default_font, font_size: @size, translate: {@margin_h, @margin_v})
+      |> button("Try Again", id: :try_again, theme: :warning)
+      |> text(head_msg, translate: {0, head_v}, font_size: @size + 4)
+      |> text(args_msg, translate: {0, args_v}, fill: @args_color)
+      |> text(err_msg, translate: {0, err_v}, fill: @error_color)
+      |> text(stack_msg, translate: {0, stack_v}, fill: @error_color)
 
     scene =
       scene
-      |> assign( args: scene_args, mod: scene_mod )
-      |> push_graph( graph )
+      |> assign(args: scene_args, mod: scene_mod)
+      |> push_graph(graph)
 
     {:ok, scene}
   end
@@ -82,7 +83,7 @@ defmodule Scenic.Scenes.Error do
   # --------------------------------------------------------
   @impl Scenic.Scene
   def handle_event({:click, :try_again}, _, %{assigns: %{args: args, mod: mod}} = scene) do
-    ViewPort.set_root( scene.viewport, mod, args )
+    ViewPort.set_root(scene.viewport, mod, args)
     {:noreply, scene}
   end
 

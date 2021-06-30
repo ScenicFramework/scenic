@@ -20,5 +20,4 @@ defmodule Scenic.Primitive.Style.LineHeightTest do
     {:error, msg} = LineHeight.validate("way off")
     assert msg =~ "must be a positive number"
   end
-
 end

@@ -110,13 +110,12 @@ defmodule Scenic.Component.Input.TextField do
 
   @hint_color :grey
 
-
-
   # --------------------------------------------------------
   @impl Scenic.Component
-  def validate( text ) when is_bitstring(text) do
+  def validate(text) when is_bitstring(text) do
     {:ok, text}
   end
+
   def validate(data) do
     {
       :error,
@@ -129,7 +128,6 @@ defmodule Scenic.Component.Input.TextField do
     }
   end
 
-
   # --------------------------------------------------------
   @doc false
   @impl Scenic.Scene
@@ -140,7 +138,6 @@ defmodule Scenic.Component.Input.TextField do
     theme =
       (opts[:theme] || Theme.preset(:dark))
       |> Theme.normalize()
-
 
     # get the font metrics
     # {:ok, {:font, fm}} = Static.fetch( @default_font )
@@ -158,27 +155,26 @@ defmodule Scenic.Component.Input.TextField do
 
     display = display_from_value(value, type)
 
-    caret_v = -trunc( (height - @default_font_size) / 4 )
+    caret_v = -trunc((height - @default_font_size) / 4)
 
-    scene = assign(
-      scene,
-      graph: nil,
-      theme: theme,
-      width: width,
-      height: height,
-      value: value,
-      display: display,
-      hint: hint,
-      index: index,
-      char_width: @char_width,
-      focused: false,
-      type: type,
-      filter: filter,
-      id: id,
-      caret_v: caret_v
-    )
-
-
+    scene =
+      assign(
+        scene,
+        graph: nil,
+        theme: theme,
+        width: width,
+        height: height,
+        value: value,
+        display: display,
+        hint: hint,
+        index: index,
+        char_width: @char_width,
+        focused: false,
+        type: type,
+        filter: filter,
+        id: id,
+        caret_v: caret_v
+      )
 
     graph =
       Graph.build(
@@ -213,10 +209,10 @@ defmodule Scenic.Component.Input.TextField do
 
     scene =
       scene
-      |> assign( graph: graph )
-      |> push_graph( graph )
+      |> assign(graph: graph)
+      |> push_graph(graph)
 
-    { :ok, scene }
+    {:ok, scene}
   end
 
   # ============================================================================
@@ -264,7 +260,7 @@ defmodule Scenic.Component.Input.TextField do
     capture_input(scene, @input_capture)
 
     # start animating the caret
-    cast_children( scene, :start_caret )
+    cast_children(scene, :start_caret)
 
     # show the caret
     graph =
@@ -274,17 +270,17 @@ defmodule Scenic.Component.Input.TextField do
 
     # update the state
     scene
-    |> assign( focused: true, graph: graph )
-    |> push_graph( graph )
+    |> assign(focused: true, graph: graph)
+    |> push_graph(graph)
   end
 
   # --------------------------------------------------------
   defp release_focus(%{assigns: %{focused: true, graph: graph, theme: theme}} = scene) do
     # release the input
-    release_input( scene )
+    release_input(scene)
 
     # stop animating the caret
-    cast_children( scene, :stop_caret )
+    cast_children(scene, :stop_caret)
 
     # hide the caret
     graph =
@@ -294,8 +290,8 @@ defmodule Scenic.Component.Input.TextField do
 
     # update the state
     scene
-    |> assign( focused: false, graph: graph )
-    |> push_graph( graph )
+    |> assign(focused: false, graph: graph)
+    |> push_graph(graph)
   end
 
   # --------------------------------------------------------
@@ -359,18 +355,20 @@ defmodule Scenic.Component.Input.TextField do
   @doc false
   @impl Scenic.Scene
   def handle_input(
-        {:cursor_button, {0, :press, _, _}} = inpt, :border,
+        {:cursor_button, {0, :press, _, _}} = inpt,
+        :border,
         %{assigns: %{focused: false}} = scene
       ) do
-    handle_input( inpt, :border, capture_focus(scene) )
+    handle_input(inpt, :border, capture_focus(scene))
   end
-
 
   # --------------------------------------------------------
   # focused click in the text field
   def handle_input(
-        {:cursor_button, {0, :press, _, pos}}, :border,
-        %{assigns: %{focused: true, value: value, index: index, graph: graph, caret_v: caret_v}} = scene
+        {:cursor_button, {0, :press, _, pos}},
+        :border,
+        %{assigns: %{focused: true, value: value, index: index, graph: graph, caret_v: caret_v}} =
+          scene
       ) do
     {index, graph} =
       case index_from_cursor_pos(pos, value) do
@@ -379,7 +377,7 @@ defmodule Scenic.Component.Input.TextField do
 
         i ->
           # reset_caret the caret blinker
-          cast_children( scene, :reset_caret )
+          cast_children(scene, :reset_caret)
 
           # move the caret
           {i, update_caret(graph, value, i, caret_v)}
@@ -396,14 +394,15 @@ defmodule Scenic.Component.Input.TextField do
   # --------------------------------------------------------
   # focused click outside the text field
   def handle_input(
-        {:cursor_button, {0, :press, _, _}}, _id,
+        {:cursor_button, {0, :press, _, _}},
+        _id,
         %{assigns: %{focused: true}} = scene
       ) do
     {:cont, release_focus(scene)}
   end
 
   # ignore other button press events
-  def handle_input({:cursor_button, {_, _, _, _}}, _id, scene ) do
+  def handle_input({:cursor_button, {_, _, _, _}}, _id, scene) do
     {:noreply, scene}
   end
 
@@ -418,7 +417,8 @@ defmodule Scenic.Component.Input.TextField do
 
   # --------------------------------------------------------
   def handle_input(
-        {:key, {"left", :press, _}}, _id,
+        {:key, {"left", :press, _}},
+        _id,
         %{assigns: %{index: index, value: value, graph: graph, caret_v: caret_v}} = scene
       ) do
     # move left. clamp to 0
@@ -429,7 +429,7 @@ defmodule Scenic.Component.Input.TextField do
 
         i ->
           # reset_caret the caret blinker
-          cast_children( scene, :reset_caret )
+          cast_children(scene, :reset_caret)
           # move the caret
           i = i - 1
           {i, update_caret(graph, value, i, caret_v)}
@@ -445,7 +445,8 @@ defmodule Scenic.Component.Input.TextField do
 
   # --------------------------------------------------------
   def handle_input(
-        {:key, {"right", :press, _}}, _id,
+        {:key, {"right", :press, _}},
+        _id,
         %{assigns: %{index: index, value: value, graph: graph, caret_v: caret_v}} = scene
       ) do
     # the max position for the caret
@@ -459,7 +460,7 @@ defmodule Scenic.Component.Input.TextField do
 
         i ->
           # reset the caret blinker
-          cast_children( scene, :reset_caret )
+          cast_children(scene, :reset_caret)
 
           # move the caret
           i = i + 1
@@ -480,7 +481,8 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   def handle_input(
-        {:key, {"home", :press, _}}, _id,
+        {:key, {"home", :press, _}},
+        _id,
         %{assigns: %{index: index, value: value, graph: graph, caret_v: caret_v}} = scene
       ) do
     # move left. clamp to 0
@@ -491,7 +493,7 @@ defmodule Scenic.Component.Input.TextField do
 
         _ ->
           # reset the caret blinker
-          cast_children( scene, :reset_caret )
+          cast_children(scene, :reset_caret)
 
           # move the caret
           {0, update_caret(graph, value, 0, caret_v)}
@@ -511,7 +513,8 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   def handle_input(
-        {:key, {"end", :press, _}}, _id,
+        {:key, {"end", :press, _}},
+        _id,
         %{assigns: %{index: index, value: value, graph: graph, caret_v: caret_v}} = scene
       ) do
     # the max position for the caret
@@ -525,7 +528,7 @@ defmodule Scenic.Component.Input.TextField do
 
         _ ->
           # reset the caret blinker
-          cast_children( scene, :reset_caret )
+          cast_children(scene, :reset_caret)
 
           # move the caret
           {max_index, update_caret(graph, value, max_index, caret_v)}
@@ -546,18 +549,21 @@ defmodule Scenic.Component.Input.TextField do
 
   # handle backspace
   def handle_input(
-        {:key, {"backspace", :press, _}}, _id,
-        %{assigns: %{
-          graph: graph,
-          value: value,
-          index: index,
-          type: type,
-          id: id,
-          caret_v: caret_v
-        }} = scene
+        {:key, {"backspace", :press, _}},
+        _id,
+        %{
+          assigns: %{
+            graph: graph,
+            value: value,
+            index: index,
+            type: type,
+            id: id,
+            caret_v: caret_v
+          }
+        } = scene
       ) do
     # reset_caret the caret blinker
-    cast_children( scene, :reset_caret )
+    cast_children(scene, :reset_caret)
 
     # delete the char to the left of the index
     value =
@@ -582,10 +588,10 @@ defmodule Scenic.Component.Input.TextField do
     scene =
       scene
       |> assign(
-          graph: graph,
-          value: value,
-          display: display,
-          index: index
+        graph: graph,
+        value: value,
+        display: display,
+        index: index
       )
       |> push_graph(graph)
 
@@ -594,22 +600,26 @@ defmodule Scenic.Component.Input.TextField do
 
   # --------------------------------------------------------
   def handle_input(
-        {:key, {"delete", :press, _}}, _id,
-        %{assigns: %{
-          graph: graph,
-          value: value,
-          index: index,
-          type: type,
-          id: id
-        }} = scene
+        {:key, {"delete", :press, _}},
+        _id,
+        %{
+          assigns: %{
+            graph: graph,
+            value: value,
+            index: index,
+            type: type,
+            id: id
+          }
+        } = scene
       ) do
-
     # ignore delete if at end of the field
     case index < String.length(value) do
-      false -> {:noreply, scene}
+      false ->
+        {:noreply, scene}
+
       true ->
         # reset the caret blinker
-        cast_children( scene, :reset_caret )
+        cast_children(scene, :reset_caret)
 
         # delete the char at the index
         value =
@@ -628,10 +638,10 @@ defmodule Scenic.Component.Input.TextField do
         scene =
           scene
           |> assign(
-              graph: graph,
-              value: value,
-              display: display,
-              index: index
+            graph: graph,
+            value: value,
+            display: display,
+            index: index
           )
           |> push_graph(graph)
 
@@ -655,12 +665,12 @@ defmodule Scenic.Component.Input.TextField do
   # --------------------------------------------------------
   def handle_input({:codepoint, {char, _}}, _id, %{assigns: %{filter: filter}} = scene) do
     case accept_char?(char, filter) do
-      true -> do_handle_codepoint( char, scene )
+      true -> do_handle_codepoint(char, scene)
       false -> {:noreply, scene}
     end
   end
 
-  #--------------------------------------------------------
+  # --------------------------------------------------------
   def handle_input(_input, _id, scene) do
     {:noreply, scene}
   end
@@ -668,17 +678,19 @@ defmodule Scenic.Component.Input.TextField do
   # --------------------------------------------------------
   defp do_handle_codepoint(
          char,
-        %{assigns: %{
-          graph: graph,
-          value: value,
-          index: index,
-          type: type,
-          id: id,
-          caret_v: caret_v
-        }} = scene
+         %{
+           assigns: %{
+             graph: graph,
+             value: value,
+             index: index,
+             type: type,
+             id: id,
+             caret_v: caret_v
+           }
+         } = scene
        ) do
     # reset the caret blinker
-    cast_children( scene, :reset_caret )
+    cast_children(scene, :reset_caret)
 
     # insert the char into the string at the index location
     {left, right} = String.split_at(value, index)
@@ -686,7 +698,7 @@ defmodule Scenic.Component.Input.TextField do
     display = display_from_value(value, type)
 
     # send the value changed event
-    send_parent_event( scene, {:value_changed, id, value} )
+    send_parent_event(scene, {:value_changed, id, value})
 
     # advance the index
     index = index + String.length(char)
@@ -700,36 +712,42 @@ defmodule Scenic.Component.Input.TextField do
     scene =
       scene
       |> assign(
-          graph: graph,
-          value: value,
-          display: display,
-          index: index
+        graph: graph,
+        value: value,
+        display: display,
+        index: index
       )
       |> push_graph(graph)
 
     {:noreply, scene}
   end
 
-
-
   # --------------------------------------------------------
   @impl GenServer
   @doc false
-  def handle_call( :fetch, _, %{assigns: %{value: value}} = scene ) do
-    {:reply, {:ok, value}, scene }
+  def handle_call(:fetch, _, %{assigns: %{value: value}} = scene) do
+    {:reply, {:ok, value}, scene}
   end
 
-  def handle_call( {:put, value}, _, %{assigns: %{
-          graph: graph,
-          index: index,
-          caret_v: caret_v
-        }} = scene) when is_bitstring(value) do
-
+  def handle_call(
+        {:put, value},
+        _,
+        %{
+          assigns: %{
+            graph: graph,
+            index: index,
+            caret_v: caret_v
+          }
+        } = scene
+      )
+      when is_bitstring(value) do
     count = String.length(value)
-    index = case index < count do
-      true -> index
-      false -> count
-    end
+
+    index =
+      case index < count do
+        true -> index
+        false -> count
+      end
 
     # update the graph
     graph =
@@ -740,18 +758,17 @@ defmodule Scenic.Component.Input.TextField do
     scene =
       scene
       |> assign(
-          graph: graph,
-          value: value,
-          display: value,
-          index: index
+        graph: graph,
+        value: value,
+        display: value,
+        index: index
       )
       |> push_graph(graph)
 
-    {:reply, :ok, scene }
+    {:reply, :ok, scene}
   end
 
-  def handle_call( {:put, _}, _, scene) do
-    {:reply, {:error, :invalid}, scene }
+  def handle_call({:put, _}, _, scene) do
+    {:reply, {:error, :invalid}, scene}
   end
-
 end

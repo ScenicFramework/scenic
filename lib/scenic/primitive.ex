@@ -73,16 +73,11 @@ defmodule Scenic.Primitive do
           opts: list
         }
 
-
-  @callback validate( data :: any ) :: {:ok, data::any} | {:error, String.t()}
+  @callback validate(data :: any) :: {:ok, data :: any} | {:error, String.t()}
 
   @callback valid_styles() :: list
-  @callback compile( primitive::Primitive.t(), styles :: Style.m() ) :: script::Scenic.Script.t()
-
-
-
-
-
+  @callback compile(primitive :: Primitive.t(), styles :: Style.m()) ::
+              script :: Scenic.Script.t()
 
   # @callback info(data :: any) :: bitstring
   # @callback verify(any) :: any
@@ -91,12 +86,16 @@ defmodule Scenic.Primitive do
   # @callback default_pin(any) :: {float, float}
   # @callback contains_point?(any, {float, float}) :: true | false
 
-
   # note: the following fields are all optional on a primitive.
   # puid is managed automatically by the owning graph
   # custom opts is used for components
-  defstruct module: nil, data: nil, parent_uid: -1, id: nil, styles: %{}, transforms: %{}, opts: []
-
+  defstruct module: nil,
+            data: nil,
+            parent_uid: -1,
+            id: nil,
+            styles: %{},
+            transforms: %{},
+            opts: []
 
   # # ===========================================================================
   # defmodule Error do
@@ -110,7 +109,7 @@ defmodule Scenic.Primitive do
       @behaviour Scenic.Primitive
 
       @doc false
-      def build( data, opts \\ [] ) do
+      def build(data, opts \\ []) do
         Primitive.build(__MODULE__, data, opts)
       end
 
@@ -143,7 +142,6 @@ defmodule Scenic.Primitive do
 
   # defmacro
 
-
   # ============================================================================
   # build and add
 
@@ -168,13 +166,14 @@ defmodule Scenic.Primitive do
 
   @spec build(module :: atom, data :: any, opts :: keyword) :: Primitive.t()
   def build(module, data, opts \\ []) do
-    data = case module.validate( data ) do
-      {:ok, data} -> data
-      {:error, error} -> raise error
-    end
+    data =
+      case module.validate(data) do
+        {:ok, data} -> data
+        {:error, error} -> raise error
+      end
 
     # prepare and validate the opts
-    {:ok, id, st, tx, op} = prep_opts( opts )
+    {:ok, id, st, tx, op} = prep_opts(opts)
 
     # first build the map with the non-optional fields
     %{
@@ -190,37 +189,38 @@ defmodule Scenic.Primitive do
     }
   end
 
-
   # split a primitive's options into three buckets. Styles, Transforms, and opts
   # this is because the three groups have different render and inheritance models.
-  defp prep_opts( opts ) when is_list(opts) do
-
-    {id, st, tx, op} = Enum.reduce(
-      opts,
-      {nil, [], [], []},
-      fn({k,v}, {id, st, tx, op}) ->
-        cond do
-          k == :id -> {v, st, tx, op}
-          Style.opts_map()[k] -> {id, [{k,v} | st], tx, op}
-          Transform.opts_map()[k] -> {id, st, [{k,v} | tx], op}
-          true -> {id, st, tx, [{k,v} | op]}
+  defp prep_opts(opts) when is_list(opts) do
+    {id, st, tx, op} =
+      Enum.reduce(
+        opts,
+        {nil, [], [], []},
+        fn {k, v}, {id, st, tx, op} ->
+          cond do
+            k == :id -> {v, st, tx, op}
+            Style.opts_map()[k] -> {id, [{k, v} | st], tx, op}
+            Transform.opts_map()[k] -> {id, st, [{k, v} | tx], op}
+            true -> {id, st, tx, [{k, v} | op]}
+          end
         end
-    end)
+      )
 
     # validate the opts for styles and transforms
-    st = case NimbleOptions.validate( st, Style.opts_schema() ) do
-      {:ok, st} -> st
-      {:error, error} -> raise Exception.message( error )
-    end
+    st =
+      case NimbleOptions.validate(st, Style.opts_schema()) do
+        {:ok, st} -> st
+        {:error, error} -> raise Exception.message(error)
+      end
 
-    tx = case NimbleOptions.validate( tx, Transform.opts_schema() ) do
-      {:ok, tx} -> tx
-      {:error, error} -> raise Exception.message( error )
-    end
+    tx =
+      case NimbleOptions.validate(tx, Transform.opts_schema()) do
+        {:ok, tx} -> tx
+        {:error, error} -> raise Exception.message(error)
+      end
 
-    {:ok, id, st, tx, op }
+    {:ok, id, st, tx, op}
   end
-
 
   # ============================================================================
   # styles
@@ -464,13 +464,13 @@ defmodule Scenic.Primitive do
   def merge_opts(primitive, opts)
 
   def merge_opts(%Primitive{} = primitive, opts) when is_list(opts) do
-    {:ok, id, st, tx, op} = prep_opts( opts )
+    {:ok, id, st, tx, op} = prep_opts(opts)
 
     primitive
-    |> Utilities.Map.put_set( :id, id )
-    |> Map.put( :styles, Map.merge(primitive.styles, Enum.into(st, %{})) )
-    |> Map.put( :transforms, Map.merge(primitive.transforms, Enum.into(tx, %{})) )
-    |> Map.put( :opts, Keyword.merge(primitive.opts, op) )
+    |> Utilities.Map.put_set(:id, id)
+    |> Map.put(:styles, Map.merge(primitive.styles, Enum.into(st, %{})))
+    |> Map.put(:transforms, Map.merge(primitive.transforms, Enum.into(tx, %{})))
+    |> Map.put(:opts, Keyword.merge(primitive.opts, op))
   end
 
   @doc """
@@ -498,8 +498,8 @@ defmodule Scenic.Primitive do
 
     # give the primitive a chance to own the put
     p
-    |> Map.put( :data, data)
-    |> merge_opts( opts )
+    |> Map.put(:data, data)
+    |> merge_opts(opts)
   end
 
   # # the default behavior for put - just verify the data and put it in place

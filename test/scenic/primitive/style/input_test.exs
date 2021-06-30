@@ -18,5 +18,4 @@ defmodule Scenic.Primitive.Style.InputTest do
     {:error, msg} = Input.validate("way off")
     assert msg =~ "true or false"
   end
-
 end

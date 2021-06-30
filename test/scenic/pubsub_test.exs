@@ -95,8 +95,7 @@ defmodule Scenic.PubSubTest do
 
   test "register enforces the options schema" do
     assert_raise RuntimeError, fn ->
-      PubSub.register( :abc, invalid: "some term" )
+      PubSub.register(:abc, invalid: "some term")
     end
   end
-
 end

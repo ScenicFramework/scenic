@@ -23,9 +23,10 @@ defmodule Scenic.Primitive.Style.Cap do
   # ============================================================================
   # data verification and serialization
 
-  def validate( :butt ), do: { :ok, :butt }
-  def validate( :round ), do: { :ok, :round }
-  def validate( :square ), do: { :ok, :square }
+  def validate(:butt), do: {:ok, :butt}
+  def validate(:round), do: {:ok, :round}
+  def validate(:square), do: {:ok, :square}
+
   def validate(data) do
     {
       :error,
@@ -37,5 +38,4 @@ defmodule Scenic.Primitive.Style.Cap do
       """
     }
   end
-
 end

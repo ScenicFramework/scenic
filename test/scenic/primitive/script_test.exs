@@ -40,7 +40,6 @@ defmodule Scenic.Primitive.ScriptTest do
     assert msg =~ "Invalid Script"
   end
 
-
   # ============================================================================
   # styles
 

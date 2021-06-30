@@ -37,19 +37,18 @@ defmodule Scenic.Primitive.Sector do
 
   # import IEx
 
-  @type t :: {radius::number, angle::number}
+  @type t :: {radius :: number, angle :: number}
   @type styles_t :: [:hidden | :fill | :stroke_width | :stroke_fill | :join | :miter_limit]
 
   @styles [:hidden, :fill, :stroke_width, :stroke_fill, :join, :miter_limit]
 
-
   @impl Primitive
-  @spec validate( t() ) :: {:ok, t()} | {:error, String.t()}
-  def validate( {radius, angle} ) when is_number(radius) and is_number(angle) do
+  @spec validate(t()) :: {:ok, t()} | {:error, String.t()}
+  def validate({radius, angle}) when is_number(radius) and is_number(angle) do
     {:ok, {radius, angle}}
   end
-  
-  def validate( {r, a1, a2} = old ) when is_number(r) and is_number(a1) and is_number(a2) do
+
+  def validate({r, a1, a2} = old) when is_number(r) and is_number(a1) and is_number(a2) do
     {
       :error,
       """
@@ -63,8 +62,8 @@ defmodule Scenic.Primitive.Sector do
       """
     }
   end
-  
-  def validate( data ) do
+
+  def validate(data) do
     {
       :error,
       """
@@ -77,7 +76,6 @@ defmodule Scenic.Primitive.Sector do
     }
   end
 
-
   # --------------------------------------------------------
   @doc """
   Returns a list of styles recognized by this primitive.
@@ -86,19 +84,16 @@ defmodule Scenic.Primitive.Sector do
   @spec valid_styles() :: styles_t()
   def valid_styles(), do: @styles
 
-
   # --------------------------------------------------------
   @doc """
   Compile the data for this primitive into a mini script. This can be combined with others to
   generate a larger script and is called when a graph is compiled.
   """
-  @spec compile( primitive::Primitive.t(), styles::Style.m() ) :: Script.t()
+  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
   @impl Primitive
-  def compile( %Primitive{module: __MODULE__, data: {radius, angle}}, styles) do
-    Script.draw_sector( [], radius, angle, Script.draw_flag(styles) )
+  def compile(%Primitive{module: __MODULE__, data: {radius, angle}}, styles) do
+    Script.draw_sector([], radius, angle, Script.draw_flag(styles))
   end
-
-
 
   # --------------------------------------------------------
   def contains_point?({radius, angle}, {xp, yp}) do

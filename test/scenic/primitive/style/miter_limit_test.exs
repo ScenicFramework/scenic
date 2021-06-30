@@ -23,5 +23,4 @@ defmodule Scenic.Primitive.Style.MiterLimitTest do
     {:error, msg} = MiterLimit.validate("way off")
     assert msg =~ "must be a positive number"
   end
-
 end
