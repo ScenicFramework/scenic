@@ -113,7 +113,6 @@ defmodule Scenic.Script do
   @type script_op ::
     :push_state | :pop_state | :pop_push_state |
     { :clear, color::Color.t() } |
-    fill_stroke() |
     {:draw_line, {x0::number, y0::number, x1::number, y1::number, :stroke}} |
     {:draw_quad, {x0::number, y0::number, x1::number, y1::number, x2::number, y2::number, x3::number, y3::number, fill_stroke()}} |
     {:draw_rect, {width::number, height::number, fill_stroke()}} | 
@@ -195,7 +194,6 @@ defmodule Scenic.Script do
   # control commands
   @spec push_state( ops::t() ) :: ops::t()
   def push_state( ops ), do: [:push_state | ops]
-  # def restore_state( bin ), do: bin <> serialize_op( :restore_state )
 
   @spec pop_state( ops::t() ) :: ops::t()
   def pop_state( ops ), do: [:pop_state | ops]
@@ -455,7 +453,6 @@ defmodule Scenic.Script do
 
   # style commands
 
-  # def fill_color( bin, {:color, c} ), do: bin <> serialize_op( {:fill_color, c} )
   @spec fill_color( ops::t(), color::Color.t() ) :: ops::t()
   def fill_color( ops, color ) do
     [{:fill_color, Color.to_rgba(color)} | ops]
@@ -607,10 +604,10 @@ defmodule Scenic.Script do
 
   @spec serialize( script::t(),
     op_fn:: nil |
-      (op::script_op -> nil | binary | iolist | script_op) |
-      (op::script_op, state::any -> {nil, any} | {binary, any} | {iolist, any} | {script_op, any}),
-    op_state:: nil | any
-  ) :: ops::t()
+      (op_fn::script_op -> nil | binary | iolist | script_op) |
+      (op_fn::script_op, state::any -> {nil, any} | {binary, any} | {iolist, any} | {script_op, any}),
+    op_state::any
+  ) :: iolist
   def serialize( script, op_fn \\ nil, param \\ nil )
 
   def serialize( script, nil, nil ) when is_list(script) do

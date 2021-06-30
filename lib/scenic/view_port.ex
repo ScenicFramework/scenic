@@ -8,7 +8,7 @@
 defmodule Scenic.ViewPort do
   use GenServer
 
-  # alias Scenic.Math
+  alias Scenic.Script
   alias Scenic.ViewPort
   alias Scenic.Math
   alias Scenic.Scene
@@ -233,7 +233,8 @@ defmodule Scenic.ViewPort do
 
   Used by drivers, which aren't exposed to the name
   """
-  @spec get_script_by_id( viewport :: ViewPort.t, id :: non_neg_integer ) :: {:ok, binary}
+  @spec get_script_by_id( viewport :: ViewPort.t, id :: non_neg_integer ) ::
+    {:ok, Script.t()} | {:error, :not_found}
   def get_script_by_id( %ViewPort{script_table: table}, id ) when is_integer(id) and id >= 0 do
     case :ets.lookup(table, id) do
       [{_, bin, _}] -> {:ok, bin}
@@ -247,7 +248,8 @@ defmodule Scenic.ViewPort do
 
   Not usable by drivers, which use the numeric id.
   """
-  @spec get_script_by_name( viewport :: ViewPort.t, name :: any ) :: {:ok, binary}
+  @spec get_script_by_name( viewport :: ViewPort.t, name :: any ) ::
+    {:ok, Script.t()} | {:error, :not_found}
   def get_script_by_name( viewport, name ) do
     case name_to_id(viewport, name) do
       {:ok, id} -> get_script_by_id(viewport, id)
@@ -266,7 +268,8 @@ defmodule Scenic.ViewPort do
 
   returns {:ok, id}
   """
-  @spec put_script( viewport :: ViewPort.t, name :: any, script :: list, opts :: Keyword.t ) :: {:ok, non_neg_integer}
+  @spec put_script( viewport :: ViewPort.t, name :: any, script :: Script.t(), opts :: Keyword.t ) ::
+    {:ok, non_neg_integer} | {:error, atom}
   def put_script( %ViewPort{pid: pid} = viewport, name, script, opts \\ [] ) when is_list(script) do
     opts = case NimbleOptions.validate( opts, put_x_opts_schema() ) do
       {:ok, opts} -> opts
@@ -287,7 +290,6 @@ defmodule Scenic.ViewPort do
   # internal - put by id
   defp put_script_by_id( %ViewPort{script_table: table}, id, script, owner )
   when is_integer(id) and id >= 0 do
-
 
     case :ets.lookup(table, id) do
       # do nothing if the script is in the table and has not changed
@@ -1204,7 +1206,6 @@ defmodule Scenic.ViewPort do
     vp = gen_info( state )
     state = with {:ok, script} <- GraphCompiler.compile( vp, graph ),
     {:ok, input_list} <- compile_input( graph ) do
-      # script = Scenic.Script.serialize(script)
 
       # write the script to the table
       case :ets.lookup(script_table, id) do
