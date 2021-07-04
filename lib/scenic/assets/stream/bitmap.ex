@@ -5,22 +5,67 @@
 
 defmodule Scenic.Assets.Stream.Bitmap do
   @moduledoc """
-  This module helps you to prepare images that are to be streamed, and displayed
-  through the Scenic.Assets.Stream module.
+  This module helps you to prepare images, in the form of a bitmap, that are to be streamed
+  and displayed through the `Scenic.Assets.Stream` module.
 
-  Typical textures are frames captured from a camera on a device, or bitmaps that
-  you render to directly in your own code.
+  A bitmap is a rectangular field of pixels. Each pixel can be addressed and assigned a color.
+  When the bitmap is put into `Scenic.Assets.Stream` it becomes an image that can be displayed
+  in a scene via `Scenic.Primitive.Style.Paint.Stream`.
 
-  In either case, the image being displayed in a Scene is not known in advance. Or,
-  in other words, it cannot be cached using the Scenic.Assets.Static mechanism,
-  which is preferred for things that don't change.
+  ### Committed vs. Mutable
 
-  It doesn't really matter if the image is obtained and displayed once, or captured
-  from a camera and updated ten times per second. A _texture_ is effectively a type
-  of image that is more ephemeral than something that lives with the device forever.
+  Bitmaps are interesting because a typical pattern is to change the color of many pixels in
+  a rapid burst, then send the image up. The bitmaps can become quite large tho, so if we
+  were to make a copy of it every time a single pixel was changed, that could become quite
+  slow.
+
+  Unfortunately, writing a NIF that manipulates individual pixels quickly and without making
+  a copy, breaks the immutable, functional model of Erlang/Elixir.
+
+  The compromise is that a Bitmap can be either in a "commited" state, which can be put
+  into `Scenic.Assets.Stream`, but not changed, or in a "mutable" state, which can be
+  manipulated rapidly, but not streamed to scenes.
+
+  When a new bitmap is built, it starts in the mutable state, unless the `commit: true` option is set.
+
+  ```elixir
+  alias Scenic.Assets.Stream.Bitmap
+
+  bitmap = Bitmap.build( :rgb, 20, 10, clear: :blue )
+    |> Bitmap.put( 2, 3, :red )
+    |> Bitmap.put( 9, 10, :yellow )
+    |> Bitmap.commit()
+
+  Scenic.Assets.Stream.put( "stream_id", bitmap )
+  ```
+
+  In the above example, a new bitmap is created, that can hold an rgb color in every pixel,
+  is 20 pixels wide, 10 pixels high, and starts with the entire image set to the color `:blue`.
+  The `:commit` option is not set, so it is mutable.
+
+  Then two of the pixels are set to other colors. One `:red` and the other `:yellow`.
+
+  Finally, the image is committed, making it usable, but no longer mutable. After the image is
+  completed, it is sent to `Scenic.Assets.Stream`, which makes it available for use in a scene.
+
+  ### Color Depth
+
+  Bitmaps can be one of four depths. Each consumes a different amount of memory per pixel.
+  If you are running on a constrained memory device, or are worried about bandwidth when remoting
+  the UI, then you should choose the depth that you actually use. If you have lots of memory,
+  then `:rgba` is usually the fastest format.
+
+  | Depth          | Bytes per pixel        | Notes   |
+  |---------------|------------------------|-----------|
+  |  `:g` | 1 | Simple Greyscale. 256 shades of grey |
+  |  `:ga` | 2 | Greyscale plus an alhpa channel |
+  |  `:rgb` | 3 | Red/Green/Blue Millions of colors |
+  |  `:rgba` | 4 | Red/Green/Blue/Alpha |
+
   """
 
   alias Scenic.Assets
+  alias Scenic.Assets.Stream.Bitmap
   alias Scenic.Color
 
   @app Mix.Project.config()[:app]
@@ -38,13 +83,13 @@ defmodule Scenic.Assets.Stream.Bitmap do
       |> :erlang.load_nif(0)
   end
 
-  @type format ::
+  @type depth ::
           :g
           | :ga
           | :rgb
           | :rgba
 
-  @type meta :: {width :: pos_integer, height :: pos_integer, format :: format()}
+  @type meta :: {width :: pos_integer, height :: pos_integer, depth :: depth()}
 
   @bitmap __MODULE__
   @mutable :mutable_bitmap
@@ -53,8 +98,29 @@ defmodule Scenic.Assets.Stream.Bitmap do
   @type m :: {:mutable_bitmap, meta :: meta(), data :: binary}
 
   # --------------------------------------------------------
+  @doc """
+  Build a new bitmap with a given depth, width and height.
+
+  Build creates a new bitmap in memory. It begins in a mutable state
+  and will be set to transparent black unless the :clear option is specified.
+
+  The valid depths are :g, :ga, :rgb, :rgba as explained in the following table
+
+  | Depth          | Bytes per pixel        | Notes   |
+  |---------------|------------------------|-----------|
+  |  `:g` | 1 | Simple Greyscale. 256 shades of grey |
+  |  `:ga` | 2 | Greyscale plus an alhpa channel |
+  |  `:rgb` | 3 | Red/Green/Blue Millions of colors |
+  |  `:rgba` | 4 | Red/Green/Blue/Alpha |
+
+  ### Options
+
+  * `:clear` Set the new bitmap so that every pixel is the specified color.
+  * `:commit` Set to true to start the bitmap committed. Set to false for mutable. The default if not specified is mutable.
+  """
+
   @spec build(
-          format :: Assets.image_format(),
+          depth :: Bitmap.depth(),
           width :: pos_integer,
           height :: pos_integer,
           opts :: Keyword.t()
@@ -87,14 +153,32 @@ defmodule Scenic.Assets.Stream.Bitmap do
   end
 
   # --------------------------------------------------------
+  @doc """
+  Change a bitmap from committed to mutable.
+
+  This makes a copy of the bitmap's memory to preserve the Erlang model.
+
+  Mutable bitmaps are not usable by `Scenic.Assets.Stream`.
+  """
   @spec mutable(texture :: t()) :: mutable :: m()
   def mutable({@bitmap, meta, bin}), do: {@mutable, meta, :binary.copy(bin)}
 
   # --------------------------------------------------------
+  @doc """
+  Change a bitmap from mutable to committed.
+
+  Committed bitmaps can be used by `Scenic.Assets.Stream`. They will not
+  work with the `put` and `clear` functions in this module.
+  """
   @spec commit(mutable :: m()) :: texture :: t()
   def commit({@mutable, meta, bin}), do: {@bitmap, meta, bin}
 
   # --------------------------------------------------------
+  @doc """
+  Get the color value of a single pixel in a bitmap.
+
+  Works with either committed or mutable bitmaps.
+  """
   @spec get(t_or_m :: t() | m(), x :: pos_integer, y :: pos_integer) :: Color.explicit()
   def get(texture, x, y)
   def get({@mutable, meta, bin}, x, y), do: do_get(meta, bin, x, y)
@@ -133,6 +217,18 @@ defmodule Scenic.Assets.Stream.Bitmap do
   end
 
   # --------------------------------------------------------
+  @doc """
+  Set the color value of a single pixel in a bitmap.
+
+  Only works with mutable bitmaps.
+
+  The color you provide can be any valid value from the `Scenic.Color` module.
+
+  If the color you provide doesn't match the depth of the bitmap, this will
+  transform the color as appropriate to fit. For example, putting an `:rgb`
+  color into a `:g` (greyscale) bit map, will set the level of grey to be the average
+  value of the red, green, and blue channels of the supplied color
+  """
 
   @spec put(mutable :: m(), x :: pos_integer, y :: pos_integer, color :: Color.t()) ::
           mutable :: m()
@@ -176,6 +272,20 @@ defmodule Scenic.Assets.Stream.Bitmap do
   defp nif_put(_, _, _, _, _, _), do: :erlang.nif_error("Did not find nif_put_rgba")
 
   # --------------------------------------------------------
+  @doc """
+  Set the color value of all pixels in a bitmap. This effectively erases the bitmap,
+  replacing it with a solid field of the supplied color.
+
+  Only works with mutable bitmaps.
+
+  The color you provide can be any valid value from the `Scenic.Color` module.
+
+  If the color you provide doesn't match the depth of the bitmap, this will
+  transform the color as appropriate to fit. For example, putting an `:rgb`
+  color into a `:g` (greyscale) bit map, will set the level of grey to be the average
+  value of the red, green, and blue channels of the supplied color
+  """
+
   @spec clear(mutable :: m(), color :: Color.t()) :: mutable :: m()
 
   def clear(mutable, color)
@@ -214,6 +324,7 @@ defmodule Scenic.Assets.Stream.Bitmap do
   defp nif_clear(_, _, _, _, _), do: :erlang.nif_error("Did not find nif_clear_rgba")
 
   # --------------------------------------------------------
+  @doc false
   # @impl Scenic.Assets.Stream
   @spec valid?(bitmap :: t()) :: boolean
   def valid?(bitmap)
