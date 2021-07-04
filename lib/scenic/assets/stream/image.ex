@@ -36,7 +36,6 @@ defmodule Scenic.Assets.Stream.Image do
 
   @type t :: {__MODULE__, meta :: meta(), data :: binary}
 
-
   @doc """
   Create a streamable image resource from a compressed image binary.
 
