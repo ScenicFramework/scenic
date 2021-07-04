@@ -8,6 +8,8 @@ defmodule Scenic.Assets.StreamTest do
   doctest Scenic.Assets.Stream
 
   alias Scenic.Assets.Stream
+  alias Scenic.Assets.Stream.Bitmap
+  alias Scenic.Assets.Stream.Image
 
   @stream_put {Stream, :put}
   @stream_del {Stream, :delete}
@@ -28,8 +30,11 @@ defmodule Scenic.Assets.StreamTest do
   # basic client API
 
   test "exists? returns true if key is found" do
-    tex = Stream.Texture.from_file(10, 10, "test_data")
-    assert Stream.put("abc", tex) == :ok
+    {:ok, bin} = Scenic.Assets.Static.load("images/parrot.png")
+    img = Image.from_binary(bin)
+    {Image, _, _} = img
+
+    assert Stream.put("abc", img) == :ok
     assert Stream.exists?("abc") == true
   end
 
@@ -38,8 +43,11 @@ defmodule Scenic.Assets.StreamTest do
   end
 
   test "exists! returns :ok if key is found" do
-    tex = Stream.Texture.from_file(10, 10, "test_data")
-    assert Stream.put("abc", tex) == :ok
+    {:ok, bin} = Scenic.Assets.Static.load("images/parrot.png")
+    img = Image.from_binary(bin)
+    {Image, _, _} = img
+
+    assert Stream.put("abc", img) == :ok
     assert Stream.exists!("abc") == :ok
   end
 
@@ -53,94 +61,104 @@ defmodule Scenic.Assets.StreamTest do
     assert Stream.fetch("missing") == {:error, :not_found}
   end
 
-  test "can put, exists?, fetch, put, and delete streams" do
-    refute Stream.exists?("abc")
-    tex = Stream.Texture.from_file(10, 10, "test_data")
-    assert Stream.put("abc", tex) == :ok
-    assert Stream.exists?("abc")
-    assert Stream.fetch("abc") == {:ok, {:texture, {10, 10, :file}, "test_data"}}
+  test "can put, exists?, fetch, put, and delete images" do
+    {:ok, bin} = Scenic.Assets.Static.load("images/parrot.png")
+    img = Image.from_binary(bin)
+    {Image, {_w, _h, m}, bin} = img
 
-    tex = Stream.Texture.from_file(11, 11, "updated_data")
-    assert Stream.put("abc", tex) == :ok
+    refute Stream.exists?("abc")
+    assert Stream.put("abc", img) == :ok
     assert Stream.exists?("abc")
-    assert Stream.fetch("abc") == {:ok, {:texture, {11, 11, :file}, "updated_data"}}
+    assert Stream.fetch("abc") == {:ok, img}
+
+    assert Stream.put("abc", {Image, {11, 11, m}, bin}) == :ok
+    assert Stream.exists?("abc")
+    assert Stream.fetch("abc") == {:ok, {Image, {11, 11, m}, bin}}
 
     assert Stream.subscribe("abc") == :ok
     assert Stream.delete("abc") == :ok
-    assert_receive({@stream_del, :texture, "abc"}, 100)
+    assert_receive({@stream_del, Image, "abc"}, 100)
     refute Stream.exists?("abc")
     assert Stream.fetch("abc") == {:error, :not_found}
   end
 
-  test "put rejects invalid raw image data" do
-    assert Stream.fetch("abc") == {:error, :not_found}
-    assert Stream.put("abc", {:texture, {5, 5, :file}, nil}) == {:error, :invalid}
-    assert Stream.put("abc", {:texture, {5, 5, :g}, "invalid"}) == {:error, :invalid}
-    assert Stream.put("abc", {:texture, {5, 5, :ga}, "invalid"}) == {:error, :invalid}
-    assert Stream.put("abc", {:texture, {5, 5, :rgb}, "invalid"}) == {:error, :invalid}
-    assert Stream.put("abc", {:texture, {5, 5, :rgba}, "invalid"}) == {:error, :invalid}
-    assert Stream.fetch("abc") == {:error, :not_found}
-  end
-
-  test "put accepts valid raw image data" do
-    refute Stream.exists?("one")
-    assert Stream.put("abc", {:texture, {5, 5, :file}, "anything"}) == :ok
-    assert Stream.put("one", {:texture, {2, 2, :g}, "abcd"}) == :ok
-    assert Stream.put("two", {:texture, {2, 2, :ga}, "abcdabcd"}) == :ok
-    assert Stream.put("three", {:texture, {2, 2, :rgb}, "abcdabcdabcd"}) == :ok
-    assert Stream.put("four", {:texture, {2, 2, :rgba}, "abcdabcdabcdabcd"}) == :ok
+  test "can put, exists?, fetch, put, and delete bitmaps" do
+    red = Bitmap.build(:rgb, 7, 11, clear: :red, commit: true)
+    refute Stream.exists?("abc")
+    assert Stream.put("abc", red) == :ok
     assert Stream.exists?("abc")
-    assert Stream.exists?("one")
-    assert Stream.exists?("two")
-    assert Stream.exists?("three")
-    assert Stream.exists?("four")
+    assert Stream.fetch("abc") == {:ok, red}
+
+    green = Bitmap.build(:rgb, 7, 11, clear: :green, commit: true)
+    assert Stream.put("abc", green) == :ok
+    assert Stream.exists?("abc")
+    assert Stream.fetch("abc") == {:ok, green}
+
+    assert Stream.subscribe("abc") == :ok
+    assert Stream.delete("abc") == :ok
+    assert_receive({@stream_del, Bitmap, "abc"}, 100)
+    refute Stream.exists?("abc")
+    assert Stream.fetch("abc") == {:error, :not_found}
   end
 
-  test "put validates raw image data" do
-    assert Stream.put("abc", {:texture, {2, 2, :g}, "abcd"}) == :ok
-    assert Stream.fetch("abc") == {:ok, {:texture, {2, 2, :g}, "abcd"}}
+  test "once is created of a certain type, the type cannot be changed" do
+    {:ok, bin} = Scenic.Assets.Static.load("images/parrot.png")
+    img = Image.from_binary(bin)
+    {Image, _, _} = img
 
-    assert Stream.put("abc", {:texture, {2, 2, :g}, "efgh"}) == :ok
-    assert Stream.fetch("abc") == {:ok, {:texture, {2, 2, :g}, "efgh"}}
+    bmp = Bitmap.build(:rgb, 7, 11, clear: :red, commit: true)
 
-    assert Stream.put("abc", {:texture, {2, 2, :g}, "invalid"}) == {:error, :invalid}
-    assert Stream.fetch("abc") == {:ok, {:texture, {2, 2, :g}, "efgh"}}
+    refute Stream.exists?("abc")
+    assert Stream.put("abc", img) == :ok
+    assert Stream.put("abc", bmp) == {:error, :invalid, Image}
+
+    refute Stream.exists?("def")
+    assert Stream.put("def", bmp) == :ok
+    assert Stream.put("def", img) == {:error, :invalid, Bitmap}
+  end
+
+  test "put rejects invalid images" do
+    assert Stream.put("abc", {Image, {2, 3, :invalid}, <<0>>}) == {:error, :invalid, Image}
+  end
+
+  test "put validates bitmaps" do
+    assert Stream.put("abc", {Bitmap, {2, 3, :rgba}, <<0>>}) == {:error, :invalid, Bitmap}
   end
 
   # ============================================================================
   # subscription API
 
   test "Subscribers get messages when an item is updated and deleted" do
-    assert Stream.put("abc", {:texture, {2, 2, :g}, "abcd"}) == :ok
+    assert Stream.put("abc", {Bitmap, {2, 2, :g}, "abcd"}) == :ok
     assert Stream.subscribe("abc") == :ok
     refute_receive(_, 40)
 
     # prove doing an update creates a message
-    assert Stream.put("abc", {:texture, {2, 2, :g}, "efgh"}) == :ok
-    assert_receive({@stream_put, :texture, "abc"}, 100)
+    assert Stream.put("abc", {Bitmap, {2, 2, :g}, "efgh"}) == :ok
+    assert_receive({@stream_put, Bitmap, "abc"}, 100)
 
     # clean up
     assert Stream.delete("abc") == :ok
-    assert_receive({@stream_del, :texture, "abc"}, 100)
+    assert_receive({@stream_del, Bitmap, "abc"}, 100)
   end
 
   test "Can subscribe before an item is created" do
     assert Stream.subscribe("abc") == :ok
     refute_receive(_, 40)
 
-    assert Stream.put("abc", {:texture, {2, 2, :g}, "abcd"}) == :ok
-    assert_receive({@stream_put, :texture, "abc"}, 100)
+    assert Stream.put("abc", {Bitmap, {2, 2, :g}, "abcd"}) == :ok
+    assert_receive({@stream_put, Bitmap, "abc"}, 100)
   end
 
   test "unsubscribe stops update messages" do
-    assert Stream.put("abc", {:texture, {2, 2, :g}, "abcd"}) == :ok
+    assert Stream.put("abc", {Bitmap, {2, 2, :g}, "abcd"}) == :ok
     assert Stream.subscribe("abc") == :ok
-    assert Stream.put("abc", {:texture, {2, 2, :g}, "efgh"}) == :ok
+    assert Stream.put("abc", {Bitmap, {2, 2, :g}, "efgh"}) == :ok
 
-    assert_receive({@stream_put, :texture, "abc"}, 100)
+    assert_receive({@stream_put, Bitmap, "abc"}, 100)
 
     assert Stream.unsubscribe("abc") == :ok
-    assert Stream.put("abc", {:texture, {2, 2, :g}, "ijkl"}) == :ok
+    assert Stream.put("abc", {Bitmap, {2, 2, :g}, "ijkl"}) == :ok
     refute_receive(_, 40)
   end
 end

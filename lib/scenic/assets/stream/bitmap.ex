@@ -3,7 +3,23 @@
 #  Copyright © 2021 Kry10 Limited. All rights reserved.
 #
 
-defmodule Scenic.Assets.Stream.Texture do
+defmodule Scenic.Assets.Stream.Bitmap do
+  @moduledoc """
+  This module helps you to prepare images that are to be streamed, and displayed
+  through the Scenic.Assets.Stream module.
+
+  Typical textures are frames captured from a camera on a device, or bitmaps that
+  you render to directly in your own code.
+
+  In either case, the image being displayed in a Scene is not known in advance. Or,
+  in other words, it cannot be cached using the Scenic.Assets.Static mechanism,
+  which is preferred for things that don't change.
+
+  It doesn't really matter if the image is obtained and displayed once, or captured
+  from a camera and updated ten times per second. A _texture_ is effectively a type
+  of image that is more ephemeral than something that lives with the device forever.
+  """
+
   alias Scenic.Assets
   alias Scenic.Color
 
@@ -18,17 +34,23 @@ defmodule Scenic.Assets.Stream.Texture do
     :ok =
       @app
       |> :code.priv_dir()
-      |> :filename.join('texture')
+      |> :filename.join('bitmap')
       |> :erlang.load_nif(0)
   end
 
-  @type meta :: {width :: pos_integer, height :: pos_integer, format :: Assets.image_format()}
+  @type format ::
+          :g
+          | :ga
+          | :rgb
+          | :rgba
 
-  @texture :texture
-  @mutable :mutable_texture
+  @type meta :: {width :: pos_integer, height :: pos_integer, format :: format()}
 
-  @type t :: {:texture, meta :: meta(), data :: binary}
-  @type m :: {:mutable_texture, meta :: meta(), data :: binary}
+  @bitmap __MODULE__
+  @mutable :mutable_bitmap
+
+  @type t :: {__MODULE__, meta :: meta(), data :: binary}
+  @type m :: {:mutable_bitmap, meta :: meta(), data :: binary}
 
   # --------------------------------------------------------
   @spec build(
@@ -64,26 +86,19 @@ defmodule Scenic.Assets.Stream.Texture do
     end
   end
 
-  @spec from_file(width :: pos_integer, height :: pos_integer, bin :: binary) :: t()
-  def from_file(width, height, bin)
-      when is_integer(width) and width > 0 and
-             is_integer(height) and height > 0 and is_binary(bin) do
-    {@texture, {width, height, :file}, bin}
-  end
-
   # --------------------------------------------------------
   @spec mutable(texture :: t()) :: mutable :: m()
-  def mutable({@texture, meta, bin}), do: {@mutable, meta, :binary.copy(bin)}
+  def mutable({@bitmap, meta, bin}), do: {@mutable, meta, :binary.copy(bin)}
 
   # --------------------------------------------------------
   @spec commit(mutable :: m()) :: texture :: t()
-  def commit({@mutable, meta, bin}), do: {@texture, meta, bin}
+  def commit({@mutable, meta, bin}), do: {@bitmap, meta, bin}
 
   # --------------------------------------------------------
   @spec get(t_or_m :: t() | m(), x :: pos_integer, y :: pos_integer) :: Color.explicit()
   def get(texture, x, y)
   def get({@mutable, meta, bin}, x, y), do: do_get(meta, bin, x, y)
-  def get({@texture, meta, bin}, x, y), do: do_get(meta, bin, x, y)
+  def get({@bitmap, meta, bin}, x, y), do: do_get(meta, bin, x, y)
 
   defp do_get({w, h, :g}, p, x, y)
        when is_integer(x) and x >= 0 and x <= w and
@@ -115,10 +130,6 @@ defmodule Scenic.Assets.Stream.Texture do
     skip = y * w * 4 + x * 4
     <<_::binary-size(skip), r::8, g::8, b::8, a::8, _::binary>> = p
     Color.to_rgba({r, g, b, a})
-  end
-
-  defp do_get({_, _, :file}, _p, _x, _y) do
-    raise "Texture.get(...) is not supported for file encoded data"
   end
 
   # --------------------------------------------------------
@@ -157,10 +168,6 @@ defmodule Scenic.Assets.Stream.Texture do
     {:color_rgba, {r, g, b, a}} = Color.to_rgba(color)
     nif_put(p, y * w + x, r, g, b, a)
     {@mutable, {w, h, :rgba}, p}
-  end
-
-  def put({@mutable, {_, _, :file}, _p}, _x, _y, _c) do
-    raise "Texture.put(...) is not supported for file encoded data"
   end
 
   defp nif_put(_, _, _), do: :erlang.nif_error("Did not find nif_put_g")
@@ -205,4 +212,14 @@ defmodule Scenic.Assets.Stream.Texture do
   defp nif_clear(_, _, _), do: :erlang.nif_error("Did not find nif_clear_ga")
   defp nif_clear(_, _, _, _), do: :erlang.nif_error("Did not find nif_clear_rgb")
   defp nif_clear(_, _, _, _, _), do: :erlang.nif_error("Did not find nif_clear_rgba")
+
+  # --------------------------------------------------------
+  # @impl Scenic.Assets.Stream
+  @spec valid?(bitmap :: t()) :: boolean
+  def valid?(bitmap)
+  def valid?({@bitmap, {w, h, :g}, p}), do: byte_size(p) == w * h
+  def valid?({@bitmap, {w, h, :ga}, p}), do: byte_size(p) == w * h * 2
+  def valid?({@bitmap, {w, h, :rgb}, p}), do: byte_size(p) == w * h * 3
+  def valid?({@bitmap, {w, h, :rgba}, p}), do: byte_size(p) == w * h * 4
+  def valid?(_), do: false
 end

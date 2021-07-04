@@ -26,12 +26,16 @@ defmodule Scenic.Assets.Stream do
   use GenServer
 
   # alias Scenic.Assets
-  alias Scenic.Assets.Stream.Texture
+  alias Scenic.Assets.Stream.Image
+  alias Scenic.Assets.Stream.Bitmap
 
-  @type asset :: Texture.t()
+  @type asset :: Image.t() | Bitmap.t()
   @type id :: String.t()
 
   # import IEx
+
+  # behaviour
+  @callback valid?(asset :: any) :: boolean
 
   # ===========================================================================
   defmodule Error do
@@ -68,20 +72,31 @@ defmodule Scenic.Assets.Stream do
 
   @spec put(id :: String.t(), asset :: asset()) ::
           :ok | {:error, atom} | {:error, atom, any}
-  def put(id, asset) do
-    case validate(asset) do
-      :ok ->
+  def put(id, {type, _meta, _bin} = asset) do
+    case type.valid?(asset) do
+      true ->
         case :ets.lookup(__MODULE__, id) do
           [{_, ^asset, _}] ->
+            # no change. no work to do
             :ok
 
-          _ ->
+          [] ->
+            # asset key does not yet exist
             true = :ets.insert(__MODULE__, {id, asset, self()})
             GenServer.cast(__MODULE__, {:put, id})
+
+          [{_, {^type, _, _}, _}] ->
+            # is the same type
+            true = :ets.insert(__MODULE__, {id, asset, self()})
+            GenServer.cast(__MODULE__, {:put, id})
+
+          [{_, {type, _, _}, _}] ->
+            # is a different type. reject the put
+            {:error, :invalid, type}
         end
 
-      err ->
-        err
+      false ->
+        {:error, :invalid, type}
     end
   end
 
@@ -100,46 +115,6 @@ defmodule Scenic.Assets.Stream do
   @spec unsubscribe(id :: String.t() | :all) :: :ok
   def unsubscribe(id) do
     GenServer.cast(__MODULE__, {:unsubscribe, self(), id})
-  end
-
-  # ============================================================================
-  # formats aren't completely opaque. We can verify some of them
-
-  defp validate(asset)
-
-  defp validate({:texture, {w, h, :g}, p}) do
-    case byte_size(p) == w * h do
-      true -> :ok
-      false -> {:error, :invalid}
-    end
-  end
-
-  defp validate({:texture, {w, h, :ga}, p}) do
-    case byte_size(p) == w * h * 2 do
-      true -> :ok
-      false -> {:error, :invalid}
-    end
-  end
-
-  defp validate({:texture, {w, h, :rgb}, p}) do
-    case byte_size(p) == w * h * 3 do
-      true -> :ok
-      false -> {:error, :invalid}
-    end
-  end
-
-  defp validate({:texture, {w, h, :rgba}, p}) do
-    case byte_size(p) == w * h * 4 do
-      true -> :ok
-      false -> {:error, :invalid}
-    end
-  end
-
-  defp validate({:texture, {_w, _h, :file}, data}) do
-    case is_binary(data) do
-      true -> :ok
-      false -> {:error, :invalid}
-    end
   end
 
   # ============================================================================
