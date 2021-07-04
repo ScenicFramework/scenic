@@ -3,29 +3,30 @@
 #  Copyright © 2021 Kry10 Limited. All rights reserved.
 #
 
-# A streaming asset is an asset that changes over time and thus
-# cannot be cached, neither on the device itself nor any intermediate servers.
-# the best caching we can do is a "most recent snapshot", as long as the
-# clients understand this snapshot can be updated at any time.
-
-# These asset snapshots can potentially be large in size (think frames from a camera).
-# This means we do not want to pass the data round in messages as that causes memory
-# copying, when sent across processes. (Drivers are by nature in separate processes).
-# So the data is written into an :ets table that is read optimized, then only the
-# name/id of the updated asset is sent via messages to the drivers or any other
-# listening process. This allows these processes to retrieve the data when they see fit.
-
-# In this sense, streaming assets most closely resemble the old Cache mechanism.
-
-# Unlike static assets, which use the cryptographic hash to both identify and verify the
-# contents of the asset, streaming assets cannot be hashed as they change over time. So
-# instead the name can be any string you want. This name is effectively a pub/sub id
-# that clients listen to for updates, in addition to accessing the data itself.
-
 defmodule Scenic.Assets.Stream do
+  @moduledoc """
+  Manage streaming assets (for now only compressed images and bitmaps) that are available
+  to all Scenes and ViewPorts.
+
+  The `Scenic.Assets.Stream` API gives to access to a running GenServer that manages an
+  `:ets` table and subscriptions to changes to named streams. This means that streaming
+  assets are available globally to all Scenes and ViewPorts.
+
+  You should be aware that if you have a GenServer that is rapidly updating a stream,
+  but no scene's are listening, then you are doing unnecessary work. If you have only a
+  single Scene in a single ViewPort listening to that stream, then create the stream
+  in the scene.
+
+  If you have multiple Scenes listening to a stream, or the same stream in multiple
+  ViewPorts, then create and update the stream in an independent GenServer that you
+  manage outside of Scenic.
+  """
+
+  # behaviour
+  # @callback valid?(asset :: any) :: boolean
+
   use GenServer
 
-  # alias Scenic.Assets
   alias Scenic.Assets.Stream.Image
   alias Scenic.Assets.Stream.Bitmap
 
@@ -33,9 +34,6 @@ defmodule Scenic.Assets.Stream do
   @type id :: String.t()
 
   # import IEx
-
-  # behaviour
-  @callback valid?(asset :: any) :: boolean
 
   # ===========================================================================
   defmodule Error do
@@ -46,6 +44,11 @@ defmodule Scenic.Assets.Stream do
   # ============================================================================
   # Client API
 
+  @doc """
+  Check if a named stream has been published.
+
+  Returns a boolean indicating if the stream is published.
+  """
   @spec exists?(id :: String.t()) :: boolean
   def exists?(id) when is_bitstring(id) do
     case :ets.lookup(__MODULE__, id) do
@@ -54,6 +57,11 @@ defmodule Scenic.Assets.Stream do
     end
   end
 
+  @doc """
+  Check if a named stream has been published.
+
+  Returns a `:ok` if the stream is published. Raises an error if it is not.
+  """
   @spec exists!(id :: String.t()) :: :ok
   def exists!(id) when is_bitstring(id) do
     case :ets.lookup(__MODULE__, id) do
@@ -62,6 +70,13 @@ defmodule Scenic.Assets.Stream do
     end
   end
 
+  @doc """
+  Fetch the currently published asset in a named stream.
+
+  Returns `{:ok, asset}` on success.
+
+  Returns `{:error, :not_found}` if the stream is not available.
+  """
   @spec fetch(id :: String.t()) :: {:ok, asset :: asset()} | {:error, :not_found}
   def fetch(id) when is_bitstring(id) do
     case :ets.lookup(__MODULE__, id) do
@@ -70,6 +85,22 @@ defmodule Scenic.Assets.Stream do
     end
   end
 
+  @doc """
+  Put a streamable asset into a named stream.
+
+  If the named stream does not exist yet, it is created. If it already exists, then
+  it's content is updated with the asset.
+
+  Returns `:ok` on success.
+
+  Note: Once a stream is create, the asset being updated must be the same type as the
+  asset that was originally created. I.e. you can't replace a Bitmap with an Image. This
+  will make more sense in the future as other assets types (audio) become supported.
+
+  The contents of the asset is (lightly) validated as it is put into the :ets table.
+  If the content is invalid, or a different type than what is already in the stream,
+  then it returns `{:error, :invalid, asset_type}`.
+  """
   @spec put(id :: String.t(), asset :: asset()) ::
           :ok | {:error, atom} | {:error, atom, any}
   def put(id, {type, _meta, _bin} = asset) do
@@ -100,11 +131,36 @@ defmodule Scenic.Assets.Stream do
     end
   end
 
+  @doc """
+  Fully delete a named stream.
+
+  If you recreate the stream after deleting it, you can place any asset type into
+  the new stream.
+  """
   @spec delete(id :: String.t()) :: :ok
   def delete(id) do
     GenServer.cast(__MODULE__, {:delete, id})
   end
 
+  @doc """
+  Subscribe to changes in a named stream.
+
+  Call this from a GenServer, typically a `Driver` or something you manage yourself.
+
+  When an asset stream is updated you will receive the following message.
+
+  `{{Stream, :put}, stream_type, id}`
+
+  You can match against stream_type to select certain kids of assets. Use the id
+  to fetch the contents of the asset.
+
+  When an asset stream is deleted, you will receive the following message.
+  `{{Stream, :delete}, stream_type, id}`
+
+  You can subscribe to an stream before it has been published. You will then start
+  receiving put messages when it is created. Your subscription will not end if the
+  stream is deleted.
+  """
   # subscribing to a streaming asset that doesn't exist yet, still succeeds and
   # will start sending updates if it is published in the future
   @spec subscribe(id :: String.t()) :: :ok
@@ -112,6 +168,12 @@ defmodule Scenic.Assets.Stream do
     GenServer.cast(__MODULE__, {:subscribe, self(), id})
   end
 
+  @doc """
+  Unsubscribe to changes in a named stream.
+
+  Once your process unsubscribes to a named stream, it will stop receiving all
+  messages related to it
+  """
   @spec unsubscribe(id :: String.t() | :all) :: :ok
   def unsubscribe(id) do
     GenServer.cast(__MODULE__, {:unsubscribe, self(), id})
