@@ -31,7 +31,7 @@ defmodule Scenic.Assets.StreamTest do
 
   test "exists? returns true if key is found" do
     {:ok, bin} = Scenic.Assets.Static.load("images/parrot.png")
-    img = Image.from_binary(bin)
+    {:ok, img} = Image.from_binary(bin)
     {Image, _, _} = img
 
     assert Stream.put("abc", img) == :ok
@@ -44,7 +44,7 @@ defmodule Scenic.Assets.StreamTest do
 
   test "exists! returns :ok if key is found" do
     {:ok, bin} = Scenic.Assets.Static.load("images/parrot.png")
-    img = Image.from_binary(bin)
+    {:ok, img} = Image.from_binary(bin)
     {Image, _, _} = img
 
     assert Stream.put("abc", img) == :ok
@@ -63,7 +63,7 @@ defmodule Scenic.Assets.StreamTest do
 
   test "can put, exists?, fetch, put, and delete images" do
     {:ok, bin} = Scenic.Assets.Static.load("images/parrot.png")
-    img = Image.from_binary(bin)
+    {:ok, img} = Image.from_binary(bin)
     {Image, {_w, _h, m}, bin} = img
 
     refute Stream.exists?("abc")
@@ -103,7 +103,7 @@ defmodule Scenic.Assets.StreamTest do
 
   test "once is created of a certain type, the type cannot be changed" do
     {:ok, bin} = Scenic.Assets.Static.load("images/parrot.png")
-    img = Image.from_binary(bin)
+    {:ok, img} = Image.from_binary(bin)
     {Image, _, _} = img
 
     bmp = Bitmap.build(:rgb, 7, 11, clear: :red, commit: true)
