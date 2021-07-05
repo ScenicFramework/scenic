@@ -11,7 +11,7 @@ defmodule Scenic.Component.Input.RadioGroup do
   * `radio_buttons` must be a list of radio button data. See below.
   * `checked_id` Is the id of the currently selected radio from the list.
 
-  Radio button data:
+  radio_buttons list:
 
   `{text, radio_id}`
 
@@ -20,6 +20,11 @@ defmodule Scenic.Component.Input.RadioGroup do
   group's value.
   * `checked?` - must be a boolean and indicates if the button is selected.
   `checked?` is not required and will default to `false` if not supplied.
+
+  Example showing the full data format
+  ```elixir
+  {[{"One", :one}, {"Two", :two}, {"Three", :three}], :two}
+  ```
 
   ## Messages
 
