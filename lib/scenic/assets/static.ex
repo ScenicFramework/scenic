@@ -464,5 +464,4 @@ defmodule Scenic.Assets.Static do
       _ -> :error
     end
   end
-
 end

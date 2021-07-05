@@ -17,5 +17,4 @@ defmodule Scenic.Assets.Static.ImageTest do
   test "rejects invalid image data" do
     assert Image.parse_meta(<<0, 1, 2, 3, 4, 5, 6>>) == :error
   end
-
 end

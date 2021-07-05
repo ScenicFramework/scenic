@@ -12,5 +12,4 @@ defmodule Scenic.Assets.Static.Font do
       _ -> :error
     end
   end
-  
 end

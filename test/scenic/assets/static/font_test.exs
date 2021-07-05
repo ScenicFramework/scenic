@@ -17,5 +17,4 @@ defmodule Scenic.Assets.Static.FontTest do
   test "rejects invalid font data" do
     assert Font.parse_meta(<<0, 1, 2, 3, 4, 5, 6>>) == :error
   end
-  
 end
