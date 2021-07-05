@@ -183,10 +183,6 @@ defmodule Scenic.Assets.Static do
   end
 
   # ===========================================================================
-  defmodule Ingestor do
-  end
-
-  # ===========================================================================
   # the using macro for scenes adopting this behavior
   defmacro __using__(using_opts \\ []) do
     quote do

@@ -131,6 +131,13 @@ defmodule Scenic.Mixfile do
 
   defp groups_for_modules do
     [
+      Assets: [
+        Scenic.Assets,
+        Scenic.Assets.Static,
+        Scenic.Assets.Stream,
+        Scenic.Assets.Stream.Bitmap,
+        Scenic.Assets.Stream.Image
+      ],
       Components: [
         Scenic.Component,
         Scenic.Component.Button,
@@ -147,6 +154,7 @@ defmodule Scenic.Mixfile do
         Scenic.Primitive,
         Scenic.Primitive.Arc,
         Scenic.Primitive.Circle,
+        Scenic.Primitive.Component,
         Scenic.Primitive.Ellipse,
         Scenic.Primitive.Group,
         Scenic.Primitive.Line,
@@ -154,8 +162,9 @@ defmodule Scenic.Mixfile do
         Scenic.Primitive.Quad,
         Scenic.Primitive.Rectangle,
         Scenic.Primitive.RoundedRectangle,
-        Scenic.Primitive.SceneRef,
         Scenic.Primitive.Sector,
+        Scenic.Primitive.Script,
+        Scenic.Primitive.Sprites,
         Scenic.Primitive.Text,
         Scenic.Primitive.Triangle
       ],
@@ -168,12 +177,14 @@ defmodule Scenic.Mixfile do
         Scenic.Primitive.Style.FontBlur,
         Scenic.Primitive.Style.FontSize,
         Scenic.Primitive.Style.Hidden,
+        Scenic.Primitive.Style.Input,
         Scenic.Primitive.Style.Join,
+        Scenic.Primitive.Style.LineHeight,
         Scenic.Primitive.Style.MiterLimit,
         Scenic.Primitive.Style.Scissor,
         Scenic.Primitive.Style.Stroke,
         Scenic.Primitive.Style.TextAlign,
-        Scenic.Primitive.Style.TextHeight,
+        Scenic.Primitive.Style.TextBase,
         Scenic.Primitive.Style.Theme
       ],
       "Style.Paint": [
@@ -181,9 +192,9 @@ defmodule Scenic.Mixfile do
         Scenic.Primitive.Style.Paint.Color,
         Scenic.Primitive.Style.Paint.Image,
         Scenic.Primitive.Style.Paint.Dynamic,
-        Scenic.Primitive.Style.Paint.BoxGradient,
         Scenic.Primitive.Style.Paint.LinearGradient,
-        Scenic.Primitive.Style.Paint.RadialGradient
+        Scenic.Primitive.Style.Paint.RadialGradient,
+        Scenic.Primitive.Style.Paint.Stream
       ],
       Transforms: [
         Scenic.Primitive.Transform,
