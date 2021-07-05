@@ -9,6 +9,8 @@ defmodule Scenic.Assets.StaticTest do
 
   alias Scenic.Assets.Static
 
+  # import IEx
+
   @roboto_hash <<243, 145, 76, 95, 149, 49, 167, 23, 114, 99, 197, 95, 239, 40, 165, 67, 253, 202,
                  42, 117, 16, 198, 39, 218, 236, 72, 219, 150, 94, 195, 187, 33>>
   @roboto_hash_str "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"
@@ -27,16 +29,28 @@ defmodule Scenic.Assets.StaticTest do
     refute lib["missing.png"]
   end
 
-  test "resolve_alias resolves into strings" do
-    assert Static.resolve_alias(:test_roboto) == {:ok, "fonts/roboto.ttf"}
+  test "resolve_id resolves alias into string" do
+    assert Static.resolve_id(:test_roboto) == {:ok, "fonts/roboto.ttf"}
   end
 
-  test "resolve_alias passes valid strings through" do
-    assert Static.resolve_alias("fonts/roboto.ttf") == {:ok, "fonts/roboto.ttf"}
+  test "resolve_id returns error if alias not mapped" do
+    assert Static.resolve_id(:missing) == {:error, :not_mapped}
   end
 
-  test "resolve_alias returns error if not mapped" do
-    assert Static.resolve_alias(:missing) == {:error, :not_mapped}
+  test "resolve_id passes valid strings through" do
+    assert Static.resolve_id("fonts/roboto.ttf") == {:ok, "fonts/roboto.ttf"}
+  end
+
+  test "resolve_id resolves string hash into id" do
+    assert Static.resolve_id(@roboto_hash_str) == {:ok, "fonts/roboto.ttf"}
+  end
+
+  test "resolve_id resolves binary hash into id" do
+    assert Static.resolve_id(@roboto_hash) == {:ok, "fonts/roboto.ttf"}
+  end
+
+  test "resolve_id returns :not_found for missing ids/hashes" do
+    assert Static.resolve_id("not there at all") == {:error, :not_found}
   end
 
   test "to_hash resolves the file path/alias to the hash" do
@@ -49,7 +63,7 @@ defmodule Scenic.Assets.StaticTest do
 
   test "fetch returns the metadata" do
     {:ok, {:font, %FontMetrics{}}} = Static.fetch("fonts/roboto.ttf")
-    {:ok, {:font, %FontMetrics{}}} = Static.fetch(:test_roboto)
+    {:ok, {:font, %FontMetrics{}}} = Static.fetch(:roboto)
 
     {:ok, {:image, {62, 114, "image/png"}}} = Static.fetch("images/parrot.png")
     {:ok, {:image, {62, 114, "image/png"}}} = Static.fetch(:test_parrot)
@@ -68,15 +82,5 @@ defmodule Scenic.Assets.StaticTest do
     assert is_binary(bin)
     {:ok, bin} = Static.load(:test_parrot)
     assert is_binary(bin)
-  end
-
-  test "find_hash does a reverse find and returns the file name" do
-    assert Static.find_hash(@roboto_hash, :bin_hash) == {:ok, "fonts/roboto.ttf"}
-    assert Static.find_hash(@roboto_hash_str, :str_hash) == {:ok, "fonts/roboto.ttf"}
-  end
-
-  test "find_hash returns :not_found if it can't be found..." do
-    assert Static.find_hash("missing", :bin_hash) == {:error, :not_found}
-    assert Static.find_hash("missing", :str_hash) == {:error, :not_found}
   end
 end

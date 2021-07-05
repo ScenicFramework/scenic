@@ -579,7 +579,7 @@ defmodule Scenic.Script do
   @spec fill_image(ops :: t(), image :: Static.id()) :: ops :: t()
   def fill_image(ops, id) when is_atom(id) or is_bitstring(id) do
     id =
-      with {:ok, id_str} <- Static.resolve_alias(id),
+      with {:ok, id_str} <- Static.resolve_id(id),
            {:ok, {:image, _}} <- Static.fetch(id_str) do
         id_str
       else
@@ -653,7 +653,7 @@ defmodule Scenic.Script do
   @spec stroke_image(ops :: t(), image :: Static.id()) :: ops :: t()
   def stroke_image(ops, id) when is_atom(id) or is_bitstring(id) do
     id =
-      with {:ok, id_str} <- Static.resolve_alias(id),
+      with {:ok, id_str} <- Static.resolve_id(id),
            {:ok, {:image, _}} <- Static.fetch(id_str) do
         id_str
       else
@@ -689,7 +689,7 @@ defmodule Scenic.Script do
   @spec font(ops :: t(), id :: Static.id()) :: ops :: t()
   def font(ops, id) when is_atom(id) or is_bitstring(id) do
     id =
-      with {:ok, id_str} <- Static.resolve_alias(id),
+      with {:ok, id_str} <- Static.resolve_id(id),
            {:ok, {:font, _}} <- Static.fetch(id_str) do
         id_str
       else
@@ -1667,7 +1667,7 @@ defmodule Scenic.Script do
         {[{{sx, sy}, {sw, sh}, {dx, dy}, {dw, dh}} | cmds], bin}
       end)
 
-    {:ok, id} = Static.find_hash(hash, :bin_hash)
+    {:ok, id} = Static.resolve_id(hash)
     cmds = Enum.reverse(cmds)
     {{:draw_sprites, {id, cmds}}, bin}
   end
@@ -1954,7 +1954,7 @@ defmodule Scenic.Script do
          hash::binary-size(32),
          bin::binary
        >>) do
-    {:ok, id} = Static.find_hash(hash, :bin_hash)
+    {:ok, id} = Static.resolve_id(hash)
     {{:fill_image, id}, bin}
   end
 
@@ -2051,7 +2051,7 @@ defmodule Scenic.Script do
          hash::binary-size(32),
          bin::binary
        >>) do
-    {:ok, id} = Static.find_hash(hash, :bin_hash)
+    {:ok, id} = Static.resolve_id(hash)
     {{:stroke_image, id}, bin}
   end
 
@@ -2144,7 +2144,7 @@ defmodule Scenic.Script do
          hash::binary-size(32),
          bin::binary
        >>) do
-    {:ok, id} = Static.find_hash(hash, :bin_hash)
+    {:ok, id} = Static.resolve_id(hash)
     {{:font, id}, bin}
   end
 

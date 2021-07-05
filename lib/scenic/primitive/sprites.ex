@@ -38,7 +38,7 @@ defmodule Scenic.Primitive.Sprites do
       {:error, :command, cmd} -> err_bad_cmd(image, cmd)
       {:error, :alias} -> err_bad_alias(image)
       {:error, :font} -> err_is_font(image)
-      {:error, :missing} -> err_missing_image(image)
+      {:error, :not_found} -> err_missing_image(image)
     end
   end
 
@@ -148,13 +148,13 @@ defmodule Scenic.Primitive.Sprites do
   end
 
   defp validate_image(id) do
-    with {:ok, id_str} <- Static.resolve_alias(id),
+    with {:ok, id_str} <- Static.resolve_id(id),
          {:ok, {:image, _}} <- Static.fetch(id_str) do
       {:ok, id_str}
     else
       {:ok, {:font, _}} -> {:error, :font}
       {:error, :not_mapped} -> {:error, :alias}
-      :error -> {:error, :missing}
+      {:error, :not_found} -> {:error, :not_found}
     end
   end
 

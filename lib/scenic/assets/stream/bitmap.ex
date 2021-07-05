@@ -64,7 +64,6 @@ defmodule Scenic.Assets.Stream.Bitmap do
 
   """
 
-  alias Scenic.Assets
   alias Scenic.Assets.Stream.Bitmap
   alias Scenic.Color
 

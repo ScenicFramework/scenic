@@ -15,13 +15,13 @@ defmodule Scenic.Primitive.Style.Paint.Image do
   """
 
   def validate({:image, id}) when is_atom(id) or is_bitstring(id) do
-    with {:ok, id_str} <- Static.resolve_alias(id),
+    with {:ok, id_str} <- Static.resolve_id(id),
          {:ok, {:image, _}} <- Static.fetch(id_str) do
       {:ok, {:image, id_str}}
     else
       {:ok, {:font, _}} -> err_is_a_font(id)
       {:error, :not_mapped} -> err_not_mapped(id)
-      :error -> err_missing(id)
+      {:error, :not_found} -> err_missing(id)
     end
   end
 
