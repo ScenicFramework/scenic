@@ -7,11 +7,29 @@ defmodule Scenic.Primitive.Style.Paint.Image do
   alias Scenic.Assets.Static
 
   @moduledoc """
-  Fill a primitive with an image from Scenic.Cache.Static.Texture
+  Fill a primitive with an image from Scenic.Assets.Static
 
   ## Format
 
-  * `{:image, id}` - Fill with the static image indicated by `id`
+  `{:image, id}`
+
+  Fill with the static image indicated by `id`
+
+  The `id` can be either the name of the file when the static assets library was built
+  or an alias that you set up in your conig. The following example has the alias
+  `:parrot` pointing to the `"images/parrot.png"` file, so both fills are identical.
+
+  ```elixir
+  Graph.build()
+    |> rect({100, 50}, fill: {:image, "images/parrot.jpg"})
+    |> rect({100, 50}, fill: {:image, :parrot})
+  ```
+
+  Note that this is a fill, and the images will repeat automatically if the primitive
+  being filled is larger than the source image.
+
+  If you want more control, such as no repeats, a subsection of the image, or scaling
+  the image up or down when you draw it, use the `Sprites` primitive.
   """
 
   def validate({:image, id}) when is_atom(id) or is_bitstring(id) do
@@ -25,7 +43,7 @@ defmodule Scenic.Primitive.Style.Paint.Image do
     end
   end
 
-  def validate(invalid), do: err_invalid(invalid)
+  def validate(data), do: err_invalid(data)
 
   defp err_is_a_font(_) do
     {
@@ -78,7 +96,7 @@ defmodule Scenic.Primitive.Style.Paint.Image do
     }
   end
 
-  def err_invalid(_) do
+  defp err_invalid(_) do
     {
       :error,
       """

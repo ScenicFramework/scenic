@@ -24,10 +24,11 @@ defmodule Scenic.Primitive.Style.Paint.Color do
 
   Example:
 
-      graph
-      |> rect({100,200}, fill: {:color, :blue})
-      |> rect({100,200}, fill: {:color, {1,2,3, 255}})
-
+  ```elixir
+  graph
+    |> rect( {100,200}, fill: {:color, :blue} )
+    |> rect( {100,200}, fill: {:color, {1, 2, 3, 255}} )
+  ```
 
 
   ## Shortcut Format
@@ -36,6 +37,14 @@ defmodule Scenic.Primitive.Style.Paint.Color do
 
   Because the color paint type is used so frequently, you can simply pass in any valid
   color and the `:fill` style will infer that it is to be used as paint.
+
+  Example:
+
+  ```elixir
+  graph
+    |> rect( {100,200}, fill: :blue )
+    |> rect( {100,200}, fill: {1, 2, 3, 255} )
+  ```
   """
 
   # ============================================================================

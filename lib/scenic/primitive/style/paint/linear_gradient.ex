@@ -5,11 +5,19 @@
 
 defmodule Scenic.Primitive.Style.Paint.LinearGradient do
   @moduledoc """
-  Fill a primitive with a linear gradient
+  Fill a primitive with a linear gradient between two colors
 
   ## Format
 
   `{:linear, {start_x, start_y, end_x, end_y, color_start, color_end}}`
+
+  This example fills with a smooth linear gradient that goes from blue in the upper left
+  corner of the rect to yellow in the lower right corner.
+
+  ```elixir
+  Graph.build()
+    |> rect({100, 50}, fill: {:linear, {0, 0, 100, 50, :blue, :yellow}})
+  ```
   """
 
   alias Scenic.Primitive.Style.Paint.Color

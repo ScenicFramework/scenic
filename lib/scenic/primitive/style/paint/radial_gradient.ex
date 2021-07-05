@@ -5,12 +5,21 @@
 
 defmodule Scenic.Primitive.Style.Paint.RadialGradient do
   @moduledoc """
-  Fill a primitive with a radial gradient
+  Fill a primitive with a radial gradient between two colors
 
-  ## Full Format
+  ## Format
 
   `{:radial, {center_x, center_y, inner_radius, outer_radius, color_start, color_end}}`
+
+  This example fills a rect with a smooth linear gradient that goes from blue in the
+  center and transitions to yellow in an outer ring.
+
+  ```elixir
+  Graph.build()
+    |> rect({100, 50}, fill: {:linear, {50, 25, 10, 45, :blue, :yellow}})
+  ```
   """
+
 
   alias Scenic.Primitive.Style.Paint.Color
 
