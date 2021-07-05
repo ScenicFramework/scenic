@@ -2,15 +2,18 @@ defmodule Scenic.Component.Input.RadioGroup do
   @moduledoc """
   Add a radio group to a graph
 
+  The data format for RadioGroup has changed since v0.10!
+
   ## Data
 
-  `radio_buttons`
+  `{radio_buttons, checked_id}`
 
   * `radio_buttons` must be a list of radio button data. See below.
+  * `checked_id` Is the id of the currently selected radio from the list.
 
   Radio button data:
 
-  `{text, radio_id, checked? \\\\ false}`
+  `{text, radio_id}`
 
   * `text` - must be a bitstring
   * `button_id` - can be any term you want. It will be passed back to you as the
@@ -65,11 +68,12 @@ defmodule Scenic.Component.Input.RadioGroup do
   The following example creates a radio group and positions it on the screen.
 
       graph
-      |> radio_group([
+      |> radio_group({[
           {"Radio A", :radio_a},
-          {"Radio B", :radio_b, true},
+          {"Radio B", :radio_b},
           {"Radio C", :radio_c},
-        ], id: :radio_group_id, translate: {20, 20})
+        ], :radio_b}, 
+        id: :radio_group_id, translate: {20, 20})
   """
 
   use Scenic.Component, has_children: true

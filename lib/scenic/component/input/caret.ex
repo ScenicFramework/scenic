@@ -7,13 +7,22 @@ defmodule Scenic.Component.Input.Caret do
   @moduledoc """
   Add a blinking text-input caret to a graph.
 
-
   ## Data
 
-  `{height, color}`
+  `height`
 
-  * `height` - integer greater than zero
+  * `height` - The height of the caret. The caller (TextEdit) calculates this based
+    on its :font_size (often the same thing).
+
+  ## Options
   * `color` - any [valid color](Scenic.Primitive.Style.Paint.Color.html).
+
+  You can change the color of the caret by setting the color option
+
+  ```elixir
+  Graph.build()
+    |> caret( 20, color: :white )
+  ```
 
   ## Usage
 
@@ -21,11 +30,14 @@ defmodule Scenic.Component.Input.Caret do
   although you are free to do so if it fits your needs. There is no short-cut helper
   function so you will need to add it to the graph manually.
 
-  The following example adds a caret to a graph.
+  The following example adds a blue caret to a graph.
 
-      graph
-      |> Caret.add_to_graph({height, theme.text}, id: :caret)
+  ```elixir
+  graph
+    |> Caret.add_to_graph(24, id: :caret, color: :blue )
+  ```
   """
+
   use Scenic.Component, has_children: false
 
   import Scenic.Primitives,
