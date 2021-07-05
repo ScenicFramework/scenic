@@ -24,8 +24,11 @@ defmodule Scenic.Assets.StaticTest do
     assert Scenic.Test.Assets.otp_app() == :scenic
     %{} = lib = Scenic.Test.Assets.library()
 
-    {@roboto_hash, @roboto_hash_str, {:font, %FontMetrics{}}} = lib["fonts/roboto.ttf"]
-    {@parrot_hash, @parrot_hash_str, {:image, {62, 114, "image/png"}}} = lib["images/parrot.png"]
+    {@roboto_hash, @roboto_hash_str, {Static.Font, %FontMetrics{}}} = lib["fonts/roboto.ttf"]
+
+    {@parrot_hash, @parrot_hash_str, {Static.Image, {62, 114, "image/png"}}} =
+      lib["images/parrot.png"]
+
     refute lib["missing.png"]
   end
 
@@ -62,11 +65,11 @@ defmodule Scenic.Assets.StaticTest do
   end
 
   test "fetch returns the metadata" do
-    {:ok, {:font, %FontMetrics{}}} = Static.fetch("fonts/roboto.ttf")
-    {:ok, {:font, %FontMetrics{}}} = Static.fetch(:roboto)
+    {:ok, {Static.Font, %FontMetrics{}}} = Static.fetch("fonts/roboto.ttf")
+    {:ok, {Static.Font, %FontMetrics{}}} = Static.fetch(:roboto)
 
-    {:ok, {:image, {62, 114, "image/png"}}} = Static.fetch("images/parrot.png")
-    {:ok, {:image, {62, 114, "image/png"}}} = Static.fetch(:test_parrot)
+    {:ok, {Static.Image, {62, 114, "image/png"}}} = Static.fetch("images/parrot.png")
+    {:ok, {Static.Image, {62, 114, "image/png"}}} = Static.fetch(:test_parrot)
 
     assert Static.fetch("images/missing") == :error
     assert Static.fetch(:missing) == :error

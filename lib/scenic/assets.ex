@@ -12,17 +12,17 @@ defmodule Scenic.Assets do
 
   """
 
-  @type image_format ::
-          :file
-          | :g
-          | :ga
-          | :rgb
-          | :rgba
+  # @type image_format ::
+  #         :file
+  #         | :g
+  #         | :ga
+  #         | :rgb
+  #         | :rgba
 
-  @type image_meta ::
-          {:image, {width :: integer, height :: integer, format :: image_format()}}
+  # @type image_meta ::
+  #         {Scenic.Assets.Static.Font, {width :: integer, height :: integer, format :: image_format()}}
 
-  @type font_meta :: {:font, meta :: map}
+  # @type font_meta :: {Scenic.Assets.Static.Font, meta :: map}
 
-  @type static_meta :: font_meta | image_meta
+  # @type static_meta :: font_meta | image_meta
 end

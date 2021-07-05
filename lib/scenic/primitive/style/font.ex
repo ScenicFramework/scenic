@@ -60,10 +60,10 @@ defmodule Scenic.Primitive.Style.Font do
 
   def validate(id) when is_atom(id) or is_bitstring(id) do
     with {:ok, id_str} <- Static.resolve_id(id),
-         {:ok, {:font, _}} <- Static.fetch(id_str) do
+         {:ok, {Static.Font, _}} <- Static.fetch(id_str) do
       {:ok, id_str}
     else
-      {:ok, {:image, _}} -> err_is_an_image(id)
+      {:ok, {Static.Image, _}} -> err_is_an_image(id)
       {:error, :not_mapped} -> err_not_mapped(id)
       {:error, :not_found} -> err_missing(id)
     end

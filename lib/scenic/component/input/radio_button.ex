@@ -71,7 +71,7 @@ defmodule Scenic.Component.Input.RadioButton do
       |> Theme.normalize()
 
     # font related info
-    {:ok, {:font, fm}} = Static.fetch(@default_font)
+    {:ok, {Static.Font, fm}} = Static.fetch(@default_font)
     ascent = FontMetrics.ascent(@default_font_size, fm)
     fm_width = FontMetrics.width(text, @default_font_size, fm)
     space_width = FontMetrics.width(' ', @default_font_size, fm)

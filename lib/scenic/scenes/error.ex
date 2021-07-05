@@ -41,7 +41,7 @@ defmodule Scenic.Scenes.Error do
     # Get the viewport width
     {width, _} = scene.viewport.size
 
-    {:ok, {:font, fm}} = Static.fetch(@default_font)
+    {:ok, {Static.Font, fm}} = Static.fetch(@default_font)
     wrap_width = width - @margin_h * 2
 
     head_msg = module_msg <> @mod_header

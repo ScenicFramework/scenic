@@ -580,7 +580,7 @@ defmodule Scenic.Script do
   def fill_image(ops, id) when is_atom(id) or is_bitstring(id) do
     id =
       with {:ok, id_str} <- Static.resolve_id(id),
-           {:ok, {:image, _}} <- Static.fetch(id_str) do
+           {:ok, {Static.Image, _}} <- Static.fetch(id_str) do
         id_str
       else
         err ->
@@ -654,7 +654,7 @@ defmodule Scenic.Script do
   def stroke_image(ops, id) when is_atom(id) or is_bitstring(id) do
     id =
       with {:ok, id_str} <- Static.resolve_id(id),
-           {:ok, {:image, _}} <- Static.fetch(id_str) do
+           {:ok, {Static.Image, _}} <- Static.fetch(id_str) do
         id_str
       else
         err ->
@@ -690,7 +690,7 @@ defmodule Scenic.Script do
   def font(ops, id) when is_atom(id) or is_bitstring(id) do
     id =
       with {:ok, id_str} <- Static.resolve_id(id),
-           {:ok, {:font, _}} <- Static.fetch(id_str) do
+           {:ok, {Static.Font, _}} <- Static.fetch(id_str) do
         id_str
       else
         err ->
@@ -898,7 +898,7 @@ defmodule Scenic.Script do
 
   defp serialize_op({:draw_sprites, {id, cmds}}) do
     <<hash::binary-size(32)>> =
-      with {:ok, {:image, _}} <- Static.fetch(id),
+      with {:ok, {Static.Image, _}} <- Static.fetch(id),
            {:ok, bin_hash, _str_hash} <- Static.to_hash(id) do
         bin_hash
       else
@@ -1238,7 +1238,7 @@ defmodule Scenic.Script do
 
   defp serialize_op({:fill_image, id}) do
     <<hash::binary-size(32)>> =
-      with {:ok, {:image, _}} <- Static.fetch(id),
+      with {:ok, {Static.Image, _}} <- Static.fetch(id),
            {:ok, bin_hash, _str_hash} <- Static.to_hash(id) do
         bin_hash
       else
@@ -1354,7 +1354,7 @@ defmodule Scenic.Script do
 
   defp serialize_op({:stroke_image, id}) do
     <<hash::binary-size(32)>> =
-      with {:ok, {:image, _}} <- Static.fetch(id),
+      with {:ok, {Static.Image, _}} <- Static.fetch(id),
            {:ok, bin_hash, _str_hash} <- Static.to_hash(id) do
         bin_hash
       else
@@ -1455,7 +1455,7 @@ defmodule Scenic.Script do
 
   defp serialize_op({:font, id}) do
     <<hash::binary-size(32)>> =
-      with {:ok, {:font, _}} <- Static.fetch(id),
+      with {:ok, {Static.Font, _}} <- Static.fetch(id),
            {:ok, bin_hash, _str_hash} <- Static.to_hash(id) do
         bin_hash
       else

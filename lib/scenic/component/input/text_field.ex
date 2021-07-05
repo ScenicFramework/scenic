@@ -139,11 +139,6 @@ defmodule Scenic.Component.Input.TextField do
       (opts[:theme] || Theme.preset(:dark))
       |> Theme.normalize()
 
-    # get the font metrics
-    # {:ok, {:font, fm}} = Static.fetch( @default_font )
-    # ascent = FontMetrics.ascent(@default_font_size, fm)
-    # char_width = FontMetrics.width(" ", @default_font_size, fm)
-
     # get the text_field specific opts
     hint = opts[:hint] || @default_hint
     width = opts[:width] || opts[:w] || @default_width

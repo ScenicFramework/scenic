@@ -149,10 +149,10 @@ defmodule Scenic.Primitive.Sprites do
 
   defp validate_image(id) do
     with {:ok, id_str} <- Static.resolve_id(id),
-         {:ok, {:image, _}} <- Static.fetch(id_str) do
+         {:ok, {Static.Image, _}} <- Static.fetch(id_str) do
       {:ok, id_str}
     else
-      {:ok, {:font, _}} -> {:error, :font}
+      {:ok, {Static.Font, _}} -> {:error, :font}
       {:error, :not_mapped} -> {:error, :alias}
       {:error, :not_found} -> {:error, :not_found}
     end

@@ -154,6 +154,8 @@ defmodule Scenic.Assets.Static do
   in the assets you want to use directly.
   """
 
+  alias Scenic.Assets.Static
+
   # import IEx
 
   @type id :: String.t() | atom
@@ -167,6 +169,12 @@ defmodule Scenic.Assets.Static do
     roboto: "fonts/roboto.ttf",
     roboto_mono: "fonts/roboto_mono.ttf"
   ]
+
+  @callback ingest(bin :: binary, meta :: {asset_type :: atom, data :: any}) ::
+              {:ok, binary}
+              | :error
+
+  @optional_callbacks ingest: 2
 
   # ===========================================================================
   defmodule Error do
@@ -182,7 +190,9 @@ defmodule Scenic.Assets.Static do
   # the using macro for scenes adopting this behavior
   defmacro __using__(using_opts \\ []) do
     quote do
-      @library Scenic.Assets.Static.build(unquote(using_opts))
+      @behaviour Scenic.Assets.Static
+
+      @library Scenic.Assets.Static.build(__MODULE__, unquote(using_opts))
       def library(), do: @library
       def otp_app(), do: unquote(using_opts[:otp_app])
 
@@ -382,13 +392,9 @@ defmodule Scenic.Assets.Static do
     end
   end
 
-  # ===========================================================================
-  # called at compile time...
-  # intended for internal use
-
   # --------------------------------------------------------
   @doc false
-  def build(opts) when is_list(opts) do
+  def build(mod, opts) when is_list(opts) do
     if !opts[:otp_app] || !is_atom(opts[:otp_app]) do
       raise "use Scenic.Assets requires a valid :otp_app option"
     end
@@ -413,74 +419,50 @@ defmodule Scenic.Assets.Static do
     |> Enum.reduce(%{}, fn path, lib ->
       case File.dir?(path) do
         true -> lib
-        false -> add_file(lib, path, src, dst, opts)
+        false -> ingest_file(mod, lib, path, src, dst)
       end
     end)
   end
 
-  defp add_file(library, path, src, dst, opts) do
-    # load the source binary data and generate the hash.
-    bin = File.read!(path)
-    bin_hash = :crypto.hash(@hash_type, bin)
-    str_hash = Base.url_encode64(bin_hash, padding: false)
-
-    id = Path.relative_to(path, src)
-
-    # parse the binary to generate the metadata
-    # if this fails, then the file is an unknown type and we should output
-    # a warning and skip the file.
-    case parse_meta(bin, path, opts) do
-      {:ok, meta, copy?} ->
-        # write out the binary if requested
-        with true <- copy?,
-             file_out <- Path.join(dst, str_hash),
-             false <- File.exists?(file_out) do
-          File.write!(file_out, bin)
-        end
-
-        # the id is the path minus the "assets" folder at the start
-        Map.put(library, id, {bin_hash, str_hash, meta})
-
-      _ ->
-        library
-    end
-  end
-
-  defp parse_meta(bin, path, opts) do
-    with :not_parsed <- parse_font(bin, path, opts),
-         :not_parsed <- parse_image(path) do
-      :not_parsed
-    else
-      {:ok, meta, copy?} -> {:ok, meta, copy?}
-    end
-  end
-
-  # The parse_*** functions attempt to parse the binary
-  # if they succeed, they return a metadata object.
-  # if they fail, return nil
-  # also return guidance on if the file should be copied
-  defp parse_font(bin, path, opts) do
-    case TruetypeMetrics.parse(bin, path) do
-      {:ok, meta} ->
-        copy? =
-          case opts[:copy_font] do
-            false -> false
-            _ -> true
-          end
-
-        {:ok, {:font, meta}, copy?}
-
-      _ ->
-        :not_parsed
-    end
-  end
-
-  defp parse_image(path) do
+  defp ingest_file(mod, library, path, src, dst) do
     with {:ok, bin} <- File.read(path),
-         {mime, width, height, _type} <- ExImageInfo.info(bin) do
-      {:ok, {:image, {width, height, mime}}, true}
+         {:ok, meta} <- parse_bin(bin),
+         {:ok, bin, meta} <- transform_bin(bin, meta, mod) do
+      id = Path.relative_to(path, src)
+      bin_hash = :crypto.hash(@hash_type, bin)
+      str_hash = Base.url_encode64(bin_hash, padding: false)
+
+      Path.join(dst, str_hash) |> File.write!(bin)
+      Map.put(library, id, {bin_hash, str_hash, meta})
     else
-      _ -> :not_parsed
+      _ -> library
     end
   end
+
+  defp parse_bin(bin) do
+    # parse the file, gen the entry, allow the asset lib to transform it
+    with :error <- Static.Image.parse_meta(bin),
+         :error <- Static.Font.parse_meta(bin) do
+      :error
+    else
+      {:ok, meta} -> {:ok, meta}
+    end
+  end
+
+  defp transform_bin(bin, meta, mod) do
+    case Kernel.function_exported?(mod, :ingest, 2) do
+      true -> do_transform_bin(bin, meta, mod)
+      false -> {:ok, bin, meta}
+    end
+  end
+
+  defp do_transform_bin(bin, meta, mod) do
+    with {:ok, bin} <- mod.ingest(bin, meta),
+         {:ok, meta} <- parse_bin(bin) do
+      {:ok, bin, meta}
+    else
+      _ -> :error
+    end
+  end
+
 end
