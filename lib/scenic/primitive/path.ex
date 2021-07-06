@@ -28,18 +28,27 @@ defmodule Scenic.Primitive.Path do
 
   * `:begin` - start a new path segment
   * `:close_path` - draw a line back to the start of the current segment
-  * `:solid` - mark the current segment as something that will be filled
-  * `:hole` - mark the current segment as something that cut out of other segments
   * `{:move_to, x, y}` - move the current draw position
   * `{:line_to, x, y}` - draw a line from the current position to a new location.
   * `{:bezier_to, c1x, c1y, c2x, c2y, x, y}` - draw a bezier curve from the current position to a new location.
   * `{:quadratic_to, cx, cy, x, y}` - draw a quadratic curve from the current position to a new location.
   * `{:arc_to, x1, y1, x2, y2, radius}` - draw an arc from the current position to a new location.
 
-  ## Usage
+  Example
 
-  You should add/modify primitives via the helper functions in
-  [`Scenic.Primitives`](Scenic.Primitives.html#line/3)
+  ```elixir
+  graph
+    |> path( [
+        :begin,
+        {:move_to, 0, 0},
+        {:bezier_to, 0, 20, 0, 50, 40, 50},
+        {:bezier_to, 60, 50, 60, 20, 80, 20},
+        {:bezier_to, 100, 20, 110, 0, 120, 0},
+        {:bezier_to, 140, 0, 160, 30, 160, 50}
+      ],
+      stroke: {2, :yellow}
+    )
+  ```
   """
 
   use Scenic.Primitive
@@ -197,11 +206,11 @@ defmodule Scenic.Primitive.Path do
   generate a larger script and is called when a graph is compiled.
 
   Note: Path is a "Meta" primitive. It isn't really a primitive that is represented in a
-  draw script. Instead, it generates it's on mini-script, which is included inline to the
+  draw script. Instead, it generates it's own mini-script, which is included inline to the
   graph it is contained in.
 
   Note: The compiled script is backwards. This is an inline script, which means
-  it is inserted into a larger script as part of the graph compile process nad
+  it is inserted into a larger script as part of the graph compile process and
   Script.finish() will be called on that later.
   """
   @impl Primitive
