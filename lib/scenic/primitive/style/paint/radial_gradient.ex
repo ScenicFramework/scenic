@@ -20,7 +20,6 @@ defmodule Scenic.Primitive.Style.Paint.RadialGradient do
   ```
   """
 
-
   alias Scenic.Primitive.Style.Paint.Color
 
   # --------------------------------------------------------

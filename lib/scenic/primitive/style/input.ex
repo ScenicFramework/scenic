@@ -15,7 +15,7 @@ defmodule Scenic.Primitive.Style.Input do
   ```
 
   ### Data Format
-  
+
   * `true` - Positional input is tested against this primitive
   * `false` - Input is not tested against this primitive. This is the default value.
 

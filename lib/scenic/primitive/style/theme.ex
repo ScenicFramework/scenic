@@ -80,7 +80,6 @@ defmodule Scenic.Primitive.Style.Theme do
     text: @text
   }
 
-
   # ============================================================================
   # data verification and serialization
   @doc false

@@ -15,7 +15,7 @@ defmodule Scenic.Primitive.Style.Hidden do
   ```
 
   ### Data Format
-  
+
   * `true` - "Hide" the primitive. Drawing is skipped.
   * `false` - "Show" the primitive. Drawing is run.
 

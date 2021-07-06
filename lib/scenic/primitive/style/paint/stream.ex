@@ -16,7 +16,7 @@ defmodule Scenic.Primitive.Style.Paint.Stream do
   This example fills a rect with the contents of the `"color_cycle"` stream.
   When the source of the stream updates the bitmap it contains, the rect's
   fill will automatically be updated.
- 
+
   ```elixir
   Graph.build()
     |> rect( {100, 50}, fill: {:stream, "color_cycle"} )

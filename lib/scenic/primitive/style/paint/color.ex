@@ -101,5 +101,4 @@ defmodule Scenic.Primitive.Style.Paint.Color do
     https://hexdocs.pm/scenic/Scenic.Color.html#module-named-colors#{IO.ANSI.default_color()}
     """
   end
-
 end
