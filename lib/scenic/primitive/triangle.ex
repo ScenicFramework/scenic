@@ -79,7 +79,7 @@ defmodule Scenic.Primitive.Triangle do
   Compile the data for this primitive into a mini script. This can be combined with others to
   generate a larger script and is called when a graph is compiled.
   """
-  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
+  @spec compile(primitive :: Primitive.t(), styles :: Style.t()) :: Script.t()
   @impl Primitive
   def compile(%Primitive{module: __MODULE__, data: {{x0, y0}, {x1, y1}, {x2, y2}}}, styles) do
     Script.draw_triangle([], x0, y0, x1, y1, x2, y2, Script.draw_flag(styles))

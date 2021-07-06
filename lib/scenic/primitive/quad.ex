@@ -83,7 +83,7 @@ defmodule Scenic.Primitive.Quad do
   generate a larger script and is called when a graph is compiled.
   """
   @impl Primitive
-  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
+  @spec compile(primitive :: Primitive.t(), styles :: Style.t()) :: Script.t()
   def compile(
         %Primitive{module: __MODULE__, data: {{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}}},
         styles

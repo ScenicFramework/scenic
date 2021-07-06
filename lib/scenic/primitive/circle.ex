@@ -69,7 +69,7 @@ defmodule Scenic.Primitive.Circle do
   Compile the data for this primitive into a mini script. This can be combined with others to
   generate a larger script and is called when a graph is compiled.
   """
-  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
+  @spec compile(primitive :: Primitive.t(), styles :: Style.t()) :: Script.t()
   @impl Primitive
   def compile(%Primitive{module: __MODULE__, data: radius}, styles) do
     Script.draw_circle([], radius, Script.draw_flag(styles))

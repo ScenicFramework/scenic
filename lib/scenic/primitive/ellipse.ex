@@ -77,7 +77,7 @@ defmodule Scenic.Primitive.Ellipse do
   generate a larger script and is called when a graph is compiled.
   """
   @impl Primitive
-  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
+  @spec compile(primitive :: Primitive.t(), styles :: Style.t()) :: Script.t()
   def compile(%Primitive{module: __MODULE__, data: {radius_1, radius_2}}, styles) do
     Script.draw_ellipse([], radius_1, radius_2, Script.draw_flag(styles))
   end

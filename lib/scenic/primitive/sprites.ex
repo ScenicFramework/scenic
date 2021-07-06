@@ -190,7 +190,7 @@ defmodule Scenic.Primitive.Sprites do
   # compiling a script is a special case and is handled in Scenic.ViewPort.GraphCompiler
   @doc false
   @impl Primitive
-  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
+  @spec compile(primitive :: Primitive.t(), styles :: Style.t()) :: Script.t()
   def compile(%Primitive{module: __MODULE__, data: {image, cmds}}, _styles) do
     Script.draw_sprites([], image, cmds)
   end

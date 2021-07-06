@@ -76,7 +76,7 @@ defmodule Scenic.Primitive do
   @callback validate(data :: any) :: {:ok, data :: any} | {:error, String.t()}
 
   @callback valid_styles() :: list
-  @callback compile(primitive :: Primitive.t(), styles :: Style.m()) ::
+  @callback compile(primitive :: Primitive.t(), styles :: Style.t()) ::
               script :: Scenic.Script.t()
 
   # @callback info(data :: any) :: bitstring

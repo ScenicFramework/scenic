@@ -52,7 +52,7 @@ defmodule Scenic.Primitive.Style do
 
   # import IEx
 
-  @type m :: %{atom => any}
+  @type t :: %{atom => any}
 
   @opts_map %{
     :input => Style.Input,

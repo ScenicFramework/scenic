@@ -205,7 +205,7 @@ defmodule Scenic.Primitive.Path do
   Script.finish() will be called on that later.
   """
   @impl Primitive
-  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
+  @spec compile(primitive :: Primitive.t(), styles :: Style.t()) :: Script.t()
   def compile(%Primitive{module: __MODULE__, data: commands}, styles) do
     ops =
       Enum.reduce(commands, [], fn

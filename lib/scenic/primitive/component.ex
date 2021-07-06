@@ -82,7 +82,7 @@ defmodule Scenic.Primitive.Component do
   # compiling a component is a special case and is handled in Scenic.ViewPort.GraphCompiler
   @doc false
   @impl Primitive
-  @spec compile(primitive :: Primitive.t(), styles :: Style.m()) :: Script.t()
+  @spec compile(primitive :: Primitive.t(), styles :: Style.t()) :: Script.t()
   def compile(%Primitive{module: __MODULE__}, _styles) do
     raise "compiling a Component is a special case and is handled in Scenic.ViewPort.GraphCompiler"
   end
