@@ -16,7 +16,7 @@ defmodule Scenic.Primitive.Transform.Pin do
   `{pin_x, pin_y}`  
 
   Example:
-  
+
   ```elixir
   graph
     |> text( "Rotated!", rotate: 1.2, pin: {10, 20} )
