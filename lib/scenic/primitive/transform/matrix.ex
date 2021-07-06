@@ -12,14 +12,16 @@ defmodule Scenic.Primitive.Transform.Matrix do
 
   Example:
 
-      @matrix [ 0, 1, 2, 3,
-                4, 5, 6, 7,
-                8, 9, 10, 11,
-                12, 13, 14, 15 ]
-      |> Scenic.Math.Matrix.Matrix.Utils.to_binary()
+  ```elixir
+  @matrix [ 0, 1, 2, 3,
+            4, 5, 6, 7,
+            8, 9, 10, 11,
+            12, 13, 14, 15 ]
+    |> Scenic.Math.Matrix.Matrix.Utils.to_binary()
 
-      graph
-      |> text("Transformer!", matrix: @matrix)
+  graph
+    |> text("Transformer!", matrix: @matrix)
+  ```
   """
 
   use Scenic.Primitive.Transform

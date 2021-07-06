@@ -17,11 +17,14 @@ defmodule Scenic.Primitive.Transform.Rotate do
   [`:pin`](Scenic.Primitive.Transform.Pin.html) that you assign explicitly.
 
   Example:
-      graph
-      |> text("Rotated!", rotate: 1.2)
-      |> text("Rotated!", rotate: 1.2, pin: {10, 20})
 
-  ## Shortcut
+  ```elixir
+  graph
+    |> text("Rotated!", rotate: 1.2)
+    |> text("Rotated!", rotate: 1.2, pin: {10, 20})
+  ```
+
+  ### Shortcut
 
   Rotation is common enough that you can use `:r` as a shortcut.
 

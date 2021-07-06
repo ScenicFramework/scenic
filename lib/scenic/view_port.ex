@@ -625,7 +625,7 @@ defmodule Scenic.ViewPort do
     # record the root transform of the main graph
     main_tx =
       main_graph.primitives[0].transforms
-      |> Scenic.Primitive.Transform.calculate_local()
+      |> Scenic.Primitive.Transform.combine()
 
     state = Map.put(state, :main_tx, main_tx)
 
@@ -1655,7 +1655,7 @@ defmodule Scenic.ViewPort do
 
       txs ->
         # multiply the local txs into the tx_parent
-        Math.Matrix.mul(tx_parent, Transform.calculate_local(txs))
+        Math.Matrix.mul(tx_parent, Transform.combine(txs))
     end
   end
 

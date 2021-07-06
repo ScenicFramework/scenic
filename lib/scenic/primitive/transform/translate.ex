@@ -12,16 +12,22 @@ defmodule Scenic.Primitive.Transform.Translate do
   `{x, y}` - move the primitive by the given amounts
 
   Example:
-      graph
-      |> text("Scaled!", translate: {10, 20})
+
+  ```elixir
+  graph
+    |> text("Scaled!", translate: {10, 20})
+  ```
 
   ## Shortcut
 
   Translating is common enough that you can use `:t` as a shortcut.
 
   Example:
-      graph
-      |> text("Scaled!", t: {10, 20})
+
+  ```elixir
+  graph
+    |> text("Scaled!", t: {10, 20})
+  ```
   """
 
   use Scenic.Primitive.Transform

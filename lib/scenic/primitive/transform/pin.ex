@@ -13,11 +13,14 @@ defmodule Scenic.Primitive.Transform.Pin do
 
   Use the `:pin` option to set it explicitly
 
-  `{pin_x, pin_y }`  
+  `{pin_x, pin_y}`  
 
   Example:
-      graph
-      |> text("Rotated!", rotate: 1.2, pin: {10, 20})
+  
+  ```elixir
+  graph
+    |> text( "Rotated!", rotate: 1.2, pin: {10, 20} )
+  ```
   """
   use Scenic.Primitive.Transform
 

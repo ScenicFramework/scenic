@@ -16,17 +16,22 @@ defmodule Scenic.Primitive.Transform.Scale do
   [`:pin`](Scenic.Primitive.Transform.Pin.html) that you assign explicitly.
 
   Example:
-      graph
-      |> text("Scaled!", scale: 1.2)
-      |> text("Scaled!", scale: {1.0, 1.2}, pin: {10, 20})
 
-  ## Shortcut
+  ```elixir
+  graph
+    |> text("Scaled!", scale: 1.2)
+    |> text("Scaled!", scale: {1.0, 1.2}, pin: {10, 20})
+  ```
+
+  ### Shortcut
 
   Scaling is common enough that you can use `:s` as a shortcut.
 
   Example:
-      graph
-      |> text("Scaled!", s: 1.2)
+  ```elixir
+  graph
+    |> text("Scaled!", s: 1.2)
+  ```
   """
   use Scenic.Primitive.Transform
 

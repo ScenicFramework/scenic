@@ -32,16 +32,16 @@ defmodule Scenic.Primitive.TransformTest do
   # ============================================================================
   # calculate the local matrix
 
-  test "calculate_local returns nil if the transform is nil" do
-    assert Transform.calculate_local(nil) == nil
+  test "combine returns nil if the transform is nil" do
+    assert Transform.combine(nil) == nil
   end
 
-  test "calculate_local returns nil if only pin is set" do
+  test "combine returns nil if only pin is set" do
     only_pin = %{pin: {10, 20}}
-    assert Transform.calculate_local(only_pin) == nil
+    assert Transform.combine(only_pin) == nil
   end
 
-  test "calculate_local calculates the local matrix in the right order" do
+  test "combine calculates the local matrix in the right order" do
     # first calc all the matrices
     mx_pin = Matrix.build_translation(@pin)
     mx_inv_pin = Matrix.build_translation(Vector2.invert(@pin))
@@ -60,6 +60,6 @@ defmodule Scenic.Primitive.TransformTest do
       |> Matrix.mul(mx_inv_pin)
 
     # calcualte the normal way
-    assert Transform.calculate_local(@tx) == expected
+    assert Transform.combine(@tx) == expected
   end
 end

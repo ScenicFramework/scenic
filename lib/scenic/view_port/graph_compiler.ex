@@ -459,7 +459,7 @@ defmodule Scenic.ViewPort.GraphCompiler do
     mx =
       txs
       |> Map.put(:pin, pin)
-      |> Scenic.Primitive.Transform.calculate_local()
+      |> Scenic.Primitive.Transform.combine()
 
     <<
       m00::float-size(32)-native,

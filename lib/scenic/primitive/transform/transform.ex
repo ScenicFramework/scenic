@@ -27,10 +27,12 @@ defmodule Scenic.Primitive.Transform do
 
   You apply transforms to a primitive the same way you specify styles.
 
-      graph =
-        Graph.build
-        |> circle( 100, fill: {:color, :green}, translate: {200, 200} )
-        |> ellipse( {40, 60, fill: {:color, :red}, rotate: 0.4, translate: {100, 100} )
+  ```elixir
+  graph =
+    Graph.build
+    |> circle( 100, fill: {:color, :green}, translate: {200, 200} )
+    |> ellipse( {40, 60, fill: {:color, :red}, rotate: 0.4, translate: {100, 100} )
+  ```
 
   Don't worry about the order you apply transforms to a single object. Scenic will multiply them together in the correct way when it comes time to render them.
   """
@@ -72,7 +74,10 @@ defmodule Scenic.Primitive.Transform do
     :matrix
   ]
 
+  @doc false
   def opts_map(), do: @opts_map
+
+  @doc false
   def opts_schema(), do: @opts_schema
 
   # ===========================================================================
@@ -83,6 +88,7 @@ defmodule Scenic.Primitive.Transform do
     end
   end
 
+  @doc false
   def valid(), do: @primitive_transforms
 
   # ============================================================================
@@ -99,22 +105,22 @@ defmodule Scenic.Primitive.Transform do
   You will not normally need to use this function. It is used internally by the input system.
   """
 
-  def calculate_local(txs)
+  def combine(txs)
 
-  def calculate_local(nil), do: nil
-  def calculate_local(txs) when txs == %{}, do: nil
+  def combine(nil), do: nil
+  def combine(txs) when txs == %{}, do: nil
 
-  def calculate_local(%{pin: _} = txs) do
+  def combine(%{pin: _} = txs) do
     # look for case where only the pin is set
     case Enum.count(txs) do
       1 -> nil
-      _ -> do_calculate_local(txs)
+      _ -> do_combine(txs)
     end
   end
 
-  def calculate_local(txs), do: do_calculate_local(txs)
+  def combine(txs), do: do_combine(txs)
 
-  defp do_calculate_local(txs) do
+  defp do_combine(txs) do
     # start with identity - which is like multiplying by 1
     Matrix.identity()
     |> multiply_partial(:matrix, txs[:matrix])
