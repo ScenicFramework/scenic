@@ -9,14 +9,16 @@ defmodule Scenic.Primitive.Style.Scissor do
 
   Example:
 
-      graph
-      |> triangle( {{0,40},{40,40},{40,0}}
-        miter_limit: 2,
-        fill: :green,
-        scissor: {20, 40}
-      )
+  ```elixir
+  graph
+    |> triangle( {{0,40},{40,40},{40,0}}
+      miter_limit: 2,
+      fill: :green,
+      scissor: {20, 40}
+    )
+  ```
 
-  ## Data
+  ### Data Format
 
   `{width, height}`
 
@@ -29,6 +31,7 @@ defmodule Scenic.Primitive.Style.Scissor do
   # ============================================================================
   # data verification and serialization
 
+  @doc false
   def validate({w, h}) when is_number(w) and is_number(h), do: {:ok, {w, h}}
 
   def validate(data) do

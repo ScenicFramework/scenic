@@ -9,44 +9,37 @@ defmodule Scenic.Primitive.Style.Font do
 
   Example:
 
-      graph
-      |> text("Hello World", font: :roboto)
+  ```elixir
+  graph
+    |> text( "Hello World", font: "fonts/my_fancy_font.ttf" )
+  ```
 
-  ## Data
+  ### Data Format
       
-  You can choose one of the named system fonts, or one you've loaded into the cache.
+  You can use any font loaded into your static assets library. You can also
+  refer to the font by either it's library file name, or an alias that you
+  have configured.
 
-  * `:roboto` - The standard [Roboto](https://fonts.google.com/specimen/Roboto) sans-serif font.
-  * `:roboto_mono` - The standard [Roboto Mono](https://fonts.google.com/specimen/Roboto+Mono) mono-spaced font.
+  The following example shows both ways to identify a font.
+  ```elixir
+  Graph.build()
+    |> text( "By name", font: "fonts/roboto.ttf" )
+    |> text( "By alias", font: :roboto )
+  ```
 
-  To use a font from the cache, set it's hash into the font style.
+  # Standard Fonts
 
+  You are highly encouraged to use Roboto and Roboto Mono as the standard system
+  fonts for Scenic. Aliases are automatically set up for them.
 
-  Example:
-      @my_font_path :code.priv_dir(:my_app)
-                 |> Path.join("/static/fonts/my_font.ttf")
-      @my_font_hash Scenic.Cache.Hash.file!( @my_font_path, :sha )
+  | Alias          | Font  |
+  |---------------|------------------------|
+  |  `:roboto` | "fonts/roboto.ttf" |
+  |  `:roboto_mono` | "fonts/roboto_mono.ttf" |
 
-      @graph Graph.build()
-      |> text("Hello World", font: @my_font_hash)
-
-      def init(_, _opts) do
-        # load the font into the cache
-        Scenic.Cache.File.load(@my_font_path, @my_font_hash)
-
-        {:ok, :some_state, push: @graph}
-      end
-
-  __Note 1:__ The font renderer used by Scenic is the fantastic
-  [stb_truetype](https://github.com/nothings/stb/blob/master/stb_truetype.h) library.
-  This renderer was developed for games, which is another way of saying it is not trying to
-  be the all-renderer for all fonts. Don't be surprised if you find a TrueType font
-  that doesn't work as expected.
-
-  __Note 2:__ Other font renderers might become available in the future. The named system
-  fonts should keep working, but custom TrueType fonts might need to be ported.
-
-  It is up to you to test your custom font choices to see if they work for your application.
+  It is expected that you will include the roboto.ttf and roboto_mono.ttf files
+  in your asset source folder. You don't technically need to, but if you don't
+  then those aliases won't work.
   """
 
   use Scenic.Primitive.Style
@@ -58,6 +51,7 @@ defmodule Scenic.Primitive.Style.Font do
   # ============================================================================
   # data verification and serialization
 
+  @doc false
   def validate(id) when is_atom(id) or is_bitstring(id) do
     with {:ok, id_str} <- Static.resolve_id(id),
          {:ok, {Static.Font, _}} <- Static.fetch(id_str) do

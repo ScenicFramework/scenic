@@ -7,7 +7,7 @@ defmodule Scenic.Primitive.Style.Paint.Stream do
   @moduledoc """
   Fill a primitive with an image or bitmap from Scenic.Assets.Stream
 
-  ## Format
+  ### Data Format
 
   `{:stream, key}`
 
@@ -21,8 +21,12 @@ defmodule Scenic.Primitive.Style.Paint.Stream do
   Graph.build()
     |> rect( {100, 50}, fill: {:stream, "color_cycle"} )
   ```
+
+  See the documentation for `Scenic.Assets.Stream` for more information on how to
+  create and manage streams.
   """
 
+  @doc false
   def validate(data)
 
   def validate({:stream, key}) when is_bitstring(key) do

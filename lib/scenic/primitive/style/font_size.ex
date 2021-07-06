@@ -9,11 +9,13 @@ defmodule Scenic.Primitive.Style.FontSize do
 
   Example:
 
-      graph
-      |> text("Small", font_size: 6)
-      |> text("Large", font_size: 64)
+  ```elixir
+  graph
+    |> text( "Small", font_size: 12.5 )
+    |> text( "Large", font_size: 64 )
+  ```
 
-  ## Data
+  ### Data Format
 
   Any number greater than or equal to 6.
   """
@@ -25,6 +27,7 @@ defmodule Scenic.Primitive.Style.FontSize do
   # ============================================================================
   # data verification and serialization
 
+  @doc false
   def validate(size) when is_number(size) and size > 0, do: {:ok, size}
 
   def validate(size) do

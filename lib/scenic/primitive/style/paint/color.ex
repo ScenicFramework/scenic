@@ -9,14 +9,14 @@ defmodule Scenic.Primitive.Style.Paint.Color do
 
   The color paint is used as the data for the [`:fill`](Scenic.Primitive.Style.Fill.html) style.
 
-  ## Full Format
+  ### Data Format
 
   `{:color, valid_color}`
 
   The full format is a tuple with two parameters. The first is the :color atom indicating
   that this is color paint data. The second is any valid color (see below).
 
-  ## Valid Colors
+  ### Valid Colors
 
   You can pass in any color format that is supported by the `Scenic.Color.to_rgba/1` function.
 
@@ -27,11 +27,11 @@ defmodule Scenic.Primitive.Style.Paint.Color do
   ```elixir
   graph
     |> rect( {100,200}, fill: {:color, :blue} )
-    |> rect( {100,200}, fill: {:color, {1, 2, 3, 255}} )
+    |> rect( {100,200}, stroke: {1, {:color, :green}} )
   ```
 
 
-  ## Shortcut Format
+  ### Shortcut Format
 
   `valid_color`
 
@@ -43,12 +43,27 @@ defmodule Scenic.Primitive.Style.Paint.Color do
   ```elixir
   graph
     |> rect( {100,200}, fill: :blue )
-    |> rect( {100,200}, fill: {1, 2, 3, 255} )
+    |> rect( {100,200}, stroke: {1, :green} )
   ```
   """
 
-  # ============================================================================
-  # data verification and serialization
+  # --------------------------------------------------------
+  @doc false
+  def validate({:color, color}) do
+    try do
+      {:ok, {:color, Scenic.Color.to_rgba(color)}}
+    rescue
+      _ -> {:error, error_msg({:color, color})}
+    end
+  end
+
+  def validate(color) do
+    try do
+      {:ok, Scenic.Color.to_rgba(color)}
+    rescue
+      _ -> {:error, error_msg(color)}
+    end
+  end
 
   defp error_msg({:color, color}) do
     """
@@ -87,23 +102,4 @@ defmodule Scenic.Primitive.Style.Paint.Color do
     """
   end
 
-  # --------------------------------------------------------
-  @doc """
-  Validate the format of a color or a color paint
-  """
-  def validate({:color, color}) do
-    try do
-      {:ok, {:color, Scenic.Color.to_rgba(color)}}
-    rescue
-      _ -> {:error, error_msg({:color, color})}
-    end
-  end
-
-  def validate(color) do
-    try do
-      {:ok, Scenic.Color.to_rgba(color)}
-    rescue
-      _ -> {:error, error_msg(color)}
-    end
-  end
 end

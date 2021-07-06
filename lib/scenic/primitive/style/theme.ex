@@ -5,19 +5,20 @@
 
 defmodule Scenic.Primitive.Style.Theme do
   @moduledoc """
-  The theme style is a way to bundle up default colors that are intended to be used by dynamic components invoked by a scene.
+  Themes are a way to bundle up a set of colors that are intended to be used
+  by components invoked by a scene.
 
-  There is a set of pre-defined themes.
-  You can also pass in a map of theme values.
+  There are a set of pre-defined themes.
+  You can also pass in a map of color values.
 
-  Unlike other styles, these are a guide to the components.
+  Unlike other styles, The currently set theme is given to child components.
   Each component gets to pick, choose, or ignore any colors in a given style.
 
-  ## Main Predefined Themes
+  ### Predefined Themes
   * `:dark` - This is the default and most common. Use when the background is dark.
   * `:light` - Use when the background is light colored.
 
-  ## Specialty Themes
+  ### Specialty Themes
 
   The remaining themes are designed to color the standard components and don't really
   make much sense when applied to the root of a graph. You could, but it would be...
@@ -79,11 +80,11 @@ defmodule Scenic.Primitive.Style.Theme do
     text: @text
   }
 
-  def valid_themes(), do: @themes
 
   # ============================================================================
   # data verification and serialization
-
+  @doc false
+  def validate(theme)
   def validate(:light), do: {:ok, :light}
   def validate(:dark), do: {:ok, :dark}
   def validate(:primary), do: {:ok, :primary}

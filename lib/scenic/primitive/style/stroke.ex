@@ -9,22 +9,30 @@ defmodule Scenic.Primitive.Style.Stroke do
 
   Example:
 
-      graph
-      |> triangle( {{0,40},{40,40},{40,0}}
-        miter_limit: 2,
-        stroke: {2, :green}
-      )
+  ```elixir
+  graph
+    |> triangle( {{0,40},{40,40},{40,0}}
+      miter_limit: 2,
+      stroke: {2, :green}
+    )
+  ```
 
-  ## Data
+  ### Data Format
 
-  `paint`
   `{width, paint}`
 
   * `width` - Width of the border being stroked.
-  * `:paint` - Any [valid paint](Scenic.Primitive.Style.Paint.html).
+  * `paint` - Any paint data.
 
-  Using the form `{width, paint}` is the same as setting the styles `stroke: paint_type, stroke_width: width`
+  The paint can any be any format defined by the following modules:
 
+  * `Scenic.Primitive.Style.Paint.Color`
+  * `Scenic.Primitive.Style.Paint.Image`
+  * `Scenic.Primitive.Style.Paint.LinearGradient`
+  * `Scenic.Primitive.Style.Paint.RadialGradient`
+  * `Scenic.Primitive.Style.Paint.Stream`
+
+  See the documentation for the paint module for further details.
   """
 
   use Scenic.Primitive.Style
@@ -33,6 +41,7 @@ defmodule Scenic.Primitive.Style.Stroke do
   # ============================================================================
   # data verification and serialization
 
+  @doc false
   def validate({width, paint} = data) when is_number(width) and width >= 0 do
     case Paint.validate(paint) do
       {:ok, paint} -> {:ok, {width, paint}}

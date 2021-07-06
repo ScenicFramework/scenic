@@ -7,7 +7,7 @@ defmodule Scenic.Primitive.Style.Paint.LinearGradient do
   @moduledoc """
   Fill a primitive with a linear gradient between two colors
 
-  ## Format
+  ### Data Format
 
   `{:linear, {start_x, start_y, end_x, end_y, color_start, color_end}}`
 
@@ -16,12 +16,13 @@ defmodule Scenic.Primitive.Style.Paint.LinearGradient do
 
   ```elixir
   Graph.build()
-    |> rect({100, 50}, fill: {:linear, {0, 0, 100, 50, :blue, :yellow}})
+    |> rect( {100, 50}, fill: {:linear, {0, 0, 100, 50, :blue, :yellow}} )
   ```
   """
 
   alias Scenic.Primitive.Style.Paint.Color
 
+  @doc false
   def validate({:linear, {sx, sy, ex, ey, color_start, color_end}})
       when is_number(sx) and is_number(sy) and is_number(ex) and is_number(ey) do
     with {:ok, color_start} <- Color.validate(color_start),

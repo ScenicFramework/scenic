@@ -12,13 +12,18 @@ defmodule Scenic.Primitive.Style.Join do
 
   Example:
 
-      graph
-      |> triangle( {{0,40},{40,40},{40,0}}
-        join: :round,
-        stroke: {2, :green}
-      )
+  ```elixir
+  graph
+    |> triangle( {{0,40},{40,40},{40,0}}
+      join: :round,
+      stroke: {2, :green}
+    )
+  ```
 
-  ## Data
+  ### Data Format
+
+  Join can be any of the following values:
+
   * `:miter` - Miter the pointy part of the joint.
   * `:round` - Round the entire joint.
   * `:bevel` - Bevel the joint.
@@ -29,6 +34,7 @@ defmodule Scenic.Primitive.Style.Join do
   # ============================================================================
   # data verification and serialization
 
+  @doc false
   def validate(:miter), do: {:ok, :miter}
   def validate(:round), do: {:ok, :round}
   def validate(:bevel), do: {:ok, :bevel}

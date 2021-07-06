@@ -7,36 +7,37 @@ defmodule Scenic.Primitive.Style.TextBase do
   @moduledoc """
   Set the vertical alignment of text.
 
-  :alphabetic is the default
-
   Example:
 
-      graph
-      |> text( "Some Text", text_base: :alphabetic )
+  ```elixir
+  graph
+    |> text( "Some Text", text_base: :alphabetic )
+  ```
 
-  ## Data
+  ### Data Format
 
-  `alignment`
+  TextBase can be any one of the following values
 
-  The alignment type can be any one of the following
+  * `:top` - The top of the em square.
+  * `:middle` - The middle of the em square.
+  * `:alphabetic` - The normal alphabetic baseline.
+  * `:bottom` - The bottom of the bounding box.
 
-  * `:top` - The text baseline is the top of the em square.
-  * `:hanging` - The text baseline is the hanging baseline.
-  * `:middle` - The text baseline is the middle of the em square.
-  * `:alphabetic` - The text baseline is the normal alphabetic baseline.
-  * `:ideographic` - The text baseline is the ideographic baseline.
-  * `:bottom` - The text baseline is the bottom of the bounding box.
+  The default if `:text_base` is undefined is `:alphabetic`.
+
+  The alphabetic baseline is at the bottom of characters such as "a", but above the
+  bottom of characters with descending tails, such as "g" or "y". This the standard
+  baseline from the world of typography. It may be unintuitive if you expected it
+  to be at the top of the characters, like most of the primitives in Scenic.
+  If that is what you want, then set `:text_base` to `:top`
   """
 
   use Scenic.Primitive.Style
-  #  alias Scenic.Primitive.Style
-
-  #  @dflag            Style.dflag()
-  #  @type_code        0x0020
 
   # ============================================================================
   # data verification and serialization
 
+  @doc false
   def validate(:top), do: {:ok, :top}
   def validate(:middle), do: {:ok, :middle}
   def validate(:alphabetic), do: {:ok, :alphabetic}

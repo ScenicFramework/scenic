@@ -9,13 +9,15 @@ defmodule Scenic.Primitive.Style.MiterLimit do
 
   Example:
 
-      graph
-      |> triangle( {{0,40},{40,40},{40,0}}
-        miter_limit: 2,
-        stroke: {2, :green}
-      )
+  ```elixir
+  graph
+    |> triangle( {{0,40},{40,40},{40,0}}
+      miter_limit: 2,
+      stroke: {2, :green}
+    )
+  ```
 
-  ## Data
+  ### Data Format
 
   A number greater than zero.
   """
@@ -25,6 +27,7 @@ defmodule Scenic.Primitive.Style.MiterLimit do
   # ============================================================================
   # data verification and serialization
 
+  @doc false
   def validate(size) when is_number(size) and size > 0, do: {:ok, size}
 
   def validate(data) do

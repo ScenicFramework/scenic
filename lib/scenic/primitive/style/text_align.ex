@@ -9,28 +9,25 @@ defmodule Scenic.Primitive.Style.TextAlign do
 
   Example:
 
-      graph
-      |> text( "Some Text", text_align: :center_middle )
+  ```elixir
+  graph
+    |> text( "Some Text", text_align: :center_middle )
+  ```
 
-  ## Data
+  ### Data Format
 
-  `alignment`
-
-  The alignment type can be any one of the following
+  TextAlign can be any one of the following values
 
   * `:left` - Left side horizontally. Base of the text vertically.
   * `:right` - Right side horizontally. Base of the text vertically.
   * `:center` - Centered horizontally. Base of the text vertically.
   """
   use Scenic.Primitive.Style
-  #  alias Scenic.Primitive.Style
-
-  #  @dflag            Style.dflag()
-  #  @type_code        0x0020
 
   # ============================================================================
   # data verification and serialization
 
+  @doc false
   def validate(:left), do: {:ok, :left}
   def validate(:center), do: {:ok, :center}
   def validate(:right), do: {:ok, :right}

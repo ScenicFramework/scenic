@@ -9,7 +9,7 @@ defmodule Scenic.Primitive.Style.Paint.Image do
   @moduledoc """
   Fill a primitive with an image from Scenic.Assets.Static
 
-  ## Format
+  ### Data Format
 
   `{:image, id}`
 
@@ -32,6 +32,7 @@ defmodule Scenic.Primitive.Style.Paint.Image do
   the image up or down when you draw it, use the `Sprites` primitive.
   """
 
+  @doc false
   def validate({:image, id}) when is_atom(id) or is_bitstring(id) do
     with {:ok, id_str} <- Static.resolve_id(id),
          {:ok, {Static.Image, _}} <- Static.fetch(id_str) do
