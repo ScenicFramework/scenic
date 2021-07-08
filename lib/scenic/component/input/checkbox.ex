@@ -109,8 +109,8 @@ defmodule Scenic.Component.Input.Checkbox do
     # I'd build it at compile time if it weren't for the theme.thumb color...
     chx_script =
       Script.start()
-      |> Script.join(:round)
       |> Script.push_state()
+      |> Script.join(:round)
       |> Script.stroke_width(@border_width + 1)
       |> Script.stroke_color(theme.thumb)
       |> Script.begin_path()

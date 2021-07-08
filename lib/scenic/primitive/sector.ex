@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on June 5, 2018.2017-10-29.
-#  Copyright © 2017 Kry10 Limited. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Sector do
@@ -15,7 +15,15 @@ defmodule Scenic.Primitive.Sector do
 
   The data for an Sector is a tuple.
   * `radius` - the radius of the Sector
-  * `angle` - the angle the Sector is swept through
+  * `angle` - the angle the Sector is swept through in radians
+
+  ### Note
+  
+  The format for Sector has changed since v0.10. It used to be
+  {radius, start_angle, end_angle}. You can achieve the same effect in the
+  new, simpler format by using the same radius and the new angle is the
+  difference between the old end_angle and start_angle. Then you can apply
+  a rotation transform to get it in the right position.
 
   ## Styles
 
@@ -28,6 +36,11 @@ defmodule Scenic.Primitive.Sector do
 
   You should add/modify primitives via the helper functions in
   [`Scenic.Primitives`](Scenic.Primitives.html#sector/3)
+
+  ```elixir
+  graph
+    |> sector( {100, 1.5}, stroke: {1, :yellow} )
+  ```
   """
 
   use Scenic.Primitive

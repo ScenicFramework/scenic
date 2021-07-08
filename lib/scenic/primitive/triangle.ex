@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on June 5, 2018.2017-05-06.
-#  Copyright © 2017 Kry10 Limited. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Triangle do
@@ -28,7 +28,15 @@ defmodule Scenic.Primitive.Triangle do
   ## Usage
 
   You should add/modify primitives via the helper functions in
-  [`Scenic.Primitives`](Scenic.Primitives.html#text/3)
+  [`Scenic.Primitives`](Scenic.Primitives.html#triangle/3)
+
+  ```elixir
+  graph
+    |> triangle(
+      {{10, 0}, {20, 40}, 0, 20}},
+      stroke: {1, :yellow}
+    )
+  ```
   """
 
   use Scenic.Primitive

@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2018-06-06.
-#  Copyright © 2017 Kry10 Limited. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Ellipse do
@@ -23,12 +23,17 @@ defmodule Scenic.Primitive.Ellipse do
   * [`stroke`](Scenic.Primitive.Style.Stroke.html) - stroke the outline of the primitive. In this case, only the curvy part.
 
   Note: you can achieve the same effect with a Circle primitive
-  by applying a :size transform to it with unequal values on the axes
+  by applying a `:scale` transform to it with unequal values on the axes
 
   ## Usage
 
   You should add/modify primitives via the helper functions in
   [`Scenic.Primitives`](Scenic.Primitives.html#ellipse/3)
+
+  ```elixir
+  graph
+    |> ellipse( {75, 100}, stroke: {1, :yellow} )
+  ```
   """
 
   use Scenic.Primitive

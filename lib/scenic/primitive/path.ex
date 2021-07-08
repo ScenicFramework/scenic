@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2018-06-05.
-#  Copyright © 2018 Kry10 Limited. All rights reserved.
+#  Copyright © 2018-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Path do
@@ -34,7 +34,27 @@ defmodule Scenic.Primitive.Path do
   * `{:quadratic_to, cx, cy, x, y}` - draw a quadratic curve from the current position to a new location.
   * `{:arc_to, x1, y1, x2, y2, radius}` - draw an arc from the current position to a new location.
 
-  Example
+  ## `Path` vs. `Script`
+
+  Both the `Path` and the `Script` primitives use the `Scenic.Script` to create scripts
+  are sent to the drivers for drawing. The difference is that a Path is far more limited
+  in what it can do, and is inserted inline with the compiled graph that created it.
+
+  The script primitive, on the other hand, has full access to the API set of
+  `Scenic.Script` and accesses scripts by reference.
+
+  The inline vs. reference difference is important. A simple path will be consume
+  fewer resources. BUT it will cause the entire graph to be recompile and resent
+  to the drivers if you change it.
+
+  A script primitive references a script that you create separately from the
+  the graph. This means that any changes to the graph (such as an animation) will
+  NOT need to recompile or resend the script.
+
+  ## Usage
+
+  You should add/modify primitives via the helper functions in
+  [`Scenic.Primitives`](Scenic.Primitives.html#path/3)
 
   ```elixir
   graph
@@ -42,11 +62,10 @@ defmodule Scenic.Primitive.Path do
         :begin,
         {:move_to, 0, 0},
         {:bezier_to, 0, 20, 0, 50, 40, 50},
-        {:bezier_to, 60, 50, 60, 20, 80, 20},
-        {:bezier_to, 100, 20, 110, 0, 120, 0},
-        {:bezier_to, 140, 0, 160, 30, 160, 50}
+        {:line_to, 30, 60},
+        :close_path
       ],
-      stroke: {2, :yellow}
+      fill: :blue
     )
   ```
   """

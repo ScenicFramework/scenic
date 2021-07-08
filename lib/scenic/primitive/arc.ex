@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2018-06-06.
-#  Copyright © 2018 Kry10 Limited. All rights reserved.
+#  Copyright © 2018-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Arc do
@@ -22,7 +22,15 @@ defmodule Scenic.Primitive.Arc do
 
   The data for an arc is a tuple.
   * `radius` - the radius of the arc
-  * `angle` - the angle the arc is swept through
+  * `angle` - the angle the arc is swept through in radians
+
+  ### Note
+
+  The format for Arc has changed since v0.10. It used to be
+  {radius, start_angle, end_angle}. You can achieve the same effect in the
+  new, simpler format by using the same radius and the new angle is the
+  difference between the old end_angle and start_angle. Then you can apply
+  a rotation transform to get it in the right position.
 
 
   ## Styles
@@ -36,6 +44,11 @@ defmodule Scenic.Primitive.Arc do
 
   You should add/modify primitives via the helper functions in
   [`Scenic.Primitives`](Scenic.Primitives.html#arc/3)
+
+  ```elixir
+  graph
+    |> arc( {100, 1.5}, stroke: {1, :yellow} )
+  ```
   """
 
   use Scenic.Primitive

@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-05-06.
-#  Copyright © 2017 Kry10 Limited. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Group do
@@ -15,18 +15,44 @@ defmodule Scenic.Primitive.Group do
 
   `uids`
 
-  The data for an arc is a list of internal uids for the primitives it contains
+  The data for an arc is a list of internal uids for the primitives it contains.
 
+  You will not typically add these ids yourself. You should use the helper functions
+  with a callback to do that for you. See Usage below.
 
   ## Styles
 
   The group is special in that it accepts all styles and transforms, even if they
-  are non-standard. These are then inherited by any primitives, including SceneRefs
+  are non-standard. These are then inherited by any primitives, including SceneRefs.
+
+  Any styles you place on the group itself will be inherited by the primitives
+  contained in the group. However, these styles will not be inherited by any
+  component in the group.
+
+  ## Transforms
+
+  If you add a transform to a group, then everything in the group will also be
+  moved by that transform, including child components. This is a very handy way
+  to create some UI, then position, scale, or rotate it as needed without having
+  to adjust the inner elements.
 
   ## Usage
 
   You should add/modify primitives via the helper functions in
   [`Scenic.Primitives`](Scenic.Primitives.html#group/3)
+
+  ```elixir
+  graph
+    |> group( fn(g) ->
+      g
+      |> rect( {200, 100}, fill: :blue )
+      |> test( "In a Group", fill: :yellow, translate: {20, 40} )
+    end,
+    translate: {100, 100},
+    font: :roboto
+  )
+  ```
+
   """
 
   use Scenic.Primitive

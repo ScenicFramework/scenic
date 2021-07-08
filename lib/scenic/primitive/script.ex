@@ -1,44 +1,76 @@
 #
-#  Created by Boyd Multerer on 2018-03-16.
-#  Copyright © 2018 Kry10 Limited. All rights reserved.
+#  Created by Boyd Multerer on 2021-02-03.
+#  Copyright © 2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Script do
   @moduledoc """
-  A reference to another graph or component.
+  A reference to a draw script.
 
-  When rendering a graph, the SceneRef primmitive causes the render to stop
-  what it is doing, render another graph, then continue on where it left off.
+  The `Script` primitive is used to refer to a script that you created
+  and loaded into the ViewPort separately from the graph. This script also
+  has full access to the `Scenic.Script` API.
 
-  The SceneRef primitive is usually added for you when you use a Component
-  via the Primitive.Components helpers.
+  For example, the check mark shape in the `Checkbox` control is a draw
+  script that is reference by the checkbox control's graph. A graph
+  can reference the same script multiple times, which is very efficient
+  as the script is only sent to the drivers once.
 
-  However, it can also be useful directly if you want to declare multiple
-  graphs in a single scene and reference them from each other. This is
-  done when you want to limit the data scanned and sent when just a portion
-  of your graph is changing.
+  If the graph is modified later, then any scripts it references will not
+  need to be resent to the drivers. This is an isolation of concerns. The same
+  is true in reverse. If you rebuild a script and send it to the
+  `ViewPort`, the script will be sent to the drivers, but any graphs that
+  reference it do not need to be.
 
-  Be careful not to create circular references!
+  ## `Script` vs. `Path`
 
-  ## Data
+  Both the `Path` and the `Script` primitives use the `Scenic.Script` to create scripts
+  are sent to the drivers for drawing. The difference is that a Path is far more limited
+  in what it can do, and is inserted inline with the compiled graph that created it.
 
-  The data for a SceneRef can take one of several forms.
-  * `scene_name` - an atom naming a scene you are managing yourself
-  * `{scene_name, sub_id}` - an atom naming a scene you are managing yourself and a sub-id
-  * `pid` - the pid of a running scene (rarely used)
-  * `{pid, sub_id}` - the pid of a running scene and a sub_id (rarely used)
-  * `{:graph, scene, sub_id}` - a full graph key - must already be in `ViewPort.Tables`
-  * `{{module, data}, sub_id}` - init data for a dynamic scene (very common)
+  The script primitive, on the other hand, has full access to the API set of
+  `Scenic.Script` and accesses scripts by reference.
 
-  ## Styles
+  The inline vs. reference difference is important. A simple path will be consume
+  fewer resources. BUT it will cause the entire graph to be recompile and resent
+  to the drivers if you change it.
 
-  The SceneRef is special in that it accepts all styles and transforms, even if they
-  are non-standard. These are then inherited by any dynamic scenes that get created.
+  A script primitive references a script that you create separately from the
+  the graph. This means that any changes to the graph (such as an animation) will
+  NOT need to recompile or resend the script.
 
   ## Usage
 
   You should add/modify primitives via the helper functions in
-  [`Scenic.Primitives`](Scenic.Primitives.html#scene_ref/3)
+  [`Scenic.Primitives`](Scenic.Primitives.html#script/3)
+
+  This example is based on the check mark script from the Checkbox control.
+
+  ```elixir
+    alias Scenic.Script
+
+    # build the checkmark script
+    my_script =
+      Script.start()
+      |> Script.push_state()
+      |> Script.join(:round)
+      |> Script.stroke_width(3)
+      |> Script.stroke_color(:light_blue)
+      |> Script.begin_path()
+      |> Script.move_to(0, 8)
+      |> Script.line_to(5, 13)
+      |> Script.line_to(12, 1)
+      |> Script.stroke_path()
+      |> Script.pop_state()
+      |> Script.finish()
+
+    # push the script to the ViewPort
+    scene = push_script(scene, my_script, "My Script")
+
+    # refer to the script in a graph, and position it
+    graph
+    |> script("My Script", translate: {3, 2})
+  ```
   """
 
   use Scenic.Primitive

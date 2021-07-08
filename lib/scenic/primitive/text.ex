@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-05-06.
-#  Copyright © 2017 Kry10 Limited. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Text do
@@ -29,6 +29,11 @@ defmodule Scenic.Primitive.Text do
 
   You should add/modify primitives via the helper functions in
   [`Scenic.Primitives`](Scenic.Primitives.html#text/3)
+
+  ```elixir
+  graph
+    |> text( "Some example text", fill: :green, font: :roboto_mono, font_size: 64 )
+  ```
   """
 
   use Scenic.Primitive

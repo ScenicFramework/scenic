@@ -5,7 +5,70 @@
 
 defmodule Scenic.Primitive.Sprites do
   @moduledoc """
-  Draw an Image on the screen.
+  Draw one or more sprites from a single source image.
+
+  ## Overview
+
+  The term "sprite" means one or more subsections of a larger image
+  that get rendered to the screen. You can do many things with sprites
+  including animations and zooming in and out of an image and more.
+
+  ## Data Format
+
+  { source_image_id, draw_commands }
+
+  `source_image_id` refers to an image in the `Scenic.Assets.Static`
+  library. This can be either the file name from your asset sources
+  or an alias that you set up in your configuration scripts.
+
+  `draw_commands` is a list of source/destination drawing commands that
+  are executed in order when the primitive renders.
+
+  `[ {{src_x, src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}} ]`
+
+  Each draw command is an x/y position and width/height of a rectangle in
+  the source image, followed by the x/y position and width/height
+  rectangle in the destination space.
+
+  In other words, This copies rectangular images from the source
+  indicated by image_id and draws them in the coordinate space of
+  the graph.
+
+  The size of the destination rectangle does NOT need to be the same as the
+  source. This allows you to grow or shrink the image as needed. You can
+  use this to zoom in or zoom out of the source image.
+
+  ## Animations
+
+  Sprites are common in the game industry and can be used to
+  create animations, manage large numbers of small images and more.
+
+  For example, in many games a character walking is built as a  series
+  of frames in an animation that all live together in a single image
+  file. When it comes time to draw, the different frames are rendered
+  to the screen on after the other to give the appearance that the
+  character is animating.
+
+  A simpler example would be an image of a device with a blinking
+  light on it. The same device would be in the source image twice.
+  Once with the light on, and once with it off. Then you render the
+  appropriate portion of source image on a timer.
+
+  ## Usage
+
+  You should add/modify primitives via the helper functions in
+  [`Scenic.Primitives`](Scenic.Primitives.html#sprites/3)
+
+  This example draws the same source rectangle twice in different locations.
+  The first is at full size, the second is expanded 10x.
+
+  ```elixir
+  graph
+    |> sprites( { "images/my_sprites.png", [
+      {{0,0}, {10, 20}, {10, 10}, {10, 20}},
+      {{0,0}, {10, 20}, {100, 100}, {100, 200}},
+    ]})
+  ```
   """
 
   use Scenic.Primitive

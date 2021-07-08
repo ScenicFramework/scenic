@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2018-06-05.
-#  Copyright © 2017 Kry10 Limited. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Circle do
@@ -25,6 +25,11 @@ defmodule Scenic.Primitive.Circle do
 
   You should add/modify primitives via the helper functions in
   [`Scenic.Primitives`](Scenic.Primitives.html#circle/3)
+
+  ```elixir
+  graph
+    |> circle( 100, stroke: {1, :yellow} )
+  ```
   """
 
   use Scenic.Primitive

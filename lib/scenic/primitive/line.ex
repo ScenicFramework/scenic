@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-05-06.
-#  Copyright © 2017 Kry10 Limited. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Line do
@@ -26,6 +26,11 @@ defmodule Scenic.Primitive.Line do
 
   You should add/modify primitives via the helper functions in
   [`Scenic.Primitives`](Scenic.Primitives.html#line/3)
+
+  ```elixir
+  graph
+    |> line( {{0, 0}, {20, 40}}, stroke: {1, :yellow} )
+  ```
   """
 
   use Scenic.Primitive

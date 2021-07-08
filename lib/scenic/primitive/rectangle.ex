@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-05-08.
-#  Copyright © 2017 Kry10 Limited. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Rectangle do
@@ -28,6 +28,14 @@ defmodule Scenic.Primitive.Rectangle do
 
   You should add/modify primitives via the helper functions in
   [`Scenic.Primitives`](Scenic.Primitives.html#rectangle/3)
+
+  ```elixir
+  graph
+    |> rect( {100, 50}, stroke: {1, :yellow} )
+    |> rectangle( {100, 50}, stroke: {1, :yellow} )
+  ```
+
+  Note: `rect` is a shortcut for `rectangle` and they can be used interchangeably.
   """
 
   use Scenic.Primitive
