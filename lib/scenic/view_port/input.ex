@@ -5,6 +5,69 @@
 #
 
 defmodule Scenic.ViewPort.Input do
+
+  @moduledoc """
+  The low-level interface for working in input into and out of a `ViewPort`.
+
+  You will typically use the input related functions in `Scenic.Scene`, which
+  wrap this module and make them easy to use from a Scene module.
+
+  If you wanted monitor input from some other `GenServer`, or inject input into
+  a `ViewPort`, then this is the API to use.
+
+  Input events begin when a driver sends an event to the `ViewPort` it is attached
+  to. In order to keep scenes simple, and to reduce the amount of work and data
+  transferred when input is created (for example, a moving mouse...), events are
+  only sent to any scenes that have indicated that they are listening.
+
+  There are two ways a scene indicates that it is interested in an input event.
+
+  ## Requested Input
+
+  Normally, a scene "requests" input. This will route any keyboard or other
+  location independent events to the scene. However, any positional input, such
+  as `:cursor_button` will only be received it if is over an item in a graph
+  managed by a scene that has the `input: true` style.
+
+  ```elixir
+  graph
+    |> rect( {20, 40}, t: {10, 10}, id: :rect_in, input: true, fill: :blue )
+    |> rect( {20, 40}, t: {10, 50}, id: :rect_other, fill: :blue )
+  ```
+
+  In the above example, the scene would only receive :cursor_button events if the
+  :rect_in rect is clicked. This is because it is the only rect that has the 
+  `input: true` style on it.
+
+  Cursor clicks over the `:rect_other` rect, are not delivered to the scene.
+
+  ## Captured Input
+
+  If you look at the code behind components such as Button or Slider, you will see
+  that when the button is clicked, it "captures" the `:cursor_button` input type.
+
+  This causes the caller to receive *all* input events of that type, regardless of
+  the `:input` style. This means that even `:cursor_button` events that would be
+  otherwise be routed to some other scene are sent *only* to the scene that has
+  captured the input. The other scene that has only "requested" the event does
+  not receive it.
+
+  If multiple scenes have captured an input type, the most recent call wins. When
+  scene releases the capture, the event type remains captured but is now sent to
+  the second scene that had been overridden.
+
+  ## Sending Input
+
+  When a driver (or any other caller, but it is typically a `Scenic.Driver`)
+  wants to send an input event to the ViewPort, it creates a message and sends
+  it to it's ViewPort with the `Scenic.ViewPort.Input.send/2` function.
+
+  Drivers have no knowledge of the running scenes. The `ViewPort` takes care of
+  that routing.
+
+  Input events are validated against `Scenic.ViewPort.Input.validate/2` function.
+  """
+
   alias Scenic.Math
   alias Scenic.ViewPort
 
@@ -46,7 +109,7 @@ defmodule Scenic.ViewPort.Input do
   @doc """
   Capture one or more types of input.
 
-  returns :ok or an error
+  returns `:ok` or an error
 
   This function should be called from a Scene. Typically, you will use
   the `Scenic.Scene` scene version of this api, which then does some
@@ -229,7 +292,7 @@ defmodule Scenic.ViewPort.Input do
           input :: ViewPort.Input.t()
         ) :: :ok
   def send(%ViewPort{pid: pid}, input) do
-    case validate_input(input) do
+    case validate(input) do
       :ok -> GenServer.cast(pid, {:input, input})
       err -> err
     end
@@ -258,38 +321,45 @@ defmodule Scenic.ViewPort.Input do
   end
 
   # --------------------------------------------------------
-  defp validate_input(input)
+  @doc """
+  Validate an input messages.
 
-  defp validate_input({:codepoint, {codepoint, mods}})
+  Returns `:ok` if the message is valid.
+
+  Returns `{:error, :invalid}` if the message is not valid.
+  """
+  @spec validate(input :: t()) :: :ok | {:error, :invalid}
+  def validate(input)
+
+  def validate({:codepoint, {codepoint, mods}})
        when is_bitstring(codepoint) and is_integer(mods),
        do: :ok
 
-  defp validate_input({:key, {key, :press, mods}}) when is_bitstring(key) and is_integer(mods),
+  def validate({:key, {key, :press, mods}}) when is_bitstring(key) and is_integer(mods),
     do: :ok
 
-  defp validate_input({:key, {key, :release, mods}}) when is_bitstring(key) and is_integer(mods),
+  def validate({:key, {key, :release, mods}}) when is_bitstring(key) and is_integer(mods),
     do: :ok
 
-  defp validate_input({:key, {key, :repeat, mods}}) when is_bitstring(key) and is_integer(mods),
+  def validate({:key, {key, :repeat, mods}}) when is_bitstring(key) and is_integer(mods),
     do: :ok
 
-  defp validate_input({:cursor_button, {btn, :press, mods, {x, y}}})
+  def validate({:cursor_button, {btn, :press, mods, {x, y}}})
        when is_integer(btn) and is_integer(mods) and is_number(x) and is_number(y),
        do: :ok
 
-  defp validate_input({:cursor_button, {btn, :release, mods, {x, y}}})
+  def validate({:cursor_button, {btn, :release, mods, {x, y}}})
        when is_integer(btn) and is_integer(mods) and is_number(x) and is_number(y),
        do: :ok
 
-  # defp validate_input( {:cursor, {:scroll, {ox,oy}, {px,py}}} )
-  # when is_integer(ox) and is_integer(oy) and
-  # is_integer(px) and is_integer(py), do: :ok
+  def validate( {:cursor_scroll, {{ox,oy}, {px,py}} )
+      when is_integer(ox) and is_integer(oy) and is_integer(px) and is_integer(py), do: :ok
 
-  defp validate_input({:cursor_pos, {x, y}}) when is_number(x) and is_number(y), do: :ok
+  def validate({:cursor_pos, {x, y}}) when is_number(x) and is_number(y), do: :ok
 
-  defp validate_input({:viewport, {:enter, {x, y}}}) when is_number(x) and is_number(y), do: :ok
-  defp validate_input({:viewport, {:exit, {x, y}}}) when is_number(x) and is_number(y), do: :ok
-  defp validate_input({:viewport, {:reshape, {w, h}}}) when is_number(w) and is_number(h), do: :ok
+  def validate({:viewport, {:enter, {x, y}}}) when is_number(x) and is_number(y), do: :ok
+  def validate({:viewport, {:exit, {x, y}}}) when is_number(x) and is_number(y), do: :ok
+  def validate({:viewport, {:reshape, {w, h}}}) when is_number(w) and is_number(h), do: :ok
 
-  defp validate_input(_), do: {:error, :invalid}
+  def validate(_), do: {:error, :invalid}
 end

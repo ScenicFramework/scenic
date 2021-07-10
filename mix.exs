@@ -53,7 +53,7 @@ defmodule Scenic.Mixfile do
       # Tools
       {:elixir_make, "~> 0.6.2", runtime: false},
       {:truetype_metrics, "~> 0.5", only: [:dev, :test], runtime: false},
-      {:ex_doc, ">= 0.0.0", only: :dev},
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:credo, ">= 0.0.0", only: [:dev, :test], runtime: false},
       {:excoveralls, ">= 0.0.0", only: :test, runtime: false},
       {:inch_ex, "~> 2.0", only: [:dev, :docs], runtime: false},
