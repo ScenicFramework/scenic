@@ -50,10 +50,10 @@ defmodule Scenic.Color do
 
   ## Additional Named Colors
 
-    | Name          | Value                  | Example   |
-  |---------------|------------------------|-----------|
-  | `:clear` | `{0x80, 0x80, 0x80, 0x00}` | |
-  | `:transparent` | `{0x80, 0x80, 0x80, 0x00}` | |
+    | Name          | Value                  |
+  |---------------|------------------------|
+  | `:clear` | `{0x80, 0x80, 0x80, 0x00}` |
+  | `:transparent` | `{0x80, 0x80, 0x80, 0x00}` |
 
   ## Converting Between Color Formats
 
