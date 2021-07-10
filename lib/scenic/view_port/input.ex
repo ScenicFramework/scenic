@@ -47,6 +47,10 @@ defmodule Scenic.ViewPort.Input do
   Capture one or more types of input.
 
   returns :ok or an error
+
+  This function should be called from a Scene. Typically, you will use
+  the `Scenic.Scene` scene version of this api, which then does some
+  housekeeping and call this one.
   """
   @spec capture(
           viewport :: ViewPort.t(),
@@ -70,6 +74,10 @@ defmodule Scenic.ViewPort.Input do
   # --------------------------------------------------------
   @doc """
   release the captured inputs from the calling process.
+
+  This function should be called from a Scene. Typically, you will use
+  the `Scenic.Scene` scene version of this api, which then does some
+  housekeeping and call this one.
   """
   @spec release(
           viewport :: ViewPort.t(),
@@ -104,6 +112,10 @@ defmodule Scenic.ViewPort.Input do
   Retrieve a list of input captured by the caller.
 
   Returns: { :ok, list }
+
+  This function should be called from a Scene. Typically, you will use
+  the `Scenic.Scene` scene version of this api, which then does some
+  housekeeping and call this one.
   """
   @spec fetch_captures(
           viewport :: ViewPort.t(),

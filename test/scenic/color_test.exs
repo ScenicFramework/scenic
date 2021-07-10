@@ -19,6 +19,7 @@ defmodule Scenic.ColorTest do
   test "to_g explicit" do
     # from bisque
     hsv = Color.to_hsv(:bisque)
+    hsl = Color.to_hsl(:bisque)
     g = round((0xFF + 0xE4 + 0xC4) / 3)
 
     assert Color.to_g({:color_g, 128}) == {:color_g, 128}
@@ -26,6 +27,7 @@ defmodule Scenic.ColorTest do
     assert Color.to_g({:color_rgb, {0xFF, 0xE4, 0xC4}}) == {:color_g, g}
     assert Color.to_g({:color_rgba, {0xFF, 0xE4, 0xC4, 0xFF}}) == {:color_g, g}
     assert Color.to_g(hsv) == {:color_g, g}
+    assert Color.to_g(hsl) == {:color_g, g}
   end
 
   test "to_ga implied" do
@@ -42,6 +44,7 @@ defmodule Scenic.ColorTest do
   test "to_ga explicit" do
     # from bisque
     hsv = Color.to_hsv(:bisque)
+    hsl = Color.to_hsl(:bisque)
     g = round((0xFF + 0xE4 + 0xC4) / 3)
 
     assert Color.to_ga({:color_g, 128}) == {:color_ga, {128, 0xFF}}
@@ -49,6 +52,7 @@ defmodule Scenic.ColorTest do
     assert Color.to_ga({:color_rgb, {0xFF, 0xE4, 0xC4}}) == {:color_ga, {g, 0xFF}}
     assert Color.to_ga({:color_rgba, {0xFF, 0xE4, 0xC4, 200}}) == {:color_ga, {g, 200}}
     assert Color.to_ga(hsv) == {:color_ga, {g, 0xFF}}
+    assert Color.to_ga(hsl) == {:color_ga, {g, 0xFF}}
   end
 
   test "to_rgb implied" do
@@ -64,6 +68,7 @@ defmodule Scenic.ColorTest do
   test "to_rgb explicit" do
     # from bisque
     hsv = Color.to_hsv(:bisque)
+    hsl = Color.to_hsl(:bisque)
     assert Color.to_rgb({:color_g, 128}) == {:color_rgb, {128, 128, 128}}
     assert Color.to_rgb({:color_ga, {128, 200}}) == {:color_rgb, {128, 128, 128}}
     assert Color.to_rgb({:color_rgb, {0xFF, 0xE4, 0xC4}}) == {:color_rgb, {0xFF, 0xE4, 0xC4}}
@@ -72,6 +77,7 @@ defmodule Scenic.ColorTest do
              {:color_rgb, {0xFF, 0xE4, 0xC4}}
 
     assert Color.to_rgb(hsv) == {:color_rgb, {0xFF, 0xE4, 0xC4}}
+    assert Color.to_rgb(hsl) == {:color_rgb, {0xFF, 0xE4, 0xC4}}
   end
 
   test "to_rgba implied" do
@@ -87,6 +93,7 @@ defmodule Scenic.ColorTest do
   test "to_rgba explicit" do
     # from bisque
     hsv = Color.to_hsv(:bisque)
+    hsl = Color.to_hsl(:bisque)
     assert Color.to_rgba({:color_g, 128}) == {:color_rgba, {128, 128, 128, 0xFF}}
     assert Color.to_rgba({:color_ga, {128, 200}}) == {:color_rgba, {128, 128, 128, 200}}
 
@@ -97,7 +104,10 @@ defmodule Scenic.ColorTest do
              {:color_rgba, {0xFF, 0xE4, 0xC4, 200}}
 
     assert Color.to_rgba(hsv) == {:color_rgba, {0xFF, 0xE4, 0xC4, 0xFF}}
+    assert Color.to_rgba(hsl) == {:color_rgba, {0xFF, 0xE4, 0xC4, 0xFF}}
   end
+
+
 
   test "to_hsv implied - using to_rgb as truth" do
     # from bisque
@@ -106,10 +116,10 @@ defmodule Scenic.ColorTest do
     assert Color.to_hsv(0) == {:color_hsv, {0, 0, 0}}
 
     {:color_hsv, {0.0, 0.0, v}} = Color.to_hsv(128)
-    assert v > 0.5 && v < 0.51
+    assert v > 50 && v < 51
 
     {:color_hsv, {0.0, 0.0, v}} = Color.to_hsv({128, 200})
-    assert v > 0.5 && v < 0.51
+    assert v > 50 && v < 51
 
     assert Color.to_hsv(:bisque) |> Color.to_rgb() == rgb
     assert Color.to_hsv({:bisque, 200}) |> Color.to_rgb() == rgb
@@ -119,18 +129,64 @@ defmodule Scenic.ColorTest do
 
   test "to_hsv explicit - using to_rgb as truth" do
     # from bisque
+    hsl = Color.to_hsl(:bisque)
     rgb = Color.to_rgb(:bisque)
 
     {:color_hsv, {0.0, 0.0, v}} = Color.to_hsv({:color_g, 128})
-    assert v > 0.5 && v < 0.51
+    assert v > 50 && v < 51
 
     {:color_hsv, {0.0, 0.0, v}} = Color.to_hsv({:color_ga, {128, 200}})
-    assert v > 0.5 && v < 0.51
+    assert v > 50 && v < 51
 
-    assert Color.to_hsv({:color_rgb, {0xFF, 0xE4, 0xC4}}) |> Color.to_rgb() == rgb
+    assert Color.to_hsv(rgb) |> Color.to_rgb() == rgb
+    assert Color.to_hsv(hsl) |> Color.to_rgb() == rgb
     assert Color.to_hsv({:color_rgba, {0xFF, 0xE4, 0xC4, 200}}) |> Color.to_rgb() == rgb
     assert Color.to_hsv({:color_hsv, {1.1, 1.2, 1.3}}) == {:color_hsv, {1.1, 1.2, 1.3}}
   end
+
+  test "to_hsl implied - using to_rgb as truth" do
+    # from bisque
+    rgb = Color.to_rgb(:bisque)
+
+    assert Color.to_hsl(0) == {:color_hsl, {0, 0, 0}}
+
+    {:color_hsl, {0.0, 0.0, l}} = Color.to_hsl(128)
+    assert l > 50 && l < 51
+
+    {:color_hsl, {0.0, 0.0, l}} = Color.to_hsl({128, 200})
+    assert l > 50 && l < 51
+
+    assert Color.to_hsl(:bisque) |> Color.to_rgb() == rgb
+    assert Color.to_hsl({:bisque, 200}) |> Color.to_rgb() == rgb
+    assert Color.to_hsl({0xFF, 0xE4, 0xC4}) |> Color.to_rgb() == rgb
+    assert Color.to_hsl({0xFF, 0xE4, 0xC4, 200}) |> Color.to_rgb() == rgb
+  end
+
+  test "to_hsl explicit - using to_rgb as truth" do
+    # from bisque
+    rgb = Color.to_rgb(:bisque)
+
+    {:color_hsl, {0.0, 0.0, l}} = Color.to_hsl({:color_g, 128})
+    assert l > 50 && l < 51
+
+    {:color_hsl, {0.0, 0.0, l}} = Color.to_hsl({:color_ga, {128, 200}})
+    assert l > 50 && l < 51
+
+    assert Color.to_hsl({:color_rgb, {0xFF, 0xE4, 0xC4}}) |> Color.to_rgb() == rgb
+    assert Color.to_hsl({:color_rgba, {0xFF, 0xE4, 0xC4, 200}}) |> Color.to_rgb() == rgb
+    assert Color.to_hsl({:color_hsl, {1.1, 1.2, 1.3}}) == {:color_hsl, {1.1, 1.2, 1.3}}
+  end
+
+  test "named looks right" do
+    Color.named()
+    |> Enum.each( fn({n, {r, g, b}}) ->
+      assert is_atom(n)
+      assert is_integer(r) && r >= 0 && r <= 255
+      assert is_integer(g) && g >= 0 && g <= 255
+      assert is_integer(b) && b >= 0 && b <= 255
+    end)
+  end
+
 
   test ":alice_blue", do: assert(Color.to_rgb(:alice_blue) == {:color_rgb, {0xF0, 0xF8, 0xFF}})
 
