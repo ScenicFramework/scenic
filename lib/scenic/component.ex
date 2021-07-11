@@ -1,85 +1,139 @@
 #
 #  Created by Boyd Multerer on 2018-03-26.
-#  Copyright © 2018 Kry10 Limited. All rights reserved.
+#  Copyright © 2018-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Component do
   @moduledoc """
-  A Component is simply a Scene that is optimized to be referenced by another scene.
+  A Component is Scene that is optimized to be used as a child of another scene.
 
-  All you need to do to create a Component is call
-
-      use Scenic.Component
-
-  instead of
-
-      use Scenic.Scene
-
-  At the top of your module definition.
+  These are typically controls that you want to define once and use in multiple places.
 
   ## Standard Components
 
-  Scenic includes a small number of standard components that you can simply reuse in your
-  scenes. These were chosen to be in the main library because a) they are used frequently,
-  and b) their use promotes a certain amount of "common" look and feel.
+  Scenic includes a several standard components that you can use in your
+  scenes. These were chosen to be in the main library because:
+    * They are used frequently
+    * Their use promotes a certain amount of "common" look and feel
 
   All of these components are typically added/modified via the helper functions in the
   [`Scenic.Components`](Scenic.Components.html) module.
 
-  * [`Button`](Scenic.Component.Button.html) a simple button.
-  * [`Checkbox`](Scenic.Component.Input.Checkbox.html) a checkbox input field.
-  * [`Dropdown`](Scenic.Component.Input.Dropdown.html) a dropdown / select input field.
-  * [`RadioGroup`](Scenic.Component.Input.RadioGroup.html) a group of radio button inputs.
-  * [`Slider`](Scenic.Component.Input.Slider.html) a slider input.
-  * [`TextField`](Scenic.Component.Input.TextField.html) a text / password input field.
-  * [`Toggle`](Scenic.Component.Input.Toggle.html) an on/off toggle input.
+  | Helper | Component Module | Description |
+  |---|---|---|
+  | [`button/3`](Scenic.Components.html#button/3) | `Scenic.Component.Button` | A simple button |
+  | [`checkbox/3`](Scenic.Components.html#checkbox/3) | `Scenic.Component.Input.Checkbox` | A boolean checkbox control |
+  | [`dropdown/3`](Scenic.Components.html#dropdown/3) | `Scenic.Component.Input.Dropdown` | A menu-like dropdown control |
+  | [`radio_group/3`](Scenic.Components.html#radio_group/3) | `Scenic.Component.Input.RadioGroup` | A group of radio controls |
+  | [`slider/3`](Scenic.Components.html#slider/3) | `Scenic.Component.Input.Slider` | A slider ranging from one value to another |
+  | [`text_field/3`](Scenic.Components.html#text_field/3) | `Scenic.Component.Input.TextField` | A text input field. |
+  | [`toggle/3`](Scenic.Components.html#toggle/3) | `Scenic.Component.Input.Toggle` | A boolean toggle control. |
 
-  ## Other Components
+  ```elixir
+  import Scenic.Components
 
-  For completeness, Scenic also includes the following standard components. They are used
-  by the components above, although you are free to use them as well if they fit your needs.
+  graph
+    |> button( "Press Me", id: :press_me )
+    |> slider( {{0,100}, 0}, id: :slide_me )
+  ```
 
-  * [`Caret`](Scenic.Component.Input.Caret.html) the vertical, blinking, caret line in a text field.
-  * [`RadioButton`](Scenic.Component.Input.RadioButton.html) a single radio button in a radio group.
+  ## Creating a Component
 
-  ## Verifiers
+  Creating a new Component is similar to creating a Scene with an extra validation function.
 
-  One of the main differences between a Component and a Scene is the two extra callbacks
-  that are used to verify incoming data. Since Components are meant to be reused, you
-  should do some basic validation that the data being set up is valid, then provide
-  feedback if it isn't.
 
-  ## Optional: Named Component
+  ```elixir
+  defmodule MyApp.Component.Fancy do
+    use Scenic.Component, has_children: false
 
-  Whether you override one or more message handlers, like `handle_info/2`,
-  you might want to use registered name as
-  [`Process.dest()`](https://hexdocs.pm/elixir/Process.html?#t:dest/0).
-  For this to be possible, you might pass `name:` keyword argument in a call
-  to `use Scenic.Component`.
+    @impl Scenic.Component
+    def validate(text) when is_bitstring(text), do: {:ok, text}
+    def validate(_), do: { :error, "Descriptive error message goes here" }
 
-      use Scenic.Component, name: __MODULE__
+    # the rest is similar to what you do in any other scene
 
-  Once passed, it limits the usage of this particular component to
-  a single instance, because two processes cannot be registered under the same name.
+    @impl Scenic.Scene
+    def init(scene, text, opts) do
+      # Create / push a graph here. Or set state...
+      # This is just like any other scene
+      { :ok, scene }
+    end
+
+  end
+  ```
+
+  ## Generating/Sending Events
+  
+  Communication from a component to it's parent is usually done via event messages. Scenic knows how
+  to route events to a component's parent. If that parent doesn't handle it, then it is automatically
+  routed to the parent's parent. If it gets all the way to the ViewPort itself, then it is ignored.
+
+  ```elixir
+    def init(scene, text, opts) do
+      { :ok, assign(scene, id: opts[:id]) }
+    end
+
+    def handle_input( {:cursor_button, {0, :release, _, _}}, :btn,
+          %Scene{assigns: %{id: id}} = scene
+        ) do
+      :ok = send_parent_event( scene, {:click, id}  )
+      { :noreply, scene }
+    end
+  ```
+
+  Notice how the component saved the original `id` that was passed in to the `init` function via
+  the `opts` list. This is then used to identify the click to the parent. This is a common pattern. 
+
+
+  ## Optional: Fetch/Put Handlers
+
+  If you would like the parent scene to be able to query your component's state without waiting
+  for the component to send events, you can optionally implement the following handle_call functions.
+
+  This is an "informal" spec... You don't have to implement it, but it is nice when you do.
+
+  ```elixir
+  defmodule MyApp.Component.Fancy do
+    use Scenic.Component, has_children: false
+    
+    # ... init, validate, and other functions ...
+
+    # handle a fetch request
+    def handle_call(:fetch, _, %{assigns: %{value: value}} = scene) do
+      { :reply, {:ok, value}, scene }
+    end
+
+    def handle_call({:put, value}, _, scene) when is_bitstring(value) do
+      { :reply, :ok, assign(scene, value: value) }
+    end
+
+    def handle_call({:put, _}, _, scene) do
+      {:reply, {:error, :invalid}, scene}
+    end
+  end
+  ```
+  
+  To make the above example more practical, you would probably also modify and push a graph when
+  handling the `:put` message. See the code for the standard input components for deeper examples.
+
 
   ## Optional: No Children
 
-  There is an optimization you can use. If you know for certain that your component
-  will not attempt to use any components, you can set `has_children` to `false` like this.
+  If you know for certain that your component will not itself use any components, you can
+  set `has_children` to `false` like this.
 
       use Scenic.Component, has_children: false
 
-  Setting `has_children` to `false` this will do two things. First, it won't create
-  a dynamic supervisor for this scene, which saves some resources.
+  When `:has_children` to `false`, no `DynamicSupervisor` is started to manage the scene's children,
+  and the the overall resource use and startup speed is more efficient. You will not,
+  however, be able to nested components in any scene where `:has_children` is `false`.
 
-  For example, the Button component sets `has_children` to `false`.
+  For example, the Button component sets `:has_children` to `false`.
 
-  This option is available for any Scene, not just components
+  This option is available for any Scene, not just components.
   """
 
   alias Scenic.Primitive
-
-  # @optional_callbacks add_to_graph: 3, info: 1
 
   @doc """
   Add this component to a `Scenic.Graph`
@@ -124,20 +178,19 @@ defmodule Scenic.Component do
   # defmacro
 
   @filter_out [
-    :input,
-    :hidden,
-    :fill,
-    :stroke,
-    :stroke_width,
-    :join,
     :cap,
-    :miter_limit,
+    :fill,
     :font,
     :font_size,
+    :hidden,
+    :input,
+    :join,
+    :line_height,
+    :miter_limit,
+    :scissor,
+    :stroke,
     :text_align,
     :text_base,
-    :text_height,
-    :scissor,
     :translate,
     :scale,
     :rotate,
