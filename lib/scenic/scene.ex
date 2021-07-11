@@ -444,7 +444,7 @@ defmodule Scenic.Scene do
   def request_input(scene, input) when is_atom(input), do: request_input(scene, [input])
 
   def request_input(%Scene{viewport: vp, pid: pid}, inputs) when is_list(inputs) do
-    ViewPort.Input.request(vp, inputs, pid)
+    ViewPort.Input.request(vp, inputs, pid: pid)
   end
 
   # --------------------------------------------------------
@@ -460,7 +460,7 @@ defmodule Scenic.Scene do
   def unrequest_input(scene, input_class \\ :all)
 
   def unrequest_input(%Scene{viewport: vp, pid: pid}, input_class) do
-    ViewPort.Input.unrequest(vp, input_class, pid)
+    ViewPort.Input.unrequest(vp, input_class, pid: pid)
   end
 
   # --------------------------------------------------------
@@ -497,7 +497,7 @@ defmodule Scenic.Scene do
   def capture_input(scene, input) when is_atom(input), do: capture_input(scene, [input])
 
   def capture_input(%Scene{viewport: vp, pid: pid}, inputs) when is_list(inputs) do
-    ViewPort.Input.capture(vp, inputs, pid)
+    ViewPort.Input.capture(vp, inputs, pid: pid)
   end
 
   # --------------------------------------------------------
@@ -513,7 +513,7 @@ defmodule Scenic.Scene do
   def release_input(scene, input_class \\ :all)
 
   def release_input(%Scene{viewport: vp, pid: pid}, input_class) do
-    ViewPort.Input.release(vp, input_class, pid)
+    ViewPort.Input.release(vp, input_class, pid: pid)
   end
 
   # --------------------------------------------------------

@@ -110,21 +110,19 @@ defmodule Scenic.ViewPort.Input do
   Capture one or more types of input.
 
   returns `:ok` or an error
-
-  This function should be called from a Scene. Typically, you will use
-  the `Scenic.Scene` scene version of this api, which then does some
-  housekeeping and call this one.
   """
   @spec capture(
           viewport :: ViewPort.t(),
           inputs :: ViewPort.Input.class() | list(ViewPort.Input.class()),
-          from :: nil | pid
+          opts :: Keyword.t()
         ) :: :ok
-  def capture(viewport, inputs, from \\ nil)
-  def capture(viewport, input, nil), do: capture(viewport, input, self())
-  def capture(viewport, input, from) when is_atom(input), do: capture(viewport, [input], from)
-
-  def capture(%ViewPort{pid: pid}, inputs, from) when is_list(inputs) and is_pid(from) do
+  def capture(viewport, inputs, opts \\ [])
+  def capture(viewport, input, opts) when is_atom(input), do: capture(viewport, [input], opts)
+  def capture(%ViewPort{pid: pid}, inputs, opts) when is_list(inputs) and is_list(opts) do
+    from = case Keyword.fetch(opts, :pid) do
+      {:ok, pid} -> pid
+      _ -> self()
+    end
     case validate_types(inputs) do
       {:ok, inputs} ->
         GenServer.cast(pid, {:_capture_input, inputs, from})
@@ -145,13 +143,15 @@ defmodule Scenic.ViewPort.Input do
   @spec release(
           viewport :: ViewPort.t(),
           input_class :: ViewPort.Input.class() | list(ViewPort.Input.class()) | :all,
-          from :: nil | pid
+          opts :: Keyword.t()
         ) :: :ok
-  def release(viewport, inputs \\ :all, from \\ nil)
-  def release(viewport, input, nil), do: release(viewport, input, self())
-  def release(viewport, input, from) when is_atom(input), do: release(viewport, [input], from)
-
-  def release(%ViewPort{pid: pid}, inputs, from) when is_list(inputs) and is_pid(from) do
+  def release(viewport, inputs \\ :all, opts \\ [])
+  def release(viewport, input, opts) when is_atom(input), do: release(viewport, [input], opts)
+  def release(%ViewPort{pid: pid}, inputs, opts) when is_list(inputs) and is_list(opts) do
+    from = case Keyword.fetch(opts, :pid) do
+      {:ok, pid} -> pid
+      _ -> self()
+    end
     GenServer.cast(pid, {:_release_input, inputs, from})
   end
 
@@ -186,7 +186,6 @@ defmodule Scenic.ViewPort.Input do
         ) :: {:ok, list}
   def fetch_captures(viewport, captured_by \\ nil)
   def fetch_captures(viewport, nil), do: fetch_captures(viewport, self())
-
   def fetch_captures(%ViewPort{pid: pid}, captured_by) when is_pid(captured_by) do
     GenServer.call(pid, {:_fetch_input_captures, captured_by})
   end
@@ -199,7 +198,6 @@ defmodule Scenic.ViewPort.Input do
   """
   @spec fetch_captures!(viewport :: ViewPort.t()) :: {:ok, list}
   def fetch_captures!(viewport)
-
   def fetch_captures!(%ViewPort{pid: pid}) do
     GenServer.call(pid, :_fetch_input_captures!)
   end
@@ -214,19 +212,18 @@ defmodule Scenic.ViewPort.Input do
   @spec request(
           viewport :: ViewPort.t(),
           inputs :: ViewPort.Input.class() | list(ViewPort.Input.class()),
-          from :: nil | pid
+          opts :: Keyword.t()
         ) :: :ok
-  def request(viewport, inputs, from \\ nil)
-  def request(viewport, input, nil), do: request(viewport, input, self())
-  def request(viewport, input, from) when is_atom(input), do: request(viewport, [input], from)
-
-  def request(%ViewPort{pid: pid}, inputs, from) when is_list(inputs) and is_pid(from) do
+  def request(viewport, inputs, opts \\ [])
+  def request(viewport, input, opts) when is_atom(input), do: request(viewport, [input], opts)
+  def request(%ViewPort{pid: pid}, inputs, opts) when is_list(inputs) and is_list(opts) do
+    from = case Keyword.fetch(opts, :pid) do
+      {:ok, pid} -> pid
+      _ -> self()
+    end
     case validate_types(inputs) do
-      {:ok, inputs} ->
-        GenServer.cast(pid, {:_request_input, inputs, from})
-
-      err ->
-        err
+      {:ok, inputs} -> GenServer.cast(pid, {:_request_input, inputs, from})
+      err -> err
     end
   end
 
@@ -237,13 +234,16 @@ defmodule Scenic.ViewPort.Input do
   @spec unrequest(
           viewport :: ViewPort.t(),
           input_class :: ViewPort.Input.class() | list(ViewPort.Input.class()) | :all,
-          from :: nil | pid
+          opts :: Keyword.t()
         ) :: :ok
-  def unrequest(viewport, inputs \\ :all, from \\ nil)
-  def unrequest(viewport, input, nil), do: unrequest(viewport, input, self())
-  def unrequest(viewport, input, from) when is_atom(input), do: unrequest(viewport, [input], from)
+  def unrequest(viewport, inputs \\ :all, opts \\ [])
+  def unrequest(viewport, input, opts) when is_atom(input), do: unrequest(viewport, [input], opts)
+  def unrequest(%ViewPort{pid: pid}, inputs, opts) when is_list(inputs) and is_list(opts) do
+    from = case Keyword.fetch(opts, :pid) do
+      {:ok, pid} -> pid
+      _ -> self()
+    end
 
-  def unrequest(%ViewPort{pid: pid}, inputs, from) when is_list(inputs) and is_pid(from) do
     GenServer.cast(pid, {:_unrequest_input, inputs, from})
   end
 
@@ -352,7 +352,7 @@ defmodule Scenic.ViewPort.Input do
        when is_integer(btn) and is_integer(mods) and is_number(x) and is_number(y),
        do: :ok
 
-  def validate( {:cursor_scroll, {{ox,oy}, {px,py}} )
+  def validate( {:cursor_scroll, {{ox,oy}, {px,py}}} )
       when is_integer(ox) and is_integer(oy) and is_integer(px) and is_integer(py), do: :ok
 
   def validate({:cursor_pos, {x, y}}) when is_number(x) and is_number(y), do: :ok
