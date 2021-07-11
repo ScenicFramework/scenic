@@ -113,7 +113,7 @@ defmodule Scenic.ViewPort.Input do
   """
   @spec capture(
           viewport :: ViewPort.t(),
-          inputs :: ViewPort.Input.class() | list(ViewPort.Input.class()),
+          inputs :: ViewPort.Input.class() | [ViewPort.Input.class()],
           opts :: Keyword.t()
         ) :: :ok
   def capture(viewport, inputs, opts \\ [])
@@ -142,7 +142,7 @@ defmodule Scenic.ViewPort.Input do
   """
   @spec release(
           viewport :: ViewPort.t(),
-          input_class :: ViewPort.Input.class() | list(ViewPort.Input.class()) | :all,
+          input_class :: ViewPort.Input.class() | [ViewPort.Input.class()] | :all,
           opts :: Keyword.t()
         ) :: :ok
   def release(viewport, inputs \\ :all, opts \\ [])
@@ -161,7 +161,7 @@ defmodule Scenic.ViewPort.Input do
   """
   @spec release!(
           viewport :: ViewPort.t(),
-          input_class :: ViewPort.Input.class() | list(ViewPort.Input.class()) | :all
+          input_class :: ViewPort.Input.class() | [ViewPort.Input.class()] | :all
         ) :: :ok
   def release!(viewport, inputs)
   def release!(viewport, input) when is_atom(input), do: release!(viewport, [input])
@@ -211,7 +211,7 @@ defmodule Scenic.ViewPort.Input do
   """
   @spec request(
           viewport :: ViewPort.t(),
-          inputs :: ViewPort.Input.class() | list(ViewPort.Input.class()),
+          inputs :: ViewPort.Input.class() | [ViewPort.Input.class()],
           opts :: Keyword.t()
         ) :: :ok
   def request(viewport, inputs, opts \\ [])
@@ -233,7 +233,7 @@ defmodule Scenic.ViewPort.Input do
   """
   @spec unrequest(
           viewport :: ViewPort.t(),
-          input_class :: ViewPort.Input.class() | list(ViewPort.Input.class()) | :all,
+          input_class :: ViewPort.Input.class() | [ViewPort.Input.class()] | :all,
           opts :: Keyword.t()
         ) :: :ok
   def unrequest(viewport, inputs \\ :all, opts \\ [])
