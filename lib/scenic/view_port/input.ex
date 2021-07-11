@@ -77,13 +77,12 @@ defmodule Scenic.ViewPort.Input do
           {:codepoint, {codepoint :: String.t(), mods :: integer}}
           | {:key, {key :: String.t(), :press | :release | :repeat, mods :: integer}}
           | {:cursor_button,
-             {button :: 0 | 1 | 2, action :: :press | :release, mods :: integer,
-              position :: Math.point()}}
+             {button :: 0 | 1 | 2, :press | :release, mods :: integer,
+             position :: Math.point()}}
           | {:cursor_scroll, {offset :: Math.point(), position :: Math.point()}}
           | {:cursor_pos, position :: Math.point()}
-          | {:viewport, {:enter, position :: Math.point()}}
-          | {:viewport, {:exit, position :: Math.point()}}
-          | {:viewport, {:reshape, size :: Math.point()}}
+          | {:viewport, {:enter | :exit | :reshape, xy :: Math.point()}}
+
 
   @type class ::
           :cursor_button
@@ -94,7 +93,7 @@ defmodule Scenic.ViewPort.Input do
           | :viewport
 
   @spec valid_inputs() :: [class]
-  def valid_inputs() do
+  defp valid_inputs() do
     [
       :cursor_button,
       :cursor_scroll,
@@ -109,7 +108,10 @@ defmodule Scenic.ViewPort.Input do
   @doc """
   Capture one or more types of input.
 
-  returns `:ok` or an error
+  Returns `:ok` or an error
+
+  ### Options
+  * `:pid` - Send input to the specified pid instead of the caller process.
   """
   @spec capture(
           viewport :: ViewPort.t(),
@@ -134,11 +136,10 @@ defmodule Scenic.ViewPort.Input do
 
   # --------------------------------------------------------
   @doc """
-  release the captured inputs from the calling process.
+  Release the captured inputs from the calling process.
 
-  This function should be called from a Scene. Typically, you will use
-  the `Scenic.Scene` scene version of this api, which then does some
-  housekeeping and call this one.
+  ### Options
+  * `:pid` - Release from the specified pid instead of the caller process.
   """
   @spec release(
           viewport :: ViewPort.t(),
@@ -157,7 +158,7 @@ defmodule Scenic.ViewPort.Input do
 
   # --------------------------------------------------------
   @doc """
-  release the captured inputs from ALL processes
+  Release the captured inputs from ALL processes
   """
   @spec release!(
           viewport :: ViewPort.t(),
@@ -175,10 +176,6 @@ defmodule Scenic.ViewPort.Input do
   Retrieve a list of input captured by the caller.
 
   Returns: { :ok, list }
-
-  This function should be called from a Scene. Typically, you will use
-  the `Scenic.Scene` scene version of this api, which then does some
-  housekeeping and call this one.
   """
   @spec fetch_captures(
           viewport :: ViewPort.t(),
@@ -207,7 +204,10 @@ defmodule Scenic.ViewPort.Input do
   @doc """
   Request one or more types of input.
 
-  returns :ok or an error
+  Returns :ok or an error
+
+  ### Options
+  * `:pid` - Send input to the specified pid instead of the caller process.
   """
   @spec request(
           viewport :: ViewPort.t(),
@@ -229,7 +229,10 @@ defmodule Scenic.ViewPort.Input do
 
   # --------------------------------------------------------
   @doc """
-  unrequest the captured inputs from the calling process.
+  Unrequest the captured inputs from the calling process.
+
+  ### Options
+  * `:pid` - Unrequest from the specified pid instead of the caller process.
   """
   @spec unrequest(
           viewport :: ViewPort.t(),
@@ -282,10 +285,10 @@ defmodule Scenic.ViewPort.Input do
   Send raw input to a viewport.
 
   This is used primarily by drivers to send raw user input to the viewport. Having said that,
-  nothing stops a scene from using it to send input into the system. There are a few cases
-  where that is useful.
+  nothing stops a scene or any other process from using it to send input into the system.
+  There are a few cases where that is useful.
 
-  See the [input docs](Scenic.ViewPort.Input.html#t:t/0) for the input formats you can send.
+  See the [input types](Scenic.ViewPort.Input.html#t:t/0) for the input formats you can send.
   """
   @spec send(
           viewport :: ViewPort.t(),
@@ -322,7 +325,7 @@ defmodule Scenic.ViewPort.Input do
 
   # --------------------------------------------------------
   @doc """
-  Validate an input messages.
+  Validate an input message.
 
   Returns `:ok` if the message is valid.
 

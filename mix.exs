@@ -216,12 +216,6 @@ defmodule Scenic.Mixfile do
         Scenic.Animation,
         Scenic.Animation.Basic.Rotate
       ],
-      ViewPort: [
-        Scenic.ViewPort.Config,
-        Scenic.ViewPort.Input,
-        Scenic.ViewPort.Context,
-        Scenic.ViewPort.Tables
-      ],
       Drivers: [
         Scenic.ViewPort.Driver,
         Scenic.ViewPort.Driver.Config,
