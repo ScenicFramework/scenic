@@ -18,7 +18,7 @@ defmodule Scenic.Primitive.Sector do
   * `angle` - the angle the Sector is swept through in radians
 
   ### Note
-  
+
   The format for Sector has changed since v0.10. It used to be
   {radius, start_angle, end_angle}. You can achieve the same effect in the
   new, simpler format by using the same radius and the new angle is the

@@ -5,7 +5,6 @@
 #
 
 defmodule Scenic.ViewPort.Input do
-
   @moduledoc """
   The low-level interface for working in input into and out of a `ViewPort`.
 
@@ -77,12 +76,10 @@ defmodule Scenic.ViewPort.Input do
           {:codepoint, {codepoint :: String.t(), mods :: integer}}
           | {:key, {key :: String.t(), :press | :release | :repeat, mods :: integer}}
           | {:cursor_button,
-             {button :: 0 | 1 | 2, :press | :release, mods :: integer,
-             position :: Math.point()}}
+             {button :: 0 | 1 | 2, :press | :release, mods :: integer, position :: Math.point()}}
           | {:cursor_scroll, {offset :: Math.point(), position :: Math.point()}}
           | {:cursor_pos, position :: Math.point()}
           | {:viewport, {:enter | :exit | :reshape, xy :: Math.point()}}
-
 
   @type class ::
           :cursor_button
@@ -120,11 +117,14 @@ defmodule Scenic.ViewPort.Input do
         ) :: :ok
   def capture(viewport, inputs, opts \\ [])
   def capture(viewport, input, opts) when is_atom(input), do: capture(viewport, [input], opts)
+
   def capture(%ViewPort{pid: pid}, inputs, opts) when is_list(inputs) and is_list(opts) do
-    from = case Keyword.fetch(opts, :pid) do
-      {:ok, pid} -> pid
-      _ -> self()
-    end
+    from =
+      case Keyword.fetch(opts, :pid) do
+        {:ok, pid} -> pid
+        _ -> self()
+      end
+
     case validate_types(inputs) do
       {:ok, inputs} ->
         GenServer.cast(pid, {:_capture_input, inputs, from})
@@ -148,11 +148,14 @@ defmodule Scenic.ViewPort.Input do
         ) :: :ok
   def release(viewport, inputs \\ :all, opts \\ [])
   def release(viewport, input, opts) when is_atom(input), do: release(viewport, [input], opts)
+
   def release(%ViewPort{pid: pid}, inputs, opts) when is_list(inputs) and is_list(opts) do
-    from = case Keyword.fetch(opts, :pid) do
-      {:ok, pid} -> pid
-      _ -> self()
-    end
+    from =
+      case Keyword.fetch(opts, :pid) do
+        {:ok, pid} -> pid
+        _ -> self()
+      end
+
     GenServer.cast(pid, {:_release_input, inputs, from})
   end
 
@@ -183,6 +186,7 @@ defmodule Scenic.ViewPort.Input do
         ) :: {:ok, list}
   def fetch_captures(viewport, captured_by \\ nil)
   def fetch_captures(viewport, nil), do: fetch_captures(viewport, self())
+
   def fetch_captures(%ViewPort{pid: pid}, captured_by) when is_pid(captured_by) do
     GenServer.call(pid, {:_fetch_input_captures, captured_by})
   end
@@ -195,6 +199,7 @@ defmodule Scenic.ViewPort.Input do
   """
   @spec fetch_captures!(viewport :: ViewPort.t()) :: {:ok, list}
   def fetch_captures!(viewport)
+
   def fetch_captures!(%ViewPort{pid: pid}) do
     GenServer.call(pid, :_fetch_input_captures!)
   end
@@ -216,11 +221,14 @@ defmodule Scenic.ViewPort.Input do
         ) :: :ok
   def request(viewport, inputs, opts \\ [])
   def request(viewport, input, opts) when is_atom(input), do: request(viewport, [input], opts)
+
   def request(%ViewPort{pid: pid}, inputs, opts) when is_list(inputs) and is_list(opts) do
-    from = case Keyword.fetch(opts, :pid) do
-      {:ok, pid} -> pid
-      _ -> self()
-    end
+    from =
+      case Keyword.fetch(opts, :pid) do
+        {:ok, pid} -> pid
+        _ -> self()
+      end
+
     case validate_types(inputs) do
       {:ok, inputs} -> GenServer.cast(pid, {:_request_input, inputs, from})
       err -> err
@@ -241,11 +249,13 @@ defmodule Scenic.ViewPort.Input do
         ) :: :ok
   def unrequest(viewport, inputs \\ :all, opts \\ [])
   def unrequest(viewport, input, opts) when is_atom(input), do: unrequest(viewport, [input], opts)
+
   def unrequest(%ViewPort{pid: pid}, inputs, opts) when is_list(inputs) and is_list(opts) do
-    from = case Keyword.fetch(opts, :pid) do
-      {:ok, pid} -> pid
-      _ -> self()
-    end
+    from =
+      case Keyword.fetch(opts, :pid) do
+        {:ok, pid} -> pid
+        _ -> self()
+      end
 
     GenServer.cast(pid, {:_unrequest_input, inputs, from})
   end
@@ -335,8 +345,8 @@ defmodule Scenic.ViewPort.Input do
   def validate(input)
 
   def validate({:codepoint, {codepoint, mods}})
-       when is_bitstring(codepoint) and is_integer(mods),
-       do: :ok
+      when is_bitstring(codepoint) and is_integer(mods),
+      do: :ok
 
   def validate({:key, {key, :press, mods}}) when is_bitstring(key) and is_integer(mods),
     do: :ok
@@ -348,15 +358,16 @@ defmodule Scenic.ViewPort.Input do
     do: :ok
 
   def validate({:cursor_button, {btn, :press, mods, {x, y}}})
-       when is_integer(btn) and is_integer(mods) and is_number(x) and is_number(y),
-       do: :ok
+      when is_integer(btn) and is_integer(mods) and is_number(x) and is_number(y),
+      do: :ok
 
   def validate({:cursor_button, {btn, :release, mods, {x, y}}})
-       when is_integer(btn) and is_integer(mods) and is_number(x) and is_number(y),
-       do: :ok
+      when is_integer(btn) and is_integer(mods) and is_number(x) and is_number(y),
+      do: :ok
 
-  def validate( {:cursor_scroll, {{ox,oy}, {px,py}}} )
-      when is_integer(ox) and is_integer(oy) and is_integer(px) and is_integer(py), do: :ok
+  def validate({:cursor_scroll, {{ox, oy}, {px, py}}})
+      when is_integer(ox) and is_integer(oy) and is_integer(px) and is_integer(py),
+      do: :ok
 
   def validate({:cursor_pos, {x, y}}) when is_number(x) and is_number(y), do: :ok
 

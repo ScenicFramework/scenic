@@ -107,8 +107,6 @@ defmodule Scenic.ColorTest do
     assert Color.to_rgba(hsl) == {:color_rgba, {0xFF, 0xE4, 0xC4, 0xFF}}
   end
 
-
-
   test "to_hsv implied - using to_rgb as truth" do
     # from bisque
     rgb = Color.to_rgb(:bisque)
@@ -179,14 +177,13 @@ defmodule Scenic.ColorTest do
 
   test "named looks right" do
     Color.named()
-    |> Enum.each( fn({n, {r, g, b}}) ->
+    |> Enum.each(fn {n, {r, g, b}} ->
       assert is_atom(n)
       assert is_integer(r) && r >= 0 && r <= 255
       assert is_integer(g) && g >= 0 && g <= 255
       assert is_integer(b) && b >= 0 && b <= 255
     end)
   end
-
 
   test ":alice_blue", do: assert(Color.to_rgb(:alice_blue) == {:color_rgb, {0xF0, 0xF8, 0xFF}})
 

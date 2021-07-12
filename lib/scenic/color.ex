@@ -22,7 +22,7 @@ defmodule Scenic.Color do
   Most of the time, you will use one of the pre-defined named colors from the
   Named Colors table. However, there are times when you want to work with
   other color formats ranging from simple grayscale to rgb to hsl. 
-  
+
   The following formats are all supported by the `Scenic.Color` module.
   The values of r, g, b, and a are integers between 0 and 255.
   For HSL and HSV, h is a float between 0 and 360, while the s, v and l values
@@ -71,19 +71,18 @@ defmodule Scenic.Color do
   @hsl :color_hsl
 
   @type implicit ::
-    atom
-    | {name :: atom, a :: integer}
-    | (gray :: integer)
-    | {gray :: integer, alpha :: integer}
-    | {red :: integer, green :: integer, blue :: integer}
-    | {red :: integer, green :: integer, blue :: integer, alpha :: integer}
+          atom
+          | {name :: atom, a :: integer}
+          | (gray :: integer)
+          | {gray :: integer, alpha :: integer}
+          | {red :: integer, green :: integer, blue :: integer}
+          | {red :: integer, green :: integer, blue :: integer, alpha :: integer}
 
   @type g :: {:color_g, grey :: integer}
   @type ga :: {:color_ga, {grey :: integer, alpha :: integer}}
   @type rgb :: {:color_rgb, {red :: integer, green :: integer, blue :: integer}}
   @type rgba ::
-          {:color_rgba,
-           {red :: integer, green :: integer, blue :: integer, alpha :: integer}}
+          {:color_rgba, {red :: integer, green :: integer, blue :: integer, alpha :: integer}}
   @type hsv :: {:color_hsv, {hue :: number, saturation :: number, value :: number}}
   @type hsl :: {:color_hsl, {hue :: number, saturation :: number, lightness :: number}}
   @type explicit :: g | ga | rgb | rgba | hsl | hsv
@@ -241,8 +240,6 @@ defmodule Scenic.Color do
     yellow: {0xFF, 0xFF, 0x00},
     yellow_green: {0x9A, 0xCD, 0x32}
   }
-
-
 
   # ============================================================================
   # https://www.w3schools.com/colors/colors_names.asp
@@ -458,6 +455,7 @@ defmodule Scenic.Color do
 
   # ------------------------------------
   defp do_rgb_to_hsv({0, 0, 0}), do: {0, 0, 0}
+
   defp do_rgb_to_hsv({r, g, b}) do
     # convert to range of 0 to 1
     r = r / 255
@@ -470,7 +468,7 @@ defmodule Scenic.Color do
     delta = max - min
 
     # calculate hsv
-    h = rgb_to_hue( r, g, b )
+    h = rgb_to_hue(r, g, b)
     s = delta / max * 100
     v = max * 100
 
@@ -478,6 +476,7 @@ defmodule Scenic.Color do
   end
 
   defp do_hsv_to_rgb({_, 0, v}), do: {v, v, v}
+
   defp do_hsv_to_rgb({h, s, v}) do
     s = s / 100
     v = v / 100
@@ -515,8 +514,8 @@ defmodule Scenic.Color do
     }
   end
 
-
   defp do_rgb_to_hsl({0, 0, 0}), do: {0, 0, 0}
+
   defp do_rgb_to_hsl({r, g, b}) do
     # convert to range of 0 to 1
     r = r / 255
@@ -529,12 +528,14 @@ defmodule Scenic.Color do
     delta = max - min
 
     # calculate hsl
-    h = rgb_to_hue( r, g, b )
+    h = rgb_to_hue(r, g, b)
     l = (max + min) / 2
-    s = case delta do
-      0 -> 0
-      d -> d / (1 - abs(2 * l - 1))
-    end
+
+    s =
+      case delta do
+        0 -> 0
+        d -> d / (1 - abs(2 * l - 1))
+      end
 
     {h, s * 100, l * 100}
   end
@@ -549,11 +550,12 @@ defmodule Scenic.Color do
       |> rem_f(360.0)
       # convert away from degrees
       |> Kernel./(60.0)
+
     i = trunc(h)
 
     c = (1 - abs(2 * l - 1)) * s
-    x = c * (1 - abs( rem_f(h, 2) - 1))
-    m = l - c/2
+    x = c * (1 - abs(rem_f(h, 2) - 1))
+    m = l - c / 2
 
     {r, g, b} =
       case i do
@@ -573,9 +575,8 @@ defmodule Scenic.Color do
     }
   end
 
-
   # rgb should be 0 to 1
-  defp rgb_to_hue( r, g, b ) do
+  defp rgb_to_hue(r, g, b) do
     # prep
     min = min(r, g) |> min(b)
     max = max(r, g) |> max(b)
@@ -619,10 +620,10 @@ defmodule Scenic.Color do
   # @doc """
   # Convert a named color to RGB format
   # """
-  @spec name_to_rgb(name :: atom) :: {red :: pos_integer, green :: pos_integer, blue :: pos_integer}
+  @spec name_to_rgb(name :: atom) ::
+          {red :: pos_integer, green :: pos_integer, blue :: pos_integer}
   defp name_to_rgb(name) when is_atom(name) do
     named()
     |> Map.get(name)
   end
-
 end

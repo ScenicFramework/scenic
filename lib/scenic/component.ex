@@ -69,7 +69,7 @@ defmodule Scenic.Component do
   ```
 
   ## Generating/Sending Events
-  
+
   Communication from a component to it's parent is usually done via event messages. Scenic knows how
   to route events to a component's parent. If that parent doesn't handle it, then it is automatically
   routed to the parent's parent. If it gets all the way to the ViewPort itself, then it is ignored.
@@ -126,7 +126,7 @@ defmodule Scenic.Component do
     end
   end
   ```
-  
+
   To make the above example more practical, you would probably also modify and push a graph when
   handling the `:put` message. See the code for the standard input components for deeper examples.
 
