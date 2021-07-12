@@ -10,36 +10,23 @@ defmodule Scenic.PubSub do
   use GenServer
 
   @moduledoc """
-  `Scenic.PubSub` is a combination pub/sub server and data cache. It is intended to be the interface between
-  sensors (or other data sources) and Scenic scenes, although it has no dependencies on Scenic and can be used
-  in other applications.
+  `Scenic.PubSub` is a combination pub/sub server and data cache.
+
+  It is intended to be the interface between sensors (or other data sources) and Scenic scenes.
 
   ## Why Scenic.PubSub
 
   Sensors (or other data sources) and scenes often need to communicate, but tend to operate on different timelines.
 
-  Some sensors update fairly slowly or don't behave well when asked to get data at random times by multiple clients. `Scenic.PubSub` creates a GenServer that collects data from a data source in a well-behaved manner, yet is able to serve that data on demand or by subscription to many clients.
+  Some sensors update fairly slowly or don't behave well when asked to get data at random times by multiple clients.
+  `Scenic.PubSub` is backed by a `GenServer` that collects data from a data source in a well-behaved manner,
+  yet is able to serve that data on demand or by subscription to many clients.
 
 
   ## Global Scope
 
-  It is important to note that Scenic.PubSub is Global in scope. In other words, anything published
-  into Scenic.PubSub is visible to all ViewPorts and Scenes.
-
-  This good if you have a sensor that will be read by multiple scenes and/or viewports.
-  Then it is only held in memory once.
-
-  This is *might* be bad for something like a camera. If you publish camera frames into PubSub even if
-  no scenes are listening, then you are doing work to move a potentially large amount of data for
-  little to no benefit. If there is only scene that uses the camera, and there is is only one ViewPort,
-  then it is better to use Scenic.ViewPort.Stream to publish the camera frames.
-
-  On the other hand, if multiple ViewPorts are streaming camera frames, then publishing the camera data
-  to PubSub might be exactly what you want. You can use Scenic.ViewPort.Stream.pubsub to link ViewPort streaming
-  to items in PubSub. This keeps only one copy of the frame data in memory.
-
-  There is a design decision here for you to make.
-
+  It is important to note that `Scenic.PubSub` is global in scope. In other words, anything published
+  into `Scenic.PubSub` is visible to all `ViewPorts` and `Scenes`.
 
   ## Registering Data Sources
 
@@ -49,7 +36,8 @@ defmodule Scenic.PubSub do
 
         Scenic.PubSub.register( source_id )
 
-  The `source_id` parameter must be an atom that names the sensor. Subscribers will use this id to request data or subscriptions to the source.
+  The `source_id` parameter must be an atom that names the sensor. Subscribers will use this id to request
+  data or subscriptions to the source.
 
   You can can also unregister data sources if they are no longer available.
 

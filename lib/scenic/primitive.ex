@@ -9,11 +9,11 @@ defmodule Scenic.Primitive do
 
   ## What is a primitive
 
-  A primitive is the simplest thing Scenic knows how to draw on the screen. There is is only
-  a small, fixed set of them, but they can be combined in a graph to draw very complicated
+  A primitive is the simplest thing Scenic knows how to draw on the screen. There is 
+  a, fixed set of them, but they can be combined in a graph to draw very complicated
   images.
 
-  In general, each Primitive type has a piece of data that it expects to operate on. For
+  In general, each Primitive has a piece of data that it expects to operate on. For
   example, Primitive.Text requires a bitstring. Primitive.Circle requires a radius. Please
   see the documentation for each primitive for details.
 
@@ -23,35 +23,42 @@ defmodule Scenic.Primitive do
   [`Scenic.Primitives`](Scenic.Primitives.html). These helpers can both add primitives to
   a scene you are building and modify later as you react to events.
 
+  ```elixir
+  import Scenic.Primitives
+
+  @graph Scenic.Graph.build()
+    |> rect( {100, 50}, stroke: {1, :yellow} )
+    |> rectangle( {100, 50}, stroke: {1, :yellow} )
+  ```
+
   Once you get a primitive out of a graph via functions such as `Graph.modify`, or `Graph.get`,
   You can use the generic helpers in this module to access or manipulate them.
 
-  ## Standard primitives
+  ## Standard Primitives
 
   The set of primitives supported in Scenic is fixed in any given version. They have been chosen
   to provide the maximum flexibility when combined together, while still requiring the minimal
   amount of code and maintenance.
 
-  If required, new primitives can be added in the future, but they will not work with older
-  versions of the drivers.
+  See the documentation for each primitive's module for details on it's data type.
 
-  * [`Arc`](Scenic.Primitive.Arc.html) draws an arc. This would be a line cut out of a part of the edge of a circle. If you want a shape that looks like a piece of pie, then you should use the [`Sector`](Scenic.Primitive.Sector.html).
-  * [`Circle`](Scenic.Primitive.Circle.html) draws a circle.
-  * [`Component`](Scenic.Primitive.Component.html) Starts and renders a child component.
-  * [`Ellipse`](Scenic.Primitive.Ellipse.html) draws an ellipse.
-  * [`Group`](Scenic.Primitive.Group.html) doesn't draw anything. Instead, it creates a node in the graph that you can insert more primitives into. Any styles or transforms you apply to the Group are inherited by all the primitives below it.
-  * [`Line`](Scenic.Primitive.Line.html) draws a line.
-  * [`Quad`](Scenic.Primitive.Quad.html) draws polygon with four sides.
-  * [`Rectangle`](Scenic.Primitive.Rectangle.html) draws a rectangle.
-  * [`RoundedRectangle`](Scenic.Primitive.RoundedRectangle.html) draws a rectangle with the corners rounded by a given radius.
-  * [`Script`](Scenic.Primitive.Script.html) sends a given render script to the drivers unchanged.
-  * [`Sector`](Scenic.Primitive.Sector.html) draws a shape that looks like a piece of pie. If you want to stroke just the curved edge, then combine it with an [`Arc`](Scenic.Primitive.Arc.html).
-  * [`Sprites`](Scenic.Primitive.Sprites.html) draw an image, or multiple parts of an image.
-  * [`Text`](Scenic.Primitive.Text.html) draws a string of text.
-  * [`Triangle`](Scenic.Primitive.Triangle.html) draws a triangle.
-
-
-  Note: the Path primitive has been deprecated. Use the Script primitive instead.
+  | Helper | Primitive Module | Description |
+  |---|---|---|
+  | [`arc/3`](Scenic.Primitives.html#arc/3) | `Scenic.Primitive.Arc` | Draw an arc around a circle |
+  | [`circle/3`](Scenic.Components.html#circle/3) | `Scenic.Primitive.Circle` | Draw a full circle |
+  | [`component/3`](Scenic.Primitives.html#component/3) | `Scenic.Primitive.Component` | Start a child component |
+  | [`ellipse/3`](Scenic.Primitives.html#ellipse/3) | `Scenic.Primitive.Ellipse` | Draw an ellipse |
+  | [`group/3`](Scenic.Primitives.html#group/3) | `Scenic.Primitive.Group` | Create a group |
+  | [`line/3`](Scenic.Primitives.html#line/3) | `Scenic.Primitive.Line` | Draw a line |
+  | [`path/3`](Scenic.Primitives.html#path/3) | `Scenic.Primitive.Path` | Draw a complicated path |
+  | [`quad/3`](Scenic.Primitives.html#quad/3) | `Scenic.Primitive.Quad` | Draw a quad |
+  | [`rect/3`](Scenic.Primitives.html#rect/3) | `Scenic.Primitive.Rectangle` | Draw a rectangle |
+  | [`rrect/3`](Scenic.Primitives.html#rrect/3) | `Scenic.Primitive.RoundedRectangle` | Draw a rounded rectangle |
+  | [`script/3`](Scenic.Primitives.html#script/3) | `Scenic.Primitive.Script` | Run a referenced draw script |
+  | [`sector/3`](Scenic.Primitives.html#sector/3) | `Scenic.Primitive.Sector` | A boolean toggle control. |
+  | [`sprites/3`](Scenic.Primitives.html#sprites/3) | `Scenic.Primitive.Sprites` | Draw a sector |
+  | [`text/3`](Scenic.Primitives.html#text/3) | `Scenic.Primitive.Text` | Draw a string of text |
+  | [`triangle/3`](Scenic.Primitives.html#triangle/3) | `Scenic.Primitive.Triangle` | Draw a triangle |
   """
 
   alias Scenic.Graph

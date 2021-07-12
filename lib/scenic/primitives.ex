@@ -63,9 +63,9 @@ defmodule Scenic.Primitives do
   together.
 
       @graph Graph.build()
-      |> text( "Hello World" )
-      |> rectangle( {100, 200} )
-      |> line( {{10,20}, {100, 20}})
+        |> text( "Hello World" )
+        |> rectangle( {100, 200} )
+        |> line( {{10,20}, {100, 20}})
 
 
   When modifying a graph, you can again use the helpers by passing
@@ -77,7 +77,6 @@ defmodule Scenic.Primitives do
       end)
 
       # or, more compactly...
-
       Graph.modify(graph, :rect, &rectangle(&1, {200, 300}) )
 
   In each case, the second parameter is a data term that is specific
@@ -90,9 +89,9 @@ defmodule Scenic.Primitives do
   transforms and such.
 
       @graph Graph.build()
-      |> text( "Hello World", id: :hello, font_size: 24, rotate: 0.4 )
-      |> rectangle( {100, 200}, translate: {10, 30}, fill: :yellow)
-      |> line( {{10,20}, {100, 20}}, id: :a_line, stroke: {4, :green})
+        |> text( "Hello World", id: :hello, font_size: 24, rotate: 0.4 )
+        |> rectangle( {100, 200}, translate: {10, 30}, fill: :yellow)
+        |> line( {{10,20}, {100, 20}}, id: :a_line, stroke: {4, :green})
 
   ## Deferred Primitive Helpers
 
@@ -121,7 +120,7 @@ defmodule Scenic.Primitives do
       ]
 
       g = items
-          |> Enum.reduce(Graph.build(), fn item, g -> item.(g) end)
+        |> Enum.reduce(Graph.build(), fn item, g -> item.(g) end)
 
   Deferred helpers let us express primitives as data. This
   makes it easier to define display graphs at compile time, particularly
@@ -176,7 +175,7 @@ defmodule Scenic.Primitives do
   ### Style options
 
   Style options affect the way primitives are drawn. They include options such
-  as `:fill`, `:stroke`, `:font` and many more. See the Styles documentation
+  as `:fill`, `:stroke`, `:font` and many more. See the `Scenic.Primitive.Style` documentation
   for the full list. Style options are inherited down the graph. In other words,
   if you set a style on the root of the graph like this:
   `Graph.build(font_size: 24)`, then all text items in all groups will be
