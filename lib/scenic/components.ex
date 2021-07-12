@@ -17,14 +17,14 @@ defmodule Scenic.Components do
 
   ## About Components
 
-  Components are small scenes that are referenced, and managed, by another
-  scene.  They are useful for reusing bits of UI and containing the logic that
+  Components are small scenes that are managed, by another scene.
+  They are useful for reusing bits of UI and containing the logic that
   runs them.
 
   ## Helper Functions
 
   This module contains a set of helper functions to make it easy to add, or
-  modify, the standard components in a graph.
+  modify, the standard components.
 
   In general, each helper function is of the form:
 
@@ -40,10 +40,6 @@ defmodule Scenic.Components do
   This doesn't happen all at once. These helper functions simply add a
   reference to a to-be-started component to your graph. When you push a graph,
   the ViewPort then manages the life cycle of the components.
-
-  You can also supervise components yourself, but then you should add the scene
-  reference yourself via the `scene_ref/3` function, which is in the
-  `Scenic.Primitives` module.
 
   When adding components to a graph, each helper function accepts a graph as
   the first parameter and returns the transformed graph. This makes is very
@@ -73,35 +69,6 @@ defmodule Scenic.Components do
 
       @graph Graph.build()
       |> button("Press Me", id: :sample_button, rotate: 0.4)
-
-  ### Event messages
-
-  Most basic or input components exist to collect data and/or send messages to
-  the host scene that references.
-
-  For example, when a button scene decides that it has been "clicked", the
-  generic button component doesn't know how to do anything with that
-  information. So it sends a `{:click, id}` to the host scene that referenced
-  it.
-
-  That scene can intercept the message, act on it, transform it, and/or send it
-  up to the host scene that references it. (Components can be nested many
-  layers deep)
-
-  To do this, the **host scene** should implement the `filter_event` callback.
-
-  ## Examples:
-
-        def filter_event({:click, :sample_button}, _, state) do
-          {:halt, state}
-        end
-
-        def filter_event({:click, :sample_button}, _, state) do
-          {:cont, {:click, :transformed}, state}
-        end
-
-  Inside a `filter_event` callback you can modify a graph, change state, send
-  messages, transform the event, stop the event, and much more.
   """
 
   # --------------------------------------------------------
@@ -213,8 +180,8 @@ defmodule Scenic.Components do
 
   ### Messages
 
-  When the state of the checkbox, it sends an event message to the host scene
-  in the form of:
+  When the state of the checkbox changes, it sends an event message to the
+  parent scene in the form of:
 
   `{:value_changed, id, checked?}`
 
@@ -278,7 +245,7 @@ defmodule Scenic.Components do
 
   ### Data
 
-  `{items, initial_item}`
+  `{items, initial_id}`
 
   * `items` - must be a list of items, each of which is: `{text, id}`. See below...
   * `initial_item` - the `id` of the initial selected item. It can be any term
@@ -295,14 +262,14 @@ defmodule Scenic.Components do
 
   ### Messages
 
-  When the state of the checkbox, it sends an event message to the host scene
+  When the state of the Dropdown changes, it sends an event message to the host scene
   in the form of:
 
   `{:value_changed, id, selected_item_id}`
 
   ### Options
 
-  Dropdowns honor the following list of options.
+  Dropdown honors the following list of options.
 
   ### Styles
 
@@ -377,19 +344,17 @@ defmodule Scenic.Components do
 
   ### Data
 
-  `radio_buttons`
+  `{radio_buttons, selected_id}`
 
   * `radio_buttons` must be a list of radio button data. See below.
 
   Radio button data:
 
-  `{text, radio_id, checked? \\\\ false}`
+  `{text, radio_id}`
 
   * `text` - must be a bitstring
-  * `button_id` - can be any term you want. It will be passed back to you as the
+  * `radio_id` - can be any term you want. It will be passed back to you as the
   group's value.
-  * `checked?` - must be a boolean and indicates if the button is selected.
-  `checked?` is not required and will default to `false` if not supplied.
 
   ### Messages
 
@@ -433,11 +398,11 @@ defmodule Scenic.Components do
   The following example creates a radio group and positions it on the screen.
 
       graph
-      |> radio_group([
+      |> radio_group([{
           {"Radio A", :radio_a},
-          {"Radio B", :radio_b, true},
+          {"Radio B", :radio_b},
           {"Radio C", :radio_c},
-        ], id: :radio_group_id, translate: {20, 20})
+        ], :radio_b}, id: :radio_group, translate: {20, 20})
   """
   @spec radio_group(
           source :: Graph.t() | Primitive.t(),
