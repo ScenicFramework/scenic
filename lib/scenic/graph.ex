@@ -17,34 +17,53 @@ defmodule Scenic.Graph do
   hierarchical tree of data that describes a set of things to draw on the screen.
 
   You build a graph by appending primitives (individual things to draw) to the current
-  node in the tree. Nodes are represented by the Group primitive in Scenic.
+  node in the tree. Nodes are represented by `Scenic.Primitive.Group`.
 
   The following example builds a simple graph that displays some text, creates a group,
   then adds more text and a rounded rectangle to it.
 
-      @graph  Scenic.Graph.build()
-      |> text( "This is some text", translate: {20, 20} )
-      |> group( fn(graph) ->
-        graph
-        |> text( "This text is in a group", translate: {200, 24} )
-        |> rounded_rectangle( {400, 30}, stroke: {2, :blue})
-      end, translate: {20, 100}, text_align: :center)
+  ```elixir
+  @graph  Scenic.Graph.build()
+  |> text( "This is some text", translate: {20, 20} )
+  |> group( fn(graph) ->
+    graph
+    |> text( "This text is in a group", translate: {200, 24} )
+    |> rounded_rectangle( {400, 30}, stroke: {2, :blue})
+  end, translate: {20, 100}, text_align: :center)
+  ```
 
-  There is a fair amount going on in the example above, we will break it down line by line.
-  The first line
+  There is a fair amount going on in the example above. The first line builds an empty
+  graph with only one group as the root node.
 
-      @graph  Scenic.Graph.build()
+  ```elixir
+  @graph Scenic.Graph.build()
+  ```
 
-  builds an empty graph with only one group as the root node. By assigning it to the
-  compile directive @group, we know that this group will be built once at compile
-  time and will be very fast to access later during runtime.
+  By assigning it to the
+  compile directive `@group`, we know that this group will be built once at compile
+  time and will be very fast to access later during runtime. You could also do this
+  at runtime, in your init function for example.
 
-  The empty graph that is returned from `build()` is then passed to `text(...)`, which
-  adds a text primitive to the root group. The graph returned from that call is then
-  passed again into the `group(...)` call. This creates a new group and then calls an
-  anonymous function that you can use to add primitives to the newly created group.
+  The empty graph that is returned from `build()` is then passed to
 
-  Notice that the anonymous "builder" function receives a graph as its only parameter.
+  ```elixir
+  |> text( "This is some text", translate: {20, 20} )
+  ```
+
+  This adds a text primitive to the root group. The graph returned from that call is then
+  passed again into
+
+  ```elixir
+  |> group( fn(graph) ->
+    graph
+    |> text( "This text is in a group", translate: {200, 24} )
+    |> rounded_rectangle( {400, 30}, stroke: {2, :blue})
+  end, translate: {20, 100}, text_align: :center)
+  ```
+
+  This creates a new group which is filled with several other primitives.
+
+  Notice that the anonymous group "builder" function receives a graph as its only parameter.
   This is the same graph that we are building, except that it has a marker indicating
   that new primitives added to it are inserted into the new group instead of the
   root of the graph.
@@ -60,13 +79,15 @@ defmodule Scenic.Graph do
   contained by that group will have those properties applied to them too. This is true
   even if the primitive is nested in several groups at the same time.
 
-      @graph  Scenic.Graph.build(font: :roboto_mono)
-      |> text( "This text inherits the font", translate: {20, 20} )
-      |> group( fn(graph) ->
-        graph
-        |> text( "This text also inherits the font", translate: {200, 24} )
-        |> text( "This text overrides the font", font: :roboto )
-      end, translate: {20, 100}, text_align: :center)
+  ```elixir
+  @graph  Scenic.Graph.build(font: :roboto_mono)
+  |> text( "This text inherits the font", translate: {20, 20} )
+  |> group( fn(graph) ->
+    graph
+    |> text( "This text also inherits the font", translate: {200, 24} )
+    |> text( "This text overrides the font", font: :roboto )
+  end, translate: {20, 100}, text_align: :center)
+  ```
 
   Transforms, such as translate, rotate, scale, also inherit down the graph, but do
   so slightly differently than the styles. With a style, when you set a specific value
@@ -75,6 +96,8 @@ defmodule Scenic.Graph do
   With a transform, the values multiply together. This allows you to position items
   within a group relative to the origin {0,0}, then move the group as a whole, keeping
   the interior positions unchanged.
+
+  Styles, however, are NOT inherited by components even though transforms are.
 
   ## Modifying a Graph
 
@@ -90,17 +113,21 @@ defmodule Scenic.Graph do
 
   For example, lets go back to our graph with the two text items in it.
 
-      @graph Graph.build(font: :roboto, font_size: 24, rotate: 0.4)
-        |> text("Hello World", translate: {300, 300}, id: :small_text)
-        |> text("Bigger Hello", font_size: 40, scale: 1.5, id: :big_text)
+  ```elixir
+  @graph Graph.build(font: :roboto, font_size: 24, rotate: 0.4)
+    |> text("Hello World", translate: {300, 300}, id: :small_text)
+    |> text("Bigger Hello", font_size: 40, scale: 1.5, id: :big_text)
+  ```
 
   This time, we've assigned ids to both of the text primitives. This makes it easy to
   find and modify that primitive in the graph.
 
-      graph =
-        @graph
-        |> Graph.modify( :small_text, &text(&1, "Smaller Hello", font_size: 16))
-        |> Graph.modify( :big_text, &text(&1, "Bigger Hello", font_size: 60))
+  ```elixir
+  graph =
+    @graph
+    |> Graph.modify( :small_text, &text(&1, "Smaller Hello", font_size: 16))
+    |> Graph.modify( :big_text, &text(&1, "Bigger Hello", font_size: 60))
+  ```
 
   Notice that the graph is modified multiple times in the pipeline. The `push_graph/1`
   function is relatively heavy when the graph references other scenes. The recommended
@@ -111,9 +138,11 @@ defmodule Scenic.Graph do
   When using a Graph, it is extremely common to access and modify primitives. The way
   you do this is by putting an id on the primitives you care about in a graph.
 
-      @graph Graph.build()
-        |> text("small text", id: :small_text)
-        |> text("bit text", id: :big_text)
+  ```elixir
+  @graph Graph.build()
+    |> text("small text", id: :small_text)
+    |> text("bit text", id: :big_text)
+  ```
 
   When you get primitives, or modify a graph, you specify them by id. This happens
   quickly, but at a cost of using a little memory. If you aren't going to access
@@ -157,21 +186,8 @@ defmodule Scenic.Graph do
 
   @err_msg_depth "Graph too deep. Possible circular reference!"
   @err_msg_depth_option "The :max_depth option must be a positive integer"
-  # @err_msg_group "Can only add primitives to Group nodes"
   @err_msg_put "Graph.put can only update existing items."
   @err_msg_get_id_one "Graph.get! expected to find one and only one element"
-
-  # ============================================================================
-  # @doc """
-  # Returns the root group of a graph as a primitive.
-  # Deprecated. Use `Graph.get!(graph, :_root_)` instead.
-  # """
-  # @deprecated "Use Graph.get!(graph, :_root_) instead"
-  # @spec get_root(graph :: t()) :: Primitive.t()
-  # def get_root(%__MODULE__{} = graph) do
-  #   get!(graph, :_root_)
-  #   # Map.delete(graph.primitives[@root_uid], :styles)
-  # end
 
   # ============================================================================
   # build a new graph, starting with the given element
