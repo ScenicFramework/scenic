@@ -30,36 +30,42 @@ defmodule Scenic.Component do
   | [`toggle/3`](Scenic.Components.html#toggle/3) | `Scenic.Component.Input.Toggle` | A boolean toggle control. |
 
   ```elixir
-  import Scenic.Components
-
-  graph
-    |> button( "Press Me", id: :press_me )
-    |> slider( {{0,100}, 0}, id: :slide_me )
-  ```
-
-  ## Creating a Component
-
-  Creating a new Component is similar to creating a Scene with an extra validation function.
-
-
-  ```elixir
-  defmodule MyApp.Component.Fancy do
-    use Scenic.Component, has_children: false
-
-    @impl Scenic.Component
-    def validate(text) when is_bitstring(text), do: {:ok, text}
-    def validate(_), do: { :error, "Descriptive error message goes here" }
-
-    # the rest is similar to what you do in any other scene
+  defmodule MyApp.Scene.MyScene do
+    use Scenic.Scene
+    import Scenic.Components
 
     @impl Scenic.Scene
     def init(scene, text, opts) do
-      # Create / push a graph here. Or set state...
-      # This is just like any other scene
-      { :ok, scene }
-    end
+      graph =
+        Scenic.Graph.build()
+        |> button( "Press Me", id: :press_me )
+        |> slider( {{0,100}, 0}, id: :slide_me )
 
+      { :ok, push_graph(scene, graph) }
+    end
   end
+  ```
+
+  ## Creating Custom Components
+
+  Creating a custom component that you can use in your scenes is just like creating a scene
+  with an extra validation function. This validation function is used when the graph that 
+  uses your component is built in order to make sure it uses data that conforms to what your
+  component expects.
+
+  ```elixir
+    defmodule MyApp.Component.Fancy do
+      use Scenic.Component
+
+      @impl Scenic.Component
+      def validate(data) when is_bitstring(data), do: {:ok, data}
+      def validate(_), do: {:error, "Descriptive error message goes here."}
+
+      @impl Scenic.Scene
+      def init(scene, data, opts) do
+        { :ok, scene }
+      end
+    end
   ```
 
   ## Generating/Sending Events
@@ -69,15 +75,24 @@ defmodule Scenic.Component do
   routed to the parent's parent. If it gets all the way to the ViewPort itself, then it is ignored.
 
   ```elixir
-    def init(scene, text, opts) do
-      { :ok, assign(scene, id: opts[:id]) }
-    end
+    defmodule MyApp.Component.Fancy do
+      
+    # ... validate, and other setup ...
 
-    def handle_input( {:cursor_button, {0, :release, _, _}}, :btn,
-          %Scene{assigns: %{id: id}} = scene
-        ) do
-      :ok = send_parent_event( scene, {:click, id}  )
-      { :noreply, scene }
+      @impl Scenic.Scene
+      def init(scene, data, opts) do
+        # setup and push a graph here...
+        { :ok, assign(scene, id: opts[:id] }
+      end
+
+      @impl Scenic.Scene
+      def handle_input( {:cursor_button, {0, :release, _, _}}, :btn,
+            %Scene{assigns: %{id: id}} = scene
+          ) do
+        :ok = send_parent_event( scene, {:click, id}  )
+        { :noreply, scene }
+      end
+
     end
   ```
 
@@ -94,11 +109,10 @@ defmodule Scenic.Component do
 
   ```elixir
   defmodule MyApp.Component.Fancy do
-    use Scenic.Component, has_children: false
+    use Scenic.Component
     
     # ... init, validate, and other functions ...
 
-    # handle a fetch request
     def handle_call(:fetch, _, %{assigns: %{value: value}} = scene) do
       { :reply, {:ok, value}, scene }
     end
@@ -117,18 +131,23 @@ defmodule Scenic.Component do
   handling the `:put` message. See the code for the standard input components for deeper examples.
 
 
-  ## Optional: No Children
+  ## Optional: `has_children: false`
 
   If you know for certain that your component will not itself use any components, you can
-  set `has_children` to `false` like this.
+  set `:has_children` to `false` like this.
 
-      use Scenic.Component, has_children: false
+  ```elixir
+  defmodule MyApp.Component.Fancy do
+    use Scenic.Component, has_children: false
+    # ...
+  end
+  ```
 
-  When `:has_children` to `false`, no `DynamicSupervisor` is started to manage the scene's children,
-  and the the overall resource use and startup speed is more efficient. You will not,
+  When `:has_children` is set to `false`, no `DynamicSupervisor` is started to manage the
+  scene's children, overall resource use is improved, and startup time is faster. You will not,
   however, be able to nested components in any scene where `:has_children` is `false`.
 
-  For example, the Button component sets `:has_children` to `false`.
+  For example, the `Scenic.Component.Button` component sets `:has_children` to `false`.
 
   This option is available for any Scene, not just components.
   """
@@ -136,13 +155,18 @@ defmodule Scenic.Component do
   alias Scenic.Primitive
 
   @doc """
-  Add this component to a `Scenic.Graph`
+  Add this component to a Graph.
+
+  A standard `add_to_graph/3` is automatically added to your component. Override this
+  callback if you want to customize it.
   """
   @callback add_to_graph(graph :: Scenic.Graph.t(), data :: any, opts :: Keyword.t()) ::
               Scenic.Graph.t()
 
   @doc """
-  Validate that the data for a component is correctly formed
+  Validate that the data for a component is correctly formed.
+
+  This callback is required. 
   """
   @callback validate(data :: any) :: {:ok, data :: any} | {:error, String.t()}
 
@@ -207,11 +231,23 @@ defmodule Scenic.Component do
     Enum.reject(opts, fn {key, _} -> Enum.member?(@filter_out, key) end)
   end
 
+  @doc """
+  Fetch the current value from a component.
+
+  This is not supported by all components. Please see the component you are
+  interesting in querying.
+  """
   @spec fetch(component_pid :: pid) :: {:ok, any} | {:error, atom}
   def fetch(component_pid) do
     GenServer.call(component_pid, :fetch)
   end
 
+  @doc """
+  Set the value of a component.
+
+  This is not supported by all components. Please see the component you are
+  interesting in modifying.
+  """
   @spec put(component_pid :: pid, value :: any) :: :ok | {:error, atom}
   def put(component_pid, value) do
     GenServer.call(component_pid, {:put, value}, 5_000_000)
