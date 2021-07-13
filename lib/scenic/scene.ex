@@ -67,7 +67,7 @@ defmodule Scenic.Scene do
 
   Your application is a collection of scenes that are in use at different times. There
   is only ever **one** scene showing in a [`ViewPort`](overview_viewport.html) at a given
-  time. However, scenes can reference other scenes, effectively embedding their graphs
+  time. However, scenes can instantiate components, effectively embedding their graphs
   inside the main one. More on that below.
 
 
@@ -85,8 +85,7 @@ defmodule Scenic.Scene do
   Example of building a graph during compile time:
 
     @graph  graph.build(font_size: 24)
-    |> button({"Press Me", :button_id}, translate: {20, 20})
-
+      |> button({"Press Me", :button_id}, translate: {20, 20})
 
 
   Rather than having a single scene maintain a massive graph of UI,
@@ -101,7 +100,7 @@ defmodule Scenic.Scene do
   handlers of a check-box scene don't need to know anything about
   how a slider works, even though they are both used in the same
   parent scene. At best, they only need to know that they
-  both conform to the `Component.Input` behaviour, and can thus
+  both conform to the `Component.Input` behavior, and can thus
   query or set each others value. Though it is usually
   the parent scene that does that.
 
@@ -112,47 +111,20 @@ defmodule Scenic.Scene do
   immediate control. You update that graph by calling `push_graph`
   again.
 
-  **Note: ** The use of `push_graph` when returning from a scene update
-  has been deprecated. The use of `push: graph` in the return value is preferred.
+  ## Scene State
 
-  This does mean you could maintain two separate graphs
-  and rapidly switch back and forth between them via push_graph.
-  I have not yet hit a good use case for that.
+  Scenes are just a specialized form of `GenServer`. This means they can react to messages
+  and can have state. However, scene state is a bit like socket state in `Phoenix` in that
+  It has a strict format, but you can add anything you want into it's `:assigns` map.
 
-  #### Graph ID.
 
-  This is an advanced feature...
+  #### Multiple Graphs
 
-  Each scene has a default graph id of nil. When you send a graph
-  to the ViewPort by calling `push_graph(graph)`, you are really
-  sending it with a sub-id of nil. This encourages thinking that
-  scenes and graphs have a 1:1 relationship. There are, however,
-  times that you want a single scene to host multiple graphs that
-  can refer to each other via sub-ids. You would push them
-  like this: `push_graph(graph, id)`. Where the id is any term you
-  would like to use as a key.
+  Any given scene can maintain multiple graphs and multiple draw scripts.
+  They are identified from each other with an id that you attach.
 
-  There are several use cases where this makes sense.
-  1) You have a complex tree (perhaps a lot of text) that you want
-  to animate. Rather than re-rendering the text (relatively expensive)
-  every time you simply transform a rotation matrix, you could place
-  the text into its own static sub-graph and then refer to it
-  from the primary. This will save energy as you animate.
-
-  2) Both the Remote and Recording clients make heavy use of sub-ids
-  to make sense of the graph being replayed.
-
-  The downside of using graph_ids comes with input handling.
-  because you have a single scene handling the input events for
-  multiple graphs, you will need to take extra care to correctly
-  handle position-dependent events, which may not be projected
-  into the coordinate space you think they are. The Remote and
-  Recording clients deal with this by rendering a single, completely
-  transparent rect above all the sub scenes. This invisible, yet
-  present rect hits all the position dependent events and makes
-  sure they are sent to the scene projected in to the main
-  (id is nil) graph's coordinate space.
-
+  Normally when you use push_graph, you don't attach an ID. In that case
+  the scene's pid is used as the id.
 
   ### Communications
 
@@ -250,8 +222,9 @@ defmodule Scenic.Scene do
 
       use Scenic.Component, has_children: false
 
-  Setting `has_children` to `false` this will do two things. First, it won't create
-  a dynamic supervisor for this scene, which saves some resources.
+  Setting `has_children` to `false` means the scene won't create
+  a dynamic supervisor for this scene, which saves some resources and imporoves startup
+  time.
 
   For example, the Button component sets `has_children` to `false`.
   """
@@ -299,7 +272,6 @@ defmodule Scenic.Scene do
 
   # @doc """
   # """
-
   @spec get(scene :: Scene.t(), key :: any, default :: any) :: any
   def get(%Scene{assigns: assigns}, key, default \\ nil) do
     Map.get(assigns, key, default)

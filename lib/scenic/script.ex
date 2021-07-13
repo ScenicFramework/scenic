@@ -50,9 +50,7 @@ defmodule Scenic.Script do
   @op_push_state 0x40
   @op_pop_state 0x41
   @op_pop_push_state 0x42
-  # @op_clear           0x43
   @op_scissor 0x44
-  # @op_draw            0x45
 
   @op_transform 0x50
   @op_scale 0x51
@@ -80,7 +78,6 @@ defmodule Scenic.Script do
   @op_font_size 0x91
   @op_text_align 0x92
   @op_text_base 0x93
-  # @op_text_height     0x94
 
   # parameters
   @line_butt 0x00
@@ -208,9 +205,23 @@ defmodule Scenic.Script do
   # ============================================================================
   # The virtual api
 
+  @doc """
+  Create a new Script.
+  """
   @spec start() :: ops :: t()
   def start(), do: []
 
+  @doc """
+  Finish a script, preparing it to be sent to the ViewPort.
+
+  This function cleans up the script, which should have been created by first
+  calling `start/0` then and series of calls to Scenic.Script functions that add
+  commands to the script.
+
+  `finish/1` cleans up the script, reverses it, and runs an optimization pass.
+
+  The resulting script is ready to be stored in the ViewPort.
+  """
   @spec finish(ops :: t()) :: final_script :: t()
   def finish(ops) when is_list(ops) do
     ops
@@ -219,15 +230,53 @@ defmodule Scenic.Script do
   end
 
   # control commands
+  @doc """
+  Saves the current style/transform state of the script as it is running.
+
+  This function saves the current style and transform states in a stack of
+  states. The idea is that you can make changes, then "pop" back to where
+  the state was before.
+
+  `push_state/1` must be paired with an eventual `pop_state/1` or `pop_push_state/1`
+  """
   @spec push_state(ops :: t()) :: ops :: t()
   def push_state(ops), do: [:push_state | ops]
 
+  @doc """
+  Reverts the style/transform state of the script to the most recently pushed state.
+
+  This function restores the style and transform states from a stack of
+  states. The idea is that you can make changes, then "pop" back to where
+  the state was before.
+
+  `push_state/1` must be preceded with either `push_state/1` or `pop_push_state/1`
+  """
   @spec pop_state(ops :: t()) :: ops :: t()
   def pop_state(ops), do: [:pop_state | ops]
 
+  @doc """
+  Reverts the style/transform state of the script then immediately pushes it again.
+
+  `pop_push_state/1` is for when you have made changes that you want to revert, but then
+  know you are going to make more changes that you revert again. This is functionally
+  equivalent to calling `pop_state/1` followed immediately by `push_state/1`, except that
+  it is done as a single operation in the script instead of two. This saves drawtime
+  compute and makes the script smaller. Any adjacent pop/push pairs in the script will
+  be converted to pop_push in the optimization phase of the `finish/1` function.
+
+  `pop_push_state/1` must be preceded with either `push_state/1` and followed by either
+  `pop_state/1` or another `pop_push_state/1`
+  """
   @spec pop_push_state(ops :: t()) :: ops :: t()
   def pop_push_state(ops), do: [:pop_push_state | ops]
 
+  @doc """
+  Erase the entire drawing field output.
+
+  The `clear/1` function is equivalent to setting a color, creating a new rect path
+  that covers the entire draw field, then filling it. `clear/1` does all this in a
+  single, compact script command.
+  """
   @spec clear(ops :: t(), color :: Color.t()) :: ops :: t()
   def clear(ops, color) do
     [{:clear, Color.to_rgba(color)} | ops]
@@ -246,12 +295,24 @@ defmodule Scenic.Script do
   defp from_flag(0), do: nil
 
   # primitive objects
+  @doc """
+  Draws a line from a start point to a finish point. Can only be stroked.
+
+  The `draw_line/6` function creates a new path in the shape of a line. This shape cannot
+  be filled, so the only fill/stroke command accepted is `:stroke`.
+  """
   @spec draw_line(ops :: t(), x0 :: number, y0 :: number, x1 :: number, y1 :: number, :stroke) ::
           ops :: t()
   def draw_line(ops, x0, y0, x1, y1, :stroke) do
     [{:draw_line, {x0, y0, x1, y1, :stroke}} | ops]
   end
 
+  @doc """
+  Draws a Triangle defined by three points. Can be filled or stroked.
+
+  The `draw_triangle/8` function creates a new path in the shape of a triangle and draws it.
+  Each x/y pair is a point in the triangle.
+  """
   @spec draw_triangle(
           ops :: t(),
           x0 :: number,
@@ -266,6 +327,12 @@ defmodule Scenic.Script do
     [{:draw_triangle, {x0, y0, x1, y1, x2, y2, flag}} | ops]
   end
 
+  @doc """
+  Draws a Quad defined by four points. Can be filled or stroked.
+
+  The `draw_quad/10` function creates a new path in the shape of a Quad and draws it.
+  Each x/y pair is a point in the quad.
+  """
   @spec draw_quad(
           ops :: t(),
           x0 :: number,
