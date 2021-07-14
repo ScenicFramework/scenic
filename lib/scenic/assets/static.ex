@@ -161,7 +161,7 @@ defmodule Scenic.Assets.Static do
   @type id :: String.t() | atom
 
   @default_src_dir "assets"
-  @dst_dir "assets"
+  @dst_dir "_assets"
 
   @hash_type :sha3_256
 
@@ -373,7 +373,8 @@ defmodule Scenic.Assets.Static do
   def load(id) do
     dir =
       otp_app()
-      |> :code.priv_dir()
+      # |> :code.priv_dir()
+      |> :code.lib_dir()
       |> Path.join(@dst_dir)
 
     with {:ok, id} <- resolve_id(id),
@@ -401,12 +402,14 @@ defmodule Scenic.Assets.Static do
     # build the full path to the destination artifacts directory
     dst =
       opts[:otp_app]
-      |> :code.priv_dir()
+      # |> :code.priv_dir()
+      |> :code.lib_dir()
       |> Path.join(@dst_dir)
+
 
     # make sure the destination directory exists (delete and recreate to keep it clean)
     File.rm_rf(dst)
-    File.mkdir!(dst)
+    File.mkdir_p!( dst )
 
     # build the library
     src
