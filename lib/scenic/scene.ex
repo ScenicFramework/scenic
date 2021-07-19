@@ -1012,11 +1012,11 @@ defmodule Scenic.Scene do
         {:noreply, scene, opts}
 
       {:cont, event, %Scene{parent: parent} = scene} ->
-        GenServer.cast(parent, {:_event, event, from})
+        Process.send(parent, {:_event, event, from}, [])
         {:noreply, scene}
 
       {:cont, event, %Scene{parent: parent} = scene, opts} ->
-        GenServer.cast(parent, {:_event, event, from})
+        Process.send(parent, {:_event, event, from}, [])
         {:noreply, scene, opts}
 
       response ->
