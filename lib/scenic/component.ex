@@ -250,6 +250,6 @@ defmodule Scenic.Component do
   """
   @spec put(component_pid :: pid, value :: any) :: :ok | {:error, atom}
   def put(component_pid, value) do
-    GenServer.call(component_pid, {:put, value}, 5_000_000)
+    GenServer.call(component_pid, {:put, value})
   end
 end
