@@ -110,6 +110,32 @@ defmodule Scenic.PubSub do
 
   # --------------------------------------------------------
   @doc """
+  Retrieve the cached data value for a named data source.
+
+  This data is pulled from an `:ets` table and does not put load on the data source itself.
+
+  ## Parameters
+  * `source_id` an atom that is registered to a data source.
+
+  ## Return Value
+
+        data
+
+  If the data source is either not registered, or has not yet published any data, get returns
+
+        nil
+  """
+
+  @spec get(source_id :: atom) :: {:ok, any} | {:error, :no_data}
+  def get(source_id) when is_atom(source_id) do
+    case :ets.lookup(@table, source_id) do
+      [{_key, data, _timestamp}] -> data
+      _ -> nil
+    end
+  end
+
+  # --------------------------------------------------------
+  @doc """
   Retrieve the cached data for a named data source.
 
   This data is pulled from an `:ets` table and does not put load on the data source itself.
@@ -130,15 +156,49 @@ defmodule Scenic.PubSub do
         {:error, :no_data} 
   """
 
-  @spec get(source_id :: atom) :: {:ok, any} | {:error, :no_data}
-  def get(source_id) when is_atom(source_id) do
+  @spec fetch(source_id :: atom) :: {:ok, any} | {:error, :not_found}
+  def fetch(source_id) when is_atom(source_id) do
+    case :ets.lookup(@table, source_id) do
+      [{_key, data, _timestamp}] ->
+        {:ok, data}
+
+      # no data
+      _ ->
+        {:error, :not_found}
+    end
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Retrieve the full cached data for a named data source.
+
+  This data is pulled from an `:ets` table and does not put load on the data source itself.
+
+  ## Parameters
+  * `source_id` an atom that is registered to a data source.
+
+  ## Return Value
+
+        {:ok, {source_id, data, timestamp}}
+
+  * `source_id` is the atom representing the data source.
+  * `data` source_id whatever data the data source last published.
+  * `timestamp` is the time - from `:os.system_time(:micro_seconds)` - the last data was published.
+
+  If the data source is either not registered, or has not yet published any data, get returns
+
+        {:error, :not_found} 
+  """
+
+  @spec query(source_id :: atom) :: {:ok, any} | {:error, :not_found}
+  def query(source_id) when is_atom(source_id) do
     case :ets.lookup(@table, source_id) do
       [data] ->
         {:ok, data}
 
       # no data
       _ ->
-        {:error, :no_data}
+        {:error, :not_found}
     end
   end
 
@@ -378,7 +438,7 @@ defmodule Scenic.PubSub do
     {reply, state} = do_subscribe(pid, source_id, state)
 
     # send the already-set value if one is set
-    case get(source_id) do
+    case query(source_id) do
       {:ok, data} -> send(pid, {@data, data})
       _ -> :ok
     end

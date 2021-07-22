@@ -19,9 +19,10 @@ defmodule Scenic.PubSubTest do
   # ============================================================================
   # integration style tests
 
-  test "integration - subscribe, register, publish, unregister" do
+  test "integration - subscribe, register, publish, unregister, get&co" do
     # subscribe
     :ok = PubSub.subscribe(:abc)
+    assert PubSub.get(:abc) == nil
 
     # register
     self = self()
@@ -41,6 +42,12 @@ defmodule Scenic.PubSubTest do
     assert_receive({@data, {:abc, 123, timestamp}})
     assert is_integer(timestamp)
     [{:abc, 123, ^timestamp}] = :ets.lookup(@table, :abc)
+
+    # get/fetch/query the data
+    assert PubSub.get(:abc) == 123
+    assert PubSub.fetch(:abc) == {:ok, 123}
+    {:ok, {:abc, 123, timestamp}} = PubSub.query(:abc)
+    assert is_integer(timestamp)
 
     # unregister the PubSub
     refute_receive({@unregistered, :abc})
