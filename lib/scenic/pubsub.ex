@@ -105,6 +105,11 @@ defmodule Scenic.PubSub do
   @registered {__MODULE__, :registered}
   @unregistered {__MODULE__, :unregistered}
 
+  defmodule Error do
+    @moduledoc false
+    defexception message: nil, source_id: nil
+  end
+
   # ============================================================================
   # client api
 
@@ -131,6 +136,34 @@ defmodule Scenic.PubSub do
     case :ets.lookup(@table, source_id) do
       [{_key, data, _timestamp}] -> data
       _ -> nil
+    end
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Retrieve the cached data value for a named data source.
+
+  Raises an error if the value is not registered
+
+  This data is pulled from an `:ets` table and does not put load on the data source itself.
+
+  ## Parameters
+  * `source_id` an atom that is registered to a data source.
+
+  ## Return Value
+
+        data
+
+  If the data source is either not registered, or has not yet published any data, get returns
+
+        nil
+  """
+
+  @spec get!(source_id :: atom) :: {:ok, any} | {:error, :no_data}
+  def get!(source_id) when is_atom(source_id) do
+    case fetch(source_id) do
+      {:ok, data} -> data
+      _ -> raise Error, message: "#{inspect(source_id)} is not registered", source_id: source_id
     end
   end
 
@@ -333,7 +366,7 @@ defmodule Scenic.PubSub do
   def register(source_id, opts \\ []) when is_atom(source_id) do
     case NimbleOptions.validate(opts, @register_opts_schema) do
       {:ok, opts} -> opts
-      {:error, error} -> raise Exception.message(error)
+      {:error, error} -> raise Error, message: error, source_id: source_id
     end
 
     opts = Keyword.put(opts, :registered_at, :os.system_time(:micro_seconds))
