@@ -88,9 +88,11 @@ defmodule Scenic.Primitive.Path do
           | {:arc_to, x1 :: number, y1 :: number, x2 :: number, y2 :: number, radius :: number}
 
   @type t :: [cmd]
-  @type styles_t :: [:hidden | :fill | :stroke_width | :stroke_fill | :cap | :join | :miter_limit]
+  @type styles_t :: [
+          :hidden | :scissor | :fill | :stroke_width | :stroke_fill | :cap | :join | :miter_limit
+        ]
 
-  @styles [:hidden, :fill, :stroke_width, :stroke_fill, :cap, :join, :miter_limit]
+  @styles [:hidden, :scissor, :fill, :stroke_width, :stroke_fill, :cap, :join, :miter_limit]
 
   @impl Primitive
   @spec validate(commands :: t()) :: {:ok, commands :: t()} | {:error, String.t()}

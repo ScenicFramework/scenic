@@ -40,7 +40,7 @@ defmodule Scenic.Primitive.CircleTest do
   # styles
 
   test "valid_styles works" do
-    assert Circle.valid_styles() == [:hidden, :fill, :stroke_width, :stroke_fill]
+    assert Circle.valid_styles() == [:hidden, :scissor, :fill, :stroke_width, :stroke_fill]
   end
 
   # ============================================================================

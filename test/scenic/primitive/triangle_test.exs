@@ -49,6 +49,7 @@ defmodule Scenic.Primitive.TriangleTest do
   test "valid_styles works" do
     assert Triangle.valid_styles() == [
              :hidden,
+             :scissor,
              :fill,
              :stroke_width,
              :stroke_fill,

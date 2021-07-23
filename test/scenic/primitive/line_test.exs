@@ -41,7 +41,7 @@ defmodule Scenic.Primitive.LineTest do
   # styles
 
   test "valid_styles works" do
-    assert Line.valid_styles() == [:hidden, :stroke_width, :stroke_fill, :cap]
+    assert Line.valid_styles() == [:hidden, :scissor, :stroke_width, :stroke_fill, :cap]
   end
 
   # ============================================================================

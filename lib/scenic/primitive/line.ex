@@ -41,9 +41,9 @@ defmodule Scenic.Primitive.Line do
   #  import IEx
 
   @type t :: {{x0 :: number, y0 :: number}, {x1 :: number, y1 :: number}}
-  @type styles_t :: [:hidden | :stroke_width | :stroke_fill | :cap]
+  @type styles_t :: [:hidden | :scissor | :stroke_width | :stroke_fill | :cap]
 
-  @styles [:hidden, :stroke_width, :stroke_fill, :cap]
+  @styles [:hidden, :scissor, :stroke_width, :stroke_fill, :cap]
 
   @impl Primitive
   @spec validate(t()) ::

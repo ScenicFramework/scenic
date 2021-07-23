@@ -43,10 +43,26 @@ defmodule Scenic.Primitive.Text do
 
   @type t :: String.t()
   @type styles_t :: [
-          :hidden | :font | :font_size | :line_height | :text_align | :text_base | :line_height
+          :hidden
+          | :scissor
+          | :font
+          | :font_size
+          | :line_height
+          | :text_align
+          | :text_base
+          | :line_height
         ]
 
-  @styles [:hidden, :font, :font_size, :line_height, :text_align, :text_base, :line_height]
+  @styles [
+    :hidden,
+    :scissor,
+    :font,
+    :font_size,
+    :line_height,
+    :text_align,
+    :text_base,
+    :line_height
+  ]
 
   @impl Primitive
   @spec validate(text :: t()) :: {:ok, t()} | {:error, String.t()}

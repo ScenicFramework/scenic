@@ -38,9 +38,9 @@ defmodule Scenic.Primitive.Circle do
   alias Scenic.Primitive.Style
 
   @type t :: radius :: number
-  @type styles_t :: [:hidden | :fill | :stroke_width | :stroke_fill | :cap]
+  @type styles_t :: [:hidden | :scissor | :fill | :stroke_width | :stroke_fill | :cap]
 
-  @styles [:hidden, :fill, :stroke_width, :stroke_fill]
+  @styles [:hidden, :scissor, :fill, :stroke_width, :stroke_fill]
 
   @impl Primitive
   @spec validate(t()) :: {:ok, radius :: number} | {:error, String.t()}

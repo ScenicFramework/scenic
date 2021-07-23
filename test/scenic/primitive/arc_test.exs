@@ -44,7 +44,7 @@ defmodule Scenic.Primitive.ArcTest do
   # styles
 
   test "valid_styles works" do
-    assert Arc.valid_styles() == [:hidden, :fill, :stroke_width, :stroke_fill, :cap]
+    assert Arc.valid_styles() == [:hidden, :scissor, :fill, :stroke_width, :stroke_fill, :cap]
   end
 
   # ============================================================================

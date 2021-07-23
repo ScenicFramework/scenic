@@ -46,9 +46,9 @@ defmodule Scenic.Primitive.RoundedRectangle do
   # import IEx
 
   @type t :: {width :: number, height :: number, radius :: number}
-  @type styles_t :: [:hidden | :fill | :stroke_width | :stroke_fill]
+  @type styles_t :: [:hidden | :scissor | :fill | :stroke_width | :stroke_fill]
 
-  @styles [:hidden, :fill, :stroke_width, :stroke_fill]
+  @styles [:hidden, :scissor, :fill, :stroke_width, :stroke_fill]
 
   @impl Primitive
   @spec validate(t()) :: {:ok, t()} | {:error, String.t()}

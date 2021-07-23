@@ -39,8 +39,8 @@ defmodule Scenic.Primitive.Component do
   alias Scenic.Primitive.Style
 
   @type t :: {mod :: module, param :: any, name :: atom | String.t()}
-  @type styles_t :: [:hidden]
-  @styles [:hidden]
+  @type styles_t :: [:hidden | :scissor]
+  @styles [:hidden, :scissor]
 
   # longer names use more memory, but have a lower chance of collision.
   # 16 should still have a very very very low chance of collision

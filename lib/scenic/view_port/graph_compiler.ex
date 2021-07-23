@@ -237,7 +237,7 @@ defmodule Scenic.ViewPort.GraphCompiler do
   defp do_primitive(%Primitive{module: Primitive.Text, data: text}, _, state) do
     {st_ops, state} =
       compile_styles(
-        [:font, :font_size, :line_height, :text_align, :text_base],
+        [:font, :font_size, :line_height, :text_align, :text_base, :scissor],
         state
       )
 

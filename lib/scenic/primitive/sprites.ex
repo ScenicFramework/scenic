@@ -86,9 +86,9 @@ defmodule Scenic.Primitive.Sprites do
   @type draw_cmds :: [draw_cmd()]
 
   @type t :: {image :: Static.id(), draw_cmds}
-  @type styles_t :: [:hidden]
+  @type styles_t :: [:hidden | :scissor]
 
-  @styles [:hidden]
+  @styles [:hidden, :scissor]
 
   @impl Primitive
   @spec validate(t()) :: {:ok, t()} | {:error, String.t()}

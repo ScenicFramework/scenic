@@ -46,6 +46,7 @@ defmodule Scenic.Primitive.SectorTest do
   test "valid_styles works" do
     assert Sector.valid_styles() == [
              :hidden,
+             :scissor,
              :fill,
              :stroke_width,
              :stroke_fill,

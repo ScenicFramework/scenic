@@ -41,6 +41,7 @@ defmodule Scenic.Primitive.TextTest do
   test "valid_styles works" do
     assert Text.valid_styles() == [
              :hidden,
+             :scissor,
              :font,
              :font_size,
              :line_height,

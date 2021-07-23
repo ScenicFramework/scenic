@@ -406,10 +406,9 @@ defmodule Scenic.Assets.Static do
       |> :code.lib_dir()
       |> Path.join(@dst_dir)
 
-
     # make sure the destination directory exists (delete and recreate to keep it clean)
     File.rm_rf(dst)
-    File.mkdir_p!( dst )
+    File.mkdir_p!(dst)
 
     # build the library
     src

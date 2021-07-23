@@ -48,9 +48,11 @@ defmodule Scenic.Primitive.Triangle do
   @type t ::
           {{x0 :: number, y0 :: number}, {x1 :: number, y1 :: number},
            {x2 :: number, y2 :: number}}
-  @type styles_t :: [:hidden | :fill | :stroke_width | :stroke_fill | :join | :miter_limit]
+  @type styles_t :: [
+          :hidden | :scissor | :fill | :stroke_width | :stroke_fill | :join | :miter_limit
+        ]
 
-  @styles [:hidden, :fill, :stroke_width, :stroke_fill, :join, :miter_limit]
+  @styles [:hidden, :scissor, :fill, :stroke_width, :stroke_fill, :join, :miter_limit]
 
   @impl Primitive
   @spec validate(t()) :: {:ok, t()} | {:error, String.t()}

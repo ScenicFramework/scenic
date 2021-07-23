@@ -32,7 +32,9 @@ defmodule Scenic.Primitive.Style.Scissor do
   # data verification and serialization
 
   @doc false
-  def validate({w, h}) when is_number(w) and is_number(h), do: {:ok, {w, h}}
+  def validate({w, h}) when is_number(w) and is_number(h) do
+    {:ok, {w, h}}
+  end
 
   def validate(data) do
     {

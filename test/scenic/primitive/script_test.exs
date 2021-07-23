@@ -44,7 +44,7 @@ defmodule Scenic.Primitive.ScriptTest do
   # styles
 
   test "valid_styles works" do
-    assert Script.valid_styles() == [:hidden]
+    assert Script.valid_styles() == [:hidden, :scissor]
   end
 
   # ============================================================================

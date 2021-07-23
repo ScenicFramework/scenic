@@ -48,6 +48,7 @@ defmodule Scenic.Primitive.QuadTest do
   test "valid_styles works" do
     assert Quad.valid_styles() == [
              :hidden,
+             :scissor,
              :fill,
              :stroke_width,
              :stroke_fill,

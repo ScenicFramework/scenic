@@ -48,7 +48,7 @@ defmodule Scenic.Primitive.ComponentTest do
   # styles
 
   test "valid_styles works" do
-    assert Component.valid_styles() == [:hidden]
+    assert Component.valid_styles() == [:hidden, :scissor]
   end
 
   # ============================================================================

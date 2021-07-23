@@ -40,7 +40,7 @@ defmodule Scenic.Primitive.EllipseTest do
   # styles
 
   test "valid_styles works" do
-    assert Ellipse.valid_styles() == [:hidden, :fill, :stroke_width, :stroke_fill]
+    assert Ellipse.valid_styles() == [:hidden, :scissor, :fill, :stroke_width, :stroke_fill]
   end
 
   # ============================================================================

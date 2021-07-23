@@ -42,9 +42,9 @@ defmodule Scenic.Primitive.Ellipse do
   alias Scenic.Primitive.Style
 
   @type t :: {radius_1 :: number, radius_2 :: number}
-  @type styles_t :: [:hidden | :fill | :stroke_width | :stroke_fill]
+  @type styles_t :: [:hidden | :scissor | :fill | :stroke_width | :stroke_fill]
 
-  @styles [:hidden, :fill, :stroke_width, :stroke_fill]
+  @styles [:hidden, :scissor, :fill, :stroke_width, :stroke_fill]
 
   @impl Primitive
   @spec validate({radius_1 :: number, radius_2 :: number}) ::

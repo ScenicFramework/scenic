@@ -78,8 +78,8 @@ defmodule Scenic.Primitive.Script do
   alias Scenic.Primitive
   alias Scenic.Primitive.Style
 
-  @type styles_t :: [:hidden]
-  @styles [:hidden]
+  @type styles_t :: [:hidden | :scissor]
+  @styles [:hidden, :scissor]
 
   @impl Primitive
   @spec validate(script_id :: Scenic.Script.id()) ::

@@ -92,7 +92,7 @@ defmodule Scenic.Primitive.GroupTest do
   # styles
 
   test "valid_styles works" do
-    assert Group.valid_styles() == [:hidden]
+    assert Group.valid_styles() == [:hidden, :scissor]
   end
 
   # ============================================================================

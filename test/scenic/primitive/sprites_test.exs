@@ -53,7 +53,7 @@ defmodule Scenic.Primitive.SpritesTest do
   # styles
 
   test "valid_styles works" do
-    assert Sprites.valid_styles() == [:hidden]
+    assert Sprites.valid_styles() == [:hidden, :scissor]
   end
 
   # ============================================================================

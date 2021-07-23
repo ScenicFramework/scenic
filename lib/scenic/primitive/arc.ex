@@ -59,9 +59,9 @@ defmodule Scenic.Primitive.Arc do
   alias Scenic.Primitive.Triangle
 
   @type t :: {radius :: number, angle :: number}
-  @type styles_t :: [:hidden | :fill | :stroke_width | :stroke_fill | :cap]
+  @type styles_t :: [:hidden | :scissor | :fill | :stroke_width | :stroke_fill | :cap]
 
-  @styles [:hidden, :fill, :stroke_width, :stroke_fill, :cap]
+  @styles [:hidden, :scissor, :fill, :stroke_width, :stroke_fill, :cap]
 
   @impl Primitive
   @spec validate(t()) ::

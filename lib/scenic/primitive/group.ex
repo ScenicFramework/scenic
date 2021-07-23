@@ -63,9 +63,9 @@ defmodule Scenic.Primitive.Group do
   #  import IEx
 
   @type t :: [pos_integer]
-  @type styles_t :: [:hidden | atom]
+  @type styles_t :: [:hidden | :scissor | atom]
 
-  @styles [:hidden]
+  @styles [:hidden, :scissor]
 
   # ============================================================================
   # data verification and serialization
