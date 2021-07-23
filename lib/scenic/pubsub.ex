@@ -131,7 +131,7 @@ defmodule Scenic.PubSub do
         nil
   """
 
-  @spec get(source_id :: atom) :: {:ok, any} | {:error, :no_data}
+  @spec get(source_id :: atom) :: any | nil
   def get(source_id) when is_atom(source_id) do
     case :ets.lookup(@table, source_id) do
       [{_key, data, _timestamp}] -> data
@@ -159,7 +159,7 @@ defmodule Scenic.PubSub do
         nil
   """
 
-  @spec get!(source_id :: atom) :: {:ok, any} | {:error, :no_data}
+  @spec get!(source_id :: atom) :: any
   def get!(source_id) when is_atom(source_id) do
     case fetch(source_id) do
       {:ok, data} -> data
