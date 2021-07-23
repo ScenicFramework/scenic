@@ -44,7 +44,13 @@ defmodule Scenic.Primitive.RoundedRectangleTest do
   # styles
 
   test "valid_styles works" do
-    assert RoundedRectangle.valid_styles() == [:hidden, :scissor, :fill, :stroke_width, :stroke_fill]
+    assert RoundedRectangle.valid_styles() == [
+             :hidden,
+             :scissor,
+             :fill,
+             :stroke_width,
+             :stroke_fill
+           ]
   end
 
   # ============================================================================
