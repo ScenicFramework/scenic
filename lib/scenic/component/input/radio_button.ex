@@ -233,14 +233,15 @@ defmodule Scenic.Component.Input.RadioButton do
   end
 
   # --------------------------------------------------------
-  @impl GenServer
   @doc false
-  def handle_call(:fetch, _, %{assigns: %{checked?: checked?}} = scene) do
+  @impl Scenic.Component
+  def handle_fetch( _, %{assigns: %{checked?: checked?}} = scene) do
     {:reply, {:ok, checked?}, scene}
   end
 
-  def handle_call({:put, checked?}, _, %{assigns: %{graph: graph}} = scene)
-      when is_boolean(checked?) do
+  @doc false
+  @impl Scenic.Component
+  def handle_put( checked?, _, %{assigns: %{graph: graph}} = scene) when is_boolean(checked?) do
     graph = update_check(graph, checked?)
 
     scene =
@@ -251,7 +252,8 @@ defmodule Scenic.Component.Input.RadioButton do
     {:reply, :ok, scene}
   end
 
-  def handle_call({:put, _}, _, scene) do
+  def handle_put(_, _, scene) do
     {:reply, {:error, :invalid}, scene}
   end
+
 end

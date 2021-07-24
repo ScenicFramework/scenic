@@ -213,12 +213,14 @@ defmodule Scenic.Component.Input.RadioGroup do
 
   # --------------------------------------------------------
   @doc false
-  @impl GenServer
-  def handle_call(:fetch, _, %{assigns: %{value: value}} = scene) do
+  @impl Scenic.Component
+  def handle_fetch( _, %{assigns: %{value: value}} = scene) do
     {:reply, {:ok, value}, scene}
   end
 
-  def handle_call({:put, id}, _, %{assigns: %{items: items}} = scene) do
+  @doc false
+  @impl Scenic.Component
+  def handle_put( id, _, %{assigns: %{items: items}} = scene) do
     Enum.any?(items, fn
       {_, ^id} -> true
       _ -> false

@@ -718,24 +718,20 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   # --------------------------------------------------------
-  @impl GenServer
+
   @doc false
-  def handle_call(:fetch, _, %{assigns: %{value: value}} = scene) do
+  @impl Scenic.Component
+  def handle_fetch( _, %{assigns: %{value: value}} = scene) do
     {:reply, {:ok, value}, scene}
   end
 
-  def handle_call(
-        {:put, value},
-        _,
-        %{
-          assigns: %{
+  @doc false
+  @impl Scenic.Component
+  def handle_put( value, _, %{assigns: %{
             graph: graph,
             index: index,
             caret_v: caret_v
-          }
-        } = scene
-      )
-      when is_bitstring(value) do
+          }} = scene) when is_bitstring(value) do
     count = String.length(value)
 
     index =
@@ -763,7 +759,8 @@ defmodule Scenic.Component.Input.TextField do
     {:reply, :ok, scene}
   end
 
-  def handle_call({:put, _}, _, scene) do
+  def handle_put(_, _, scene) do
     {:reply, {:error, :invalid}, scene}
   end
+
 end

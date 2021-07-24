@@ -362,21 +362,21 @@ defmodule Scenic.Component.Input.Slider do
 
   # --------------------------------------------------------
   @doc false
-  @impl GenServer
-  def handle_call(:fetch, _, %{assigns: %{value: value}} = scene) do
+  @impl Scenic.Component
+  def handle_fetch( _, %{assigns: %{value: value}} = scene) do
     {:reply, {:ok, value}, scene}
   end
 
-  def handle_call({:put, value}, _, %{assigns: %{extents: extents}} = scene)
-      when is_list(extents) do
+  @doc false
+  @impl Scenic.Component
+  def handle_put( value, _, %{assigns: %{extents: extents}} = scene) when is_list(extents) do
     case Enum.member?(extents, value) do
       true -> {:reply, :ok, do_put(value, extents, scene)}
       false -> {:reply, {:error, :invalid}, scene}
     end
   end
 
-  def handle_call({:put, value}, _, %{assigns: %{extents: {min, max}}} = scene)
-      when is_number(value) do
+  def handle_put( value, _, %{assigns: %{extents: {min, max}}} = scene) when is_number(value) do
     case value >= min && value <= max do
       true -> {:reply, :ok, do_put(value, {min, max}, scene)}
       false -> {:reply, {:error, :invalid}, scene}

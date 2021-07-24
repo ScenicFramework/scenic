@@ -261,13 +261,14 @@ defmodule Scenic.Component.Input.Checkbox do
 
   # --------------------------------------------------------
   @doc false
-  @impl GenServer
-  def handle_call(:fetch, _, %{assigns: %{checked: checked?}} = scene) do
+  @impl Scenic.Component
+  def handle_fetch( _, %{assigns: %{checked: checked?}} = scene) do
     {:reply, {:ok, checked?}, scene}
   end
 
-  def handle_call({:put, checked?}, _, %{assigns: %{graph: graph}} = scene)
-      when is_boolean(checked?) do
+  @doc false
+  @impl Scenic.Component
+  def handle_put(checked?, _, %{assigns: %{graph: graph}} = scene) when is_boolean(checked?) do
     graph = Graph.modify(graph, :chx, &Primitive.put_style(&1, :hidden, checked?))
 
     scene =
@@ -278,7 +279,7 @@ defmodule Scenic.Component.Input.Checkbox do
     {:reply, :ok, scene}
   end
 
-  def handle_call({:put, _}, _, scene) do
+  def handle_put(_, _, scene) do
     {:reply, {:error, :invalid}, scene}
   end
 end

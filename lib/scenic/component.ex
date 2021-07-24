@@ -153,6 +153,7 @@ defmodule Scenic.Component do
   """
 
   alias Scenic.Primitive
+  alias Scenic.Scene
 
   @doc """
   Add this component to a Graph.
@@ -169,6 +170,34 @@ defmodule Scenic.Component do
   This callback is required. 
   """
   @callback validate(data :: any) :: {:ok, data :: any} | {:error, String.t()}
+
+  @doc """
+  Retrieve the current \"value\" associated with the control and return it to the caller.
+
+  If this callback is not implemented, the caller with get an {:error, :not_implemented}. 
+  """
+  @callback handle_fetch(from :: GenServer.from(), scene :: Scene.t()) ::
+      {:reply, reply, new_state}
+      | {:reply, reply, new_state, timeout() | :hibernate | {:continue, term()}}
+      | {:noreply, new_state}
+      | {:noreply, new_state, timeout() | :hibernate | {:continue, term()}}
+      | {:stop, reason, reply, new_state}
+      | {:stop, reason, new_state}
+    when reply: term(), new_state: term(), reason: term()
+
+  @doc """
+  Retrieve the current \"value\" associated with the control and return it to the caller.
+
+  If this callback is not implemented, the caller with get an {:error, :not_implemented}. 
+  """
+  @callback handle_put(data :: any, from :: GenServer.from(), scene :: Scene.t()) ::
+      {:reply, reply, new_state}
+      | {:reply, reply, new_state, timeout() | :hibernate | {:continue, term()}}
+      | {:noreply, new_state}
+      | {:noreply, new_state, timeout() | :hibernate | {:continue, term()}}
+      | {:stop, reason, reply, new_state}
+      | {:stop, reason, new_state}
+    when reply: term(), new_state: term(), reason: term()
 
   #  import IEx
 
@@ -192,8 +221,13 @@ defmodule Scenic.Component do
         Primitive.Component.add_to_graph(graph, {__MODULE__, data}, opts)
       end
 
+      def handle_fetch(_from, scene), do: {:reply, {:error, :not_implemented}, scene}
+      def handle_put(_data, _from, scene), do: {:reply, {:error, :not_implemented}, scene}
+
       # --------------------------------------------------------
-      defoverridable add_to_graph: 3
+      defoverridable add_to_graph: 3,
+        handle_fetch: 2,
+        handle_put: 3
     end
 
     # quote
@@ -239,7 +273,7 @@ defmodule Scenic.Component do
   """
   @spec fetch(component_pid :: pid) :: {:ok, any} | {:error, atom}
   def fetch(component_pid) do
-    GenServer.call(component_pid, :fetch)
+    GenServer.call(component_pid, :_component_fetch)
   end
 
   @doc """
@@ -250,6 +284,6 @@ defmodule Scenic.Component do
   """
   @spec put(component_pid :: pid, value :: any) :: :ok | {:error, atom}
   def put(component_pid, value) do
-    GenServer.call(component_pid, {:put, value})
+    GenServer.call(component_pid, {:_component_put, value})
   end
 end

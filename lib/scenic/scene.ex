@@ -1044,6 +1044,14 @@ defmodule Scenic.Scene do
     {:reply, :_pong_, scene}
   end
 
+  def handle_call(:_component_fetch, from, %Scene{module: module} = scene) do
+    module.handle_fetch( from, scene )
+  end
+
+  def handle_call({:_component_put, value}, from, %Scene{module: module} = scene) do
+    module.handle_put( value, from, scene )
+  end
+
   # --------------------------------------------------------
   # generic handle_call. give the scene a chance to handle it
   def handle_call(msg, from, %Scene{module: module} = scene) do
