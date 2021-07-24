@@ -214,12 +214,14 @@ defmodule Scenic.ViewPort.GraphCompiler do
 
   # The group is the root and also the only primitive doesn't set its own styles
   defp do_primitive(%Primitive{module: Primitive.Group, data: ids}, primitives, state) do
+    {st_ops, state} = compile_styles([:scissor, :fill, :stroke], state)
+
     {ops, state} =
       Enum.reduce(ids, {[], state}, fn id, {ops, state} ->
         compile_primitive(ops, primitives[id], primitives, state)
       end)
 
-    {ops, [], state}
+    {ops, st_ops, state}
   end
 
   defp do_primitive(%Primitive{module: Primitive.Script, data: name}, _, %{vp: vp} = state) do
