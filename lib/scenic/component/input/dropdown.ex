@@ -581,7 +581,11 @@ defmodule Scenic.Component.Input.Dropdown do
   end
 
   # ignore other button press events
-  def handle_input({:cursor_button, {_, _, _, _}}, _id, scene) do
+  def handle_input({:cursor_button, _}, _id, scene) do
+    {:noreply, scene}
+  end
+
+  def handle_input({:cursor_pos, _}, _id, scene) do
     {:noreply, scene}
   end
 
