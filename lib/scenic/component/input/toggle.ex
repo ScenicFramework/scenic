@@ -329,13 +329,14 @@ defmodule Scenic.Component.Input.Toggle do
   # --------------------------------------------------------
   @doc false
   @impl Scenic.Component
-  def handle_fetch( _, %{assigns: %{on?: on?}} = scene) do
+  def handle_fetch(_, %{assigns: %{on?: on?}} = scene) do
     {:reply, {:ok, on?}, scene}
   end
 
   @doc false
   @impl Scenic.Component
-  def handle_put( on?, _, %{assigns: %{graph: graph, thumb_translate: thumb}} = scene) when is_boolean(on?) do
+  def handle_put(on?, _, %{assigns: %{graph: graph, thumb_translate: thumb}} = scene)
+      when is_boolean(on?) do
     graph =
       case on? do
         true -> Graph.modify(graph, :thumb, &Primitive.put_transform(&1, :translate, thumb.on))
@@ -353,5 +354,4 @@ defmodule Scenic.Component.Input.Toggle do
   def handle_put(_, _, scene) do
     {:reply, {:error, :invalid}, scene}
   end
-
 end

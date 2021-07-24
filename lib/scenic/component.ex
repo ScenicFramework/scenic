@@ -177,13 +177,13 @@ defmodule Scenic.Component do
   If this callback is not implemented, the caller with get an {:error, :not_implemented}. 
   """
   @callback handle_fetch(from :: GenServer.from(), scene :: Scene.t()) ::
-      {:reply, reply, new_state}
-      | {:reply, reply, new_state, timeout() | :hibernate | {:continue, term()}}
-      | {:noreply, new_state}
-      | {:noreply, new_state, timeout() | :hibernate | {:continue, term()}}
-      | {:stop, reason, reply, new_state}
-      | {:stop, reason, new_state}
-    when reply: term(), new_state: term(), reason: term()
+              {:reply, reply, new_state}
+              | {:reply, reply, new_state, timeout() | :hibernate | {:continue, term()}}
+              | {:noreply, new_state}
+              | {:noreply, new_state, timeout() | :hibernate | {:continue, term()}}
+              | {:stop, reason, reply, new_state}
+              | {:stop, reason, new_state}
+            when reply: term(), new_state: term(), reason: term()
 
   @doc """
   Retrieve the current \"value\" associated with the control and return it to the caller.
@@ -191,13 +191,13 @@ defmodule Scenic.Component do
   If this callback is not implemented, the caller with get an {:error, :not_implemented}. 
   """
   @callback handle_put(data :: any, from :: GenServer.from(), scene :: Scene.t()) ::
-      {:reply, reply, new_state}
-      | {:reply, reply, new_state, timeout() | :hibernate | {:continue, term()}}
-      | {:noreply, new_state}
-      | {:noreply, new_state, timeout() | :hibernate | {:continue, term()}}
-      | {:stop, reason, reply, new_state}
-      | {:stop, reason, new_state}
-    when reply: term(), new_state: term(), reason: term()
+              {:reply, reply, new_state}
+              | {:reply, reply, new_state, timeout() | :hibernate | {:continue, term()}}
+              | {:noreply, new_state}
+              | {:noreply, new_state, timeout() | :hibernate | {:continue, term()}}
+              | {:stop, reason, reply, new_state}
+              | {:stop, reason, new_state}
+            when reply: term(), new_state: term(), reason: term()
 
   #  import IEx
 
@@ -226,8 +226,8 @@ defmodule Scenic.Component do
 
       # --------------------------------------------------------
       defoverridable add_to_graph: 3,
-        handle_fetch: 2,
-        handle_put: 3
+                     handle_fetch: 2,
+                     handle_put: 3
     end
 
     # quote

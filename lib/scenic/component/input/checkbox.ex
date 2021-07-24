@@ -262,7 +262,7 @@ defmodule Scenic.Component.Input.Checkbox do
   # --------------------------------------------------------
   @doc false
   @impl Scenic.Component
-  def handle_fetch( _, %{assigns: %{checked: checked?}} = scene) do
+  def handle_fetch(_, %{assigns: %{checked: checked?}} = scene) do
     {:reply, {:ok, checked?}, scene}
   end
 

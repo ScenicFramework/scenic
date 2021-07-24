@@ -235,13 +235,13 @@ defmodule Scenic.Component.Input.RadioButton do
   # --------------------------------------------------------
   @doc false
   @impl Scenic.Component
-  def handle_fetch( _, %{assigns: %{checked?: checked?}} = scene) do
+  def handle_fetch(_, %{assigns: %{checked?: checked?}} = scene) do
     {:reply, {:ok, checked?}, scene}
   end
 
   @doc false
   @impl Scenic.Component
-  def handle_put( checked?, _, %{assigns: %{graph: graph}} = scene) when is_boolean(checked?) do
+  def handle_put(checked?, _, %{assigns: %{graph: graph}} = scene) when is_boolean(checked?) do
     graph = update_check(graph, checked?)
 
     scene =
@@ -255,5 +255,4 @@ defmodule Scenic.Component.Input.RadioButton do
   def handle_put(_, _, scene) do
     {:reply, {:error, :invalid}, scene}
   end
-
 end

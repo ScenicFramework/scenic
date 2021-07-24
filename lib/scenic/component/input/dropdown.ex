@@ -621,13 +621,13 @@ defmodule Scenic.Component.Input.Dropdown do
   # --------------------------------------------------------
   @doc false
   @impl Scenic.Component
-  def handle_fetch( _, %{assigns: %{selected_id: selected_id}} = scene) do
+  def handle_fetch(_, %{assigns: %{selected_id: selected_id}} = scene) do
     {:reply, {:ok, selected_id}, scene}
   end
 
   @doc false
   @impl Scenic.Component
-  def handle_put( id, _, %{assigns: %{items: items}} = scene) do
+  def handle_put(id, _, %{assigns: %{items: items}} = scene) do
     Enum.find(items, fn
       {_, ^id} -> true
       _ -> false

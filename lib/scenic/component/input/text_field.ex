@@ -721,17 +721,24 @@ defmodule Scenic.Component.Input.TextField do
 
   @doc false
   @impl Scenic.Component
-  def handle_fetch( _, %{assigns: %{value: value}} = scene) do
+  def handle_fetch(_, %{assigns: %{value: value}} = scene) do
     {:reply, {:ok, value}, scene}
   end
 
   @doc false
   @impl Scenic.Component
-  def handle_put( value, _, %{assigns: %{
+  def handle_put(
+        value,
+        _,
+        %{
+          assigns: %{
             graph: graph,
             index: index,
             caret_v: caret_v
-          }} = scene) when is_bitstring(value) do
+          }
+        } = scene
+      )
+      when is_bitstring(value) do
     count = String.length(value)
 
     index =
@@ -762,5 +769,4 @@ defmodule Scenic.Component.Input.TextField do
   def handle_put(_, _, scene) do
     {:reply, {:error, :invalid}, scene}
   end
-
 end

@@ -1045,11 +1045,11 @@ defmodule Scenic.Scene do
   end
 
   def handle_call(:_component_fetch, from, %Scene{module: module} = scene) do
-    module.handle_fetch( from, scene )
+    module.handle_fetch(from, scene)
   end
 
   def handle_call({:_component_put, value}, from, %Scene{module: module} = scene) do
-    module.handle_put( value, from, scene )
+    module.handle_put(value, from, scene)
   end
 
   # --------------------------------------------------------
