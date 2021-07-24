@@ -223,7 +223,8 @@ defmodule Scenic.ViewPort.GraphCompiler do
   end
 
   defp do_primitive(%Primitive{module: Primitive.Script, data: name}, _, %{vp: vp} = state) do
-    {do_compile_script_name([], vp, name), [], state}
+    {st_ops, state} = compile_styles(Primitive.Script.valid_styles(), state)
+    {do_compile_script_name([], vp, name), st_ops, state}
   end
 
   defp do_primitive(
@@ -231,13 +232,14 @@ defmodule Scenic.ViewPort.GraphCompiler do
          _,
          %{vp: vp} = state
        ) do
-    {do_compile_script_name([], vp, name), [], state}
+    {st_ops, state} = compile_styles(Primitive.Component.valid_styles(), state)
+    {do_compile_script_name([], vp, name), st_ops, state}
   end
 
   defp do_primitive(%Primitive{module: Primitive.Text, data: text}, _, state) do
     {st_ops, state} =
       compile_styles(
-        [:font, :font_size, :line_height, :text_align, :text_base, :scissor],
+        Primitive.Text.valid_styles(),
         state
       )
 
