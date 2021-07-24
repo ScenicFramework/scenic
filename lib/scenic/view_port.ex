@@ -627,7 +627,7 @@ defmodule Scenic.ViewPort do
       main_graph.primitives[0].transforms
       |> Scenic.Primitive.Transform.combine()
 
-    state = Map.put(state, :main_tx, main_tx)
+    state = Map.put(state, :main_tx, main_tx || Math.Matrix.identity())
 
     # insert the main script to the scripts table
     # can slam it in as we are in startup
@@ -1110,6 +1110,10 @@ defmodule Scenic.ViewPort do
     end
   end
 
+  defp scene_tx(:_root_, %{main_tx: main_tx}) do
+    {:ok, main_tx}
+  end
+
   defp scene_tx(scene_id, %{scene_transforms: txs}) do
     case Map.fetch(txs, scene_id) do
       :error -> {:error, :not_found}
@@ -1374,7 +1378,7 @@ defmodule Scenic.ViewPort do
   end
 
   defp do_request(input, caller, %{_input_requests: requests} = state) do
-    pids = [caller | Map.get(requests, input, [])]
+    pids = [caller | Map.get(requests, input, [])] |> Enum.uniq()
     requests = Map.put(requests, input, pids)
     %{state | _input_requests: requests}
   end
@@ -1468,10 +1472,17 @@ defmodule Scenic.ViewPort do
     end
   end
 
+  defp do_captured_input({:cursor_scroll, {delta, gxy}} = input, [pid | _], state) do
+    case prep_gxy_input(gxy, pid, state) do
+      {:ok, xy, id} -> send(pid, {:_input, {:cursor_scroll, {delta, xy}}, input, id})
+      _ -> send(pid, {:_input, {:cursor_scroll, {delta, gxy}}, input, nil})
+    end
+  end
+
   defp do_captured_input({:cursor_pos, gxy} = input, [pid | _], state) do
-    # prep the gxy. Throw away the input if it doesn't succeed
-    with {:ok, xy, id} <- prep_gxy_input(gxy, pid, state) do
-      send(pid, {:_input, {:cursor_pos, xy}, input, id})
+    case prep_gxy_input(gxy, pid, state) do
+      {:ok, xy, id} -> send(pid, {:_input, {:cursor_pos, xy}, input, id})
+      _ -> send(pid, {:_input, {:cursor_pos, gxy}, input, nil})
     end
   end
 
@@ -1492,7 +1503,18 @@ defmodule Scenic.ViewPort do
           send(pid, {:_input, {:cursor_button, {button, action, mods, xy}}, input, id})
 
         _ ->
-          :ok
+          send(pid, {:_input, {:cursor_button, {button, action, mods, gxy}}, input, nil})
+      end
+    end)
+  end
+
+  defp do_requested_input({:cursor_scroll, {delta, gxy}} = input, pids, state) do
+    # send the input to each requesting pid. But... needs to be in the local
+    # coord space and indicate if it was over an input
+    Enum.each(pids, fn pid ->
+      case prep_gxy_input(gxy, pid, state) do
+        {:ok, xy, id} -> send(pid, {:_input, {:cursor_scroll, {delta, xy}}, input, id})
+        _ -> send(pid, {:_input, {:cursor_scroll, {delta, gxy}}, input, nil})
       end
     end)
   end
@@ -1502,9 +1524,8 @@ defmodule Scenic.ViewPort do
     # coord space and indicate if it was over an input
     Enum.each(pids, fn pid ->
       case prep_gxy_input(gxy, pid, state) do
-        {:ok, _xy, nil} -> :ok
         {:ok, xy, id} -> send(pid, {:_input, {:cursor_pos, xy}, input, id})
-        _ -> :ok
+        _ -> send(pid, {:_input, {:cursor_pos, gxy}, input, nil})
       end
     end)
   end
@@ -1583,7 +1604,6 @@ defmodule Scenic.ViewPort do
 
   defp compile_input(%Graph{primitives: primitives}) do
     input = comp_input_prim([], 0, primitives[0], primitives, Math.Matrix.identity())
-
     {:ok, input}
   end
 

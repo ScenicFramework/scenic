@@ -305,6 +305,8 @@ defmodule Scenic.ViewPort.Input do
           input :: ViewPort.Input.t()
         ) :: :ok
   def send(%ViewPort{pid: pid}, input) do
+    # IO.inspect(input, label: "Raw Send")
+
     case validate(input) do
       :ok -> GenServer.cast(pid, {:input, input})
       err -> err
@@ -370,6 +372,10 @@ defmodule Scenic.ViewPort.Input do
       do: :ok
 
   def validate({:cursor_pos, {x, y}}) when is_number(x) and is_number(y), do: :ok
+
+  def validate({:cursor_scroll, {{dx, dy}, {x, y}}})
+      when is_number(dx) and is_number(dy) and is_number(x) and is_number(y),
+      do: :ok
 
   def validate({:viewport, {:enter, {x, y}}}) when is_number(x) and is_number(y), do: :ok
   def validate({:viewport, {:exit, {x, y}}}) when is_number(x) and is_number(y), do: :ok

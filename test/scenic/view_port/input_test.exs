@@ -124,6 +124,65 @@ defmodule Scenic.ViewPort.InputTest do
   end
 
   # ----------------
+  # specific input types
+
+  test "cursor_scroll request works", %{vp: vp} do    
+    assert Input.fetch_captures!(vp) == {:ok, []}
+    assert Input.fetch_requests(vp) == {:ok, []}
+
+    :ok = Input.request(vp, :cursor_scroll)
+    assert Input.fetch_requests(vp) == {:ok, [:cursor_scroll]}
+
+    assert Input.send( vp, {:cursor_scroll, {{1,2}, {3,4}}} ) == :ok
+    assert_receive({:_input,
+      {:cursor_scroll, {{1,2}, {3,4}}}, {:cursor_scroll, {{1,2}, {3,4}}}, nil},
+      100
+    )
+  end
+
+  test "cursor_scroll capture works", %{vp: vp} do    
+    assert Input.fetch_captures(vp) == {:ok, []}
+    assert Input.fetch_requests(vp) == {:ok, []}
+
+    :ok = Input.capture(vp, :cursor_scroll)
+    assert Input.fetch_captures(vp) == {:ok, [:cursor_scroll]}
+
+    assert Input.send( vp, {:cursor_scroll, {{1,2}, {3,4}}} ) == :ok
+    assert_receive({:_input,
+      {:cursor_scroll, {{1,2}, {3,4}}}, {:cursor_scroll, {{1,2}, {3,4}}}, nil},
+      100
+    )
+  end
+
+  test "cursor_pos request works", %{vp: vp} do    
+    assert Input.fetch_captures!(vp) == {:ok, []}
+    assert Input.fetch_requests(vp) == {:ok, []}
+
+    :ok = Input.request(vp, :cursor_pos)
+    assert Input.fetch_requests(vp) == {:ok, [:cursor_pos]}
+
+    assert Input.send( vp, {:cursor_pos, {1,2}} ) == :ok
+    assert_receive({:_input,
+      {:cursor_pos, {1,2}}, {:cursor_pos, {1,2}}, nil},
+      100
+    )
+  end
+
+  test "cursor_pos capture works", %{vp: vp} do    
+    assert Input.fetch_captures(vp) == {:ok, []}
+    assert Input.fetch_requests(vp) == {:ok, []}
+
+    :ok = Input.capture(vp, :cursor_pos)
+    assert Input.fetch_captures(vp) == {:ok, [:cursor_pos]}
+
+    assert Input.send( vp, {:cursor_pos, {1,2}} ) == :ok
+    assert_receive({:_input,
+      {:cursor_pos, {1,2}}, {:cursor_pos, {1,2}}, nil},
+      100
+    )
+  end
+
+  # ----------------
   # drivers are sent input updates
 
   test "drivers are sent requested input updates", %{vp: vp} do
@@ -206,6 +265,7 @@ defmodule Scenic.ViewPort.InputTest do
     assert Input.fetch_requests!(vp) == {:ok, [:cursor_button]}
     assert_receive({:"$gen_cast", {:request_input, [:cursor_button]}}, 100)
   end
+
 
   # ----------------
   # actual input is routed to listeners

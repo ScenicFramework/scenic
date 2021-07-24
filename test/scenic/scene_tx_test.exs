@@ -190,10 +190,10 @@ defmodule Scenic.SceneTxTest do
   } do
     :ok = ViewPort.Input.send(vp, {:cursor_pos, {25.0, 35.0}})
     assert_receive({:n0_input, {:cursor_pos, {5.0, 5.0}}, :n0_rect}, 200)
-    refute_receive({:n1_input, {:cursor_pos, {-95.0, -195.0}}, nil}, 20)
+    assert_receive({:n1_input, {:cursor_pos, {-95.0, -195.0}}, nil}, 20)
 
     :ok = ViewPort.Input.send(vp, {:cursor_pos, {125.0, 235.0}})
-    refute_receive({:n0_input, {:cursor_pos, {105.0, 205.0}}, nil}, 20)
+    assert_receive({:n0_input, {:cursor_pos, {105.0, 205.0}}, nil}, 20)
     assert_receive({:n1_input, {:cursor_pos, {5.0, 5.0}}, :n1_rect}, 200)
   end
 end
