@@ -1331,7 +1331,7 @@ defmodule Scenic.Primitives do
 
   NOTE: this doesn't add the script itself. Only places a reference to it in
   the graph. You still need to add the script to the ViewPort via
-  `ViewPort.put_script'.
+  `Scenic.ViewPort.put_script/4`.
 
   Data:
 

@@ -64,7 +64,7 @@ defmodule Scenic.ViewPort.Input do
   Drivers have no knowledge of the running scenes. The `ViewPort` takes care of
   that routing.
 
-  Input events are validated against `Scenic.ViewPort.Input.validate/2` function.
+  Input events are validated against `Scenic.ViewPort.Input.validate/1` function.
   """
 
   alias Scenic.Math

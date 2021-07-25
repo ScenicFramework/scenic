@@ -20,7 +20,7 @@ defmodule Scenic.Component.Button do
       {:click, id}
 
   These messages can be received and handled in your scene via
-  `Scenic.Scene.handle_event/3`. For example:
+  `c:Scenic.Scene.handle_event/3`. For example:
 
   ```
   ...
