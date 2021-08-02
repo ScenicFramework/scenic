@@ -41,6 +41,13 @@ defmodule Scenic.Primitive.TransformTest do
     assert Transform.combine(only_pin) == nil
   end
 
+  test "scale shortcut gets properly expanded" do
+    tx = [s: 0.6]
+
+    assert NimbleOptions.validate(tx, Transform.opts_schema()) ==
+             {:ok, [s: 0.6, scale: {0.6, 0.6}]}
+  end
+
   test "combine calculates the local matrix in the right order" do
     # first calc all the matrices
     mx_pin = Matrix.build_translation(@pin)
