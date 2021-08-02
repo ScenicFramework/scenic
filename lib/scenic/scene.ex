@@ -869,9 +869,9 @@ defmodule Scenic.Scene do
     module.terminate(reason, scene)
   end
 
-  # def terminate( _reason, _state ) do
-  #   nil
-  # end
+  def terminate( _reason, _state ) do
+    nil
+  end
 
   # ============================================================================
   # handle_continue
