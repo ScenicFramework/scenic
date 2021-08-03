@@ -12,7 +12,7 @@ defmodule Scenic.Assets.Stream.ImageTest do
 
   test "from_binary works" do
     # use the parrot from the static assets as the input...
-    {:ok, bin} = Static.load("images/parrot.png")
+    {:ok, bin} = Static.load(:parrot)
     {:ok, {Image, {62, 114, "image/png"}, b}} = Image.from_binary(bin)
     assert b == bin
   end

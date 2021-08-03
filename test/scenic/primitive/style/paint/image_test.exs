@@ -5,21 +5,25 @@ defmodule Scenic.Primitive.Style.Paint.ImageTest do
   alias Scenic.Primitive.Style.Paint.Image
 
   test "validate accepts image asset aliases" do
-    assert Image.validate({:image, :test_parrot}) == {:ok, {:image, "images/parrot.png"}}
+    assert Image.validate({:image, :parrot}) == {:ok, {:image, :parrot}}
   end
 
   test "validate accepts image asset paths" do
-    assert Image.validate({:image, "images/parrot.png"}) == {:ok, {:image, "images/parrot.png"}}
+    Image.validate({:image, :parrot})
+    Image.validate({:image, {:test_assets, "images/parrot.png"}})
+
+    assert Image.validate({:image, {:test_assets, "images/parrot.png"}}) ==
+             {:ok, {:image, {:test_assets, "images/parrot.png"}}}
   end
 
   test "validate rejects font assets" do
-    {:error, msg} = Image.validate({:image, :test_roboto})
+    {:error, msg} = Image.validate({:image, :roboto})
     assert msg =~ "font"
   end
 
   test "validate rejects unmapped aliases" do
     {:error, msg} = Image.validate({:image, :invalid})
-    assert msg =~ "not mapped"
+    assert msg =~ "could not be found"
   end
 
   test "validate rejects missing assets" do

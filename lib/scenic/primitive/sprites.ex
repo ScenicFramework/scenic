@@ -92,8 +92,7 @@ defmodule Scenic.Primitive.Sprites do
 
   @impl Primitive
   @spec validate(t()) :: {:ok, t()} | {:error, String.t()}
-  def validate({image, cmds})
-      when is_list(cmds) and (is_atom(image) or is_bitstring(image)) do
+  def validate({image, cmds}) when is_list(cmds) do
     with {:ok, image} <- validate_image(image),
          {:ok, cmds} <- validate_commands(cmds) do
       {:ok, {image, cmds}}
@@ -211,13 +210,10 @@ defmodule Scenic.Primitive.Sprites do
   end
 
   defp validate_image(id) do
-    with {:ok, id_str} <- Static.resolve_id(id),
-         {:ok, {Static.Image, _}} <- Static.fetch(id_str) do
-      {:ok, id_str}
-    else
+    case Static.meta(id) do
+      {:ok, {Static.Image, _}} -> {:ok, id}
       {:ok, {Static.Font, _}} -> {:error, :font}
-      {:error, :not_mapped} -> {:error, :alias}
-      {:error, :not_found} -> {:error, :not_found}
+      _ -> {:error, :not_found}
     end
   end
 

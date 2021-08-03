@@ -52,18 +52,13 @@ defmodule Scenic.Primitive.Style.Font do
   # data verification and serialization
 
   @doc false
-  def validate(id) when is_atom(id) or is_bitstring(id) do
-    with {:ok, id_str} <- Static.resolve_id(id),
-         {:ok, {Static.Font, _}} <- Static.fetch(id_str) do
-      {:ok, id_str}
-    else
+  def validate(id) do
+    case Static.meta(id) do
+      {:ok, {Static.Font, _}} -> {:ok, id}
       {:ok, {Static.Image, _}} -> err_is_an_image(id)
-      {:error, :not_mapped} -> err_not_mapped(id)
-      {:error, :not_found} -> err_missing(id)
+      _ -> err_missing(id)
     end
   end
-
-  def validate(invalid), do: err_invalid(invalid)
 
   defp err_is_an_image(id) do
     {
@@ -74,26 +69,6 @@ defmodule Scenic.Primitive.Style.Font do
       This is an image!!
       #{IO.ANSI.yellow()}
       The :font style must be an id that names an font in your Scenic.Assets.Static library#{IO.ANSI.default_color()}
-      """
-    }
-  end
-
-  defp err_not_mapped(id) do
-    {
-      :error,
-      """
-      #{IO.ANSI.red()}Invalid Font specification
-      Received: #{inspect(id)}
-      The alias #{inspect(id)} is not mapped to an asset path
-      #{IO.ANSI.yellow()}
-      The :font style must be an id that names an font in your Scenic.Assets.Static library
-
-      To resolve this, make sure the alias mapped to a file path in your config.
-        config :scenic, :assets,
-          module: MyApplication.Assets,
-          alias: [
-            my_font: "fonts/my_font.ttf"
-          ]#{IO.ANSI.default_color()}
       """
     }
   end

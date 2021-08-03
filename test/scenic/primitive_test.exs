@@ -252,7 +252,7 @@ defmodule Scenic.PrimitiveTest do
     p = Primitive.put_style(@primitive, :font, :roboto)
 
     assert Primitive.get_styles(p) == %{
-             font: "fonts/roboto.ttf",
+             font: :roboto,
              line_height: 2
            }
   end

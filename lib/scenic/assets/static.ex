@@ -4,8 +4,6 @@
 #
 
 defmodule Scenic.Assets.Static do
-  require Logger
-
   @moduledoc """
   Manages static assets, which are resources such as fonts or images (jpg or png) that
   ship with your application and do not change over time.
@@ -154,27 +152,53 @@ defmodule Scenic.Assets.Static do
   in the assets you want to use directly.
   """
 
+  require Logger
   alias Scenic.Assets.Static
 
   # import IEx
 
-  @type id :: String.t() | atom
+  # ===========================================================================
+  # the using macro for scenes adopting this behavior
+  defmacro __using__(using_opts \\ []) do
+    quote do
+      # @library Scenic.Assets.Static.build(__MODULE__, unquote(using_opts))
+      @library Scenic.Assets.Static.build!(__MODULE__, unquote(using_opts))
+      def library(), do: @library
 
-  @default_src_dir "assets"
-  @dst_dir "_assets"
+      # quote
+    end
+
+    # defmacro
+  end
+
+  # import IEx
+
+  @type id :: String.t() | atom | {atom, String.t()}
 
   @hash_type :sha3_256
 
+  @dst_dir "_assets"
+  @default_src_dir "assets"
+
   @default_aliases [
-    roboto: "fonts/roboto.ttf",
-    roboto_mono: "fonts/roboto_mono.ttf"
+    roboto: {:scenic, "fonts/roboto.ttf"},
+    roboto_mono: {:scenic, "fonts/roboto_mono.ttf"}
   ]
 
-  @callback ingest(bin :: binary, meta :: {asset_type :: atom, data :: any}) ::
-              {:ok, binary}
-              | :error
+  @parsers [
+    Scenic.Assets.Static.Image,
+    Scenic.Assets.Static.Font
+  ]
 
-  @optional_callbacks ingest: 2
+  @type t :: %Scenic.Assets.Static{
+          aliases: map,
+          metas: map,
+          hash_type: :sha3_256,
+          module: module,
+          otp_app: atom
+        }
+
+  defstruct aliases: %{}, metas: %{}, hash_type: @hash_type, module: nil, otp_app: nil
 
   # ===========================================================================
   defmodule Error do
@@ -183,25 +207,6 @@ defmodule Scenic.Assets.Static do
   end
 
   # ===========================================================================
-  # the using macro for scenes adopting this behavior
-  defmacro __using__(using_opts \\ []) do
-    quote do
-      @behaviour Scenic.Assets.Static
-
-      @library Scenic.Assets.Static.build(__MODULE__, unquote(using_opts))
-      def library(), do: @library
-      def otp_app(), do: unquote(using_opts[:otp_app])
-
-      # quote
-    end
-
-    # defmacro
-  end
-
-  # --------------------------------------------------------
-  @doc "Return the hash type used in the library."
-  @spec hash() :: atom
-  def hash(), do: @hash_type
 
   # --------------------------------------------------------
   # internal config sugar
@@ -211,118 +216,37 @@ defmodule Scenic.Assets.Static do
   Return the configured asset library module.
   """
   def module(), do: config()[:module]
-  defp otp_app(), do: module().otp_app()
 
   @doc "Return the compiled asset library."
   def library(), do: module().library()
 
-  @doc "Return the list of configured aliases."
-  def aliases() do
-    Enum.reduce(
-      @default_aliases,
-      config()[:alias] || [],
-      fn {k, v}, acc -> Keyword.put_new(acc, k, v) end
-    )
-  end
+  @doc false
+  def dst_dir(), do: @dst_dir
 
   # --------------------------------------------------------
   @doc """
-  Resolve an id, an alias, or a hash into the asset's id.
+  Transform an asset id into the file hash.
 
-  Examples:
-  ```elixir
-  iex(1)> Scenic.Assets.Static.resolve_id( "fonts/roboto.ttf" )
-  {:ok, "fonts/roboto.ttf"}
-
-  iex(2)> Scenic.Assets.Static.resolve_id( :roboto )
-  {:ok, "fonts/roboto.ttf"}
-
-  iex(3)> Scenic.Assets.Static.resolve_id( "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE" )
-  {:ok, "fonts/roboto.ttf"}
-  ```
-  """
-  @spec resolve_id(id :: String.t() | atom | binary) ::
-          {:ok, String.t()}
-          | {:error, :not_mapped}
-          | {:error, :not_found}
-
-  def resolve_id(id)
-
-  def resolve_id(id) when is_atom(id) do
-    case Keyword.fetch(aliases(), id) do
-      {:ok, id} -> {:ok, id}
-      :error -> {:error, :not_mapped}
-    end
-  end
-
-  def resolve_id(id) when is_binary(id) do
-    case fetch(id) do
-      {:ok, _} ->
-        {:ok, id}
-
-      :error ->
-        case byte_size(id) do
-          32 -> do_resolve_bin_hash(id)
-          _ -> do_resolve_str_hash(id)
-        end
-    end
-    |> case do
-      {:ok, id} -> {:ok, id}
-      :error -> {:error, :not_found}
-    end
-  end
-
-  defp do_resolve_bin_hash(hash) do
-    library()
-    |> Enum.find_value(fn
-      {id, {^hash, _, _}} -> {:ok, id}
-      _ -> false
-    end)
-    |> case do
-      {:ok, id} -> {:ok, id}
-      _ -> :error
-    end
-  end
-
-  defp do_resolve_str_hash(hash) do
-    library()
-    |> Enum.find_value(fn
-      {id, {_, ^hash, _}} -> {:ok, id}
-      _ -> false
-    end)
-    |> case do
-      {:ok, id} -> {:ok, id}
-      _ -> :error
-    end
-  end
-
-  # --------------------------------------------------------
-  @doc """
-  Return the cryptographic hash of an asset.
-
-  Return is in the form of `{:ok, binary_hash, string_hash}`
-
-  If the named asset is not in the library, `{:error, :not_found}` is returned.
+  If you pass in a valid hash, it is returned unchanged
 
   Example:
   ```elixir
-  iex(1)> Scenic.Assets.Static.to_hash( :roboto )
-  {:ok,
-   <<243, 145, 76, 95, 149, 49, 167, 23, 114, 99, 197, 95, 239, 40, 165, 67, 253,
-     202, 42, 117, 16, 198, 39, 218, 236, 72, 219, 150, 94, 195, 187, 33>>,
-   "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"}
+  alias Scenic.Assets.Static
+  library = Scenic.Assets.Static.library()
+
+  {:ok, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"} = Static.hash( library, :parrot )
+  {:ok, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"} = Static.hash( library, "images/parrot.png" )
+  {:ok, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"} = Static.hash( library, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns" )
   ```
   """
-  @spec to_hash(id :: String.t() | atom) ::
-          {:ok, binary, String.t()}
-          | {:error, :not_found}
-  def to_hash(id) do
-    with {:ok, id_str} <- resolve_id(id),
-         {:ok, {bin_hash, str_hash, _meta}} <- Map.fetch(library(), id_str) do
-      {:ok, bin_hash, str_hash}
-    else
-      :error -> {:error, :not_found}
-      error -> error
+  @spec to_hash(id :: any) :: {:ok, hash :: any} | :error
+  def to_hash(id), do: library() |> to_hash(id)
+
+  @spec to_hash(library :: t(), id :: any) :: {:ok, hash :: any} | :error
+  def to_hash(%Static{aliases: aliases, metas: metas}, id) do
+    case Map.fetch(metas, id) do
+      {:ok, _} -> {:ok, id}
+      :error -> Map.fetch(aliases, id)
     end
   end
 
@@ -339,18 +263,14 @@ defmodule Scenic.Assets.Static do
   {:ok, meta} = Scenic.Assets.Static.fetch( :parrot )
   ```
   """
-  @spec fetch(id :: String.t() | atom) :: {:ok, meta :: any} | :error
-  def fetch(id) when is_atom(id) do
-    case resolve_id(id) do
-      {:ok, id} -> fetch(id)
-      _ -> :error
-    end
-  end
+  @spec meta(id :: any) :: {:ok, meta :: any} | :error
+  def meta(id), do: library() |> meta(id)
 
-  def fetch(id) do
-    case Map.fetch(library(), id) do
-      {:ok, {_bin_hash, _str_hash, meta}} -> {:ok, meta}
-      :error -> :error
+  @spec meta(library :: t(), id :: any) :: {:ok, meta :: any} | :error
+  def meta(%Static{metas: metas} = lib, id) do
+    case to_hash(lib, id) do
+      {:ok, hash} -> Map.fetch(metas, hash)
+      err -> err
     end
   end
 
@@ -364,23 +284,33 @@ defmodule Scenic.Assets.Static do
 
   The contents of the file will be hashed and compared against the hash found in
   the library. If this test fails, `{:error, :hash_failed}` is returned.
+
+  If the output file cannot be read, it returns a posix error.
   """
-  @spec load(id :: String.t() | atom | binary) ::
+  @spec load(id :: any) ::
           {:ok, data :: binary}
           | {:error, :not_found}
           | {:error, :hash_failed}
+          | {:error, File.posix()}
 
-  def load(id) do
+  def load(id), do: library() |> load(id)
+
+  @spec load(library :: t(), id :: any) ::
+          {:ok, data :: binary}
+          | {:error, :not_found}
+          | {:error, :hash_failed}
+          | {:error, File.posix()}
+
+  def load(%Static{otp_app: otp_app, hash_type: hash_type} = lib, id) do
     dir =
-      otp_app()
-      # |> :code.priv_dir()
+      otp_app
       |> :code.lib_dir()
-      |> Path.join(@dst_dir)
+      |> Path.join(dst_dir())
 
-    with {:ok, id} <- resolve_id(id),
-         {:ok, bin_hash, str_hash} <- to_hash(id),
+    with {:ok, str_hash} <- to_hash(lib, id),
+         {:ok, bin_hash} <- Base.url_decode64(str_hash, padding: false),
          {:ok, bin} <- File.read(Path.join(dir, str_hash)),
-         ^bin_hash <- :crypto.hash(@hash_type, bin) do
+         ^bin_hash <- :crypto.hash(hash_type, bin) do
       {:ok, bin}
     else
       :error -> {:error, :not_found}
@@ -389,77 +319,152 @@ defmodule Scenic.Assets.Static do
     end
   end
 
+  # ========================================================
+
   # --------------------------------------------------------
   @doc false
-  def build(mod, opts) when is_list(opts) do
-    if !opts[:otp_app] || !is_atom(opts[:otp_app]) do
-      raise "use Scenic.Assets requires a valid :otp_app option"
-    end
-
-    # build the full path to the source directory
-    src = opts[:directory] || @default_src_dir
-
-    # build the full path to the destination artifacts directory
+  def build!(library_module, opts \\ []) when is_atom(library_module) do
+    # simultaneously calc the dst dir and validate the :otp_app option
     dst =
-      opts[:otp_app]
-      # |> :code.priv_dir()
-      |> :code.lib_dir()
-      |> Path.join(@dst_dir)
+      try do
+        opts[:otp_app]
+        # |> :code.priv_dir()
+        |> :code.lib_dir()
+        |> Path.join(Static.dst_dir())
+      rescue
+        _ ->
+          raise """
+          'use Scenic.Assets.Static' requires a valid :otp_app option.
+          """
+      end
 
     # make sure the destination directory exists (delete and recreate to keep it clean)
     File.rm_rf(dst)
     File.mkdir_p!(dst)
 
+    # start building the library
+    library = %Static{module: library_module, otp_app: opts[:otp_app]}
+
+    # build the file data and metas from the sources
+    library =
+      case opts[:sources] do
+        nil -> [{opts[:otp_app], @default_src_dir}, {:scenic, "deps/scenic/assets"}]
+        srcs -> srcs
+      end
+      |> Enum.reduce(library, &build_from_source(&2, &1, dst))
+
+    # add the default aliases
+    library = Enum.reduce(@default_aliases, library, &add_alias(&2, &1))
+
+    # add any additional aliases, then return
+    case opts[:alias] || opts[:aliases] do
+      nil -> []
+      aliases -> aliases
+    end
+    |> Enum.reduce(library, &add_alias(&2, &1))
+  end
+
+  # --------------------------------------------------------
+  defp build_from_source(library, source, dst)
+
+  defp build_from_source(%Static{otp_app: app} = lib, src, dst) when is_bitstring(src) do
+    build_from_source(lib, {app, src}, dst)
+  end
+
+  defp build_from_source(%Static{} = lib, {app, dir}, dst)
+       when is_atom(app) and is_bitstring(dir) do
     # build the library
-    src
+    dir
     |> Path.join("**")
     |> Path.wildcard()
-    |> Enum.reduce(%{}, fn path, lib ->
+    |> Enum.reduce(lib, fn path, lib ->
       case File.dir?(path) do
         true -> lib
-        false -> ingest_file(mod, lib, path, src, dst)
+        false -> ingest_file(lib, app, dir, path, dst)
       end
     end)
   end
 
-  defp ingest_file(mod, library, path, src, dst) do
+  defp build_from_source(%Static{module: mod}, src, _dst) do
+    raise """
+    Invalid :sources list when building assets library #{inspect(mod)}
+    Received: #{inspect(src)}
+
+    Expected a list of sources in the format of
+    [{otp_app, assets_path}]
+    """
+  end
+
+  # --------------------------------------------------------
+  defp ingest_file(%Static{otp_app: otp_app, hash_type: hash_type} = lib, src_app, dir, path, dst) do
     with {:ok, bin} <- File.read(path),
-         {:ok, meta} <- parse_bin(bin),
-         {:ok, bin, meta} <- transform_bin(bin, meta, mod) do
-      id = Path.relative_to(path, src)
-      bin_hash = :crypto.hash(@hash_type, bin)
+         {:ok, meta} <- parse_bin(bin) do
+      id = Path.relative_to(path, dir)
+      bin_hash = :crypto.hash(hash_type, bin)
       str_hash = Base.url_encode64(bin_hash, padding: false)
 
       Path.join(dst, str_hash) |> File.write!(bin)
-      Map.put(library, id, {bin_hash, str_hash, meta})
+
+      # fill in the library entries
+      lib =
+        lib
+        |> assign(:metas, str_hash, meta)
+        |> assign(:aliases, {src_app, id}, str_hash)
+
+      case otp_app == src_app do
+        true -> assign(lib, :aliases, id, str_hash)
+        false -> lib
+      end
     else
-      _ -> library
+      _ -> lib
     end
   end
 
+  # --------------------------------------------------------
+  def assign(%Static{metas: metas} = lib, :metas, key, value) do
+    %{lib | metas: Map.put(metas, key, value)}
+  end
+
+  def assign(%Static{aliases: aliases} = lib, :aliases, key, value) do
+    %{lib | aliases: Map.put(aliases, key, value)}
+  end
+
+  # --------------------------------------------------------
   defp parse_bin(bin) do
-    # parse the file, gen the entry, allow the asset lib to transform it
-    with :error <- Static.Image.parse_meta(bin),
-         :error <- Static.Font.parse_meta(bin) do
-      :error
-    else
+    @parsers
+    |> Enum.find_value(fn parser ->
+      case parser.parse_meta(bin) do
+        {:ok, meta} -> {:ok, meta}
+        _ -> false
+      end
+    end)
+    |> case do
       {:ok, meta} -> {:ok, meta}
-    end
-  end
-
-  defp transform_bin(bin, meta, mod) do
-    case Kernel.function_exported?(mod, :ingest, 2) do
-      true -> do_transform_bin(bin, meta, mod)
-      false -> {:ok, bin, meta}
-    end
-  end
-
-  defp do_transform_bin(bin, meta, mod) do
-    with {:ok, bin} <- mod.ingest(bin, meta),
-         {:ok, meta} <- parse_bin(bin) do
-      {:ok, bin, meta}
-    else
       _ -> :error
     end
+  end
+
+  # --------------------------------------------------------
+  defp add_alias(library, new_alias)
+
+  defp add_alias(%Static{aliases: aliases} = lib, {new_alias, to}) do
+    case Map.fetch(aliases, to) do
+      {:ok, hash} ->
+        assign(lib, :aliases, new_alias, hash)
+
+      _ ->
+        Logger.warn("Attempted to alias #{inspect(new_alias)} to unknown asset: #{inspect(to)}")
+        lib
+    end
+  end
+
+  defp add_alias(%Static{module: mod}, src) do
+    raise """
+    Invalid :alias list when building assets library #{inspect(mod)}
+    Received: #{inspect(src)}
+
+    Expected a list of sources in the format of
+    [alias_one: relative_path, alias_two: {otp_app, relative_path}]
+    """
   end
 end

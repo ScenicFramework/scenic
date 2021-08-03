@@ -33,14 +33,11 @@ defmodule Scenic.Primitive.Style.Paint.Image do
   """
 
   @doc false
-  def validate({:image, id}) when is_atom(id) or is_bitstring(id) do
-    with {:ok, id_str} <- Static.resolve_id(id),
-         {:ok, {Static.Image, _}} <- Static.fetch(id_str) do
-      {:ok, {:image, id_str}}
-    else
+  def validate({:image, id}) do
+    case Static.meta(id) do
+      {:ok, {Static.Image, _}} -> {:ok, {:image, id}}
       {:ok, {Static.Font, _}} -> err_is_a_font(id)
-      {:error, :not_mapped} -> err_not_mapped(id)
-      {:error, :not_found} -> err_missing(id)
+      _ -> err_missing(id)
     end
   end
 
@@ -53,24 +50,6 @@ defmodule Scenic.Primitive.Style.Paint.Image do
       This is a font!!
       #{IO.ANSI.yellow()}
       Image fills must be an id that names an image in your Scenic.Assets.Static library.#{IO.ANSI.default_color()}
-      """
-    }
-  end
-
-  defp err_not_mapped(id) do
-    {
-      :error,
-      """
-      The alias #{inspect(id)} is not mapped to an asset path
-      #{IO.ANSI.yellow()}
-      Image fills must be an id that names an image in your Scenic.Assets.Static library.
-
-      To resolve this, make sure the alias mapped to a file path in your config.
-        config :scenic, :assets,
-          module: MyApplication.Assets,
-          alias: [
-            parrot: "images/parrot.jpg"
-          ]#{IO.ANSI.default_color()}
       """
     }
   end

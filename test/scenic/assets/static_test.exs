@@ -11,79 +11,138 @@ defmodule Scenic.Assets.StaticTest do
 
   # import IEx
 
-  @roboto_hash <<243, 145, 76, 95, 149, 49, 167, 23, 114, 99, 197, 95, 239, 40, 165, 67, 253, 202,
-                 42, 117, 16, 198, 39, 218, 236, 72, 219, 150, 94, 195, 187, 33>>
-  @roboto_hash_str "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"
-
-  @parrot_hash <<86, 245, 144, 22, 54, 229, 35, 4, 198, 178, 241, 177, 243, 174, 173, 240, 194, 6,
-                 217, 204, 214, 200, 135, 60, 111, 46, 151, 115, 207, 0, 58, 123>>
-  @parrot_hash_str "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"
-
-  # test can get metadata for the 
-  test "The Asset library was built and configured correctly" do
-    assert Scenic.Test.Assets.otp_app() == :scenic
-    %{} = lib = Scenic.Test.Assets.library()
-
-    {@roboto_hash, @roboto_hash_str, {Static.Font, %FontMetrics{}}} = lib["fonts/roboto.ttf"]
-
-    {@parrot_hash, @parrot_hash_str, {Static.Image, {62, 114, "image/png"}}} =
-      lib["images/parrot.png"]
-
-    refute lib["missing.png"]
+  test "module returns the configured library module" do
+    assert Static.module() == Scenic.Test.Assets
   end
 
-  test "resolve_id resolves alias into string" do
-    assert Static.resolve_id(:test_roboto) == {:ok, "fonts/roboto.ttf"}
+  test "library returns the configured module's library" do
+    assert Static.library() == Scenic.Test.Assets.library()
   end
 
-  test "resolve_id returns error if alias not mapped" do
-    assert Static.resolve_id(:missing) == {:error, :not_mapped}
+  test "to_hash retrieves aliased hashes from the library" do
+    lib = Static.library()
+
+    assert Static.to_hash(lib, :parrot) == {:ok, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"}
+
+    assert Static.to_hash(lib, {:test_assets, "images/parrot.png"}) ==
+             {:ok, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"}
+
+    assert Static.to_hash(lib, :roboto) == {:ok, "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"}
+
+    assert Static.to_hash(lib, "fonts/roboto.ttf") ==
+             {:ok, "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"}
+
+    assert Static.to_hash(lib, {:scenic, "fonts/roboto.ttf"}) ==
+             {:ok, "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"}
+
+    assert Static.to_hash(lib, :roboto_mono) ==
+             {:ok, "seffyKC7EpKVq50qdgz9W7Kk1oj4SPnnSIr66hYTPPA"}
+
+    assert Static.to_hash(lib, {:scenic, "fonts/roboto_mono.ttf"}) ==
+             {:ok, "seffyKC7EpKVq50qdgz9W7Kk1oj4SPnnSIr66hYTPPA"}
   end
 
-  test "resolve_id passes valid strings through" do
-    assert Static.resolve_id("fonts/roboto.ttf") == {:ok, "fonts/roboto.ttf"}
+  test "to_hash passes valid hashes through untouched" do
+    lib = Static.library()
+
+    assert Static.to_hash(lib, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns") ==
+             {:ok, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"}
+
+    assert Static.to_hash(lib, "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE") ==
+             {:ok, "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"}
+
+    assert Static.to_hash(lib, "seffyKC7EpKVq50qdgz9W7Kk1oj4SPnnSIr66hYTPPA") ==
+             {:ok, "seffyKC7EpKVq50qdgz9W7Kk1oj4SPnnSIr66hYTPPA"}
   end
 
-  test "resolve_id resolves string hash into id" do
-    assert Static.resolve_id(@roboto_hash_str) == {:ok, "fonts/roboto.ttf"}
+  test "to_hash returns :error for missing errors - just like Map.fetch" do
+    lib = Static.library()
+    assert Static.to_hash(lib, :missing) == :error
   end
 
-  test "resolve_id resolves binary hash into id" do
-    assert Static.resolve_id(@roboto_hash) == {:ok, "fonts/roboto.ttf"}
+  test "to_hash with lib shortcut works" do
+    assert Static.to_hash(:parrot) == {:ok, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"}
+
+    assert Static.to_hash("fonts/roboto.ttf") ==
+             {:ok, "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"}
+
+    assert Static.to_hash({:scenic, "fonts/roboto_mono.ttf"}) ==
+             {:ok, "seffyKC7EpKVq50qdgz9W7Kk1oj4SPnnSIr66hYTPPA"}
+
+    assert Static.to_hash("VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns") ==
+             {:ok, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"}
+
+    assert Static.to_hash(:missing) == :error
   end
 
-  test "resolve_id returns :not_found for missing ids/hashes" do
-    assert Static.resolve_id("not there at all") == {:error, :not_found}
+  test "meta retrieves meta data for an asset" do
+    lib = Static.library()
+
+    assert Static.meta(lib, :parrot) ==
+             {:ok, {Scenic.Assets.Static.Image, {62, 114, "image/png"}}}
+
+    assert Static.meta(lib, {:test_assets, "images/parrot.png"}) ==
+             {:ok, {Scenic.Assets.Static.Image, {62, 114, "image/png"}}}
+
+    assert Static.meta(lib, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns") ==
+             {:ok, {Scenic.Assets.Static.Image, {62, 114, "image/png"}}}
   end
 
-  test "to_hash resolves the file path/alias to the hash" do
-    assert Static.to_hash("fonts/roboto.ttf") == {:ok, @roboto_hash, @roboto_hash_str}
-    assert Static.to_hash(:test_roboto) == {:ok, @roboto_hash, @roboto_hash_str}
-
-    assert Static.to_hash("images/parrot.png") == {:ok, @parrot_hash, @parrot_hash_str}
-    assert Static.to_hash(:test_parrot) == {:ok, @parrot_hash, @parrot_hash_str}
+  test "meta returns :error for missing errors - just like Map.fetch" do
+    lib = Static.library()
+    assert Static.meta(lib, :missing) == :error
   end
 
-  test "fetch returns the metadata" do
-    {:ok, {Static.Font, %FontMetrics{}}} = Static.fetch("fonts/roboto.ttf")
-    {:ok, {Static.Font, %FontMetrics{}}} = Static.fetch(:roboto)
+  test "meta with lib shortcut works" do
+    assert Static.meta(:parrot) == {:ok, {Scenic.Assets.Static.Image, {62, 114, "image/png"}}}
 
-    {:ok, {Static.Image, {62, 114, "image/png"}}} = Static.fetch("images/parrot.png")
-    {:ok, {Static.Image, {62, 114, "image/png"}}} = Static.fetch(:test_parrot)
-
-    assert Static.fetch("images/missing") == :error
-    assert Static.fetch(:missing) == :error
+    assert Static.meta({:test_assets, "images/parrot.png"}) ==
+             {:ok, {Scenic.Assets.Static.Image, {62, 114, "image/png"}}}
   end
 
-  test "load returns the contents of the file" do
-    {:ok, bin} = Static.load("fonts/roboto.ttf")
+  test "load retrieves the binary data for an asset" do
+    lib = Static.library()
+
+    {:ok, bin} = Static.load(lib, :parrot)
     assert is_binary(bin)
-    {:ok, bin} = Static.load(:test_roboto)
+
+    {:ok, bin} = Static.load(lib, {:test_assets, "images/parrot.png"})
     assert is_binary(bin)
 
-    {:ok, bin} = Static.load("images/parrot.png")
+    {:ok, bin} = Static.load(lib, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns")
     assert is_binary(bin)
-    {:ok, bin} = Static.load(:test_parrot)
+  end
+
+  test "load returns :not_found for missing assets" do
+    lib = Static.library()
+
+    assert Static.load(lib, :missing) == {:error, :not_found}
+  end
+
+  test "load returns :hash_failed when hash_check fails" do
+    lib = Static.library()
+
+    # tamper with the file
+    {:ok, hash} = Static.to_hash(lib, {:test_assets, "images/tamper.png"})
+
+    path =
+      lib.otp_app
+      |> :code.lib_dir()
+      |> Path.join(Static.dst_dir())
+      |> Path.join(hash)
+
+    {:ok, <<t::64, bin::binary>>} = File.read(path)
+    File.write!(path, <<t + 1::64, bin::binary>>)
+
+    # it should fail this time
+    assert Static.load(lib, {:test_assets, "images/tamper.png"}) == {:error, :hash_failed}
+  end
+
+  test "load with lib shortcut works" do
+    {:ok, bin} = Static.load(:parrot)
+    assert is_binary(bin)
+
+    {:ok, bin} = Static.load({:test_assets, "images/parrot.png"})
     assert is_binary(bin)
   end
 end

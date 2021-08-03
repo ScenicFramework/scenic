@@ -45,13 +45,13 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
     {:ok, list} = GraphCompiler.compile(@viewport, graph)
 
     assert list == [
-             {:font, "fonts/roboto.ttf"},
+             {:font, "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"},
              {:font_size, 27},
              {:text_align, :left},
              {:text_base, :alphabetic},
              {:fill_color, {:color_rgba, {0, 0, 255, 255}}},
              {:draw_text, "blue"},
-             {:font, "fonts/roboto_mono.ttf"},
+             {:font, "seffyKC7EpKVq50qdgz9W7Kk1oj4SPnnSIr66hYTPPA"},
              {:draw_text, "blue_mono"}
            ]
   end
@@ -88,7 +88,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
     {:ok, list} = GraphCompiler.compile(@viewport, graph)
 
     assert list == [
-             {:font, "fonts/roboto.ttf"},
+             {:font, "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"},
              {:font_size, 26},
              {:text_align, :left},
              {:text_base, :alphabetic},
@@ -159,7 +159,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
              {:draw_quad, {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, :fill}},
              {:draw_rect, {1.0, 2.0, :fill}},
              {:draw_rrect, {10.0, 20.0, 3.0, :fill}},
-             {:font, "fonts/roboto.ttf"},
+             {:font, "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"},
              {:font_size, 24.0},
              {:text_align, :left},
              {:text_base, :alphabetic},
@@ -203,8 +203,6 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
 
   # ---------------------------------------------------------
   test "graph with sprites works" do
-    img = "images/parrot.png"
-
     cmds = [
       {{0, 1}, {10, 11}, {2, 3}, {12, 13}},
       {{2, 3}, {10, 11}, {4, 5}, {12, 13}}
@@ -212,12 +210,13 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
 
     graph =
       Graph.build()
-      |> sprites({img, cmds})
+      # |> sprites({{:test_assets, "images/parrot.png"}, cmds})
+      |> sprites({:parrot, cmds})
 
     {:ok, list} = GraphCompiler.compile(@viewport, graph)
 
     assert list == [
-             {:draw_sprites, {img, cmds}}
+             {:draw_sprites, {"VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns", cmds}}
            ]
   end
 
@@ -415,13 +414,12 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
     {:ok, list} = GraphCompiler.compile(@viewport, graph)
 
     assert list == [
-             {:font, "fonts/roboto.ttf"},
+             {:font, "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"},
              {:font_size, 24},
              {:text_align, :left},
              {:text_base, :alphabetic},
              {:fill_color, {:color_rgba, {255, 255, 255, 255}}},
              {:draw_text, "roboto"},
-             {:font, "fonts/roboto.ttf"},
              {:font_size, 64},
              {:draw_text, "size_64"},
              {:font_size, 24},
@@ -452,7 +450,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
     {:ok, list} = GraphCompiler.compile(@viewport, graph)
 
     assert list == [
-             font: "fonts/roboto.ttf",
+             font: "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE",
              font_size: 24.0,
              text_align: :left,
              text_base: :alphabetic,
@@ -508,16 +506,16 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
   test "fill_images works" do
     graph =
       Graph.build()
-      |> rect({100, 200}, fill: {:image, :test_parrot})
-      |> rect({100, 200}, stroke: {4, {:image, :test_parrot}})
+      |> rect({100, 200}, fill: {:image, :parrot})
+      |> rect({100, 200}, stroke: {4, {:image, :parrot}})
 
     {:ok, list} = GraphCompiler.compile(@viewport, graph)
 
     assert list == [
-             {:fill_image, "images/parrot.png"},
+             {:fill_image, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"},
              {:draw_rect, {100.0, 200.0, :fill}},
              {:stroke_width, 4},
-             {:stroke_image, "images/parrot.png"},
+             {:stroke_image, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"},
              {:draw_rect, {100.0, 200.0, :stroke}}
            ]
   end
@@ -609,7 +607,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
     {:ok, list} = GraphCompiler.compile(@viewport, graph)
 
     assert list == [
-             font: "fonts/roboto.ttf",
+             font: "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE",
              font_size: 32,
              text_align: :left,
              text_base: :alphabetic,
@@ -628,7 +626,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
     {:ok, list} = GraphCompiler.compile(@viewport, graph)
 
     assert list == [
-             font: "fonts/roboto.ttf",
+             font: "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE",
              font_size: 25,
              text_align: :left,
              text_base: :alphabetic,
@@ -646,7 +644,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
     {:ok, list} = GraphCompiler.compile(@viewport, graph)
 
     assert list == [
-             font: "fonts/roboto.ttf",
+             font: "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE",
              font_size: 64,
              text_align: :left,
              text_base: :alphabetic,
@@ -666,7 +664,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
     {:ok, list} = GraphCompiler.compile(@viewport, graph)
 
     assert list == [
-             {:font, "fonts/roboto.ttf"},
+             {:font, "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"},
              {:font_size, 50},
              {:text_align, :left},
              {:text_base, :alphabetic},
@@ -694,13 +692,13 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
     {:ok, list} = GraphCompiler.compile(@viewport, graph)
 
     assert list == [
-             {:font, "fonts/roboto.ttf"},
+             {:font, "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"},
              {:font_size, 50},
              {:text_align, :left},
              {:text_base, :alphabetic},
              {:fill_color, {:color_rgba, {255, 0, 255, 255}}},
              {:draw_text, "Hello"},
-             {:font, "fonts/roboto_mono.ttf"},
+             {:font, "seffyKC7EpKVq50qdgz9W7Kk1oj4SPnnSIr66hYTPPA"},
              {:font_size, 40},
              {:fill_color, {:color_rgba, {255, 0, 255, 255}}},
              {:draw_text, "World"}

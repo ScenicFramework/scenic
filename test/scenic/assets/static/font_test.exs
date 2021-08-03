@@ -10,7 +10,7 @@ defmodule Scenic.Assets.Static.FontTest do
   alias Scenic.Assets.Static.Font
 
   test "parses a valid font file" do
-    bin = File.read!("test/assets/fonts/roboto.ttf")
+    bin = File.read!("assets/fonts/roboto.ttf")
     {:ok, {Font, %FontMetrics{}}} = Font.parse_meta(bin)
   end
 

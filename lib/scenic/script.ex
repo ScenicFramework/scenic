@@ -416,7 +416,16 @@ defmodule Scenic.Script do
           draw_commands :: Sprites.draw_cmds()
         ) :: ops :: t()
   def draw_sprites(ops, src_id, cmds) do
-    [{:draw_sprites, {src_id, cmds}} | ops]
+    id =
+      with {:ok, hash} <- Static.to_hash(src_id),
+           {:ok, {Static.Image, _}} <- Static.meta(hash) do
+        hash
+      else
+        err ->
+          raise "Invalid image -> #{inspect(src_id)}, err: #{inspect(err)}"
+      end
+
+    [{:draw_sprites, {id, cmds}} | ops]
   end
 
   @spec draw_text(ops :: t(), text :: String.t()) :: ops :: t()
@@ -646,9 +655,9 @@ defmodule Scenic.Script do
   @spec fill_image(ops :: t(), image :: Static.id()) :: ops :: t()
   def fill_image(ops, id) when is_atom(id) or is_bitstring(id) do
     id =
-      with {:ok, id_str} <- Static.resolve_id(id),
-           {:ok, {Static.Image, _}} <- Static.fetch(id_str) do
-        id_str
+      with {:ok, hash} <- Static.to_hash(id),
+           {:ok, {Static.Image, _}} <- Static.meta(id) do
+        hash
       else
         err ->
           raise "Invalid image -> #{inspect(id)}, err: #{inspect(err)}"
@@ -720,9 +729,9 @@ defmodule Scenic.Script do
   @spec stroke_image(ops :: t(), image :: Static.id()) :: ops :: t()
   def stroke_image(ops, id) when is_atom(id) or is_bitstring(id) do
     id =
-      with {:ok, id_str} <- Static.resolve_id(id),
-           {:ok, {Static.Image, _}} <- Static.fetch(id_str) do
-        id_str
+      with {:ok, hash} <- Static.to_hash(id),
+           {:ok, {Static.Image, _}} <- Static.meta(hash) do
+        hash
       else
         err ->
           raise "Invalid image -> #{inspect(id)}, err: #{inspect(err)}"
@@ -756,9 +765,9 @@ defmodule Scenic.Script do
   @spec font(ops :: t(), id :: Static.id()) :: ops :: t()
   def font(ops, id) when is_atom(id) or is_bitstring(id) do
     id =
-      with {:ok, id_str} <- Static.resolve_id(id),
-           {:ok, {Static.Font, _}} <- Static.fetch(id_str) do
-        id_str
+      with {:ok, hash} <- Static.to_hash(id),
+           {:ok, {Static.Font, _}} <- Static.meta(hash) do
+        hash
       else
         err ->
           raise "Invalid font -> #{inspect(id)}, err: #{inspect(err)}"
@@ -965,8 +974,9 @@ defmodule Scenic.Script do
 
   defp serialize_op({:draw_sprites, {id, cmds}}) do
     <<hash::binary-size(32)>> =
-      with {:ok, {Static.Image, _}} <- Static.fetch(id),
-           {:ok, bin_hash, _str_hash} <- Static.to_hash(id) do
+      with {:ok, {Static.Image, _}} <- Static.meta(id),
+           {:ok, str_hash} <- Static.to_hash(id),
+           {:ok, bin_hash} <- Base.url_decode64(str_hash, padding: false) do
         bin_hash
       else
         err -> raise "Invalid image -> #{inspect(id)}, err: #{inspect(err)}"
@@ -1305,8 +1315,9 @@ defmodule Scenic.Script do
 
   defp serialize_op({:fill_image, id}) do
     <<hash::binary-size(32)>> =
-      with {:ok, {Static.Image, _}} <- Static.fetch(id),
-           {:ok, bin_hash, _str_hash} <- Static.to_hash(id) do
+      with {:ok, {Static.Image, _}} <- Static.meta(id),
+           {:ok, str_hash} <- Static.to_hash(id),
+           {:ok, bin_hash} <- Base.url_decode64(str_hash, padding: false) do
         bin_hash
       else
         err ->
@@ -1421,8 +1432,9 @@ defmodule Scenic.Script do
 
   defp serialize_op({:stroke_image, id}) do
     <<hash::binary-size(32)>> =
-      with {:ok, {Static.Image, _}} <- Static.fetch(id),
-           {:ok, bin_hash, _str_hash} <- Static.to_hash(id) do
+      with {:ok, {Static.Image, _}} <- Static.meta(id),
+           {:ok, str_hash} <- Static.to_hash(id),
+           {:ok, bin_hash} <- Base.url_decode64(str_hash, padding: false) do
         bin_hash
       else
         err ->
@@ -1522,8 +1534,9 @@ defmodule Scenic.Script do
 
   defp serialize_op({:font, id}) do
     <<hash::binary-size(32)>> =
-      with {:ok, {Static.Font, _}} <- Static.fetch(id),
-           {:ok, bin_hash, _str_hash} <- Static.to_hash(id) do
+      with {:ok, {Static.Font, _}} <- Static.meta(id),
+           {:ok, str_hash} <- Static.to_hash(id),
+           {:ok, bin_hash} <- Base.url_decode64(str_hash, padding: false) do
         bin_hash
       else
         err -> raise "Invalid font -> #{inspect(id)}, err: #{inspect(err)}"
@@ -1734,7 +1747,7 @@ defmodule Scenic.Script do
         {[{{sx, sy}, {sw, sh}, {dx, dy}, {dw, dh}} | cmds], bin}
       end)
 
-    {:ok, id} = Static.resolve_id(hash)
+    id = Base.url_encode64(hash, padding: false)
     cmds = Enum.reverse(cmds)
     {{:draw_sprites, {id, cmds}}, bin}
   end
@@ -2021,7 +2034,7 @@ defmodule Scenic.Script do
          hash::binary-size(32),
          bin::binary
        >>) do
-    {:ok, id} = Static.resolve_id(hash)
+    id = Base.url_encode64(hash, padding: false)
     {{:fill_image, id}, bin}
   end
 
@@ -2118,7 +2131,7 @@ defmodule Scenic.Script do
          hash::binary-size(32),
          bin::binary
        >>) do
-    {:ok, id} = Static.resolve_id(hash)
+    id = Base.url_encode64(hash, padding: false)
     {{:stroke_image, id}, bin}
   end
 
@@ -2211,7 +2224,7 @@ defmodule Scenic.Script do
          hash::binary-size(32),
          bin::binary
        >>) do
-    {:ok, id} = Static.resolve_id(hash)
+    id = Base.url_encode64(hash, padding: false)
     {{:font, id}, bin}
   end
 
@@ -2283,28 +2296,11 @@ defmodule Scenic.Script do
     do_optimize(tail, [head | acc])
   end
 
-  # scan a script an return static assets and streams
-  def media(script, :id) do
-    raw_media(script) |> Enum.into(%{})
-  end
-
-  def media(script, :bin_hash) do
+  @doc """
+  Extract a map of all the media used in a script
+  """
+  def media(script) do
     raw_media(script)
-    |> Enum.map(fn
-      {:fonts, ids} -> {:fonts, ids_to_bin_hash(ids)}
-      {:images, ids} -> {:images, ids_to_bin_hash(ids)}
-      other -> other
-    end)
-    |> Enum.into(%{})
-  end
-
-  def media(script, :str_hash) do
-    raw_media(script)
-    |> Enum.map(fn
-      {:fonts, ids} -> {:fonts, ids_to_str_hash(ids)}
-      {:images, ids} -> {:images, ids_to_str_hash(ids)}
-      other -> other
-    end)
     |> Enum.into(%{})
   end
 
@@ -2319,25 +2315,5 @@ defmodule Scenic.Script do
       _, media -> media
     end)
     |> Enum.map(fn {k, v} -> {k, Enum.uniq(v)} end)
-  end
-
-  defp ids_to_bin_hash(ids, acc \\ [])
-  defp ids_to_bin_hash([], acc), do: acc
-
-  defp ids_to_bin_hash([head | tail], acc) do
-    case Static.to_hash(head) do
-      {:ok, bin_hash, _str_hash} -> ids_to_bin_hash(tail, [bin_hash | acc])
-      _err -> ids_to_bin_hash(tail, acc)
-    end
-  end
-
-  defp ids_to_str_hash(ids, acc \\ [])
-  defp ids_to_str_hash([], acc), do: acc
-
-  defp ids_to_str_hash([head | tail], acc) do
-    case Static.to_hash(head) do
-      {:ok, _bin_hash, str_hash} -> ids_to_str_hash(tail, [str_hash | acc])
-      _err -> ids_to_str_hash(tail, acc)
-    end
   end
 end

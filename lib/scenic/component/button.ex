@@ -138,16 +138,18 @@ defmodule Scenic.Component.Button do
     id = opts[:id]
 
     # theme is passed in as an inherited style
-    theme = case opts[:theme] do
-      nil -> Theme.preset(:primary)
-      :dark -> Theme.preset(:primary)
-      :light -> Theme.preset(:primary)
-      theme -> theme
-    end |> Theme.normalize()
+    theme =
+      case opts[:theme] do
+        nil -> Theme.preset(:primary)
+        :dark -> Theme.preset(:primary)
+        :light -> Theme.preset(:primary)
+        theme -> theme
+      end
+      |> Theme.normalize()
 
     # font related info
     font = @default_font
-    {:ok, {Static.Font, fm}} = Static.fetch(font)
+    {:ok, {Static.Font, fm}} = Static.meta(@default_font)
     font_size = opts[:button_font_size] || @default_font_size
 
     ascent = FontMetrics.ascent(font_size, fm)

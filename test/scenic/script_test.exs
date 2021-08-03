@@ -239,8 +239,8 @@ defmodule Scenic.ScriptTest do
 
   test "draw_sprites works" do
     cmds = [{{10, 11}, {30, 40}, {2, 3}, {60, 70}}]
-    expected = [{:draw_sprites, {"images/parrot.png", cmds}}]
-    assert Script.draw_sprites([], "images/parrot.png", cmds) == expected
+    expected = [{:draw_sprites, {"VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns", cmds}}]
+    assert Script.draw_sprites([], :parrot, cmds) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
   end
 
@@ -406,20 +406,17 @@ defmodule Scenic.ScriptTest do
   end
 
   test "fill_image works with string image paths" do
-    intermediate = [{:fill_image, "images/parrot.png"}]
-    assert Script.fill_image([], "images/parrot.png") == intermediate
+    expected = [{:fill_image, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"}]
+    assert Script.fill_image([], :parrot) == expected
 
-    assert Script.serialize(intermediate) |> Script.deserialize() == [
-             {:fill_image, "images/parrot.png"}
-           ]
+    assert Script.serialize(expected) |> Script.deserialize() == expected
   end
 
   test "fill_image converts atom aliases into paths" do
-    expected = [{:fill_image, "images/parrot.png"}]
-    assert Script.fill_image([], :test_parrot) == expected
+    expected = [{:fill_image, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"}]
+    assert Script.fill_image([], :parrot) == expected
 
-    assert Script.serialize(expected) |> Script.deserialize() ==
-             [{:fill_image, "images/parrot.png"}]
+    assert Script.serialize(expected) |> Script.deserialize() == expected
   end
 
   test "fill_stream works" do
@@ -462,24 +459,22 @@ defmodule Scenic.ScriptTest do
   end
 
   test "stroke_image works with string image keys" do
-    intermediate = [{:stroke_image, "images/parrot.png"}]
-    assert Script.stroke_image([], "images/parrot.png") == intermediate
+    expected = [{:stroke_image, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"}]
+    assert Script.stroke_image([], :parrot) == expected
 
-    assert Script.serialize(intermediate) |> Script.deserialize() ==
-             [{:stroke_image, "images/parrot.png"}]
+    assert Script.serialize(expected) |> Script.deserialize() == expected
   end
 
   test "stroke_image converts atom aliases into paths" do
-    expected = [{:stroke_image, "images/parrot.png"}]
-    assert Script.stroke_image([], :test_parrot) == expected
+    expected = [{:stroke_image, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"}]
+    assert Script.stroke_image([], :parrot) == expected
 
-    assert Script.serialize(expected) |> Script.deserialize() ==
-             [{:stroke_image, "images/parrot.png"}]
+    assert Script.serialize(expected) |> Script.deserialize() == expected
   end
 
   test "stroke_image works with paths" do
-    expected = [{:stroke_image, "images/parrot.png"}]
-    assert Script.stroke_image([], "images/parrot.png") == expected
+    expected = [{:stroke_image, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"}]
+    assert Script.stroke_image([], :parrot) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
   end
 
@@ -538,21 +533,16 @@ defmodule Scenic.ScriptTest do
   # font/text styles
 
   test "font converts alias atoms to strings" do
-    expected = [{:font, "fonts/roboto.ttf"}]
-    assert Script.font([], :test_roboto) == expected
+    expected = [{:font, "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"}]
+    assert Script.font([], :roboto) == expected
 
-    assert Script.serialize(expected) |> Script.deserialize() == [
-             font: "fonts/roboto.ttf"
-           ]
+    assert Script.serialize(expected) |> Script.deserialize() == expected
   end
 
   test "font works by path" do
-    expected = [{:font, "fonts/roboto.ttf"}]
-    assert Script.font([], "fonts/roboto.ttf") == [{:font, "fonts/roboto.ttf"}]
-
-    assert Script.serialize(expected) |> Script.deserialize() == [
-             font: "fonts/roboto.ttf"
-           ]
+    expected = [{:font, "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"}]
+    assert Script.font([], "fonts/roboto.ttf") == expected
+    assert Script.serialize(expected) |> Script.deserialize() == expected
   end
 
   test "font_size works" do
@@ -598,44 +588,44 @@ defmodule Scenic.ScriptTest do
       |> Script.font("fonts/roboto.ttf")
       |> Script.finish()
 
-    assert Script.media(script, :id) == %{
-             fonts: ["fonts/roboto.ttf"]
+    assert Script.media(script) == %{
+             fonts: ["85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"]
            }
   end
 
   test "media extractor finds images in fill_image" do
     script =
       Script.start()
-      |> Script.fill_image("images/parrot.png")
-      |> Script.fill_image("images/parrot.png")
+      |> Script.fill_image(:parrot)
+      |> Script.fill_image(:parrot)
       |> Script.finish()
 
-    assert Script.media(script, :id) == %{
-             images: ["images/parrot.png"]
+    assert Script.media(script) == %{
+             images: ["VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"]
            }
   end
 
   test "media extractor finds images in stroke_image" do
     script =
       Script.start()
-      |> Script.stroke_image("images/parrot.png")
-      |> Script.stroke_image("images/parrot.png")
+      |> Script.stroke_image(:parrot)
+      |> Script.stroke_image(:parrot)
       |> Script.finish()
 
-    assert Script.media(script, :id) == %{
-             images: ["images/parrot.png"]
+    assert Script.media(script) == %{
+             images: ["VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"]
            }
   end
 
   test "media extractor finds images in draw_sprites" do
     script =
       Script.start()
-      |> Script.draw_sprites("images/parrot.png", [])
-      |> Script.draw_sprites("images/parrot.png", [])
+      |> Script.draw_sprites(:parrot, [])
+      |> Script.draw_sprites(:parrot, [])
       |> Script.finish()
 
-    assert Script.media(script, :id) == %{
-             images: ["images/parrot.png"]
+    assert Script.media(script) == %{
+             images: ["VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"]
            }
   end
 
@@ -646,7 +636,7 @@ defmodule Scenic.ScriptTest do
       |> Script.fill_stream("test_stream")
       |> Script.finish()
 
-    assert Script.media(script, :id) == %{
+    assert Script.media(script) == %{
              streams: ["test_stream"]
            }
   end
@@ -658,7 +648,7 @@ defmodule Scenic.ScriptTest do
       |> Script.stroke_stream("test_stream")
       |> Script.finish()
 
-    assert Script.media(script, :id) == %{
+    assert Script.media(script) == %{
              streams: ["test_stream"]
            }
   end
@@ -670,38 +660,17 @@ defmodule Scenic.ScriptTest do
     script =
       Script.start()
       |> Script.font("fonts/roboto.ttf")
-      |> Script.fill_image("images/parrot.png")
-      |> Script.stroke_image("images/parrot.png")
-      |> Script.draw_sprites("images/parrot.png", [])
+      |> Script.fill_image(:parrot)
+      |> Script.stroke_image(:parrot)
+      |> Script.draw_sprites(:parrot, [])
       |> Script.fill_stream("test_stream")
       |> Script.stroke_stream("test_stream")
       |> Script.finish()
 
-    {:ok, _, roboto_hash} = Scenic.Assets.Static.to_hash("fonts/roboto.ttf")
-    {:ok, _, parrot_hash} = Scenic.Assets.Static.to_hash("images/parrot.png")
+    {:ok, roboto_hash} = Scenic.Assets.Static.to_hash("fonts/roboto.ttf")
+    {:ok, parrot_hash} = Scenic.Assets.Static.to_hash(:parrot)
 
-    assert Script.media(script, :str_hash) == %{
-             fonts: [roboto_hash],
-             images: [parrot_hash],
-             streams: ["test_stream"]
-           }
-  end
-
-  test "media extractor extracts into binary hashes" do
-    script =
-      Script.start()
-      |> Script.font("fonts/roboto.ttf")
-      |> Script.fill_image("images/parrot.png")
-      |> Script.stroke_image("images/parrot.png")
-      |> Script.draw_sprites("images/parrot.png", [])
-      |> Script.fill_stream("test_stream")
-      |> Script.stroke_stream("test_stream")
-      |> Script.finish()
-
-    {:ok, roboto_hash, _} = Scenic.Assets.Static.to_hash("fonts/roboto.ttf")
-    {:ok, parrot_hash, _} = Scenic.Assets.Static.to_hash("images/parrot.png")
-
-    assert Script.media(script, :bin_hash) == %{
+    assert Script.media(script) == %{
              fonts: [roboto_hash],
              images: [parrot_hash],
              streams: ["test_stream"]

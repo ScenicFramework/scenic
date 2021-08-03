@@ -10,7 +10,7 @@ defmodule Scenic.Primitive.Style.FontTest do
   alias Scenic.Primitive.Style.Font
 
   test "validate accepts font asset aliases" do
-    assert Font.validate(:test_roboto) == {:ok, "fonts/roboto.ttf"}
+    assert Font.validate(:roboto) == {:ok, :roboto}
   end
 
   test "validate accepts font` asset paths" do
@@ -18,13 +18,13 @@ defmodule Scenic.Primitive.Style.FontTest do
   end
 
   test "validate rejects image assets" do
-    {:error, msg} = Font.validate(:test_parrot)
+    {:error, msg} = Font.validate(:parrot)
     assert msg =~ "image"
   end
 
   test "validate rejects unmapped aliases" do
     {:error, msg} = Font.validate(:invalid)
-    assert msg =~ "not mapped"
+    assert msg =~ "could not be found"
   end
 
   test "validate rejects missing assets" do

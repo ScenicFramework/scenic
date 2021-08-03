@@ -21,8 +21,11 @@ defmodule Scenic.Primitive.Style.StrokeTest do
   end
 
   test "validate accepts image paint" do
-    assert Stroke.validate({1, {:image, :test_parrot}}) ==
-             {:ok, {1, {:image, "images/parrot.png"}}}
+    assert Stroke.validate({1, {:image, :parrot}}) ==
+             {:ok, {1, {:image, :parrot}}}
+
+    assert Stroke.validate({1, {:image, {:test_assets, "images/parrot.png"}}}) ==
+             {:ok, {1, {:image, {:test_assets, "images/parrot.png"}}}}
   end
 
   test "validate accepts linear graient paint" do

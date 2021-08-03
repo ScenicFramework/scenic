@@ -19,7 +19,7 @@ defmodule Scenic.Primitive.Style.FillTest do
   end
 
   test "validate accepts image paint" do
-    assert Fill.validate({:image, :test_parrot}) == {:ok, {:image, "images/parrot.png"}}
+    assert Fill.validate({:image, :parrot}) == {:ok, {:image, :parrot}}
   end
 
   test "validate accepts linear graient paint" do
