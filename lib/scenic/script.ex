@@ -653,7 +653,7 @@ defmodule Scenic.Script do
   end
 
   @spec fill_image(ops :: t(), image :: Static.id()) :: ops :: t()
-  def fill_image(ops, id) when is_atom(id) or is_bitstring(id) do
+  def fill_image(ops, id) do
     id =
       with {:ok, hash} <- Static.to_hash(id),
            {:ok, {Static.Image, _}} <- Static.meta(id) do
@@ -727,7 +727,7 @@ defmodule Scenic.Script do
   end
 
   @spec stroke_image(ops :: t(), image :: Static.id()) :: ops :: t()
-  def stroke_image(ops, id) when is_atom(id) or is_bitstring(id) do
+  def stroke_image(ops, id) do
     id =
       with {:ok, hash} <- Static.to_hash(id),
            {:ok, {Static.Image, _}} <- Static.meta(hash) do
@@ -763,7 +763,7 @@ defmodule Scenic.Script do
   def scissor(ops, w, h), do: [{:scissor, {w, h}} | ops]
 
   @spec font(ops :: t(), id :: Static.id()) :: ops :: t()
-  def font(ops, id) when is_atom(id) or is_bitstring(id) do
+  def font(ops, id) do
     id =
       with {:ok, hash} <- Static.to_hash(id),
            {:ok, {Static.Font, _}} <- Static.meta(hash) do
