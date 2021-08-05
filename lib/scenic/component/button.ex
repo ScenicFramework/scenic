@@ -305,8 +305,8 @@ defmodule Scenic.Component.Button do
     {:noreply, scene}
   end
 
-  # ignore other button press events
-  def handle_input({:cursor_button, {_, _, _, _}}, _id, scene) do
+  # ignore other input
+  def handle_input(_input, _id, scene) do
     {:noreply, scene}
   end
 
