@@ -198,7 +198,7 @@ defmodule Scenic.Component.Input.Slider do
 
     graph =
       Graph.build()
-      |> rect({width, @height}, fill: :clear, t: {0, -1}, id: :hit_rect, input: true)
+      |> rect({width, @height}, fill: :clear, t: {0, -1}, id: :hit_rect, input: :cursor_button)
       |> line({{0, @mid_height}, {width, @mid_height}}, stroke: {@line_width, theme.border})
       |> rrect({@btn_size, @btn_size, @radius}, fill: theme.thumb, id: :thumb, t: {0, 1})
       |> update_slider_position(value, extents, width)

@@ -93,7 +93,7 @@ defmodule Scenic.Component.Input.RadioButton do
       Graph.build(font: @default_font, font_size: @default_font_size, t: {dx, dv})
       |> Primitive.Group.add_to_graph(fn graph ->
         graph
-        |> rect({box_width, box_height}, id: :btn, input: true)
+        |> rect({box_width, box_height}, id: :btn, input: :cursor_button)
         |> circle(
           outer_radius,
           fill: theme.background,

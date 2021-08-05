@@ -178,7 +178,7 @@ defmodule Scenic.Component.Button do
     # build the graph
     graph =
       Graph.build(font: font, font_size: font_size)
-      |> rrect({width, height, radius}, fill: theme.background, id: :btn, input: true)
+      |> rrect({width, height, radius}, fill: theme.background, id: :btn, input: :cursor_button)
       |> do_aligned_text(alignment, text, theme.text, width, vpos)
       # special case the dark and light themes to show an outline
       |> do_special_theme_outline(theme, theme.border)

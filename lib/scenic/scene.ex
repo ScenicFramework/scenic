@@ -918,8 +918,8 @@ defmodule Scenic.Scene do
           scene
       end
 
-    # default input is just the cursor_button
-    request_input(scene, :cursor_button)
+    # # default input is just the cursor_button
+    # request_input(scene, :cursor_button)
 
     # start up the scene
     response =

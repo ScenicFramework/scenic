@@ -531,6 +531,7 @@ defmodule Scenic.ViewPort do
       # that have input: true assigned to them end up in these lists which
       # are then used to determine what was clicked on by the user.
       input_lists: %{},
+      input_positional: [],
       scene_transforms: %{},
 
       # input captures track when a scene has requested that it receive input
@@ -712,6 +713,7 @@ defmodule Scenic.ViewPort do
               state
           end
       end
+      |> update_positional_input()
 
     # if the requests changed, then tell the remaining drivers.
     do_update_driver_input(old_state, state)
@@ -782,10 +784,10 @@ defmodule Scenic.ViewPort do
   end
 
   def handle_cast(
-        {:input_list, input, name, caller},
-        %{input_lists: lists, scene_transforms: txs} = state
+        {:input_list, {input, types}, name, caller},
+        %{input_lists: lists, scene_transforms: txs} = old_state
       ) do
-    input_lists = Map.put(lists, name, {input, caller})
+    input_lists = Map.put(lists, name, {input, types, caller})
 
     # scan the incoming input list and extract any scene transforms
     txs =
@@ -797,7 +799,15 @@ defmodule Scenic.ViewPort do
           acc
       end)
 
-    {:noreply, %{state | input_lists: input_lists, scene_transforms: txs}}
+    new_state =
+      old_state
+      |> Map.put( :input_lists, input_lists )
+      |> Map.put( :scene_transforms, txs )
+      |> update_positional_input()
+
+    do_update_driver_input( old_state, new_state )
+
+    {:noreply, new_state}
   end
 
   def handle_cast({:put_scripts, ids, owner}, state) do
@@ -808,17 +818,28 @@ defmodule Scenic.ViewPort do
 
   def handle_cast(
         {:del_script, name},
-        %{name_table: name_table, script_table: script_table} = state
+        %{
+          name_table: name_table,
+          script_table: script_table,
+          input_lists: ils
+        } = old_state
       ) do
-    case :ets.lookup(name_table, name) do
+    state = case :ets.lookup(name_table, name) do
       [{_, id, _}] ->
-        cast_drivers(state, {:del_script, id})
+        cast_drivers(old_state, {:del_script, id})
         :ets.delete(script_table, id)
         :ets.delete(name_table, name)
 
+        # make sure the input list is cleaned up
+        %{old_state | input_lists: Map.delete(ils, name)}
+        |> update_positional_input()
+
       _ ->
-        nil
+        old_state
     end
+
+    # if the requests changed, then tell the remaining drivers.
+    do_update_driver_input(old_state, state)
 
     {:noreply, state}
   end
@@ -995,9 +1016,15 @@ defmodule Scenic.ViewPort do
   end
 
   # --------------------------------------------------------
-  def handle_call({:find_point, {x, y}}, _from, state)
+  def handle_call({:find_point, {x, y}}, _from, %{input_lists: ils} = state)
       when is_number(x) and is_number(y) do
-    {:reply, find_gxy_hit({x, y}, state), state}
+
+    hit = case input_find_hit(ils, @main_graph, {x, y}) do
+      {:ok, pid, _xy, _inv_tx, id} -> {:ok, pid, id}
+      _ -> {:error, :not_found}
+    end
+
+    {:reply, hit, state}
   end
 
   # --------------------------------------------------------
@@ -1176,8 +1203,7 @@ defmodule Scenic.ViewPort do
       |> Map.put(:scene, {scene, param})
       |> Map.put(:input_lists, %{@main_graph => ils[@main_graph]})
       |> Map.put(:next_id, @first_open_graph_id)
-
-    # |> Map.put( :reset_scenes, [] )
+      # |> update_positional_input()
 
     {:ok, state}
   end
@@ -1215,7 +1241,7 @@ defmodule Scenic.ViewPort do
 
     state =
       with {:ok, script} <- GraphCompiler.compile(vp, graph),
-           {:ok, input_list} <- compile_input(graph) do
+           {:ok, {input_list, input_types}} <- compile_input(graph) do
         # write the script to the table
         case :ets.lookup(script_table, id) do
           # do nothing if the script is in the table and has not changed
@@ -1229,7 +1255,10 @@ defmodule Scenic.ViewPort do
         end
 
         # add the input list to the state
-        %{state | input_lists: Map.put(ils, name, {input_list, nil})}
+        state
+        |> Map.put( :input_lists, Map.put(ils, name, {input_list, input_types, nil}) )
+        |> update_positional_input()
+
       else
         _ -> state
       end
@@ -1247,16 +1276,17 @@ defmodule Scenic.ViewPort do
   # the keys change? That's what triggers a driver update
   # defp do_update_driver_input( %{} = old_reqs, %{_input_requests: new_reqs} = state ) do
   defp do_update_driver_input(
-         %{_input_requests: old_reqs, _input_captures: old_capts},
-         %{_input_requests: new_reqs, _input_captures: new_capts} = state
+         %{_input_requests: old_reqs, _input_captures: old_capts, input_positional: old_pos},
+         %{_input_requests: new_reqs, _input_captures: new_capts, input_positional: new_pos} = state
        ) do
+
     old_keys =
-      (Map.keys(old_capts) ++ Map.keys(old_reqs))
+      (Map.keys(old_capts) ++ Map.keys(old_reqs) ++ old_pos)
       |> Enum.uniq()
       |> Enum.sort()
 
     new_keys =
-      (Map.keys(new_capts) ++ Map.keys(new_reqs))
+      (Map.keys(new_capts) ++ Map.keys(new_reqs) ++ new_pos)
       |> Enum.uniq()
       |> Enum.sort()
 
@@ -1264,6 +1294,20 @@ defmodule Scenic.ViewPort do
       cast_drivers(state, {:request_input, new_keys})
     end
   end
+
+  # defp do_update_driver_input!(
+  #        %{_input_requests: reqs, _input_captures: capts, input_positional: pos} = state
+  #      ) do
+
+  #   keys =
+  #     (Map.keys(capts) ++ Map.keys(reqs) ++ pos)
+  #     |> Enum.uniq()
+  #     |> Enum.sort()
+
+  #   cast_drivers(state, {:request_input, keys})
+
+  #   state
+  # end
 
   # --------------------------------------------------------
   defp handle_capture(inputs, caller, old_state) do
@@ -1432,19 +1476,23 @@ defmodule Scenic.ViewPort do
   # receive input from a driver and cast it to a scene
   defp handle_input(
          {input_type, _} = input,
-         %{_input_captures: captures, _input_requests: requests} = state
+         %{
+          _input_captures: captures,
+          _input_requests: requests,
+          input_positional: input_positional
+        } = state
        ) do
     case Map.fetch(captures, input_type) do
       {:ok, pids} ->
         do_captured_input(input, pids, state)
 
       :error ->
+        if Enum.member?(input_positional, input_type) do
+          do_listed_input(input, state)
+        end
         case Map.fetch(requests, input_type) do
-          {:ok, pids} ->
-            do_requested_input(input, pids, state)
-
-          :error ->
-            :ok
+          {:ok, pids} -> do_requested_input(input, pids, state)
+          :error -> :ok
         end
     end
 
@@ -1496,14 +1544,8 @@ defmodule Scenic.ViewPort do
     # coord space and indicate if it was over an input
     Enum.each(pids, fn pid ->
       case prep_gxy_input(gxy, pid, state) do
-        {:ok, _xy, nil} ->
-          :ok
-
-        {:ok, xy, id} ->
-          send(pid, {:_input, {:cursor_button, {button, action, mods, xy}}, input, id})
-
-        _ ->
-          send(pid, {:_input, {:cursor_button, {button, action, mods, gxy}}, input, nil})
+        {:ok, xy, id} -> send(pid, {:_input, {:cursor_button, {button, action, mods, xy}}, input, id})
+        _ -> send(pid, {:_input, {:cursor_button, {button, action, mods, gxy}}, input, nil})
       end
     end)
   end
@@ -1535,32 +1577,45 @@ defmodule Scenic.ViewPort do
   end
 
   # --------------------------------------------------------
-  defp prep_gxy_input(gxy, pid, state) do
-    with {:ok, tx} <- scene_tx(pid, state) do
-      # see if there is a hit item
-      id =
-        case find_gxy_hit(gxy, state) do
-          {:ok, ^pid, id} -> id
-          _ -> nil
-        end
+  defp do_listed_input({:cursor_button, {button, action, mods, gxy}} = input, %{input_lists: ils}=state) do
+    # main_graph = @main_graph
+    # out = input_find_hit(ils, main_graph, gxy)
 
-      # project gxy into local coordinate space
-      xy =
-        tx
-        |> Math.Matrix.invert()
-        |> Math.Matrix.project_vector(gxy)
+    with {:ok, pid, xy, inv_tx, id} <- input_find_hit(ils, @main_graph, gxy) do
+      send(pid, {:_input, {:cursor_button, {button, action, mods, xy}}, input, id})
+    end
+  end
 
-      {:ok, xy, id}
-    else
-      err -> err
+  defp do_listed_input({:cursor_scroll, {delta, gxy}} = input, %{input_lists: ils}) do
+    with {:ok, pid, xy, _inv_tx, id} <- input_find_hit(ils, @main_graph, gxy) do
+      send(pid, {:_input, {:cursor_scroll, {delta, xy}}, input, id})
+    end
+  end
+
+  defp do_listed_input({:cursor_pos, gxy} = input, %{input_lists: ils}) do
+    with {:ok, pid, xy, _inv_tx, id} <- input_find_hit(ils, @main_graph, gxy) do
+      send(pid, {:_input, {:cursor_pos, xy}, input, id})
     end
   end
 
   # --------------------------------------------------------
-  defp find_gxy_hit(gxy, %{input_lists: ils}) do
+  defp prep_gxy_input(gxy, pid, %{input_lists: ils} = state) do
     case input_find_hit(ils, @main_graph, gxy) do
-      {:ok, pid, _xy, _inv_tx, id} -> {:ok, pid, id}
-      _ -> {:error, :not_found}
+      {:ok, ^pid, xy, _inv_tx, id} ->
+        {:ok, xy, id}
+      _ ->
+        case scene_tx(pid, state) do
+          {:ok, tx} ->
+            scene_tx(pid, state)
+            # project gxy into local coordinate space
+            xy =
+              tx
+              |> Math.Matrix.invert()
+              |> Math.Matrix.project_vector(gxy)
+            {:ok, xy, nil}
+
+          err -> err
+        end
     end
   end
 
@@ -1599,12 +1654,21 @@ defmodule Scenic.ViewPort do
   # compile a graph into a list of input directives -> [{id,script}|...]
   # the output is already a reversed list.
   # i.e. the last thing draw, is the first thing tested
-  @spec compile_input(graph :: Graph.t()) :: {:ok, binary}
+  @spec compile_input(graph :: Graph.t()) :: {:ok, {binary, types::[ViewPort.Input.positional()]}}
   defp compile_input(graph)
 
   defp compile_input(%Graph{primitives: primitives}) do
-    input = comp_input_prim([], 0, primitives[0], primitives, Math.Matrix.identity())
-    {:ok, input}
+    input =
+      comp_input_prim([], 0, primitives[0], primitives, Math.Matrix.identity())
+
+    # compile the requested input types
+    types = Enum.reduce(input, [], fn({_mod, _name, _tx, _pid, types, _id}, acc) ->
+      [types | acc]
+    end)
+    |> List.flatten()
+    |> Enum.uniq()
+
+    {:ok, {input, types}}
   end
 
   defp comp_input_prim(input, uid, primitive, primitives, tx)
@@ -1635,33 +1699,33 @@ defmodule Scenic.ViewPort do
   # components get a call out to another input list
   defp comp_input_prim(
          input,
-         uid,
+         _uid,
          %Primitive{module: Primitive.Component, data: {_, _, name}, transforms: txs},
          _,
          tx
        ) do
     # calculate the graph-local transform
     local_tx = local_tx(txs, tx)
-    [{Primitive.Component, name, local_tx, self(), uid, nil} | input]
+    [{Primitive.Component, name, local_tx, self(), [], nil} | input]
   end
 
-  # items that have input set on them
   defp comp_input_prim(
          input,
-         uid,
+         _uid,
          %Primitive{
            id: id,
            module: module,
            data: data,
            transforms: txs,
-           styles: %{input: true}
+           styles: %{input: input_types}
          },
          _,
          tx
+         # ) when is_list(input_types) do
        ) do
     # calculate the graph-local transform
     local_tx = local_tx(txs, tx)
-    [{module, data, local_tx, self(), uid, id} | input]
+    [{module, data, local_tx, self(), input_types, id} | input]
   end
 
   # primitives that don't have input set are skipped
@@ -1679,6 +1743,19 @@ defmodule Scenic.ViewPort do
     end
   end
 
+  # coalesce the requested positional input into a single simple list
+  defp update_positional_input( %{input_lists: input_lists} = state ) do
+    input_positional =
+      input_lists
+      |> Enum.reduce( [], fn({_, {_, types, _}}, acc) ->
+        [types, acc]
+      end)
+      |> List.flatten()
+      |> Enum.uniq()
+      |> Enum.sort()
+    %{state | input_positional: input_positional}
+  end
+
   # ============================================================================
   # walk an input list and look for hits
   @doc false
@@ -1690,7 +1767,7 @@ defmodule Scenic.ViewPort do
 
   defp input_find_hit(lists, name, global_point, parent_tx) do
     case Map.fetch(lists, name) do
-      {:ok, {in_list, _}} -> do_find_hit(in_list, global_point, lists, name, parent_tx)
+      {:ok, {in_list, _, _}} -> do_find_hit(in_list, global_point, lists, name, parent_tx)
       _ -> :not_found
     end
   end

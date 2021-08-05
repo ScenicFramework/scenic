@@ -134,7 +134,7 @@ defmodule Scenic.Component.Input.Checkbox do
         |> rect(
           {box_width, box_height},
           id: :btn,
-          input: true
+          input: :cursor_button
         )
         |> rrect({box_height, box_height, 3},
           fill: theme.background,

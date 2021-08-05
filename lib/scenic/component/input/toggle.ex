@@ -178,7 +178,7 @@ defmodule Scenic.Component.Input.Toggle do
             fill: initial_track_fill,
             stroke: {border_width, theme.border},
             id: :track,
-            input: true
+            input: :cursor_button
           )
           |> circle(thumb_radius,
             fill: color.thumb.default,

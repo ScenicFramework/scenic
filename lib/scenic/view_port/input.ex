@@ -89,6 +89,11 @@ defmodule Scenic.ViewPort.Input do
           | :key
           | :viewport
 
+  @type positional ::
+          :cursor_button
+          | :cursor_scroll
+          | :cursor_pos
+
   @spec valid_inputs() :: [class]
   defp valid_inputs() do
     [
@@ -98,6 +103,16 @@ defmodule Scenic.ViewPort.Input do
       :codepoint,
       :key,
       :viewport
+    ]
+  end
+
+  @spec positional_inputs() :: [positional()]
+  @doc false
+  def positional_inputs() do
+    [
+      :cursor_button,
+      :cursor_scroll,
+      :cursor_pos
     ]
   end
 

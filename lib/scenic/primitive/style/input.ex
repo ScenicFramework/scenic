@@ -29,12 +29,23 @@ defmodule Scenic.Primitive.Style.Input do
   """
 
   use Scenic.Primitive.Style
+  alias Scenic.ViewPort
 
   # ============================================================================
 
   @doc false
-  def validate(true), do: {:ok, true}
-  def validate(false), do: {:ok, false}
+  def validate(input_type) when is_atom(input_type), do: validate([input_type])
+
+  def validate(input_types) when is_list(input_types) do
+    valid_types = ViewPort.Input.positional_inputs()
+    inputs = Enum.uniq(input_types)
+
+    Enum.all?(inputs, &Enum.member?(valid_types, &1))
+    |> case do
+      true -> {:ok, inputs}
+      false -> invalid_types(input_types)
+    end
+  end
 
   def validate(data) do
     {
@@ -43,7 +54,21 @@ defmodule Scenic.Primitive.Style.Input do
       #{IO.ANSI.red()}Invalid Input specification
       Received: #{inspect(data)}
       #{IO.ANSI.yellow()}
-      The :input style must be either true or false#{IO.ANSI.default_color()}
+      The :input style must be any of #{inspect(ViewPort.Input.positional_inputs())}
+      or a list containing any combination of those input types.#{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  defp invalid_types(input_types) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Input specification
+      Received: #{inspect(input_types)}
+      #{IO.ANSI.yellow()}
+      The :input style must be any of #{inspect(ViewPort.Input.positional_inputs())}
+      or a list containing any combination of those input types.#{IO.ANSI.default_color()}
       """
     }
   end

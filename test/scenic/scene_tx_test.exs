@@ -35,7 +35,7 @@ defmodule Scenic.SceneTxTest do
     def init(scene, pid, _opts) do
       graph =
         Graph.build()
-        |> rect({10, 10}, id: :n1_rect, input: true)
+        |> rect({10, 10}, id: :n1_rect, input: :cursor_button)
 
       # request xy inputs
       request_input(scene, [:cursor_pos])
@@ -69,7 +69,7 @@ defmodule Scenic.SceneTxTest do
       graph =
         Graph.build()
         |> Nested1.add_to_graph(pid, id: :nested_1, t: {100, 200})
-        |> rect({10, 10}, id: :n0_rect, input: true)
+        |> rect({10, 10}, id: :n0_rect, input: :cursor_button)
 
       request_input(scene, [:cursor_pos])
 
@@ -98,7 +98,7 @@ defmodule Scenic.SceneTxTest do
     def init(scene, pid, _opts) do
       graph =
         Graph.build()
-        |> rect({10, 10}, id: :main_rect, input: true)
+        |> rect({10, 10}, id: :main_rect, input: :cursor_button)
         |> Nested0.add_to_graph(pid, id: :nested_0, t: {20, 30})
 
       scene =

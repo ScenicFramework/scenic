@@ -177,14 +177,13 @@ defmodule Scenic.Component.Input.TextField do
         font_size: @default_font_size,
         scissor: {width, height}
       )
-      # |> rect({width, height}, fill: theme.background, input: true)
       |> rect(
         {width, height},
         # fill: :clear,
         fill: theme.background,
         stroke: {2, theme.border},
         id: :border,
-        input: true
+        input: :cursor_button
       )
       |> group(
         fn g ->

@@ -257,7 +257,7 @@ defmodule Scenic.Component.Input.Dropdown do
         fill: theme.background,
         stroke: {@border_width, theme.border},
         id: @button_id,
-        input: true
+        input: :cursor_button
       )
       |> text(initial_text,
         fill: theme.text,
@@ -272,9 +272,6 @@ defmodule Scenic.Component.Input.Dropdown do
         rotate: @rotate_neutral,
         id: @caret_id
       )
-
-      # an invisible rect for hit-test purposes
-      # |> rect({width, height}, id: @button_id, input: true)
 
       # the drop box itself
       |> group(
@@ -298,7 +295,7 @@ defmodule Scenic.Component.Input.Dropdown do
                           theme.background
                         end,
                       id: id,
-                      input: true
+                      input: :cursor_button
                     )
                     |> text(text,
                       fill: theme.text,

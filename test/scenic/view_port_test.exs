@@ -26,7 +26,7 @@ defmodule Scenic.ViewPortTest do
     def init(scene, pid, _) do
       graph =
         Scenic.Graph.build()
-        |> Scenic.Primitives.rect({200, 100}, fill: :red, id: :rect, input: true)
+        |> Scenic.Primitives.rect({200, 100}, fill: :red, id: :rect, input: :cursor_button)
 
       scene =
         scene
