@@ -23,6 +23,10 @@ defmodule Scenic.ViewPort.InputTest do
     def handle_call(:ping, _from, scene) do
       {:reply, :pong, scene}
     end
+
+    # def handle_input( input, %{assigns: %{pid: pid}} = scene ) do
+    #   Process.send( pid, {:test_input, input}, [] )
+    # end
   end
 
   setup do
@@ -150,6 +154,186 @@ defmodule Scenic.ViewPort.InputTest do
 
     Scenic.Scene.push_graph(scene, graph)
     assert_receive({:"$gen_cast", {:request_input, []}}, 100)
+  end
+
+  test ":cursor_button only the input listed in a input style is requested", %{
+    vp: vp,
+    scene: scene
+  } do
+    # make like a driver
+    GenServer.cast(vp.pid, {:register_driver, self()})
+    assert Input.fetch_requests!(vp) == {:ok, []}
+
+    graph =
+      Scenic.Graph.build()
+      |> Scenic.Primitives.rect({10, 20}, input: :cursor_button)
+
+    Scenic.Scene.push_graph(scene, graph)
+
+    assert_receive(
+      {:"$gen_cast", {:request_input, [:cursor_button]}},
+      100
+    )
+  end
+
+  test ":cursor_scroll only the input listed in a input style is requested", %{
+    vp: vp,
+    scene: scene
+  } do
+    # make like a driver
+    GenServer.cast(vp.pid, {:register_driver, self()})
+    assert Input.fetch_requests!(vp) == {:ok, []}
+
+    graph =
+      Scenic.Graph.build()
+      |> Scenic.Primitives.rect({10, 20}, input: :cursor_scroll)
+
+    Scenic.Scene.push_graph(scene, graph)
+
+    assert_receive(
+      {:"$gen_cast", {:request_input, [:cursor_scroll]}},
+      100
+    )
+  end
+
+  test ":cursor_pos only the input listed in a input style is requested", %{vp: vp, scene: scene} do
+    # make like a driver
+    GenServer.cast(vp.pid, {:register_driver, self()})
+    assert Input.fetch_requests!(vp) == {:ok, []}
+
+    graph =
+      Scenic.Graph.build()
+      |> Scenic.Primitives.rect({10, 20}, input: :cursor_pos)
+
+    Scenic.Scene.push_graph(scene, graph)
+
+    assert_receive(
+      {:"$gen_cast", {:request_input, [:cursor_pos]}},
+      100
+    )
+  end
+
+  test ":cursor_button only is the only cursor input type sent", %{vp: vp, scene: scene} do
+    graph =
+      Scenic.Graph.build()
+      |> Scenic.Primitives.rect({100, 200}, id: :test, input: :cursor_button)
+
+    Scenic.Scene.push_graph(scene, graph)
+
+    # Send a cursor_button input through. We should receive this one
+    input = {:cursor_button, {0, :press, 0, {10.0, 20.0}}}
+    Scenic.ViewPort.Input.send(vp, input)
+    assert_receive({:_input, ^input, ^input, :test}, 100)
+
+    # should NOT receive the other positional inputs
+    input = {:cursor_scroll, {{1.0, 2.0}, {10.0, 20.0}}}
+    Scenic.ViewPort.Input.send(vp, input)
+    refute_receive({:_input, ^input, ^input, :test}, 100)
+
+    input = {:cursor_pos, {10.0, 20.0}}
+    Scenic.ViewPort.Input.send(vp, input)
+    refute_receive({:_input, ^input, ^input, :test}, 100)
+  end
+
+  test ":cursor_scroll only is the only cursor input type sent", %{vp: vp, scene: scene} do
+    graph =
+      Scenic.Graph.build()
+      |> Scenic.Primitives.rect({100, 200}, id: :test, input: :cursor_scroll)
+
+    Scenic.Scene.push_graph(scene, graph)
+
+    # Send a cursor_button input through. We should receive this one
+    input = {:cursor_scroll, {{1.0, 2.0}, {10.0, 20.0}}}
+    Scenic.ViewPort.Input.send(vp, input)
+    assert_receive({:_input, ^input, ^input, :test}, 100)
+
+    # should NOT receive the other positional inputs
+    input = {:cursor_button, {0, :press, 0, {10.0, 20.0}}}
+    Scenic.ViewPort.Input.send(vp, input)
+    refute_receive({:_input, ^input, ^input, :test}, 100)
+
+    input = {:cursor_pos, {10.0, 20.0}}
+    Scenic.ViewPort.Input.send(vp, input)
+    refute_receive({:_input, ^input, ^input, :test}, 100)
+  end
+
+  test ":cursor_pos only is the only cursor input type sent", %{vp: vp, scene: scene} do
+    graph =
+      Scenic.Graph.build()
+      |> Scenic.Primitives.rect({100, 200}, id: :test, input: :cursor_pos)
+
+    Scenic.Scene.push_graph(scene, graph)
+
+    # Send a cursor_button input through. We should receive this one
+    input = {:cursor_pos, {10.0, 20.0}}
+    Scenic.ViewPort.Input.send(vp, input)
+    assert_receive({:_input, ^input, ^input, :test}, 100)
+
+    # should NOT receive the other positional inputs
+    input = {:cursor_button, {0, :press, 0, {10.0, 20.0}}}
+    Scenic.ViewPort.Input.send(vp, input)
+    refute_receive({:_input, ^input, ^input, :test}, 100)
+
+    input = {:cursor_scroll, {{1.0, 2.0}, {10.0, 20.0}}}
+    Scenic.ViewPort.Input.send(vp, input)
+    refute_receive({:_input, ^input, ^input, :test}, 100)
+  end
+
+  test "positional inputs fall through to the correct primitive", %{vp: vp, scene: scene} do
+    graph =
+      Scenic.Graph.build()
+      |> Scenic.Primitives.rect({100, 200}, id: :btn, input: :cursor_button)
+      |> Scenic.Primitives.rect({100, 200}, id: :scl, input: :cursor_scroll)
+      |> Scenic.Primitives.rect({100, 200}, id: :pos, input: :cursor_pos)
+
+    Scenic.Scene.push_graph(scene, graph)
+
+    # Send a cursor_button input through. We should receive this one
+    input = {:cursor_button, {0, :press, 0, {10.0, 20.0}}}
+    Scenic.ViewPort.Input.send(vp, input)
+    assert_receive({:_input, ^input, ^input, :btn}, 100)
+    input = {:cursor_scroll, {{1.0, 2.0}, {10.0, 20.0}}}
+    Scenic.ViewPort.Input.send(vp, input)
+    assert_receive({:_input, ^input, ^input, :scl}, 100)
+    input = {:cursor_pos, {10.0, 20.0}}
+    Scenic.ViewPort.Input.send(vp, input)
+    assert_receive({:_input, ^input, ^input, :pos}, 100)
+
+    graph =
+      Scenic.Graph.build()
+      |> Scenic.Primitives.rect({100, 200}, id: :pos, input: :cursor_pos)
+      |> Scenic.Primitives.rect({100, 200}, id: :btn, input: :cursor_button)
+      |> Scenic.Primitives.rect({100, 200}, id: :scl, input: :cursor_scroll)
+
+    Scenic.Scene.push_graph(scene, graph)
+
+    input = {:cursor_button, {0, :press, 0, {10.0, 20.0}}}
+    Scenic.ViewPort.Input.send(vp, input)
+    assert_receive({:_input, ^input, ^input, :btn}, 100)
+    input = {:cursor_scroll, {{1.0, 2.0}, {10.0, 20.0}}}
+    Scenic.ViewPort.Input.send(vp, input)
+    assert_receive({:_input, ^input, ^input, :scl}, 100)
+    input = {:cursor_pos, {10.0, 20.0}}
+    Scenic.ViewPort.Input.send(vp, input)
+    assert_receive({:_input, ^input, ^input, :pos}, 100)
+
+    graph =
+      Scenic.Graph.build()
+      |> Scenic.Primitives.rect({100, 200}, id: :scl, input: :cursor_scroll)
+      |> Scenic.Primitives.rect({100, 200}, id: :pos, input: :cursor_pos)
+      |> Scenic.Primitives.rect({100, 200}, id: :btn, input: :cursor_button)
+
+    Scenic.Scene.push_graph(scene, graph)
+
+    input = {:cursor_button, {0, :press, 0, {10.0, 20.0}}}
+    Scenic.ViewPort.Input.send(vp, input)
+    assert_receive({:_input, ^input, ^input, :btn}, 100)
+    input = {:cursor_scroll, {{1.0, 2.0}, {10.0, 20.0}}}
+    Scenic.ViewPort.Input.send(vp, input)
+    assert_receive({:_input, ^input, ^input, :scl}, 100)
+    input = {:cursor_pos, {10.0, 20.0}}
+    Scenic.ViewPort.Input.send(vp, input)
+    assert_receive({:_input, ^input, ^input, :pos}, 100)
   end
 
   # ----------------

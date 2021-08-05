@@ -1020,7 +1020,7 @@ defmodule Scenic.ViewPort do
   def handle_call({:find_point, {x, y}}, _from, %{input_lists: ils} = state)
       when is_number(x) and is_number(y) do
     hit =
-      case input_find_hit(ils, @main_graph, {x, y}) do
+      case input_find_hit(ils, :any, @main_graph, {x, y}) do
         {:ok, pid, _xy, _inv_tx, id} -> {:ok, pid, id}
         _ -> {:error, :not_found}
       end
@@ -1517,20 +1517,20 @@ defmodule Scenic.ViewPort do
 
   defp do_captured_input({:cursor_button, {button, action, mods, gxy}} = input, [pid | _], state) do
     # prep the gxy. Throw away the input if it doesn't succeed
-    with {:ok, xy, id} <- prep_gxy_input(gxy, pid, state) do
+    with {:ok, xy, id} <- prep_gxy_input(gxy, :any, pid, state) do
       send(pid, {:_input, {:cursor_button, {button, action, mods, xy}}, input, id})
     end
   end
 
   defp do_captured_input({:cursor_scroll, {delta, gxy}} = input, [pid | _], state) do
-    case prep_gxy_input(gxy, pid, state) do
+    case prep_gxy_input(gxy, :any, pid, state) do
       {:ok, xy, id} -> send(pid, {:_input, {:cursor_scroll, {delta, xy}}, input, id})
       _ -> send(pid, {:_input, {:cursor_scroll, {delta, gxy}}, input, nil})
     end
   end
 
   defp do_captured_input({:cursor_pos, gxy} = input, [pid | _], state) do
-    case prep_gxy_input(gxy, pid, state) do
+    case prep_gxy_input(gxy, :any, pid, state) do
       {:ok, xy, id} -> send(pid, {:_input, {:cursor_pos, xy}, input, id})
       _ -> send(pid, {:_input, {:cursor_pos, gxy}, input, nil})
     end
@@ -1545,7 +1545,7 @@ defmodule Scenic.ViewPort do
     # send the input to each requesting pid. But... needs to be in the local
     # coord space and indicate if it was over an input
     Enum.each(pids, fn pid ->
-      case prep_gxy_input(gxy, pid, state) do
+      case prep_gxy_input(gxy, :any, pid, state) do
         {:ok, xy, id} ->
           send(pid, {:_input, {:cursor_button, {button, action, mods, xy}}, input, id})
 
@@ -1559,7 +1559,7 @@ defmodule Scenic.ViewPort do
     # send the input to each requesting pid. But... needs to be in the local
     # coord space and indicate if it was over an input
     Enum.each(pids, fn pid ->
-      case prep_gxy_input(gxy, pid, state) do
+      case prep_gxy_input(gxy, :any, pid, state) do
         {:ok, xy, id} -> send(pid, {:_input, {:cursor_scroll, {delta, xy}}, input, id})
         _ -> send(pid, {:_input, {:cursor_scroll, {delta, gxy}}, input, nil})
       end
@@ -1570,7 +1570,7 @@ defmodule Scenic.ViewPort do
     # send the input to each requesting pid. But... needs to be in the local
     # coord space and indicate if it was over an input
     Enum.each(pids, fn pid ->
-      case prep_gxy_input(gxy, pid, state) do
+      case prep_gxy_input(gxy, :any, pid, state) do
         {:ok, xy, id} -> send(pid, {:_input, {:cursor_pos, xy}, input, id})
         _ -> send(pid, {:_input, {:cursor_pos, gxy}, input, nil})
       end
@@ -1586,29 +1586,26 @@ defmodule Scenic.ViewPort do
          {:cursor_button, {button, action, mods, gxy}} = input,
          %{input_lists: ils} = state
        ) do
-    # main_graph = @main_graph
-    # out = input_find_hit(ils, main_graph, gxy)
-
-    with {:ok, pid, xy, inv_tx, id} <- input_find_hit(ils, @main_graph, gxy) do
+    with {:ok, pid, xy, inv_tx, id} <- input_find_hit(ils, :cursor_button, @main_graph, gxy) do
       send(pid, {:_input, {:cursor_button, {button, action, mods, xy}}, input, id})
     end
   end
 
   defp do_listed_input({:cursor_scroll, {delta, gxy}} = input, %{input_lists: ils}) do
-    with {:ok, pid, xy, _inv_tx, id} <- input_find_hit(ils, @main_graph, gxy) do
+    with {:ok, pid, xy, _inv_tx, id} <- input_find_hit(ils, :cursor_scroll, @main_graph, gxy) do
       send(pid, {:_input, {:cursor_scroll, {delta, xy}}, input, id})
     end
   end
 
   defp do_listed_input({:cursor_pos, gxy} = input, %{input_lists: ils}) do
-    with {:ok, pid, xy, _inv_tx, id} <- input_find_hit(ils, @main_graph, gxy) do
+    with {:ok, pid, xy, _inv_tx, id} <- input_find_hit(ils, :cursor_pos, @main_graph, gxy) do
       send(pid, {:_input, {:cursor_pos, xy}, input, id})
     end
   end
 
   # --------------------------------------------------------
-  defp prep_gxy_input(gxy, pid, %{input_lists: ils} = state) do
-    case input_find_hit(ils, @main_graph, gxy) do
+  defp prep_gxy_input(gxy, input_type, pid, %{input_lists: ils} = state) do
+    case input_find_hit(ils, input_type, @main_graph, gxy) do
       {:ok, ^pid, xy, _inv_tx, id} ->
         {:ok, xy, id}
 
@@ -1772,25 +1769,29 @@ defmodule Scenic.ViewPort do
   # ============================================================================
   # walk an input list and look for hits
   @doc false
-  defp input_find_hit(lists, name, global_point, parent_tx \\ nil)
+  defp input_find_hit(lists, input_type, name, global_point, parent_tx \\ nil)
 
-  defp input_find_hit(lists, name, global_point, nil) do
-    input_find_hit(lists, name, global_point, Math.Matrix.identity())
+  defp input_find_hit(lists, input_type, name, global_point, nil) do
+    input_find_hit(lists, input_type, name, global_point, Math.Matrix.identity())
   end
 
-  defp input_find_hit(lists, name, global_point, parent_tx) do
+  defp input_find_hit(lists, input_type, name, global_point, parent_tx) do
     case Map.fetch(lists, name) do
-      {:ok, {in_list, _, _}} -> do_find_hit(in_list, global_point, lists, name, parent_tx)
-      _ -> :not_found
+      {:ok, {in_list, _, _}} ->
+        do_find_hit(in_list, input_type, global_point, lists, name, parent_tx)
+
+      _ ->
+        :not_found
     end
   end
 
-  defp do_find_hit(input_list, global_point, lists, name, parent_tx)
-  defp do_find_hit([], _, _, _, _), do: :not_found
+  defp do_find_hit(input_list, input_type, global_point, lists, name, parent_tx)
+  defp do_find_hit([], _, _, _, _, _), do: :not_found
 
   # components recurse
   defp do_find_hit(
          [{Primitive.Component, data, local_tx, _pid, _uid, _id} | tail],
+         input_type,
          global_point,
          lists,
          name,
@@ -1800,20 +1801,21 @@ defmodule Scenic.ViewPort do
     local_tx = Math.Matrix.mul(parent_tx, local_tx)
 
     # recurse to test the component
-    case input_find_hit(lists, data, global_point, local_tx) do
+    case input_find_hit(lists, input_type, data, global_point, local_tx) do
       {:ok, _, _, _, _} = hit ->
         # Rhere was a hit inside the component. Return result as we are done.
         hit
 
       :not_found ->
         # if not found, keep going
-        do_find_hit(tail, global_point, lists, name, parent_tx)
+        do_find_hit(tail, input_type, global_point, lists, name, parent_tx)
     end
   end
 
   # actual thing to test against
   defp do_find_hit(
-         [{module, data, local_tx, pid, _uid, id} | tail],
+         [{module, data, local_tx, pid, types, id} | tail],
+         input_type,
          {gx, gy} = gp,
          lists,
          name,
@@ -1826,23 +1828,25 @@ defmodule Scenic.ViewPort do
     # project the global point by the inverse matrix
     {x, y} = Math.Vector2.project({gx, gy}, invert_tx)
 
-    case module.contains_point?(data, {x, y}) do
-      true ->
-        # return the xy in parent coordinate space
-        inv = Math.Matrix.invert(parent_tx)
-        pxy = Math.Vector2.project({gx, gy}, inv)
+    # for this to be a yet, it must be both a valid input type on the primitive
+    # AND in the primitive itself.
+    with true <- input_type == :any || Enum.member?(types, input_type),
+         true <- module.contains_point?(data, {x, y}) do
+      # return the xy in parent coordinate space
+      inv = Math.Matrix.invert(parent_tx)
+      pxy = Math.Vector2.project({gx, gy}, inv)
 
-        {
-          :ok,
-          pid,
-          pxy,
-          inv,
-          id
-        }
-
-      # No hit here. Keep going
+      {
+        :ok,
+        pid,
+        pxy,
+        inv,
+        id
+      }
+    else
       false ->
-        do_find_hit(tail, gp, lists, name, parent_tx)
+        # No hit here. Keep going
+        do_find_hit(tail, input_type, gp, lists, name, parent_tx)
     end
   end
 end
