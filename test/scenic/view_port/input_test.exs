@@ -118,35 +118,39 @@ defmodule Scenic.ViewPort.InputTest do
 
   test "requests are cleaned up with the owning process stops", %{vp: vp, scene: scene} do
     :ok = Input.request(vp, :cursor_pos)
-    Scenic.Scene.request_input( scene, :codepoint )
+    Scenic.Scene.request_input(scene, :codepoint)
     assert Input.fetch_requests!(vp) == {:ok, [:codepoint, :cursor_pos]}
     Scenic.Scene.stop(scene)
     assert Input.fetch_requests!(vp) == {:ok, [:cursor_pos]}
   end
 
-
   # ----------------
   # input: [types]
 
   test "adding or removing input types from a graph pushes those requests to drivers",
-  %{vp: vp, scene: scene} do
+       %{vp: vp, scene: scene} do
     # make like a driver
     GenServer.cast(vp.pid, {:register_driver, self()})
     assert Input.fetch_requests!(vp) == {:ok, []}
 
-    graph = Scenic.Graph.build()
-      |> Scenic.Primitives.rect({10, 20}, input: [:cursor_button, :cursor_scroll, :cursor_pos] )
+    graph =
+      Scenic.Graph.build()
+      |> Scenic.Primitives.rect({10, 20}, input: [:cursor_button, :cursor_scroll, :cursor_pos])
 
-    Scenic.Scene.push_graph( scene, graph )
-    assert_receive({:"$gen_cast", {:request_input, [:cursor_button, :cursor_pos, :cursor_scroll]}}, 100)
+    Scenic.Scene.push_graph(scene, graph)
 
-    graph = Scenic.Graph.build()
-      |> Scenic.Primitives.rect({10, 20} )
+    assert_receive(
+      {:"$gen_cast", {:request_input, [:cursor_button, :cursor_pos, :cursor_scroll]}},
+      100
+    )
 
-    Scenic.Scene.push_graph( scene, graph )
+    graph =
+      Scenic.Graph.build()
+      |> Scenic.Primitives.rect({10, 20})
+
+    Scenic.Scene.push_graph(scene, graph)
     assert_receive({:"$gen_cast", {:request_input, []}}, 100)
   end
-
 
   # ----------------
   # specific input types
@@ -235,7 +239,7 @@ defmodule Scenic.ViewPort.InputTest do
   end
 
   test "drivers are sent requested input updates when a scene goes down", %{vp: vp, scene: scene} do
-    Scenic.Scene.request_input( scene, :cursor_button )
+    Scenic.Scene.request_input(scene, :cursor_button)
 
     assert Input.fetch_requests!(vp) == {:ok, [:cursor_button]}
 
@@ -249,7 +253,7 @@ defmodule Scenic.ViewPort.InputTest do
   end
 
   test "drivers are sent captured input updates", %{vp: vp, scene: scene} do
-    Scenic.Scene.request_input( scene, :cursor_button )
+    Scenic.Scene.request_input(scene, :cursor_button)
 
     assert Input.fetch_captures!(vp) == {:ok, []}
     assert Input.fetch_requests!(vp) == {:ok, [:cursor_button]}
@@ -271,7 +275,7 @@ defmodule Scenic.ViewPort.InputTest do
   end
 
   test "drivers are sent captured input updates when a scene goes down", %{vp: vp, scene: scene} do
-    Scenic.Scene.request_input( scene, :cursor_button )
+    Scenic.Scene.request_input(scene, :cursor_button)
 
     assert Input.fetch_requests!(vp) == {:ok, [:cursor_button]}
     self = self()

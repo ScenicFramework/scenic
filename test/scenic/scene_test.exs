@@ -335,7 +335,7 @@ defmodule Scenic.SceneTest do
   # input
 
   test "fetch_requests works", %{scene: scene} do
-    Scenic.Scene.request_input( scene, :cursor_button )
+    Scenic.Scene.request_input(scene, :cursor_button)
 
     assert Scene.fetch_requests(scene) == {:ok, [:cursor_button, :codepoint]}
 
@@ -347,7 +347,7 @@ defmodule Scenic.SceneTest do
   end
 
   test "request_input works", %{scene: scene} do
-    Scenic.Scene.request_input( scene, :cursor_button )
+    Scenic.Scene.request_input(scene, :cursor_button)
 
     assert Scene.fetch_requests(scene) ==
              {:ok, [:cursor_button, :codepoint]}
@@ -359,8 +359,8 @@ defmodule Scenic.SceneTest do
   end
 
   test "unrequest_input works", %{scene: scene} do
-    Scenic.Scene.request_input( scene, :cursor_button )
-    
+    Scenic.Scene.request_input(scene, :cursor_button)
+
     assert Scene.fetch_requests(scene) == {:ok, [:cursor_button, :codepoint]}
 
     :ok = Scene.unrequest_input(scene, :codepoint)

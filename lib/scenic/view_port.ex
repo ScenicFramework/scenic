@@ -801,11 +801,11 @@ defmodule Scenic.ViewPort do
 
     new_state =
       old_state
-      |> Map.put( :input_lists, input_lists )
-      |> Map.put( :scene_transforms, txs )
+      |> Map.put(:input_lists, input_lists)
+      |> Map.put(:scene_transforms, txs)
       |> update_positional_input()
 
-    do_update_driver_input( old_state, new_state )
+    do_update_driver_input(old_state, new_state)
 
     {:noreply, new_state}
   end
@@ -824,19 +824,20 @@ defmodule Scenic.ViewPort do
           input_lists: ils
         } = old_state
       ) do
-    state = case :ets.lookup(name_table, name) do
-      [{_, id, _}] ->
-        cast_drivers(old_state, {:del_script, id})
-        :ets.delete(script_table, id)
-        :ets.delete(name_table, name)
+    state =
+      case :ets.lookup(name_table, name) do
+        [{_, id, _}] ->
+          cast_drivers(old_state, {:del_script, id})
+          :ets.delete(script_table, id)
+          :ets.delete(name_table, name)
 
-        # make sure the input list is cleaned up
-        %{old_state | input_lists: Map.delete(ils, name)}
-        |> update_positional_input()
+          # make sure the input list is cleaned up
+          %{old_state | input_lists: Map.delete(ils, name)}
+          |> update_positional_input()
 
-      _ ->
-        old_state
-    end
+        _ ->
+          old_state
+      end
 
     # if the requests changed, then tell the remaining drivers.
     do_update_driver_input(old_state, state)
@@ -1018,11 +1019,11 @@ defmodule Scenic.ViewPort do
   # --------------------------------------------------------
   def handle_call({:find_point, {x, y}}, _from, %{input_lists: ils} = state)
       when is_number(x) and is_number(y) do
-
-    hit = case input_find_hit(ils, @main_graph, {x, y}) do
-      {:ok, pid, _xy, _inv_tx, id} -> {:ok, pid, id}
-      _ -> {:error, :not_found}
-    end
+    hit =
+      case input_find_hit(ils, @main_graph, {x, y}) do
+        {:ok, pid, _xy, _inv_tx, id} -> {:ok, pid, id}
+        _ -> {:error, :not_found}
+      end
 
     {:reply, hit, state}
   end
@@ -1203,7 +1204,8 @@ defmodule Scenic.ViewPort do
       |> Map.put(:scene, {scene, param})
       |> Map.put(:input_lists, %{@main_graph => ils[@main_graph]})
       |> Map.put(:next_id, @first_open_graph_id)
-      # |> update_positional_input()
+
+    # |> update_positional_input()
 
     {:ok, state}
   end
@@ -1256,9 +1258,8 @@ defmodule Scenic.ViewPort do
 
         # add the input list to the state
         state
-        |> Map.put( :input_lists, Map.put(ils, name, {input_list, input_types, nil}) )
+        |> Map.put(:input_lists, Map.put(ils, name, {input_list, input_types, nil}))
         |> update_positional_input()
-
       else
         _ -> state
       end
@@ -1277,9 +1278,9 @@ defmodule Scenic.ViewPort do
   # defp do_update_driver_input( %{} = old_reqs, %{_input_requests: new_reqs} = state ) do
   defp do_update_driver_input(
          %{_input_requests: old_reqs, _input_captures: old_capts, input_positional: old_pos},
-         %{_input_requests: new_reqs, _input_captures: new_capts, input_positional: new_pos} = state
+         %{_input_requests: new_reqs, _input_captures: new_capts, input_positional: new_pos} =
+           state
        ) do
-
     old_keys =
       (Map.keys(old_capts) ++ Map.keys(old_reqs) ++ old_pos)
       |> Enum.uniq()
@@ -1477,10 +1478,10 @@ defmodule Scenic.ViewPort do
   defp handle_input(
          {input_type, _} = input,
          %{
-          _input_captures: captures,
-          _input_requests: requests,
-          input_positional: input_positional
-        } = state
+           _input_captures: captures,
+           _input_requests: requests,
+           input_positional: input_positional
+         } = state
        ) do
     case Map.fetch(captures, input_type) do
       {:ok, pids} ->
@@ -1490,6 +1491,7 @@ defmodule Scenic.ViewPort do
         if Enum.member?(input_positional, input_type) do
           do_listed_input(input, state)
         end
+
         case Map.fetch(requests, input_type) do
           {:ok, pids} -> do_requested_input(input, pids, state)
           :error -> :ok
@@ -1544,8 +1546,11 @@ defmodule Scenic.ViewPort do
     # coord space and indicate if it was over an input
     Enum.each(pids, fn pid ->
       case prep_gxy_input(gxy, pid, state) do
-        {:ok, xy, id} -> send(pid, {:_input, {:cursor_button, {button, action, mods, xy}}, input, id})
-        _ -> send(pid, {:_input, {:cursor_button, {button, action, mods, gxy}}, input, nil})
+        {:ok, xy, id} ->
+          send(pid, {:_input, {:cursor_button, {button, action, mods, xy}}, input, id})
+
+        _ ->
+          send(pid, {:_input, {:cursor_button, {button, action, mods, gxy}}, input, nil})
       end
     end)
   end
@@ -1577,7 +1582,10 @@ defmodule Scenic.ViewPort do
   end
 
   # --------------------------------------------------------
-  defp do_listed_input({:cursor_button, {button, action, mods, gxy}} = input, %{input_lists: ils}=state) do
+  defp do_listed_input(
+         {:cursor_button, {button, action, mods, gxy}} = input,
+         %{input_lists: ils} = state
+       ) do
     # main_graph = @main_graph
     # out = input_find_hit(ils, main_graph, gxy)
 
@@ -1603,6 +1611,7 @@ defmodule Scenic.ViewPort do
     case input_find_hit(ils, @main_graph, gxy) do
       {:ok, ^pid, xy, _inv_tx, id} ->
         {:ok, xy, id}
+
       _ ->
         case scene_tx(pid, state) do
           {:ok, tx} ->
@@ -1612,9 +1621,11 @@ defmodule Scenic.ViewPort do
               tx
               |> Math.Matrix.invert()
               |> Math.Matrix.project_vector(gxy)
+
             {:ok, xy, nil}
 
-          err -> err
+          err ->
+            err
         end
     end
   end
@@ -1654,19 +1665,20 @@ defmodule Scenic.ViewPort do
   # compile a graph into a list of input directives -> [{id,script}|...]
   # the output is already a reversed list.
   # i.e. the last thing draw, is the first thing tested
-  @spec compile_input(graph :: Graph.t()) :: {:ok, {binary, types::[ViewPort.Input.positional()]}}
+  @spec compile_input(graph :: Graph.t()) ::
+          {:ok, {binary, types :: [ViewPort.Input.positional()]}}
   defp compile_input(graph)
 
   defp compile_input(%Graph{primitives: primitives}) do
-    input =
-      comp_input_prim([], 0, primitives[0], primitives, Math.Matrix.identity())
+    input = comp_input_prim([], 0, primitives[0], primitives, Math.Matrix.identity())
 
     # compile the requested input types
-    types = Enum.reduce(input, [], fn({_mod, _name, _tx, _pid, types, _id}, acc) ->
-      [types | acc]
-    end)
-    |> List.flatten()
-    |> Enum.uniq()
+    types =
+      Enum.reduce(input, [], fn {_mod, _name, _tx, _pid, types, _id}, acc ->
+        [types | acc]
+      end)
+      |> List.flatten()
+      |> Enum.uniq()
 
     {:ok, {input, types}}
   end
@@ -1744,15 +1756,16 @@ defmodule Scenic.ViewPort do
   end
 
   # coalesce the requested positional input into a single simple list
-  defp update_positional_input( %{input_lists: input_lists} = state ) do
+  defp update_positional_input(%{input_lists: input_lists} = state) do
     input_positional =
       input_lists
-      |> Enum.reduce( [], fn({_, {_, types, _}}, acc) ->
+      |> Enum.reduce([], fn {_, {_, types, _}}, acc ->
         [types, acc]
       end)
       |> List.flatten()
       |> Enum.uniq()
       |> Enum.sort()
+
     %{state | input_positional: input_positional}
   end
 
