@@ -882,8 +882,11 @@ defmodule Scenic.Scene do
 
       @doc false
       def handle_fetch(_from, scene), do: {:reply, {:error, :not_implemented}, scene}
+
       @doc false
-      def handle_update(_data, _opts, scene), do: {:noreply, scene}
+      def handle_update(text, opts, scene) do
+        Scenic.Scene.default_handle_update(text, opts, scene)
+      end
 
       @doc false
       def terminate(_reason, state), do: state
@@ -902,6 +905,12 @@ defmodule Scenic.Scene do
     end
 
     # defmacro
+  end
+
+  @doc false
+  def default_handle_update(text, opts, %Scene{module: module} = scene) do
+    {:ok, scene} = module.init(scene, text, opts)
+    {:noreply, scene}
   end
 
   # ===========================================================================

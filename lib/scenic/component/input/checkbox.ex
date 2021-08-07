@@ -265,29 +265,4 @@ defmodule Scenic.Component.Input.Checkbox do
   def handle_fetch(_, %{assigns: %{checked: checked?}} = scene) do
     {:reply, {:ok, checked?}, scene}
   end
-
-  # --------------------------------------------------------
-  @doc false
-  @impl Scenic.Scene
-  def handle_update(data, opts, scene) do
-    {:ok, scene} = init(scene, data, opts)
-    {:noreply, scene}
-  end
-
-  # @doc false
-  # @impl Scenic.Component
-  # def handle_put(checked?, _, %{assigns: %{graph: graph}} = scene) when is_boolean(checked?) do
-  #   graph = Graph.modify(graph, :chx, &Primitive.put_style(&1, :hidden, checked?))
-
-  #   scene =
-  #     scene
-  #     |> assign(graph: graph, checked: checked?)
-  #     |> push_graph(graph)
-
-  #   {:reply, :ok, scene}
-  # end
-
-  # def handle_put(_, _, scene) do
-  #   {:reply, {:error, :invalid}, scene}
-  # end
 end

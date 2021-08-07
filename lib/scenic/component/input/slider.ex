@@ -366,36 +366,4 @@ defmodule Scenic.Component.Input.Slider do
   def handle_fetch(_, %{assigns: %{value: value}} = scene) do
     {:reply, {:ok, value}, scene}
   end
-
-  # --------------------------------------------------------
-  @doc false
-  @impl Scenic.Scene
-  def handle_update(data, opts, scene) do
-    {:ok, scene} = init(scene, data, opts)
-    {:noreply, scene}
-  end
-
-  # @doc false
-  # @impl Scenic.Component
-  # def handle_put(value, _, %{assigns: %{extents: extents}} = scene) when is_list(extents) do
-  #   case Enum.member?(extents, value) do
-  #     true -> {:reply, :ok, do_put(value, extents, scene)}
-  #     false -> {:reply, {:error, :invalid}, scene}
-  #   end
-  # end
-
-  # def handle_put(value, _, %{assigns: %{extents: {min, max}}} = scene) when is_number(value) do
-  #   case value >= min && value <= max do
-  #     true -> {:reply, :ok, do_put(value, {min, max}, scene)}
-  #     false -> {:reply, {:error, :invalid}, scene}
-  #   end
-  # end
-
-  # defp do_put(new_value, extents, %{assigns: %{graph: graph, width: width}} = scene) do
-  #   graph = update_slider_position(graph, new_value, extents, width)
-
-  #   scene
-  #   |> assign(graph: graph, value: new_value)
-  #   |> push_graph(graph)
-  # end
 end

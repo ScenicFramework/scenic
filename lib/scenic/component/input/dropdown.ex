@@ -621,48 +621,4 @@ defmodule Scenic.Component.Input.Dropdown do
   def handle_fetch(_, %{assigns: %{selected_id: selected_id}} = scene) do
     {:reply, {:ok, selected_id}, scene}
   end
-
-  # --------------------------------------------------------
-  @doc false
-  @impl Scenic.Scene
-  def handle_update(data, opts, scene) do
-    {:ok, scene} = init(scene, data, opts)
-    {:noreply, scene}
-  end
-
-  # @doc false
-  # @impl Scenic.Component
-  # def handle_put(id, _, %{assigns: %{items: items}} = scene) do
-  #   Enum.find(items, fn
-  #     {_, ^id} -> true
-  #     _ -> false
-  #   end)
-  #   |> case do
-  #     {text, id} -> {:reply, :ok, do_put(text, id, scene)}
-  #     _ -> {:reply, {:error, :invalid}, scene}
-  #   end
-  # end
-
-  # defp do_put(
-  #        text,
-  #        item_id,
-  #        %Scene{
-  #          assigns: %{
-  #            items: items,
-  #            theme: theme,
-  #            graph: graph,
-  #            hover_id: hover_id
-  #          }
-  #        } = scene
-  #      ) do
-  #   graph =
-  #     graph
-  #     # update the main button text
-  #     |> Graph.modify(@text_id, &text(&1, text))
-  #     |> update_highlighting(items, item_id, hover_id, theme)
-
-  #   scene
-  #   |> assign(graph: graph, selected_id: item_id)
-  #   |> push_graph(graph)
-  # end
 end

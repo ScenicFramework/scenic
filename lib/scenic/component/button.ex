@@ -343,11 +343,4 @@ defmodule Scenic.Component.Button do
   def handle_fetch(_, %{assigns: %{text: text}} = scene) do
     {:reply, {:ok, text}, scene}
   end
-
-  @doc false
-  @impl Scenic.Scene
-  def handle_update(text, opts, scene) do
-    {:ok, scene} = init(scene, text, opts)
-    {:noreply, scene}
-  end
 end
