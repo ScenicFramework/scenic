@@ -11,7 +11,6 @@ defmodule Scenic.Component.Input.RadioButtonTest do
   alias Scenic.Scene
   alias Scenic.ViewPort.Input
   alias Scenic.Component.Input.RadioButton
-  alias Scenic.Component
 
   # import IEx
 
@@ -89,13 +88,7 @@ defmodule Scenic.Component.Input.RadioButtonTest do
     refute_receive(_, 10)
   end
 
-  test "implements put/fetch", %{scene: scene} do
-    {:ok, [pid]} = Scene.child(scene, :radio_button)
-
-    assert Component.fetch(pid) == {:ok, false}
-    assert Component.put(pid, true) == :ok
-    assert Component.fetch(pid) == {:ok, true}
-    assert Component.put(pid, :abc) == {:error, :invalid}
-    assert Component.fetch(pid) == {:ok, true}
+  test "implements fetch", %{scene: scene} do
+    assert Scene.child_value(scene, :radio_button) == {:ok, [false]}
   end
 end

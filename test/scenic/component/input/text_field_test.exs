@@ -11,7 +11,6 @@ defmodule Scenic.Component.Input.TextFieldTest do
   alias Scenic.Graph
   alias Scenic.Scene
   alias Scenic.ViewPort.Input
-  alias Scenic.Component
 
   # import IEx
 
@@ -308,11 +307,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
     refute_receive(_, 10)
   end
 
-  test "implements put/fetch", %{pid: pid} do
-    assert Component.fetch(pid) == {:ok, "Initial value"}
-    assert Component.put(pid, "Something Else") == :ok
-    assert Component.fetch(pid) == {:ok, "Something Else"}
-    assert Component.put(pid, 3) == {:error, :invalid}
-    assert Component.fetch(pid) == {:ok, "Something Else"}
+  test "implements fetch", %{scene: scene} do
+    assert Scene.child_value(scene, :text_field) == {:ok, ["Initial value"]}
   end
 end

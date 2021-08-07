@@ -333,7 +333,14 @@ defmodule Scenic.Scene do
 
   def child_value(scene, id) do
     {:ok, pids} = child(scene, id)
-    {:ok, Enum.map(pids, &GenServer.call(&1, :_fetch_))}
+
+    {:ok,
+     Enum.map(pids, fn pid ->
+       case GenServer.call(pid, :_fetch_) do
+         {:ok, value} -> value
+         _ -> :error
+       end
+     end)}
   end
 
   @spec get_transform(scene :: Scene.t()) :: Math.matrix()

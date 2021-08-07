@@ -148,13 +148,7 @@ defmodule Scenic.Component.Input.SliderNumericTest do
     refute_receive(_, 10)
   end
 
-  test "implements put/fetch", %{scene: scene} do
-    {:ok, [pid]} = Scene.child(scene, :slider_num)
-
-    assert Component.fetch(pid) == {:ok, 20}
-    assert Component.put(pid, 50) == :ok
-    assert Component.fetch(pid) == {:ok, 50}
-    assert Component.put(pid, 200) == {:error, :invalid}
-    assert Component.fetch(pid) == {:ok, 50}
+  test "implements fetch", %{scene: scene} do
+    assert Scene.child_value(scene, :slider_num) == {:ok, [20]}
   end
 end

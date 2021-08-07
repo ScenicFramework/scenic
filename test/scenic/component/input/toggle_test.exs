@@ -13,7 +13,6 @@ defmodule Scenic.Component.Input.ToggleTest do
   alias Scenic.Graph
   alias Scenic.Scene
   alias Scenic.ViewPort.Input
-  alias Scenic.Component
 
   @press_in {:cursor_button, {0, :press, 0, {20, 10}}}
   @release_in {:cursor_button, {0, :release, 0, {20, 10}}}
@@ -94,13 +93,7 @@ defmodule Scenic.Component.Input.ToggleTest do
     assert Process.alive?(vp.pid)
   end
 
-  test "implements put/fetch", %{scene: scene} do
-    {:ok, [pid]} = Scene.child(scene, :toggle)
-
-    assert Component.fetch(pid) == {:ok, false}
-    assert Component.put(pid, true) == :ok
-    assert Component.fetch(pid) == {:ok, true}
-    assert Component.put(pid, :abc) == {:error, :invalid}
-    assert Component.fetch(pid) == {:ok, true}
+  test "implements fetch", %{scene: scene} do
+    assert Scene.child_value(scene, :toggle) == {:ok, [false]}
   end
 end

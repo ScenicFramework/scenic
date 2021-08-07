@@ -10,7 +10,6 @@ defmodule Scenic.Component.Input.RadioGroupTest do
 
   alias Scenic.Scene
   alias Scenic.ViewPort.Input
-  alias Scenic.Component
 
   # import IEx
 
@@ -160,13 +159,7 @@ defmodule Scenic.Component.Input.RadioGroupTest do
     refute_receive(_, 10)
   end
 
-  test "implements put/fetch", %{scene: scene} do
-    {:ok, [pid]} = Scene.child(scene, :radio_group)
-
-    assert Component.fetch(pid) == {:ok, :radio_b}
-    assert Component.put(pid, :radio_a) == :ok
-    assert Component.fetch(pid) == {:ok, :radio_a}
-    assert Component.put(pid, 3) == {:error, :invalid}
-    assert Component.fetch(pid) == {:ok, :radio_a}
+  test "implements fetch", %{scene: scene} do
+    assert Scene.child_value(scene, :radio_group) == {:ok, [:radio_b]}
   end
 end

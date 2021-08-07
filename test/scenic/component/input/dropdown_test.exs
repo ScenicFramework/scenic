@@ -14,7 +14,6 @@ defmodule Scenic.Component.Input.DropdownTest do
   alias Scenic.Graph
   alias Scenic.Scene
   alias Scenic.ViewPort.Input
-  alias Scenic.Component
 
   # import IEx
 
@@ -149,13 +148,7 @@ defmodule Scenic.Component.Input.DropdownTest do
     refute_receive(_, 10)
   end
 
-  test "implements put/fetch", %{scene: scene} do
-    {:ok, [pid]} = Scene.child(scene, :dropdown)
-
-    assert Component.fetch(pid) == {:ok, 2}
-    assert Component.put(pid, 1) == :ok
-    assert Component.fetch(pid) == {:ok, 1}
-    assert Component.put(pid, 3) == {:error, :invalid}
-    assert Component.fetch(pid) == {:ok, 1}
+  test "implements fetch", %{scene: scene} do
+    assert Scene.child_value(scene, :dropdown) == {:ok, [2]}
   end
 end
