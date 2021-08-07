@@ -290,6 +290,16 @@ defmodule Scenic.Scene do
     %{scene | assigns: Map.put(assigns, key, value)}
   end
 
+  @spec assign_new(scene :: Scene.t(), key_list :: Keyword.t()) :: Scene.t()
+  def assign_new(%Scene{} = scene, key_list) when is_list(key_list) do
+    Enum.reduce(key_list, scene, fn {k, v}, acc -> assign_new(acc, k, v) end)
+  end
+
+  @spec assign_new(scene :: Scene.t(), key :: any, value :: any) :: Scene.t()
+  def assign_new(%Scene{assigns: assigns} = scene, key, value) do
+    %{scene | assigns: Map.put_new(assigns, key, value)}
+  end
+
   @spec parent(scene :: Scene.t()) :: {:ok, parent :: pid}
   def parent(%Scene{parent: parent}), do: {:ok, parent}
 
@@ -299,7 +309,7 @@ defmodule Scenic.Scene do
   def children(%Scene{children: nil}), do: {:error, :no_children}
 
   def children(%Scene{children: children}) do
-    {:ok, Enum.map(children, fn {_, {_, pid, id}} -> {id, pid} end)}
+    {:ok, Enum.map(children, fn {_, {_, pid, id, _param}} -> {id, pid} end)}
   end
 
   @spec child(scene :: Scene.t(), id :: any) ::
@@ -311,10 +321,19 @@ defmodule Scenic.Scene do
       :ok,
       children
       |> Enum.reduce([], fn
-        {_, {_, pid, ^id}}, acc -> [pid | acc]
+        {_, {_, pid, ^id, _param}}, acc -> [pid | acc]
         _, acc -> acc
       end)
     }
+  end
+
+  @spec child_value(scene :: Scene.t(), id :: any) ::
+          {:ok, [child_pid :: pid]} | {:error, :no_children}
+  def child_value(%Scene{children: nil}, _), do: {:error, :no_children}
+
+  def child_value(scene, id) do
+    {:ok, pids} = child(scene, id)
+    {:ok, Enum.map(pids, &GenServer.call(&1, :_fetch_))}
   end
 
   @spec get_transform(scene :: Scene.t()) :: Math.matrix()
@@ -378,14 +397,14 @@ defmodule Scenic.Scene do
   def send_children(%Scene{children: nil}, _msg), do: {:error, :no_children}
 
   def send_children(%Scene{children: kids}, msg) do
-    Enum.each(kids, fn {_, {_, pid, _}} -> Process.send(pid, msg, []) end)
+    Enum.each(kids, fn {_, {_, pid, _, _param}} -> Process.send(pid, msg, []) end)
   end
 
   @spec cast_children(scene :: Scene.t(), msg :: any) :: :ok | {:error, :no_children}
   def cast_children(%Scene{children: nil}, _msg), do: {:error, :no_children}
 
   def cast_children(%Scene{children: kids}, msg) do
-    Enum.each(kids, fn {_, {_, pid, _}} -> GenServer.cast(pid, msg) end)
+    Enum.each(kids, fn {_, {_, pid, _, _param}} -> GenServer.cast(pid, msg) end)
   end
 
   @spec stop(scene :: Scene.t()) :: :ok
@@ -584,6 +603,7 @@ defmodule Scenic.Scene do
               {:ok, theme} -> Keyword.put(opts, :theme, theme)
               _ -> opts
             end
+            |> Keyword.put(:id, Map.get(p, :id))
 
           [{name, {mod, param}, Map.get(p, :id), opts} | acc]
 
@@ -605,6 +625,37 @@ defmodule Scenic.Scene do
     stop_children =
       Enum.reject(running_children, fn {{_, rn}, _} ->
         Enum.any?(components, fn {sn, _, _, _} -> rn == sn end)
+      end)
+
+    modify_children =
+      Enum.reduce(running_children, [], fn {{rg, rn}, {_, _, _, {rp, ro}}}, acc ->
+        Enum.find_value(components, fn
+          # no change
+          {^rn, {_, ^rp}, _id, ^ro} -> :no_change
+          # yes change
+          {^rn, {_, cp}, _id, co} -> {:changed, {{rg, rn}, {cp, co}}}
+          # not relevant
+          _ -> nil
+        end)
+        |> case do
+          nil -> acc
+          :no_change -> acc
+          {:changed, data} -> [data | acc]
+        end
+      end)
+
+    # modify the components that are dirty
+    children =
+      Enum.reduce(modify_children, children, fn {key, {param, opts}}, acc ->
+        id =
+          case Keyword.fetch(opts, :id) do
+            {:ok, id} -> id
+            _ -> nil
+          end
+
+        {:ok, {top_pid, scene_pid, _, _}} = Map.fetch(acc, key)
+        send(scene_pid, {:_update_, param, opts})
+        Map.put(acc, key, {top_pid, scene_pid, id, {param, opts}})
       end)
 
     # start the components that need to be started
@@ -631,7 +682,7 @@ defmodule Scenic.Scene do
             opts: opts
           )
 
-        Map.put(acc, {graph_name, name}, {top, scene, id})
+        Map.put(acc, {graph_name, name}, {top, scene, id, {param, opts}})
       end)
 
     # stop the components that need to be stopped
@@ -763,6 +814,27 @@ defmodule Scenic.Scene do
               | {:stop, reason :: any}
             when new_state: any
 
+  @doc """
+  Retrieve the current \"value\" associated with the scene and return it to the caller.
+
+  If this callback is not implemented, the caller with get an {:error, :not_implemented}. 
+  """
+  @callback handle_fetch(from :: GenServer.from(), scene :: Scene.t()) ::
+              {:reply, reply, new_state}
+              | {:reply, reply, new_state, timeout() | :hibernate | {:continue, term()}}
+            when reply: term(), new_state: term()
+
+  @doc """
+  Update the data and options of a scene. Usually implemented by Components.
+
+  If this callback is not implemented, then changes to the component in the parent's
+  graph will have no affect. 
+  """
+  @callback handle_update(data :: any, opts :: Keyword.t(), scene :: Scene.t()) ::
+              {:noreply, new_state}
+              | {:noreply, new_state, timeout() | :hibernate | {:continue, term()}}
+            when new_state: term()
+
   @optional_callbacks handle_event: 3,
                       handle_input: 3
 
@@ -809,6 +881,11 @@ defmodule Scenic.Scene do
       def handle_event(event, _from, scene), do: {:cont, event, scene}
 
       @doc false
+      def handle_fetch(_from, scene), do: {:reply, {:error, :not_implemented}, scene}
+      @doc false
+      def handle_update(_data, _opts, scene), do: {:noreply, scene}
+
+      @doc false
       def terminate(_reason, state), do: state
 
       # --------------------------------------------------------
@@ -817,7 +894,9 @@ defmodule Scenic.Scene do
       # --------------------------------------------------------
       defoverridable terminate: 2,
                      handle_event: 3,
-                     handle_input: 3
+                     handle_input: 3,
+                     handle_fetch: 2,
+                     handle_update: 3
 
       # quote
     end
@@ -1022,6 +1101,14 @@ defmodule Scenic.Scene do
     end
   end
 
+  def handle_info({:_update_, param, opts}, %Scene{module: module} = scene) do
+    case module.handle_update(param, opts, scene) do
+      {:ok, %Scene{} = scene} -> {:noreply, scene}
+      {:noreply, %Scene{} = scene} -> {:noreply, scene}
+      {:noreply, %Scene{} = scene, opts} -> {:noreply, scene, opts}
+    end
+  end
+
   # --------------------------------------------------------
   # generic handle_info. give the scene a chance to handle it
   @doc false
@@ -1042,12 +1129,8 @@ defmodule Scenic.Scene do
     {:reply, :_pong_, scene}
   end
 
-  def handle_call(:_component_fetch, from, %Scene{module: module} = scene) do
+  def handle_call(:_fetch_, from, %Scene{module: module} = scene) do
     module.handle_fetch(from, scene)
-  end
-
-  def handle_call({:_component_put, value}, from, %Scene{module: module} = scene) do
-    module.handle_put(value, from, scene)
   end
 
   # --------------------------------------------------------

@@ -213,26 +213,34 @@ defmodule Scenic.Component.Input.RadioGroup do
 
   # --------------------------------------------------------
   @doc false
-  @impl Scenic.Component
+  @impl Scenic.Scene
   def handle_fetch(_, %{assigns: %{value: value}} = scene) do
     {:reply, {:ok, value}, scene}
   end
 
+  # --------------------------------------------------------
   @doc false
-  @impl Scenic.Component
-  def handle_put(id, _, %{assigns: %{items: items}} = scene) do
-    Enum.any?(items, fn
-      {_, ^id} -> true
-      _ -> false
-    end)
-    |> case do
-      true -> {:reply, :ok, do_put(id, scene)}
-      false -> {:reply, {:error, :invalid}, scene}
-    end
+  @impl Scenic.Scene
+  def handle_update(data, opts, scene) do
+    {:ok, scene} = init(scene, data, opts)
+    {:noreply, scene}
   end
 
-  defp do_put(id, scene) do
-    :ok = cast_children(scene, {:set_to_msg, id})
-    assign(scene, value: id)
-  end
+  # @doc false
+  # @impl Scenic.Component
+  # def handle_put(id, _, %{assigns: %{items: items}} = scene) do
+  #   Enum.any?(items, fn
+  #     {_, ^id} -> true
+  #     _ -> false
+  #   end)
+  #   |> case do
+  #     true -> {:reply, :ok, do_put(id, scene)}
+  #     false -> {:reply, {:error, :invalid}, scene}
+  #   end
+  # end
+
+  # defp do_put(id, scene) do
+  #   :ok = cast_children(scene, {:set_to_msg, id})
+  #   assign(scene, value: id)
+  # end
 end

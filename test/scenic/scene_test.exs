@@ -231,7 +231,7 @@ defmodule Scenic.SceneTest do
   end
 
   test "children returns a list of id/pid pairs", %{scene: scene} do
-    scene = Map.put(scene, :children, %{make_ref() => {nil, self(), :self}})
+    scene = Map.put(scene, :children, %{make_ref() => {nil, self(), :self, nil}})
     assert Scene.children(scene) == {:ok, [{:self, self()}]}
   end
 
@@ -309,14 +309,14 @@ defmodule Scenic.SceneTest do
   end
 
   test "send_children works", %{scene: scene} do
-    scene = Map.put(scene, :children, %{make_ref() => {nil, self(), :self}})
+    scene = Map.put(scene, :children, %{make_ref() => {nil, self(), :self, nil}})
 
     :ok = Scene.send_children(scene, :test_msg)
     assert_receive(:test_msg, 100)
   end
 
   test "cast_children works", %{scene: scene} do
-    scene = Map.put(scene, :children, %{make_ref() => {nil, self(), :self}})
+    scene = Map.put(scene, :children, %{make_ref() => {nil, self(), :self, nil}})
 
     :ok = Scene.cast_children(scene, :test_msg)
     assert_receive({:"$gen_cast", :test_msg}, 100)

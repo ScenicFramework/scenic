@@ -719,53 +719,61 @@ defmodule Scenic.Component.Input.TextField do
   # --------------------------------------------------------
 
   @doc false
-  @impl Scenic.Component
+  @impl Scenic.Scene
   def handle_fetch(_, %{assigns: %{value: value}} = scene) do
     {:reply, {:ok, value}, scene}
   end
 
+  # --------------------------------------------------------
   @doc false
-  @impl Scenic.Component
-  def handle_put(
-        value,
-        _,
-        %{
-          assigns: %{
-            graph: graph,
-            index: index,
-            caret_v: caret_v
-          }
-        } = scene
-      )
-      when is_bitstring(value) do
-    count = String.length(value)
-
-    index =
-      case index < count do
-        true -> index
-        false -> count
-      end
-
-    # update the graph
-    graph =
-      graph
-      |> update_text(value, scene.assigns)
-      |> update_caret(value, index, caret_v)
-
-    scene =
-      scene
-      |> assign(
-        graph: graph,
-        value: value,
-        display: value,
-        index: index
-      )
-      |> push_graph(graph)
-
-    {:reply, :ok, scene}
+  @impl Scenic.Scene
+  def handle_update(data, opts, scene) do
+    {:ok, scene} = init(scene, data, opts)
+    {:noreply, scene}
   end
 
-  def handle_put(_, _, scene) do
-    {:reply, {:error, :invalid}, scene}
-  end
+  # @doc false
+  # @impl Scenic.Component
+  # def handle_put(
+  #       value,
+  #       _,
+  #       %{
+  #         assigns: %{
+  #           graph: graph,
+  #           index: index,
+  #           caret_v: caret_v
+  #         }
+  #       } = scene
+  #     )
+  #     when is_bitstring(value) do
+  #   count = String.length(value)
+
+  #   index =
+  #     case index < count do
+  #       true -> index
+  #       false -> count
+  #     end
+
+  #   # update the graph
+  #   graph =
+  #     graph
+  #     |> update_text(value, scene.assigns)
+  #     |> update_caret(value, index, caret_v)
+
+  #   scene =
+  #     scene
+  #     |> assign(
+  #       graph: graph,
+  #       value: value,
+  #       display: value,
+  #       index: index
+  #     )
+  #     |> push_graph(graph)
+
+  #   {:reply, :ok, scene}
+  # end
+
+  # def handle_put(_, _, scene) do
+  #   {:reply, {:error, :invalid}, scene}
+  # end
 end

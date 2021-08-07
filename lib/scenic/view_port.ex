@@ -1584,9 +1584,9 @@ defmodule Scenic.ViewPort do
   # --------------------------------------------------------
   defp do_listed_input(
          {:cursor_button, {button, action, mods, gxy}} = input,
-         %{input_lists: ils} = state
+         %{input_lists: ils}
        ) do
-    with {:ok, pid, xy, inv_tx, id} <- input_find_hit(ils, :cursor_button, @main_graph, gxy) do
+    with {:ok, pid, xy, _inv_tx, id} <- input_find_hit(ils, :cursor_button, @main_graph, gxy) do
       send(pid, {:_input, {:cursor_button, {button, action, mods, xy}}, input, id})
     end
   end

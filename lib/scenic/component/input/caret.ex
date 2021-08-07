@@ -193,4 +193,12 @@ defmodule Scenic.Component.Input.Caret do
 
     {:noreply, scene}
   end
+
+  # --------------------------------------------------------
+  @doc false
+  @impl Scenic.Scene
+  def handle_update(data, opts, scene) do
+    {:ok, scene} = init(scene, data, opts)
+    {:noreply, scene}
+  end
 end

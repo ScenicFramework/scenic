@@ -182,6 +182,7 @@ defmodule Scenic.Component.Button do
       |> do_aligned_text(alignment, text, theme.text, width, vpos)
       # special case the dark and light themes to show an outline
       |> do_special_theme_outline(theme, theme.border)
+      |> update_color(theme, Scene.get(scene, :pressed, false))
 
     scene =
       scene
@@ -189,9 +190,12 @@ defmodule Scenic.Component.Button do
         vpos: vpos,
         graph: graph,
         theme: theme,
-        pressed: false,
-        id: id
+        id: id,
+        text: text,
+        theme: theme,
+        opts: opts
       )
+      |> assign_new(pressed: false)
       |> push_graph(graph)
 
     {:ok, scene}
@@ -239,13 +243,19 @@ defmodule Scenic.Component.Button do
   # --------------------------------------------------------
   # pressed in the button
   @impl Scenic.Scene
-  def handle_input({:cursor_button, {0, :press, _, _}}, :btn, scene) do
+  def handle_input(
+        {:cursor_button, {0, :press, _, _}},
+        :btn,
+        %Scene{assigns: %{graph: graph, theme: theme}} = scene
+      ) do
     :ok = capture_input(scene, :cursor_button)
+
+    graph = update_color(graph, theme, true)
 
     scene =
       scene
-      |> update_color(true, true)
       |> assign(pressed: true)
+      |> push_graph(graph)
 
     {:noreply, scene}
   end
@@ -257,14 +267,16 @@ defmodule Scenic.Component.Button do
   def handle_input(
         {:cursor_button, {0, :press, _, _}},
         _id,
-        scene
+        %Scene{assigns: %{graph: graph, theme: theme}} = scene
       ) do
     :ok = release_input(scene)
 
+    graph = update_color(graph, theme, false)
+
     scene =
       scene
-      |> update_color(false, false)
       |> assign(pressed: false)
+      |> push_graph(graph)
 
     {:noreply, scene}
   end
@@ -274,15 +286,17 @@ defmodule Scenic.Component.Button do
   def handle_input(
         {:cursor_button, {0, :release, _, _}},
         :btn,
-        %Scene{assigns: %{pressed: true, id: id}} = scene
+        %Scene{assigns: %{pressed: true, id: id, graph: graph, theme: theme}} = scene
       ) do
     :ok = release_input(scene)
     :ok = send_parent_event(scene, {:click, id})
 
+    graph = update_color(graph, theme, false)
+
     scene =
       scene
-      |> update_color(false, true)
       |> assign(pressed: false)
+      |> push_graph(graph)
 
     {:noreply, scene}
   end
@@ -293,14 +307,16 @@ defmodule Scenic.Component.Button do
   def handle_input(
         {:cursor_button, {0, :release, _, _}},
         _id,
-        scene
+        %Scene{assigns: %{graph: graph, theme: theme}} = scene
       ) do
     :ok = release_input(scene)
 
+    graph = update_color(graph, theme, false)
+
     scene =
       scene
-      |> update_color(false, true)
       |> assign(pressed: false)
+      |> push_graph(graph)
 
     {:noreply, scene}
   end
@@ -313,13 +329,25 @@ defmodule Scenic.Component.Button do
   # ============================================================================
   # internal utilities
 
-  defp update_color(%Scene{assigns: %{graph: graph, theme: theme}} = scene, true, true) do
-    graph = Graph.modify(graph, :btn, &update_opts(&1, fill: theme.active))
-    push_graph(scene, graph)
+  defp update_color(graph, theme, true) do
+    Graph.modify(graph, :btn, &update_opts(&1, fill: theme.active))
   end
 
-  defp update_color(%Scene{assigns: %{graph: graph, theme: theme}} = scene, _, _) do
-    graph = Graph.modify(graph, :btn, &update_opts(&1, fill: theme.background))
-    push_graph(scene, graph)
+  defp update_color(graph, theme, _) do
+    Graph.modify(graph, :btn, &update_opts(&1, fill: theme.background))
+  end
+
+  # --------------------------------------------------------
+  @doc false
+  @impl Scenic.Scene
+  def handle_fetch(_, %{assigns: %{text: text}} = scene) do
+    {:reply, {:ok, text}, scene}
+  end
+
+  @doc false
+  @impl Scenic.Scene
+  def handle_update(text, opts, scene) do
+    {:ok, scene} = init(scene, text, opts)
+    {:noreply, scene}
   end
 end

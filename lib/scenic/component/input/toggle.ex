@@ -328,30 +328,38 @@ defmodule Scenic.Component.Input.Toggle do
 
   # --------------------------------------------------------
   @doc false
-  @impl Scenic.Component
+  @impl Scenic.Scene
   def handle_fetch(_, %{assigns: %{on?: on?}} = scene) do
     {:reply, {:ok, on?}, scene}
   end
 
+  # --------------------------------------------------------
   @doc false
-  @impl Scenic.Component
-  def handle_put(on?, _, %{assigns: %{graph: graph, thumb_translate: thumb}} = scene)
-      when is_boolean(on?) do
-    graph =
-      case on? do
-        true -> Graph.modify(graph, :thumb, &Primitive.put_transform(&1, :translate, thumb.on))
-        false -> Graph.modify(graph, :thumb, &Primitive.put_transform(&1, :translate, thumb.off))
-      end
-
-    scene =
-      scene
-      |> assign(graph: graph, on?: on?)
-      |> push_graph(graph)
-
-    {:reply, :ok, scene}
+  @impl Scenic.Scene
+  def handle_update(data, opts, scene) do
+    {:ok, scene} = init(scene, data, opts)
+    {:noreply, scene}
   end
 
-  def handle_put(_, _, scene) do
-    {:reply, {:error, :invalid}, scene}
-  end
+  # @doc false
+  # @impl Scenic.Component
+  # def handle_put(on?, _, %{assigns: %{graph: graph, thumb_translate: thumb}} = scene)
+  #     when is_boolean(on?) do
+  #   graph =
+  #     case on? do
+  #       true -> Graph.modify(graph, :thumb, &Primitive.put_transform(&1, :translate, thumb.on))
+  #       false -> Graph.modify(graph, :thumb, &Primitive.put_transform(&1, :translate, thumb.off))
+  #     end
+
+  #   scene =
+  #     scene
+  #     |> assign(graph: graph, on?: on?)
+  #     |> push_graph(graph)
+
+  #   {:reply, :ok, scene}
+  # end
+
+  # def handle_put(_, _, scene) do
+  #   {:reply, {:error, :invalid}, scene}
+  # end
 end
