@@ -122,7 +122,8 @@ defmodule Scenic.Component.Input.Checkbox do
       |> Script.pop_state()
       |> Script.finish()
 
-    scene = push_script(scene, chx_script, :__check_mark)
+    chx_id = scene.id <> "_chk"
+    scene = push_script(scene, chx_script, chx_id)
 
     # tune final position
     dx = @border_width / 2
@@ -142,7 +143,7 @@ defmodule Scenic.Component.Input.Checkbox do
           stroke: {@border_width, theme.border},
           id: :box
         )
-        |> script(:__check_mark, id: :chx, hidden: !checked?, t: {3, 2})
+        |> script(chx_id, id: :chx, hidden: !checked?, t: {3, 2})
       end)
       |> text(text,
         fill: theme.text,
