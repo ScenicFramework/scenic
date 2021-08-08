@@ -52,6 +52,7 @@ defmodule Scenic.Component.Input.Checkbox do
   use Scenic.Component, has_children: false
 
   alias Scenic.Graph
+  alias Scenic.Scene
   alias Scenic.Primitive
   alias Scenic.Primitive.Style.Theme
   alias Scenic.Script
@@ -147,16 +148,17 @@ defmodule Scenic.Component.Input.Checkbox do
         fill: theme.text,
         translate: {box_height + space_width + @border_width, ascent - @border_width}
       )
+      |> update_color(theme, Scene.get(scene, :pressed, false))
 
     scene =
       scene
       |> assign(
         graph: graph,
         theme: theme,
-        pressed: false,
         checked: checked?,
         id: id
       )
+      |> assign_new(pressed: false)
       |> push_graph(graph)
 
     {:ok, scene}
@@ -172,7 +174,7 @@ defmodule Scenic.Component.Input.Checkbox do
       ) do
     :ok = capture_input(scene, :cursor_button)
 
-    graph = Graph.modify(graph, :box, &Primitive.put_style(&1, :fill, theme.active))
+    graph = update_color(graph, theme, true)
 
     scene =
       scene
@@ -193,7 +195,7 @@ defmodule Scenic.Component.Input.Checkbox do
       ) do
     :ok = release_input(scene)
 
-    graph = Graph.modify(graph, :box, &Primitive.put_style(&1, :fill, theme.background))
+    graph = update_color(graph, theme, false)
 
     scene =
       scene
@@ -223,8 +225,8 @@ defmodule Scenic.Component.Input.Checkbox do
 
     graph =
       graph
-      |> Graph.modify(:box, &Primitive.put_style(&1, :fill, theme.background))
       |> Graph.modify(:chx, &Primitive.put_style(&1, :hidden, checked))
+      |> update_color( theme, false )
 
     scene =
       scene
@@ -244,7 +246,7 @@ defmodule Scenic.Component.Input.Checkbox do
       ) do
     :ok = release_input(scene)
 
-    graph = Graph.modify(graph, :box, &Primitive.put_style(&1, :fill, theme.background))
+    graph = update_color(graph, theme, false)
 
     scene =
       scene
@@ -258,6 +260,16 @@ defmodule Scenic.Component.Input.Checkbox do
   def handle_input({:cursor_button, {_, _, _, _}}, _id, scene) do
     {:noreply, scene}
   end
+
+  # --------------------------------------------------------
+  defp update_color(graph, theme, true) do
+    Graph.modify(graph, :box, &update_opts(&1, fill: theme.active))
+  end
+
+  defp update_color(graph, theme, _) do
+    Graph.modify(graph, :box, &update_opts(&1, fill: theme.background))
+  end
+
 
   # --------------------------------------------------------
   @doc false
