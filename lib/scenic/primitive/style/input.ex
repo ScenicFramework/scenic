@@ -11,21 +11,24 @@ defmodule Scenic.Primitive.Style.Input do
 
   ```elixir
   graph
-    |> rect( {100, 200}, id: :my_rect, input: true )
+    |> rect( {100, 200}, id: :my_rect, input: :cursor_button )
   ```
 
   ### Data Format
 
-  * `true` - Positional input is tested against this primitive
-  * `false` - Input is not tested against this primitive. This is the default value.
+  The data for the input style is the type of input you want to receive when the cursor
+  is positioned over the primitive. This can be any single member or combination (in a list)
+  of the following input types
 
-  The `cusor_button` user input event is only sent to scenes have identified
-  one or more primitives as input targets with the `:input` style.
+  * `:cursor_button` - Went when a button on the cursor (mouse) was used.
+  * `:cursor_pos` - Sent when the cursor moves over the primitive.
+  * `:cursor_scroll` - Sent when the cursor's scroll wheel moves.
 
-  If you want your scene to receive all `cursor_button` events regardless of
-  the `:input` style, then you need to call `capture_input/2` from your scene.
-  This will, however, prevent any other scene's from receiving `cursor_button` on
-  the primitives they have marked as `:input`.
+
+  ```elixir
+  graph
+    |> rect( {100, 200}, id: :my_rect, input: [:cursor_button, :cursor_pos] )
+  ```
   """
 
   use Scenic.Primitive.Style
