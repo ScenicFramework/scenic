@@ -149,7 +149,7 @@ In response to user input (or timers or any other message), a component can
 generate an event that it sends up to its parent scene. Unlike user input, if
 the parent doesn't handle it, it is passed up again to that component's parent
 until it reaches the root scene. Scenes handle events that are bubbling up to
-the chain via the `filter_event/3` callback. This is analogous to event bubbling
+the chain via the `handle_event/3` callback. This is analogous to event bubbling
 on a web page.
 
 ## What to read next?
