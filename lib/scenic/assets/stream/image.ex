@@ -44,7 +44,7 @@ defmodule Scenic.Assets.Stream.Image do
   The supplied binary must be a valid jpeg or png format. If it is either invalid or an
   unrecognized format, this will return `{:error, :invalid}`
   """
-  @spec from_binary(bin :: binary) :: t() | {:error, :invalid}
+  @spec from_binary(bin :: binary) :: {:ok, t()} | {:error, :invalid}
   def from_binary(bin) when is_binary(bin) do
     case ExImageInfo.info(bin) do
       {mime, width, height, _type} -> {:ok, {__MODULE__, {width, height, mime}, bin}}
