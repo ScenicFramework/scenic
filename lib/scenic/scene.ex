@@ -17,7 +17,7 @@ defmodule Scenic.Scene do
 
   require Logger
 
-  # import IEx
+  import IEx
 
   @moduledoc """
 
@@ -694,7 +694,7 @@ defmodule Scenic.Scene do
 
     # stop the components that need to be stopped
     # returns the updated children
-    Enum.reduce(stop_children, children, fn {key, {pid, _, _}}, acc ->
+    Enum.reduce(stop_children, children, fn {key, {pid, _, _, _}}, acc ->
       DynamicSupervisor.terminate_child(child_supervisor, pid)
       Map.delete(acc, key)
     end)
