@@ -227,5 +227,4 @@ defmodule Scenic.Component do
   def filter_opts(opts) when is_list(opts) do
     Enum.reject(opts, fn {key, _} -> Enum.member?(@filter_out, key) end)
   end
-
 end

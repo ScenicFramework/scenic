@@ -226,7 +226,7 @@ defmodule Scenic.Component.Input.Checkbox do
     graph =
       graph
       |> Graph.modify(:chx, &Primitive.put_style(&1, :hidden, checked))
-      |> update_highlight( theme, false )
+      |> update_highlight(theme, false)
 
     scene =
       scene
@@ -269,7 +269,6 @@ defmodule Scenic.Component.Input.Checkbox do
   defp update_highlight(graph, theme, _) do
     Graph.modify(graph, :box, &update_opts(&1, fill: theme.background))
   end
-
 
   # --------------------------------------------------------
   @doc false

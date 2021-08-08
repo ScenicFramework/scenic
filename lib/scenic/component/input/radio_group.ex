@@ -181,8 +181,8 @@ defmodule Scenic.Component.Input.RadioGroup do
                   g,
                   {t, i, i == initial_id},
                   opts
-                  |> Keyword.put( :translate, {0, voffset} )
-                  |> Keyword.put( :id, i )
+                  |> Keyword.put(:translate, {0, voffset})
+                  |> Keyword.put(:id, i)
                 )
 
               {g, voffset + @line_height}
@@ -219,5 +219,4 @@ defmodule Scenic.Component.Input.RadioGroup do
   def handle_fetch(_, %{assigns: %{value: value}} = scene) do
     {:reply, {:ok, value}, scene}
   end
-
 end

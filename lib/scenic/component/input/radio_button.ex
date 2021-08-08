@@ -125,8 +125,8 @@ defmodule Scenic.Component.Input.RadioButton do
         checked?: checked?,
         id: id
       )
-      |> assign_new( pressed: false )
-      |> push_graph( graph )
+      |> assign_new(pressed: false)
+      |> push_graph(graph)
 
     {:ok, scene}
   end
@@ -152,16 +152,18 @@ defmodule Scenic.Component.Input.RadioButton do
   # pressed in the button
   @impl Scenic.Scene
   def handle_input(
-    {:cursor_button, {0, :press, _, _}}, :btn,
-    %{assigns: %{graph: graph, theme: theme}} = scene
-  ) do
+        {:cursor_button, {0, :press, _, _}},
+        :btn,
+        %{assigns: %{graph: graph, theme: theme}} = scene
+      ) do
     :ok = capture_input(scene, [:cursor_button])
 
-    graph = update_highlight( graph, theme, true )
+    graph = update_highlight(graph, theme, true)
+
     scene =
       scene
-      |> assign( graph: graph, pressed: true )
-      |> push_graph( graph )
+      |> assign(graph: graph, pressed: true)
+      |> push_graph(graph)
 
     {:noreply, scene}
   end
@@ -171,16 +173,18 @@ defmodule Scenic.Component.Input.RadioButton do
   # only happens when input is captured
   # could happen when reconnecting to a driver...
   def handle_input(
-    {:cursor_button, {0, :press, _, _}}, _id,
-    %{assigns: %{graph: graph, theme: theme}} = scene
-  ) do
+        {:cursor_button, {0, :press, _, _}},
+        _id,
+        %{assigns: %{graph: graph, theme: theme}} = scene
+      ) do
     :ok = release_input(scene)
 
-    graph = update_highlight( graph, theme, false )
+    graph = update_highlight(graph, theme, false)
+
     scene =
       scene
-      |> assign( graph: graph, pressed: false )
-      |> push_graph( graph )
+      |> assign(graph: graph, pressed: false)
+      |> push_graph(graph)
 
     {:noreply, scene}
   end
@@ -190,9 +194,7 @@ defmodule Scenic.Component.Input.RadioButton do
   def handle_input(
         {:cursor_button, {0, :release, _, _}},
         :btn,
-        %{assigns:
-          %{pressed: pressed, id: id, graph: graph, theme: theme}
-        } = scene
+        %{assigns: %{pressed: pressed, id: id, graph: graph, theme: theme}} = scene
       ) do
     :ok = release_input(scene)
 
@@ -200,11 +202,12 @@ defmodule Scenic.Component.Input.RadioButton do
       :ok = send_parent_event(scene, {:click, id})
     end
 
-    graph = update_highlight( graph, theme, false )
+    graph = update_highlight(graph, theme, false)
+
     scene =
       scene
-      |> assign( graph: graph, pressed: false )
-      |> push_graph( graph )
+      |> assign(graph: graph, pressed: false)
+      |> push_graph(graph)
 
     {:noreply, scene}
   end
@@ -213,16 +216,18 @@ defmodule Scenic.Component.Input.RadioButton do
   # released outside the button
   # only happens when input is captured
   def handle_input(
-    {:cursor_button, {0, :release, _, _}}, _id,
-    %{assigns: %{graph: graph, theme: theme}} = scene
-  ) do
+        {:cursor_button, {0, :release, _, _}},
+        _id,
+        %{assigns: %{graph: graph, theme: theme}} = scene
+      ) do
     :ok = release_input(scene)
 
-    graph = update_highlight( graph, theme, false )
+    graph = update_highlight(graph, theme, false)
+
     scene =
       scene
-      |> assign( graph: graph, pressed: false )
-      |> push_graph( graph )
+      |> assign(graph: graph, pressed: false)
+      |> push_graph(graph)
 
     {:noreply, scene}
   end
@@ -237,6 +242,7 @@ defmodule Scenic.Component.Input.RadioButton do
 
   # --------------------------------------------------------
   defp update_highlight(graph, theme, pressed)
+
   defp update_highlight(graph, theme, true) do
     Graph.modify(graph, :box, &update_opts(&1, fill: theme.active))
   end
