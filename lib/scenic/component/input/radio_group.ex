@@ -220,49 +220,4 @@ defmodule Scenic.Component.Input.RadioGroup do
     {:reply, {:ok, value}, scene}
   end
 
-  # --------------------------------------------------------
-  # @doc false
-  # @impl Scenic.Scene
-  # def handle_update(data, opts, scene) do
-  #   {:noreply, assign(scene, value: initial_id)}
-  # end
-
-  # def init(scene, {items, initial_id}, opts) when is_list(items) do
-  #   id = opts[:id]
-
-  #   graph =
-  #     Graph.build()
-  #     |> group(fn graph ->
-  #       {graph, _} =
-  #         Enum.reduce(items, {graph, 0}, fn
-  #           {t, i}, {g, voffset} ->
-  #             g =
-  #               RadioButton.add_to_graph(
-  #                 g,
-  #                 {t, i, i == initial_id},
-  #                 opts
-  #                 |> Keyword.put( :translate, {0, voffset} )
-  #                 |> Keyword.put( :id, i )
-  #               )
-
-  #             {g, voffset + @line_height}
-  #         end)
-
-  #       graph
-  #     end)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 end
