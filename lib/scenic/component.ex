@@ -170,29 +170,6 @@ defmodule Scenic.Component do
   """
   @callback validate(data :: any) :: {:ok, data :: any} | {:error, String.t()}
 
-  # @doc """
-  # Retrieve the current \"value\" associated with the scene and return it to the caller.
-
-  # If this callback is not implemented, the caller with get an {:error, :not_implemented}. 
-  # """
-  # @callback handle_fetch(from :: GenServer.from(), scene :: Scene.t()) ::
-  #             {:reply, reply, new_state}
-  #             | {:reply, reply, new_state, timeout() | :hibernate | {:continue, term()}}
-  #           when reply: term(), new_state: term()
-
-  # @doc """
-  # Update the data and options of a scene. Usually implemented by Components.
-
-  # If this callback is not implemented, then changes to the component in the parent's
-  # graph will have no affect. 
-  # """
-  # @callback handle_update(data :: any, opts :: Keyword.t(), scene :: Scene.t()) ::
-  #             {:noreply, new_state}
-  #             | {:noreply, new_state, timeout() | :hibernate | {:continue, term()}}
-  #           when new_state: term()
-
-  #  import IEx
-
   # ===========================================================================
   defmodule Error do
     @moduledoc false
@@ -251,25 +228,4 @@ defmodule Scenic.Component do
     Enum.reject(opts, fn {key, _} -> Enum.member?(@filter_out, key) end)
   end
 
-  # @doc """
-  # Fetch the current value from a component.
-
-  # This is not supported by all components. Please see the component you are
-  # interesting in querying.
-  # """
-  # @spec fetch(component_pid :: pid) :: {:ok, any} | {:error, atom}
-  # def fetch(component_pid) do
-  #   GenServer.call(component_pid, :_fetch_)
-  # end
-
-  # @doc """
-  # Set the value of a component.
-
-  # This is not supported by all components. Please see the component you are
-  # interesting in modifying.
-  # """
-  # @spec put(component_pid :: pid, value :: any) :: :ok | {:error, atom}
-  # def put(component_pid, value) do
-  #   GenServer.call(component_pid, {:_component_put, value})
-  # end
 end
