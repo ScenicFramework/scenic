@@ -174,18 +174,19 @@ my_cool_project
 
 Example config
 ```elixir
-config :scenic, :assets,
-  module: MyCoolProject.Assets,
-  alias: [
-    parrot: "images/parrot.jpg"
-  ]
+config :scenic, :assets, module: MyCoolProject.Assets
 ```
 
 Example Assets Module
 ```elixir
-defmodule MyDevice.Assets do
-  use Scenic.Assets.Static, otp_app: :my_cool_project
+defmodule MyCoolProject.Assets do
+  use Scenic.Assets.Static,
+    otp_app: :my_cool_project,
+    alias: [
+      parrot: "images/parrot.jpg"
+    ]
 end
+
 ```
 
 Example use in a Scene
