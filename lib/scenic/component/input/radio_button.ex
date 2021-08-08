@@ -27,12 +27,13 @@ defmodule Scenic.Component.Input.RadioButton do
 
   use Scenic.Component, has_children: false
 
+  alias Scenic.Scene
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.Primitive.Style.Theme
   alias Scenic.Assets.Static
 
-  import Scenic.Primitives, only: [{:rect, 3}, {:circle, 3}, {:text, 3}]
+  import Scenic.Primitives
 
   # import IEx
 
@@ -114,18 +115,18 @@ defmodule Scenic.Component.Input.RadioButton do
         fill: theme.text,
         t: {box_height + space_width + @border_width, ascent - @border_width}
       )
-
-    push_graph(scene, graph)
+      |> update_highlight(theme, Scene.get(scene, :pressed, false))
 
     scene =
       scene
       |> assign(
         graph: graph,
         theme: theme,
-        pressed: false,
         checked?: checked?,
         id: id
       )
+      |> assign_new( pressed: false )
+      |> push_graph( graph )
 
     {:ok, scene}
   end
@@ -150,24 +151,38 @@ defmodule Scenic.Component.Input.RadioButton do
   # --------------------------------------------------------
   # pressed in the button
   @impl Scenic.Scene
-  def handle_input({:cursor_button, {0, :press, _, _}}, :btn, scene) do
-    scene = update_highlight(true, true, scene)
-
+  def handle_input(
+    {:cursor_button, {0, :press, _, _}}, :btn,
+    %{assigns: %{graph: graph, theme: theme}} = scene
+  ) do
     :ok = capture_input(scene, [:cursor_button])
 
-    {:noreply, assign(scene, pressed: true)}
+    graph = update_highlight( graph, theme, true )
+    scene =
+      scene
+      |> assign( graph: graph, pressed: true )
+      |> push_graph( graph )
+
+    {:noreply, scene}
   end
 
   # --------------------------------------------------------
   # pressed outside the button
   # only happens when input is captured
   # could happen when reconnecting to a driver...
-  def handle_input({:cursor_button, {0, :press, _, _}}, _id, scene) do
-    scene = update_highlight(false, false, scene)
-
+  def handle_input(
+    {:cursor_button, {0, :press, _, _}}, _id,
+    %{assigns: %{graph: graph, theme: theme}} = scene
+  ) do
     :ok = release_input(scene)
 
-    {:noreply, assign(scene, pressed: false)}
+    graph = update_highlight( graph, theme, false )
+    scene =
+      scene
+      |> assign( graph: graph, pressed: false )
+      |> push_graph( graph )
+
+    {:noreply, scene}
   end
 
   # --------------------------------------------------------
@@ -175,7 +190,9 @@ defmodule Scenic.Component.Input.RadioButton do
   def handle_input(
         {:cursor_button, {0, :release, _, _}},
         :btn,
-        %{assigns: %{pressed: pressed, id: id}} = scene
+        %{assigns:
+          %{pressed: pressed, id: id, graph: graph, theme: theme}
+        } = scene
       ) do
     :ok = release_input(scene)
 
@@ -183,20 +200,31 @@ defmodule Scenic.Component.Input.RadioButton do
       :ok = send_parent_event(scene, {:click, id})
     end
 
-    scene = update_highlight(false, true, scene)
+    graph = update_highlight( graph, theme, false )
+    scene =
+      scene
+      |> assign( graph: graph, pressed: false )
+      |> push_graph( graph )
 
-    {:noreply, assign(scene, pressed: false)}
+    {:noreply, scene}
   end
 
   # --------------------------------------------------------
   # released outside the button
   # only happens when input is captured
-  def handle_input({:cursor_button, {0, :release, _, _}}, _id, scene) do
-    scene = update_highlight(false, true, scene)
-
+  def handle_input(
+    {:cursor_button, {0, :release, _, _}}, _id,
+    %{assigns: %{graph: graph, theme: theme}} = scene
+  ) do
     :ok = release_input(scene)
 
-    {:noreply, assign(scene, pressed: false)}
+    graph = update_highlight( graph, theme, false )
+    scene =
+      scene
+      |> assign( graph: graph, pressed: false )
+      |> push_graph( graph )
+
+    {:noreply, scene}
   end
 
   # ignore other button press events
@@ -206,24 +234,18 @@ defmodule Scenic.Component.Input.RadioButton do
 
   # ============================================================================
   # internal utilities
-  # {text_color, box_background, border_color, pressed_color, checkmark_color}
 
-  defp update_highlight(pressed, contained, scene)
-
-  defp update_highlight(true, true, %{assigns: %{graph: graph, theme: theme}} = scene) do
-    push_graph(
-      scene,
-      Graph.modify(graph, :box, &Primitive.put_style(&1, :fill, theme.active))
-    )
+  # --------------------------------------------------------
+  defp update_highlight(graph, theme, pressed)
+  defp update_highlight(graph, theme, true) do
+    Graph.modify(graph, :box, &update_opts(&1, fill: theme.active))
   end
 
-  defp update_highlight(_, _, %{assigns: %{graph: graph, theme: theme}} = scene) do
-    push_graph(
-      scene,
-      Graph.modify(graph, :box, &Primitive.put_style(&1, :fill, theme.background))
-    )
+  defp update_highlight(graph, theme, _) do
+    Graph.modify(graph, :box, &update_opts(&1, fill: theme.background))
   end
 
+  # --------------------------------------------------------
   defp update_check(graph, true) do
     Graph.modify(graph, :chx, &Primitive.put_style(&1, :hidden, false))
   end

@@ -17,7 +17,7 @@ defmodule Scenic.Scene do
 
   require Logger
 
-  import IEx
+  # import IEx
 
   @moduledoc """
 

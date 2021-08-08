@@ -148,7 +148,7 @@ defmodule Scenic.Component.Input.Checkbox do
         fill: theme.text,
         translate: {box_height + space_width + @border_width, ascent - @border_width}
       )
-      |> update_color(theme, Scene.get(scene, :pressed, false))
+      |> update_highlight(theme, Scene.get(scene, :pressed, false))
 
     scene =
       scene
@@ -174,7 +174,7 @@ defmodule Scenic.Component.Input.Checkbox do
       ) do
     :ok = capture_input(scene, :cursor_button)
 
-    graph = update_color(graph, theme, true)
+    graph = update_highlight(graph, theme, true)
 
     scene =
       scene
@@ -195,7 +195,7 @@ defmodule Scenic.Component.Input.Checkbox do
       ) do
     :ok = release_input(scene)
 
-    graph = update_color(graph, theme, false)
+    graph = update_highlight(graph, theme, false)
 
     scene =
       scene
@@ -226,7 +226,7 @@ defmodule Scenic.Component.Input.Checkbox do
     graph =
       graph
       |> Graph.modify(:chx, &Primitive.put_style(&1, :hidden, checked))
-      |> update_color( theme, false )
+      |> update_highlight( theme, false )
 
     scene =
       scene
@@ -246,7 +246,7 @@ defmodule Scenic.Component.Input.Checkbox do
       ) do
     :ok = release_input(scene)
 
-    graph = update_color(graph, theme, false)
+    graph = update_highlight(graph, theme, false)
 
     scene =
       scene
@@ -262,11 +262,11 @@ defmodule Scenic.Component.Input.Checkbox do
   end
 
   # --------------------------------------------------------
-  defp update_color(graph, theme, true) do
+  defp update_highlight(graph, theme, true) do
     Graph.modify(graph, :box, &update_opts(&1, fill: theme.active))
   end
 
-  defp update_color(graph, theme, _) do
+  defp update_highlight(graph, theme, _) do
     Graph.modify(graph, :box, &update_opts(&1, fill: theme.background))
   end
 
