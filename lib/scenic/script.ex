@@ -4,6 +4,162 @@
 #
 
 defmodule Scenic.Script do
+  @moduledoc """
+
+  ## Overview
+
+  Scenic.Script is the fundamental "rendering" data structure for Scenic.
+
+  Prior to v0.11, drivers received Graphs from the ViewPort and were responsible
+  for transforming them into a list of drawing commands that would ultimately draw
+  the actual picture that is displayed as the Scenic UI.
+
+  After some experience, it became apparent that this was a common task for almost
+  all drivers and has been moved into the ViewPort and formalized in Scenic.Script.
+
+  Simply put, Scenic.Script produces a list of static drawing commands that are
+  sent, unmodified, to the drivers through the ViewPort. These scripts are
+  generated for you when you use push_graph, or you can create them yourself
+  by using this api.
+
+  If you use Scenic.Script directly, you can create more complicated and/or
+  reusable graphics than you could by using Graphs alone.
+
+  ## Update Isolation
+
+  Another way to use scripts is to separate large static bits of a graph from
+  that which changes frequently. When a graph is pushed to the ViewPort, the 
+  entire thing is compiled into a script, which is sent as a whole to the Drivers.
+
+  If that graph references a script tho, only the reference is sent, not the contents
+  of the script. This means you can modify the graph frequently without sending
+  the contents of the scripts.
+
+  The opposite is also true. You can generate and push the scripts frequently
+  without causing the graphs that reference them to be recompiled or resent.
+
+  And example of this might be a graph that implements a chart of some sort.
+
+  The contents of the chart could be a script that is updated as new data comes
+  in without needed all the chrome around it to be recompiled or sent.
+
+  ## API Patterns
+
+  This is a large module with many functions. Most of them are very small, however and simply
+  add individual commands to the script.
+
+  The general pattern is that you start by calling Scenic.Script.start(). This simply returns
+  an empty list. Each drawing api adds an element to the head of the list. Then you end with
+  Scenic.Script.finsh(), which reverses the list and performs some optimizations on it.
+
+  ```elixir
+  alias Scenic.Script
+
+  my_script =
+    Script.start()
+    |> Script.text( "A very simple script" )
+    |> Script.finish()
+  ```
+
+  After the script is generated, you publish it to the ViewPort through either your
+  scene's helper api `Scenic.Scene.push_script/4` or directly throught the ViewPort api
+  `Scenic.ViewPort.put_script/4`
+
+  Finally, to get the script to draw, you need to reference it from a graph.
+
+  ```elixir
+  my_graph =
+    Graph.build()
+      |> script( "my_script_name" )
+  ```
+
+  It doesn't matter if you push the script before or after you push the graph that references it.
+
+  ```elixir
+  scene =
+    scene
+    |> push_script( my_script, "my_script_name" )
+    |> push_graph( my_graph )
+  ```
+
+  ## Example: the Checkbox check mark
+
+  The canonical example is the checkmark symbol used in the `Checkbox` component.
+  This is two lines, with rounded endpoints and rounded joint between them.
+  It could be described using a Path primitive, but there is no need to
+  send it's instructions ever time it is shown or hidden since it's shape
+  doesn't actually change.
+
+  The Checkbox component creates and publishes this script using something very
+  similar to the following example.
+
+  ```elixir
+  alias Scenic.Script
+
+  # build the checkmark script
+  chx_script =
+    Script.start()
+    |> Script.push_state()
+    |> Script.join(:round)
+    |> Script.stroke_width(@border_width + 1)
+    |> Script.stroke_color(theme.thumb)
+    |> Script.begin_path()
+    |> Script.move_to(0, 8)
+    |> Script.line_to(5, 13)
+    |> Script.line_to(12, 1)
+    |> Script.stroke_path()
+    |> Script.pop_state()
+    |> Script.finish()
+
+  chx_id = scene.id <> "_chk"
+  scene = push_script(scene, chx_script, chx_id)
+  ```
+
+  Building and using a custom script happens in three parts. First, the script itself
+  is created using the `Scenic.Script` api.
+
+  Then the script is published to the ViewPort using the push_script (part of Scenic.Scene)
+  with a unique name.
+
+  Later, the graph for the checkbox references this script, which is what triggers it to be drawn.
+
+  ```elixir
+  graph =
+    Graph.build()
+      |> script(chx_id, id: :chx, hidden: !checked?})
+  ```
+
+  ## Script State
+
+  The underlying rendering engine that consumes these scripts and draws the actual
+  pictures maintains a set of current drawing state, which can be pushed and popped
+  from a stack via the `push_state/1`, `pop_state/1`, and `pop_push_state/1` apis.
+
+  These functions are  analogous to the state
+  [save/restore APIs in Canvas](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/save).
+
+  ## Transforms
+
+  Transforms are applied to the running script by multiplying matrices together. This is very
+  similar to how games position elements of UI. It takes a little getting used to, but is
+  very powerful.
+
+  If you want to unroll the most recent applied transform, you should push then pop the state
+  to get back to the previous transform stack.
+
+  ## Binary Format
+
+  The `serialize/3` and `deserialize/1` go back and forth from the list format to a binary
+  representation of the script. The `serialize/3` function produces at IO list, and `deserialize`
+  goes back into a list of instructions.
+
+  There is a standard format to the binary, but that needs to be independently documented. You
+  can dig into the code behind `serialize/3` to see it in action.
+
+  Drivers, which normally do the serialization call, can intercept/override any command if they
+  need something specific.
+  """
+
   # mostly used by the @specs
   alias Scenic.Color
   alias Scenic.Assets.Static
@@ -296,10 +452,9 @@ defmodule Scenic.Script do
 
   # primitive objects
   @doc """
-  Draws a line from a start point to a finish point. Can only be stroked.
+  Draw a line from a start point to a finish point. Can only be stroked.
 
-  The `draw_line/6` function creates a new path in the shape of a line. This shape cannot
-  be filled, so the only fill/stroke command accepted is `:stroke`.
+  Creates a new path and draws it.
   """
   @spec draw_line(ops :: t(), x0 :: number, y0 :: number, x1 :: number, y1 :: number, :stroke) ::
           ops :: t()
@@ -308,10 +463,9 @@ defmodule Scenic.Script do
   end
 
   @doc """
-  Draws a Triangle defined by three points. Can be filled or stroked.
+  Draw a triangle defined by three points. Can be filled or stroked.
 
-  The `draw_triangle/8` function creates a new path in the shape of a triangle and draws it.
-  Each x/y pair is a point in the triangle.
+  Creates a new path and draws it.
   """
   @spec draw_triangle(
           ops :: t(),
@@ -328,10 +482,9 @@ defmodule Scenic.Script do
   end
 
   @doc """
-  Draws a Quad defined by four points. Can be filled or stroked.
+  Draw a quad defined by four points. Can be filled or stroked.
 
-  The `draw_quad/10` function creates a new path in the shape of a Quad and draws it.
-  Each x/y pair is a point in the quad.
+  Creates a new path and draws it.
   """
   @spec draw_quad(
           ops :: t(),
@@ -349,6 +502,11 @@ defmodule Scenic.Script do
     [{:draw_quad, {x0, y0, x1, y1, x2, y2, x3, y3, flag}} | ops]
   end
 
+  @doc """
+  Draw a rectangle defined by height and width. Can be filled or stroked.
+
+  Creates a new path and draws it.
+  """
   @spec draw_rectangle(
           ops :: t(),
           width :: number,
@@ -359,6 +517,11 @@ defmodule Scenic.Script do
     [{:draw_rect, {width, height, flag}} | ops]
   end
 
+  @doc """
+  Draw a rounded rectangle defined by height, width, and radius. Can be filled or stroked.
+
+  Creates a new path and draws it.
+  """
   @spec draw_rounded_rectangle(
           ops :: t(),
           width :: number,
@@ -371,6 +534,11 @@ defmodule Scenic.Script do
     [{:draw_rrect, {width, height, radius, flag}} | ops]
   end
 
+  @doc """
+  Draw a sector defined by radius and an angle. Can be filled or stroked.
+
+  Creates a new path and draws it.
+  """
   @spec draw_sector(
           ops :: t(),
           radius :: number,
@@ -381,6 +549,11 @@ defmodule Scenic.Script do
     [{:draw_sector, {radius, radians, flag}} | ops]
   end
 
+  @doc """
+  Draw an arc defined by radius and an angle. Can be filled or stroked.
+
+  Creates a new path and draws it.
+  """
   @spec draw_arc(
           ops :: t(),
           radius :: number,
@@ -391,6 +564,11 @@ defmodule Scenic.Script do
     [{:draw_arc, {radius, radians, flag}} | ops]
   end
 
+  @doc """
+  Draw a circle defined by a radius. Can be filled or stroked.
+
+  Creates a new path and draws it.
+  """
   @spec draw_circle(
           ops :: t(),
           radius :: number,
@@ -400,6 +578,11 @@ defmodule Scenic.Script do
     [{:draw_circle, {radius, flag}} | ops]
   end
 
+  @doc """
+  Draw an ellipse defined by two radii. Can be filled or stroked.
+
+  Creates a new path and draws it.
+  """
   @spec draw_ellipse(
           ops :: t(),
           radius0 :: number,
@@ -410,6 +593,11 @@ defmodule Scenic.Script do
     [{:draw_ellipse, {radius0, radius1, flag}} | ops]
   end
 
+  @doc """
+  Draw a collection of sprites.
+
+  Draws one or more subsection from a single source image.
+  """
   @spec draw_sprites(
           ops :: t(),
           image_source :: Static.id(),
@@ -428,11 +616,21 @@ defmodule Scenic.Script do
     [{:draw_sprites, {id, cmds}} | ops]
   end
 
+  @doc """
+  Draw a a block of text. Can be filled.
+
+  Creates a new path and draws it.
+  """
   @spec draw_text(ops :: t(), text :: String.t()) :: ops :: t()
   def draw_text(ops, utf8_string) do
     [{:draw_text, utf8_string} | ops]
   end
 
+  @doc """
+  Draw a a block of text with automatic new lines. Can be filled.
+
+  Creates a new path and draws it.
+  """
   @spec draw_text(ops :: t(), text :: String.t(), line_height :: number) :: ops :: t()
   def draw_text(ops, utf8_text, line_height) do
     do_draw_text(
@@ -452,34 +650,72 @@ defmodule Scenic.Script do
     |> do_draw_text(tail, line_height)
   end
 
+  @doc """
+  Recursively draw a script by reference.
+
+  This adds a command that pauses the current script being rendered and
+  recursively draws another script that is referenced by id.
+
+  The new script being drawn starts with the currently set draw state and the
+  current state is automatically restored with the script is completed. Then
+  the current script continues drawing.
+  """
   @spec render_script(ops :: t(), id :: pos_integer) :: ops :: t()
   def render_script(ops, id) when is_integer(id) and id >= 0 do
     [{:script, id} | ops]
   end
 
   # path commands
+  @doc """
+  Begin a new path.
+  """
   @spec begin_path(ops :: t()) :: ops :: t()
   def begin_path(ops), do: [:begin_path | ops]
 
+  @doc """
+  Close the current path.
+
+  This effectively adds a line segment from the current draw position back to
+  where the path was started.
+  """
   @spec close_path(ops :: t()) :: ops :: t()
   def close_path(ops), do: [:close_path | ops]
 
+  @doc """
+  Fill the current path with the currently selected fill paint.
+  """
   @spec fill_path(ops :: t()) :: ops :: t()
   def fill_path(ops), do: [:fill_path | ops]
 
+  @doc """
+  Stroke the current path with the currently selected stroke width/paint.
+  """
   @spec stroke_path(ops :: t()) :: ops :: t()
   def stroke_path(ops), do: [:stroke_path | ops]
 
+  @doc """
+  Move the current draw position without adding a line segment.
+  """
   @spec move_to(ops :: t(), x :: number, y :: number) :: ops :: t()
   def move_to(ops, x, y) do
     [{:move_to, {x, y}} | ops]
   end
 
+  @doc """
+  Add a new line segment from the current position to a specified location.
+
+  This adds to the current path. It does not fill or stroke anything.
+  """
   @spec line_to(ops :: t(), x :: number, y :: number) :: ops :: t()
   def line_to(ops, x, y) do
     [{:line_to, {x, y}} | ops]
   end
 
+  @doc """
+  Add an arc segment to the path using the control points and radius.
+
+  This adds to the current path. It does not fill or stroke anything.
+  """
   @spec arc_to(
           ops :: t(),
           x1 :: number,
@@ -492,6 +728,11 @@ defmodule Scenic.Script do
     [{:arc_to, {x1, y1, x2, y2, radius}} | ops]
   end
 
+  @doc """
+  Add a bezier curve segment to the path using the control points.
+
+  This adds to the current path. It does not fill or stroke anything.
+  """
   @spec bezier_to(
           ops :: t(),
           cp1x :: number,
@@ -505,12 +746,22 @@ defmodule Scenic.Script do
     [{:bezier_to, {cp1x, cp1y, cp2x, cp2y, x, y}} | ops]
   end
 
+  @doc """
+  Add a quadratic curve segment to the path using the control points.
+
+  This adds to the current path. It does not fill or stroke anything.
+  """
   @spec quadratic_to(ops :: t(), cpx :: number, cpy :: number, x :: number, y :: number) ::
           ops :: t()
   def quadratic_to(ops, cpx, cpy, x, y) do
     [{:quadratic_to, {cpx, cpy, x, y}} | ops]
   end
 
+  @doc """
+  Add a quad to the current path.
+
+  This adds to the current path. It does not fill or stroke anything.
+  """
   @spec quad(
           ops :: t(),
           x0 :: number,
@@ -526,11 +777,21 @@ defmodule Scenic.Script do
     [{:quad, {x0, y0, x1, y1, x2, y2, x3, y3}} | ops]
   end
 
+  @doc """
+  Add a rectangle to the current path.
+
+  This adds to the current path. It does not fill or stroke anything.
+  """
   @spec rectangle(ops :: t(), width :: number, height :: number) :: ops :: t()
   def rectangle(ops, width, height) do
     [{:rect, {width, height}} | ops]
   end
 
+  @doc """
+  Add a rounded rectangle to the current path.
+
+  This adds to the current path. It does not fill or stroke anything.
+  """
   @spec rounded_rectangle(ops :: t(), width :: number, height :: number, radius :: number) ::
           ops :: t()
   def rounded_rectangle(ops, width, height, radius) do
@@ -538,21 +799,41 @@ defmodule Scenic.Script do
     [{:rrect, {width, height, radius}} | ops]
   end
 
+  @doc """
+  Add a sector to the current path.
+
+  This adds to the current path. It does not fill or stroke anything.
+  """
   @spec sector(ops :: t(), radius :: number, radians :: number) :: ops :: t()
   def sector(ops, radius, radians) do
     [{:sector, {radius, radians}} | ops]
   end
 
+  @doc """
+  Add a circle to the current path.
+
+  This adds to the current path. It does not fill or stroke anything.
+  """
   @spec circle(ops :: t(), radius :: number) :: ops :: t()
   def circle(ops, radius) do
     [{:circle, radius} | ops]
   end
 
+  @doc """
+  Add an ellipse to the current path.
+
+  This adds to the current path. It does not fill or stroke anything.
+  """
   @spec ellipse(ops :: t(), radius0 :: number, radius1 :: number) :: ops :: t()
   def ellipse(ops, radius0, radius1) do
     [{:ellipse, {radius0, radius1}} | ops]
   end
 
+  @doc """
+  Add a triangle to the current path.
+
+  This adds to the current path. It does not fill or stroke anything.
+  """
   @spec triangle(
           ops :: t(),
           x0 :: number,
@@ -567,21 +848,33 @@ defmodule Scenic.Script do
   end
 
   # transform commands
+  @doc """
+  Apply a scale transform to the current transform stack.
+  """
   @spec scale(ops :: t(), x :: number, y :: number) :: ops :: t()
   def scale(ops, x, y) do
     [{:scale, {x, y}} | ops]
   end
 
+  @doc """
+  Apply a rotation transform to the current transform stack.
+  """
   @spec rotate(ops :: t(), radians :: number) :: ops :: t()
   def rotate(ops, radians) do
     [{:rotate, radians} | ops]
   end
 
+  @doc """
+  Apply a translation transform to the current transform stack.
+  """
   @spec translate(ops :: t(), x :: number, y :: number) :: ops :: t()
   def translate(ops, x, y) do
     [{:translate, {x, y}} | ops]
   end
 
+  @doc """
+  Apply an arbitrary transform to the current transform stack.
+  """
   @spec transform(
           ops :: t(),
           a :: number,
@@ -597,11 +890,23 @@ defmodule Scenic.Script do
 
   # style commands
 
+  @doc """
+  Set the current fill to an single color.
+
+  This only sets the fill paint type. You still need to call `fill_path/1` or one of the
+  draw_* apis to actually draw something.
+  """
   @spec fill_color(ops :: t(), color :: Color.t()) :: ops :: t()
   def fill_color(ops, color) do
     [{:fill_color, Color.to_rgba(color)} | ops]
   end
 
+  @doc """
+  Set the current fill to linear gradient that goes between two colors.
+
+  This only sets the fill paint type. You still need to call `fill_path/1` or one of the
+  draw_* apis to actually draw something.
+  """
   @spec fill_linear(
           ops :: t(),
           start_x :: number,
@@ -626,6 +931,12 @@ defmodule Scenic.Script do
     ]
   end
 
+  @doc """
+  Set the current fill to radial gradient that goes between two colors.
+
+  This only sets the fill paint type. You still need to call `fill_path/1` or one of the
+  draw_* apis to actually draw something.
+  """
   @spec fill_radial(
           ops :: t(),
           center_x :: number,
@@ -652,6 +963,14 @@ defmodule Scenic.Script do
     ]
   end
 
+  @doc """
+  Set the current fill to an image from the Static asset library.
+
+  This image will be automatically repeated both horizontally and vertically.
+
+  This only sets the fill paint type. You still need to call `fill_path/1` or one of the
+  draw_* apis to actually draw something.
+  """
   @spec fill_image(ops :: t(), image :: Static.id()) :: ops :: t()
   def fill_image(ops, id) do
     id =
@@ -666,14 +985,34 @@ defmodule Scenic.Script do
     [{:fill_image, id} | ops]
   end
 
+  @doc """
+  Set the current fill to an image from an asset stream.
+
+  This image will be automatically repeated both horizontally and vertically.
+
+  This only sets the fill paint type. You still need to call `fill_path/1` or one of the
+  draw_* apis to actually draw something.
+  """
   @spec fill_stream(ops :: t(), id :: Stream.id()) :: ops :: t()
   def fill_stream(ops, id) when is_bitstring(id), do: [{:fill_stream, id} | ops]
 
+  @doc """
+  Set the current stroke to an single color.
+
+  This only sets the stroke paint type. You still need to call `stroke_path/1` or one of the
+  draw_* apis to actually draw something.
+  """
   @spec stroke_color(ops :: t(), color :: Color.t()) :: ops :: t()
   def stroke_color(ops, color) do
     [{:stroke_color, Color.to_rgba(color)} | ops]
   end
 
+  @doc """
+  Set the current stroke to linear gradient that goes between two colors.
+
+  This only sets the stroke paint type. You still need to call `stroke_path/1` or one of the
+  draw_* apis to actually draw something.
+  """
   @spec stroke_linear(
           ops :: t(),
           start_x :: number,
@@ -700,6 +1039,12 @@ defmodule Scenic.Script do
     ]
   end
 
+  @doc """
+  Set the current stroke to radial gradient that goes between two colors.
+
+  This only sets the stroke paint type. You still need to call `stroke_path/1` or one of the
+  draw_* apis to actually draw something.
+  """
   @spec stroke_radial(
           ops :: t(),
           center_x :: number,
@@ -726,6 +1071,14 @@ defmodule Scenic.Script do
     ]
   end
 
+  @doc """
+  Set the current stroke to an image from the Static asset library.
+
+  This image will be automatically repeated both horizontally and vertically.
+
+  This only sets the stroke paint type. You still need to call `stroke_path/1` or one of the
+  draw_* apis to actually draw something.
+  """
   @spec stroke_image(ops :: t(), image :: Static.id()) :: ops :: t()
   def stroke_image(ops, id) do
     id =
@@ -740,28 +1093,64 @@ defmodule Scenic.Script do
     [{:stroke_image, id} | ops]
   end
 
+  @doc """
+  Set the current stroke to an image from an asset stream.
+
+  This image will be automatically repeated both horizontally and vertically.
+
+  This only sets the stroke paint type. You still need to call `stroke_path/1` or one of the
+  draw_* apis to actually draw something.
+  """
   @spec stroke_stream(ops :: t(), id :: Stream.id()) :: ops :: t()
   def stroke_stream(ops, id) when is_bitstring(id), do: [{:stroke_stream, id} | ops]
 
+  @doc """
+  Set the current stroke width.
+
+  This only sets the stroke sidth. You still need to call `stroke_path/1` or one of the
+  draw_* apis to actually draw something.
+  """
   @spec stroke_width(ops :: t(), width :: number) :: ops :: t()
   def stroke_width(ops, width), do: [{:stroke_width, width} | ops]
 
+  @doc """
+  Set the current end cap style.
+
+  Can be any one of `:butt`, `:round`, or `:square`
+  """
   @spec cap(ops :: t(), type :: :butt | :round | :square) :: ops :: t()
   def cap(ops, :butt), do: [{:cap, :butt} | ops]
   def cap(ops, :round), do: [{:cap, :round} | ops]
   def cap(ops, :square), do: [{:cap, :square} | ops]
 
+  @doc """
+  Set the current line joint style.
+
+  Can be any one of `:bevel`, `:round`, or `:miter`
+  """
   @spec join(ops :: t(), type :: :bevel | :round | :miter) :: ops :: t()
   def join(ops, :bevel), do: [{:join, :bevel} | ops]
   def join(ops, :round), do: [{:join, :round} | ops]
   def join(ops, :miter), do: [{:join, :miter} | ops]
 
+  @doc """
+  Set the current miter limit for joints.
+  """
   @spec miter_limit(ops :: t(), limit :: number) :: ops :: t()
   def miter_limit(ops, limit), do: [{:miter_limit, limit} | ops]
 
+  @doc """
+  Set the current scissor rect.
+
+  To remove the scissor rect, push the state before you use the scissor, then
+  pop it afterwards.
+  """
   @spec scissor(ops :: t(), width :: number, height :: number) :: ops :: t()
   def scissor(ops, w, h), do: [{:scissor, {w, h}} | ops]
 
+  @doc """
+  Set the current font. Must be a valid reference into your static assets library.
+  """
   @spec font(ops :: t(), id :: Static.id()) :: ops :: t()
   def font(ops, id) do
     id =
@@ -776,14 +1165,27 @@ defmodule Scenic.Script do
     [{:font, id} | ops]
   end
 
+  @doc """
+  Set the current font size.
+  """
   @spec font_size(ops :: t(), size :: number) :: ops :: t()
   def font_size(ops, px), do: [{:font_size, px} | ops]
 
+  @doc """
+  Set the current horizontal text alignment.
+
+  Can be any one of `:left`, `:right`, or `:center`
+  """
   @spec text_align(ops :: t(), type :: :left | :center | :right) :: ops :: t()
   def text_align(ops, :left), do: [{:text_align, :left} | ops]
   def text_align(ops, :center), do: [{:text_align, :center} | ops]
   def text_align(ops, :right), do: [{:text_align, :right} | ops]
 
+  @doc """
+  Set the current vertical text alignment.
+
+  Can be any one of `:top`, `:middle`, `:alphabetic`, or `:bottom`
+  """
   @spec text_base(ops :: t(), type :: :top | :middle | :alphabetic | :bottom) :: ops :: t()
   def text_base(ops, :top), do: [{:text_base, :top} | ops]
   def text_base(ops, :middle), do: [{:text_base, :middle} | ops]
@@ -792,6 +1194,34 @@ defmodule Scenic.Script do
 
   # ============================================================================
 
+  @doc """
+  Transform a script list into a binary IO list. Usually called from a driver.
+
+  In its most basic form, pass in a raw script list and it will return a standard format IO list.
+
+  ```elixir
+  with {:ok, script} <- ViewPort.get_script_by_id(vp, "my_script_id") do
+    Scenic.Script.serialize(script)
+    |> my_render_function()
+  end
+  ```
+
+  There are times when a driver will want to customize the serialization. For example,
+  GLFW driver wants fixed width names for the streams. So it hooks the serialization
+  of certain commands.
+
+  ```elixir
+  with {:ok, script} <- ViewPort.get_script_by_id(vp, id) do
+    Script.serialize(script, fn
+      {:font, id} -> serialize_font(id)
+      {:fill_stream, id} -> serialize_fill_stream(id)
+      {:stroke_stream, id} -> serialize_stroke_stream(id)
+      other -> other
+    end)
+    |> Glfw.ToPort.put_script(id, port)
+  end
+  ```
+  """
   @spec serialize(
           script :: t(),
           op_fn ::
@@ -838,6 +1268,14 @@ defmodule Scenic.Script do
 
   defp filter_op(op, nil, param), do: {op, param}
   defp filter_op(op, filter, param) when is_function(filter, 2), do: filter.(op, param)
+
+  @doc """
+  Transform a binary or io list into a readable script list.
+
+  This is intended to help with debugging.
+
+  Deserialization will only work for scripts serialized using the standard, un-hooked format.
+  """
 
   @spec deserialize(bin :: binary) :: script :: t()
   def deserialize(bin) when is_binary(bin) do
@@ -1575,18 +2013,12 @@ defmodule Scenic.Script do
   defp serialize_op({:text_base, :bottom}),
     do: <<@op_text_base::16-big, @baseline_bottom::16-big>>
 
-  # defp serialize_op( {:text_height, px} ) do
-  #   <<
-  #     @op_text_height::16-big,
-  #     px::16-big,
-  #   >>
-  # end
-
   defp smallest([h | t]), do: do_smallest(t, h)
   defp do_smallest([], current), do: current
   defp do_smallest([h | t], current) when h < current, do: do_smallest(t, h)
   defp do_smallest([_ | t], current), do: do_smallest(t, current)
 
+  @doc false
   def padded_string(string) do
     [
       string,
@@ -2275,14 +2707,7 @@ defmodule Scenic.Script do
     {str, bin}
   end
 
-  def optimize(ops) when is_binary(ops) do
-    ops
-    |> deserialize()
-    |> optimize()
-    |> serialize()
-  end
-
-  def optimize(ops) when is_list(ops) do
+  defp optimize(ops) when is_list(ops) do
     do_optimize(ops, [])
   end
 
@@ -2297,7 +2722,7 @@ defmodule Scenic.Script do
   end
 
   @doc """
-  Extract a map of all the media used in a script
+  Extract a map of all the media (both static assets and streams) used in a script.
   """
   def media(script) do
     raw_media(script)
