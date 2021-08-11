@@ -18,8 +18,7 @@ See the [getting started guide](https://hexdocs.pm/scenic/getting_started.html) 
 
 
 # Current Status! __Important!__
-This branch is v.11, which is a major upgrade. There are numerous breaking changes
-and the docs are pretty out of date. BUT the upgrade guide is new and explains the major pieces
+This branch is v.11, which is a major upgrade. There are numerous breaking changes. The docs have been upgraded, but probably need another pass. The upgrade guide (in the docs) explains the major pieces.
 
 READ THAT FIRST
 
