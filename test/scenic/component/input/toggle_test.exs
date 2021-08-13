@@ -93,7 +93,16 @@ defmodule Scenic.Component.Input.ToggleTest do
     assert Process.alive?(vp.pid)
   end
 
-  test "implements fetch", %{scene: scene} do
-    assert Scene.child_value(scene, :toggle) == {:ok, [false]}
+  test "implements get/put", %{scene: scene} do
+    assert Scene.get_child(scene, :toggle) == [false]
+    assert Scene.put_child(scene, :toggle, true) == :ok
+    assert Scene.get_child(scene, :toggle) == [true]
+  end
+
+  test "implements fetch/update", %{scene: scene} do
+    assert Scene.fetch_child(scene, :toggle) == {:ok, [false]}
+    %Scene{} = scene = Scene.update_child(scene, :toggle, true)
+    assert Scene.fetch_child(scene, :toggle) == {:ok, [true]}
+    assert Scene.get_child(scene, :toggle) == [true]
   end
 end

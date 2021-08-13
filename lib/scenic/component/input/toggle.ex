@@ -64,6 +64,8 @@ defmodule Scenic.Component.Input.Toggle do
 
   import Scenic.Primitives
 
+  require Logger
+
   # import IEx
 
   @default_thumb_pressed_color :gainsboro
@@ -327,6 +329,42 @@ defmodule Scenic.Component.Input.Toggle do
   end
 
   # --------------------------------------------------------
+  # --------------------------------------------------------
+  @doc false
+  @impl Scenic.Scene
+  def handle_get(_, %{assigns: %{on?: on?}} = scene) do
+    {:reply, on?, scene}
+  end
+
+  @doc false
+  @impl Scenic.Scene
+  def handle_put(v, %{assigns: %{on?: on?}} = scene) when v == on? do
+    # no change
+    {:noreply, scene}
+  end
+
+  def handle_put(on?, %{assigns: %{graph: graph, id: id}} = scene) when is_boolean(on?) do
+    send_parent_event(scene, {:value_changed, id, on?})
+
+    graph =
+      graph
+      |> update_check(on?, scene.assigns)
+
+    scene =
+      scene
+      |> assign(graph: graph, on?: on?)
+      |> push_graph(graph)
+
+    {:noreply, scene}
+  end
+
+  def handle_put(v, %{assigns: %{id: id}} = scene) do
+    Logger.warn( "Attempted to put an invalid value on Toggle id: #{inspect(id)}, value: #{inspect(v)}")
+    {:noreply, scene}
+  end
+
+
+
   @doc false
   @impl Scenic.Scene
   def handle_fetch(_, %{assigns: %{on?: on?}} = scene) do

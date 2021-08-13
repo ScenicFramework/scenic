@@ -141,7 +141,17 @@ defmodule Scenic.Component.Input.SliderListTest do
     refute_receive(_, 10)
   end
 
-  test "implements fetch", %{scene: scene} do
-    assert Scene.child_value(scene, :slider_list) == {:ok, [:b]}
+  test "implements get/put", %{scene: scene} do
+    assert Scene.get_child(scene, :slider_list) == [:b]
+    assert Scene.put_child(scene, :slider_list, :c) == :ok
+    assert Scene.get_child(scene, :slider_list) == [:c]
   end
+
+  test "implements fetch/update", %{scene: scene} do
+    assert Scene.fetch_child(scene, :slider_list) == {:ok, [{[:a, :b, :c, :d, :e], :b}]}
+    %Scene{} = scene = Scene.update_child(scene, :slider_list, {[:aa, :bb, :cc, :dd, :ee], :ee})
+    assert Scene.fetch_child(scene, :slider_list) == {:ok, [{[:aa, :bb, :cc, :dd, :ee], :ee}] }
+    assert Scene.get_child(scene, :slider_list) == [:ee]
+  end
+
 end

@@ -65,7 +65,7 @@ defmodule Scenic.Component.ButtonTest do
     # needed to give time for the pid and vp to close
     on_exit(fn -> Process.sleep(1) end)
 
-    out
+    Map.put(out, :scene, scene)
   end
 
   test "validate passes valid data" do
@@ -100,4 +100,15 @@ defmodule Scenic.Component.ButtonTest do
     Input.send(vp, @release_in)
     refute_receive(_, 10)
   end
+
+  test "does not implements get", %{scene: scene} do
+    assert Scene.get_child(scene, :test_btn) == [nil]
+  end
+
+  test "implements fetch/update", %{scene: scene} do
+    assert Scene.fetch_child(scene, :test_btn) == {:ok, ["Test Button"]}
+    %Scene{} = scene = Scene.update_child(scene, :test_btn, "modified")
+    assert Scene.fetch_child(scene, :test_btn) == {:ok, ["modified"]}
+  end
+
 end

@@ -33,6 +33,8 @@ defmodule Scenic.Component.Input.RadioButton do
   alias Scenic.Primitive.Style.Theme
   alias Scenic.Assets.Static
 
+  require Logger
+
   import Scenic.Primitives
 
   # import IEx
@@ -123,6 +125,7 @@ defmodule Scenic.Component.Input.RadioButton do
         graph: graph,
         theme: theme,
         checked?: checked?,
+        text: text,
         id: id
       )
       |> assign_new(pressed: false)
@@ -263,7 +266,40 @@ defmodule Scenic.Component.Input.RadioButton do
   # --------------------------------------------------------
   @doc false
   @impl Scenic.Scene
-  def handle_fetch(_, %{assigns: %{checked?: checked?}} = scene) do
-    {:reply, {:ok, checked?}, scene}
+  def handle_get(_, %{assigns: %{checked?: checked?}} = scene) do
+    {:reply, checked?, scene}
   end
+
+  @doc false
+  @impl Scenic.Scene
+  def handle_put(chk?, %{assigns: %{checked: checked}} = scene) when chk? == checked do
+    # no change
+    {:noreply, scene}
+  end
+
+  def handle_put(chk?, %{assigns: %{graph: graph, id: id}} = scene) when is_boolean(chk?) do
+    send_parent_event(scene, {:value_changed, id, chk?})
+
+    graph = update_check(graph, chk?)
+
+    scene =
+      scene
+      |> assign(graph: graph, checked?: chk?)
+      |> push_graph(graph)
+
+    {:noreply, scene}
+  end
+
+  def handle_put(v, %{assigns: %{id: id}} = scene) do
+    Logger.warn( "Attempted to put an invalid value on Radio Button id: #{inspect(id)}, value: #{inspect(v)}")
+    {:noreply, scene}
+  end
+
+
+  @doc false
+  @impl Scenic.Scene
+  def handle_fetch(_, %{assigns: %{text: text, id: id, checked?: checked?}} = scene) do
+    {:reply, {:ok, {text, id, checked?}}, scene}
+  end
+
 end

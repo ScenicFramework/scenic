@@ -72,6 +72,8 @@ defmodule Scenic.Component.Input.Slider do
   alias Scenic.Primitive.Style.Theme
   import Scenic.Primitives, only: [{:rect, 3}, {:line, 3}, {:rrect, 3}, {:update_opts, 2}]
 
+  require Logger
+
   # import IEx
 
   @height 18
@@ -363,7 +365,73 @@ defmodule Scenic.Component.Input.Slider do
   # --------------------------------------------------------
   @doc false
   @impl Scenic.Scene
-  def handle_fetch(_, %{assigns: %{value: value}} = scene) do
-    {:reply, {:ok, value}, scene}
+  def handle_get(_, %{assigns: %{value: value}} = scene) do
+    {:reply, value, scene}
+  end
+
+  @doc false
+  @impl Scenic.Scene
+  def handle_put(v, %{assigns: %{value: value}} = scene) when v == value do
+    # no change
+    {:noreply, scene}
+  end
+
+  def handle_put(value, %{assigns: %{
+      graph: graph,
+      extents: extents,
+      width: width,
+      id: id
+    }} = scene) when is_list(extents) do
+
+    scene = case Enum.member?(extents, value) do
+      false ->
+        Logger.warn( "Attempted to put an invalid value on Slider id: #{inspect(id)}, value: #{inspect(value)}")
+        scene
+
+      true -> 
+        send_parent_event(scene, {:value_changed, id, value})
+        new_x = calc_slider_position(width, extents, value)
+        graph = Graph.modify(graph, :thumb, fn p ->
+          update_opts(p, translate: {new_x, 0})
+        end)
+
+        scene
+        |> assign( graph: graph, value: value )
+        |> push_graph( graph )
+    end
+
+    {:noreply, scene}
+  end
+
+  def handle_put(value, %{assigns: %{
+      graph: graph,
+      extents: {min, max} = extents,
+      width: width,
+      id: id
+    }} = scene) when is_number(value) and value >= min and value <= max do
+
+    send_parent_event(scene, {:value_changed, id, value})
+    new_x = calc_slider_position(width, extents, value)
+    graph = Graph.modify(graph, :thumb, fn p ->
+      update_opts(p, translate: {new_x, 0})
+    end)
+
+    scene =
+      scene
+      |> assign( graph: graph, value: value )
+      |> push_graph( graph )
+
+    {:noreply, scene}
+  end
+
+  def handle_put(v, %{assigns: %{id: id}} = scene) do
+    Logger.warn( "Attempted to put an invalid value on Slider id: #{inspect(id)}, value: #{inspect(v)}")
+    {:noreply, scene}
+  end
+
+  @doc false
+  @impl Scenic.Scene
+  def handle_fetch(_, %{assigns: %{extents: extents, value: value}} = scene) do
+    {:reply, {:ok, {extents, value}}, scene}
   end
 end

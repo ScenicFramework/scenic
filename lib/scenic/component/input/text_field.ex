@@ -82,6 +82,8 @@ defmodule Scenic.Component.Input.TextField do
   alias Scenic.Primitive.Style.Theme
   # alias Scenic.Assets.Static
 
+  require Logger
+
   import Scenic.Primitives,
     only: [
       {:rect, 3},
@@ -717,6 +719,54 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   # --------------------------------------------------------
+  @doc false
+  @impl Scenic.Scene
+  def handle_get(_, %{assigns: %{value: value}} = scene) do
+    {:reply, value, scene}
+  end
+
+  @doc false
+  @impl Scenic.Scene
+  def handle_put(v, %{assigns: %{value: value}} = scene) when v == value do
+    # no change
+    {:noreply, scene}
+  end
+
+  def handle_put(text, %{assigns: %{
+    graph: graph,
+    id: id,
+    index: index,
+    caret_v: caret_v,
+    type: type
+  }} = scene) when is_bitstring(text) do
+    send_parent_event(scene, {:value_changed, id, text})
+
+    display = display_from_value(text, type)
+
+    # if the index is beyond the end of the string, move it back into range
+    max_index = String.length(display)
+    index = case index > max_index do
+      true -> max_index
+      false ->  index
+    end
+
+    graph =
+      graph
+      |> update_text(display, scene.assigns)
+      |> update_caret(display, index, caret_v)
+
+    scene =
+      scene
+      |> assign(graph: graph, value: text)
+      |> push_graph(graph)
+
+    {:noreply, scene}
+  end
+
+  def handle_put(v, %{assigns: %{id: id}} = scene) do
+    Logger.warn( "Attempted to put an invalid value on TextField id: #{inspect(id)}, value: #{inspect(v)}")
+    {:noreply, scene}
+  end
 
   @doc false
   @impl Scenic.Scene

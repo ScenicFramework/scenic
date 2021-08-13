@@ -25,7 +25,7 @@ defmodule Scenic.Component.Input.RadioButtonTest do
 
     def graph() do
       Scenic.Graph.build()
-      |> RadioButton.add_to_graph({"Radio Button", :radio_button, false}, id: :radio_button)
+      |> RadioButton.add_to_graph({"Radio Button", :radio_button, false}, id: :btn)
     end
 
     @impl Scenic.Scene
@@ -88,7 +88,19 @@ defmodule Scenic.Component.Input.RadioButtonTest do
     refute_receive(_, 10)
   end
 
-  test "implements fetch", %{scene: scene} do
-    assert Scene.child_value(scene, :radio_button) == {:ok, [false]}
+
+  test "implements get/put", %{scene: scene} do
+    assert Scene.get_child(scene, :btn) == [false]
+    assert Scene.put_child(scene, :btn, true) == :ok
+    assert Scene.get_child(scene, :btn) == [true]
   end
+
+  test "implements fetch/update", %{scene: scene} do
+    assert Scene.fetch_child(scene, :btn) == {:ok, [{"Radio Button", :radio_button, false}]}
+    %Scene{} = scene = Scene.update_child(scene, :btn, {"RadioMod", :radio_mod, true})
+    assert Scene.fetch_child(scene, :btn) == {:ok, [{"RadioMod", :radio_mod, true}]}
+    assert Scene.get_child(scene, :btn) == [true]
+  end
+
+
 end

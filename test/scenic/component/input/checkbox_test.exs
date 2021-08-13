@@ -94,7 +94,16 @@ defmodule Scenic.Component.Input.CheckboxTest do
     refute_receive(_, 10)
   end
 
-  test "implements fetch", %{scene: scene} do
-    assert Scene.child_value(scene, :checkbox) == {:ok, [false]}
+  test "implements get/put", %{scene: scene} do
+    assert Scene.get_child(scene, :checkbox) == [false]
+    assert Scene.put_child(scene, :checkbox, true) == :ok
+    assert Scene.get_child(scene, :checkbox) == [true]
+  end
+
+  test "implements fetch/update", %{scene: scene} do
+    assert Scene.fetch_child(scene, :checkbox) == {:ok, [{"Check Box", false}]}
+    %Scene{} = scene = Scene.update_child(scene, :checkbox, {"Updated text", true})
+    assert Scene.fetch_child(scene, :checkbox) == {:ok, [{"Updated text", true}]}
+    assert Scene.get_child(scene, :checkbox) == [true]
   end
 end
