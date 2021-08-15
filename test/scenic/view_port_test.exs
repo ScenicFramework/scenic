@@ -12,6 +12,12 @@ defmodule Scenic.ViewPortTest do
 
   # @viewports :scenic_viewports
 
+  # @main ViewPort.root_id()
+  # @root "__root__"
+
+  @root_id ViewPort.root_id()
+  @main_id ViewPort.main_id()
+
   @simple_graph_red Scenic.Graph.build()
                     |> Scenic.Primitives.rect({200, 100}, fill: :red)
   defp simple_graph_red(), do: @simple_graph_red
@@ -93,6 +99,14 @@ defmodule Scenic.ViewPortTest do
     out
   end
 
+  test "root_id returns the root script id" do
+    assert ViewPort.root_id() == "_root_"
+  end
+
+  test "main_id returns the main script id" do
+    assert ViewPort.main_id() == "_main_"
+  end
+
   # ---------------------------------------------------------------------------
   # client api - start / stop / info
 
@@ -130,73 +144,48 @@ defmodule Scenic.ViewPortTest do
   end
 
   # ---------------------------------------------------------------------------
-  # client api - names and ids
-
-  test "register_script_name maps a name to an id number", %{vp: vp} do
-    {:error, :not_found} = ViewPort.name_to_id(vp, :test_name)
-    # the first one is always 2. 0 is vp main, 1 is root scene
-    {:ok, 2} = ViewPort.register_script_name(vp, :test_name)
-  end
-
-  test "register_script_name does nothing if already registered", %{vp: vp} do
-    {:ok, 2} = ViewPort.register_script_name(vp, :test_name)
-    {:ok, 2} = ViewPort.register_script_name(vp, :test_name)
-  end
-
-  test "name_to_id looks up the id for a name", %{vp: vp} do
-    {:ok, 2} = ViewPort.register_script_name(vp, :test_name)
-    {:ok, 2} = ViewPort.name_to_id(vp, :test_name)
-  end
-
-  test "name_to_id returns error if the name is not registered", %{vp: vp} do
-    assert ViewPort.name_to_id(vp, :unknown_name) == {:error, :not_found}
-  end
-
-  # ---------------------------------------------------------------------------
   # client api - scripts
 
-  test "put_script adds a script, auto registering the name. get_script_by_id returns it", %{
+  test "put_script adds a script, auto registering the name. get_script returns it", %{
     vp: vp
   } do
-    {:error, :not_found} = ViewPort.name_to_id(vp, :test_name)
-    {:ok, 2} = ViewPort.put_script(vp, :test_name, [1, 2, 3])
-    {:ok, 2} = ViewPort.name_to_id(vp, :test_name)
-    assert ViewPort.get_script_by_id(vp, 2) == {:ok, [1, 2, 3]}
+    {:error, :not_found} = ViewPort.get_script(vp, "test_name")
+    {:ok, "test_name"} = ViewPort.put_script(vp, "test_name", [1, 2, 3])
+    assert ViewPort.get_script(vp, "test_name") == {:ok, [1, 2, 3]}
   end
 
   test "put_script replaces an existing script", %{vp: vp} do
-    {:ok, 2} = ViewPort.put_script(vp, :test_name, [1, 2, 3])
-    assert ViewPort.get_script_by_id(vp, 2) == {:ok, [1, 2, 3]}
-    {:ok, 2} = ViewPort.put_script(vp, :test_name, [4, 5, 6])
-    assert ViewPort.get_script_by_id(vp, 2) == {:ok, [4, 5, 6]}
+    {:ok, "test_name"} = ViewPort.put_script(vp, "test_name", [1, 2, 3])
+    assert ViewPort.get_script(vp, "test_name") == {:ok, [1, 2, 3]}
+    {:ok, "test_name"} = ViewPort.put_script(vp, "test_name", [4, 5, 6])
+    assert ViewPort.get_script(vp, "test_name") == {:ok, [4, 5, 6]}
   end
 
-  test "get_script_by_id gets by id", %{vp: vp} do
-    {:ok, 2} = ViewPort.put_script(vp, :test_name, [1, 2, 3])
-    assert ViewPort.get_script_by_id(vp, 2) == {:ok, [1, 2, 3]}
+  test "get_script gets by id", %{vp: vp} do
+    {:ok, "test_name"} = ViewPort.put_script(vp, "test_name", [1, 2, 3])
+    assert ViewPort.get_script(vp, "test_name") == {:ok, [1, 2, 3]}
   end
 
   test "get_script_by_name gets by name", %{vp: vp} do
-    {:ok, 2} = ViewPort.put_script(vp, :test_name, [1, 2, 3])
-    assert ViewPort.get_script_by_name(vp, :test_name) == {:ok, [1, 2, 3]}
+    {:ok, "test_name"} = ViewPort.put_script(vp, "test_name", [1, 2, 3])
+    assert ViewPort.get_script(vp, "test_name") == {:ok, [1, 2, 3]}
   end
 
   test "del_script deletes scripts by name", %{vp: vp} do
-    {:ok, 2} = ViewPort.put_script(vp, :test_name, [1, 2, 3])
-    :ok = ViewPort.del_script(vp, :test_name)
+    {:ok, "test_name"} = ViewPort.put_script(vp, "test_name", [1, 2, 3])
+    :ok = ViewPort.del_script(vp, "test_name")
     Process.sleep(10)
-    assert ViewPort.get_script_by_name(vp, :test_name) == {:error, :not_found}
-    assert ViewPort.name_to_id(vp, :test_name) == {:error, :not_found}
+    assert ViewPort.get_script(vp, "test_name") == {:error, :not_found}
   end
 
   test "del_script does nothing if script is not there", %{vp: vp} do
-    :ok = ViewPort.del_script(vp, :unknown_name)
+    :ok = ViewPort.del_script(vp, "unknown_name")
   end
 
   test "all_script_ids gets a list of script ids", %{vp: vp} do
-    assert ViewPort.all_script_ids(vp) |> Enum.sort() == [0, 1]
-    {:ok, 2} = ViewPort.put_script(vp, :test_name, [1, 2, 3])
-    assert ViewPort.all_script_ids(vp) |> Enum.sort() == [0, 1, 2]
+    assert ViewPort.all_script_ids(vp) |> Enum.sort() == [@main_id, @root_id]
+    {:ok, "test_name"} = ViewPort.put_script(vp, "test_name", [1, 2, 3])
+    assert ViewPort.all_script_ids(vp) |> Enum.sort() == [@main_id, @root_id, "test_name"]
   end
 
   # ---------------------------------------------------------------------------
@@ -207,20 +196,20 @@ defmodule Scenic.ViewPortTest do
   defp simple_graph(), do: @simple_graph
 
   test "put_graph compiles a graph and stores it's script", %{vp: vp} do
-    assert ViewPort.name_to_id(vp, :test_graph) == {:error, :not_found}
-    assert ViewPort.put_graph(vp, :test_graph, simple_graph()) == {:ok, 2}
-    assert ViewPort.name_to_id(vp, :test_graph) == {:ok, 2}
+    assert ViewPort.get_script(vp, "test_graph") == {:error, :not_found}
+    assert ViewPort.put_graph(vp, "test_graph", simple_graph()) == {:ok, "test_graph"}
+    {:ok, _} = ViewPort.get_script(vp, "test_graph")
 
     # get the script and compare against one compiled
-    {:ok, script} = ViewPort.GraphCompiler.compile(vp, simple_graph())
-    assert ViewPort.get_script_by_name(vp, :test_graph) == {:ok, script}
+    {:ok, script} = ViewPort.GraphCompiler.compile(simple_graph())
+    assert ViewPort.get_script(vp, "test_graph") == {:ok, script}
   end
 
   test "del_graph deletes existing graphs", %{vp: vp} do
-    assert ViewPort.name_to_id(vp, :test_graph) == {:error, :not_found}
-    assert ViewPort.put_graph(vp, :test_graph, simple_graph()) == {:ok, 2}
-    assert ViewPort.name_to_id(vp, :test_graph) == {:ok, 2}
-    assert ViewPort.all_script_ids(vp) |> Enum.sort() == [0, 1, 2]
+    assert ViewPort.get_script(vp, "test_graph") == {:error, :not_found}
+    assert ViewPort.put_graph(vp, "test_graph", simple_graph()) == {:ok, "test_graph"}
+    {:ok, _} = ViewPort.get_script(vp, "test_graph")
+    assert ViewPort.all_script_ids(vp) |> Enum.sort() == [@main_id, @root_id, "test_graph"]
   end
 
   # ---------------------------------------------------------------------------
@@ -230,16 +219,16 @@ defmodule Scenic.ViewPortTest do
   # we confirm this by examining the stored scripts in slot 1, which is the root scene
   test "set_root changes the running scene", %{vp: vp} do
     # first, prove that the red scene is running as the default
-    {:ok, red_script} = ViewPort.GraphCompiler.compile(vp, simple_graph_red())
-    assert ViewPort.get_script_by_name(vp, :_root_) == {:ok, red_script}
+    {:ok, red_script} = ViewPort.GraphCompiler.compile(simple_graph_red())
+    assert ViewPort.get_script(vp, @main_id) == {:ok, red_script}
 
     # set the green scene as the root
     assert ViewPort.set_root(vp, TestSceneGreen, self()) == :ok
     assert_receive :green_up, 40
 
     # prove the green scene is now running
-    {:ok, green_script} = ViewPort.GraphCompiler.compile(vp, simple_graph_green())
-    assert ViewPort.get_script_by_name(vp, :_root_) == {:ok, green_script}
+    {:ok, green_script} = ViewPort.GraphCompiler.compile(simple_graph_green())
+    assert ViewPort.get_script(vp, @main_id) == {:ok, green_script}
   end
 
   # set the theme - this should restart the current scene
@@ -262,10 +251,10 @@ defmodule Scenic.ViewPortTest do
     assert_receive :green_up, 40
 
     # confirm the script ids are at the start
-    assert ViewPort.all_script_ids(vp_0) |> Enum.sort() == [0, 1]
-    assert ViewPort.all_script_ids(vp_1) |> Enum.sort() == [0, 1]
+    assert ViewPort.all_script_ids(vp_0) |> Enum.sort() == [@main_id, @root_id]
+    assert ViewPort.all_script_ids(vp_1) |> Enum.sort() == [@main_id, @root_id]
 
     # the scripts themselves should be different...
-    assert ViewPort.get_script_by_id(vp_0, 1) != ViewPort.get_script_by_id(vp_1, 1)
+    assert ViewPort.get_script(vp_0, @root_id) != ViewPort.get_script(vp_1, @root_id)
   end
 end

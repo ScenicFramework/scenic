@@ -96,13 +96,13 @@ defmodule Scenic.ViewPort do
   @type t :: %ViewPort{
           name: atom,
           pid: pid,
-          name_table: reference,
+          # name_table: reference,
           script_table: reference,
           size: {number, number}
         }
   defstruct name: nil,
             pid: nil,
-            name_table: nil,
+            # name_table: nil,
             script_table: nil,
             size: nil
 
@@ -127,8 +127,8 @@ defmodule Scenic.ViewPort do
     ]
   ]
 
-  @main_graph :_main_
-  @root_graph :_root_
+  @main_id "_main_"
+  @root_id "_root_"
 
   @first_open_graph_id 2
 
@@ -160,6 +160,17 @@ defmodule Scenic.ViewPort do
   Returns a list of the valid input types
   """
   def input_types(), do: @input_types
+
+  @doc """
+  Returns the id of the first script in the drawing tree
+
+  Used by drivers
+  """
+  @spec root_id() :: String.t()
+  def root_id(), do: @root_id
+
+  @doc false
+  def main_id(), do: @main_id
 
   # ============================================================================
   # client api
@@ -202,61 +213,15 @@ defmodule Scenic.ViewPort do
   end
 
   # --------------------------------------------------------
-  @doc false
-  @spec register_script_name(viewport :: ViewPort.t(), name :: any) :: {:ok, integer}
-  def register_script_name(viewport, name)
-
-  def register_script_name(%ViewPort{name_table: table, pid: pid}, name) do
-    case :ets.lookup(table, name) do
-      # if the name already exists, return its numerical id
-      [{_, id, _}] -> {:ok, id}
-      # the script_id is not there. register it
-      [] -> GenServer.call(pid, {:script_id, name, self()})
-    end
-  end
-
-  # --------------------------------------------------------
   @doc """
-  look up an id for a name. Does not register the name if it is missing
+  Retrieve a script
   """
-  @spec name_to_id(viewport :: ViewPort.t(), name :: any) ::
-          {:ok, non_neg_integer} | {:error, :not_found}
-  def name_to_id(viewport, name)
-
-  def name_to_id(%ViewPort{name_table: table}, name) do
-    case :ets.lookup(table, name) do
-      [{_, id, _}] -> {:ok, id}
-      [] -> {:error, :not_found}
-    end
-  end
-
-  # --------------------------------------------------------
-  @doc """
-  Retrieve a script by id - this is not the name!.
-
-  Used by drivers, which aren't exposed to the name
-  """
-  @spec get_script_by_id(viewport :: ViewPort.t(), id :: non_neg_integer) ::
+  @spec get_script(viewport :: ViewPort.t(), name :: any) ::
           {:ok, Script.t()} | {:error, :not_found}
-  def get_script_by_id(%ViewPort{script_table: table}, id) when is_integer(id) and id >= 0 do
-    case :ets.lookup(table, id) do
+  def get_script(%ViewPort{script_table: script_table}, name) do
+    case :ets.lookup(script_table, name) do
       [{_, bin, _}] -> {:ok, bin}
       [] -> {:error, :not_found}
-    end
-  end
-
-  # --------------------------------------------------------
-  @doc """
-  Retrieve a script by name
-
-  Not usable by drivers, which use the numeric id.
-  """
-  @spec get_script_by_name(viewport :: ViewPort.t(), name :: any) ::
-          {:ok, Script.t()} | {:error, :not_found}
-  def get_script_by_name(viewport, name) do
-    case name_to_id(viewport, name) do
-      {:ok, id} -> get_script_by_id(viewport, id)
-      err -> err
     end
   end
 
@@ -277,7 +242,13 @@ defmodule Scenic.ViewPort do
           opts :: Keyword.t()
         ) ::
           {:ok, non_neg_integer} | {:error, atom}
-  def put_script(%ViewPort{pid: pid} = viewport, name, script, opts \\ []) when is_list(script) do
+  def put_script(
+        %ViewPort{pid: pid, script_table: script_table},
+        name,
+        script,
+        opts \\ []
+      )
+      when is_list(script) do
     opts =
       case NimbleOptions.validate(opts, put_x_opts_schema()) do
         {:ok, opts} -> opts
@@ -286,27 +257,16 @@ defmodule Scenic.ViewPort do
 
     owner = opts[:owner]
 
-    with {:ok, id} <- register_script_name(viewport, name),
-         :ok <- put_script_by_id(viewport, id, script, owner) do
-      GenServer.cast(pid, {:put_scripts, [id], owner})
-      {:ok, id}
-    else
-      err -> err
-    end
-  end
-
-  # internal - put by id
-  defp put_script_by_id(%ViewPort{script_table: table}, id, script, owner)
-       when is_integer(id) and id >= 0 do
-    case :ets.lookup(table, id) do
+    case :ets.lookup(script_table, name) do
       # do nothing if the script is in the table and has not changed
       [{_, ^script, ^owner}] ->
         :no_change
 
       # it isn't there or has changed
       _ ->
-        true = :ets.insert(table, {id, script, owner})
-        :ok
+        true = :ets.insert(script_table, {name, script, owner})
+        GenServer.cast(pid, {:put_scripts, [name], owner})
+        {:ok, name}
     end
   end
 
@@ -347,7 +307,7 @@ defmodule Scenic.ViewPort do
           name :: any,
           graph :: Graph.t(),
           opts :: Keyword.t()
-        ) :: {:ok, id :: any}
+        ) :: {:ok, name :: any}
   def put_graph(%ViewPort{pid: pid} = viewport, name, %Graph{} = graph, opts \\ []) do
     opts =
       case NimbleOptions.validate(opts, put_x_opts_schema()) do
@@ -355,24 +315,23 @@ defmodule Scenic.ViewPort do
         {:error, error} -> raise Exception.message(error)
       end
 
-    with {:ok, id} <- register_script_name(viewport, name),
-         {:ok, script} <- GraphCompiler.compile(viewport, graph),
+    with {:ok, script} <- GraphCompiler.compile(graph),
          {:ok, input_list} <- compile_input(graph) do
       # write the script - but only if it has actually changed
-      if {:ok, script} != get_script_by_id(viewport, id) do
+      if {:ok, script} != get_script(viewport, name) do
         owner = opts[:owner]
 
         # write the script to the table
-        put_script_by_id(viewport, id, script, owner)
+        put_script(viewport, name, script, owner: owner)
 
         # notify the drivers
-        GenServer.cast(pid, {:put_scripts, [id], owner})
+        GenServer.cast(pid, {:put_scripts, [name], owner})
 
         # send the input list to the viewport
         GenServer.cast(pid, {:input_list, input_list, name, owner})
       end
 
-      {:ok, id}
+      {:ok, name}
     else
       err -> err
     end
@@ -479,7 +438,7 @@ defmodule Scenic.ViewPort do
 
     # name_table = :ets.new( make_ref(), [:protected] )
     # script_table = :ets.new( make_ref(), [:public, {:read_concurrency, true}] )
-    name_table = :ets.new(:_vp_name_table_, [:protected])
+    # name_table = :ets.new(:_vp_name_table_, [:protected])
     script_table = :ets.new(:_vp_script_table_, [:public, {:read_concurrency, true}])
 
     state = %{
@@ -508,14 +467,6 @@ defmodule Scenic.ViewPort do
       # and as they complete. It is set to a list when the root is reset. When it goes to
       # empty, then the process is complete. If it is nil, then we are not in a reset
       starting_scenes: [],
-
-      # ets table for name->id pairs. Protected. So readable by other processes, but
-      # only writable by the VP. Used when compiling graphs
-      name_table: name_table,
-      # as new script names are added to the name table, the next ID to assign is
-      # tracked in the simple next_id integer field. This field is reset when
-      # the root scene is changed.
-
       next_id: @first_open_graph_id,
       # ets table for scripts. Public. Readable and Writable by others. The intended
       # use is that Scenes compile graphs in their own process and insert the scripts
@@ -583,7 +534,7 @@ defmodule Scenic.ViewPort do
         {:init, opts},
         %{
           # supervisor: supervisor,
-          name_table: name_table
+          # name_table: name_table
         } = state
       ) do
     # create the supervisor for the drivers - this is expected to work
@@ -602,10 +553,6 @@ defmodule Scenic.ViewPort do
       )
     end)
 
-    # insert the root name into the name table
-    # this is startup, so can just slam it in
-    :ets.insert(name_table, {@root_graph, 1, self()})
-
     # retrieve the ViewPort's theme
     theme = opts[:theme]
     background = Theme.normalize(theme).background
@@ -621,7 +568,7 @@ defmodule Scenic.ViewPort do
       # not a real component. never managed by a scene
       # this is to get input to hook up correctly to the root scene
       # needs to be a Component and NOT a Script so that it shows up in the main input list
-      |> Scenic.Primitive.Component.add_to_graph({@root_graph, nil, @root_graph})
+      |> Scenic.Primitive.Component.add_to_graph({@main_id, nil, @main_id})
 
     # record the root transform of the main graph
     main_tx =
@@ -630,12 +577,8 @@ defmodule Scenic.ViewPort do
 
     state = Map.put(state, :main_tx, main_tx || Math.Matrix.identity())
 
-    # insert the main script to the scripts table
-    # can slam it in as we are in startup
-    # {:ok, main_script} = ViewPort.Graph.compile( main_graph, info )
-    # :ets.insert(script_table, {0, main_script, :main})
     # put the main graph. This compiles it and adds it's input list to state
-    state = internal_put_graph(main_graph, @main_graph, 0, state)
+    state = internal_put_graph(main_graph, @root_id, state)
 
     # start the default scene
     scene =
@@ -672,7 +615,7 @@ defmodule Scenic.ViewPort do
           driver_pids: driver_pids,
           input_lists: input_lists,
           scene_transforms: scene_transforms,
-          name_table: name_table,
+          # name_table: name_table,
           script_table: script_table,
           scenes_by_pid: scenes_by_pid,
           scenes_by_id: scenes_by_id,
@@ -680,7 +623,6 @@ defmodule Scenic.ViewPort do
         } = old_state
       ) do
     # cleanup scripts & names tables
-    :ets.match_delete(name_table, {:_, :_, pid})
     :ets.match_delete(script_table, {:_, :_, pid})
 
     # clean up any input requested by the pid
@@ -819,17 +761,16 @@ defmodule Scenic.ViewPort do
   def handle_cast(
         {:del_script, name},
         %{
-          name_table: name_table,
+          # name_table: name_table,
           script_table: script_table,
           input_lists: ils
         } = old_state
       ) do
     state =
-      case :ets.lookup(name_table, name) do
-        [{_, id, _}] ->
-          cast_drivers(old_state, {:del_script, id})
-          :ets.delete(script_table, id)
-          :ets.delete(name_table, name)
+      case :ets.lookup(script_table, name) do
+        [_] ->
+          cast_drivers(old_state, {:del_script, name})
+          :ets.delete(script_table, name)
 
           # make sure the input list is cleaned up
           %{old_state | input_lists: Map.delete(ils, name)}
@@ -895,19 +836,17 @@ defmodule Scenic.ViewPort do
       |> Graph.modify(:background, &Primitive.merge_opts(&1, fill: background))
 
     # insert the main script to the scripts table
-    state = internal_put_graph(main_graph, @main_graph, 0, state)
+    state = internal_put_graph(main_graph, @root_id, state)
 
     # tell the drivers the background changed
     cast_drivers(state, :reset)
-    cast_drivers(state, {:put_scripts, [0]})
+    cast_drivers(state, {:put_scripts, [@root_id]})
 
     # update the state
     state =
       state
       |> Map.put(:theme, theme)
       |> Map.put(:main_graph, main_graph)
-
-    # |> Map.put( :starting_scenes, [] )
 
     # restart the current scene directly
     handle_cast({:set_root, scene, param}, state)
@@ -1020,7 +959,7 @@ defmodule Scenic.ViewPort do
   def handle_call({:find_point, {x, y}}, _from, %{input_lists: ils} = state)
       when is_number(x) and is_number(y) do
     hit =
-      case input_find_hit(ils, :any, @main_graph, {x, y}) do
+      case input_find_hit(ils, :any, @root_id, {x, y}) do
         {:ok, pid, _xy, _inv_tx, id} -> {:ok, pid, id}
         _ -> {:error, :not_found}
       end
@@ -1060,19 +999,17 @@ defmodule Scenic.ViewPort do
       |> Graph.modify(:background, &Primitive.merge_opts(&1, fill: background))
 
     # insert the main script to the scripts table
-    state = internal_put_graph(main_graph, @main_graph, 0, state)
+    state = internal_put_graph(main_graph, @root_id, state)
 
     # tell the drivers the background changed
     cast_drivers(state, :reset)
-    cast_drivers(state, {:put_scripts, [0]})
+    cast_drivers(state, {:put_scripts, [@root_id]})
 
     # update the state
     state =
       state
       |> Map.put(:theme, theme)
       |> Map.put(:main_graph, main_graph)
-
-    # |> Map.put( :reset_scenes, [] )
 
     # restart the current scene directly
     # handle_cast( {:set_root, scene, param}, state )
@@ -1188,7 +1125,7 @@ defmodule Scenic.ViewPort do
     # start the new scene
     {:ok, new_pid, _} =
       Scene.start(
-        name: @root_graph,
+        name: @main_id,
         module: scene,
         parent: self(),
         param: param,
@@ -1202,7 +1139,7 @@ defmodule Scenic.ViewPort do
       state
       |> Map.put(:root_pid, new_pid)
       |> Map.put(:scene, {scene, param})
-      |> Map.put(:input_lists, %{@main_graph => ils[@main_graph]})
+      |> Map.put(:input_lists, %{@root_id => ils[@root_id]})
       |> Map.put(:next_id, @first_open_graph_id)
 
     # |> update_positional_input()
@@ -1215,14 +1152,14 @@ defmodule Scenic.ViewPort do
 
   defp gen_info(%{
          name: name,
-         name_table: name_table,
+         # name_table: name_table,
          script_table: script_table,
          size: size
        }) do
     %ViewPort{
       pid: self(),
       name: name,
-      name_table: name_table,
+      # name_table: name_table,
       script_table: script_table,
       size: size
     }
@@ -1236,23 +1173,20 @@ defmodule Scenic.ViewPort do
   defp internal_put_graph(
          %Graph{} = graph,
          name,
-         id,
          %{input_lists: ils, script_table: script_table} = state
        ) do
-    vp = gen_info(state)
-
     state =
-      with {:ok, script} <- GraphCompiler.compile(vp, graph),
+      with {:ok, script} <- GraphCompiler.compile(graph),
            {:ok, {input_list, input_types}} <- compile_input(graph) do
         # write the script to the table
-        case :ets.lookup(script_table, id) do
+        case :ets.lookup(script_table, name) do
           # do nothing if the script is in the table and has not changed
           [{_, ^script, :viewport}] ->
             :no_change
 
           # it isn't there or has changed
           _ ->
-            true = :ets.insert(script_table, {id, script, :viewport})
+            true = :ets.insert(script_table, {name, script, :viewport})
             :ok
         end
 
@@ -1295,20 +1229,6 @@ defmodule Scenic.ViewPort do
       cast_drivers(state, {:request_input, new_keys})
     end
   end
-
-  # defp do_update_driver_input!(
-  #        %{_input_requests: reqs, _input_captures: capts, input_positional: pos} = state
-  #      ) do
-
-  #   keys =
-  #     (Map.keys(capts) ++ Map.keys(reqs) ++ pos)
-  #     |> Enum.uniq()
-  #     |> Enum.sort()
-
-  #   cast_drivers(state, {:request_input, keys})
-
-  #   state
-  # end
 
   # --------------------------------------------------------
   defp handle_capture(inputs, caller, old_state) do
@@ -1586,26 +1506,26 @@ defmodule Scenic.ViewPort do
          {:cursor_button, {button, action, mods, gxy}} = input,
          %{input_lists: ils}
        ) do
-    with {:ok, pid, xy, _inv_tx, id} <- input_find_hit(ils, :cursor_button, @main_graph, gxy) do
+    with {:ok, pid, xy, _inv_tx, id} <- input_find_hit(ils, :cursor_button, @root_id, gxy) do
       send(pid, {:_input, {:cursor_button, {button, action, mods, xy}}, input, id})
     end
   end
 
   defp do_listed_input({:cursor_scroll, {delta, gxy}} = input, %{input_lists: ils}) do
-    with {:ok, pid, xy, _inv_tx, id} <- input_find_hit(ils, :cursor_scroll, @main_graph, gxy) do
+    with {:ok, pid, xy, _inv_tx, id} <- input_find_hit(ils, :cursor_scroll, @root_id, gxy) do
       send(pid, {:_input, {:cursor_scroll, {delta, xy}}, input, id})
     end
   end
 
   defp do_listed_input({:cursor_pos, gxy} = input, %{input_lists: ils}) do
-    with {:ok, pid, xy, _inv_tx, id} <- input_find_hit(ils, :cursor_pos, @main_graph, gxy) do
+    with {:ok, pid, xy, _inv_tx, id} <- input_find_hit(ils, :cursor_pos, @root_id, gxy) do
       send(pid, {:_input, {:cursor_pos, xy}, input, id})
     end
   end
 
   # --------------------------------------------------------
   defp prep_gxy_input(gxy, input_type, pid, %{input_lists: ils} = state) do
-    case input_find_hit(ils, input_type, @main_graph, gxy) do
+    case input_find_hit(ils, input_type, @root_id, gxy) do
       {:ok, ^pid, xy, _inv_tx, id} ->
         {:ok, xy, id}
 

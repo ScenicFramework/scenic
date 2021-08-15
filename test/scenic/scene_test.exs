@@ -13,6 +13,8 @@ defmodule Scenic.SceneTest do
   alias Scenic.Script
   import Scenic.Components
 
+  @root_id ViewPort.root_id()
+
   # import IEx
 
   defmodule TestSceneNoKids do
@@ -397,20 +399,20 @@ defmodule Scenic.SceneTest do
   # push
 
   test "push_script pushes into the ViewPort's script table", %{vp: vp, scene: scene} do
-    assert ViewPort.all_script_ids(vp) == [0]
+    assert ViewPort.all_script_ids(vp) == [@root_id]
 
     script =
       Script.start()
       |> Script.draw_triangle(0, 1, 2, 3, 4, 5, :stroke)
       |> Script.finish()
 
-    Scene.push_script(scene, script, :test_script)
+    Scene.push_script(scene, script, "test_script")
 
-    assert ViewPort.all_script_ids(vp) |> Enum.sort() == [0, 2]
+    assert ViewPort.all_script_ids(vp) |> Enum.sort() == [@root_id, "test_script"]
   end
 
   test "push_graph pushes into the ViewPort's script table", %{vp: vp, scene: scene} do
-    assert ViewPort.all_script_ids(vp) == [0]
+    assert ViewPort.all_script_ids(vp) == [@root_id]
 
     graph =
       Scenic.Graph.build()
@@ -418,6 +420,6 @@ defmodule Scenic.SceneTest do
 
     Scene.push_graph(scene, graph)
 
-    assert ViewPort.all_script_ids(vp) |> Enum.sort() == [0, 1]
+    assert ViewPort.all_script_ids(vp) |> Enum.sort() == [ViewPort.main_id(), @root_id]
   end
 end

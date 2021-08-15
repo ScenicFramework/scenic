@@ -226,12 +226,6 @@ defmodule Scenic.Component.Input.TextField do
   # ============================================================================
 
   # --------------------------------------------------------
-  # current value string is empty. show the hint string
-  # defp update_caret( graph, state ) do
-  #   x = calc_caret_x( state )
-  #   Graph.modify( graph, :caret, &update_opts(&1, t: {x,0}) )
-  # end
-
   defp update_caret(graph, value, index, caret_v) do
     str_len = String.length(value)
 
@@ -732,23 +726,31 @@ defmodule Scenic.Component.Input.TextField do
     {:noreply, scene}
   end
 
-  def handle_put(text, %{assigns: %{
-    graph: graph,
-    id: id,
-    index: index,
-    caret_v: caret_v,
-    type: type
-  }} = scene) when is_bitstring(text) do
+  def handle_put(
+        text,
+        %{
+          assigns: %{
+            graph: graph,
+            id: id,
+            index: index,
+            caret_v: caret_v,
+            type: type
+          }
+        } = scene
+      )
+      when is_bitstring(text) do
     send_parent_event(scene, {:value_changed, id, text})
 
     display = display_from_value(text, type)
 
     # if the index is beyond the end of the string, move it back into range
     max_index = String.length(display)
-    index = case index > max_index do
-      true -> max_index
-      false ->  index
-    end
+
+    index =
+      case index > max_index do
+        true -> max_index
+        false -> index
+      end
 
     graph =
       graph
@@ -764,7 +766,10 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   def handle_put(v, %{assigns: %{id: id}} = scene) do
-    Logger.warn( "Attempted to put an invalid value on TextField id: #{inspect(id)}, value: #{inspect(v)}")
+    Logger.warn(
+      "Attempted to put an invalid value on TextField id: #{inspect(id)}, value: #{inspect(v)}"
+    )
+
     {:noreply, scene}
   end
 

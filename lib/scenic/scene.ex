@@ -333,7 +333,7 @@ defmodule Scenic.Scene do
 
   def get_child(scene, id) do
     case child(scene, id) do
-      {:ok, pids} -> Enum.map(pids, &GenServer.call(&1, :_get_) )
+      {:ok, pids} -> Enum.map(pids, &GenServer.call(&1, :_get_))
       err -> err
     end
   end
@@ -342,12 +342,15 @@ defmodule Scenic.Scene do
           :ok | {:error, :no_children}
   def put_child(scene, id, value)
   def put_child(%Scene{children: nil}, _id, _val), do: {:error, :no_children}
+
   def put_child(%Scene{} = scene, id, value) do
     case child(scene, id) do
       {:ok, pids} ->
-        Enum.each(pids, &send(&1, {:_put_, value}) )
+        Enum.each(pids, &send(&1, {:_put_, value}))
         :ok
-      err -> err
+
+      err ->
+        err
     end
   end
 
@@ -368,7 +371,8 @@ defmodule Scenic.Scene do
           end)
         }
 
-      err -> err
+      err ->
+        err
     end
   end
 
@@ -376,10 +380,11 @@ defmodule Scenic.Scene do
           Scene.t()
   def update_child(scene, id, value, opts \\ [])
   def update_child(%Scene{children: nil}, _id, _val, _opts), do: {:error, :no_children}
+
   def update_child(%Scene{children: children} = scene, id, new_value, new_opts) do
-    children = 
+    children =
       children
-      |> Enum.reduce( children, fn 
+      |> Enum.reduce(children, fn
         {name, {top, scene_pid, ^id, {mod, _old_value, old_opts}}}, kids ->
           case mod.validate(new_value) do
             {:ok, new_value} ->
@@ -390,7 +395,10 @@ defmodule Scenic.Scene do
 
             _ ->
               # invalid data. log a warning
-              Logger.warn("Attempted to update component with invalid data. id: #{inspect(id)}, data: #{inspect(new_value)}")
+              Logger.warn(
+                "Attempted to update component with invalid data. id: #{inspect(id)}, data: #{inspect(new_value)}"
+              )
+
               kids
           end
 
@@ -399,9 +407,8 @@ defmodule Scenic.Scene do
           kids
       end)
 
-    %{ scene | children: children }
+    %{scene | children: children}
   end
-
 
   @spec get_transform(scene :: Scene.t()) :: Math.matrix()
   def get_transform(%Scene{viewport: %ViewPort{pid: pid}, id: id}) do
@@ -585,25 +592,19 @@ defmodule Scenic.Scene do
     ViewPort.Input.fetch_captures(vp, pid)
   end
 
-  # def push_graph( %Scene{} = scene, %Graph{} = graph, name \\ nil ) do
-  #   scene_state = Scene.push_graph( graph, name, Process.get(:scene_state) )
-  #   Process.put( :scene_state, scene_state )
-  #   # return the graph so that it can be chained
-  #   graph
-  # end
-
   @spec push_script(
           scene :: Scene.t(),
           script :: Scenic.Script.t(),
-          name :: any,
+          name :: String.t(),
           opts :: Keyword.t()
         ) :: Scene.t()
-  def push_script(%Scene{viewport: vp} = scene, script, name, opts \\ []) do
+  def push_script(%Scene{viewport: vp} = scene, script, name, opts \\ [])
+      when is_bitstring(name) do
     ViewPort.put_script(vp, name, script, opts)
     scene
   end
 
-  @spec push_graph(scene :: Scene.t(), graph :: Graph.t(), name :: any) :: Scene.t()
+  @spec push_graph(scene :: Scene.t(), graph :: Graph.t(), name :: String.t() | nil) :: Scene.t()
   def push_graph(scene, graph, id \\ nil)
 
   def push_graph(%Scene{id: id} = scene, %Graph{} = graph, nil) do
@@ -613,19 +614,13 @@ defmodule Scenic.Scene do
   def push_graph(
         %Scene{
           viewport: viewport,
-          id: scene_id,
           theme: theme,
           children: children
         } = scene,
         %Graph{} = graph,
         id
-      ) do
-    id =
-      case id do
-        nil -> scene_id
-        id -> id
-      end
-
+      )
+      when is_bitstring(id) do
     # if the graph does not have a theme set at the root, then
     # set the default theme for this scene automatically
     graph =
@@ -872,14 +867,14 @@ defmodule Scenic.Scene do
   to the ViewPort. This is preferable to the old push_graph() function.
   """
 
-  @callback init(scene :: Scene.t(), args :: term, options :: list) ::
-              {:ok, new_state}
-              | {:ok, new_state, timeout :: non_neg_integer}
-              | {:ok, new_state, :hibernate}
-              | {:ok, new_state, opts :: response_opts()}
+  @callback init(scene :: Scene.t(), args :: term(), options :: Keyword.t()) ::
+              {:ok, scene}
+              | {:ok, scene, timeout :: non_neg_integer}
+              | {:ok, scene, :hibernate}
+              | {:ok, scene, opts :: response_opts()}
               | :ignore
-              | {:stop, reason :: any}
-            when new_state: any
+              | {:stop, reason}
+            when scene: Scene.t(), reason: term()
 
   @doc """
   Get the current \"value\" associated with the scene and return it to the caller.
@@ -887,9 +882,9 @@ defmodule Scenic.Scene do
   If this callback is not implemented, the caller with receive nil. 
   """
   @callback handle_get(from :: GenServer.from(), scene :: Scene.t()) ::
-              {:reply, reply, new_state}
-              | {:reply, reply, new_state, timeout() | :hibernate | {:continue, term()}}
-            when reply: term(), new_state: term()
+              {:reply, reply, scene}
+              | {:reply, reply, scene, timeout() | :hibernate | {:continue, term()}}
+            when reply: term(), scene: Scene.t()
 
   @doc """
   Put the current \"value\" associated with the scene .
@@ -897,9 +892,9 @@ defmodule Scenic.Scene do
   Does nothing if this callback is not implemented. 
   """
   @callback handle_put(value :: any, scene :: Scene.t()) ::
-              {:noreply, new_state}
-              | {:noreply, new_state, timeout() | :hibernate | {:continue, term()}}
-            when new_state: term()
+              {:noreply, scene}
+              | {:noreply, scene, timeout() | :hibernate | {:continue, term()}}
+            when scene: Scene.t()
 
   @doc """
   Retrieve the current data associated with the scene and return it to the caller.
@@ -907,9 +902,9 @@ defmodule Scenic.Scene do
   If this callback is not implemented, the caller with get an {:error, :not_implemented}. 
   """
   @callback handle_fetch(from :: GenServer.from(), scene :: Scene.t()) ::
-              {:reply, reply, new_state}
-              | {:reply, reply, new_state, timeout() | :hibernate | {:continue, term()}}
-            when reply: term(), new_state: term()
+              {:reply, reply, scene}
+              | {:reply, reply, scene, timeout() | :hibernate | {:continue, term()}}
+            when reply: term(), scene: Scene.t()
 
   @doc """
   Update the data and options of a scene. Usually implemented by Components.
@@ -918,12 +913,16 @@ defmodule Scenic.Scene do
   graph will have no affect. 
   """
   @callback handle_update(data :: any, opts :: Keyword.t(), scene :: Scene.t()) ::
-              {:noreply, new_state}
-              | {:noreply, new_state, timeout() | :hibernate | {:continue, term()}}
-            when new_state: term()
+              {:noreply, scene}
+              | {:noreply, scene, timeout() | :hibernate | {:continue, term()}}
+            when scene: Scene.t()
 
   @optional_callbacks handle_event: 3,
-                      handle_input: 3
+                      handle_input: 3,
+                      handle_get: 2,
+                      handle_put: 2,
+                      handle_fetch: 2,
+                      handle_update: 3
 
   # ============================================================================
   # using macro
@@ -959,51 +958,10 @@ defmodule Scenic.Scene do
       @doc false
       def init(_param), do: :ignore
 
-      # --------------------------------------------------------
-      # Here so that the scene can override if desired
-
-      @doc false
-      def handle_input(_input, _id, scene), do: {:noreply, scene}
-      @doc false
-      def handle_event(event, _from, scene), do: {:cont, event, scene}
-
-      @doc false
-      def handle_get(_from, scene), do: {:reply, nil, scene}
-      @doc false
-      def handle_put(value, scene), do: {:noreply, scene}
-
-      @doc false
-      def handle_fetch(_from, scene), do: {:reply, {:error, :not_implemented}, scene}
-      @doc false
-      def handle_update(text, opts, scene) do
-        Scenic.Scene.default_handle_update(text, opts, scene)
-      end
-
-      @doc false
-      def terminate(_reason, state), do: state
-
-      # --------------------------------------------------------
-      # add local shortcuts to things like get/put graph and modify element
-      # do not add a put element. keep it at modify to stay atomic
-      # --------------------------------------------------------
-      defoverridable terminate: 2,
-                     handle_event: 3,
-                     handle_input: 3,
-                     handle_get: 2,
-                     handle_put: 2,
-                     handle_fetch: 2,
-                     handle_update: 3
-
       # quote
     end
 
     # defmacro
-  end
-
-  @doc false
-  def default_handle_update(text, opts, %Scene{module: module} = scene) do
-    {:ok, scene} = module.init(scene, text, opts)
-    {:noreply, scene}
   end
 
   # ===========================================================================
@@ -1047,11 +1005,10 @@ defmodule Scenic.Scene do
   # terminate
 
   def terminate(reason, %Scene{module: module} = scene) do
-    module.terminate(reason, scene)
-  end
-
-  def terminate(_reason, _state) do
-    nil
+    case Kernel.function_exported?(module, :terminate, 2) do
+      true -> module.terminate(reason, scene)
+      false -> nil
+    end
   end
 
   # ============================================================================
@@ -1098,9 +1055,6 @@ defmodule Scenic.Scene do
         false ->
           scene
       end
-
-    # # default input is just the cursor_button
-    # request_input(scene, :cursor_button)
 
     # start up the scene
     response =
@@ -1149,73 +1103,100 @@ defmodule Scenic.Scene do
         {:_input, input, raw_input, id},
         %Scene{module: module, viewport: %{pid: vp_pid}} = scene
       ) do
-    case module.handle_input(input, id, scene) do
-      {:noreply, %Scene{} = scene} ->
+    case Kernel.function_exported?(module, :handle_input, 3) do
+      true ->
+        case module.handle_input(input, id, scene) do
+          {:noreply, %Scene{} = scene} ->
+            {:noreply, scene}
+
+          {:noreply, %Scene{} = scene, opts} ->
+            {:noreply, scene, opts}
+
+          {:halt, %Scene{} = scene} ->
+            {:noreply, scene}
+
+          {:halt, %Scene{} = scene, opts} ->
+            {:noreply, scene, opts}
+
+          {:cont, scene} ->
+            GenServer.cast(vp_pid, {:continue_input, raw_input})
+            {:noreply, scene}
+
+          {:cont, scene, opts} ->
+            GenServer.cast(vp_pid, {:continue_input, raw_input})
+            {:noreply, scene, opts}
+
+          response ->
+            response
+        end
+
+      false ->
         {:noreply, scene}
-
-      {:noreply, %Scene{} = scene, opts} ->
-        {:noreply, scene, opts}
-
-      {:halt, %Scene{} = scene} ->
-        {:noreply, scene}
-
-      {:halt, %Scene{} = scene, opts} ->
-        {:noreply, scene, opts}
-
-      {:cont, scene} ->
-        GenServer.cast(vp_pid, {:continue_input, raw_input})
-        {:noreply, scene}
-
-      {:cont, scene, opts} ->
-        GenServer.cast(vp_pid, {:continue_input, raw_input})
-        {:noreply, scene, opts}
-
-      response ->
-        response
     end
   end
 
   # --------------------------------------------------------
-  def handle_info({:_event, event, from}, %Scene{module: module} = scene) do
-    case module.handle_event(event, from, scene) do
-      {:noreply, %Scene{} = scene} ->
-        {:noreply, scene}
+  def handle_info({:_event, event, from}, %Scene{module: module, parent: parent} = scene) do
+    case Kernel.function_exported?(module, :handle_event, 3) do
+      true ->
+        case module.handle_event(event, from, scene) do
+          {:noreply, %Scene{} = scene} ->
+            {:noreply, scene}
 
-      {:noreply, %Scene{} = scene, opts} ->
-        {:noreply, scene, opts}
+          {:noreply, %Scene{} = scene, opts} ->
+            {:noreply, scene, opts}
 
-      {:halt, %Scene{} = scene} ->
-        {:noreply, scene}
+          {:halt, %Scene{} = scene} ->
+            {:noreply, scene}
 
-      {:halt, %Scene{} = scene, opts} ->
-        {:noreply, scene, opts}
+          {:halt, %Scene{} = scene, opts} ->
+            {:noreply, scene, opts}
 
-      {:cont, event, %Scene{parent: parent} = scene} ->
+          {:cont, event, %Scene{parent: parent} = scene} ->
+            Process.send(parent, {:_event, event, from}, [])
+            {:noreply, scene}
+
+          {:cont, event, %Scene{parent: parent} = scene, opts} ->
+            Process.send(parent, {:_event, event, from}, [])
+            {:noreply, scene, opts}
+
+          response ->
+            response
+        end
+
+      false ->
         Process.send(parent, {:_event, event, from}, [])
         {:noreply, scene}
-
-      {:cont, event, %Scene{parent: parent} = scene, opts} ->
-        Process.send(parent, {:_event, event, from}, [])
-        {:noreply, scene, opts}
-
-      response ->
-        response
     end
   end
 
   def handle_info({:_put_, param}, %Scene{module: module} = scene) do
-    case module.handle_put(param, scene) do
-      {:ok, %Scene{} = scene} -> {:noreply, scene}
-      {:noreply, %Scene{} = scene} -> {:noreply, scene}
-      {:noreply, %Scene{} = scene, opts} -> {:noreply, scene, opts}
+    case Kernel.function_exported?(module, :handle_put, 2) do
+      true ->
+        case module.handle_put(param, scene) do
+          {:ok, %Scene{} = scene} -> {:noreply, scene}
+          {:noreply, %Scene{} = scene} -> {:noreply, scene}
+          {:noreply, %Scene{} = scene, opts} -> {:noreply, scene, opts}
+        end
+
+      false ->
+        {:noreply, scene}
     end
   end
 
   def handle_info({:_update_, param, opts}, %Scene{module: module} = scene) do
-    case module.handle_update(param, opts, scene) do
-      {:ok, %Scene{} = scene} -> {:noreply, scene}
-      {:noreply, %Scene{} = scene} -> {:noreply, scene}
-      {:noreply, %Scene{} = scene, opts} -> {:noreply, scene, opts}
+    case Kernel.function_exported?(module, :handle_update, 3) do
+      true ->
+        case module.handle_update(param, opts, scene) do
+          {:ok, %Scene{} = scene} -> {:noreply, scene}
+          {:noreply, %Scene{} = scene} -> {:noreply, scene}
+          {:noreply, %Scene{} = scene, opts} -> {:noreply, scene, opts}
+        end
+
+      false ->
+        # the default behaviour is to call the scene's init function
+        {:ok, scene} = module.init(scene, param, opts)
+        {:noreply, scene}
     end
   end
 
@@ -1240,11 +1221,17 @@ defmodule Scenic.Scene do
   end
 
   def handle_call(:_get_, from, %Scene{module: module} = scene) do
-    module.handle_get(from, scene)
+    case Kernel.function_exported?(module, :handle_get, 2) do
+      true -> module.handle_get(from, scene)
+      false -> {:reply, nil, scene}
+    end
   end
 
   def handle_call(:_fetch_, from, %Scene{module: module} = scene) do
-    module.handle_fetch(from, scene)
+    case Kernel.function_exported?(module, :handle_fetch, 2) do
+      true -> module.handle_fetch(from, scene)
+      false -> {:reply, {:error, :not_implemented}, scene}
+    end
   end
 
   # --------------------------------------------------------

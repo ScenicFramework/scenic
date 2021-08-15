@@ -252,12 +252,8 @@ defmodule Scenic.Component.Input.Slider do
     {:noreply, scene}
   end
 
-  # ignore other button press events
-  def handle_input({:cursor_button, _}, _id, scene) do
-    {:noreply, scene}
-  end
-
-  def handle_input({:cursor_pos, _}, _id, scene) do
+  # ignore other input
+  def handle_input(_input, _id, scene) do
     {:noreply, scene}
   end
 
@@ -376,56 +372,77 @@ defmodule Scenic.Component.Input.Slider do
     {:noreply, scene}
   end
 
-  def handle_put(value, %{assigns: %{
-      graph: graph,
-      extents: extents,
-      width: width,
-      id: id
-    }} = scene) when is_list(extents) do
+  def handle_put(
+        value,
+        %{
+          assigns: %{
+            graph: graph,
+            extents: extents,
+            width: width,
+            id: id
+          }
+        } = scene
+      )
+      when is_list(extents) do
+    scene =
+      case Enum.member?(extents, value) do
+        false ->
+          Logger.warn(
+            "Attempted to put an invalid value on Slider id: #{inspect(id)}, value: #{inspect(value)}"
+          )
 
-    scene = case Enum.member?(extents, value) do
-      false ->
-        Logger.warn( "Attempted to put an invalid value on Slider id: #{inspect(id)}, value: #{inspect(value)}")
-        scene
+          scene
 
-      true -> 
-        send_parent_event(scene, {:value_changed, id, value})
-        new_x = calc_slider_position(width, extents, value)
-        graph = Graph.modify(graph, :thumb, fn p ->
-          update_opts(p, translate: {new_x, 0})
-        end)
+        true ->
+          send_parent_event(scene, {:value_changed, id, value})
+          new_x = calc_slider_position(width, extents, value)
 
-        scene
-        |> assign( graph: graph, value: value )
-        |> push_graph( graph )
-    end
+          graph =
+            Graph.modify(graph, :thumb, fn p ->
+              update_opts(p, translate: {new_x, 0})
+            end)
+
+          scene
+          |> assign(graph: graph, value: value)
+          |> push_graph(graph)
+      end
 
     {:noreply, scene}
   end
 
-  def handle_put(value, %{assigns: %{
-      graph: graph,
-      extents: {min, max} = extents,
-      width: width,
-      id: id
-    }} = scene) when is_number(value) and value >= min and value <= max do
-
+  def handle_put(
+        value,
+        %{
+          assigns: %{
+            graph: graph,
+            extents: {min, max} = extents,
+            width: width,
+            id: id
+          }
+        } = scene
+      )
+      when is_number(value) and value >= min and value <= max do
     send_parent_event(scene, {:value_changed, id, value})
     new_x = calc_slider_position(width, extents, value)
-    graph = Graph.modify(graph, :thumb, fn p ->
-      update_opts(p, translate: {new_x, 0})
-    end)
+
+    graph =
+      Graph.modify(graph, :thumb, fn p ->
+        update_opts(p, translate: {new_x, 0})
+      end)
 
     scene =
       scene
-      |> assign( graph: graph, value: value )
-      |> push_graph( graph )
+      |> assign(graph: graph, value: value)
+      |> push_graph(graph)
 
     {:noreply, scene}
   end
 
   def handle_put(v, %{assigns: %{id: id}} = scene) do
-    Logger.warn( "Attempted to put an invalid value on Slider id: #{inspect(id)}, value: #{inspect(v)}")
+    Logger.warn(
+      "Attempted to put an invalid value on Slider id: #{inspect(id)}, value: #{inspect(v)}"
+    )
+
     {:noreply, scene}
   end
 

@@ -27,7 +27,7 @@ defmodule Scenic.Scenes.ErrorTest do
     # confirm it's script is in place
     # starting the scene is async and may take some time
     Enum.find(1..200, fn _ ->
-      case ViewPort.get_script_by_id(vp, 1) do
+      case ViewPort.get_script(vp, ViewPort.main_id()) do
         {:ok, _script} ->
           true
 

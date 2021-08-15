@@ -291,15 +291,16 @@ defmodule Scenic.Component.Input.RadioButton do
   end
 
   def handle_put(v, %{assigns: %{id: id}} = scene) do
-    Logger.warn( "Attempted to put an invalid value on Radio Button id: #{inspect(id)}, value: #{inspect(v)}")
+    Logger.warn(
+      "Attempted to put an invalid value on Radio Button id: #{inspect(id)}, value: #{inspect(v)}"
+    )
+
     {:noreply, scene}
   end
-
 
   @doc false
   @impl Scenic.Scene
   def handle_fetch(_, %{assigns: %{text: text, id: id, checked?: checked?}} = scene) do
     {:reply, {:ok, {text, id, checked?}}, scene}
   end
-
 end

@@ -167,37 +167,44 @@ defmodule Scenic.Component.Input.RadioGroupTest do
 
   test "implements fetch/update", %{scene: scene} do
     assert Scene.fetch_child(scene, :radio_group) ==
-      {:ok, [{
-          [
-            {"Radio A", :radio_a},
-            {"Radio B", :radio_b},
-            {"Radio C", :radio_c}
-          ],
-          :radio_b
-        }]}
+             {:ok,
+              [
+                {
+                  [
+                    {"Radio A", :radio_a},
+                    {"Radio B", :radio_b},
+                    {"Radio C", :radio_c}
+                  ],
+                  :radio_b
+                }
+              ]}
 
-    %Scene{} = scene = Scene.update_child(scene, :radio_group, {
-          [
-            {"Mod A", :radio_a},
-            {"Modd B", :radio_b},
-            {"Moddd C", :radio_c}
-          ],
-          :radio_c
-        })
+    %Scene{} =
+      scene =
+      Scene.update_child(scene, :radio_group, {
+        [
+          {"Mod A", :radio_a},
+          {"Modd B", :radio_b},
+          {"Moddd C", :radio_c}
+        ],
+        :radio_c
+      })
 
-    assert Scene.fetch_child(scene, :radio_group) == {:ok, [{
-          [
-            {"Mod A", :radio_a},
-            {"Modd B", :radio_b},
-            {"Moddd C", :radio_c}
-          ],
-          :radio_c
-        }]}
+    assert Scene.fetch_child(scene, :radio_group) ==
+             {:ok,
+              [
+                {
+                  [
+                    {"Mod A", :radio_a},
+                    {"Modd B", :radio_b},
+                    {"Moddd C", :radio_c}
+                  ],
+                  :radio_c
+                }
+              ]}
+
     assert Scene.get_child(scene, :radio_group) == [:radio_c]
   end
-
-
-
 
   # test "implements get/fetch/update", %{scene: scene} do
   #   assert Scene.get_child(scene, :radio_group) == [:radio_b]
@@ -223,5 +230,4 @@ defmodule Scenic.Component.Input.RadioGroupTest do
   #   assert Scene.get_child(scene, :radio_group) == [:radio_c]
   #   assert Scene.fetch_child(scene, :radio_group) == {:ok, [{[{"mod One", 1}, {"mod Two", 2}], 1}]}
   # end
-
 end

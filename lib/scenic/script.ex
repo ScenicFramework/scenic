@@ -660,8 +660,8 @@ defmodule Scenic.Script do
   current state is automatically restored with the script is completed. Then
   the current script continues drawing.
   """
-  @spec render_script(ops :: t(), id :: pos_integer) :: ops :: t()
-  def render_script(ops, id) when is_integer(id) and id >= 0 do
+  @spec render_script(ops :: t(), id :: String.t()) :: ops :: t()
+  def render_script(ops, id) when is_bitstring(id) do
     [{:script, id} | ops]
   end
 
@@ -1195,9 +1195,11 @@ defmodule Scenic.Script do
   # ============================================================================
 
   @doc """
-  Transform a script list into a binary IO list. Usually called from a driver.
+  Transform a script list into a binary IO list.
 
-  In its most basic form, pass in a raw script list and it will return a standard format IO list.
+  Usually called from a driver.
+
+  Returns an IO list.
 
   ```elixir
   with {:ok, script} <- ViewPort.get_script_by_id(vp, "my_script_id") do
@@ -1211,36 +1213,48 @@ defmodule Scenic.Script do
   of certain commands.
 
   ```elixir
-  with {:ok, script} <- ViewPort.get_script_by_id(vp, id) do
-    Script.serialize(script, fn
-      {:font, id} -> serialize_font(id)
-      {:fill_stream, id} -> serialize_fill_stream(id)
-      {:stroke_stream, id} -> serialize_stroke_stream(id)
+    io_list = Script.serialize(script, fn
+      {:font, id} -> my_serialize_font(id)
+      {:fill_stream, id} -> my_serialize_fill_stream(id)
+      {:stroke_stream, id} -> my_serialize_stroke_stream(id)
+      other -> other
+  end
+  ```
+  """
+  @spec serialize(script :: t()) :: iolist
+  def serialize(script)
+
+  def serialize(script) when is_list(script) do
+    Enum.map(script, &serialize_op(&1))
+  end
+
+  @doc """
+  Transform a script list into a binary IO list with a map like interceptor function.
+
+  Usually called from a driver.
+
+  Returns an IO list.
+
+  ```elixir
+  with {:ok, script} <- ViewPort.get_script(vp, id) do
+    io_list = Script.serialize(script, fn
+      {:font, id} -> my_serialize_font(id)
+      {:fill_stream, id} -> my_serialize_fill_stream(id)
+      {:stroke_stream, id} -> my_serialize_stroke_stream(id)
       other -> other
     end)
-    |> Glfw.ToPort.put_script(id, port)
   end
   ```
   """
   @spec serialize(
           script :: t(),
-          op_fn ::
-            nil
-            | (op_fn :: script_op -> nil | binary | iolist | script_op)
-            | (op_fn :: script_op, state :: any ->
-                 {nil, any} | {binary, any} | {iolist, any} | {script_op, any}),
-          op_state :: any
+          op_fn :: (op_fn :: script_op -> nil | binary | iolist | script_op)
         ) :: iolist
-  def serialize(script, op_fn \\ nil, param \\ nil)
+  def serialize(script, intercept_fn)
 
-  def serialize(script, nil, nil) when is_list(script) do
-    # Enum.reduce(script, <<>>, fn(op, bin) ->
-    Enum.map(script, &serialize_op(&1))
-  end
-
-  def serialize(script, op_fn, nil) when is_list(script) do
+  def serialize(script, op_fn) when is_list(script) and is_function(op_fn, 1) do
     Enum.map(script, fn op ->
-      case filter_op(op, op_fn) do
+      case op_fn.(op) do
         nil -> []
         bin when is_binary(bin) -> bin
         io_list when is_list(io_list) -> io_list
@@ -1249,25 +1263,40 @@ defmodule Scenic.Script do
     end)
   end
 
-  def serialize(script, op_fn, param) when is_list(script) do
-    {io_list, param} =
-      Enum.reduce(script, {[], param}, fn op, {acc, param} ->
-        case filter_op(op, op_fn, param) do
-          {nil, p} -> {acc, p}
-          {bin, p} when is_binary(bin) -> {[bin | acc], p}
-          {io_list, p} when is_list(io_list) -> {[io_list | acc], p}
-          {op, p} -> {[serialize_op(op) | acc], p}
-        end
-      end)
+  @doc """
+  Transform a script list into a binary IO list with a map_reduce like interceptor function.
 
-    {Enum.reverse(io_list), param}
+  Usually called from a driver.
+
+  Returns an IO list.
+
+  ```elixir
+    {io_list, count} = Script.serialize(script, 0, fn
+      {:font, id}, c -> {my_serialize_font(id), c+1}
+      {:fill_stream, id}, c -> {my_serialize_fill_stream(id), c+1}
+      {:stroke_stream, id}, c -> {my_serialize_stroke_stream(id), c+1}
+      other, c -> {other, c+1}
+    end)
+  ```
+  """
+  @spec serialize(
+          script :: t(),
+          accumulator :: Enum.acc(),
+          (op_fn :: script_op, state :: any ->
+             {nil, any} | {binary, any} | {iolist, any} | {script_op, any})
+        ) :: {iolist, Enum.acc()}
+  def serialize(script, acc, intercept_fn)
+
+  def serialize(script, acc, op_fn) when is_list(script) and is_function(op_fn, 2) do
+    Enum.map_reduce(script, acc, fn op, acc ->
+      case op_fn.(op, acc) do
+        {nil, acc} -> {[], acc}
+        {bin, acc} when is_binary(bin) -> {bin, acc}
+        {io_list, acc} when is_list(io_list) -> {io_list, acc}
+        {op, acc} -> {serialize_op(op), acc}
+      end
+    end)
   end
-
-  defp filter_op(op, nil), do: op
-  defp filter_op(op, filter) when is_function(filter, 1), do: filter.(op)
-
-  defp filter_op(op, nil, param), do: {op, param}
-  defp filter_op(op, filter, param) when is_function(filter, 2), do: filter.(op, param)
 
   @doc """
   Transform a binary or io list into a readable script list.
@@ -1454,10 +1483,13 @@ defmodule Scenic.Script do
   end
 
   defp serialize_op({:script, id}) do
-    <<
-      @op_draw_script::16-big,
-      id::16-big
-    >>
+    [
+      <<
+        @op_draw_script::16-big,
+        byte_size(id)::16
+      >>,
+      padded_string(id)
+    ]
   end
 
   defp serialize_op(:begin_path), do: <<@op_begin_path::16-big, 0::16>>
@@ -2186,9 +2218,10 @@ defmodule Scenic.Script do
 
   defp deserialize_op(<<
          @op_draw_script::16-big,
-         id::16-big,
+         id_size::16,
          bin::binary
        >>) do
+    {id, bin} = extract_string(bin, id_size)
     {{:script, id}, bin}
   end
 

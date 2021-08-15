@@ -232,8 +232,8 @@ defmodule Scenic.ScriptTest do
   end
 
   test "render_script works" do
-    expected = [{:script, 1234}]
-    assert Script.render_script([], 1234) == expected
+    expected = [{:script, "script_id"}]
+    assert Script.render_script([], "script_id") == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()
   end
 
@@ -651,6 +651,181 @@ defmodule Scenic.ScriptTest do
     assert Script.media(script) == %{
              streams: ["test_stream"]
            }
+  end
+
+  # --------------------------------------------------------
+  # serialization forms
+
+  test "serialize works with a map like function - responds with binary" do
+    script =
+      Script.start()
+      |> Script.rectangle(10, 20)
+      |> Script.fill_stream("test_stream")
+      |> Script.finish()
+
+    # get the default io_list as a baseline
+    normal = Script.serialize(script) |> List.flatten()
+    [rect, _, "test_stream", <<0>>] = normal
+
+    # to it again mapping the stream name to something else
+    mapped =
+      Script.serialize(script, fn
+        {:fill_stream, _} -> <<1, 2, 3, 4>>
+        other -> other
+      end)
+
+    [^rect, <<1, 2, 3, 4>>] = mapped
+  end
+
+  test "serialize works with a map like function - removes items with nil response" do
+    script =
+      Script.start()
+      |> Script.rectangle(10, 20)
+      |> Script.fill_stream("test_stream")
+      |> Script.finish()
+
+    # get the default io_list as a baseline
+    normal = Script.serialize(script) |> List.flatten()
+    [rect, _, "test_stream", <<0>>] = normal
+
+    # to it again mapping the stream name to something else
+    mapped =
+      Script.serialize(script, fn
+        {:fill_stream, _} -> nil
+        other -> other
+      end)
+
+    [^rect, []] = mapped
+  end
+
+  test "serialize works with a map like function - default serializes mapped op" do
+    script =
+      Script.start()
+      |> Script.rectangle(10, 20)
+      |> Script.fill_stream("test_stream")
+      |> Script.finish()
+
+    # get the default io_list as a baseline
+    normal = Script.serialize(script) |> List.flatten()
+    [rect, _, "test_stream", <<0>>] = normal
+
+    # to it again mapping the stream name to something else
+    mapped =
+      Script.serialize(script, fn
+        {:fill_stream, _} -> {:rect, {10, 20}}
+        other -> other
+      end)
+
+    [^rect, ^rect] = mapped
+  end
+
+  test "serialize works with a map like function - responds with io_list" do
+    script =
+      Script.start()
+      |> Script.rectangle(10, 20)
+      |> Script.fill_stream("test_stream")
+      |> Script.finish()
+
+    # get the default io_list as a baseline
+    normal = Script.serialize(script) |> List.flatten()
+    [rect, _, "test_stream", <<0>>] = normal
+
+    # to it again mapping the stream name to something else
+    mapped =
+      Script.serialize(script, fn
+        {:fill_stream, _} -> [<<1, 2>>, <<3, 4>>]
+        other -> other
+      end)
+
+    [^rect, [<<1, 2>>, <<3, 4>>]] = mapped
+  end
+
+  test "serialize works with a map_reduce like function - responds with binary" do
+    script =
+      Script.start()
+      |> Script.rectangle(10, 20)
+      |> Script.fill_stream("test_stream")
+      |> Script.finish()
+
+    # get the default io_list as a baseline
+    normal = Script.serialize(script) |> List.flatten()
+    [rect, _, "test_stream", <<0>>] = normal
+
+    # to it again mapping the stream name to something else
+    {mapped, count} =
+      Script.serialize(script, 0, fn
+        {:fill_stream, _}, c -> {<<1, 2, 3, 4>>, c + 1}
+        other, c -> {other, c + 1}
+      end)
+
+    [^rect, <<1, 2, 3, 4>>] = mapped
+    assert count == 2
+  end
+
+  test "serialize works with a map_reduce like function - removes items with nil response" do
+    script =
+      Script.start()
+      |> Script.rectangle(10, 20)
+      |> Script.fill_stream("test_stream")
+      |> Script.finish()
+
+    # get the default io_list as a baseline
+    normal = Script.serialize(script) |> List.flatten()
+    [rect, _, "test_stream", <<0>>] = normal
+
+    # to it again mapping the stream name to something else
+    {mapped, count} =
+      Script.serialize(script, 0, fn
+        {:fill_stream, _}, c -> {nil, c}
+        other, c -> {other, c + 1}
+      end)
+
+    [^rect, []] = mapped
+    assert count == 1
+  end
+
+  test "serialize works with a map_reduce like function - default serializes mapped op" do
+    script =
+      Script.start()
+      |> Script.rectangle(10, 20)
+      |> Script.fill_stream("test_stream")
+      |> Script.finish()
+
+    # get the default io_list as a baseline
+    normal = Script.serialize(script) |> List.flatten()
+    [rect, _, "test_stream", <<0>>] = normal
+
+    # to it again mapping the stream name to something else
+    {mapped, count} =
+      Script.serialize(script, 0, fn
+        {:fill_stream, _}, c -> {{:rect, {10, 20}}, c + 1}
+        other, c -> {other, c + 1}
+      end)
+
+    [^rect, ^rect] = mapped
+    assert count == 2
+  end
+
+  test "serialize works with a map_reduce like function - responds with io_list" do
+    script =
+      Script.start()
+      |> Script.rectangle(10, 20)
+      |> Script.fill_stream("test_stream")
+      |> Script.finish()
+
+    # get the default io_list as a baseline
+    normal = Script.serialize(script) |> List.flatten()
+    [rect, _, "test_stream", <<0>>] = normal
+
+    # to it again mapping the stream name to something else
+    {mapped, count} =
+      Script.serialize(script, 0, fn
+        {:fill_stream, _}, c -> {[<<1, 2>>, <<3, 4>>], c + 1}
+        other, c -> {other, c + 1}
+      end)
+
+    [^rect, [<<1, 2>>, <<3, 4>>]] = mapped
+    assert count == 2
   end
 
   # --------------------------------------------------------

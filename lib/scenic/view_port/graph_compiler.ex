@@ -32,7 +32,7 @@ defmodule Scenic.ViewPort.GraphCompiler do
     text_base: @default_text_base
   }
 
-  defstruct set: %{}, set_stack: [], reqs: @default_styles, req_stack: [], vp: nil
+  defstruct set: %{}, set_stack: [], reqs: @default_styles, req_stack: []
 
   # ========================================================
   # internal helpers for working with the compiler state
@@ -67,16 +67,16 @@ defmodule Scenic.ViewPort.GraphCompiler do
   # ========================================================
 
   # compile a graph into a list of scripts -> [{id,script}|...]
-  @spec compile(viewport :: ViewPort.t(), graph :: Graph.t()) :: {:ok, Script.t()}
-  def compile(viewport, graph)
+  @spec compile(graph :: Graph.t()) :: {:ok, Script.t()}
+  def compile(graph)
 
-  def compile(%ViewPort{} = viewport, %Graph{primitives: primitives}) do
+  def compile(%Graph{primitives: primitives}) do
     {ops, _} =
       compile_primitive(
         Script.start(),
         primitives[0],
         primitives,
-        %GraphCompiler{vp: viewport}
+        %GraphCompiler{}
       )
 
     {:ok, Script.finish(ops)}
@@ -224,18 +224,18 @@ defmodule Scenic.ViewPort.GraphCompiler do
     {ops, st_ops, state}
   end
 
-  defp do_primitive(%Primitive{module: Primitive.Script, data: name}, _, %{vp: vp} = state) do
+  defp do_primitive(%Primitive{module: Primitive.Script, data: name}, _, state) do
     {st_ops, state} = compile_styles(Primitive.Script.valid_styles(), state)
-    {do_compile_script_name([], vp, name), st_ops, state}
+    {do_compile_script_name([], name), st_ops, state}
   end
 
   defp do_primitive(
          %Primitive{module: Primitive.Component, data: {_, _, name}},
          _,
-         %{vp: vp} = state
+         state
        ) do
     {st_ops, state} = compile_styles(Primitive.Component.valid_styles(), state)
-    {do_compile_script_name([], vp, name), st_ops, state}
+    {do_compile_script_name([], name), st_ops, state}
   end
 
   defp do_primitive(%Primitive{module: Primitive.Text, data: text}, _, state) do
@@ -264,10 +264,8 @@ defmodule Scenic.ViewPort.GraphCompiler do
     {mod.compile(p, state.reqs), st_ops, state}
   end
 
-  defp do_compile_script_name(ops, vp, name) do
-    # this should work, so if it doesn't, make it obvious by crashing
-    {:ok, id} = ViewPort.register_script_name(vp, name)
-    Script.render_script(ops, id)
+  defp do_compile_script_name(ops, name) do
+    Script.render_script(ops, name)
   end
 
   defp do_text_color(

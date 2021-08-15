@@ -85,7 +85,7 @@ defmodule Scenic.Primitive.Script do
   @spec validate(script_id :: Scenic.Script.id()) ::
           {:ok, script_id :: Scenic.Script.id()} | {:error, String.t()}
 
-  def validate(id) when is_atom(id) or is_bitstring(id) or is_reference(id) or is_pid(id) do
+  def validate(id) when is_bitstring(id) do
     {:ok, id}
   end
 

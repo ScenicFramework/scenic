@@ -88,7 +88,6 @@ defmodule Scenic.Component.Input.RadioButtonTest do
     refute_receive(_, 10)
   end
 
-
   test "implements get/put", %{scene: scene} do
     assert Scene.get_child(scene, :btn) == [false]
     assert Scene.put_child(scene, :btn, true) == :ok
@@ -101,6 +100,4 @@ defmodule Scenic.Component.Input.RadioButtonTest do
     assert Scene.fetch_child(scene, :btn) == {:ok, [{"RadioMod", :radio_mod, true}]}
     assert Scene.get_child(scene, :btn) == [true]
   end
-
-
 end

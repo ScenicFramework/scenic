@@ -110,5 +110,4 @@ defmodule Scenic.Component.ButtonTest do
     %Scene{} = scene = Scene.update_child(scene, :test_btn, "modified")
     assert Scene.fetch_child(scene, :test_btn) == {:ok, ["modified"]}
   end
-
 end

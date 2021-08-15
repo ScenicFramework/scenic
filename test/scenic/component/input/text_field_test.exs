@@ -307,7 +307,6 @@ defmodule Scenic.Component.Input.TextFieldTest do
     refute_receive(_, 10)
   end
 
-
   test "implements get/put", %{scene: scene} do
     assert Scene.get_child(scene, :text_field) == ["Initial value"]
     assert Scene.put_child(scene, :text_field, "updated") == :ok
@@ -317,8 +316,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
   test "implements fetch/update", %{scene: scene} do
     assert Scene.fetch_child(scene, :text_field) == {:ok, ["Initial value"]}
     %Scene{} = scene = Scene.update_child(scene, :text_field, "updated")
-    assert Scene.fetch_child(scene, :text_field) == {:ok, ["updated"] }
+    assert Scene.fetch_child(scene, :text_field) == {:ok, ["updated"]}
     assert Scene.get_child(scene, :text_field) == ["updated"]
   end
-
 end

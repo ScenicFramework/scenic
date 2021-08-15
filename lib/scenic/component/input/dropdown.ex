@@ -627,50 +627,61 @@ defmodule Scenic.Component.Input.Dropdown do
   @doc false
   @impl Scenic.Scene
   def handle_put(s_id, %{assigns: %{selected_id: selected_id}} = scene)
-  when s_id == selected_id do
+      when s_id == selected_id do
     # no change
     {:noreply, scene}
   end
 
-  def handle_put(s_id, %{assigns: %{
-      id: id,
-      items: items,
-      theme: theme,
-      graph: graph
-    }} = scene) do
-
+  def handle_put(
+        s_id,
+        %{
+          assigns: %{
+            id: id,
+            items: items,
+            theme: theme,
+            graph: graph
+          }
+        } = scene
+      ) do
     # find the newly selected item's text
-    scene = case Enum.find(items, fn {_, id} -> id == s_id end) do
-      nil ->
-        Logger.warn( "Attempted to put an invalid value on Dropdown id: #{inspect(id)}, value: #{inspect(s_id)}")
-        scene
+    scene =
+      case Enum.find(items, fn {_, id} -> id == s_id end) do
+        nil ->
+          Logger.warn(
+            "Attempted to put an invalid value on Dropdown id: #{inspect(id)}, value: #{inspect(s_id)}"
+          )
 
-      {text, _} ->
-        # send the value_changed message
-        send_parent_event(scene, {:value_changed, id, s_id})
+          scene
 
-        graph =
-          graph
-          # update the main button text
-          |> Graph.modify(@text_id, &text(&1, text))
-          # restore standard highliting
-          |> update_highlighting(items, s_id, nil, theme)
-          # raise the dropdown
-          |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
-          |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
+        {text, _} ->
+          # send the value_changed message
+          send_parent_event(scene, {:value_changed, id, s_id})
 
-        :ok = release_input(scene)
+          graph =
+            graph
+            # update the main button text
+            |> Graph.modify(@text_id, &text(&1, text))
+            # restore standard highliting
+            |> update_highlighting(items, s_id, nil, theme)
+            # raise the dropdown
+            |> Graph.modify(@caret_id, &update_opts(&1, rotate: @rotate_neutral))
+            |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
 
-        scene
-        |> assign(down: false, graph: graph, selected_id: s_id)
-        |> push_graph(graph)
-    end
+          :ok = release_input(scene)
+
+          scene
+          |> assign(down: false, graph: graph, selected_id: s_id)
+          |> push_graph(graph)
+      end
 
     {:noreply, scene}
   end
 
   def handle_put(v, %{assigns: %{id: id}} = scene) do
-    Logger.warn( "Attempted to put an invalid value on Dropdown id: #{inspect(id)}, value: #{inspect(v)}")
+    Logger.warn(
+      "Attempted to put an invalid value on Dropdown id: #{inspect(id)}, value: #{inspect(v)}"
+    )
+
     {:noreply, scene}
   end
 

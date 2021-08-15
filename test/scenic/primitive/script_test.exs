@@ -19,20 +19,15 @@ defmodule Scenic.Primitive.ScriptTest do
   # build / add
 
   test "build works" do
-    p = Script.build(:named_scene)
+    p = Script.build("named_scene")
     assert p.module == Script
-    assert Primitive.get(p) == :named_scene
+    assert Primitive.get(p) == "named_scene"
   end
 
   # ============================================================================
 
   test "validate accepts an id" do
-    assert Script.validate(self()) == {:ok, self()}
-    assert Script.validate(__MODULE__) == {:ok, __MODULE__}
     assert Script.validate("a string id") == {:ok, "a string id"}
-
-    ref = make_ref()
-    assert Script.validate(ref) == {:ok, ref}
   end
 
   test "validate rejects bad data" do
@@ -51,7 +46,7 @@ defmodule Scenic.Primitive.ScriptTest do
   # compile
 
   test "compile raises - it is a special case" do
-    p = Script.build(:named_scene)
+    p = Script.build("named_scene")
     assert_raise RuntimeError, fn -> Script.compile(p, %{}) end
   end
 

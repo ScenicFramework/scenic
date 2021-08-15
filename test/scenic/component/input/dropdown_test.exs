@@ -156,11 +156,10 @@ defmodule Scenic.Component.Input.DropdownTest do
 
   test "implements fetch/update", %{scene: scene} do
     assert Scene.fetch_child(scene, :dropdown) ==
-      {:ok, [{[{"Option One", 1}, {"Option Two", 2}], 2}]}
+             {:ok, [{[{"Option One", 1}, {"Option Two", 2}], 2}]}
+
     %Scene{} = scene = Scene.update_child(scene, :dropdown, {[{"mod One", 1}, {"mod Two", 2}], 1})
     assert Scene.fetch_child(scene, :dropdown) == {:ok, [{[{"mod One", 1}, {"mod Two", 2}], 1}]}
     assert Scene.get_child(scene, :dropdown) == [1]
   end
-
-
 end

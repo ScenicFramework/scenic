@@ -230,29 +230,40 @@ defmodule Scenic.Component.Input.RadioGroup do
     {:noreply, scene}
   end
 
-  def handle_put(value, %{assigns: %{
-      items: items,
-      id: id
-    }} = scene) do
-
+  def handle_put(
+        value,
+        %{
+          assigns: %{
+            items: items,
+            id: id
+          }
+        } = scene
+      ) do
     # find the newly selected item's text
-    scene = case Enum.find(items, fn {_, id} -> id == value end) do
-      nil ->
-        Logger.warn( "Attempted to put an invalid value on Radio Group id: #{inspect(id)}, value: #{inspect(value)}")
-        scene
+    scene =
+      case Enum.find(items, fn {_, id} -> id == value end) do
+        nil ->
+          Logger.warn(
+            "Attempted to put an invalid value on Radio Group id: #{inspect(id)}, value: #{inspect(value)}"
+          )
 
-      {_, _} ->
-        # send the value_changed message
-        send_parent_event(scene, {:value_changed, id, value})
-        :ok = cast_children(scene, {:set_to_msg, value})
-        assign(scene, value: value)
-    end
+          scene
+
+        {_, _} ->
+          # send the value_changed message
+          send_parent_event(scene, {:value_changed, id, value})
+          :ok = cast_children(scene, {:set_to_msg, value})
+          assign(scene, value: value)
+      end
 
     {:noreply, scene}
   end
 
   def handle_put(v, %{assigns: %{id: id}} = scene) do
-    Logger.warn( "Attempted to put an invalid value on Dropdown id: #{inspect(id)}, value: #{inspect(v)}")
+    Logger.warn(
+      "Attempted to put an invalid value on Dropdown id: #{inspect(id)}, value: #{inspect(v)}"
+    )
+
     {:noreply, scene}
   end
 
@@ -261,5 +272,4 @@ defmodule Scenic.Component.Input.RadioGroup do
   def handle_fetch(_, %{assigns: %{items: items, value: value}} = scene) do
     {:reply, {:ok, {items, value}}, scene}
   end
-
 end

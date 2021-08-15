@@ -47,15 +47,17 @@ defmodule Scenic.Primitive.Component do
   # (16 * 8) = 128 bits of randomness
   @name_length 16
 
+  @main_id Scenic.ViewPort.main_id()
+
   # ============================================================================
   # data verification and serialization
 
   @impl Primitive
   @spec validate(
           {mod :: module, param :: any}
-          | {mod :: module, param :: any, name :: pid | atom | String.t()}
+          | {mod :: module, param :: any, name :: String.t()}
         ) ::
-          {:ok, {mod :: module, param :: any, name :: pid | atom | String.t()}}
+          {:ok, {mod :: module, param :: any, name :: String.t()}}
           | {:error, String.t()}
   def validate({mod, param}) do
     name =
@@ -68,7 +70,7 @@ defmodule Scenic.Primitive.Component do
 
   # special case the root
 
-  def validate({:_root_, nil, :_root_}), do: {:ok, {:_root_, nil, :_root_}}
+  def validate({@main_id, nil, @main_id}), do: {:ok, {@main_id, nil, @main_id}}
 
   def validate({mod, param, name})
       when is_atom(mod) and mod != nil and
