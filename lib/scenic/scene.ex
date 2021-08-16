@@ -440,6 +440,7 @@ defmodule Scenic.Scene do
   end
 
   @doc "Send an event message to a specific scene"
+  @spec send_parent_event(pid :: pid, event :: any) :: :ok
   def send_event(pid, event_msg) do
     Process.send(pid, {:_event, event_msg, self()}, [])
   end
