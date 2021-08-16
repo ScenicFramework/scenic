@@ -439,19 +439,12 @@ defmodule Scenic.Scene do
     |> Scenic.Math.Matrix.project_vector({x, y})
   end
 
-  @doc "Send a message to a scene's parent"
-  def send_event(_event_msg) do
-    IO.warn("""
-    send_event/1 from within a scene is deprecated.
-    Use send_parent_event/2 instead
-
-    Example: send_parent_event( scene, :my_event )
-
-    send_event/1 was unclear who it was sending to and needed to access hidden state
-    that is now explicitly stored in the %Scene{} struct.
-    """)
+  @doc "Send an event message to a specific scene"
+  def send_event(pid, event_msg) do
+    Process.send(pid, {:_event, event_msg, self()}, [])
   end
 
+  @doc "Send an event message to a scene's parent"
   @spec send_parent_event(scene :: Scene.t(), event :: any) :: :ok
   def send_parent_event(%Scene{parent: parent_pid, pid: scene_pid}, event_msg) do
     Process.send(parent_pid, {:_event, event_msg, scene_pid}, [])
@@ -879,7 +872,7 @@ defmodule Scenic.Scene do
   @doc """
   Get the current \"value\" associated with the scene and return it to the caller.
 
-  If this callback is not implemented, the caller with receive nil. 
+  If this callback is not implemented, the caller with receive nil.
   """
   @callback handle_get(from :: GenServer.from(), scene :: Scene.t()) ::
               {:reply, reply, scene}
@@ -889,7 +882,7 @@ defmodule Scenic.Scene do
   @doc """
   Put the current \"value\" associated with the scene .
 
-  Does nothing if this callback is not implemented. 
+  Does nothing if this callback is not implemented.
   """
   @callback handle_put(value :: any, scene :: Scene.t()) ::
               {:noreply, scene}
@@ -899,7 +892,7 @@ defmodule Scenic.Scene do
   @doc """
   Retrieve the current data associated with the scene and return it to the caller.
 
-  If this callback is not implemented, the caller with get an {:error, :not_implemented}. 
+  If this callback is not implemented, the caller with get an {:error, :not_implemented}.
   """
   @callback handle_fetch(from :: GenServer.from(), scene :: Scene.t()) ::
               {:reply, reply, scene}
@@ -910,7 +903,7 @@ defmodule Scenic.Scene do
   Update the data and options of a scene. Usually implemented by Components.
 
   If this callback is not implemented, then changes to the component in the parent's
-  graph will have no affect. 
+  graph will have no affect.
   """
   @callback handle_update(data :: any, opts :: Keyword.t(), scene :: Scene.t()) ::
               {:noreply, scene}
