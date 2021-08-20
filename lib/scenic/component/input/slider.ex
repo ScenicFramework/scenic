@@ -220,6 +220,11 @@ defmodule Scenic.Component.Input.Slider do
     {:ok, scene}
   end
 
+  @impl Scenic.Component
+  def bounds(_data, opts) do
+    {0, 0, opts[:width] || @default_width, @height}
+  end
+
   # ============================================================================
 
   # --------------------------------------------------------

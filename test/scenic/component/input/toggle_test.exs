@@ -105,4 +105,12 @@ defmodule Scenic.Component.Input.ToggleTest do
     assert Scene.fetch_child(scene, :toggle) == {:ok, [true]}
     assert Scene.get_child(scene, :toggle) == [true]
   end
+
+  test "bounds works with defaults" do
+    graph =
+      Graph.build()
+      |> Scenic.Components.toggle(true)
+
+    {0.0, 0.0, 40.0, 24.0} = Graph.bounds(graph)
+  end
 end

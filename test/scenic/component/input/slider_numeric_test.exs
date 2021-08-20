@@ -160,4 +160,20 @@ defmodule Scenic.Component.Input.SliderNumericTest do
     assert Scene.fetch_child(scene, :slider_num) == {:ok, [{{10, 110}, 30}]}
     assert Scene.get_child(scene, :slider_num) == [30]
   end
+
+  test "bounds works with defaults" do
+    graph =
+      Scenic.Graph.build()
+      |> Scenic.Components.slider({{0, 100}, 20}, id: :sn)
+
+    {0.0, 0.0, 300.0, 18.0} = Scenic.Graph.bounds(graph)
+  end
+
+  test "bounds works with overrides" do
+    graph =
+      Graph.build()
+      |> Scenic.Components.slider({{0, 100}, 20}, id: :sn, width: 400)
+
+    assert Graph.bounds(graph) == {0.0, 0.0, 400.0, 18.0}
+  end
 end

@@ -109,4 +109,10 @@ defmodule Scenic.Primitive.Rectangle do
     # yp must be less than the height
     xp * w >= 0 && yp * h >= 0 && abs(xp) <= abs(w) && abs(yp) <= abs(h)
   end
+
+  # --------------------------------------------------------
+  @doc false
+  def default_pin({width, height}, _styles) do
+    {width / 2, height / 2}
+  end
 end

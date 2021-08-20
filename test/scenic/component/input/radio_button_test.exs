@@ -100,4 +100,14 @@ defmodule Scenic.Component.Input.RadioButtonTest do
     assert Scene.fetch_child(scene, :btn) == {:ok, [{"RadioMod", :radio_mod, true}]}
     assert Scene.get_child(scene, :btn) == [true]
   end
+
+  test "bounds works with defaults" do
+    graph =
+      Scenic.Graph.build()
+      |> RadioButton.add_to_graph({"Radio Button", :rb, false}, id: :btn)
+
+    {0.0, 0.0, r, b} = Scenic.Graph.bounds(graph)
+    assert r > 140 && r < 141
+    assert b > 23 && b < 24
+  end
 end

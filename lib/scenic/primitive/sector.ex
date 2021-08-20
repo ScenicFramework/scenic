@@ -131,4 +131,29 @@ defmodule Scenic.Primitive.Sector do
       point_angle <= 0 && point_angle >= angle && point_radius_sqr <= sector_radius_sqr
     end
   end
+
+  # --------------------------------------------------------
+  # Math.matrix()
+  @tau :math.pi() * 2
+  def bounds(arc_data, mx \\ nil)
+
+  def bounds(arc_data, nil) do
+    bounds(arc_data, Scenic.Math.Matrix.identity())
+  end
+
+  def bounds({radius, angle}, <<_::binary-size(64)>> = mx) do
+    n =
+      cond do
+        angle < @tau / 4 -> 4
+        angle < @tau / 2 -> 8
+        angle < @tau * 3 / 4 -> 12
+        true -> 16
+      end
+
+    Enum.reduce(0..n, [{0, 0}], fn i, pts ->
+      [{radius * :math.cos(angle * i / n), radius * :math.sin(angle * i / n)} | pts]
+    end)
+    |> Scenic.Math.Vector2.project(mx)
+    |> Scenic.Math.Vector2.bounds()
+  end
 end

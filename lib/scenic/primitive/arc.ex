@@ -136,4 +136,26 @@ defmodule Scenic.Primitive.Arc do
       false
     end
   end
+
+  # --------------------------------------------------------
+  # Math.matrix()
+  @tau :math.pi() * 2
+  @doc false
+  def bounds(data, mx)
+
+  def bounds({radius, angle}, <<_::binary-size(64)>> = mx) do
+    n =
+      cond do
+        angle < @tau / 4 -> 4
+        angle < @tau / 2 -> 8
+        angle < @tau * 3 / 4 -> 12
+        true -> 16
+      end
+
+    Enum.reduce(0..n, [], fn i, pts ->
+      [{radius * :math.cos(angle * i / n), radius * :math.sin(angle * i / n)} | pts]
+    end)
+    |> Scenic.Math.Vector2.project(mx)
+    |> Scenic.Math.Vector2.bounds()
+  end
 end

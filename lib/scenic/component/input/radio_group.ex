@@ -84,7 +84,7 @@ defmodule Scenic.Component.Input.RadioGroup do
   use Scenic.Component, has_children: true
 
   alias Scenic.Graph
-  # alias Scenic.Scene
+  alias Scenic.Assets.Static
   alias Scenic.Component.Input.RadioButton
   import Scenic.Primitives, only: [{:group, 2}]
 
@@ -92,7 +92,10 @@ defmodule Scenic.Component.Input.RadioGroup do
 
   # import IEx
 
-  @line_height 24
+  @default_font :roboto
+  @default_font_size 20
+  @border_width 2
+  @line_height @default_font_size + @border_width + @border_width
 
   # --------------------------------------------------------
   @impl Scenic.Component
@@ -203,6 +206,27 @@ defmodule Scenic.Component.Input.RadioGroup do
       )
 
     {:ok, scene}
+  end
+
+  @impl Scenic.Component
+  def bounds({items, _id}, _opts) do
+    {:ok, {Static.Font, fm}} = Static.meta(@default_font)
+    ascent = FontMetrics.ascent(@default_font_size, fm)
+
+    # find the longest text width
+    fm_width =
+      Enum.reduce(items, 0, fn {text, _}, w ->
+        tw = FontMetrics.width(text, @default_font_size, fm)
+
+        case tw > w do
+          true -> tw
+          false -> w
+        end
+      end)
+
+    space_width = FontMetrics.width(' ', @default_font_size, fm)
+    box_width = fm_width + ascent + space_width + @border_width
+    {0, 0, box_width, @line_height * Enum.count(items)}
   end
 
   # ============================================================================

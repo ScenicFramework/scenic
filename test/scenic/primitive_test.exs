@@ -45,7 +45,8 @@ defmodule Scenic.PrimitiveTest do
              id: nil,
              opts: [],
              styles: %{},
-             transforms: %{}
+             transforms: %{},
+             default_pin: {0, 0}
            }
   end
 
@@ -58,7 +59,8 @@ defmodule Scenic.PrimitiveTest do
              id: nil,
              opts: [custom_field: 123],
              styles: %{},
-             transforms: %{}
+             transforms: %{},
+             default_pin: {0, 0}
            }
   end
 
@@ -71,7 +73,8 @@ defmodule Scenic.PrimitiveTest do
              id: nil,
              opts: [],
              styles: %{},
-             transforms: %{pin: {10, 11}, rotate: 0.1}
+             transforms: %{pin: {10, 11}, rotate: 0.1},
+             default_pin: {0, 0}
            }
   end
 
@@ -84,7 +87,8 @@ defmodule Scenic.PrimitiveTest do
              id: nil,
              opts: [],
              styles: %{fill: {:color, {:color_rgba, {255, 255, 0, 255}}}},
-             transforms: %{}
+             transforms: %{},
+             default_pin: {0, 0}
            }
   end
 
@@ -97,7 +101,8 @@ defmodule Scenic.PrimitiveTest do
              id: :test_id,
              opts: [],
              styles: %{},
-             transforms: %{}
+             transforms: %{},
+             default_pin: {0, 0}
            }
   end
 
@@ -110,7 +115,8 @@ defmodule Scenic.PrimitiveTest do
              id: {:test_id, 123},
              opts: [],
              styles: %{},
-             transforms: %{}
+             transforms: %{},
+             default_pin: {0, 0}
            }
   end
 

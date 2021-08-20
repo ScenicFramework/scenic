@@ -207,6 +207,20 @@ defmodule Scenic.Component.Input.Toggle do
     {:ok, scene}
   end
 
+  @impl Scenic.Component
+  def bounds(_data, styles) do
+    # get toggle specific styles
+    thumb_radius = Map.get(styles, :thumb_radius, @default_thumb_radius)
+    padding = Map.get(styles, :padding, @default_padding)
+    border_width = Map.get(styles, :border_width, @default_border_width)
+
+    # calculate the dimensions of the track
+    track_height = thumb_radius * 2 + 2 * padding + 2 * border_width
+    track_width = thumb_radius * 4 + 2 * padding + 2 * border_width
+
+    {0, 0, track_width, track_height}
+  end
+
   # --------------------------------------------------------
   # pressed in the button
   @doc false

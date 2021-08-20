@@ -148,4 +148,13 @@ defmodule Scenic.Primitive.Quad do
     # assumes convex, which is verified above
     Triangle.contains_point?({p0, p1, p2}, px) || Triangle.contains_point?({p1, p2, p3}, px)
   end
+
+  # --------------------------------------------------------
+  @doc false
+  def default_pin({{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}}, _styles) do
+    {
+      (x0 + x1 + x2 + x3) / 4,
+      (y0 + y1 + y2 + y3) / 4
+    }
+  end
 end

@@ -106,4 +106,14 @@ defmodule Scenic.Component.Input.CheckboxTest do
     assert Scene.fetch_child(scene, :checkbox) == {:ok, [{"Updated text", true}]}
     assert Scene.get_child(scene, :checkbox) == [true]
   end
+
+  test "bounds works with defaults" do
+    graph =
+      Graph.build()
+      |> Scenic.Components.checkbox({"Test Checkbox", false})
+
+    {0.0, 0.0, r, b} = Graph.bounds(graph)
+    assert r > 157 && r < 158
+    assert b > 23 && b < 24
+  end
 end

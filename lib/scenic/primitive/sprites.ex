@@ -246,7 +246,7 @@ defmodule Scenic.Primitive.Sprites do
   def valid_styles(), do: @styles
 
   # --------------------------------------------------------
-  # compiling a script is a special case and is handled in Scenic.ViewPort.GraphCompiler
+  # compiling a script is a special case and is handled in Scenic.Graph.Compiler
   @doc false
   @impl Primitive
   @spec compile(primitive :: Primitive.t(), styles :: Style.t()) :: Script.t()

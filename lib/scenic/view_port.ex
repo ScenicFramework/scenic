@@ -14,7 +14,7 @@ defmodule Scenic.ViewPort do
   alias Scenic.Scene
   alias Scenic.Graph
   alias Scenic.Primitive
-  alias Scenic.ViewPort.GraphCompiler
+  alias Scenic.Graph.Compiler, as: GraphCompiler
 
   # alias Scenic.Utilities
   alias Scenic.Utilities.Validators

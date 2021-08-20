@@ -118,6 +118,11 @@ defmodule Scenic.Component.Input.Caret do
     {:ok, scene}
   end
 
+  @impl Scenic.Component
+  def bounds(height, _opts) do
+    {0, 0, @width, height}
+  end
+
   # --------------------------------------------------------
   @doc false
   @impl GenServer

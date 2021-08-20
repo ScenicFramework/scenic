@@ -336,6 +336,37 @@ defmodule Scenic.Component.Input.Dropdown do
     {:ok, scene}
   end
 
+  @impl Scenic.Component
+  def bounds({items, _initial_id}, styles) do
+    # font related info
+    {:ok, {Static.Font, fm}} = Static.meta(@default_font)
+    ascent = FontMetrics.ascent(@default_font_size, fm)
+
+    # find the width of the widest item
+    fm_width =
+      Enum.reduce(items, 0, fn {text, _}, w ->
+        width = FontMetrics.width(text, @default_font_size, fm)
+
+        max(w, width)
+      end)
+
+    width =
+      case styles[:width] || styles[:w] do
+        nil -> fm_width + ascent * 3
+        :auto -> fm_width + ascent * 3
+        width when is_number(width) and width > 0 -> width
+      end
+
+    height =
+      case styles[:height] || styles[:h] do
+        nil -> @default_font_size + ascent
+        :auto -> @default_font_size + ascent
+        height when is_number(height) and height > 0 -> height
+      end
+
+    {0, 0, width, height}
+  end
+
   # ============================================================================
   # tracking when the dropdown is UP
 

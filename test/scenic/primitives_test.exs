@@ -246,7 +246,7 @@ defmodule Scenic.PrimitivesTest do
     p = g.primitives[1]
 
     assert p.module == Scenic.Primitive.Path
-    assert p.data == []
+    assert p.data == [:begin]
   end
 
   test "path adds empty list to the graph" do
@@ -257,12 +257,13 @@ defmodule Scenic.PrimitivesTest do
       |> Graph.get!(:path)
 
     assert p.module == Scenic.Primitive.Path
-    assert p.data == actions
+    assert p.data == [:begin]
     assert p.id == :path
   end
 
   test "path adds actions to the graph" do
     actions = [
+      :begin,
       {:move_to, 1, 2},
       {:line_to, 3, 4},
       {:line_to, 3, 5}
@@ -302,6 +303,7 @@ defmodule Scenic.PrimitivesTest do
 
   test "path adds via spec" do
     actions = [
+      :begin,
       {:move_to, 1, 2},
       {:line_to, 3, 4},
       {:line_to, 3, 5}

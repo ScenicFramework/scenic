@@ -110,4 +110,22 @@ defmodule Scenic.Component.ButtonTest do
     %Scene{} = scene = Scene.update_child(scene, :test_btn, "modified")
     assert Scene.fetch_child(scene, :test_btn) == {:ok, ["modified"]}
   end
+
+  test "bounds works with defaults" do
+    graph =
+      Graph.build()
+      |> Scenic.Components.button("Test Button")
+
+    {0.0, 0.0, r, b} = Graph.bounds(graph)
+    assert r > 140 && r < 141
+    assert b > 38 && b < 39
+  end
+
+  test "bounds works with overrides" do
+    graph =
+      Graph.build()
+      |> Scenic.Components.button("Test Button", width: 200, height: 100)
+
+    assert Graph.bounds(graph) == {0.0, 0.0, 200.0, 100.0}
+  end
 end

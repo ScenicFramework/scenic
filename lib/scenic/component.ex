@@ -170,6 +170,24 @@ defmodule Scenic.Component do
   """
   @callback validate(data :: any) :: {:ok, data :: any} | {:error, String.t()}
 
+  @doc """
+  Compute the bounding box of the component.
+
+  This function can be called outside of the context of a running component. The box
+  should be computed as if it was running with the given data and styles.
+  """
+  @callback bounds(data :: any, styles :: map) :: Scenic.Graph.bounds()
+
+  @doc """
+  Provide a default pin for this component.
+
+  If this callback is not implemented, then the default pin will be {0,0}.
+  """
+  @callback default_pin(data :: any, styles :: map) :: Scenic.Math.vector_2()
+
+  @optional_callbacks bounds: 2,
+                      default_pin: 2
+
   # ===========================================================================
   defmodule Error do
     @moduledoc false

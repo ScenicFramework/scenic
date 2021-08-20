@@ -206,28 +206,22 @@ defmodule Scenic.Component.Input.RadioGroupTest do
     assert Scene.get_child(scene, :radio_group) == [:radio_c]
   end
 
-  # test "implements get/fetch/update", %{scene: scene} do
-  #   assert Scene.get_child(scene, :radio_group) == [:radio_b]
-  #   assert Scene.fetch_child(scene, :radio_group) ==
-  #     {:ok, [{
-  #         [
-  #           {"Radio A", :radio_a},
-  #           {"Radio B", :radio_b},
-  #           {"Radio C", :radio_c}
-  #         ],
-  #         :radio_b
-  #       }]}
+  test "bounds works with defaults" do
+    graph =
+      Scenic.Graph.build()
+      |> Scenic.Components.radio_group(
+        {
+          [
+            {"Radio A", :radio_a},
+            {"Radio B", :radio_b},
+            {"Radio C", :radio_c}
+          ],
+          :radio_b
+        },
+        id: :rg
+      )
 
-  #   %Scene{} = scene = Scene.update_child(scene, :radio_group, {
-  #         [
-  #           {"Mod A", :radio_a},
-  #           {"Modd B", :radio_b},
-  #           {"Moddd C", :radio_c}
-  #         ],
-  #         :radio_c
-  #       })
-
-  #   assert Scene.get_child(scene, :radio_group) == [:radio_c]
-  #   assert Scene.fetch_child(scene, :radio_group) == {:ok, [{[{"mod One", 1}, {"mod Two", 2}], 1}]}
-  # end
+    {0.0, 0.0, r, 72.0} = Scenic.Graph.bounds(graph)
+    assert r > 94 && r < 95
+  end
 end

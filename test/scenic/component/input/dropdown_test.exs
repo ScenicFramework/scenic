@@ -162,4 +162,14 @@ defmodule Scenic.Component.Input.DropdownTest do
     assert Scene.fetch_child(scene, :dropdown) == {:ok, [{[{"mod One", 1}, {"mod Two", 2}], 1}]}
     assert Scene.get_child(scene, :dropdown) == [1]
   end
+
+  test "bounds works with defaults" do
+    graph =
+      Graph.build()
+      |> Scenic.Components.dropdown({[{"Option One", 1}, {"Option Two", 2}], 2}, id: :dd)
+
+    {0.0, 0.0, r, b} = Graph.bounds(graph)
+    assert r > 157 && r < 158
+    assert b > 38 && b < 39
+  end
 end

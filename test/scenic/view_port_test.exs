@@ -201,7 +201,7 @@ defmodule Scenic.ViewPortTest do
     {:ok, _} = ViewPort.get_script(vp, "test_graph")
 
     # get the script and compare against one compiled
-    {:ok, script} = ViewPort.GraphCompiler.compile(simple_graph())
+    {:ok, script} = Scenic.Graph.Compiler.compile(simple_graph())
     assert ViewPort.get_script(vp, "test_graph") == {:ok, script}
   end
 
@@ -219,7 +219,7 @@ defmodule Scenic.ViewPortTest do
   # we confirm this by examining the stored scripts in slot 1, which is the root scene
   test "set_root changes the running scene", %{vp: vp} do
     # first, prove that the red scene is running as the default
-    {:ok, red_script} = ViewPort.GraphCompiler.compile(simple_graph_red())
+    {:ok, red_script} = Scenic.Graph.Compiler.compile(simple_graph_red())
     assert ViewPort.get_script(vp, @main_id) == {:ok, red_script}
 
     # set the green scene as the root
@@ -227,7 +227,7 @@ defmodule Scenic.ViewPortTest do
     assert_receive :green_up, 40
 
     # prove the green scene is now running
-    {:ok, green_script} = ViewPort.GraphCompiler.compile(simple_graph_green())
+    {:ok, green_script} = Scenic.Graph.Compiler.compile(simple_graph_green())
     assert ViewPort.get_script(vp, @main_id) == {:ok, green_script}
   end
 

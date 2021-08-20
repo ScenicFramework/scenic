@@ -211,6 +211,13 @@ defmodule Scenic.Component.Input.TextField do
     {:ok, scene}
   end
 
+  @impl Scenic.Component
+  def bounds(_data, opts) do
+    width = opts[:width] || opts[:w] || @default_width
+    height = opts[:height] || opts[:h] || @default_height
+    {0, 0, width, height}
+  end
+
   # ============================================================================
 
   # --------------------------------------------------------

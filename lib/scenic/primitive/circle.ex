@@ -83,31 +83,6 @@ defmodule Scenic.Primitive.Circle do
   # ============================================================================
   # data verification and serialization
 
-  # # --------------------------------------------------------
-  # @doc false
-  # def info(data),
-  #   do: """
-  #     #{IO.ANSI.red()}#{__MODULE__} data must be: radius
-  #     #{IO.ANSI.yellow()}Received: #{inspect(data)}
-  #     #{IO.ANSI.default_color()}
-  #   """
-
-  # # --------------------------------------------------------
-  # @doc false
-  # def verify(data) do
-  #   normalize(data)
-  #   {:ok, data}
-  # rescue
-  #   _ -> :invalid_data
-  # end
-
-  # # --------------------------------------------------------
-  # @doc false
-  # @spec normalize(number()) :: number()
-  # def normalize(radius) when is_number(radius) do
-  #   radius
-  # end
-
   # --------------------------------------------------------
   def contains_point?(radius, {xp, yp}) do
     # calc the distance squared fromthe pont to the center

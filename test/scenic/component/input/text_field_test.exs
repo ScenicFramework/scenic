@@ -319,4 +319,20 @@ defmodule Scenic.Component.Input.TextFieldTest do
     assert Scene.fetch_child(scene, :text_field) == {:ok, ["updated"]}
     assert Scene.get_child(scene, :text_field) == ["updated"]
   end
+
+  test "bounds works with defaults" do
+    graph =
+      Graph.build()
+      |> Scenic.Components.text_field("Test Field")
+
+    {0.0, 0.0, 288.0, 30.0} = Graph.bounds(graph)
+  end
+
+  test "bounds works with overrides" do
+    graph =
+      Graph.build()
+      |> Scenic.Components.text_field("Test Field", width: 300, height: 40)
+
+    {0.0, 0.0, 300.0, 40.0} = Graph.bounds(graph)
+  end
 end

@@ -5,7 +5,7 @@
 # Compile a graph into scripts for the given ViewPort
 # Considered to be part of the ViewPort module
 
-defmodule Scenic.ViewPort.GraphCompiler do
+defmodule Scenic.Graph.Compiler do
   @moduledoc false
 
   alias Scenic.Script
@@ -13,54 +13,39 @@ defmodule Scenic.ViewPort.GraphCompiler do
   alias Scenic.Graph
   alias Scenic.Color
   alias Scenic.Primitive.Style.Theme
-  alias Scenic.ViewPort
-  alias Scenic.ViewPort.GraphCompiler
+  alias Scenic.Graph.Compiler
 
   # import IEx
 
-  @default_font :roboto
-  @default_font_size 24
-  @default_text_align :left
-  @default_text_base :alphabetic
-  @default_line_height 1.2
-
-  @default_styles %{
-    font: @default_font,
-    font_size: @default_font_size,
-    line_height: @default_line_height,
-    text_align: @default_text_align,
-    text_base: @default_text_base
-  }
-
-  defstruct set: %{}, set_stack: [], reqs: @default_styles, req_stack: []
+  defstruct set: %{}, set_stack: [], reqs: nil, req_stack: []
 
   # ========================================================
   # internal helpers for working with the compiler state
-  defp fetch_req(%GraphCompiler{reqs: reqs}, k), do: Map.fetch(reqs, k)
+  defp fetch_req(%Compiler{reqs: reqs}, k), do: Map.fetch(reqs, k)
 
-  defp merge_reqs(%GraphCompiler{reqs: reqs} = state, styles) do
+  defp merge_reqs(%Compiler{reqs: reqs} = state, styles) do
     %{state | reqs: Map.merge(reqs, styles)}
   end
 
-  defp push_reqs(%GraphCompiler{reqs: reqs, req_stack: stack} = state) do
+  defp push_reqs(%Compiler{reqs: reqs, req_stack: stack} = state) do
     %{state | req_stack: [reqs | stack]}
   end
 
-  defp pop_reqs(%GraphCompiler{req_stack: [head | tail]} = state) do
+  defp pop_reqs(%Compiler{req_stack: [head | tail]} = state) do
     %{state | reqs: head, req_stack: tail}
   end
 
-  defp fetch_set(%GraphCompiler{set: set}, k), do: Map.fetch(set, k)
+  defp fetch_set(%Compiler{set: set}, k), do: Map.fetch(set, k)
 
-  defp put_set(%GraphCompiler{set: set} = state, k, v) do
+  defp put_set(%Compiler{set: set} = state, k, v) do
     %{state | set: Map.put(set, k, v)}
   end
 
-  defp push_set(%GraphCompiler{set: set, set_stack: stack} = state) do
+  defp push_set(%Compiler{set: set, set_stack: stack} = state) do
     %{state | set_stack: [set | stack]}
   end
 
-  defp pop_set(%GraphCompiler{set_stack: [head | tail]} = state) do
+  defp pop_set(%Compiler{set_stack: [head | tail]} = state) do
     %{state | set: head, set_stack: tail}
   end
 
@@ -76,7 +61,7 @@ defmodule Scenic.ViewPort.GraphCompiler do
         Script.start(),
         primitives[0],
         primitives,
-        %GraphCompiler{}
+        %Compiler{reqs: Scenic.Primitive.Style.default()}
       )
 
     {:ok, Script.finish(ops)}
@@ -89,7 +74,7 @@ defmodule Scenic.ViewPort.GraphCompiler do
     {ops, state}
   end
 
-  defp compile_primitive(ops, primitive, primitives, %GraphCompiler{} = state) do
+  defp compile_primitive(ops, primitive, primitives, %Compiler{} = state) do
     # prepare the reqs
     state = push_reqs(state)
 
@@ -121,7 +106,7 @@ defmodule Scenic.ViewPort.GraphCompiler do
     {ops, pop_reqs(state)}
   end
 
-  defp do_compile_primitive(ops, primitive, primitives, %GraphCompiler{} = state) do
+  defp do_compile_primitive(ops, primitive, primitives, %Compiler{} = state) do
     # get the requested styles and transforms
     tx = Map.get(primitive, :transforms)
 
@@ -168,7 +153,7 @@ defmodule Scenic.ViewPort.GraphCompiler do
   end
 
   # returns {ops, state}
-  defp compile_styles(desired, %GraphCompiler{} = state) when is_list(desired) do
+  defp compile_styles(desired, %Compiler{} = state) when is_list(desired) do
     Enum.reduce(desired, {[], state}, fn k, {ops, state} ->
       # if not requested, there is no style to compile...
       with {:ok, req} <- fetch_req(state, k) do
@@ -403,11 +388,11 @@ defmodule Scenic.ViewPort.GraphCompiler do
   # do nothing if no transforms are provided
   defp compile_transforms(ops, %{}, _), do: ops
 
-  defp complex_tx(ops, txs, %Primitive{module: module, data: data}) do
+  defp complex_tx(ops, txs, %Primitive{default_pin: default_pin}) do
     # get the pin for this operation
     pin =
       case txs[:pin] do
-        nil -> module.default_pin(data)
+        nil -> default_pin
         pin -> pin
       end
 
@@ -416,46 +401,47 @@ defmodule Scenic.ViewPort.GraphCompiler do
     # If it is smaller to send simple commands than a combined matrix, do that.
     # or send if combined matrix if that is smaller
     # note that just transform was taken care of during compile_transforms
-    case pin do
-      {0, 0} -> zero_pin(ops, txs)
-      {0.0, 0.0} -> zero_pin(ops, txs)
-      _ -> combined_tx(ops, pin, txs)
-    end
+    # case pin do
+    #   {0, 0} -> zero_pin(ops, txs)
+    #   {0.0, 0.0} -> zero_pin(ops, txs)
+    #   _ -> combined_tx(ops, pin, txs)
+    # end
+    combined_tx(ops, pin, txs)
   end
 
-  defp zero_pin(ops, txs) do
-    case txs do
-      %{matrix: _} ->
-        # doing a matrix anyway...
-        combined_tx(ops, {0.0, 0.0}, txs)
+  # defp zero_pin(ops, txs) do
+  #   case txs do
+  #     %{matrix: _} ->
+  #       # doing a matrix anyway...
+  #       combined_tx(ops, {0.0, 0.0}, txs)
 
-      %{rotate: _, scale: _, translate: _} ->
-        # combined matrix is smaller
-        combined_tx(ops, {0.0, 0.0}, txs)
+  #     %{rotate: _, scale: _, translate: _} ->
+  #       # combined matrix is smaller
+  #       combined_tx(ops, {0.0, 0.0}, txs)
 
-      %{rotate: r, scale: {x, y}} ->
-        ops
-        |> Script.rotate(r)
-        |> Script.scale(x, y)
+  #     %{rotate: r, scale: {x, y}} ->
+  #       ops
+  #       |> Script.rotate(r)
+  #       |> Script.scale(x, y)
 
-      %{rotate: r, translate: {x, y}} ->
-        ops
-        |> Script.rotate(r)
-        |> Script.translate(x, y)
+  #     %{rotate: r, translate: {x, y}} ->
+  #       ops
+  #       |> Script.rotate(r)
+  #       |> Script.translate(x, y)
 
-      %{scale: {sx, sy}, translate: {tx, ty}} ->
-        ops
-        |> Script.scale(sx, sy)
-        |> Script.translate(tx, ty)
+  #     %{scale: {sx, sy}, translate: {tx, ty}} ->
+  #       ops
+  #       |> Script.scale(sx, sy)
+  #       |> Script.translate(tx, ty)
 
-      %{rotate: r} ->
-        Script.rotate(ops, r)
+  #     %{rotate: r} ->
+  #       Script.rotate(ops, r)
 
-      %{scale: {x, y}} ->
-        Script.scale(ops, x, y)
-        # transform is already taken care of above...
-    end
-  end
+  #     %{scale: {x, y}} ->
+  #       Script.scale(ops, x, y)
+  #       # transform is already taken care of above...
+  #   end
+  # end
 
   defp combined_tx(ops, pin, txs) do
     mx =

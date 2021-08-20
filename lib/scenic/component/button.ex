@@ -201,6 +201,32 @@ defmodule Scenic.Component.Button do
     {:ok, scene}
   end
 
+  @impl Scenic.Component
+  def bounds(text, opts) do
+    # font related info
+    {:ok, {Static.Font, fm}} = Static.meta(@default_font)
+    font_size = opts[:button_font_size] || @default_font_size
+
+    ascent = FontMetrics.ascent(font_size, fm)
+    fm_width = FontMetrics.width(text, font_size, fm)
+
+    width =
+      case opts[:width] || opts[:w] do
+        nil -> fm_width + ascent + ascent
+        :auto -> fm_width + ascent + ascent
+        width when is_number(width) and width > 0 -> width
+      end
+
+    height =
+      case opts[:height] || opts[:h] do
+        nil -> font_size + ascent
+        :auto -> font_size + ascent
+        height when is_number(height) and height > 0 -> height
+      end
+
+    {0.0, 0.0, width, height}
+  end
+
   defp do_aligned_text(graph, :center, text, fill, width, vpos) do
     text(graph, text,
       fill: fill,

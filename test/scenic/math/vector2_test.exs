@@ -204,19 +204,23 @@ defmodule Scenic.Math.Vector2Test do
     assert Vector2.project({10, 20}, @projection_mx) == {15, 27}
   end
 
-  test "project works with a packed binary" do
-    vectors_in = <<
-      10::float-size(32)-native,
-      20::float-size(32)-native,
-      100::float-size(32)-native,
-      200::float-size(32)-native
-    >>
+  test "project works with a list of points" do
+    vectors_in = [{10, 20}, {100, 200}]
+    assert Vector2.project(vectors_in, @projection_mx) == [{15.0, 27.0}, {105.0, 207.0}]
+  end
 
-    assert Vector2.project(vectors_in, @projection_mx) == <<
-             15::float-size(32)-native,
-             27::float-size(32)-native,
-             105::float-size(32)-native,
-             207::float-size(32)-native
-           >>
+  # ----------------------------------------------------------------------------
+  test "bounds works with a single point" do
+    assert Vector2.bounds([{10, 20}]) == {10, 20, 10, 20}
+  end
+
+  test "bounds works with many points" do
+    assert Vector2.bounds([
+             {10, 20},
+             {6, 30},
+             {7, 29},
+             {20, 2},
+             {16, 60}
+           ]) == {6, 2, 20, 60}
   end
 end

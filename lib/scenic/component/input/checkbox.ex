@@ -168,6 +168,17 @@ defmodule Scenic.Component.Input.Checkbox do
     {:ok, scene}
   end
 
+  @impl Scenic.Component
+  def bounds({text, chk?}, _styles) when is_bitstring(text) and is_boolean(chk?) do
+    {:ok, {Static.Font, fm}} = Static.meta(@default_font)
+    ascent = FontMetrics.ascent(@default_font_size, fm)
+    descent = FontMetrics.descent(@default_font_size, fm)
+    fm_width = FontMetrics.width(text, @default_font_size, fm)
+    space_width = FontMetrics.width(' ', @default_font_size, fm)
+    box_width = fm_width + ascent + space_width + @border_width
+    {0, 0, box_width, ascent - descent}
+  end
+
   # --------------------------------------------------------
   # pressed in the button
   @impl Scenic.Scene

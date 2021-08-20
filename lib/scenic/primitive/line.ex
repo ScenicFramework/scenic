@@ -106,4 +106,22 @@ defmodule Scenic.Primitive.Line do
       (y0 + y1) / 2
     }
   end
+
+  # -----------------------------------------
+  def bounds(data, mx, styles)
+
+  def bounds({p0, p1}, <<_::binary-size(64)>> = mx, _styles) do
+    [p0, p1]
+    |> Scenic.Math.Vector2.project(mx)
+    |> Scenic.Math.Vector2.bounds()
+  end
+
+  # --------------------------------------------------------
+  @doc false
+  def default_pin({{x0, y0}, {x1, y1}}, _styles) do
+    {
+      (x0 + x1) / 2,
+      (y0 + y1) / 2
+    }
+  end
 end

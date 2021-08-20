@@ -11,7 +11,6 @@ defmodule Scenic.Primitive.PathTest do
   alias Scenic.Primitive.Path
 
   @data [
-    :begin,
     {:move_to, 10, 20},
     {:line_to, 30, 40},
     {:bezier_to, 10, 11, 20, 21, 30, 40},
@@ -23,16 +22,30 @@ defmodule Scenic.Primitive.PathTest do
   # ============================================================================
   # build / add
 
-  test "build works" do
-    p = Path.build(@data)
+  test "build works - inserts a :begin at the start" do
+    cmds = [{:move_to, 10, 20}]
+    expected = [:begin, {:move_to, 10, 20}]
+
+    p = Path.build(cmds)
     assert p.module == Path
-    assert Primitive.get(p) == @data
+    assert Primitive.get(p) == expected
+  end
+
+  test "build works - doesn't add :begin if it already starts with one" do
+    cmds = [
+      :begin,
+      {:move_to, 10, 20}
+    ]
+
+    p = Path.build(cmds)
+    assert p.module == Path
+    assert Primitive.get(p) == cmds
   end
 
   # ============================================================================
 
   test "validate accepts valid data" do
-    assert Path.validate(@data) == {:ok, @data}
+    assert Path.validate(@data) == {:ok, [:begin | @data]}
   end
 
   test "rejects :solid as deprecated" do

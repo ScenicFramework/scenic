@@ -101,6 +101,24 @@ defmodule Scenic.Primitive.Style do
   @doc false
   def opts_schema(), do: @opts_schema
 
+  # --------------------------------------------------------
+  @default_styles %{
+    font: :roboto,
+    font_size: 24,
+    text_align: :left,
+    text_base: :alphabetic,
+    line_height: 1.2
+  }
+
+  @doc """
+  The default styles if none are set.
+
+  ```elixir
+  #{inspect(@default_styles)}
+  ```
+  """
+  def default(), do: @default_styles
+
   # ===========================================================================
   # defmodule FormatError do
   #   defexception message: nil, module: nil, data: nil

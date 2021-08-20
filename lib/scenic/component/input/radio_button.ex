@@ -134,6 +134,17 @@ defmodule Scenic.Component.Input.RadioButton do
     {:ok, scene}
   end
 
+  @impl Scenic.Component
+  def bounds({text, _id, _chk}, _styles) when is_bitstring(text) do
+    {:ok, {Static.Font, fm}} = Static.meta(@default_font)
+    ascent = FontMetrics.ascent(@default_font_size, fm)
+    descent = FontMetrics.descent(@default_font_size, fm)
+    fm_width = FontMetrics.width(text, @default_font_size, fm)
+    space_width = FontMetrics.width(' ', @default_font_size, fm)
+    box_width = fm_width + ascent + space_width + @border_width
+    {0, 0, box_width, ascent - descent}
+  end
+
   # --------------------------------------------------------
   @doc false
   @impl GenServer

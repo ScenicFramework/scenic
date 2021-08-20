@@ -132,6 +132,12 @@ defmodule Scenic.Primitive.Path do
       cmd, _ ->
         err_cmd(cmd, commands)
     end)
+    # make sure it always starts with a :begin
+    |> case do
+      {:ok, [:begin | _] = cmds} -> {:ok, cmds}
+      {:ok, cmds} -> {:ok, [:begin | cmds]}
+      err -> err
+    end
   end
 
   def validate(data) do

@@ -151,4 +151,10 @@ defmodule Scenic.Primitive.RoundedRectangle do
       false
     end
   end
+
+  # --------------------------------------------------------
+  @doc false
+  def default_pin({width, height, _radius}, _styles) do
+    {width / 2, height / 2}
+  end
 end

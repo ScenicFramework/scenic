@@ -172,6 +172,8 @@ defmodule Scenic.Graph do
           add_to: non_neg_integer
         }
 
+  @type bounds :: {left :: number, top :: number, right :: number, bottom :: number}
+
   @type deferred :: (t -> t)
 
   # ===========================================================================
@@ -831,4 +833,21 @@ defmodule Scenic.Graph do
         |> Map.merge(Primitive.get_styles(p))
     end
   end
+
+  # ============================================================================
+  # --------------------------------------------------------
+  @doc """
+  Compile a graph into a script.
+  """
+  @spec compile(graph :: Scenic.Graph.t()) :: {:ok, Scenic.Script.t()}
+  defdelegate compile(graph), to: Scenic.Graph.Compiler
+
+  # --------------------------------------------------------
+  @doc """
+  Compute the bounding box that contains the graph.
+
+  Returns `{left, right, top, bottom}` or `nil` if the graph is empty.
+  """
+  @spec bounds(graph :: t()) :: Scenic.Graph.bounds() | nil
+  defdelegate bounds(graph), to: Scenic.Graph.Bounds, as: :compute
 end

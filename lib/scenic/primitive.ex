@@ -74,6 +74,7 @@ defmodule Scenic.Primitive do
           module: atom,
           data: any,
           parent_uid: integer,
+          default_pin: Scenic.Math.vector_2(),
           id: any,
           styles: map,
           transforms: map,
@@ -102,9 +103,10 @@ defmodule Scenic.Primitive do
             id: nil,
             styles: %{},
             transforms: %{},
+            default_pin: {0, 0},
             opts: []
 
-  # # ===========================================================================
+  # ===========================================================================
   # defmodule Error do
   #   @moduledoc false
   #   defexception message: nil
@@ -192,8 +194,10 @@ defmodule Scenic.Primitive do
       parent_uid: -1,
       styles: Enum.into(st, %{}),
       transforms: Enum.into(tx, %{}),
+      default_pin: {0, 0},
       opts: op
     }
+    |> update_default_pin()
   end
 
   # split a primitive's options into three buckets. Styles, Transforms, and opts
@@ -478,6 +482,7 @@ defmodule Scenic.Primitive do
     |> Map.put(:styles, Map.merge(primitive.styles, Enum.into(st, %{})))
     |> Map.put(:transforms, Map.merge(primitive.transforms, Enum.into(tx, %{})))
     |> Map.put(:opts, Keyword.merge(primitive.opts, op))
+    |> update_default_pin()
   end
 
   @doc """
@@ -507,6 +512,7 @@ defmodule Scenic.Primitive do
     p
     |> Map.put(:data, data)
     |> merge_opts(opts)
+    |> update_default_pin()
   end
 
   # # the default behavior for put - just verify the data and put it in place
@@ -544,5 +550,14 @@ defmodule Scenic.Primitive do
   @spec contains_point?(primitive :: Primitive.t(), point :: Scenic.Math.point()) :: map
   def contains_point?(%Primitive{module: mod, data: data}, point) do
     mod.contains_point?(data, point)
+  end
+
+  # --------------------------------------------------------
+  @spec update_default_pin(primitive :: Primitive.t()) :: Primitive.t()
+  defp update_default_pin(%Primitive{module: module, data: data, styles: styles} = p) do
+    case Kernel.function_exported?(module, :default_pin, 2) do
+      true -> %{p | default_pin: module.default_pin(data, styles)}
+      false -> %{p | default_pin: {0, 0}}
+    end
   end
 end

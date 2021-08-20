@@ -1005,8 +1005,7 @@ defmodule Scenic.Scene do
     end
   end
 
-  def terminate(reason, other), do: reason
-
+  def terminate(reason, _other), do: reason
 
   # ============================================================================
   # handle_continue

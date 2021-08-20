@@ -1,14 +1,14 @@
 #
 #  Created by Boyd Multerer on 2021-02-07.
-#  Copyright © 2021 Kry10 Limited. All rights reserved.
+#  Copyright 2021 Kry10 Limited
 #
 
-defmodule Scenic.ViewPort.GraphCompilerTest do
+defmodule Scenic.Graph.CompilerTest do
   use ExUnit.Case, async: true
-  doctest Scenic.ViewPort.GraphCompiler
+  doctest Scenic.Graph.Compiler
 
   alias Scenic.Graph
-  alias Scenic.ViewPort.GraphCompiler
+  alias Scenic.Graph.Compiler
 
   # import IEx
 
@@ -20,7 +20,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       Graph.build()
       |> rect({200, 100}, fill: :blue)
       |> rrect({200, 100, 80}, fill: :blue, stroke: {4, :purple})
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:fill_color, {:color_rgba, {0, 0, 255, 255}}},
@@ -37,7 +37,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       Graph.build(font: :roboto, font_size: 27)
       |> text("blue", fill: :blue)
       |> text("blue_mono", font: :roboto_mono, fill: :blue)
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:font, "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"},
@@ -59,7 +59,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       |> rect({10, 20}, stroke: {1, :white}, miter_limit: 2)
       |> rect({10, 20}, stroke: {1, :white}, join: :round)
       |> line({{0, 0}, {10, 10}}, stroke: {1, :white}, cap: :round)
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:stroke_width, 1},
@@ -78,7 +78,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
     {:ok, list} =
       Graph.build(font: :roboto, font_size: 26, theme: :dark)
       |> text("theme")
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:font, "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"},
@@ -96,7 +96,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       Graph.build()
       |> rect({200, 100}, fill: :blue, t: {10, 20})
       |> rrect({200, 100, 80}, fill: :blue, t: {20, 30})
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              :push_state,
@@ -118,7 +118,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       |> rect({200, 100}, fill: :red)
       |> group(&text(&1, "This is a test", font_size: 64), hidden: true)
       |> rrect({200, 100, 80}, stroke: {4, :purple}, translate: {200, 30}, hidden: true)
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:fill_color, {:color_rgba, {255, 0, 0, 255}}},
@@ -139,7 +139,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       |> rrect({10, 20, 3}, fill: :green)
       |> text("This is white text", fill: :white)
       |> triangle({{1, 2}, {3, 4}, {5, 6}}, fill: :green)
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:fill_color, {:color_rgba, {255, 0, 0, 255}}},
@@ -175,7 +175,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
         ],
         stroke: {2, :red}
       )
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:stroke_width, 2},
@@ -201,7 +201,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       Graph.build()
       # |> sprites({{:test_assets, "images/parrot.png"}, cmds})
       |> sprites({:parrot, cmds})
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:draw_sprites, {"VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns", cmds}}
@@ -220,30 +220,27 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       |> circle(8, scale: {7, 8}, translate: {11, 21})
       |> circle(8, rotate: 9, translate: {11, 21})
       |> circle(8, scale: {7, 8}, rotate: 9, translate: {11, 21})
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert [
              {:fill_color, {:color_rgba, {255, 0, 0, 255}}},
              :push_state,
-             {:scale, {7, 8}},
+             {:transform, {_, _, _, _, _, _}},
              {:draw_circle, {8, :fill}},
              :pop_push_state,
-             {:rotate, 9},
+             {:transform, {_, _, _, _, _, _}},
              {:draw_circle, {8, :fill}},
              :pop_push_state,
              {:translate, {11, 21}},
              {:draw_circle, {8, :fill}},
              :pop_push_state,
-             {:rotate, 9},
-             {:scale, {7, 8}},
+             {:transform, {_, _, _, _, _, _}},
              {:draw_circle, {8, :fill}},
              :pop_push_state,
-             {:scale, {7, 8}},
-             {:translate, {11, 21}},
+             {:transform, {_, _, _, _, _, _}},
              {:draw_circle, {8, :fill}},
              :pop_push_state,
-             {:rotate, 9},
-             {:translate, {11, 21}},
+             {:transform, {_, _, _, _, _, _}},
              {:draw_circle, {8, :fill}},
              :pop_push_state,
              {:transform, {_, _, _, _, _, _}},
@@ -266,7 +263,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       |> circle(6, scale: {7, 8}, translate: {11, 21})
       |> circle(7, rotate: 9, translate: {11, 21})
       |> circle(8, scale: {7, 8}, rotate: 9, translate: {11, 21})
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:fill_color, {:color_rgba, {255, 0, 0, 255}}},
@@ -293,7 +290,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       |> rect({10, 20}, rotate: 10, scale: {7, 8}, translate: {10, 20})
       |> circle(10, rotate: 10, scale: {7, 8}, translate: {10, 20})
       |> circle(10, rotate: 10, scale: {7, 8}, translate: {10, 20}, pin: {10, 10})
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert [
              {:fill_color, {:color_rgba, {255, 255, 0, 255}}},
@@ -343,7 +340,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       |> line({{1, 2}, {10, 20}}, cap: :butt)
       |> line({{1, 2}, {10, 20}}, cap: :round)
       |> line({{1, 2}, {10, 20}}, cap: :square)
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:stroke_width, 2},
@@ -365,7 +362,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       |> rect({10, 20}, join: :bevel)
       |> rect({10, 20}, join: :round, fill: :orange)
       |> rect({10, 20}, join: :miter)
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:stroke_width, 1},
@@ -393,7 +390,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       |> text("middle", text_base: :middle)
       |> text("alphabetic", text_base: :alphabetic)
       |> text("bottom", text_base: :bottom, fill: :yellow)
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:font, "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"},
@@ -428,7 +425,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
     {:ok, list} =
       Graph.build()
       |> text("test")
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              font: "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE",
@@ -448,7 +445,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       |> circle(10, fill: {:color, :red})
       |> circle(10, fill: {:color, {0, 1, 2}})
       |> circle(10, fill: {:color, {0, 1, 2, 3}})
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:fill_color, {:color_rgba, {255, 0, 0, 255}}},
@@ -467,7 +464,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       Graph.build()
       |> rect({100, 200}, fill: {:linear, {1, 2, 3, 4, :red, :green}})
       |> rect({100, 200}, fill: {:radial, {10, 20, 1, 2, :blue, :purple}})
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:fill_linear,
@@ -487,7 +484,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       Graph.build()
       |> rect({100, 200}, fill: {:image, :parrot})
       |> rect({100, 200}, stroke: {4, {:image, :parrot}})
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:fill_image, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"},
@@ -504,7 +501,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       Graph.build()
       |> rect({100, 200}, fill: {:stream, "some_stream_name"})
       |> rect({100, 200}, stroke: {4, {:stream, "some_stream_name"}})
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:fill_stream, "some_stream_name"},
@@ -525,7 +522,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       |> line({{1, 2}, {10, 20}}, stroke: {6, {:color, :green}})
       |> line({{1, 2}, {10, 20}}, stroke: {6, {:color, {0, 1, 2}}})
       |> line({{1, 2}, {10, 20}}, stroke: {5, {:color, {0, 1, 2, 3}}})
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:stroke_width, 2.5},
@@ -552,7 +549,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       |> rect({100, 200}, stroke: {2, {:radial, {10, 20, 1, 2, :blue, :purple}}})
       |> rect({100, 200}, stroke: {7, {:linear, {1, 2, 3, 4, :red, :green}}})
       |> rect({100, 200}, stroke: {7, {:radial, {10, 20, 1, 2, :blue, :purple}}})
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:stroke_width, 1},
@@ -578,7 +575,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
     {:ok, list} =
       Graph.build(font: :roboto_mono, font_size: 25)
       |> text("text", font: :roboto, font_size: 32)
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              font: "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE",
@@ -596,7 +593,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
     {:ok, list} =
       Graph.build(font: :roboto, font_size: 25)
       |> text("text")
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              font: "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE",
@@ -613,7 +610,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
     {:ok, list} =
       Graph.build()
       |> group(&text(&1, "text"), font: :roboto, font_size: 64)
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              font: "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE",
@@ -632,7 +629,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
       |> text("text", font: :roboto, font_size: 50)
       |> text("text", font: :roboto, font_size: 40)
       |> text("text")
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:font, "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"},
@@ -659,7 +656,7 @@ defmodule Scenic.ViewPort.GraphCompilerTest do
     {:ok, list} =
       Graph.build(font: :roboto, font_size: 24)
       |> add_specs_to_graph([group_spec(text_spec, font_size: 40)])
-      |> GraphCompiler.compile()
+      |> Compiler.compile()
 
     assert list == [
              {:font, "85FMX5UxpxdyY8Vf7yilQ_3KKnUQxifa7Ejbll7DuyE"},

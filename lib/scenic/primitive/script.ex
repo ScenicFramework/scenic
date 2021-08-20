@@ -116,11 +116,11 @@ defmodule Scenic.Primitive.Script do
   def valid_styles(), do: @styles
 
   # --------------------------------------------------------
-  # compiling a script is a special case and is handled in Scenic.ViewPort.GraphCompiler
+  # compiling a script is a special case and is handled in Scenic.Graph.Compiler
   @doc false
   @impl Primitive
   @spec compile(primitive :: Primitive.t(), styles :: Style.t()) :: Script.t()
   def compile(%Primitive{module: __MODULE__}, _styles) do
-    raise "compiling a Script is a special case and is handled in Scenic.ViewPort.GraphCompiler"
+    raise "compiling a Script is a special case and is handled in Scenic.Graph.Compiler"
   end
 end

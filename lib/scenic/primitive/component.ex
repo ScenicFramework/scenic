@@ -106,11 +106,22 @@ defmodule Scenic.Primitive.Component do
   def valid_styles(), do: @styles
 
   # --------------------------------------------------------
-  # compiling a component is a special case and is handled in Scenic.ViewPort.GraphCompiler
+  # compiling a component is a special case and is handled in Scenic.Graph.Compiler
   @doc false
   @impl Primitive
   @spec compile(primitive :: Primitive.t(), styles :: Style.t()) :: Script.t()
   def compile(%Primitive{module: __MODULE__}, _styles) do
-    raise "compiling a Component is a special case and is handled in Scenic.ViewPort.GraphCompiler"
+    raise "compiling a Component is a special case and is handled in Scenic.Graph.Compiler"
+  end
+
+  # --------------------------------------------------------
+  @doc false
+  def default_pin({@main_id, _data, @main_id}, _styles), do: {0, 0}
+
+  def default_pin({module, data, _name}, styles) when is_atom(module) do
+    case Kernel.function_exported?(module, :default_pin, 2) do
+      true -> module.default_pin(data, styles)
+      false -> {0, 0}
+    end
   end
 end
