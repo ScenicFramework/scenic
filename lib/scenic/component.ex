@@ -242,6 +242,7 @@ defmodule Scenic.Component do
   # sense, while leaving any opts/styles that are intended for the component itself.
   # also, add the viewport as an option.
   @doc false
+  @spec filter_opts(opts :: Keyword.t()) :: Keyword.t()
   def filter_opts(opts) when is_list(opts) do
     Enum.reject(opts, fn {key, _} -> Enum.member?(@filter_out, key) end)
   end
