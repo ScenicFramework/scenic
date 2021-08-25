@@ -43,6 +43,7 @@ defmodule Scenic.Component.Input.TextField do
     it.
   * `:hint` - A string that will be shown (greyed out) when the entered value
   of the component is empty.
+  * `:hint_color` - any [valid color](Scenic.Primitive.Style.Paint.Color.html).
   * `:type` - Can be one of the following options:
     * `:all` - Show all characters. This is the default.
     * `:password` - Display a string of '*' characters instead of the value.
