@@ -361,10 +361,9 @@ defmodule Scenic.Scene do
 
   @type response_opts ::
           list(
-            {:timeout, non_neg_integer}
-            | {:hibernate, true}
+            timeout()
+            | :hibernate
             | {:continue, term}
-            | {:push, graph :: Graph.t()}
           )
 
   defmodule Error do
@@ -1320,31 +1319,27 @@ defmodule Scenic.Scene do
       end
 
     # start up the scene
-    response =
-      case module.init(scene, param, opts[:opts] || []) do
-        {:ok, %Scene{} = state} ->
-          {:noreply, state}
+    case module.init(scene, param, opts[:opts] || []) do
+      {:ok, %Scene{} = state} ->
+        GenServer.cast(viewport.pid, {:scene_complete, id})
+        {:noreply, state}
 
-        {:ok, _other} ->
-          raise "Invalid response from #{module}.init/3 State must be a %Scene{}"
+      {:ok, _other} ->
+        raise "Invalid response from #{module}.init/3 State must be a %Scene{}"
 
-        {:ok, %Scene{} = state, opt} ->
-          {:noreply, state, opt}
+      {:ok, %Scene{} = state, opt} ->
+        GenServer.cast(viewport.pid, {:scene_complete, id})
+        {:noreply, state, opt}
 
-        {:ok, _other, _opt} ->
-          raise "Invalid response from #{module}.init/3 State must be a %Scene{}"
+      {:ok, _other, _opt} ->
+        raise "Invalid response from #{module}.init/3 State must be a %Scene{}"
 
-        :ignore ->
-          :ignore
+      :ignore ->
+        :ignore
 
-        {:stop, reason} ->
-          {:stop, reason}
-      end
-
-    # signal the vp that the scene is done starting up
-    GenServer.cast(viewport.pid, {:scene_complete, id})
-
-    response
+      {:stop, reason} ->
+        {:stop, reason}
+    end
   end
 
   # --------------------------------------------------------

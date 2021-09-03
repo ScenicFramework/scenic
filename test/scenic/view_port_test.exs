@@ -74,9 +74,17 @@ defmodule Scenic.ViewPortTest do
 
   defmodule TestDriver do
     use Scenic.Driver
-    def init(_, _), do: {:ok, :test_driver_state}
-    def handle_info(_, s), do: {:noreply, s}
-    def handle_cast(_, s), do: {:noreply, s}
+
+    def validate_opts(opts), do: {:ok, opts}
+    def init(driver, _), do: {:ok, driver}
+
+    def put_scripts(_ids, driver), do: {:noreply, driver}
+    def del_scripts(_ids, driver), do: {:noreply, driver}
+    def request_input(_input, driver), do: {:noreply, driver}
+    def reset_scene(driver), do: {:noreply, driver}
+
+    def handle_info(_, driver), do: {:noreply, driver}
+    def handle_cast(_, driver), do: {:noreply, driver}
   end
 
   @driver_config [

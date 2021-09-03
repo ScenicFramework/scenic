@@ -9,6 +9,11 @@ defmodule Scenic.Assets.StaticTest do
 
   alias Scenic.Assets.Static
 
+  # we expect errors to be logged in this set of tests. This happens when we purposefully
+  # attempted to load an asset that has been tampered with. So turn off the logging to
+  # keep the tests clean.
+  @moduletag :capture_log
+
   # import IEx
 
   test "module returns the configured library module" do

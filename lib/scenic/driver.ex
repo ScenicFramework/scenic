@@ -141,6 +141,65 @@ defmodule Scenic.Driver do
   `0`, `1`, or `2`, where `0` is the primary button.
   """
 
+  alias Scenic.Driver
+  alias Scenic.ViewPort
+
+  # import IEx
+  # require Logger
+
+  @root_id ViewPort.root_id()
+  # @main_id ViewPort.main_id()
+
+  # ============================================================================
+  # Driver Struct
+
+  @type t :: %Driver{
+          viewport: ViewPort.t(),
+          pid: pid,
+          module: atom,
+          limit_ms: integer,
+          dirty_ids: list,
+          gated: boolean,
+          limited: boolean,
+          input_limited: boolean,
+          input_buffer: %{ViewPort.Input.class() => ViewPort.Input.t()},
+          busy: boolean,
+          requested_inputs: [ViewPort.Input.class()],
+          assigns: map
+        }
+
+  defstruct viewport: nil,
+            pid: nil,
+            module: nil,
+            limit_ms: 0,
+            dirty_ids: [],
+            gated: false,
+            limited: false,
+            input_limited: false,
+            input_buffer: %{},
+            busy: false,
+            requested_inputs: [],
+            assigns: %{}
+
+  @type response_opts ::
+          list(
+            timeout()
+            | :hibernate
+            | {:continue, term}
+          )
+
+  @init :_init_
+  @limiter :_limiter_expired_
+  @input_limiter :_input_limiter_expired_
+  @not_busy :_not_busy_
+
+  @put_scripts ViewPort.msg_put_scripts()
+  @request_input ViewPort.msg_request_input()
+  @del_scripts ViewPort.msg_del_scripts()
+  @reset_scene ViewPort.msg_reset_scene()
+  @gate_start ViewPort.msg_gate_start()
+  @gate_complete ViewPort.msg_gate_complete()
+
   # ============================================================================
   # callback definitions
 
@@ -169,14 +228,157 @@ defmodule Scenic.Driver do
   initializing any `GenServer` process, it should return `{:ok, state}`
   """
   @callback init(
-              vp_info :: Scenic.ViewPort.t(),
+              driver :: Driver.t(),
               opts :: Keyword.t()
-            ) :: {:ok, any}
+            ) :: {:ok, Driver.t()}
+
+  @callback reset_scene(driver :: Driver.t()) :: {:ok, Driver.t()}
+
+  @callback request_input(
+              input :: [Scenic.ViewPort.Input.class()],
+              driver :: Driver.t()
+            ) :: {:ok, Driver.t()}
+
+  @callback put_scripts(
+              script_ids :: [Scenic.Script.id()],
+              driver :: Driver.t()
+            ) :: {:ok, Driver.t()}
+
+  @callback del_scripts(
+              script_ids :: [Scenic.Script.id()],
+              driver :: Driver.t()
+            ) :: {:ok, Driver.t()}
+
+  @optional_callbacks reset_scene: 1,
+                      request_input: 2,
+                      put_scripts: 2,
+                      del_scripts: 2
 
   # ===========================================================================
   defmodule Error do
     defexception message: nil
   end
+
+  # ============================================================================
+  # client api - working with the driver
+
+  @doc """
+  Convenience function to get an assigned value out of a driver struct.
+  """
+  @spec get(driver :: Driver.t(), key :: any, default :: any) :: any
+  def get(%Driver{assigns: assigns}, key, default \\ nil) do
+    Map.get(assigns, key, default)
+  end
+
+  @doc """
+  Convenience function to fetch an assigned value out of a driver struct.
+  """
+  @spec fetch(driver :: Driver.t(), key :: any) :: {:ok, any} | :error
+  def fetch(%Driver{assigns: assigns}, key) do
+    Map.fetch(assigns, key)
+  end
+
+  @doc """
+  Convenience function to assign a list of values into a driver struct.
+  """
+  @spec assign(driver :: Driver.t(), key_list :: Keyword.t()) :: Driver.t()
+  def assign(%Driver{} = driver, key_list) when is_list(key_list) do
+    Enum.reduce(key_list, driver, fn {k, v}, acc -> assign(acc, k, v) end)
+  end
+
+  @doc """
+  Convenience function to assign a value into a driver struct.
+  """
+  @spec assign(driver :: Driver.t(), key :: any, value :: any) :: Driver.t()
+  def assign(%Driver{assigns: assigns} = driver, key, value) do
+    %{driver | assigns: Map.put(assigns, key, value)}
+  end
+
+  @doc """
+  Convenience function to assign a list of new values into a driver struct.
+
+  Only values that do not already exist will be assigned
+  """
+  @spec assign_new(driver :: Driver.t(), key_list :: Keyword.t()) :: Driver.t()
+  def assign_new(%Driver{} = driver, key_list) when is_list(key_list) do
+    Enum.reduce(key_list, driver, fn {k, v}, acc -> assign_new(acc, k, v) end)
+  end
+
+  @doc """
+  Convenience function to assign a new values into a driver struct.
+
+  The value will only be assigned if it does not already exist in the struct.
+  """
+  @spec assign_new(driver :: Driver.t(), key :: any, value :: any) :: Driver.t()
+  def assign_new(%Driver{assigns: assigns} = driver, key, value) do
+    %{driver | assigns: Map.put_new(assigns, key, value)}
+  end
+
+  @doc """
+  Set or clear the busy flag.
+
+  When the busy flag is set, put_script messages will be consolidated until cleared.
+  """
+  @spec set_busy(driver :: Driver.t(), flag :: boolean) :: Driver.t()
+  def set_busy(%Driver{} = driver, flag) when is_boolean(flag) do
+    %{driver | busy: flag}
+  end
+
+  @doc """
+  Send input from the driver.
+
+  Send input from the driver to its ViewPort. `:cursor_pos` and `:cursor_scroll`
+  input will be buffered/rate limited according the driver's `:limit_ms` setting.
+  """
+  @spec send_input(driver :: Driver.t(), input :: ViewPort.Input.t()) :: Driver.t()
+  def send_input(%Driver{limit_ms: 0} = drvr, input), do: do_send_input(drvr, input)
+
+  def send_input(
+        %Driver{input_limited: true, input_buffer: buffer} = driver,
+        {class, _} = input
+      ) do
+    case class do
+      :cursor_pos -> %{driver | input_buffer: Map.put(buffer, class, input)}
+      :cursor_scroll -> %{driver | input_buffer: Map.put(buffer, class, input)}
+      # Everything else is sent right away
+      _ -> do_send_input(driver, input)
+    end
+  end
+
+  def send_input(
+        %Driver{limit_ms: limit_ms} = driver,
+        {class, _} = input
+      ) do
+    case class do
+      :cursor_pos ->
+        Process.send_after(self(), @input_limiter, limit_ms)
+        do_send_input(%{driver | input_limited: true}, input)
+
+      :cursor_scroll ->
+        Process.send_after(self(), @input_limiter, limit_ms)
+        do_send_input(%{driver | input_limited: true}, input)
+
+      _ ->
+        # Everything else is does not trigger a limit
+        do_send_input(driver, input)
+    end
+  end
+
+  defp do_send_input(
+         %Driver{viewport: vp, requested_inputs: requested_inputs} = driver,
+         {input_type, _} = input
+       ) do
+    if Enum.member?(requested_inputs, input_type) do
+      :ok = ViewPort.input(vp, input)
+    end
+
+    driver
+  end
+
+  # def send_input( %Driver{viewport: vp} = driver, input ) do
+  #   ViewPort.input( vp, input )
+  #   driver
+  # end
 
   # ===========================================================================
   # the using macro for scenes adopting this behavior
@@ -185,45 +387,411 @@ defmodule Scenic.Driver do
       use GenServer
       @behaviour Scenic.Driver
 
-      def validate_opts(opts), do: {:ok, opts}
+      import Scenic.Driver,
+        only: [
+          get: 2,
+          get: 3,
+          fetch: 2,
+          assign: 2,
+          assign: 3,
+          assign_new: 2,
+          assign_new: 3,
+          set_busy: 2,
+          send_input: 2
+        ]
 
-      def init({vp_info, opts}) do
-        GenServer.cast(vp_info.pid, {:register_driver, self()})
-        {:ok, nil, {:continue, {:__init__, vp_info, opts}}}
-      end
-
-      def build_assets(_src_dir), do: :ok
-
-      def start_link({vp_info, opts}) do
-        opts = Keyword.delete(opts, :module)
-
-        case opts[:name] do
-          nil -> GenServer.start_link(__MODULE__, {vp_info, opts})
-          name -> GenServer.start_link(__MODULE__, {vp_info, opts}, name: name)
-        end
-      end
-
-      def handle_continue({:__init__, vp_info, opts}, nil) do
-        assets = opts[:assets]
-
-        opts =
-          opts
-          |> Keyword.delete(:module)
-          |> Keyword.delete(:name)
-
-        {:ok, state} = init(vp_info, opts)
-        {:noreply, state}
-      end
-
-      # --------------------------------------------------------
-      defoverridable validate_opts: 1,
-                     handle_continue: 2,
-                     build_assets: 1
+      @doc false
+      def init(_param), do: :ignore
     end
 
     # quote
   end
 
+  # ===========================================================================
+  # calls for starting up a driver
+
+  @doc false
+  def child_spec(data) do
+    %{
+      id: make_ref(),
+      start: {__MODULE__, :start_link, [data]},
+      type: :worker,
+      restart: :permanent,
+      shutdown: 500
+    }
+  end
+
+  @doc false
+  # internal start_link
+  def start_link({vp_info, opts}) do
+    # GenServer.start_link(__MODULE__, {vp_info, opts})
+    case opts[:name] do
+      nil -> GenServer.start_link(__MODULE__, {vp_info, opts})
+      name -> GenServer.start_link(__MODULE__, {vp_info, opts}, name: name)
+    end
+  end
+
+  # --------------------------------------------------------
+  @doc false
+  def init({vp, _opts} = data) do
+    GenServer.cast(vp.pid, {:register_driver, self()})
+    {:ok, nil, {:continue, {@init, data}}}
+  end
+
+  # ============================================================================
+  # terminate
+
+  def terminate(reason, %Driver{module: module} = driver) do
+    IO.inspect({reason, driver}, label: "inner terminate")
+
+    case Kernel.function_exported?(module, :terminate, 2) do
+      true -> module.terminate(reason, driver)
+      false -> nil
+    end
+  end
+
+  # def terminate(reason, _other), do: reason
+  def terminate(reason, driver) do
+    IO.inspect({reason, driver}, label: "-----> terminate")
+    reason
+  end
+
+  # --------------------------------------------------------
+  @doc false
+  def handle_continue({@init, {vp, opts}}, nil) do
+    {:ok, module} = Keyword.fetch(opts, :module)
+
+    # create the driver struct
+    driver = %Driver{
+      viewport: vp,
+      module: module,
+      pid: self(),
+      limit_ms: opts[:limit_ms] || 0
+    }
+
+    # start up the scene
+    case module.init(driver, Keyword.delete(opts, :module)) do
+      {:ok, %Driver{} = driver} ->
+        {:noreply, driver}
+
+      {:ok, other} ->
+        raise """
+        Driver callback init returned an invalid Scenic.Driver struct
+        Received: #{inspect(other)}
+        """
+
+      {:ok, %Driver{} = state, opt} ->
+        {:noreply, state, opt}
+
+      {:ok, other, _opt} ->
+        raise """
+        Driver callback init returned an invalid Scenic.Driver struct
+        Received: #{inspect(other)}
+        """
+
+      :ignore ->
+        :ignore
+
+      {:stop, reason} ->
+        {:stop, reason}
+    end
+  end
+
+  # --------------------------------------------------------
+  @doc false
+  def handle_continue(msg, %Driver{module: module, busy: old_busy} = driver) do
+    case module.handle_continue(msg, driver) do
+      {:noreply, %Driver{busy: new_busy} = driver} ->
+        if old_busy && !new_busy, do: send(self(), @not_busy)
+        {:noreply, driver}
+
+      {:noreply, state} ->
+        raise """
+        Driver callback handle_continue must return a driver struct as the state
+        Received: #{inspect(state)}
+        """
+
+      {:noreply, %Driver{busy: new_busy} = driver, opts} ->
+        if old_busy && !new_busy, do: send(self(), @not_busy)
+        {:noreply, driver, opts}
+
+      {:noreply, state, _opts} ->
+        raise """
+        Driver callback handle_continue must return a driver struct as the state
+        Received: #{inspect(state)}
+        """
+
+      response ->
+        response
+    end
+  end
+
+  # --------------------------------------------------------
+  # info
+  @doc false
+
+  def handle_info(@not_busy, driver), do: do_not_busy(driver)
+  def handle_info(@input_limiter, driver), do: do_input_limit_expired(driver)
+  def handle_info(@limiter, driver), do: do_limit_expired(driver)
+  def handle_info({@put_scripts, ids}, driver), do: do_put_scripts(ids, driver)
+  def handle_info({@del_scripts, ids}, driver), do: do_del_scripts(ids, driver)
+  def handle_info({@request_input, req}, driver), do: do_input_reqs(req, driver)
+  def handle_info(@reset_scene, driver), do: do_reset_scene(driver)
+  def handle_info(@gate_start, driver), do: do_gate_start(driver)
+  def handle_info(@gate_complete, driver), do: do_gate_complete(driver)
+
+  # generic handle_info. give the driver a chance to handle it
+  def handle_info(msg, %Driver{module: module, busy: old_busy} = driver) do
+    case module.handle_info(msg, driver) do
+      {:noreply, %Driver{busy: new_busy} = driver} ->
+        if old_busy && !new_busy, do: send(self(), @not_busy)
+        {:noreply, driver}
+
+      {:noreply, state} ->
+        raise """
+        Driver callback handle_info must return a driver struct as the state
+        Received: #{inspect(state)}
+        """
+
+      {:noreply, %Driver{busy: new_busy} = driver, opts} ->
+        if old_busy && !new_busy, do: send(self(), @not_busy)
+        {:noreply, driver, opts}
+
+      {:noreply, state, _opts} ->
+        raise """
+        Driver callback handle_info must return a driver struct as the state
+        Received: #{inspect(state)}
+        """
+
+      response ->
+        response
+    end
+  end
+
+  # --------------------------------------------------------
+  # cast
+  @doc false
+  def handle_cast(msg, %Driver{module: module, busy: old_busy} = driver) do
+    case module.handle_cast(msg, driver) do
+      {:noreply, %Driver{busy: new_busy} = driver} ->
+        if old_busy && !new_busy, do: send(self(), @not_busy)
+        {:noreply, driver}
+
+      {:noreply, state} ->
+        raise """
+        Driver callback handle_cast must return a driver struct as the state
+        Received: #{inspect(state)}
+        """
+
+      {:noreply, %Driver{busy: new_busy} = driver, opts} ->
+        if old_busy && !new_busy, do: send(self(), @not_busy)
+        {:noreply, driver, opts}
+
+      {:noreply, state, _opts} ->
+        raise """
+        Driver callback handle_cast must return a driver struct as the state
+        Received: #{inspect(state)}
+        """
+
+      response ->
+        response
+    end
+  end
+
+  # --------------------------------------------------------
+  @doc false
+  def handle_call(msg, from, %Driver{module: module, busy: old_busy} = driver) do
+    case module.handle_call(msg, from, driver) do
+      {:noreply, %Driver{busy: new_busy} = driver} ->
+        if old_busy && !new_busy, do: send(self(), @not_busy)
+        {:noreply, driver}
+
+      {:noreply, other} ->
+        raise """
+        Driver callback handle_call must return a driver struct as the state
+        Received: #{inspect(other)}
+        """
+
+      {:noreply, %Driver{busy: new_busy} = driver, opts} ->
+        if old_busy && !new_busy, do: send(self(), @not_busy)
+        {:noreply, driver, opts}
+
+      {:noreply, other, _opts} ->
+        raise """
+        Driver callback handle_call must return a driver struct as the state
+        Received: #{inspect(other)}
+        """
+
+      {:reply, reply, %Driver{busy: new_busy} = driver} ->
+        if old_busy && !new_busy, do: send(self(), @not_busy)
+        {:reply, reply, driver}
+
+      {:reply, _reply, other} ->
+        raise """
+        Driver callback handle_call must return a driver struct as the state
+        Received: #{inspect(other)}
+        """
+
+      {:reply, reply, %Driver{busy: new_busy} = driver, opts} ->
+        if old_busy && !new_busy, do: send(self(), @not_busy)
+        {:reply, reply, driver, opts}
+
+      {:reply, _reply, other, _opts} ->
+        raise """
+        Driver callback handle_call must return a driver struct as the state
+        Received: #{inspect(other)}
+        """
+
+      response ->
+        response
+    end
+  end
+
+  # ============================================================================
+  # internal handlers
+
+  defp state_msg(name, data) do
+    """
+    Driver callback '#{name}' must return {:ok, driver}
+    The 'driver' field must be a valid %Scenic.Driver{} struct.
+    Received: #{inspect(data)}
+    """
+  end
+
+  defp do_not_busy(%Driver{dirty_ids: []} = driver), do: {:noreply, driver}
+  defp do_not_busy(%Driver{} = driver), do: do_put_scripts([], driver)
+
+  defp do_input_limit_expired(
+         %Driver{viewport: vp, limit_ms: limit_ms, input_buffer: buffer} = driver
+       ) do
+    case buffer == %{} do
+      true ->
+        # no buffered input. End the rate limit.
+        {:noreply, %{driver | input_limited: false}}
+
+      false ->
+        Process.send_after(self(), @input_limiter, limit_ms)
+        Enum.each(buffer, fn {_, input} -> ViewPort.input(vp, input) end)
+        {:noreply, %{driver | input_limited: true, input_buffer: %{}}}
+    end
+  end
+
+  defp do_limit_expired(%Driver{dirty_ids: []} = driver) do
+    {:noreply, %{driver | limited: false}}
+  end
+
+  defp do_limit_expired(%Driver{} = driver) do
+    do_put_scripts([], %{driver | limited: false})
+  end
+
+  defp do_put_scripts(ids, %Driver{gated: false, limited: false, busy: false} = drvr) do
+    {:noreply, do_do_put_scripts(drvr, ids)}
+  end
+
+  defp do_put_scripts(ids, %Driver{dirty_ids: dirty_ids, module: module} = driver) do
+    case Kernel.function_exported?(module, :put_scripts, 2) do
+      true -> {:noreply, %{driver | dirty_ids: [ids | dirty_ids]}}
+      false -> {:noreply, driver}
+    end
+  end
+
+  defp do_del_scripts(ids, %Driver{module: module} = driver) do
+    case Kernel.function_exported?(module, :del_scripts, 2) do
+      true ->
+        case module.del_scripts(ids, driver) do
+          {:ok, %Driver{} = driver} -> {:noreply, driver}
+          other -> raise state_msg("del_scripts", other)
+        end
+
+      false ->
+        {:noreply, driver}
+    end
+  end
+
+  defp do_input_reqs(requested_inputs, %Driver{module: module} = driver) do
+    # always update the inputs even if the callback isn't defined
+    driver = %{driver | requested_inputs: requested_inputs}
+
+    case Kernel.function_exported?(module, :request_input, 2) do
+      true ->
+        case module.request_input(requested_inputs, driver) do
+          {:ok, %Driver{} = driver} -> {:noreply, driver}
+          other -> raise state_msg("request_input", other)
+        end
+
+      false ->
+        {:noreply, driver}
+    end
+  end
+
+  defp do_reset_scene(%Driver{module: module} = driver) do
+    driver =
+      case Kernel.function_exported?(module, :reset_scene, 1) do
+        true ->
+          driver
+          |> Map.put(:dirty_ids, [@root_id])
+          |> Map.put(:gated, false)
+          |> module.reset_scene()
+          |> case do
+            {:ok, %Driver{} = driver} ->
+              driver
+
+            other ->
+              raise state_msg("reset", other)
+          end
+
+        false ->
+          driver
+          |> Map.put(:dirty_ids, [@root_id])
+          |> Map.put(:gated, false)
+      end
+
+    {:noreply, driver}
+  end
+
+  defp do_gate_start(%Driver{} = driver) do
+    {:noreply, %{driver | gated: true}}
+  end
+
+  defp do_gate_complete(%Driver{} = driver) do
+    do_put_scripts([], %{driver | gated: false})
+  end
+
+  defp do_do_put_scripts(
+         %Driver{
+           module: module,
+           dirty_ids: dirty,
+           limit_ms: limit_ms
+         } = driver,
+         ids
+       ) do
+    case Kernel.function_exported?(module, :put_scripts, 2) do
+      true ->
+        ids =
+          [ids | dirty]
+          |> List.flatten()
+          |> Enum.uniq()
+
+        with true <- ids != [],
+             {:ok, %Driver{} = driver} <- module.put_scripts(ids, driver),
+             true <- limit_ms > 0 do
+          # there was at least one dirty script
+          # and the driver returned ok
+          # and there is a requested script limit
+          Process.send_after(self(), @limiter, limit_ms)
+          Map.put(driver, :limited, true)
+        else
+          false -> Map.put(driver, :limited, false)
+          other -> raise state_msg("put_scripts", other)
+        end
+        |> Map.put(:dirty_ids, [])
+
+      false ->
+        driver
+    end
+  end
+
+  # --------------------------------------------------------
   # options validation
   @opts_schema [
     module: [required: true, type: :atom],

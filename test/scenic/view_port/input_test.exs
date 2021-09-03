@@ -144,7 +144,7 @@ defmodule Scenic.ViewPort.InputTest do
     Scenic.Scene.push_graph(scene, graph)
 
     assert_receive(
-      {:"$gen_cast", {:request_input, [:cursor_button, :cursor_pos, :cursor_scroll]}},
+      {:_request_input_, [:cursor_button, :cursor_pos, :cursor_scroll]},
       100
     )
 
@@ -153,7 +153,7 @@ defmodule Scenic.ViewPort.InputTest do
       |> Scenic.Primitives.rect({10, 20})
 
     Scenic.Scene.push_graph(scene, graph)
-    assert_receive({:"$gen_cast", {:request_input, []}}, 100)
+    assert_receive({:_request_input_, []}, 100)
   end
 
   test ":cursor_button only the input listed in a input style is requested", %{
@@ -170,10 +170,7 @@ defmodule Scenic.ViewPort.InputTest do
 
     Scenic.Scene.push_graph(scene, graph)
 
-    assert_receive(
-      {:"$gen_cast", {:request_input, [:cursor_button]}},
-      100
-    )
+    assert_receive({:_request_input_, [:cursor_button]}, 100)
   end
 
   test ":cursor_scroll only the input listed in a input style is requested", %{
@@ -190,10 +187,7 @@ defmodule Scenic.ViewPort.InputTest do
 
     Scenic.Scene.push_graph(scene, graph)
 
-    assert_receive(
-      {:"$gen_cast", {:request_input, [:cursor_scroll]}},
-      100
-    )
+    assert_receive({:_request_input_, [:cursor_scroll]}, 100)
   end
 
   test ":cursor_pos only the input listed in a input style is requested", %{vp: vp, scene: scene} do
@@ -207,10 +201,7 @@ defmodule Scenic.ViewPort.InputTest do
 
     Scenic.Scene.push_graph(scene, graph)
 
-    assert_receive(
-      {:"$gen_cast", {:request_input, [:cursor_pos]}},
-      100
-    )
+    assert_receive({:_request_input_, [:cursor_pos]}, 100)
   end
 
   test ":cursor_button only is the only cursor input type sent", %{vp: vp, scene: scene} do
@@ -407,19 +398,19 @@ defmodule Scenic.ViewPort.InputTest do
     :ok = Input.request(vp, :cursor_button)
 
     GenServer.cast(vp.pid, {:register_driver, self()})
-    assert_receive({:"$gen_cast", {:request_input, [:cursor_button]}}, 100)
+    assert_receive({:_request_input_, [:cursor_button]}, 100)
 
     # should NOT get an update when the same thing is requested again
     :ok = Input.request(vp, :cursor_button)
-    refute_receive({:"$gen_cast", {:request_input, _}}, 20)
+    refute_receive({:_request_input_, _}, 20)
 
     # should get an update when something new is requested
     :ok = Input.request(vp, :cursor_pos)
-    assert_receive({:"$gen_cast", {:request_input, [:cursor_button, :cursor_pos]}}, 100)
+    assert_receive({:_request_input_, [:cursor_button, :cursor_pos]}, 100)
 
     # should get an update when something is removed
     :ok = Input.unrequest(vp, :cursor_pos)
-    assert_receive({:"$gen_cast", {:request_input, [:cursor_button]}}, 100)
+    assert_receive({:_request_input_, [:cursor_button]}, 100)
   end
 
   test "drivers are sent requested input updates when a scene goes down", %{vp: vp, scene: scene} do
@@ -428,12 +419,12 @@ defmodule Scenic.ViewPort.InputTest do
     assert Input.fetch_requests!(vp) == {:ok, [:cursor_button]}
 
     GenServer.cast(vp.pid, {:register_driver, self()})
-    assert_receive({:"$gen_cast", {:request_input, [:cursor_button]}}, 100)
+    assert_receive({:_request_input_, [:cursor_button]}, 100)
 
     Scenic.Scene.stop(scene)
 
     # should get an update the owning scene goes down
-    assert_receive({:"$gen_cast", {:request_input, []}}, 100)
+    assert_receive({:_request_input_, []}, 100)
   end
 
   test "drivers are sent captured input updates", %{vp: vp, scene: scene} do
@@ -443,19 +434,19 @@ defmodule Scenic.ViewPort.InputTest do
     assert Input.fetch_requests!(vp) == {:ok, [:cursor_button]}
 
     GenServer.cast(vp.pid, {:register_driver, self()})
-    assert_receive({:"$gen_cast", {:request_input, [:cursor_button]}}, 100)
+    assert_receive({:_request_input_, [:cursor_button]}, 100)
 
     # should NOT get an update when the same thing is captured
     :ok = Input.capture(vp, :cursor_button)
-    refute_receive({:"$gen_cast", {:request_input, _}}, 20)
+    refute_receive({:_request_input_, _}, 20)
 
     # should get an update when something new is requested
     :ok = Input.capture(vp, :cursor_pos)
-    assert_receive({:"$gen_cast", {:request_input, [:cursor_button, :cursor_pos]}}, 100)
+    assert_receive({:_request_input_, [:cursor_button, :cursor_pos]}, 100)
 
     # should get an update when something is removed
     :ok = Input.release(vp, :all)
-    assert_receive({:"$gen_cast", {:request_input, [:cursor_button]}}, 100)
+    assert_receive({:_request_input_, [:cursor_button]}, 100)
   end
 
   test "drivers are sent captured input updates when a scene goes down", %{vp: vp, scene: scene} do
@@ -479,7 +470,7 @@ defmodule Scenic.ViewPort.InputTest do
     GenServer.call(vp.pid, :_ping_)
 
     GenServer.cast(vp.pid, {:register_driver, self()})
-    assert_receive({:"$gen_cast", {:request_input, [:cursor_button, :cursor_pos]}}, 100)
+    assert_receive({:_request_input_, [:cursor_button, :cursor_pos]}, 100)
 
     # stop the agent
     Agent.stop(agent)
@@ -487,7 +478,7 @@ defmodule Scenic.ViewPort.InputTest do
     # should get an update when the owning pid goes down
     # calling fetch_requests! makes sure the vp has processed the agent DOWN message
     assert Input.fetch_requests!(vp) == {:ok, [:cursor_button]}
-    assert_receive({:"$gen_cast", {:request_input, [:cursor_button]}}, 100)
+    assert_receive({:_request_input_, [:cursor_button]}, 100)
   end
 
   # ----------------

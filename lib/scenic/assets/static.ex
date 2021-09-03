@@ -177,7 +177,7 @@ defmodule Scenic.Assets.Static do
 
   @hash_type :sha3_256
 
-  @dst_dir "_assets"
+  @dst_dir "/priv/__scenic/assets"
   @default_src_dir "assets"
 
   @default_aliases [
@@ -313,9 +313,19 @@ defmodule Scenic.Assets.Static do
          ^bin_hash <- :crypto.hash(hash_type, bin) do
       {:ok, bin}
     else
-      :error -> {:error, :not_found}
-      bin when is_binary(bin) -> {:error, :hash_failed}
-      err -> err
+      :error ->
+        err = {:error, :not_found}
+        Logger.error("asset: #{inspect(id)} from #{dir}, error: #{inspect(err)}")
+        err
+
+      bin when is_binary(bin) ->
+        err = :hash_failed
+        Logger.error("asset: #{inspect(id)} from #{dir}, error: #{inspect(err)}")
+        {:error, :hash_failed}
+
+      err ->
+        Logger.error("asset: #{inspect(id)} from #{dir}, error: #{inspect(err)}")
+        err
     end
   end
 
@@ -328,7 +338,6 @@ defmodule Scenic.Assets.Static do
     dst =
       try do
         opts[:otp_app]
-        # |> :code.priv_dir()
         |> :code.lib_dir()
         |> Path.join(Static.dst_dir())
       rescue

@@ -10,6 +10,7 @@ defmodule Scenic.ViewPort do
 
   alias Scenic.Script
   alias Scenic.ViewPort
+  alias Scenic.Driver
   alias Scenic.Math
   alias Scenic.Scene
   alias Scenic.Graph
@@ -119,7 +120,7 @@ defmodule Scenic.ViewPort do
       type: {:custom, Validators, :validate_scene, [:default_scene]}
     ],
     theme: [type: {:custom, Theme, :validate, []}, default: :dark],
-    drivers: [type: {:custom, Scenic.Driver, :validate, []}, default: []],
+    drivers: [type: {:custom, Driver, :validate, []}, default: []],
     input_filter: [type: {:custom, __MODULE__, :validate_input_filter, []}, default: :all],
     opts: [
       type: :keyword_list,
@@ -129,6 +130,13 @@ defmodule Scenic.ViewPort do
 
   @main_id "_main_"
   @root_id "_root_"
+
+  @put_scripts :_put_scripts_
+  @del_scripts :_del_scripts_
+  @request_input :_request_input_
+  @reset_scene :_reset_scene_
+  @gate_start :_gate_start_
+  @gate_complete :_gate_complete_
 
   @first_open_graph_id 2
 
@@ -140,6 +148,24 @@ defmodule Scenic.ViewPort do
     :key,
     :viewport
   ]
+
+  @doc false
+  def msg_put_scripts(), do: @put_scripts
+
+  @doc false
+  def msg_del_scripts(), do: @del_scripts
+
+  @doc false
+  def msg_request_input(), do: @request_input
+
+  @doc false
+  def msg_reset_scene(), do: @reset_scene
+
+  @doc false
+  def msg_gate_start(), do: @gate_start
+
+  @doc false
+  def msg_gate_complete(), do: @gate_complete
 
   @doc false
   def validate_input_filter(:all), do: {:ok, :all}
@@ -322,10 +348,8 @@ defmodule Scenic.ViewPort do
         owner = opts[:owner]
 
         # write the script to the table
+        # this notifies the drivers...
         put_script(viewport, name, script, owner: owner)
-
-        # notify the drivers
-        GenServer.cast(pid, {:put_scripts, [name], owner})
 
         # send the input list to the viewport
         GenServer.cast(pid, {:input_list, input_list, name, owner})
@@ -419,7 +443,7 @@ defmodule Scenic.ViewPort do
           driver_pid :: GenServer.server()
         ) :: :ok
   def stop_driver(%ViewPort{pid: pid}, driver_pid) do
-    GenServer.cast(pid, {:stop_driver, driver_pid})
+    GenServer.call(pid, {:stop_driver, driver_pid})
   end
 
   # --------------------------------------------------------
@@ -549,7 +573,8 @@ defmodule Scenic.ViewPort do
     Enum.each(opts[:drivers], fn driver_opts ->
       DynamicSupervisor.start_child(
         driver_sup,
-        {driver_opts[:module], {info, driver_opts}}
+        # {driver_opts[:module], {info, driver_opts}}
+        {Driver, {info, driver_opts}}
       )
     end)
 
@@ -688,18 +713,6 @@ defmodule Scenic.ViewPort do
   # ============================================================================
   # handle_cast
   @doc false
-
-  # --------------------------
-  # stop drivers cleanly
-  def handle_cast(
-        {:stop_driver, driver_pid},
-        %{driver_sup: driver_sup} = state
-      ) do
-    DynamicSupervisor.terminate_child(driver_sup, driver_pid)
-    # drivers are monitored, so that will do the cleanup work.
-    {:noreply, state}
-  end
-
   # --------------------------
   # casts from scenes
 
@@ -754,7 +767,7 @@ defmodule Scenic.ViewPort do
 
   def handle_cast({:put_scripts, ids, owner}, state) do
     # tell the drivers
-    cast_drivers(state, {:put_scripts, ids})
+    cast_drivers(state, {@put_scripts, ids})
     {:noreply, ensure_monitor(owner, state)}
   end
 
@@ -769,7 +782,7 @@ defmodule Scenic.ViewPort do
     state =
       case :ets.lookup(script_table, name) do
         [_] ->
-          cast_drivers(old_state, {:del_script, name})
+          cast_drivers(old_state, {@del_scripts, [name]})
           :ets.delete(script_table, name)
 
           # make sure the input list is cleaned up
@@ -802,7 +815,8 @@ defmodule Scenic.ViewPort do
 
     # send the driver all the current script ids
     ids = all_script_ids(gen_info(state))
-    GenServer.cast(pid, {:put_scripts, ids})
+    # GenServer.cast(pid, {:put_scripts, ids})
+    send(pid, {@put_scripts, ids})
 
     # send the driver all the current requested inputs
     input_keys =
@@ -810,7 +824,8 @@ defmodule Scenic.ViewPort do
       |> Enum.uniq()
       |> Enum.sort()
 
-    GenServer.cast(pid, {:request_input, input_keys})
+    # GenServer.cast(pid, {:request_input, input_keys})
+    send(pid, {@request_input, input_keys})
 
     {:noreply, %{state | driver_pids: driver_pids}}
   end
@@ -839,8 +854,8 @@ defmodule Scenic.ViewPort do
     state = internal_put_graph(main_graph, @root_id, state)
 
     # tell the drivers the background changed
-    cast_drivers(state, :reset)
-    cast_drivers(state, {:put_scripts, [@root_id]})
+    cast_drivers(state, @reset_scene)
+    cast_drivers(state, {@put_scripts, [@root_id]})
 
     # update the state
     state =
@@ -860,7 +875,7 @@ defmodule Scenic.ViewPort do
   end
 
   def handle_cast({:scene_start, scene_id}, %{starting_scenes: []} = state) do
-    cast_drivers(state, :gate_start)
+    cast_drivers(state, @gate_start)
     {:noreply, %{state | starting_scenes: [scene_id]}}
   end
 
@@ -879,7 +894,7 @@ defmodule Scenic.ViewPort do
         [] ->
           # starting_scenes has gone to an empty list. We are done.
           # tell the drivers the reset is complete
-          cast_drivers(state, :gate_complete)
+          cast_drivers(state, @gate_complete)
           []
 
         scenes_ids ->
@@ -1002,8 +1017,8 @@ defmodule Scenic.ViewPort do
     state = internal_put_graph(main_graph, @root_id, state)
 
     # tell the drivers the background changed
-    cast_drivers(state, :reset)
-    cast_drivers(state, {:put_scripts, [@root_id]})
+    cast_drivers(state, @reset_scene)
+    cast_drivers(state, {@put_scripts, [@root_id]})
 
     # update the state
     state =
@@ -1025,14 +1040,26 @@ defmodule Scenic.ViewPort do
       ) do
     info = gen_info(state)
 
-    case DynamicSupervisor.start_child(driver_sup, {opts[:module], {info, opts}}) do
-      {:ok, pid} ->
-        # adding the pid to the driver list happens later when the driver registers itself.
-        {:reply, {:ok, pid}, state}
+    {
+      :reply,
+      DynamicSupervisor.start_child(driver_sup, {Driver, {info, opts}}),
+      state
+    }
+  end
 
-      err ->
-        {:reply, err, state}
-    end
+  # --------------------------
+  # stop drivers cleanly
+  def handle_call(
+        {:stop_driver, driver_pid},
+        _from,
+        %{driver_sup: driver_sup} = state
+      ) do
+    # drivers are monitored, so that will do the rest of the cleanup work.
+    {
+      :reply,
+      DynamicSupervisor.terminate_child(driver_sup, driver_pid),
+      state
+    }
   end
 
   def handle_call({:_fetch_input_captures, from}, _, state) do
@@ -1111,7 +1138,7 @@ defmodule Scenic.ViewPort do
          } = state
        ) do
     # tell the drivers to reset the scene
-    cast_drivers(state, :reset)
+    cast_drivers(state, @reset_scene)
 
     # if there is already a root running, kill it and reset the tables
     case old_root do
@@ -1166,7 +1193,7 @@ defmodule Scenic.ViewPort do
   end
 
   defp cast_drivers(%{driver_pids: pids}, msg) do
-    Enum.each(pids, &GenServer.cast(&1, msg))
+    Enum.each(pids, &send(&1, msg))
   end
 
   # only called from inside the viewport
@@ -1226,7 +1253,7 @@ defmodule Scenic.ViewPort do
       |> Enum.sort()
 
     if Enum.sort(new_keys) != Enum.sort(old_keys) do
-      cast_drivers(state, {:request_input, new_keys})
+      cast_drivers(state, {@request_input, new_keys})
     end
   end
 
