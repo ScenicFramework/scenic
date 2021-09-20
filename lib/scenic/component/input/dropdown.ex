@@ -451,7 +451,7 @@ defmodule Scenic.Component.Input.Dropdown do
 
   # --------------------------------------------------------
   def handle_input(
-        {:cursor_button, {0, :press, _, _}},
+        {:cursor_button, {:btn_left, 1, _, _}},
         @button_id,
         %Scene{assigns: %{down: false, graph: graph, rotate_caret: rotate_caret}} = scene
       ) do
@@ -475,7 +475,7 @@ defmodule Scenic.Component.Input.Dropdown do
 
   # pressing the button when down, raises it back up without doing anything else
   def handle_input(
-        {:cursor_button, {0, :press, _, _}},
+        {:cursor_button, {:btn_left, 1, _, _}},
         @button_id,
         %Scene{
           assigns: %{
@@ -506,7 +506,7 @@ defmodule Scenic.Component.Input.Dropdown do
 
   # releasing the button when down, raises it back up without doing anything else
   def handle_input(
-        {:cursor_button, {0, :release, _, _}},
+        {:cursor_button, {:btn_left, 0, _, _}},
         @button_id,
         %Scene{
           assigns: %{
@@ -544,7 +544,7 @@ defmodule Scenic.Component.Input.Dropdown do
   # --------------------------------------------------------
   # the button is pressed or released over an item with the drop open
   def handle_input(
-        {:cursor_button, {0, _, _, _}},
+        {:cursor_button, {:btn_left, _, _, _}},
         item_id,
         %Scene{
           assigns: %{
@@ -586,7 +586,7 @@ defmodule Scenic.Component.Input.Dropdown do
   # --------------------------------------------------------
   # the button is pressed or released outside the dropdown space
   def handle_input(
-        {:cursor_button, {0, _, _, _}},
+        {:cursor_button, {:btn_left, _, _, _}},
         _,
         %Scene{
           assigns: %{

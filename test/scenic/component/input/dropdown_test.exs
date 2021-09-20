@@ -17,17 +17,17 @@ defmodule Scenic.Component.Input.DropdownTest do
 
   # import IEx
 
-  @press_in {:cursor_button, {0, :press, 0, {20, 20}}}
-  @release_in {:cursor_button, {0, :release, 0, {20, 20}}}
+  @press_in {:cursor_button, {:btn_left, 1, [], {20, 20}}}
+  @release_in {:cursor_button, {:btn_left, 0, [], {20, 20}}}
 
-  @press_a {:cursor_button, {0, :press, 0, {20, 50}}}
-  @release_a {:cursor_button, {0, :release, 0, {20, 50}}}
+  @press_a {:cursor_button, {:btn_left, 1, [], {20, 50}}}
+  @release_a {:cursor_button, {:btn_left, 0, [], {20, 50}}}
 
-  @press_b {:cursor_button, {0, :press, 0, {20, 80}}}
-  @release_b {:cursor_button, {0, :release, 0, {20, 80}}}
+  @press_b {:cursor_button, {:btn_left, 1, [], {20, 80}}}
+  @release_b {:cursor_button, {:btn_left, 0, [], {20, 80}}}
 
-  @press_out {:cursor_button, {0, :press, 0, {1000, 1000}}}
-  @release_out {:cursor_button, {0, :release, 0, {1000, 1000}}}
+  @press_out {:cursor_button, {:btn_left, 1, [], {1000, 1000}}}
+  @release_out {:cursor_button, {:btn_left, 1, [], {1000, 1000}}}
 
   defmodule TestScene do
     use Scenic.Scene

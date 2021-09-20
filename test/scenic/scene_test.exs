@@ -70,7 +70,7 @@ defmodule Scenic.SceneTest do
     end
   end
 
-  @codepoint {:codepoint, {"k", 0}}
+  @codepoint {:codepoint, {"k", []}}
 
   setup do
     out = Scenic.Test.ViewPort.start({TestSceneNoKids, self()})

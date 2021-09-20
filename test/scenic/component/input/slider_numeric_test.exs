@@ -14,8 +14,8 @@ defmodule Scenic.Component.Input.SliderNumericTest do
 
   # import IEx
 
-  @press {:cursor_button, {0, :press, 0, {14, 10}}}
-  @release {:cursor_button, {0, :release, 0, {14, 10}}}
+  @press {:cursor_button, {:btn_left, 1, [], {14, 10}}}
+  @release {:cursor_button, {:btn_left, 0, [], {14, 10}}}
 
   @pos_0 {:cursor_pos, {58, 10}}
   @pos_1 {:cursor_pos, {100, 10}}

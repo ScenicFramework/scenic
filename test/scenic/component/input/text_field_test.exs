@@ -18,21 +18,21 @@ defmodule Scenic.Component.Input.TextFieldTest do
   # @initial_password "*************"
   # @hint "Hint String"
 
-  @press_in {:cursor_button, {0, :press, 0, {14, 10}}}
-  @press_move {:cursor_button, {0, :press, 0, {43, 10}}}
-  @press_out {:cursor_button, {0, :press, 0, {1000, 1000}}}
+  @press_in {:cursor_button, {:btn_left, 1, [], {14, 10}}}
+  @press_move {:cursor_button, {:btn_left, 1, [], {43, 10}}}
+  @press_out {:cursor_button, {:btn_left, 1, [], {1000, 1000}}}
 
-  @cp_k {:codepoint, {"k", 0}}
-  @cp_l {:codepoint, {"l", 0}}
+  @cp_k {:codepoint, {"k", []}}
+  @cp_l {:codepoint, {"l", []}}
 
-  @key_right {:key, {"right", :press, 0}}
-  @key_left {:key, {"left", :press, 0}}
-  @key_page_up {:key, {"page_up", :press, 0}}
-  @key_page_down {:key, {"page_down", :press, 0}}
-  @key_home {:key, {"home", :press, 0}}
-  @key_end {:key, {"end", :press, 0}}
-  @key_backspace {:key, {"backspace", :press, 0}}
-  @key_delete {:key, {"delete", :press, 0}}
+  @key_right {:key, {:key_right, 1, []}}
+  @key_left {:key, {:key_left, 1, []}}
+  @key_page_up {:key, {:key_pageup, 1, []}}
+  @key_page_down {:key, {:key_pagedown, 1, []}}
+  @key_home {:key, {:key_home, 1, []}}
+  @key_end {:key, {:key_end, 1, []}}
+  @key_backspace {:key, {:key_backspace, 1, []}}
+  @key_delete {:key, {:key_delete, 1, []}}
 
   defmodule TestScene do
     use Scenic.Scene
@@ -224,18 +224,18 @@ defmodule Scenic.Component.Input.TextFieldTest do
     {:ok, [pid]} = Scene.child(scene, :number_field)
     :_pong_ = GenServer.call(pid, :_ping_)
 
-    Input.send(vp, {:cursor_button, {0, :press, 0, {20, 60}}})
+    Input.send(vp, {:cursor_button, {:btn_left, 1, [], {20, 60}}})
     force_sync(vp.pid, pid)
 
-    Input.send(vp, {:codepoint, {"a", 0}})
+    Input.send(vp, {:codepoint, {"a", []}})
     refute_receive(_, 10)
-    Input.send(vp, {:codepoint, {"1", 0}})
+    Input.send(vp, {:codepoint, {"1", []}})
     assert_receive({:fwd_event, {:value_changed, :number_field, "1"}}, 200)
-    Input.send(vp, {:codepoint, {"v", 0}})
+    Input.send(vp, {:codepoint, {"v", []}})
     refute_receive(_, 10)
-    Input.send(vp, {:codepoint, {".", 0}})
+    Input.send(vp, {:codepoint, {".", []}})
     assert_receive({:fwd_event, {:value_changed, :number_field, "1."}}, 200)
-    Input.send(vp, {:codepoint, {"2", 0}})
+    Input.send(vp, {:codepoint, {"2", []}})
     assert_receive({:fwd_event, {:value_changed, :number_field, "1.2"}}, 200)
   end
 
@@ -243,18 +243,18 @@ defmodule Scenic.Component.Input.TextFieldTest do
     {:ok, [pid]} = Scene.child(scene, :integer_field)
     :_pong_ = GenServer.call(pid, :_ping_)
 
-    Input.send(vp, {:cursor_button, {0, :press, 0, {14, 86}}})
+    Input.send(vp, {:cursor_button, {:btn_left, 1, [], {14, 86}}})
     force_sync(vp.pid, pid)
 
-    Input.send(vp, {:codepoint, {"a", 0}})
+    Input.send(vp, {:codepoint, {"a", []}})
     refute_receive(_, 10)
-    Input.send(vp, {:codepoint, {"1", 0}})
+    Input.send(vp, {:codepoint, {"1", []}})
     assert_receive({:fwd_event, {:value_changed, :integer_field, "1"}}, 200)
-    Input.send(vp, {:codepoint, {"v", 0}})
+    Input.send(vp, {:codepoint, {"v", []}})
     refute_receive(_, 10)
-    Input.send(vp, {:codepoint, {".", 0}})
+    Input.send(vp, {:codepoint, {".", []}})
     refute_receive(_, 10)
-    Input.send(vp, {:codepoint, {"2", 0}})
+    Input.send(vp, {:codepoint, {"2", []}})
     assert_receive({:fwd_event, {:value_changed, :integer_field, "12"}}, 200)
   end
 
@@ -262,16 +262,16 @@ defmodule Scenic.Component.Input.TextFieldTest do
     {:ok, [pid]} = Scene.child(scene, :abcdefg_field)
     :_pong_ = GenServer.call(pid, :_ping_)
 
-    Input.send(vp, {:cursor_button, {0, :press, 0, {14, 121}}})
+    Input.send(vp, {:cursor_button, {:btn_left, 1, [], {14, 121}}})
     force_sync(vp.pid, pid)
 
-    Input.send(vp, {:codepoint, {"a", 0}})
+    Input.send(vp, {:codepoint, {"a", []}})
     assert_receive({:fwd_event, {:value_changed, :abcdefg_field, "a"}}, 200)
-    Input.send(vp, {:codepoint, {"1", 0}})
+    Input.send(vp, {:codepoint, {"1", []}})
     refute_receive(_, 10)
-    Input.send(vp, {:codepoint, {"v", 0}})
+    Input.send(vp, {:codepoint, {"v", []}})
     refute_receive(_, 10)
-    Input.send(vp, {:codepoint, {"f", 0}})
+    Input.send(vp, {:codepoint, {"f", []}})
     assert_receive({:fwd_event, {:value_changed, :abcdefg_field, "af"}}, 200)
   end
 
@@ -279,12 +279,12 @@ defmodule Scenic.Component.Input.TextFieldTest do
     {:ok, [pid]} = Scene.child(scene, :fn_field)
     :_pong_ = GenServer.call(pid, :_ping_)
 
-    Input.send(vp, {:cursor_button, {0, :press, 0, {14, 171}}})
+    Input.send(vp, {:cursor_button, {:btn_left, 1, [], {14, 171}}})
     force_sync(vp.pid, pid)
 
-    Input.send(vp, {:codepoint, {"a", 0}})
+    Input.send(vp, {:codepoint, {"a", []}})
     refute_receive(_, 10)
-    Input.send(vp, {:codepoint, {"h", 0}})
+    Input.send(vp, {:codepoint, {"h", []}})
     assert_receive({:fwd_event, {:value_changed, :fn_field, "h"}}, 200)
   end
 
@@ -292,18 +292,18 @@ defmodule Scenic.Component.Input.TextFieldTest do
     {:ok, [pid]} = Scene.child(scene, :password_field)
     :_pong_ = GenServer.call(pid, :_ping_)
 
-    Input.send(vp, {:cursor_button, {0, :press, 0, {14, 214}}})
+    Input.send(vp, {:cursor_button, {:btn_left, 1, [], {14, 214}}})
     force_sync(vp.pid, pid)
 
-    Input.send(vp, {:codepoint, {"a", 0}})
+    Input.send(vp, {:codepoint, {"a", []}})
     assert_receive({:fwd_event, {:value_changed, :password_field, "a"}}, 200)
-    Input.send(vp, {:codepoint, {"2", 0}})
+    Input.send(vp, {:codepoint, {"2", []}})
     assert_receive({:fwd_event, {:value_changed, :password_field, "a2"}}, 200)
   end
 
   test "ignores non-main button clicks", %{vp: vp} do
-    Input.send(vp, {:cursor_button, {1, :press, 0, {14, 10}}})
-    Input.send(vp, {:cursor_button, {2, :press, 0, {14, 10}}})
+    Input.send(vp, {:cursor_button, {:btn_right, 1, [], {14, 10}}})
+    Input.send(vp, {:cursor_button, {:btn_middle, 1, [], {14, 10}}})
     refute_receive(_, 10)
   end
 

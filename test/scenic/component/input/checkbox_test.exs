@@ -15,11 +15,11 @@ defmodule Scenic.Component.Input.CheckboxTest do
   alias Scenic.Scene
   alias Scenic.ViewPort.Input
 
-  @press_in {:cursor_button, {0, :press, 0, {20, 2}}}
-  @release_in {:cursor_button, {0, :release, 0, {20, 2}}}
+  @press_in {:cursor_button, {:btn_left, 1, [], {20, 2}}}
+  @release_in {:cursor_button, {:btn_left, 0, [], {20, 2}}}
 
-  @press_out {:cursor_button, {0, :press, 0, {1000, 1000}}}
-  @release_out {:cursor_button, {0, :release, 0, {1000, 1000}}}
+  @press_out {:cursor_button, {:btn_left, 1, [], {1000, 1000}}}
+  @release_out {:cursor_button, {:btn_left, 0, [], {1000, 1000}}}
 
   defmodule TestScene do
     use Scenic.Scene

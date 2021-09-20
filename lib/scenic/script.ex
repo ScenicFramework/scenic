@@ -1440,11 +1440,11 @@ defmodule Scenic.Script do
   end
 
   defp serialize_op({:draw_sprites, {id, cmds}}) do
-    <<hash::binary-size(32)>> =
+    hash =
       with {:ok, {Static.Image, _}} <- Static.meta(id),
-           {:ok, str_hash} <- Static.to_hash(id),
-           {:ok, bin_hash} <- Base.url_decode64(str_hash, padding: false) do
-        bin_hash
+           {:ok, str_hash} <- Static.to_hash(id) do
+        # {:ok, bin_hash} <- Base.url_decode64(str_hash, padding: false) do
+        str_hash
       else
         err -> raise "Invalid image -> #{inspect(id)}, err: #{inspect(err)}"
       end
@@ -1473,11 +1473,10 @@ defmodule Scenic.Script do
     cmds = Enum.reverse(cmds)
 
     [
-      <<
-        @op_draw_sprites::16-big,
-        count::16-big
-      >>,
-      hash,
+      <<@op_draw_sprites::16-big>>,
+      <<byte_size(hash)::16-big>>,
+      <<count::32-big>>,
+      padded_string(hash),
       cmds
     ]
   end
@@ -1784,11 +1783,11 @@ defmodule Scenic.Script do
   end
 
   defp serialize_op({:fill_image, id}) do
-    <<hash::binary-size(32)>> =
+    hash =
       with {:ok, {Static.Image, _}} <- Static.meta(id),
-           {:ok, str_hash} <- Static.to_hash(id),
-           {:ok, bin_hash} <- Base.url_decode64(str_hash, padding: false) do
-        bin_hash
+           {:ok, str_hash} <- Static.to_hash(id) do
+        # {:ok, bin_hash} <- Base.url_decode64(str_hash, padding: false) do
+        str_hash
       else
         err ->
           raise "Invalid image -> #{inspect(id)}, err: #{inspect(err)}"
@@ -1797,10 +1796,9 @@ defmodule Scenic.Script do
     [
       <<
         @op_fill_image::16-big,
-        0::16
+        byte_size(hash)::16
       >>,
-      hash
-      # padded_string(hash)
+      padded_string(hash)
     ]
   end
 
@@ -1901,11 +1899,11 @@ defmodule Scenic.Script do
   end
 
   defp serialize_op({:stroke_image, id}) do
-    <<hash::binary-size(32)>> =
+    hash =
       with {:ok, {Static.Image, _}} <- Static.meta(id),
-           {:ok, str_hash} <- Static.to_hash(id),
-           {:ok, bin_hash} <- Base.url_decode64(str_hash, padding: false) do
-        bin_hash
+           {:ok, str_hash} <- Static.to_hash(id) do
+        # {:ok, bin_hash} <- Base.url_decode64(str_hash, padding: false) do
+        str_hash
       else
         err ->
           raise "Invalid image -> #{inspect(id)}, err: #{inspect(err)}"
@@ -1914,9 +1912,9 @@ defmodule Scenic.Script do
     [
       <<
         @op_stroke_image::16-big,
-        0::16
+        byte_size(hash)::16
       >>,
-      hash
+      padded_string(hash)
     ]
   end
 
@@ -2003,11 +2001,10 @@ defmodule Scenic.Script do
   end
 
   defp serialize_op({:font, id}) do
-    <<hash::binary-size(32)>> =
+    hash =
       with {:ok, {Static.Font, _}} <- Static.meta(id),
-           {:ok, str_hash} <- Static.to_hash(id),
-           {:ok, bin_hash} <- Base.url_decode64(str_hash, padding: false) do
-        bin_hash
+           {:ok, str_hash} <- Static.to_hash(id) do
+        str_hash
       else
         err -> raise "Invalid font -> #{inspect(id)}, err: #{inspect(err)}"
       end
@@ -2015,9 +2012,9 @@ defmodule Scenic.Script do
     [
       <<
         @op_font::16-big,
-        0::16-big
+        byte_size(hash)::16-big
       >>,
-      hash
+      padded_string(hash)
     ]
   end
 
@@ -2190,10 +2187,12 @@ defmodule Scenic.Script do
 
   defp deserialize_op(<<
          @op_draw_sprites::16-big,
-         count::16-big,
-         hash::binary-size(32),
+         id_size::16-big,
+         count::32-big,
          bin::binary
        >>) do
+    {id, bin} = extract_string(bin, id_size)
+
     {cmds, bin} =
       Enum.reduce(1..count, {[], bin}, fn _, {cmds, bin} ->
         <<
@@ -2211,7 +2210,6 @@ defmodule Scenic.Script do
         {[{{sx, sy}, {sw, sh}, {dx, dy}, {dw, dh}} | cmds], bin}
       end)
 
-    id = Base.url_encode64(hash, padding: false)
     cmds = Enum.reverse(cmds)
     {{:draw_sprites, {id, cmds}}, bin}
   end
@@ -2495,11 +2493,10 @@ defmodule Scenic.Script do
 
   defp deserialize_op(<<
          @op_fill_image::16-big,
-         0::16,
-         hash::binary-size(32),
+         id_size::16,
          bin::binary
        >>) do
-    id = Base.url_encode64(hash, padding: false)
+    {id, bin} = extract_string(bin, id_size)
     {{:fill_image, id}, bin}
   end
 
@@ -2592,11 +2589,10 @@ defmodule Scenic.Script do
 
   defp deserialize_op(<<
          @op_stroke_image::16-big,
-         0::16,
-         hash::binary-size(32),
+         id_size::16,
          bin::binary
        >>) do
-    id = Base.url_encode64(hash, padding: false)
+    {id, bin} = extract_string(bin, id_size)
     {{:stroke_image, id}, bin}
   end
 
@@ -2685,11 +2681,10 @@ defmodule Scenic.Script do
 
   defp deserialize_op(<<
          @op_font::16-big,
-         0::16-big,
-         hash::binary-size(32),
+         id_size::16-big,
          bin::binary
        >>) do
-    id = Base.url_encode64(hash, padding: false)
+    {id, bin} = extract_string(bin, id_size)
     {{:font, id}, bin}
   end
 

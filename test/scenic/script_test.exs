@@ -408,7 +408,6 @@ defmodule Scenic.ScriptTest do
   test "fill_image works with string image paths" do
     expected = [{:fill_image, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"}]
     assert Script.fill_image([], :parrot) == expected
-
     assert Script.serialize(expected) |> Script.deserialize() == expected
   end
 

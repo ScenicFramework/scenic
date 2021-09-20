@@ -212,7 +212,7 @@ defmodule Scenic.ViewPort.InputTest do
     Scenic.Scene.push_graph(scene, graph)
 
     # Send a cursor_button input through. We should receive this one
-    input = {:cursor_button, {0, :press, 0, {10.0, 20.0}}}
+    input = {:cursor_button, {:button_left, 1, [], {10.0, 20.0}}}
     Scenic.ViewPort.Input.send(vp, input)
     assert_receive({:_input, ^input, ^input, :test}, 100)
 
@@ -239,7 +239,7 @@ defmodule Scenic.ViewPort.InputTest do
     assert_receive({:_input, ^input, ^input, :test}, 100)
 
     # should NOT receive the other positional inputs
-    input = {:cursor_button, {0, :press, 0, {10.0, 20.0}}}
+    input = {:cursor_button, {:button_left, 1, [], {10.0, 20.0}}}
     Scenic.ViewPort.Input.send(vp, input)
     refute_receive({:_input, ^input, ^input, :test}, 100)
 
@@ -261,7 +261,7 @@ defmodule Scenic.ViewPort.InputTest do
     assert_receive({:_input, ^input, ^input, :test}, 100)
 
     # should NOT receive the other positional inputs
-    input = {:cursor_button, {0, :press, 0, {10.0, 20.0}}}
+    input = {:cursor_button, {:button_left, 1, [], {10.0, 20.0}}}
     Scenic.ViewPort.Input.send(vp, input)
     refute_receive({:_input, ^input, ^input, :test}, 100)
 
@@ -280,12 +280,14 @@ defmodule Scenic.ViewPort.InputTest do
     Scenic.Scene.push_graph(scene, graph)
 
     # Send a cursor_button input through. We should receive this one
-    input = {:cursor_button, {0, :press, 0, {10.0, 20.0}}}
+    input = {:cursor_button, {:button_left, 1, [], {10.0, 20.0}}}
     Scenic.ViewPort.Input.send(vp, input)
     assert_receive({:_input, ^input, ^input, :btn}, 100)
+
     input = {:cursor_scroll, {{1.0, 2.0}, {10.0, 20.0}}}
     Scenic.ViewPort.Input.send(vp, input)
     assert_receive({:_input, ^input, ^input, :scl}, 100)
+
     input = {:cursor_pos, {10.0, 20.0}}
     Scenic.ViewPort.Input.send(vp, input)
     assert_receive({:_input, ^input, ^input, :pos}, 100)
@@ -298,7 +300,7 @@ defmodule Scenic.ViewPort.InputTest do
 
     Scenic.Scene.push_graph(scene, graph)
 
-    input = {:cursor_button, {0, :press, 0, {10.0, 20.0}}}
+    input = {:cursor_button, {:button_left, 1, [], {10.0, 20.0}}}
     Scenic.ViewPort.Input.send(vp, input)
     assert_receive({:_input, ^input, ^input, :btn}, 100)
     input = {:cursor_scroll, {{1.0, 2.0}, {10.0, 20.0}}}
@@ -316,7 +318,7 @@ defmodule Scenic.ViewPort.InputTest do
 
     Scenic.Scene.push_graph(scene, graph)
 
-    input = {:cursor_button, {0, :press, 0, {10.0, 20.0}}}
+    input = {:cursor_button, {:button_left, 1, [], {10.0, 20.0}}}
     Scenic.ViewPort.Input.send(vp, input)
     assert_receive({:_input, ^input, ^input, :btn}, 100)
     input = {:cursor_scroll, {{1.0, 2.0}, {10.0, 20.0}}}
@@ -484,7 +486,7 @@ defmodule Scenic.ViewPort.InputTest do
   # ----------------
   # actual input is routed to listeners
 
-  @codepoint {:codepoint, {"k", 0}}
+  @codepoint {:codepoint, {"k", []}}
 
   test "receives requested input", %{vp: vp} do
     :ok = Input.request(vp, :codepoint)

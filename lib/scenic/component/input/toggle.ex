@@ -226,7 +226,7 @@ defmodule Scenic.Component.Input.Toggle do
   @doc false
   @impl Scenic.Scene
   def handle_input(
-        {:cursor_button, {0, :press, _, _}},
+        {:cursor_button, {:btn_left, 1, _, _}},
         :track,
         %{assigns: %{graph: graph, color: color}} = scene
       ) do
@@ -247,7 +247,7 @@ defmodule Scenic.Component.Input.Toggle do
   # only happens when input is captured
   # could happen when reconnecting to a driver...
   def handle_input(
-        {:cursor_button, {0, :press, _, _}},
+        {:cursor_button, {:btn_left, 1, _, _}},
         _id,
         %{assigns: %{graph: graph, color: color}} = scene
       ) do
@@ -266,7 +266,7 @@ defmodule Scenic.Component.Input.Toggle do
   # --------------------------------------------------------
   # released inside the button
   def handle_input(
-        {:cursor_button, {0, :release, _, _}},
+        {:cursor_button, {:btn_left, 0, _, _}},
         :track,
         %{
           assigns: %{
@@ -298,7 +298,7 @@ defmodule Scenic.Component.Input.Toggle do
   # --------------------------------------------------------
   # released, but not in the button
   def handle_input(
-        {:cursor_button, {0, :release, _, _}},
+        {:cursor_button, {:btn_left, 0, _, _}},
         _id,
         %{assigns: %{graph: graph, color: color}} = scene
       ) do

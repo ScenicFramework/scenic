@@ -74,9 +74,10 @@ defmodule Scenic.ViewPort.Input do
 
   @type t ::
           {:codepoint, {codepoint :: String.t(), mods :: integer}}
-          | {:key, {key :: String.t(), :press | :release | :repeat, mods :: integer}}
+          | {:key, {key :: atom, :press | :release | :repeat, mods :: integer}}
+          # | {:key, {key :: String.t(), :press | :release | :repeat, mods :: integer}}
           | {:cursor_button,
-             {button :: 0 | 1 | 2, :press | :release, mods :: integer, position :: Math.point()}}
+             {button :: atom, :press | :release, mods :: integer, position :: Math.point()}}
           | {:cursor_scroll, {offset :: Math.point(), position :: Math.point()}}
           | {:cursor_pos, position :: Math.point()}
           | {:viewport, {:enter | :exit | :reshape, xy :: Math.point()}}
@@ -105,6 +106,19 @@ defmodule Scenic.ViewPort.Input do
       :viewport
     ]
   end
+
+  # :cursor_button,
+  # :cursor_scroll,
+  # :cursor_pos,
+  # :codepoint
+  # :key
+  # :viewport
+  # :button
+  # :position
+  # :relative
+  # :touch
+  # :led
+  # :switch
 
   @spec positional_inputs() :: [positional()]
   @doc false
@@ -359,42 +373,30 @@ defmodule Scenic.ViewPort.Input do
   Returns `{:error, :invalid}` if the message is not valid.
   """
   @spec validate(input :: t()) :: :ok | {:error, :invalid}
-  def validate(input)
 
   def validate({:codepoint, {codepoint, mods}})
-      when is_bitstring(codepoint) and is_integer(mods),
+      when is_bitstring(codepoint) and is_list(mods),
       do: :ok
 
-  def validate({:key, {key, :press, mods}}) when is_bitstring(key) and is_integer(mods),
-    do: :ok
-
-  def validate({:key, {key, :release, mods}}) when is_bitstring(key) and is_integer(mods),
-    do: :ok
-
-  def validate({:key, {key, :repeat, mods}}) when is_bitstring(key) and is_integer(mods),
-    do: :ok
-
-  def validate({:cursor_button, {btn, :press, mods, {x, y}}})
-      when is_integer(btn) and is_integer(mods) and is_number(x) and is_number(y),
+  def validate({:key, {key, action, mods}})
+      when is_atom(key) and is_integer(action) and is_list(mods),
       do: :ok
 
-  def validate({:cursor_button, {btn, :release, mods, {x, y}}})
-      when is_integer(btn) and is_integer(mods) and is_number(x) and is_number(y),
+  def validate({:cursor_button, {btn, action, mods, {x, y}}})
+      when is_atom(btn) and is_integer(action) and is_list(mods) and is_number(x) and is_number(y),
       do: :ok
 
   def validate({:cursor_scroll, {{ox, oy}, {px, py}}})
-      when is_integer(ox) and is_integer(oy) and is_integer(px) and is_integer(py),
+      when is_number(ox) and is_number(oy) and is_number(px) and is_number(py),
       do: :ok
 
   def validate({:cursor_pos, {x, y}}) when is_number(x) and is_number(y), do: :ok
-
-  def validate({:cursor_scroll, {{dx, dy}, {x, y}}})
-      when is_number(dx) and is_number(dy) and is_number(x) and is_number(y),
-      do: :ok
 
   def validate({:viewport, {:enter, {x, y}}}) when is_number(x) and is_number(y), do: :ok
   def validate({:viewport, {:exit, {x, y}}}) when is_number(x) and is_number(y), do: :ok
   def validate({:viewport, {:reshape, {w, h}}}) when is_number(w) and is_number(h), do: :ok
 
   def validate(_), do: {:error, :invalid}
+
+  # def validate(_input), do: :ok
 end

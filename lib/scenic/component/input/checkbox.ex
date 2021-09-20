@@ -183,7 +183,7 @@ defmodule Scenic.Component.Input.Checkbox do
   # pressed in the button
   @impl Scenic.Scene
   def handle_input(
-        {:cursor_button, {0, :press, _, _}},
+        {:cursor_button, {:btn_left, 1, _, _}},
         :btn,
         %{assigns: %{graph: graph, theme: theme}} = scene
       ) do
@@ -204,7 +204,7 @@ defmodule Scenic.Component.Input.Checkbox do
   # only happens when input is captured
   # could happen when reconnecting to a driver...
   def handle_input(
-        {:cursor_button, {0, :press, _, _}},
+        {:cursor_button, {:btn_left, 1, _, _}},
         _id,
         %{assigns: %{graph: graph, theme: theme}} = scene
       ) do
@@ -223,7 +223,7 @@ defmodule Scenic.Component.Input.Checkbox do
   # --------------------------------------------------------
   # released inside the button while pressed
   def handle_input(
-        {:cursor_button, {0, :release, _, _}},
+        {:cursor_button, {:btn_left, 0, _, _}},
         :btn,
         %{
           assigns: %{
@@ -255,7 +255,7 @@ defmodule Scenic.Component.Input.Checkbox do
   # released either outside the button or when not pressed
   # only happens when input is captured
   def handle_input(
-        {:cursor_button, {0, :release, _, _}},
+        {:cursor_button, {:btn_left, 0, _, _}},
         _id,
         %{assigns: %{graph: graph, theme: theme}} = scene
       ) do

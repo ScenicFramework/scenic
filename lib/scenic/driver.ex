@@ -60,10 +60,14 @@ defmodule Scenic.Driver do
   ## Messages from the ViewPort
 
   The way a ViewPort communicates with it's drivers is by sending them a
-  set of well-known messages. It is up to the drivers to react to and process
+  set of well-known messages. These are picked up by the Driver module and
+  sent to your driver through the standard callbacks
   them.
 
-  | Message | Description |
+
+  THE TABLE BELOW NEEDS TO BE UPDATED
+
+  | Callback | Description |
   |---|---|
   | `{:request_input, keys}` | The ViewPort is requesting user inputs from the `keys` list |
   | `:reset` | The `ViewPort` context has been reset. The driver can clean up all scripts and cached media |
@@ -73,7 +77,7 @@ defmodule Scenic.Driver do
   | `:gate_complete` | The gate is complete. This should trigger a redraw |
 
 
-  ## Handling Scripts
+  ## Handling Updates
 
   The main drawing related task of a Driver is to receive the `{:put_scripts, ids}`
   message and then draw those scripts to the screen, or whatever output medium the
@@ -145,7 +149,7 @@ defmodule Scenic.Driver do
   alias Scenic.ViewPort
 
   # import IEx
-  # require Logger
+  require Logger
 
   @root_id ViewPort.root_id()
   # @main_id ViewPort.main_id()
@@ -160,12 +164,13 @@ defmodule Scenic.Driver do
           limit_ms: integer,
           dirty_ids: list,
           gated: boolean,
-          limited: boolean,
           input_limited: boolean,
           input_buffer: %{ViewPort.Input.class() => ViewPort.Input.t()},
           busy: boolean,
           requested_inputs: [ViewPort.Input.class()],
-          assigns: map
+          assigns: map,
+          update_requested: boolean,
+          update_ready: boolean
         }
 
   defstruct viewport: nil,
@@ -174,12 +179,13 @@ defmodule Scenic.Driver do
             limit_ms: 0,
             dirty_ids: [],
             gated: false,
-            limited: false,
             input_limited: false,
             input_buffer: %{},
             busy: false,
             requested_inputs: [],
-            assigns: %{}
+            assigns: %{},
+            update_requested: false,
+            update_ready: false
 
   @type response_opts ::
           list(
@@ -189,9 +195,9 @@ defmodule Scenic.Driver do
           )
 
   @init :_init_
-  @limiter :_limiter_expired_
   @input_limiter :_input_limiter_expired_
   @not_busy :_not_busy_
+  @do_update :_do_update_
 
   @put_scripts ViewPort.msg_put_scripts()
   @request_input ViewPort.msg_request_input()
@@ -199,6 +205,7 @@ defmodule Scenic.Driver do
   @reset_scene ViewPort.msg_reset_scene()
   @gate_start ViewPort.msg_gate_start()
   @gate_complete ViewPort.msg_gate_complete()
+  @clear_color ViewPort.msg_clear_color()
 
   # ============================================================================
   # callback definitions
@@ -239,7 +246,7 @@ defmodule Scenic.Driver do
               driver :: Driver.t()
             ) :: {:ok, Driver.t()}
 
-  @callback put_scripts(
+  @callback update_scene(
               script_ids :: [Scenic.Script.id()],
               driver :: Driver.t()
             ) :: {:ok, Driver.t()}
@@ -249,10 +256,16 @@ defmodule Scenic.Driver do
               driver :: Driver.t()
             ) :: {:ok, Driver.t()}
 
+  @callback clear_color(
+              color :: Scenic.Color.t(),
+              driver :: Driver.t()
+            ) :: {:ok, Driver.t()}
+
   @optional_callbacks reset_scene: 1,
                       request_input: 2,
-                      put_scripts: 2,
-                      del_scripts: 2
+                      update_scene: 2,
+                      del_scripts: 2,
+                      clear_color: 2
 
   # ===========================================================================
   defmodule Error do
@@ -337,6 +350,7 @@ defmodule Scenic.Driver do
         %Driver{input_limited: true, input_buffer: buffer} = driver,
         {class, _} = input
       ) do
+    # Logger.warn( "input_limited #{inspect({input})}" )
     case class do
       :cursor_pos -> %{driver | input_buffer: Map.put(buffer, class, input)}
       :cursor_scroll -> %{driver | input_buffer: Map.put(buffer, class, input)}
@@ -349,6 +363,7 @@ defmodule Scenic.Driver do
         %Driver{limit_ms: limit_ms} = driver,
         {class, _} = input
       ) do
+    # Logger.warn( "input #{inspect({input})}" )
     case class do
       :cursor_pos ->
         Process.send_after(self(), @input_limiter, limit_ms)
@@ -369,16 +384,69 @@ defmodule Scenic.Driver do
          {input_type, _} = input
        ) do
     if Enum.member?(requested_inputs, input_type) do
-      :ok = ViewPort.input(vp, input)
+      case ViewPort.input(vp, input) do
+        :ok ->
+          :ok
+
+        {:error, :invalid} ->
+          Logger.error("""
+          #{inspect(driver.module)} attempted send an improperly formatted input message.
+          Received: #{inspect(input)}
+          """)
+      end
     end
 
     driver
   end
 
-  # def send_input( %Driver{viewport: vp} = driver, input ) do
-  #   ViewPort.input( vp, input )
-  #   driver
-  # end
+  @doc """
+  Send updates to the driver.
+
+  This is used internally when scripts are updated. Some drivers use it to batch updates
+  into a single atomic operation. This call is rate limited by limit_ms.
+  """
+
+  def request_update(%Driver{update_requested: true} = driver), do: driver
+  def request_update(%Driver{update_ready: true} = driver), do: driver
+
+  # no limiter. update right away.
+  def request_update(%Driver{limit_ms: 0, pid: pid} = driver) do
+    send(pid, @do_update)
+    %{driver | update_requested: true}
+  end
+
+  def request_update(%Driver{limit_ms: limit_ms, pid: pid} = driver) do
+    Process.send_after(pid, @do_update, limit_ms)
+    %{driver | update_requested: true}
+  end
+
+  # updating doesn't happen until it is marked ready, not gated and not busy
+  defp do_update(%Driver{update_requested: false} = driver), do: driver
+  defp do_update(%Driver{update_ready: false} = driver), do: driver
+  defp do_update(%Driver{gated: true} = driver), do: driver
+  defp do_update(%Driver{busy: true} = driver), do: driver
+
+  # perform an actual update
+  defp do_update(%Driver{module: module, dirty_ids: ids} = driver) do
+    case Kernel.function_exported?(module, :update_scene, 2) do
+      true ->
+        ids =
+          ids
+          |> List.flatten()
+          |> Enum.uniq()
+
+        case module.update_scene(ids, %{driver | dirty_ids: ids}) do
+          {:ok, %Driver{} = driver} -> driver
+          other -> raise state_msg("update_scene", other)
+        end
+
+      false ->
+        driver
+    end
+    |> Map.put(:update_requested, false)
+    |> Map.put(:update_ready, false)
+    |> Map.put(:dirty_ids, [])
+  end
 
   # ===========================================================================
   # the using macro for scenes adopting this behavior
@@ -442,19 +510,13 @@ defmodule Scenic.Driver do
   # terminate
 
   def terminate(reason, %Driver{module: module} = driver) do
-    IO.inspect({reason, driver}, label: "inner terminate")
-
     case Kernel.function_exported?(module, :terminate, 2) do
       true -> module.terminate(reason, driver)
       false -> nil
     end
   end
 
-  # def terminate(reason, _other), do: reason
-  def terminate(reason, driver) do
-    IO.inspect({reason, driver}, label: "-----> terminate")
-    reason
-  end
+  def terminate(reason, _state), do: reason
 
   # --------------------------------------------------------
   @doc false
@@ -530,15 +592,17 @@ defmodule Scenic.Driver do
   # info
   @doc false
 
+  def handle_info(@do_update, driver), do: handle_do_update(driver)
   def handle_info(@not_busy, driver), do: do_not_busy(driver)
   def handle_info(@input_limiter, driver), do: do_input_limit_expired(driver)
-  def handle_info(@limiter, driver), do: do_limit_expired(driver)
+  # def handle_info(@limiter, driver), do: do_limit_expired(driver)
   def handle_info({@put_scripts, ids}, driver), do: do_put_scripts(ids, driver)
   def handle_info({@del_scripts, ids}, driver), do: do_del_scripts(ids, driver)
   def handle_info({@request_input, req}, driver), do: do_input_reqs(req, driver)
   def handle_info(@reset_scene, driver), do: do_reset_scene(driver)
   def handle_info(@gate_start, driver), do: do_gate_start(driver)
   def handle_info(@gate_complete, driver), do: do_gate_complete(driver)
+  def handle_info({@clear_color, color}, driver), do: do_clear_color(color, driver)
 
   # generic handle_info. give the driver a chance to handle it
   def handle_info(msg, %Driver{module: module, busy: old_busy} = driver) do
@@ -658,8 +722,19 @@ defmodule Scenic.Driver do
     """
   end
 
-  defp do_not_busy(%Driver{dirty_ids: []} = driver), do: {:noreply, driver}
-  defp do_not_busy(%Driver{} = driver), do: do_put_scripts([], driver)
+  defp do_not_busy(%Driver{} = driver) do
+    {:noreply, do_update(%{driver | busy: false})}
+  end
+
+  defp handle_do_update(%Driver{} = driver) do
+    {:noreply, do_update(%{driver | update_ready: true})}
+  end
+
+  defp do_put_scripts([], driver), do: {:noreply, driver}
+
+  defp do_put_scripts(ids, %Driver{dirty_ids: dirty_ids} = driver) do
+    {:noreply, request_update(%{driver | dirty_ids: [ids | dirty_ids]})}
+  end
 
   defp do_input_limit_expired(
          %Driver{viewport: vp, limit_ms: limit_ms, input_buffer: buffer} = driver
@@ -673,25 +748,6 @@ defmodule Scenic.Driver do
         Process.send_after(self(), @input_limiter, limit_ms)
         Enum.each(buffer, fn {_, input} -> ViewPort.input(vp, input) end)
         {:noreply, %{driver | input_limited: true, input_buffer: %{}}}
-    end
-  end
-
-  defp do_limit_expired(%Driver{dirty_ids: []} = driver) do
-    {:noreply, %{driver | limited: false}}
-  end
-
-  defp do_limit_expired(%Driver{} = driver) do
-    do_put_scripts([], %{driver | limited: false})
-  end
-
-  defp do_put_scripts(ids, %Driver{gated: false, limited: false, busy: false} = drvr) do
-    {:noreply, do_do_put_scripts(drvr, ids)}
-  end
-
-  defp do_put_scripts(ids, %Driver{dirty_ids: dirty_ids, module: module} = driver) do
-    case Kernel.function_exported?(module, :put_scripts, 2) do
-      true -> {:noreply, %{driver | dirty_ids: [ids | dirty_ids]}}
-      false -> {:noreply, driver}
     end
   end
 
@@ -729,22 +785,20 @@ defmodule Scenic.Driver do
       case Kernel.function_exported?(module, :reset_scene, 1) do
         true ->
           driver
-          |> Map.put(:dirty_ids, [@root_id])
-          |> Map.put(:gated, false)
           |> module.reset_scene()
           |> case do
-            {:ok, %Driver{} = driver} ->
-              driver
-
-            other ->
-              raise state_msg("reset", other)
+            {:ok, %Driver{} = driver} -> driver
+            other -> raise state_msg("reset", other)
           end
 
         false ->
           driver
-          |> Map.put(:dirty_ids, [@root_id])
-          |> Map.put(:gated, false)
       end
+      |> Map.put(:dirty_ids, [@root_id])
+      |> Map.put(:gated, false)
+
+    # |> Map.put( :update_requested, false )
+    # |> Map.put( :update_ready, false )
 
     {:noreply, driver}
   end
@@ -754,41 +808,23 @@ defmodule Scenic.Driver do
   end
 
   defp do_gate_complete(%Driver{} = driver) do
-    do_put_scripts([], %{driver | gated: false})
+    {:noreply, do_update(%{driver | gated: false})}
   end
 
-  defp do_do_put_scripts(
-         %Driver{
-           module: module,
-           dirty_ids: dirty,
-           limit_ms: limit_ms
-         } = driver,
-         ids
-       ) do
-    case Kernel.function_exported?(module, :put_scripts, 2) do
-      true ->
-        ids =
-          [ids | dirty]
-          |> List.flatten()
-          |> Enum.uniq()
+  defp do_clear_color(color, %Driver{module: module} = driver) do
+    driver =
+      case Kernel.function_exported?(module, :clear_color, 2) do
+        true ->
+          case module.clear_color(color, driver) do
+            {:ok, %Driver{} = driver} -> driver
+            other -> raise state_msg("clear_color", other)
+          end
 
-        with true <- ids != [],
-             {:ok, %Driver{} = driver} <- module.put_scripts(ids, driver),
-             true <- limit_ms > 0 do
-          # there was at least one dirty script
-          # and the driver returned ok
-          # and there is a requested script limit
-          Process.send_after(self(), @limiter, limit_ms)
-          Map.put(driver, :limited, true)
-        else
-          false -> Map.put(driver, :limited, false)
-          other -> raise state_msg("put_scripts", other)
-        end
-        |> Map.put(:dirty_ids, [])
+        false ->
+          driver
+      end
 
-      false ->
-        driver
-    end
+    {:noreply, driver}
   end
 
   # --------------------------------------------------------

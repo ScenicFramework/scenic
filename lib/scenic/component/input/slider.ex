@@ -230,7 +230,7 @@ defmodule Scenic.Component.Input.Slider do
   # --------------------------------------------------------
   @doc false
   @impl Scenic.Scene
-  def handle_input({:cursor_button, {0, :press, _, {x, _}}}, :hit_rect, scene) do
+  def handle_input({:cursor_button, {:btn_left, 1, _, {x, _}}}, :hit_rect, scene) do
     :ok = capture_input(scene, [:cursor_button, :cursor_pos, :viewport])
 
     scene =
@@ -241,7 +241,7 @@ defmodule Scenic.Component.Input.Slider do
     {:noreply, scene}
   end
 
-  def handle_input({:cursor_button, {0, :release, _, _xy}}, _id, scene) do
+  def handle_input({:cursor_button, {:btn_left, 0, _, _xy}}, _id, scene) do
     scene = assign(scene, :tracking, false)
     release_input(scene)
     {:noreply, scene}

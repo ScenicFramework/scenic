@@ -14,8 +14,8 @@ defmodule Scenic.Component.Input.SliderListTest do
 
   # import IEx
 
-  @press {:cursor_button, {0, :press, 0, {20, 10}}}
-  @release {:cursor_button, {0, :release, 0, {20, 10}}}
+  @press {:cursor_button, {:btn_left, 1, [], {20, 10}}}
+  @release {:cursor_button, {:btn_left, 0, [], {20, 10}}}
 
   @pos_0 {:cursor_pos, {70, 10}}
   @pos_1 {:cursor_pos, {140, 10}}

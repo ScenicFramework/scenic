@@ -13,17 +13,17 @@ defmodule Scenic.Component.Input.RadioGroupTest do
 
   # import IEx
 
-  @press_a {:cursor_button, {0, :press, 0, {10, 10}}}
-  @release_a {:cursor_button, {0, :release, 0, {10, 10}}}
+  @press_a {:cursor_button, {:btn_left, 1, [], {10, 10}}}
+  @release_a {:cursor_button, {:btn_left, 0, [], {10, 10}}}
 
-  @press_b {:cursor_button, {0, :press, 0, {10, 34}}}
-  @release_b {:cursor_button, {0, :release, 0, {10, 34}}}
+  @press_b {:cursor_button, {:btn_left, 1, [], {10, 34}}}
+  @release_b {:cursor_button, {:btn_left, 0, [], {10, 34}}}
 
-  @press_c {:cursor_button, {0, :press, 0, {10, 58}}}
-  @release_c {:cursor_button, {0, :release, 0, {10, 58}}}
+  @press_c {:cursor_button, {:btn_left, 1, [], {10, 58}}}
+  @release_c {:cursor_button, {:btn_left, 0, [], {10, 58}}}
 
-  @press_out {:cursor_button, {0, :press, 0, {1000, 1000}}}
-  @release_out {:cursor_button, {0, :release, 0, {1000, 1000}}}
+  @press_out {:cursor_button, {:btn_left, 1, [], {1000, 1000}}}
+  @release_out {:cursor_button, {:btn_left, 0, [], {1000, 1000}}}
 
   defmodule TestScene do
     use Scenic.Scene

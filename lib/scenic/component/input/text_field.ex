@@ -352,7 +352,7 @@ defmodule Scenic.Component.Input.TextField do
   @doc false
   @impl Scenic.Scene
   def handle_input(
-        {:cursor_button, {0, :press, _, _}} = inpt,
+        {:cursor_button, {:btn_left, 1, _, _}} = inpt,
         :border,
         %{assigns: %{focused: false}} = scene
       ) do
@@ -362,7 +362,7 @@ defmodule Scenic.Component.Input.TextField do
   # --------------------------------------------------------
   # focused click in the text field
   def handle_input(
-        {:cursor_button, {0, :press, _, pos}},
+        {:cursor_button, {:btn_left, 1, _, pos}},
         :border,
         %{assigns: %{focused: true, value: value, index: index, graph: graph, caret_v: caret_v}} =
           scene
@@ -391,7 +391,7 @@ defmodule Scenic.Component.Input.TextField do
   # --------------------------------------------------------
   # focused click outside the text field
   def handle_input(
-        {:cursor_button, {0, :press, _, _}},
+        {:cursor_button, {:btn_left, 1, _, _}},
         _id,
         %{assigns: %{focused: true}} = scene
       ) do
@@ -408,13 +408,13 @@ defmodule Scenic.Component.Input.TextField do
 
   # --------------------------------------------------------
   # treat key repeats as a press
-  def handle_input({:key, {key, :repeat, mods}}, id, scene) do
-    handle_input({:key, {key, :press, mods}}, id, scene)
+  def handle_input({:key, {key, 2, mods}}, id, scene) do
+    handle_input({:key, {key, 1, mods}}, id, scene)
   end
 
   # --------------------------------------------------------
   def handle_input(
-        {:key, {"left", :press, _}},
+        {:key, {:key_left, 1, _}},
         _id,
         %{assigns: %{index: index, value: value, graph: graph, caret_v: caret_v}} = scene
       ) do
@@ -442,7 +442,7 @@ defmodule Scenic.Component.Input.TextField do
 
   # --------------------------------------------------------
   def handle_input(
-        {:key, {"right", :press, _}},
+        {:key, {:key_right, 1, _}},
         _id,
         %{assigns: %{index: index, value: value, graph: graph, caret_v: caret_v}} = scene
       ) do
@@ -473,12 +473,12 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   # --------------------------------------------------------
-  def handle_input({:key, {"page_up", :press, mod}}, id, state) do
-    handle_input({:key, {"home", :press, mod}}, id, state)
+  def handle_input({:key, {:key_pageup, 1, mod}}, id, state) do
+    handle_input({:key, {:key_home, 1, mod}}, id, state)
   end
 
   def handle_input(
-        {:key, {"home", :press, _}},
+        {:key, {:key_home, 1, _}},
         _id,
         %{assigns: %{index: index, value: value, graph: graph, caret_v: caret_v}} = scene
       ) do
@@ -505,12 +505,12 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   # --------------------------------------------------------
-  def handle_input({:key, {"page_down", :press, mod}}, id, scene) do
-    handle_input({:key, {"end", :press, mod}}, id, scene)
+  def handle_input({:key, {:key_pagedown, 1, mod}}, id, scene) do
+    handle_input({:key, {:key_end, 1, mod}}, id, scene)
   end
 
   def handle_input(
-        {:key, {"end", :press, _}},
+        {:key, {:key_end, 1, _}},
         _id,
         %{assigns: %{index: index, value: value, graph: graph, caret_v: caret_v}} = scene
       ) do
@@ -541,12 +541,12 @@ defmodule Scenic.Component.Input.TextField do
 
   # --------------------------------------------------------
   # ignore backspace if at index 0
-  def handle_input({:key, {"backspace", :press, _}}, _id, %{assigns: %{index: 0}} = scene),
+  def handle_input({:key, {:key_backspace, 1, _}}, _id, %{assigns: %{index: 0}} = scene),
     do: {:noreply, scene}
 
   # handle backspace
   def handle_input(
-        {:key, {"backspace", :press, _}},
+        {:key, {:key_backspace, 1, _}},
         _id,
         %{
           assigns: %{
@@ -597,7 +597,7 @@ defmodule Scenic.Component.Input.TextField do
 
   # --------------------------------------------------------
   def handle_input(
-        {:key, {"delete", :press, _}},
+        {:key, {:key_delete, 1, _}},
         _id,
         %{
           assigns: %{
@@ -647,12 +647,12 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   # --------------------------------------------------------
-  def handle_input({:key, {"enter", :press, _}}, _id, scene) do
+  def handle_input({:key, {:key_enter, 1, _}}, _id, scene) do
     {:noreply, scene}
   end
 
   # --------------------------------------------------------
-  def handle_input({:key, {"escape", :press, _}}, _id, scene) do
+  def handle_input({:key, {:key_esc, 1, _}}, _id, scene) do
     {:noreply, scene}
   end
 

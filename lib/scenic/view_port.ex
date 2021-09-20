@@ -19,7 +19,6 @@ defmodule Scenic.ViewPort do
 
   # alias Scenic.Utilities
   alias Scenic.Utilities.Validators
-  alias Scenic.Color
   alias Scenic.Primitive.Style.Theme
 
   require Logger
@@ -137,6 +136,7 @@ defmodule Scenic.ViewPort do
   @reset_scene :_reset_scene_
   @gate_start :_gate_start_
   @gate_complete :_gate_complete_
+  @clear_color :_clear_color_
 
   @first_open_graph_id 2
 
@@ -166,6 +166,9 @@ defmodule Scenic.ViewPort do
 
   @doc false
   def msg_gate_complete(), do: @gate_complete
+
+  @doc false
+  def msg_clear_color(), do: @clear_color
 
   @doc false
   def validate_input_filter(:all), do: {:ok, :all}
@@ -469,6 +472,7 @@ defmodule Scenic.ViewPort do
       # simple metadata about the ViewPort
       name: opts[:name],
       size: opts[:size],
+      theme: opts[:theme],
 
       # a list of all the pids for currently running drivers. Is used to broadcast
       # messages to drivers. Example: :put_scripts
@@ -554,42 +558,21 @@ defmodule Scenic.ViewPort do
 
   # --------------------------------------------------------
   @doc false
-  def handle_continue(
-        {:init, opts},
-        %{
-          # supervisor: supervisor,
-          # name_table: name_table
-        } = state
-      ) do
+  def handle_continue({:init, opts}, state) do
     # create the supervisor for the drivers - this is expected to work
     {:ok, driver_sup} = DynamicSupervisor.start_link(strategy: :one_for_one)
+    state = Map.put(state, :driver_sup, driver_sup)
 
     # create the supervisor for the scenes - this is expected to work
     {:ok, scene_sup} = DynamicSupervisor.start_link(strategy: :one_for_one)
+    state = Map.put(state, :scene_sup, scene_sup)
 
     # start the drivers
-    info = gen_info(state)
-    # Enum.each( opts[:drivers], &do_start_driver(driver_sup, &1, info) )
-    Enum.each(opts[:drivers], fn driver_opts ->
-      DynamicSupervisor.start_child(
-        driver_sup,
-        # {driver_opts[:module], {info, driver_opts}}
-        {Driver, {info, driver_opts}}
-      )
-    end)
-
-    # retrieve the ViewPort's theme
-    theme = opts[:theme]
-    background = Theme.normalize(theme).background
+    Enum.each(opts[:drivers], &do_start_driver(&1, state))
 
     # build the main graph. The graph itself doesn't need to be saved in state
     main_graph =
       Graph.build(opts[:opts] || [])
-      |> Scenic.Primitives.rect(
-        opts[:size],
-        id: :background,
-        fill: Color.to_rgba(background || :black)
-      )
       # not a real component. never managed by a scene
       # this is to get input to hook up correctly to the root scene
       # needs to be a Component and NOT a Script so that it shows up in the main input list
@@ -620,19 +603,16 @@ defmodule Scenic.ViewPort do
     # save the various info
     state =
       state
-      |> Map.put(:theme, theme)
       |> Map.put(:main_graph, main_graph)
       |> Map.put(:scene, scene)
-      |> Map.put(:scene_sup, scene_sup)
-      |> Map.put(:driver_sup, driver_sup)
 
     {:noreply, state}
   end
 
   # ============================================================================
   # handle_info
-  @doc false
 
+  @doc false
   # when a scene or a driver goes down, clean it up
   def handle_info(
         {:DOWN, _monitor_ref, :process, pid, _reason},
@@ -834,36 +814,9 @@ defmodule Scenic.ViewPort do
   # change the main theme
   def handle_cast(
         {:set_theme, theme},
-        %{
-          scene: {scene, param},
-          main_graph: main_graph
-        } = state
+        %{scene: {scene, param}} = state
       ) do
-    # get the background from the theme
-    background =
-      theme
-      |> Theme.normalize()
-      |> Map.get(:background)
-
-    # update the main graph, which draws the background...
-    main_graph =
-      main_graph
-      |> Graph.modify(:background, &Primitive.merge_opts(&1, fill: background))
-
-    # insert the main script to the scripts table
-    state = internal_put_graph(main_graph, @root_id, state)
-
-    # tell the drivers the background changed
-    cast_drivers(state, @reset_scene)
-    cast_drivers(state, {@put_scripts, [@root_id]})
-
-    # update the state
-    state =
-      state
-      |> Map.put(:theme, theme)
-      |> Map.put(:main_graph, main_graph)
-
-    # restart the current scene directly
+    state = do_set_theme(theme, state)
     handle_cast({:set_root, scene, param}, state)
   end
 
@@ -997,54 +950,17 @@ defmodule Scenic.ViewPort do
   def handle_call(
         {:set_theme, theme},
         from,
-        %{
-          scene: {scene, param},
-          main_graph: main_graph
-        } = state
+        %{scene: {scene, param}} = state
       ) do
-    # get the background from the theme
-    background =
-      theme
-      |> Theme.normalize()
-      |> Map.get(:background)
-
-    # update the main graph, which draws the background...
-    main_graph =
-      main_graph
-      |> Graph.modify(:background, &Primitive.merge_opts(&1, fill: background))
-
-    # insert the main script to the scripts table
-    state = internal_put_graph(main_graph, @root_id, state)
-
-    # tell the drivers the background changed
-    cast_drivers(state, @reset_scene)
-    cast_drivers(state, {@put_scripts, [@root_id]})
-
-    # update the state
-    state =
-      state
-      |> Map.put(:theme, theme)
-      |> Map.put(:main_graph, main_graph)
-
+    state = do_set_theme(theme, state)
     # restart the current scene directly
-    # handle_cast( {:set_root, scene, param}, state )
     handle_call({:set_root, scene, param}, from, state)
   end
 
   # --------------------------
   # start drivers cleanly
-  def handle_call(
-        {:start_driver, opts},
-        _from,
-        %{driver_sup: driver_sup} = state
-      ) do
-    info = gen_info(state)
-
-    {
-      :reply,
-      DynamicSupervisor.start_child(driver_sup, {Driver, {info, opts}}),
-      state
-    }
+  def handle_call({:start_driver, opts}, _from, state) do
+    {:reply, do_start_driver(opts, state), state}
   end
 
   # --------------------------
@@ -1169,8 +1085,6 @@ defmodule Scenic.ViewPort do
       |> Map.put(:input_lists, %{@root_id => ils[@root_id]})
       |> Map.put(:next_id, @first_open_graph_id)
 
-    # |> update_positional_input()
-
     {:ok, state}
   end
 
@@ -1190,6 +1104,40 @@ defmodule Scenic.ViewPort do
       script_table: script_table,
       size: size
     }
+  end
+
+  # --------------------------
+  # start drivers cleanly
+  defp do_start_driver(opts, %{driver_sup: driver_sup, theme: theme} = state) do
+    info = gen_info(state)
+
+    background =
+      theme
+      |> Theme.normalize()
+      |> Map.get(:background)
+
+    case DynamicSupervisor.start_child(driver_sup, {Driver, {info, opts}}) do
+      {:ok, pid} ->
+        send(pid, {@clear_color, background})
+        {:ok, pid}
+
+      err ->
+        err
+    end
+  end
+
+  defp do_set_theme(theme, state) do
+    # get the background from the theme
+    background =
+      theme
+      |> Theme.normalize()
+      |> Map.get(:background)
+
+    # tell the drivers the background changed
+    cast_drivers(state, {@clear_color, background})
+
+    # update the state
+    %{state | theme: theme}
   end
 
   defp cast_drivers(%{driver_pids: pids}, msg) do

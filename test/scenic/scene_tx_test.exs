@@ -176,13 +176,13 @@ defmodule Scenic.SceneTxTest do
   test "requested cursor_button input is delivered and transformed to the requesting scene", %{
     vp: vp
   } do
-    :ok = ViewPort.Input.send(vp, {:cursor_button, {0, :press, 0, {25.0, 35.0}}})
-    assert_receive({:n0_input, {:cursor_button, {0, :press, 0, {5.0, 5.0}}}, :n0_rect}, 200)
-    refute_receive({:n1_input, {:cursor_button, {0, :press, 0, {-95.0, -195.0}}}, nil}, 20)
+    :ok = ViewPort.Input.send(vp, {:cursor_button, {:btn_left, 1, [], {25.0, 35.0}}})
+    assert_receive({:n0_input, {:cursor_button, {:btn_left, 1, [], {5.0, 5.0}}}, :n0_rect}, 200)
+    refute_receive({:n1_input, {:cursor_button, {:btn_left, 1, [], {-95.0, -195.0}}}, nil}, 20)
 
-    :ok = ViewPort.Input.send(vp, {:cursor_button, {0, :press, 0, {125.0, 235.0}}})
-    refute_receive({:n0_input, {:cursor_button, {0, :press, 0, {105.0, 205.0}}}, nil}, 20)
-    assert_receive({:n1_input, {:cursor_button, {0, :press, 0, {5.0, 5.0}}}, :n1_rect}, 200)
+    :ok = ViewPort.Input.send(vp, {:cursor_button, {:btn_left, 1, [], {125.0, 235.0}}})
+    refute_receive({:n0_input, {:cursor_button, {:btn_left, 1, [], {105.0, 205.0}}}, nil}, 20)
+    assert_receive({:n1_input, {:cursor_button, {:btn_left, 1, [], {5.0, 5.0}}}, :n1_rect}, 200)
   end
 
   test "requested cursor_pos input is delivered and transformed to the requesting scene", %{

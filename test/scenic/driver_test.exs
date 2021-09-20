@@ -10,14 +10,12 @@ defmodule Scenic.DriverTest do
   alias Scenic.Driver
   alias Scenic.ViewPort
 
-  @codepoint_input_k {:codepoint, {"k", 0}}
-  @codepoint_input_l {:codepoint, {"l", 0}}
+  @codepoint_input_k {:codepoint, {"k", []}}
+  @codepoint_input_l {:codepoint, {"l", []}}
   @cursor_pos_input {:cursor_pos, {10.0, 20.0}}
   @cursor_pos_input_1 {:cursor_pos, {11.0, 21.0}}
 
-  @limiter :_limiter_expired_
   @input_limiter :_input_limiter_expired_
-  @not_busy :_not_busy_
 
   @put_scripts ViewPort.msg_put_scripts()
   @request_input ViewPort.msg_request_input()
@@ -74,8 +72,8 @@ defmodule Scenic.DriverTest do
       {:reply, :ok, driver}
     end
 
-    def put_scripts(ids, driver) do
-      send(self(), {:put_scripts, ids})
+    def update_scene(ids, driver) do
+      send(self(), {:update_scene, ids})
       {:ok, driver}
     end
 
@@ -91,6 +89,11 @@ defmodule Scenic.DriverTest do
 
     def reset_scene(driver) do
       send(self(), :reset_scene)
+      {:ok, driver}
+    end
+
+    def clear_color(color, driver) do
+      send(self(), {:clear_color, color})
       {:ok, driver}
     end
   end
@@ -345,54 +348,23 @@ defmodule Scenic.DriverTest do
     assert_receive({:handle_call, :test_msg}, 200)
   end
 
-  test "put_scripts works once" do
-    driver = %Driver{module: TestDriver}
+  test "put_scripts buffers and requests an update" do
+    driver = %Driver{module: TestDriver, pid: self()}
     msg = {@put_scripts, [1, 2, 3]}
-    assert Driver.handle_info(msg, driver) == {:noreply, driver}
-    assert_receive({:put_scripts, [1, 2, 3]}, 200)
+    {:noreply, driver} = Driver.handle_info(msg, driver)
+    assert driver.dirty_ids == [[1, 2, 3]]
+    assert_receive(:_do_update_, 200)
   end
 
-  test "put_scripts does not rate limit if limit_ms is 0" do
-    driver = %Driver{module: TestDriver, limit_ms: 0}
+  test "if limit_ms is 0, buffers and requests right away" do
+    driver = %Driver{module: TestDriver, pid: self(), limit_ms: 0}
     {:noreply, driver} = Driver.handle_info({@put_scripts, [1, 2, 3]}, driver)
     {:noreply, driver} = Driver.handle_info({@put_scripts, [2, 3, 4]}, driver)
     {:noreply, driver} = Driver.handle_info({@put_scripts, [3, 5]}, driver)
-    assert driver.limited == false
-    assert driver.dirty_ids == []
-    assert_receive({:put_scripts, [1, 2, 3]}, 200)
-    assert_receive({:put_scripts, [2, 3, 4]}, 200)
-    assert_receive({:put_scripts, [3, 5]}, 200)
-  end
-
-  test "put_scripts rate limits" do
-    driver = %Driver{module: TestDriver, limit_ms: 10}
-    assert driver.limited == false
-
-    {:noreply, driver} = Driver.handle_info({@put_scripts, [1, 2, 3]}, driver)
-    assert driver.limited == true
-    assert driver.dirty_ids == []
-
-    {:noreply, driver} = Driver.handle_info({@put_scripts, [2, 3, 4]}, driver)
-    assert driver.limited == true
-    assert driver.dirty_ids == [[2, 3, 4]]
-
-    {:noreply, driver} = Driver.handle_info({@put_scripts, [3, 5]}, driver)
-    assert driver.limited == true
-    assert driver.dirty_ids == [[3, 5], [2, 3, 4]]
-
-    assert_receive({:put_scripts, [1, 2, 3]}, 200)
-    assert_receive(@limiter, 200)
-
-    {:noreply, driver} = Driver.handle_info(@limiter, driver)
-    assert driver.limited == true
-    assert driver.dirty_ids == []
-
-    assert_receive({:put_scripts, [3, 5, 2, 4]}, 200)
-    assert_receive(@limiter, 200)
-
-    {:noreply, driver} = Driver.handle_info(@limiter, driver)
-    assert driver.limited == false
-    assert driver.dirty_ids == []
+    assert driver.update_requested == true
+    assert driver.dirty_ids == [[3, 5], [2, 3, 4], [1, 2, 3]]
+    assert_receive(:_do_update_, 200)
+    refute_receive(:_do_update_, 10)
   end
 
   test "del_scripts works" do
@@ -418,7 +390,7 @@ defmodule Scenic.DriverTest do
   end
 
   test "marking the driver busy queues scripts" do
-    driver = %Driver{module: TestDriver, limit_ms: 0, busy: true}
+    driver = %Driver{module: TestDriver, limit_ms: 0, busy: true, pid: self()}
     {:noreply, driver} = Driver.handle_info({@put_scripts, [1, 2, 3]}, driver)
     {:noreply, driver} = Driver.handle_info({@put_scripts, [2, 3, 4]}, driver)
     {:noreply, driver} = Driver.handle_info({@put_scripts, [3, 5]}, driver)
@@ -427,7 +399,7 @@ defmodule Scenic.DriverTest do
   end
 
   test "marking the driver gated queues scripts" do
-    driver = %Driver{module: TestDriver, limit_ms: 0, gated: true}
+    driver = %Driver{module: TestDriver, limit_ms: 0, gated: true, pid: self()}
     {:noreply, driver} = Driver.handle_info({@put_scripts, [1, 2, 3]}, driver)
     {:noreply, driver} = Driver.handle_info({@put_scripts, [2, 3, 4]}, driver)
     {:noreply, driver} = Driver.handle_info({@put_scripts, [3, 5]}, driver)
@@ -445,16 +417,6 @@ defmodule Scenic.DriverTest do
     driver = %Driver{gated: true}
     {:noreply, driver} = Driver.handle_info(@gate_complete, driver)
     assert driver.gated == false
-  end
-
-  test "the not_busy signal clears the dirty_ids and lets limited" do
-    driver = %Driver{module: TestDriver, limit_ms: 1, dirty_ids: [1, 2, 3]}
-    assert driver.limited == false
-
-    {:noreply, driver} = Driver.handle_info(@not_busy, driver)
-
-    assert driver.dirty_ids == []
-    assert_receive({:put_scripts, [1, 2, 3]}, 200)
   end
 
   test "the input_limiter signal sends buffered input and limits again" do
