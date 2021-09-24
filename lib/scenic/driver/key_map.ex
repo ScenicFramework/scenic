@@ -57,7 +57,8 @@ defmodule Scenic.Driver.KeyMap do
   """
   @spec shift?(keys :: keys) :: boolean
   def shift?(keys) do
-    is_pressed?(keys[:key_leftshift]) ||
+    is_pressed?(keys[:key_shift]) ||
+      is_pressed?(keys[:key_leftshift]) ||
       is_pressed?(keys[:key_rightshift])
   end
 
@@ -66,7 +67,8 @@ defmodule Scenic.Driver.KeyMap do
   """
   @spec alt?(keys :: keys) :: boolean
   def alt?(keys) do
-    is_pressed?(keys[:key_leftalt]) ||
+    is_pressed?(keys[:key_alt]) ||
+      is_pressed?(keys[:key_leftalt]) ||
       is_pressed?(keys[:key_rightalt])
   end
 
@@ -75,7 +77,8 @@ defmodule Scenic.Driver.KeyMap do
   """
   @spec ctrl?(keys :: keys) :: boolean
   def ctrl?(keys) do
-    is_pressed?(keys[:key_leftctrl]) ||
+    is_pressed?(keys[:key_ctrl]) ||
+      is_pressed?(keys[:key_leftctrl]) ||
       is_pressed?(keys[:key_rightctrl])
   end
 
@@ -84,7 +87,8 @@ defmodule Scenic.Driver.KeyMap do
   """
   @spec meta?(keys :: keys) :: boolean
   def meta?(keys) do
-    is_pressed?(keys[:key_leftmeta]) ||
+    is_pressed?(keys[:key_meta]) ||
+      is_pressed?(keys[:key_leftmeta]) ||
       is_pressed?(keys[:key_rightmeta])
   end
 
