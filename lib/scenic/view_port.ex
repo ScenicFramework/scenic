@@ -785,13 +785,27 @@ defmodule Scenic.ViewPort do
   # a new driver has come up
   def handle_cast(
         {:register_driver, pid},
-        %{driver_pids: driver_pids, _input_requests: reqs, _input_captures: capts} = state
+        %{
+          driver_pids: driver_pids,
+          _input_requests: reqs,
+          _input_captures: capts,
+          theme: theme
+        } = state
       ) do
     # monitor the driver
     state = ensure_monitor(pid, state)
 
     # track the driver pid
     driver_pids = [pid | driver_pids]
+
+    # send the driver the theme background as the clear_color
+    # get the background from the theme
+    background =
+      theme
+      |> Theme.normalize()
+      |> Map.get(:background)
+
+    send(pid, {@clear_color, background})
 
     # send the driver all the current script ids
     ids = all_script_ids(gen_info(state))
@@ -804,7 +818,6 @@ defmodule Scenic.ViewPort do
       |> Enum.uniq()
       |> Enum.sort()
 
-    # GenServer.cast(pid, {:request_input, input_keys})
     send(pid, {@request_input, input_keys})
 
     {:noreply, %{state | driver_pids: driver_pids}}

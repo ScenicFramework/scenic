@@ -73,11 +73,11 @@ defmodule Scenic.ViewPort.Input do
   # import IEx
 
   @type t ::
-          {:codepoint, {codepoint :: String.t(), mods :: integer}}
-          | {:key, {key :: atom, :press | :release | :repeat, mods :: integer}}
-          # | {:key, {key :: String.t(), :press | :release | :repeat, mods :: integer}}
+          {:codepoint, {codepoint :: String.t(), mods :: list}}
+          | {:key, {key :: atom, :press | :release | :repeat, mods :: list}}
+          # | {:key, {key :: String.t(), :press | :release | :repeat, mods :: list}}
           | {:cursor_button,
-             {button :: atom, :press | :release, mods :: integer, position :: Math.point()}}
+             {button :: atom, :press | :release, mods :: list, position :: Math.point()}}
           | {:cursor_scroll, {offset :: Math.point(), position :: Math.point()}}
           | {:cursor_pos, position :: Math.point()}
           | {:viewport, {:enter | :exit | :reshape, xy :: Math.point()}}

@@ -147,6 +147,7 @@ defmodule Scenic.Driver do
 
   alias Scenic.Driver
   alias Scenic.ViewPort
+  alias Scenic.Color
 
   # import IEx
   require Logger
@@ -170,7 +171,8 @@ defmodule Scenic.Driver do
           requested_inputs: [ViewPort.Input.class()],
           assigns: map,
           update_requested: boolean,
-          update_ready: boolean
+          update_ready: boolean,
+          clear_color: Color.rgba()
         }
 
   defstruct viewport: nil,
@@ -185,7 +187,8 @@ defmodule Scenic.Driver do
             requested_inputs: [],
             assigns: %{},
             update_requested: false,
-            update_ready: false
+            update_ready: false,
+            clear_color: {:color_rgba, {0, 0, 0, 255}}
 
   @type response_opts ::
           list(
@@ -812,6 +815,9 @@ defmodule Scenic.Driver do
   end
 
   defp do_clear_color(color, %Driver{module: module} = driver) do
+    color = Color.to_rgba(color)
+    driver = %{driver | clear_color: color}
+
     driver =
       case Kernel.function_exported?(module, :clear_color, 2) do
         true ->
