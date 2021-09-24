@@ -33,10 +33,9 @@ defmodule Scenic.Driver do
     default_scene: MyApp.Scene.MainScene,
     drivers: [
       [
-        module: Scenic.Driver.Glfw,
-        name: :glfw_driver,
-        title: "My Application",
-        resizeable: false
+        module: Scenic.Driver.Local,
+        name: :local_driver,
+        window: [title: "My Application", resizeable: false]
       ],
       [
         module: MyApp.Driver.MyDriver,
@@ -61,88 +60,96 @@ defmodule Scenic.Driver do
 
   The way a ViewPort communicates with it's drivers is by sending them a
   set of well-known messages. These are picked up by the Driver module and
-  sent to your driver through the standard callbacks
-  them.
-
-
-  THE TABLE BELOW NEEDS TO BE UPDATED
+  sent to your driver through callbacks.
 
   | Callback | Description |
   |---|---|
-  | `{:request_input, keys}` | The ViewPort is requesting user inputs from the `keys` list |
-  | `:reset` | The `ViewPort` context has been reset. The driver can clean up all scripts and cached media |
-  | `{:put_scripts, ids}` | The scripts identified by `ids` have been update and should be processed |
-  | `{:del_script, id}` | The script identified by `id` has been deleted and can be cleaned up |
-  | `:gate_start` | Start a script gate. Scripts should be processed, but not drawn until the gate is complete |
-  | `:gate_complete` | The gate is complete. This should trigger a redraw |
-
+  | `reset_scene/1` | The `ViewPort` context has been reset. The driver can clean up all scripts and cached media |
+  | `request_input/2` | The ViewPort is requesting user inputs from the `keys` list |
+  | `update_scene/2` | The scripts identified by `ids` have been update and should be processed |
+  | `del_scripts/2` | The script identified by `id` has been deleted and can be cleaned up |
+  | `clear_color/2` | The background clear color has been updated |
 
   ## Handling Updates
 
-  The main drawing related task of a Driver is to receive the `{:put_scripts, ids}`
-  message and then draw those scripts to the screen, or whatever output medium the
+  The main drawing related task of a Driver is to receive the `update_scene/2`
+  callback and then draw the updated scripts to the screen, or whatever output medium the
   driver supports.
 
-  In the simplest case, it would look something like this.
+  In a very simple example, it would look something like this.
 
   ```elixir
-  def handle_cast( {:put_scripts, ids}, %{port: port, view_port: vp, gated: gated} = state ) do
-    ids
-    |> List.flatten()
-    |> Enum.uniq()
-    |> Enum.each( fn(id) ->
+  def update_scene( ids, driver ) do
+    Enum.each( ids, fn(id) ->
       with {:ok, script} <- ViewPort.get_script_by_id(vp, id) do
         script
         |> Scenic.Script.serialize()
-        |> my_send_to_port(id, port)
+        |> my_render_script(driver)
       end
     end)
-    if gated == false do
-      my_send_redraw_to_port(port)
-    end
+    {:ok, driver}
   end
   ```
 
-  The above example is overly simple and just there to get you started. There are several
-  points you should make note of.
-
-    * Only the ids of the scripts are sent. You still need to fish them out of the `ViewPort`
-    * The list of ids sent to the driver might need to be flattened
-    * If a script is updated very quickly, it might be in the list twice. Use `Enum.uniq()`
-    to avoid doing unnecessary work
-    * You might have been previously sent a `:gate_start` message. If you are not in a gate,
-    do whatever you need to do to redraw the screen after processing all the put scripts.
-    * If you are in a gate, do not redraw the screen. This happens when there are more
-    `:put_scripts` messages coming.
-
-  Normally, you would want to add some amount of debouncing to handle cases when a script
-  is updated faster than your frame rate, or other constraint. You can also add options
-  to the `Scenic.Script.serialize` call to customize how the data is serialized.
+  The above example is overly simple and just there to get you started. Note that only
+  the ids of the scripts are sent. You still need to fish them out of the `ViewPort`
 
 
   ## User Input
 
-  User input events are created whenever a driver has events to share. The `ViewPort`
-  will send `{:request_input, keys}` messages to the drivers to indicate which input
-  types it is listening for, but that is a guide to prevent unnecessary work. You can
-  send any input message at any time.
+  User input events are created whenever a driver has events to share. The `request_input/2`
+  callback indicates to you which input events are currently being listened to. This is a guide
+  that you can use or not. You can send any valid input event at any time, the `ViewPort` will
+  simply ignore those that aren't being listened to.
 
   In this example, there is some source of user input that casts messages to our driver.
 
   ```elixir
-  def handle_cast( {:my_cursor_press, button, xy}, %{viewport: vp} = state ) do
-    Scenic.ViewPort.Input.send(vp, {:cursor_button, {button, :press, 0, xy}} )
-    { :noreply, state }
+  def handle_cast( {:my_cursor_press, button, xy}, driver ) do
+    send_input(driver, {:cursor_button, {button, 1, [], xy}} )
+    { :noreply, driver }
   end
   ```
 
-  No matter what type of input you are sending to the `ViewPort`, it will be checked to
+  No matter what type of input you are sending, it will be checked to
   make sure it conforms the [known input types](Scenic.ViewPort.Input.html#t:t/0).
 
-  NOTE: In older versions of Scenic, the button indicator was one of `:left`, `:center`, or `:right`.
-  It seemed like `:left` was really being used to mean the "primary" button, which is a form of
-  handedness bias. So now the button indicator is typed to an integer, typically
-  `0`, `1`, or `2`, where `0` is the primary button.
+  ## Updated Input Formats
+  
+  There are several changes to the input formats in version v0.11.
+
+  Button indicators are now atoms that conform to standard linux-like buttons. This
+  allows for more buttons on a mouse like device. Do not assume these are the only
+  buttons that can be sent in a `:cursor_button` message.
+
+  | New Button | Old Button |
+  |---|---|
+  | `:btn_left` | `:left` |
+  | `:btn_right` | `:right` |
+
+  Press and Release messages were atoms and are now numbers. This is to support
+  multi-state buttons and joysticks and the like. Turns out that some buttons
+  are pressure sensitive and can have a range of values.
+
+  | New Action | Old Action |
+  |---|---|
+  | `0` | `:release` |
+  | `1` | `:press` |
+
+  Modifier keys were previously a number and you would have had to dig into the GLFW
+  documentation to see how to interpret it. That was both unintuitive and I wanted to
+  make it more source independent. So now it is a list of atoms. If the atom you
+  are interested is in the list, then it is pressed.
+
+  ```elixir
+  [:ctrl, :shift, :alt, :meta]
+  ```
+
+  Test if a modifier key is pressed using the Enum.member?/2 function.
+  ```elixir
+  mods = [:ctrl, :shift]
+  Enum.member?( mods, :shift )
+  ```
   """
 
   alias Scenic.Driver
@@ -242,23 +249,64 @@ defmodule Scenic.Driver do
               opts :: Keyword.t()
             ) :: {:ok, Driver.t()}
 
+
+  @doc """
+  Called when the scene has been reset.
+
+  This is an opportunity for your driver to clear state that may no longer
+  be relevant. This is typically scripts, inputs, media, etc.
+  """
   @callback reset_scene(driver :: Driver.t()) :: {:ok, Driver.t()}
 
+  @doc """
+  Called when requested input types have changed.
+
+  This informs your driver that the requested input types for the application
+  have changed. This is useful if you want to reduce the amount of data being transferred
+  between your input source (which might be expensive...) and the driver.
+
+  This callback is optional. If you ignore it and send all input
+  events, then only the ones being listened to will be processed.
+  """
   @callback request_input(
               input :: [Scenic.ViewPort.Input.class()],
               driver :: Driver.t()
             ) :: {:ok, Driver.t()}
 
+  @doc """
+  Called when the scene has been updated.
+
+  The list of ids is the set of script ids that have changed and should be updated.
+
+  Note that the list may be empty if you have requested an update via the
+  `request_update/1` function.
+
+  This callback is optional.
+  """
   @callback update_scene(
               script_ids :: [Scenic.Script.id()],
               driver :: Driver.t()
             ) :: {:ok, Driver.t()}
 
+  @doc """
+  Called when a script has been deleted and can be cleaned up.
+
+  The deleted id is provided.
+
+  This callback is optional.
+  """
   @callback del_scripts(
               script_ids :: [Scenic.Script.id()],
               driver :: Driver.t()
             ) :: {:ok, Driver.t()}
 
+  @doc """
+  Called when the background color has changed.
+
+  The color is provided.
+
+  This callback is optional.
+  """
   @callback clear_color(
               color :: Scenic.Color.t(),
               driver :: Driver.t()
@@ -403,9 +451,9 @@ defmodule Scenic.Driver do
   end
 
   @doc """
-  Send updates to the driver.
+  Request a scene_updated call.
 
-  This is used internally when scripts are updated. Some drivers use it to batch updates
+  This is used when scripts are updated. Some drivers use it to batch updates
   into a single atomic operation. This call is rate limited by limit_ms.
   """
 
