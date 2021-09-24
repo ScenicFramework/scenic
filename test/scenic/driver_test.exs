@@ -23,6 +23,7 @@ defmodule Scenic.DriverTest do
   @reset_scene ViewPort.msg_reset_scene()
   @gate_start ViewPort.msg_gate_start()
   @gate_complete ViewPort.msg_gate_complete()
+  @clear_color ViewPort.msg_clear_color()
 
   defmodule TestScene do
     use Scenic.Scene
@@ -448,5 +449,28 @@ defmodule Scenic.DriverTest do
     assert Map.get(driver, :input_limited) == false
     assert Map.get(driver, :input_buffer) == %{}
     refute_receive(@input_limiter, 10)
+  end
+
+  test "clear_color messages are normalized and passed through to the driver" do
+    driver = %Driver{
+      module: TestDriver,
+      viewport: %ViewPort{pid: self()}
+    }
+
+    {:noreply, %Driver{}} = Driver.handle_info({@clear_color, :blue}, driver)
+    assert_receive({:clear_color, {:color_rgba, {0, 0, 255, 255}}}, 200)
+  end
+
+  test "clear_color is stored on the root of the Driver struct" do
+    driver = %Driver{
+      module: TestDriver,
+      viewport: %ViewPort{pid: self()},
+      clear_color: nil
+    }
+
+    {:noreply, %Driver{clear_color: clear_color}} =
+      Driver.handle_info({@clear_color, :blue}, driver)
+
+    assert clear_color == {:color_rgba, {0, 0, 255, 255}}
   end
 end
