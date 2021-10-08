@@ -1538,6 +1538,8 @@ defmodule Scenic.Scene do
   # this a root-level dynamic scene
   @doc false
   def start(opts) do
+    opts = Enum.into( opts, [] )
+    
     root_sup = opts[:root_sup]
 
     # make invalid opts really obvious by crashing

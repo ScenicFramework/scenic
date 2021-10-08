@@ -134,6 +134,16 @@ defmodule Scenic.DriverTest do
   # end
 
   # ============================================================================
+
+  test "Driver accepts keyword options" do
+    {:ok, _} = Driver.validate([])
+  end
+
+  test "Driver accepts map options" do
+    {:ok, _} = Driver.validate(%{})
+  end
+
+  # ============================================================================
   # client access APIs
 
   test "get works" do

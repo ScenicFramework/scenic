@@ -899,6 +899,7 @@ defmodule Scenic.Driver do
   end
 
   defp do_validate(opts, drivers) do
+    opts = Enum.into( opts, [] )
     core_opts =
       []
       |> put_set(:module, opts[:module])

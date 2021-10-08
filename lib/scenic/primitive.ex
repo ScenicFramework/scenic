@@ -203,6 +203,7 @@ defmodule Scenic.Primitive do
   # split a primitive's options into three buckets. Styles, Transforms, and opts
   # this is because the three groups have different render and inheritance models.
   defp prep_opts(opts) when is_list(opts) do
+    opts = Enum.into( opts, [] )
     {id, st, tx, op} =
       Enum.reduce(
         opts,

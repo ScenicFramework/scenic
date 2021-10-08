@@ -213,6 +213,7 @@ defmodule Scenic.ViewPort do
   # process underneath, passing it's supervisor in as an parameter.
   @spec start(opts :: Keyword.t()) :: {:ok, ViewPort.t()}
   def start(opts) do
+    opts = Enum.into( opts, [] )
     with {:ok, opts} <- NimbleOptions.validate(opts, opts_schema()),
          {:ok, pid} <- DynamicSupervisor.start_child(@viewports, {ViewPort, opts}) do
       GenServer.call(pid, :query_info)
@@ -279,7 +280,10 @@ defmodule Scenic.ViewPort do
       )
       when is_list(script) do
     opts =
-      case NimbleOptions.validate(opts, put_x_opts_schema()) do
+      opts
+      |> Enum.into( [] )
+      |> NimbleOptions.validate( put_x_opts_schema() )
+      |> case do
         {:ok, opts} -> opts
         {:error, error} -> raise Exception.message(error)
       end
@@ -339,7 +343,10 @@ defmodule Scenic.ViewPort do
         ) :: {:ok, name :: any}
   def put_graph(%ViewPort{pid: pid} = viewport, name, %Graph{} = graph, opts \\ []) do
     opts =
-      case NimbleOptions.validate(opts, put_x_opts_schema()) do
+      opts
+      |> Enum.into( [] )
+      |> NimbleOptions.validate( put_x_opts_schema() )
+      |> case do
         {:ok, opts} -> opts
         {:error, error} -> raise Exception.message(error)
       end

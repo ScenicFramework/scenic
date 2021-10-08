@@ -364,6 +364,7 @@ defmodule Scenic.PubSub do
   @spec register(source_id :: atom, opts :: Keyword.t()) ::
           {:ok, atom} | {:error, :already_registered}
   def register(source_id, opts \\ []) when is_atom(source_id) do
+    opts = Enum.into( opts, [] )
     case NimbleOptions.validate(opts, @register_opts_schema) do
       {:ok, opts} -> opts
       {:error, error} -> raise Error, message: error, source_id: source_id
