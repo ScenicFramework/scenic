@@ -115,7 +115,7 @@ defmodule Scenic.Driver do
   make sure it conforms the [known input types](Scenic.ViewPort.Input.html#t:t/0).
 
   ## Updated Input Formats
-  
+
   There are several changes to the input formats in version v0.11.
 
   Button indicators are now atoms that conform to standard linux-like buttons. This
@@ -248,7 +248,6 @@ defmodule Scenic.Driver do
               driver :: Driver.t(),
               opts :: Keyword.t()
             ) :: {:ok, Driver.t()}
-
 
   @doc """
   Called when the scene has been reset.
@@ -899,7 +898,8 @@ defmodule Scenic.Driver do
   end
 
   defp do_validate(opts, drivers) do
-    opts = Enum.into( opts, [] )
+    opts = Enum.into(opts, [])
+
     core_opts =
       []
       |> put_set(:module, opts[:module])

@@ -116,7 +116,6 @@ defmodule Scenic.ViewPortTest do
     assert ViewPort.main_id() == "_main_"
   end
 
-
   # ============================================================================
 
   test "Driver accepts keyword options" do
@@ -132,7 +131,7 @@ defmodule Scenic.ViewPortTest do
 
   test "Driver accepts map options" do
     {:ok, %ViewPort{}} =
-      ViewPort.start( %{
+      ViewPort.start(%{
         name: :dyanmic_viewport,
         size: {700, 600},
         opts: [font: :roboto, font_size: 30, scale: 1.4],
