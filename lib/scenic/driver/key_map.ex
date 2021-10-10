@@ -15,7 +15,9 @@ defmodule Scenic.Driver.KeyMap do
   # Some keys have multiple states and may be values higher than 1. You get
   # to interpret that as appropriate.
   # """
-  @type keys :: %{atom => boolean}
+  @type keys :: %{atom => integer}
+
+  @type mods :: [:meta | :alt | :ctrl | :shift | :caps_lock | :num_lock | :scroll_lock]
 
   @doc """
   Translate a key to a codepoint, which is really just a string.
@@ -35,7 +37,7 @@ defmodule Scenic.Driver.KeyMap do
   This will not send a codepoint input, but will log the error message, which should
   be a string.
   """
-  @callback map_key(key :: atom, value :: non_neg_integer, keys :: keys(), state :: any) ::
+  @callback map_key(key :: atom, value :: integer, keys :: keys(), state :: any) ::
               {:ok, nil, state :: any}
               | {:ok, codepoint :: String.t(), state :: any}
               | {:error, msg :: String.t(), state :: any}
@@ -48,6 +50,26 @@ defmodule Scenic.Driver.KeyMap do
   @spec caps_lock?(keys :: keys) :: boolean
   def caps_lock?(keys) do
     is_pressed?(keys[:virt_caps_lock])
+  end
+
+  @doc """
+  Is the num lock enabled?
+
+  Returns true if num lock is pressed or active.
+  """
+  @spec num_lock?(keys :: keys) :: boolean
+  def num_lock?(keys) do
+    is_pressed?(keys[:virt_num_lock])
+  end
+
+  @doc """
+  Is the scroll lock enabled?
+
+  Returns true if scroll lock is pressed or active.
+  """
+  @spec scroll_lock?(keys :: keys) :: boolean
+  def scroll_lock?(keys) do
+    is_pressed?(keys[:virt_scroll_lock])
   end
 
   @doc """
@@ -95,7 +117,7 @@ defmodule Scenic.Driver.KeyMap do
   @doc """
   Generate the list of pressed modifier keys
   """
-  @spec mods(keys :: keys) :: boolean
+  @spec mods(keys :: keys) :: mods
   def mods(keys) do
     []
     |> add_if_set(:meta, meta?(keys))
@@ -103,6 +125,8 @@ defmodule Scenic.Driver.KeyMap do
     |> add_if_set(:ctrl, ctrl?(keys))
     |> add_if_set(:shift, shift?(keys))
     |> add_if_set(:caps_lock, caps_lock?(keys))
+    |> add_if_set(:num_lock, num_lock?(keys))
+    |> add_if_set(:scroll_lock, scroll_lock?(keys))
   end
 
   defp is_pressed?(nil), do: false

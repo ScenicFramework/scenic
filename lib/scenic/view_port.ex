@@ -428,7 +428,7 @@ defmodule Scenic.ViewPort do
   @spec input(
           viewport :: ViewPort.t(),
           input :: ViewPort.Input.t()
-        ) :: :ok
+        ) :: :ok | {:error, atom}
   defdelegate input(vp, input_event), to: ViewPort.Input, as: :send
 
   # --------------------------------------------------------

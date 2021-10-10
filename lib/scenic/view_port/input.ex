@@ -69,18 +69,21 @@ defmodule Scenic.ViewPort.Input do
 
   alias Scenic.Math
   alias Scenic.ViewPort
+  alias Scenic.Driver.KeyMap
 
   # import IEx
 
   @type t ::
-          {:codepoint, {codepoint :: String.t(), mods :: list}}
-          | {:key, {key :: atom, :press | :release | :repeat, mods :: list}}
-          # | {:key, {key :: String.t(), :press | :release | :repeat, mods :: list}}
+          {:codepoint, {codepoint :: String.t(), mods :: KeyMap.mods()}}
+          | {:key, {key :: atom, value :: integer, mods :: KeyMap.mods()}}
           | {:cursor_button,
-             {button :: atom, :press | :release, mods :: list, position :: Math.point()}}
+             {button :: atom, value :: integer, mods :: KeyMap.mods(), position :: Math.point()}}
           | {:cursor_scroll, {offset :: Math.point(), position :: Math.point()}}
           | {:cursor_pos, position :: Math.point()}
           | {:viewport, {:enter | :exit | :reshape, xy :: Math.point()}}
+          | {:relative, vector :: Math.point()}
+          | {:led, {id :: atom, value :: integer}}
+          | {:switch, {id :: atom, value :: integer}}
 
   @type class ::
           :cursor_button
@@ -89,11 +92,15 @@ defmodule Scenic.ViewPort.Input do
           | :codepoint
           | :key
           | :viewport
+          | :relative
+          | :led
+          | :switch
 
   @type positional ::
           :cursor_button
           | :cursor_scroll
           | :cursor_pos
+          | :relative
 
   @spec valid_inputs() :: [class]
   defp valid_inputs() do
@@ -103,22 +110,12 @@ defmodule Scenic.ViewPort.Input do
       :cursor_pos,
       :codepoint,
       :key,
-      :viewport
+      :viewport,
+      :relative,
+      :led,
+      :switch
     ]
   end
-
-  # :cursor_button,
-  # :cursor_scroll,
-  # :cursor_pos,
-  # :codepoint
-  # :key
-  # :viewport
-  # :button
-  # :position
-  # :relative
-  # :touch
-  # :led
-  # :switch
 
   @spec positional_inputs() :: [positional()]
   @doc false
@@ -126,7 +123,8 @@ defmodule Scenic.ViewPort.Input do
     [
       :cursor_button,
       :cursor_scroll,
-      :cursor_pos
+      :cursor_pos,
+      :relative
     ]
   end
 
@@ -332,7 +330,7 @@ defmodule Scenic.ViewPort.Input do
   @spec send(
           viewport :: ViewPort.t(),
           input :: ViewPort.Input.t()
-        ) :: :ok
+        ) :: :ok | {:error, atom}
   def send(%ViewPort{pid: pid}, input) do
     # IO.inspect(input, label: "Raw Send")
 
@@ -396,7 +394,9 @@ defmodule Scenic.ViewPort.Input do
   def validate({:viewport, {:exit, {x, y}}}) when is_number(x) and is_number(y), do: :ok
   def validate({:viewport, {:reshape, {w, h}}}) when is_number(w) and is_number(h), do: :ok
 
-  def validate(_), do: {:error, :invalid}
+  def validate({:relative, {x, y}}) when is_number(x) and is_number(y), do: :ok
+  def validate({:led, {id, value}}) when is_atom(id) and is_integer(value), do: :ok
+  def validate({:switch, {id, value}}) when is_atom(id) and is_integer(value), do: :ok
 
-  # def validate(_input), do: :ok
+  def validate(_), do: {:error, :invalid}
 end

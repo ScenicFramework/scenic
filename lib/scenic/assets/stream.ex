@@ -132,6 +132,17 @@ defmodule Scenic.Assets.Stream do
   end
 
   @doc """
+  Same as put, but reverses the params order (making it pipe-able) and raises on failures.
+
+  Returns the asset on success.
+  """
+  @spec put!(asset :: asset(), id :: String.t()) :: asset()
+  def put!({type, _meta, _bin} = asset, id) do
+    :ok = put(id, asset)
+    asset
+  end
+
+  @doc """
   Fully delete a named stream.
 
   If you recreate the stream after deleting it, you can place any asset type into
