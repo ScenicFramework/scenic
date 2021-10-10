@@ -43,6 +43,7 @@ defmodule Scenic.Component.Input.TextField do
     it.
   * `:hint` - A string that will be shown (greyed out) when the entered value
   of the component is empty.
+  * `:hint_color` - any [valid color](Scenic.Primitive.Style.Paint.Color.html).
   * `:type` - Can be one of the following options:
     * `:all` - Show all characters. This is the default.
     * `:password` - Display a string of '*' characters instead of the value.
@@ -95,6 +96,7 @@ defmodule Scenic.Component.Input.TextField do
   # import IEx
 
   @default_hint ""
+  @default_hint_color :grey
   @default_font :roboto_mono
   @default_font_size 20
   @char_width 12
@@ -109,8 +111,6 @@ defmodule Scenic.Component.Input.TextField do
   @input_capture [:cursor_button, :codepoint, :key]
 
   @password_char '*'
-
-  @hint_color :grey
 
   # --------------------------------------------------------
   @impl Scenic.Component
@@ -147,6 +147,7 @@ defmodule Scenic.Component.Input.TextField do
     height = opts[:height] || opts[:h] || @default_height
     type = opts[:type] || @default_type
     filter = opts[:filter] || @default_filter
+    hint_color = opts[:hint_color] || @default_hint_color
 
     index = String.length(value)
 
@@ -164,6 +165,7 @@ defmodule Scenic.Component.Input.TextField do
         value: value,
         display: display,
         hint: hint,
+        hint_color: hint_color,
         index: index,
         char_width: @char_width,
         focused: false,
@@ -192,7 +194,7 @@ defmodule Scenic.Component.Input.TextField do
           g
           |> text(
             @default_hint,
-            fill: @hint_color,
+            fill: hint_color,
             t: {0, @default_font_size},
             id: :text
           )
@@ -222,8 +224,8 @@ defmodule Scenic.Component.Input.TextField do
 
   # --------------------------------------------------------
   # to be called when the value has changed
-  defp update_text(graph, "", %{hint: hint}) do
-    Graph.modify(graph, :text, &text(&1, hint, fill: @hint_color))
+  defp update_text(graph, "", %{hint: hint, hint_color: hint_color}) do
+    Graph.modify(graph, :text, &text(&1, hint, fill: hint_color))
   end
 
   defp update_text(graph, value, %{theme: theme}) do
