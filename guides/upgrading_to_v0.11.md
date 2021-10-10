@@ -25,6 +25,7 @@ Version v0.11 is a MAJOR overhaul from the top to the bottom. For the first time
     * The SceneRef primitive is gone, and replaced with a combination of Component and Script primitives.
     * The :font_blur primitive is gone. Sorry. Didn't have a close enough analog in Canvas
     * The format of the :cursor_button input changed - see the docs
+  * `:scenic_driver_local` is the new standard renderer for Scenic. Both `:scenic_driver_glfw` and `:scenic_drives_nerves_rpi` are retired.
 
 
 I'm sure there's more.
@@ -244,9 +245,18 @@ You can also specify new textures to be cleared with a specific color and/or com
     :ok = Stream.put( "example", t )
 ```
 
-## Drivers
+## Standard Driver
 
-The biggest change to Scenic is the re-write of the driver model. If your work is all at the scene layer, then this shouldn't affect you. But if you have a custom driver that renders graphs, it will need to be re-written.
+The new standard render driver for all Scenic apps is `:scenic_driver_local`, which is being published to hex at roughly the same time as the beta for Scenic v0.11.
+
+Both `:scenic_driver_glfw` and `:scenic_drives_nerves_rpi` are retired.
+
+This driver provides a single rendering code base for both hosted (Mac/PC/Linux) and Nerves environments. The seperate drivers were 95% the same anyway and it was getting difficult to keep fixes for them in sync.
+
+
+## Driver Model
+
+Another big change to Scenic is the re-write of the driver model. If your work is all at the scene layer, then this shouldn't affect you. But if you have a custom driver that renders graphs, it will need to be re-written.
 
 The old model sent graphs directly to the drivers. They would then traverse these graphs, translating them into some render specific linear list of commands, which when then, in turn, be passed on to the actual renderer. It was complicated, repeated the same difficult code in every driver, and was difficult to maintain.
 

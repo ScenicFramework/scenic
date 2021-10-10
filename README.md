@@ -1,6 +1,5 @@
 # Core Scenic Library
 
-[![Build Status](https://travis-ci.org/boydm/scenic.svg?branch=master)](https://travis-ci.org/boydm/scenic)
 [![Codecov](https://codecov.io/gh/boydm/scenic/branch/master/graph/badge.svg)](https://codecov.io/gh/boydm/scenic)
 
 Scenic is a client application library written directly on the
@@ -18,10 +17,9 @@ See the [getting started guide](https://hexdocs.pm/scenic/getting_started.html) 
 
 
 # Current Status! __Important!__
-This branch is v.11, which is a major upgrade. There are numerous breaking changes. The docs have been upgraded, but probably need another pass. The upgrade guide (in the docs) explains the major pieces.
+Version 0.11 is a major upgrade. There are numerous breaking changes. The docs have been upgraded, but will get another pass before it leaves beta. The upgrade guide (in the docs) explains the major pieces.
 
-READ THAT FIRST
-
+__READ THAT FIRST__
 
 
 
@@ -42,7 +40,8 @@ READ THAT FIRST
 
 - **Remotable:** Scenic devices know how to run themselves, but can still be
   accessed remotely. Remote traffic attempts to be as small so it can be used
-  over the Internet, cellular modems, Bluetooth, etc.
+  over the Internet, cellular modems, Bluetooth, etc. This is actively under
+  development and coming soon.
 
 - **Reusable:** Collections of UI can be packaged up for reuse with, and across
   applications. I expect to see Hex packages of controls, graphs, and more
