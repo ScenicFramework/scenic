@@ -137,7 +137,7 @@ defmodule Scenic.Assets.Stream do
   Returns the asset on success.
   """
   @spec put!(asset :: asset(), id :: String.t()) :: asset()
-  def put!({type, _meta, _bin} = asset, id) do
+  def put!({_type, _meta, _bin} = asset, id) do
     :ok = put(id, asset)
     asset
   end
