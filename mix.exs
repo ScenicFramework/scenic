@@ -47,7 +47,7 @@ defmodule Scenic.Mixfile do
   defp deps do
     [
       {:font_metrics, "~> 0.5.0"},
-      {:nimble_options, "~> 0.3"},
+      {:nimble_options, "~> 0.3.4"},
       {:ex_image_info, "~> 0.2.4"},
 
       # Tools
