@@ -460,7 +460,7 @@ defmodule Scenic.ViewPort.InputTest do
     # test, which is pretending to be a driver...
     {:ok, agent} =
       Agent.start(fn ->
-        GenServer.cast(vp.pid, {:register_scene, self(), :agent, nil})
+        GenServer.cast(vp.pid, {:register_scene, self(), :agent, nil, nil})
         :ok = Input.capture(vp, :cursor_pos)
         send(self, :sync)
       end)

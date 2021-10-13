@@ -628,7 +628,7 @@ defmodule Scenic.ViewPort do
   @doc false
   # when a scene or a driver goes down, clean it up
   def handle_info(
-        {:DOWN, _monitor_ref, :process, pid, _reason},
+        {:DOWN, _monitor_ref, :process, pid, reason},
         %{
           driver_pids: driver_pids,
           input_lists: input_lists,
@@ -656,7 +656,7 @@ defmodule Scenic.ViewPort do
         :error ->
           state
 
-        {:ok, {id, _}} ->
+        {:ok, {id, _parent, mod}} ->
           # make sure the drivers are not gated on a scene that crashed.
           starting_scenes =
             case Enum.member?(starting_scenes, id) do
@@ -666,9 +666,9 @@ defmodule Scenic.ViewPort do
               true ->
                 Logger.error("""
                 Scene exited or crashed before it was done initializing.
-                pid: #{inspect(pid)}, id: #{inspect(id)}
+                pid: #{inspect(pid)}, reason: #{inspect(reason)}
+                module: #{inspect(mod)}, id: #{inspect(id)}
                 """)
-
                 case Enum.reject(starting_scenes, &Kernel.==(&1, id)) do
                   [] ->
                     # starting_scenes has gone to an empty list. We are done.
@@ -738,7 +738,7 @@ defmodule Scenic.ViewPort do
 
   # a new scene has come up
   def handle_cast(
-        {:register_scene, pid, id, parent_pid},
+        {:register_scene, pid, id, parent_pid, mod},
         %{scenes_by_pid: sbp, scenes_by_id: sbi} = state
       ) do
     # monitor the scene
@@ -747,12 +747,12 @@ defmodule Scenic.ViewPort do
     # get the parent's id from the parent_pid
     parent_id =
       case Map.fetch(sbp, parent_pid) do
-        {:ok, {_id, parent_id}} -> parent_id
+        {:ok, {_id, parent_id, _mod}} -> parent_id
         :error -> nil
       end
 
     # track the scene
-    sbp = Map.put(sbp, pid, {id, parent_id})
+    sbp = Map.put(sbp, pid, {id, parent_id, mod})
     sbi = Map.put(sbi, id, {pid, parent_pid})
 
     {:noreply, %{state | scenes_by_pid: sbp, scenes_by_id: sbi}}
@@ -1067,7 +1067,7 @@ defmodule Scenic.ViewPort do
   defp scene_tx(scene_pid, %{scenes_by_pid: sbp} = state) when is_pid(scene_pid) do
     case Map.fetch(sbp, scene_pid) do
       :error -> {:error, :not_found}
-      {:ok, {id, _parent_id}} -> scene_tx(id, state)
+      {:ok, {id, _parent_id, _mod}} -> scene_tx(id, state)
     end
   end
 
