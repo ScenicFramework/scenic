@@ -355,15 +355,20 @@ defmodule Scenic.ViewPort do
     with {:ok, script} <- GraphCompiler.compile(graph),
          {:ok, input_list} <- compile_input(graph) do
       # write the script - but only if it has actually changed
-      if {:ok, script} != get_script(viewport, name) do
-        owner = opts[:owner]
+      case get_script(viewport, name) do
+        {:ok, ^script} ->
+          # no change
+          :ok
 
-        # write the script to the table
-        # this notifies the drivers...
-        put_script(viewport, name, script, owner: owner)
+        _ ->
+          owner = opts[:owner]
 
-        # send the input list to the viewport
-        GenServer.cast(pid, {:input_list, input_list, name, owner})
+          # write the script to the table
+          # this notifies the drivers...
+          put_script(viewport, name, script, owner: owner)
+
+          # send the input list to the viewport
+          GenServer.cast(pid, {:input_list, input_list, name, owner})
       end
 
       {:ok, name}
@@ -628,10 +633,10 @@ defmodule Scenic.ViewPort do
           driver_pids: driver_pids,
           input_lists: input_lists,
           scene_transforms: scene_transforms,
-          # name_table: name_table,
           script_table: script_table,
           scenes_by_pid: scenes_by_pid,
           scenes_by_id: scenes_by_id,
+          starting_scenes: starting_scenes,
           monitors: monitors
         } = old_state
       ) do
@@ -652,8 +657,35 @@ defmodule Scenic.ViewPort do
           state
 
         {:ok, {id, _}} ->
-          scenes_by_pid = Map.delete(scenes_by_pid, pid)
-          state = %{state | scenes_by_pid: scenes_by_pid}
+          # make sure the drivers are not gated on a scene that crashed.
+          starting_scenes =
+            case Enum.member?(starting_scenes, id) do
+              false ->
+                starting_scenes
+
+              true ->
+                Logger.error("""
+                Scene exited or crashed before it was done initializing.
+                pid: #{inspect(pid)}, id: #{inspect(id)}
+                """)
+
+                case Enum.reject(starting_scenes, &Kernel.==(&1, id)) do
+                  [] ->
+                    # starting_scenes has gone to an empty list. We are done.
+                    # tell the drivers the reset is complete
+                    cast_drivers(state, @gate_complete)
+                    []
+
+                  starting_scenes ->
+                    starting_scenes
+                end
+            end
+
+          # cleanup that always happens
+          state =
+            state
+            |> Map.put(:scenes_by_pid, Map.delete(scenes_by_pid, pid))
+            |> Map.put(:starting_scenes, starting_scenes)
 
           # make sure the id hasn't been claimed by a new scene
           # if not, clean up scenes_by_id, input lists, etc...
