@@ -34,10 +34,8 @@ defmodule Scenic do
   of an error.
   """
 
-
   # put the travis badge here until I get travis working again - is a config issue on the travis side...
   # [![Build Status](https://travis-ci.org/boydm/scenic.svg?branch=master)](https://travis-ci.org/boydm/scenic)
-
 
   use Supervisor
 
