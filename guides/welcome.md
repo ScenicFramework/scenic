@@ -12,9 +12,8 @@ be used to build portable applications.
 
 If you have used versions before v0.11, please see the [Upgrading to v0.11 Guide](upgrading_to_v0-11.html).
 
-## Docs are out of date
-
-This is a build of v0.11, which is in progress. Expect the docs to be out of date. Read the upgrade guide for an overview of changes.
+This is a beta of v0.11. Documentation has been updated, but may still need changes. Please pitch in with
+a PR, or at least a note, if you see something that needs improving.
 
 ## How to get started?
 

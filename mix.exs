@@ -122,8 +122,7 @@ defmodule Scenic.Mixfile do
       "guides/overview_styles.md",
       "guides/overview_transforms.md",
       "guides/overview_primitives.md",
-      # "guides/overview_cache.md",
-      # "guides/custom_fonts.md",
+      "guides/overview_assets.md",
       ".github/CODE_OF_CONDUCT.md",
       ".github/CONTRIBUTING.md"
     ]

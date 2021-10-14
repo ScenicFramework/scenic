@@ -56,38 +56,29 @@ defmodule Scenic.Assets.Static do
 
   You must create this module and compile it with your application. The following example
   is what this module should look like. Replace `MyApplication` and `:my_application` with
-  the actual name of your application and it should work.
+  the actual name of your application.
 
   ```elixir
   defmodule MyApplication.Assets do
-    use Scenic.Assets.Static, otp_app: :my_application
+    use Scenic.Assets.Static,
+      otp_app: :my_application,
+      sources: [
+        "assets",
+        {:scenic, "deps/scenic/assets"}
+      ],
+      alias: [
+        parrot: "images/parrot.jpg"
+      ]
   end
   ```
 
-  IMPORTANT NOTE: When you add a new asset to the assets directory, you may need to force this
-  module to recompile for them to be usable. Adding or removing a return at the end should do 
-  the trick. In the future, there will be a file system watcher (much like Phoenix has) that
-  will do this automatically. Until then, it is pretty easy to do manually.
+  Notice that there are several configuration sections in your assets module. Sources is the list
+  of folders to look in to find assets. For example, if you take a dependency on a package that
+  contains assets, you will need to add it's assets folder here. If can omit the sources section
+  if you only use a single assets folder and scenic's default fonts. In other words, the sources
+  configuration shown above is also the default.
 
-  #### Assets Configuration
-  The final piece is some configuration that connects the assets directory and the assets module
-  togther. Put this in your applications config.exs file.
-
-  ```elixir
-  config :scenic, :assets,
-    module: MyApplication.Assets,
-    directory: "/assets",
-    alias: [
-      parrot: "images/parrot.jpg"
-    ]
-  ```
-
-  The only required configuration option in the above example is `module: MyApplication.Assets`.
-
-  Use the `:directory` option to change the location of the `/assets` directory. If this option
-  is omitted, then `/assets` will be used by default.
-
-  The `:alias` list creates shortcut atoms that refer to the files in the library. This is useful
+  The `:alias` list creates shortcuts that refer to the files in the assets library. This is useful
   if you think an asset id may change during development but want a constant way to refer to it
   in your code. In the above example, the atom :parrot is mapped to the file `images/parrot.jpb`
   and are interchangeable with each other in a graph.
@@ -104,6 +95,21 @@ defmodule Scenic.Assets.Static do
   The fonts `fonts/roboto.ttf` and `fonts/roboto_mono.ttf` are considered the default
   fonts for Scenic and are automatically aliased to `:roboto` and `:roboto_mono`.
   It is expected that you will include those two fonts in your `/assets/fonts` directory.
+
+
+  IMPORTANT NOTE: When you add a new asset to the assets directory, you may need to force this
+  module to recompile for them to be usable. Adding or removing a return at the end should do 
+  the trick. In the future, there will be a file system watcher (much like Phoenix has) that
+  will do this automatically. Until then, it is pretty easy to do manually.
+
+  #### Assets Configuration
+  The final piece is some configuration that connects scenic and your assets module
+  togther. Put this in your application's `config.exs` file.
+
+  ```elixir
+  config :scenic, :assets,
+    module: MyApplication.Assets
+  ```
 
   ### Troubleshooting
 
