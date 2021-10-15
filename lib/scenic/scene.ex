@@ -1257,10 +1257,12 @@ defmodule Scenic.Scene do
   @doc false
   def init(opts) do
     vp = opts[:viewport]
+
     GenServer.cast(
       vp.pid,
       {:register_scene, self(), opts[:name], opts[:parent], opts[:module]}
     )
+
     {:ok, nil, {:continue, {:_init, opts}}}
   end
 

@@ -669,6 +669,7 @@ defmodule Scenic.ViewPort do
                 pid: #{inspect(pid)}, reason: #{inspect(reason)}
                 module: #{inspect(mod)}, id: #{inspect(id)}
                 """)
+
                 case Enum.reject(starting_scenes, &Kernel.==(&1, id)) do
                   [] ->
                     # starting_scenes has gone to an empty list. We are done.
