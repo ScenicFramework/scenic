@@ -13,22 +13,26 @@ Version v0.11 is a MAJOR overhaul from the top to the bottom. For the first time
   * There are numerous other additions to Scenic
     * The Component primitive is used to refer to, and start components.
     * The Script primitive refers to arbitrary scripts that you can send to drivers.
-    * The :line_height style now sets the spacing between lines of text. Works like CSS.
-    * The :text_align style lets you align text vertically.
+    * The `:line_height` style now sets the spacing between lines of text. Works like CSS.
+    * The `:text_align` style lets you align text vertically.
     * There is a new Scenic.Asset.Stream type for dynamic textures.
     * New Sprite Sheet support via the Sprites primitive
   * There are multiple smaller deprecations. Notably
-    * The :text_height style is replaced by :line_height, which works the same way line_height does in CSS.
-    * The Path primitive (which almost got cut, but survived) no longer has the solid and hole commands.
+    * The `:text_height` style is replaced by :line_height, which works the same way line_height does in CSS.
+    * The `Path` primitive (which almost got cut, but survived) no longer has the solid and hole commands.
     * The Box Gradient fill is gone.
-    * The :clear_color style (which was always weird) is gone. Fill with a rect or use a Script instead.
+    * The `:clear_color` style (which was always weird) is gone. You can now set a theme on the viewport (in config), which sets the background color.
     * The SceneRef primitive is gone, and replaced with a combination of Component and Script primitives.
-    * The :font_blur primitive is gone. Sorry. Didn't have a close enough analog in Canvas
-    * The format of the :cursor_button input changed - see the docs
-  * `:scenic_driver_local` is the new standard renderer for Scenic. Both `:scenic_driver_glfw` and `:scenic_drives_nerves_rpi` are retired.
+    * The `:font_blur` primitive is gone. Sorry. Didn't have a close enough analog in Canvas
+    * The format of the input messages have changed - see the docs
+
+__Important__
+  * `:scenic_driver_local` is the new standard renderer for Scenic. Both `:scenic_driver_glfw` and `:scenic_drives_nerves_rpi` are retired as of v0.11.
+
+The options for the new local driver are NOT the same as they were for the glfw driver. Please read the docs for it. Please see the new [driver overview](overview_driver.html).
 
 
-I'm sure there's more.
+I'm sure there's more. Feel free to add any notes if you find something that isn't covered.
 
 ## Motivation
 
@@ -152,9 +156,10 @@ Here is an example from the Button control. In this case, update_color calls the
 Also notice that which mouse button was clicked is now a number instead of :left or :right. it was presumptive to assume that :left was the primary button. This is neutral and no longer handedness-biased.
 
 
-## The Static Asset Pipeline
+## [The Static Asset Library](overview_assets.html)
 
-I, and everybody else, always struggled with the various attempts at the Scenic.Cache modules. The goal is to sensibly load and use static assets like images and fonts, while maintaining cryptographic hashes for security purposes. The old system worked, but required byzantine steps to get it running.
+
+I, and everybody else, always struggled with the various attempts at the `Scenic.Cache modules`. It was close, but not quite right. The goal is to sensibly load and use static assets like images and fonts, while maintaining cryptographic hashes for security purposes. The old system worked, but required byzantine steps to get it running.
 
 The new asset pipeline is designed to feel familiar to the Phoenix static asset system.
 
