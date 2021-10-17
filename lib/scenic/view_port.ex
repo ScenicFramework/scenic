@@ -420,6 +420,10 @@ defmodule Scenic.ViewPort do
     GenServer.call(pid, {:set_root, scene, args})
   end
 
+  def set_root(_, %Scene{} = scene, _) do
+    raise "You must pass the module that represents the scene you want to switch to here, not a `%Scenic.Scene{}`"
+  end
+
   # --------------------------------------------------------
   @doc """
   Send raw input to a viewport.
