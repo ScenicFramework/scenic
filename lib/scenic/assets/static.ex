@@ -163,10 +163,52 @@ defmodule Scenic.Assets.Static do
 
   # import IEx
 
+  # https://hexdocs.pm/mix/1.12/Mix.Tasks.Compile.Elixir.html
+
   # ===========================================================================
   # the using macro for scenes adopting this behavior
   defmacro __using__(using_opts \\ []) do
     quote do
+      # this section of code is to "watch" the assets folder to look for changes
+      # it does this by marking the external asset files as objects that the
+      # module depends on
+      @sources Keyword.get(unquote(using_opts), :sources, ["assets"])
+      @paths Enum.reduce(@sources, [], fn
+               source, acc when is_bitstring(source) ->
+                 [Path.wildcard("#{source}/**/*.{jpg,jpeg,png,ttf}") | acc]
+
+               _, acc ->
+                 acc
+             end)
+             |> List.flatten()
+             |> Enum.uniq()
+      @paths_hash :erlang.md5(@paths)
+
+      for path <- @paths do
+        @external_resource path
+      end
+
+      # called every time compile is run.
+      # returns a boolean indicating if this module should
+      # be recompiled
+      def __mix_recompile__?() do
+        hash =
+          unquote(using_opts)
+          |> Keyword.get(:sources, ["assets"])
+          |> Enum.reduce([], fn
+            source, acc when is_bitstring(source) ->
+              [Path.wildcard("#{source}/**/*.{jpg,jpeg,png,ttf}") | acc]
+
+            _, acc ->
+              acc
+          end)
+          |> List.flatten()
+          |> Enum.uniq()
+          |> :erlang.md5()
+
+        hash != @paths_hash
+      end
+
       # @library Scenic.Assets.Static.build(__MODULE__, unquote(using_opts))
       @library Scenic.Assets.Static.build!(__MODULE__, unquote(using_opts))
       def library(), do: @library
