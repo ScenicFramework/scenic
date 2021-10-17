@@ -203,9 +203,6 @@ Graph.build()
   |> rect( {100, 200}, fill: {:image, :parrot} )                # uses the alias set up in config
 ```
 
-The main "gotcha" left in the assets system is that Scenic does not yet have a filesystem watcher. When you add or change a font or image in your assets folder, you may need to touch your Assets module (`MyDevice.Assets` in the above example) to get it to recompile.
-
-
 ## The Streaming Asset Pipeline
 
 What used to be called the `Scenic.Cache.Dynamic`, is now Scenic.Assets.Stream and Scenic.Assets.Stream.Texture. This is for images that you generate on the fly (charts, bit rendered game screens, rotating colors, etc) or frames that you capture live from a camera.

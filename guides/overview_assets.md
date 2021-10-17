@@ -58,8 +58,6 @@ Graph.build()
 
 Both of the rectangles in the above example render the same image. One uses a string that gives the local path in your assets folder. The other uses an alias that is configured to point to the same image in the Assets Module.
 
-The main "gotcha" left in the static assets system is that Scenic does not yet have a filesystem watcher. When you add or change a font or image in your assets folder, you may need to touch your Assets module (`MyApplication.Assets` in the above example) to get it to recompile.
-
 ### Under the covers
 
 Several things happen under the covers when you build your project
