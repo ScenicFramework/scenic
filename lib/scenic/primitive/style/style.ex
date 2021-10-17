@@ -52,44 +52,60 @@ defmodule Scenic.Primitive.Style do
 
   # import IEx
 
-  @type t :: %{atom => any}
+  @type t :: %{
+          [
+            :cap
+            | :fill
+            | :font
+            | :font_size
+            | :hidden
+            | :input
+            | :join
+            | :line_height
+            | :miter_limit
+            | :scissor
+            | :stroke
+            | :text_align
+            | :text_base
+            | :theme
+          ] => any
+        }
 
   @opts_map %{
-    :input => Style.Input,
-    :hidden => Style.Hidden,
-    :texture_wrap => Style.TextureWrap,
-    :texture_filter => Style.TextureFilter,
-    :fill => Style.Fill,
-    :stroke => Style.Stroke,
-    :join => Style.Join,
     :cap => Style.Cap,
+    :fill => Style.Fill,
+    :font => Style.Font,
+    :font_size => Style.FontSize,
+    :hidden => Style.Hidden,
+    :input => Style.Input,
+    :join => Style.Join,
     :line_height => Style.LineHeight,
     :miter_limit => Style.MiterLimit,
-    :font => Style.Font,
-    :font_blur => Style.FontBlur,
-    :font_size => Style.FontSize,
+    :scissor => Style.Scissor,
+    :stroke => Style.Stroke,
     :text_align => Style.TextAlign,
     :text_base => Style.TextBase,
-    # :text_height => Style.TextHeight,
-    :scissor => Style.Scissor,
     :theme => Style.Theme
   }
 
+  @valid_styles @opts_map
+                |> Enum.map(fn {k, _v} -> k end)
+                |> Enum.sort()
+
   @opts_schema [
-    input: [type: {:custom, Style.Input, :validate, []}],
-    hidden: [type: {:custom, Style.Hidden, :validate, []}],
-    fill: [type: {:custom, Style.Fill, :validate, []}],
-    stroke: [type: {:custom, Style.Stroke, :validate, []}],
-    join: [type: {:custom, Style.Join, :validate, []}],
     cap: [type: {:custom, Style.Cap, :validate, []}],
-    line_height: [type: {:custom, Style.LineHeight, :validate, []}],
-    miter_limit: [type: {:custom, Style.MiterLimit, :validate, []}],
+    fill: [type: {:custom, Style.Fill, :validate, []}],
     font: [type: {:custom, Style.Font, :validate, []}],
     font_size: [type: {:custom, Style.FontSize, :validate, []}],
+    hidden: [type: {:custom, Style.Hidden, :validate, []}],
+    input: [type: {:custom, Style.Input, :validate, []}],
+    join: [type: {:custom, Style.Join, :validate, []}],
+    line_height: [type: {:custom, Style.LineHeight, :validate, []}],
+    miter_limit: [type: {:custom, Style.MiterLimit, :validate, []}],
+    scissor: [type: {:custom, Style.Scissor, :validate, []}],
+    stroke: [type: {:custom, Style.Stroke, :validate, []}],
     text_align: [type: {:custom, Style.TextAlign, :validate, []}],
     text_base: [type: {:custom, Style.TextBase, :validate, []}],
-    # text_height: [type: {:custom, Style.TextHeight, :validate, []}],
-    scissor: [type: {:custom, Style.Scissor, :validate, []}],
     theme: [type: {:custom, Style.Theme, :validate, []}]
   ]
 
@@ -100,6 +116,9 @@ defmodule Scenic.Primitive.Style do
 
   @doc false
   def opts_schema(), do: @opts_schema
+
+  @doc "List of the valid style types"
+  def valid_styles(), do: @valid_styles
 
   # --------------------------------------------------------
   @default_styles %{
