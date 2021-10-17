@@ -199,7 +199,7 @@ defmodule Scenic.Color do
   a list of all the color names. I'll eventually add a link to a page that shows them
   visually.
 
-  #{inspect(Enum.map(@named_colors, fn {k, _v} -> k end), limit: :infinity, pretty: true)}
+  #{inspect(Enum.map(@named_colors, fn {k, _v} -> k end) |> Enum.sort(), limit: :infinity, pretty: true)}
 
 
   ## Additional Named Colors
