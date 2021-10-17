@@ -4,9 +4,7 @@
 #
 
 defmodule Scenic.Driver.KeyMap do
-  @moduledoc """
-  Behaviour and support for mapping key press/repeat input to codepoints
-  """
+  @moduledoc false
 
   # @doc """
   # Map of current key state. A key with a value of 1 is pressed. A key with

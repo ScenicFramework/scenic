@@ -4,91 +4,6 @@
 #
 
 defmodule Scenic.Color do
-  @moduledoc """
-  APIs to create and work with colors.
-
-  Colors are used in multiple places in Scenic. Fills and Strokes of a
-  single color are quite common.
-
-  ## Data Format
-
-  There are multiple ways to define colors.
-
-  The native format of color on modern computers is RGBA. This is four channels
-  including Red, Green, Blue, and Alpha. Alpha indicates transparency, and is
-  used to blend the color being applied at any given location with the color
-  that is already there.
-
-  Most of the time, you will use one of the pre-defined named colors from the
-  Named Colors table. However, there are times when you want to work with
-  other color formats ranging from simple grayscale to rgb to hsl. 
-
-  The following formats are all supported by the `Scenic.Color` module.
-  The values of r, g, b, and a are integers between 0 and 255.
-  For HSL and HSV, h is a float between 0 and 360, while the s, v and l values
-  are floats between 0 and 100.
-
-  | Format          | Implicit | Explicit  |
-  |---------------|------------------------|-----------|
-  | Named Color | *na* | See the Named Color Table |
-  | Grayscale | `g` | `{:g, g}` |
-  | Gray, Alpha | `{g, a}` | `{:g, {g, a}}` |
-  | Red, Green, Blue | `{r, g, b}` | `{:rgb, {r, g, b}}` |
-  | Red, Green, Blue, Alpha | `{r, g, b, a}` | `{:rgba, {r, g, b, a}}` |
-  | Hue, Saturation, Value | *na* | `{:hsv, {h, s, v}}` |
-  | Hue, Saturation, Lightness | *na* | `{:hsl, {h, s, l}}` |
-
-
-  ## Named Colors
-
-  The simplest is to used a named color (see the table below). Named colors are simply
-  referred to by an atom, which is their name. Named colors are opaque by default.
-  I failed to figure out how to show a table with colored cells in exdoc. So, Please see
-  this page for a visual list of all the named colors.
-
-  ADD LINK TO COLORS HERE.
-
-  ## Additional Named Colors
-
-    | Name          | Value                  |
-  |---------------|------------------------|
-  | `:clear` | `{0x80, 0x80, 0x80, 0x00}` |
-  | `:transparent` | `{0x80, 0x80, 0x80, 0x00}` |
-
-  ## Converting Between Color Formats
-
-  By using the functions `to_g`, `to_ga`, `to_rgb`, `to_rgb`, `to_hsl`, and `to_hsv`
-  you can convert between any implicit or explicit color type to any explicit color type.
-  """
-
-  # import IEx
-
-  @g :color_g
-  @ga :color_ga
-  @rgb :color_rgb
-  @rgba :color_rgba
-  @hsv :color_hsv
-  @hsl :color_hsl
-
-  @type implicit ::
-          atom
-          | {name :: atom, a :: integer}
-          | (gray :: integer)
-          | {gray :: integer, alpha :: integer}
-          | {red :: integer, green :: integer, blue :: integer}
-          | {red :: integer, green :: integer, blue :: integer, alpha :: integer}
-
-  @type g :: {:color_g, grey :: integer}
-  @type ga :: {:color_ga, {grey :: integer, alpha :: integer}}
-  @type rgb :: {:color_rgb, {red :: integer, green :: integer, blue :: integer}}
-  @type rgba ::
-          {:color_rgba, {red :: integer, green :: integer, blue :: integer, alpha :: integer}}
-  @type hsv :: {:color_hsv, {hue :: number, saturation :: number, value :: number}}
-  @type hsl :: {:color_hsl, {hue :: number, saturation :: number, lightness :: number}}
-  @type explicit :: g | ga | rgb | rgba | hsl | hsv
-
-  @type t :: implicit | explicit
-
   @named_colors %{
     alice_blue: {0xF0, 0xF8, 0xFF},
     antique_white: {0xFA, 0xEB, 0xD7},
@@ -240,6 +155,93 @@ defmodule Scenic.Color do
     yellow: {0xFF, 0xFF, 0x00},
     yellow_green: {0x9A, 0xCD, 0x32}
   }
+
+  @moduledoc """
+  APIs to create and work with colors.
+
+  Colors are used in multiple places in Scenic. Fills and Strokes of a
+  single color are quite common.
+
+  ## Data Format
+
+  There are multiple ways to define colors.
+
+  The native format of color on modern computers is RGBA. This is four channels
+  including Red, Green, Blue, and Alpha. Alpha indicates transparency, and is
+  used to blend the color being applied at any given location with the color
+  that is already there.
+
+  Most of the time, you will use one of the pre-defined named colors from the
+  Named Colors table. However, there are times when you want to work with
+  other color formats ranging from simple grayscale to rgb to hsl. 
+
+  The following formats are all supported by the `Scenic.Color` module.
+  The values of r, g, b, and a are integers between 0 and 255.
+  For HSL and HSV, h is a float between 0 and 360, while the s, v and l values
+  are floats between 0 and 100.
+
+  | Format          | Implicit | Explicit  |
+  |---------------|------------------------|-----------|
+  | Named Color | *na* | See the Named Color Table |
+  | Grayscale | `g` | `{:g, g}` |
+  | Gray, Alpha | `{g, a}` | `{:g, {g, a}}` |
+  | Red, Green, Blue | `{r, g, b}` | `{:rgb, {r, g, b}}` |
+  | Red, Green, Blue, Alpha | `{r, g, b, a}` | `{:rgba, {r, g, b, a}}` |
+  | Hue, Saturation, Value | *na* | `{:hsv, {h, s, v}}` |
+  | Hue, Saturation, Lightness | *na* | `{:hsl, {h, s, l}}` |
+
+
+  ## Named Colors
+
+  The simplest is to used a named color (see the table below). Named colors are simply
+  referred to by an atom, which is their name. Named colors are opaque by default.
+  I failed to figure out how to show a table with colored cells in exdoc. So this is
+  a list of all the color names. I'll eventually add a link to a page that shows them
+  visually.
+
+  #{inspect(Enum.map(@named_colors, fn {k, _v} -> k end), limit: :infinity, pretty: true)}
+
+
+  ## Additional Named Colors
+
+    | Name          | Value                  |
+  |---------------|------------------------|
+  | `:clear` | `{0x80, 0x80, 0x80, 0x00}` |
+  | `:transparent` | `{0x80, 0x80, 0x80, 0x00}` |
+
+  ## Converting Between Color Formats
+
+  By using the functions `to_g`, `to_ga`, `to_rgb`, `to_rgb`, `to_hsl`, and `to_hsv`
+  you can convert between any implicit or explicit color type to any explicit color type.
+  """
+
+  # import IEx
+
+  @g :color_g
+  @ga :color_ga
+  @rgb :color_rgb
+  @rgba :color_rgba
+  @hsv :color_hsv
+  @hsl :color_hsl
+
+  @type implicit ::
+          atom
+          | {name :: atom, a :: integer}
+          | (gray :: integer)
+          | {gray :: integer, alpha :: integer}
+          | {red :: integer, green :: integer, blue :: integer}
+          | {red :: integer, green :: integer, blue :: integer, alpha :: integer}
+
+  @type g :: {:color_g, grey :: integer}
+  @type ga :: {:color_ga, {grey :: integer, alpha :: integer}}
+  @type rgb :: {:color_rgb, {red :: integer, green :: integer, blue :: integer}}
+  @type rgba ::
+          {:color_rgba, {red :: integer, green :: integer, blue :: integer, alpha :: integer}}
+  @type hsv :: {:color_hsv, {hue :: number, saturation :: number, value :: number}}
+  @type hsl :: {:color_hsl, {hue :: number, saturation :: number, lightness :: number}}
+  @type explicit :: g | ga | rgb | rgba | hsl | hsv
+
+  @type t :: implicit | explicit
 
   # ============================================================================
   # https://www.w3schools.com/colors/colors_names.asp

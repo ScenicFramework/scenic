@@ -161,8 +161,8 @@ defmodule Scenic.Mixfile do
         Scenic.Primitive.Quad,
         Scenic.Primitive.Rectangle,
         Scenic.Primitive.RoundedRectangle,
-        Scenic.Primitive.Sector,
         Scenic.Primitive.Script,
+        Scenic.Primitive.Sector,
         Scenic.Primitive.Sprites,
         Scenic.Primitive.Text,
         Scenic.Primitive.Triangle
@@ -170,10 +170,8 @@ defmodule Scenic.Mixfile do
       Styles: [
         Scenic.Primitive.Style,
         Scenic.Primitive.Style.Cap,
-        Scenic.Primitive.Style.ClearColor,
         Scenic.Primitive.Style.Fill,
         Scenic.Primitive.Style.Font,
-        Scenic.Primitive.Style.FontBlur,
         Scenic.Primitive.Style.FontSize,
         Scenic.Primitive.Style.Hidden,
         Scenic.Primitive.Style.Input,
@@ -190,7 +188,6 @@ defmodule Scenic.Mixfile do
         Scenic.Primitive.Style.Paint,
         Scenic.Primitive.Style.Paint.Color,
         Scenic.Primitive.Style.Paint.Image,
-        Scenic.Primitive.Style.Paint.Dynamic,
         Scenic.Primitive.Style.Paint.LinearGradient,
         Scenic.Primitive.Style.Paint.RadialGradient,
         Scenic.Primitive.Style.Paint.Stream
@@ -211,30 +208,9 @@ defmodule Scenic.Mixfile do
         Scenic.Math.Quad,
         Scenic.Math.Vector2
       ],
-      Animations: [
-        Scenic.Animation,
-        Scenic.Animation.Basic.Rotate
-      ],
-      Drivers: [
-        Scenic.ViewPort.Driver,
-        Scenic.ViewPort.Driver.Config,
-        Scenic.ViewPort.Driver.Info
-      ],
-      Cache: [
-        Scenic.Cache.Static.Texture,
-        Scenic.Cache.Dynamic.Texture,
-        Scenic.Cache.Static.Font,
-        Scenic.Cache.Static.FontMetrics,
-        Scenic.Cache.Base,
-        Scenic.Cache.Support.File,
-        Scenic.Cache.Support.Hash,
-        Scenic.Cache.Support.Supervisor,
-        Scenic.Cache.Hash
-      ],
       Utilities: [
-        Scenic.Utilities.Texture,
-        Scenic.Utilities.Enum,
-        Scenic.Utilities.Map
+        Scenic.Utilities.Map,
+        Scenic.Utilities.Validators
       ]
     ]
   end
