@@ -1,4 +1,9 @@
 defmodule Scenic.Component.Button do
+  @default_radius 3
+  @default_font :roboto
+  @default_font_size 20
+  @default_alignment :center
+
   @moduledoc """
   Add a button to a graph
 
@@ -51,17 +56,30 @@ defmodule Scenic.Component.Button do
   The default is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:primary`
 
-  ## Additional Styles
+  ## Sendable Styles
+  Styles can be sent directly to the Button Component by adding a :styles list.
 
-  Buttons honor the following list of additional styles.
+      graph
+      |> button(
+        "Example",
+        styles: [font_size: 32, text_align: :right]
+      )
+
+  The following standard styles are supported
+
+  * `:font` - The default is #{inspect(@default_font)}
+  * `:font_size` - The default is #{inspect(@default_font_size)}
+  * `:text_align` - The default is #{inspect(@default_alignment)}
+
+
+  ## Options
+
+  Buttons the following options.
 
   * `:width` - :auto (default) or pass in a number to set the width of the button
   * `:height` - :auto (default) or pass in a number to set the height of the button.
   * `:radius` - pass in a number to set the radius of the button's rounded
-  rectangle.
-  * `:alignment` - set the alignment of the text inside the button. Can be one
-  of `:left, :right, :center`. The default is `:center`.
-  * `:button_font_size` - the size of the font in the button
+  rectangle. The default is #{inspect(@default_radius)}
 
   Buttons do not use the inherited `:font_size` style as they should look
   consistent regardless of what size the surrounding text is.
@@ -96,6 +114,18 @@ defmodule Scenic.Component.Button do
 
       graph
       |> button("Example", id: :button_id, translate: {20, 20}, theme: :warning)
+
+  The final example changes the text size and alignment
+
+      graph
+      |> button(
+        "Example",
+        id: :button_id,
+        translate: {20, 20},
+        theme: :warning,
+        styles: [text_size: 32, text_align: :right]
+      )
+
   """
   use Scenic.Component, has_children: false
 
@@ -107,13 +137,6 @@ defmodule Scenic.Component.Button do
   import Scenic.Primitives, only: [{:rrect, 3}, {:text, 3}, {:update_opts, 2}]
 
   # import IEx
-
-  @default_radius 3
-
-  @default_font :roboto
-  @default_font_size 20
-  @default_alignment :center
-
   @impl Scenic.Component
   def validate(text) when is_bitstring(text) do
     {:ok, text}
@@ -135,6 +158,7 @@ defmodule Scenic.Component.Button do
   @doc false
   @impl Scenic.Scene
   def init(scene, text, opts) when is_bitstring(text) and is_list(opts) do
+    styles = Keyword.get(opts, :styles, [])
     id = opts[:id]
 
     # theme is passed in as an inherited style
@@ -148,9 +172,10 @@ defmodule Scenic.Component.Button do
       |> Theme.normalize()
 
     # font related info
-    font = @default_font
-    {:ok, {Static.Font, fm}} = Static.meta(@default_font)
-    font_size = opts[:button_font_size] || @default_font_size
+    font = Keyword.get(styles, :font, @default_font)
+    {:ok, {Static.Font, fm}} = Static.meta(font)
+    font_size = Keyword.get(styles, :font_size, @default_font_size)
+    alignment = Keyword.get(styles, :text_align, @default_alignment)
 
     ascent = FontMetrics.ascent(font_size, fm)
     descent = FontMetrics.descent(font_size, fm)
@@ -171,7 +196,6 @@ defmodule Scenic.Component.Button do
       end
 
     radius = opts[:radius] || @default_radius
-    alignment = opts[:alignment] || @default_alignment
 
     vpos = height / 2 + ascent / 2 + descent / 3
 

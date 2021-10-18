@@ -28,9 +28,9 @@ defmodule Scenic.Component.Input.TextField do
   The default is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:dark`
 
-  ## Additional Styles
+  ## Additional Options
 
-  Text fields honor the following list of additional styles.
+  Text fields honor the following list of additional options.
 
   * `:filter` - Adding a filter option restricts which characters can be
   entered into the text_field component. The value of filter can be one of:

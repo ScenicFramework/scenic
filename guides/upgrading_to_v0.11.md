@@ -25,6 +25,7 @@ Version v0.11 is a MAJOR overhaul from the top to the bottom. For the first time
     * The SceneRef primitive is gone, and replaced with a combination of Component and Script primitives.
     * The `:font_blur` primitive is gone. Sorry. Didn't have a close enough analog in Canvas
     * The format of the input messages have changed - see the docs
+    * The optional styles on some of the standard components (Button) have changed to be more consistent with the standard styles. See documentation.
 
 __Important__
   * `:scenic_driver_local` is the new standard renderer for Scenic. Both `:scenic_driver_glfw` and `:scenic_drives_nerves_rpi` are retired as of v0.11.

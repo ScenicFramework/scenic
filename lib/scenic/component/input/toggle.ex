@@ -16,9 +16,9 @@ defmodule Scenic.Component.Input.Toggle do
     is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:dark`
 
-  ## Additional Styles
+  ## Additional Options
 
-  Toggles also honor the following additional styles.
+  Toggles also honor the following additional options.
 
   * `:border_width` - the border width. Defaults to `2`.
   * `:padding` - the space between the border and the thumb. Defaults to `2`
