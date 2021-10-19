@@ -191,6 +191,7 @@ defmodule Scenic.Assets.Static do
       # called every time compile is run.
       # returns a boolean indicating if this module should
       # be recompiled
+      @doc false
       def __mix_recompile__?() do
         Scenic.Assets.Static.compile_assets?(
           library(),
@@ -199,7 +200,6 @@ defmodule Scenic.Assets.Static do
         )
       end
 
-      # @library Scenic.Assets.Static.build(__MODULE__, unquote(using_opts))
       @library Scenic.Assets.Static.build!(__MODULE__, unquote(using_opts))
       def library(), do: @library
 
@@ -251,6 +251,7 @@ defmodule Scenic.Assets.Static do
   end
 
   # --------------------------------------------------------
+  @doc false
   # called during __mix_recompile__?() from the assets module
   def compile_assets?(library, paths_hash, opts) do
     assets_changed?(paths_hash, opts) || fix_cache?(library, opts)
