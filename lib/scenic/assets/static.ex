@@ -192,21 +192,26 @@ defmodule Scenic.Assets.Static do
       # returns a boolean indicating if this module should
       # be recompiled
       def __mix_recompile__?() do
-        hash =
+        # hash =
+        #   unquote(using_opts)
+        #   |> Keyword.get(:sources, ["assets"])
+        #   |> Enum.reduce([], fn
+        #     source, acc when is_bitstring(source) ->
+        #       [Path.wildcard("#{source}/**/*.{jpg,jpeg,png,ttf}") | acc]
+
+        #     _, acc ->
+        #       acc
+        #   end)
+        #   |> List.flatten()
+        #   |> Enum.uniq()
+        #   |> :erlang.md5()
+
+        # hash != @paths_hash
+        Scenic.Assets.Static.compile_assets?(
+          library(),
+          @paths_hash,
           unquote(using_opts)
-          |> Keyword.get(:sources, ["assets"])
-          |> Enum.reduce([], fn
-            source, acc when is_bitstring(source) ->
-              [Path.wildcard("#{source}/**/*.{jpg,jpeg,png,ttf}") | acc]
-
-            _, acc ->
-              acc
-          end)
-          |> List.flatten()
-          |> Enum.uniq()
-          |> :erlang.md5()
-
-        hash != @paths_hash
+        )
       end
 
       # @library Scenic.Assets.Static.build(__MODULE__, unquote(using_opts))
@@ -243,15 +248,62 @@ defmodule Scenic.Assets.Static do
           metas: map,
           hash_type: :sha3_256,
           module: module,
-          otp_app: atom
+          otp_app: atom,
+          meta_hash: binary
         }
 
-  defstruct aliases: %{}, metas: %{}, hash_type: @hash_type, module: nil, otp_app: nil
+  defstruct aliases: %{},
+            metas: %{},
+            hash_type: @hash_type,
+            module: nil,
+            otp_app: nil,
+            meta_hash: ""
 
   # ===========================================================================
   defmodule Error do
     @moduledoc false
     defexception message: nil, error: nil, id: nil
+  end
+
+  # --------------------------------------------------------
+  # called during __mix_recompile__?() from the assets module
+  def compile_assets?(library, paths_hash, opts) do
+    assets_changed?(paths_hash, opts) || fix_cache?(library, opts)
+  end
+
+  defp assets_changed?(paths_hash, opts) do
+    hash =
+      opts
+      |> Keyword.get(:sources, [@default_src_dir])
+      |> Enum.reduce([], fn
+        source, acc when is_bitstring(source) ->
+          [Path.wildcard("#{source}/**/*.{jpg,jpeg,png,ttf}") | acc]
+
+        _, acc ->
+          acc
+      end)
+      |> List.flatten()
+      |> Enum.uniq()
+      |> :erlang.md5()
+
+    hash != paths_hash
+  end
+
+  defp fix_cache?(library, opts) do
+    opts[:otp_app]
+    |> :code.lib_dir()
+    |> Path.join(dst_dir())
+    |> File.ls()
+    |> case do
+      {:ok, files} -> meta_hash(files) != library.meta_hash
+      _ -> true
+    end
+  end
+
+  defp meta_hash(files) when is_list(files) do
+    files
+    |> Enum.sort()
+    |> :erlang.md5()
   end
 
   # ===========================================================================
@@ -413,12 +465,21 @@ defmodule Scenic.Assets.Static do
     # add the default aliases
     library = Enum.reduce(@default_aliases, library, &add_alias(&2, &1))
 
-    # add any additional aliases, then return
-    case opts[:alias] || opts[:aliases] do
-      nil -> []
-      aliases -> aliases
-    end
-    |> Enum.reduce(library, &add_alias(&2, &1))
+    # add any additional aliases
+    library =
+      case opts[:alias] || opts[:aliases] do
+        nil -> []
+        aliases -> aliases
+      end
+      |> Enum.reduce(library, &add_alias(&2, &1))
+
+    # finally add the meta_hash
+    meta_hash =
+      library.metas
+      |> Enum.map(fn {k, _v} -> k end)
+      |> meta_hash()
+
+    Map.put(library, :meta_hash, meta_hash)
   end
 
   # --------------------------------------------------------
