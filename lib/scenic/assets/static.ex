@@ -192,21 +192,6 @@ defmodule Scenic.Assets.Static do
       # returns a boolean indicating if this module should
       # be recompiled
       def __mix_recompile__?() do
-        # hash =
-        #   unquote(using_opts)
-        #   |> Keyword.get(:sources, ["assets"])
-        #   |> Enum.reduce([], fn
-        #     source, acc when is_bitstring(source) ->
-        #       [Path.wildcard("#{source}/**/*.{jpg,jpeg,png,ttf}") | acc]
-
-        #     _, acc ->
-        #       acc
-        #   end)
-        #   |> List.flatten()
-        #   |> Enum.uniq()
-        #   |> :erlang.md5()
-
-        # hash != @paths_hash
         Scenic.Assets.Static.compile_assets?(
           library(),
           @paths_hash,
