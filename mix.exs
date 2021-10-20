@@ -90,7 +90,9 @@ defmodule Scenic.Mixfile do
         "README.md",
         "LICENSE",
         "CHANGELOG.md",
-        "static/**/*.metrics"
+        # default fonts
+        "assets/fonts/*.ttf",
+        "assets/fonts/LICENSE.txt"
       ]
     ]
   end
