@@ -295,13 +295,37 @@ defmodule Scenic.Assets.Static do
   # ===========================================================================
 
   # --------------------------------------------------------
-  # internal config sugar
-  defp config(), do: Application.get_env(:scenic, :assets)
-
   @doc """
   Return the configured asset library module.
   """
-  def module(), do: config()[:module]
+  def module() do
+    with {:ok, config} <- Application.fetch_env(:scenic, :assets),
+         {:ok, module} <- Keyword.fetch(config, :module) do
+      module
+    else
+      _ ->
+        raise """
+        No assets module is configured.
+        You need to create an assets modulein your application.
+        Then connect it to Scenic with some config.
+
+        Example assets module that includes an optional alias:
+
+          defmodule MyApplication.Assets do
+            use Scenic.Assets.Static,
+              otp_app: :my_application,
+              alias: [
+                my_parrot: "images/my_parrot.jpg"
+              ]
+          end
+
+        Example configuration script (this goes in your config.exs file):
+
+          config :scenic, :assets,
+            module: MyApplication.Assets
+        """
+    end
+  end
 
   @doc "Return the compiled asset library."
   def library(), do: module().library()
