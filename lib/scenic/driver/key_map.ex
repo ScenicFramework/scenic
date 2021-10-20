@@ -4,7 +4,16 @@
 #
 
 defmodule Scenic.Driver.KeyMap do
-  @moduledoc false
+  @moduledoc """
+  Behaviour and support functions for mapping physical keys to characters.
+
+  This module is meant to be implemented elsewhere and provided to a driver
+  in order to localize key presses into the correct characters.
+
+  The `:scenic_driver_local` driver comes with a USEnglish key map, which it
+  uses by default. Look at that one as an example on how to make a custom
+  key mapping.
+  """
 
   # @doc """
   # Map of current key state. A key with a value of 1 is pressed. A key with
@@ -15,7 +24,15 @@ defmodule Scenic.Driver.KeyMap do
   # """
   @type keys :: %{atom => integer}
 
-  @type mods :: [:meta | :alt | :ctrl | :shift | :caps_lock | :num_lock | :scroll_lock]
+  @type mod_keys :: [
+          :meta
+          | :alt
+          | :ctrl
+          | :shift
+          | :caps_lock
+          | :num_lock
+          | :scroll_lock
+        ]
 
   @doc """
   Translate a key to a codepoint, which is really just a string.
@@ -25,7 +42,7 @@ defmodule Scenic.Driver.KeyMap do
 
   If the mapping is successful, i.e. the key press results in a valid character,
   Then this function should return `{ :ok, codepoint, state }`. The returned
-  codepoint will be sent on to the ViewPort as a codepoint intput event.
+  codepoint will be sent on to the ViewPort as a codepoint input event.
 
   If the key press does not map to a string (this is common), then the function
   should return `{ :ok, nil, state }`. This will not result in a codepoint input
@@ -115,7 +132,7 @@ defmodule Scenic.Driver.KeyMap do
   @doc """
   Generate the list of pressed modifier keys
   """
-  @spec mods(keys :: keys) :: mods
+  @spec mods(keys :: keys) :: mod_keys
   def mods(keys) do
     []
     |> add_if_set(:meta, meta?(keys))
