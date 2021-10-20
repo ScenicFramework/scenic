@@ -22,6 +22,8 @@ Version 0.11 is a major upgrade. There are numerous breaking changes. The docs h
 __READ THAT FIRST__
 
 
+Please note that when v.11 is out of beta it will move into the /ScenicFramework org on GitHub...
+
 
 ## Goals
 
