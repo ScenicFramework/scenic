@@ -1,6 +1,6 @@
 # Changelog
 
-##0.11.0
+## 0.11.0-beta.0
 * This is a __MAJOR__ update. As Connor Rigby put it in a call... "What hasn't changed?"
 * See the v.11 upgrade guide for an overview.
 

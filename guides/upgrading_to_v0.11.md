@@ -3,6 +3,9 @@
 ## Overview
 
 Version v0.11 is a MAJOR overhaul from the top to the bottom. For the first time, Scenic feels like something approaching a 1.0 in design.
+
+This guide is a good first pass. As you use it in the Beta, if you see things that need improving, please contribute!
+
   
   * `Scenic.Cache` is gone. It is replaced by a **much** easier to use asset pipeline.
   * `push_graph` is back. WHAT! Didn't it go away last time? Yes. I've been struggling with the way scene state is handled. Coupled with the scene state change (next in this list), it finally makes sense.
