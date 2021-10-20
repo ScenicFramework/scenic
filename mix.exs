@@ -3,9 +3,9 @@ defmodule Scenic.Mixfile do
 
   @app_name :scenic
 
-  @version "0.10.5"
+  @version "0.11.0-beta.0"
 
-  @elixir_version "~> 1.8"
+  @elixir_version "~> 1.11"
   @github "https://github.com/boydm/scenic"
 
   def project do
@@ -25,9 +25,14 @@ defmodule Scenic.Mixfile do
       package: package(),
       dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex]],
       test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: cli_env()
+      preferred_cli_env: cli_env(),
+      elixirc_paths: elixirc_paths(Mix.env())
     ]
   end
+
+  # Specifies which paths to compile per environment.
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
 
   defp description do
     """
@@ -41,15 +46,18 @@ defmodule Scenic.Mixfile do
 
   defp deps do
     [
-      {:font_metrics, "~> 0.3.0"},
-      {:elixir_make, "~> 0.6.2", runtime: false},
+      {:font_metrics, "~> 0.5.0"},
+      {:nimble_options, "~> 0.3.4"},
+      {:ex_image_info, "~> 0.2.4"},
+      {:truetype_metrics, "~> 0.5"},
 
       # Tools
-      {:ex_doc, ">= 0.0.0", only: :dev},
+      {:elixir_make, "~> 0.6.2", runtime: false},
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:credo, ">= 0.0.0", only: [:dev, :test], runtime: false},
       {:excoveralls, ">= 0.0.0", only: :test, runtime: false},
       {:inch_ex, "~> 2.0", only: [:dev, :docs], runtime: false},
-      {:dialyxir, "~> 0.5", only: :dev, runtime: false}
+      {:dialyxir, "~> 1.1", only: :dev, runtime: false}
     ]
   end
 
@@ -100,7 +108,7 @@ defmodule Scenic.Mixfile do
 
   defp doc_guides do
     [
-      "guides/upgrading_to_v0.10.md",
+      "guides/upgrading_to_v0.11.md",
       "guides/welcome.md",
       "guides/install_dependencies.md",
       "guides/overview_general.md",
@@ -114,8 +122,7 @@ defmodule Scenic.Mixfile do
       "guides/overview_styles.md",
       "guides/overview_transforms.md",
       "guides/overview_primitives.md",
-      "guides/overview_cache.md",
-      "guides/custom_fonts.md",
+      "guides/overview_assets.md",
       ".github/CODE_OF_CONDUCT.md",
       ".github/CONTRIBUTING.md"
     ]
@@ -123,6 +130,13 @@ defmodule Scenic.Mixfile do
 
   defp groups_for_modules do
     [
+      Assets: [
+        Scenic.Assets,
+        Scenic.Assets.Static,
+        Scenic.Assets.Stream,
+        Scenic.Assets.Stream.Bitmap,
+        Scenic.Assets.Stream.Image
+      ],
       Components: [
         Scenic.Component,
         Scenic.Component.Button,
@@ -139,6 +153,7 @@ defmodule Scenic.Mixfile do
         Scenic.Primitive,
         Scenic.Primitive.Arc,
         Scenic.Primitive.Circle,
+        Scenic.Primitive.Component,
         Scenic.Primitive.Ellipse,
         Scenic.Primitive.Group,
         Scenic.Primitive.Line,
@@ -146,36 +161,36 @@ defmodule Scenic.Mixfile do
         Scenic.Primitive.Quad,
         Scenic.Primitive.Rectangle,
         Scenic.Primitive.RoundedRectangle,
-        Scenic.Primitive.SceneRef,
+        Scenic.Primitive.Script,
         Scenic.Primitive.Sector,
+        Scenic.Primitive.Sprites,
         Scenic.Primitive.Text,
         Scenic.Primitive.Triangle
       ],
       Styles: [
         Scenic.Primitive.Style,
         Scenic.Primitive.Style.Cap,
-        Scenic.Primitive.Style.ClearColor,
         Scenic.Primitive.Style.Fill,
         Scenic.Primitive.Style.Font,
-        Scenic.Primitive.Style.FontBlur,
         Scenic.Primitive.Style.FontSize,
         Scenic.Primitive.Style.Hidden,
+        Scenic.Primitive.Style.Input,
         Scenic.Primitive.Style.Join,
+        Scenic.Primitive.Style.LineHeight,
         Scenic.Primitive.Style.MiterLimit,
         Scenic.Primitive.Style.Scissor,
         Scenic.Primitive.Style.Stroke,
         Scenic.Primitive.Style.TextAlign,
-        Scenic.Primitive.Style.TextHeight,
+        Scenic.Primitive.Style.TextBase,
         Scenic.Primitive.Style.Theme
       ],
       "Style.Paint": [
         Scenic.Primitive.Style.Paint,
         Scenic.Primitive.Style.Paint.Color,
         Scenic.Primitive.Style.Paint.Image,
-        Scenic.Primitive.Style.Paint.Dynamic,
-        Scenic.Primitive.Style.Paint.BoxGradient,
         Scenic.Primitive.Style.Paint.LinearGradient,
-        Scenic.Primitive.Style.Paint.RadialGradient
+        Scenic.Primitive.Style.Paint.RadialGradient,
+        Scenic.Primitive.Style.Paint.Stream
       ],
       Transforms: [
         Scenic.Primitive.Transform,
@@ -193,36 +208,9 @@ defmodule Scenic.Mixfile do
         Scenic.Math.Quad,
         Scenic.Math.Vector2
       ],
-      Animations: [
-        Scenic.Animation,
-        Scenic.Animation.Basic.Rotate
-      ],
-      ViewPort: [
-        Scenic.ViewPort.Config,
-        Scenic.ViewPort.Input,
-        Scenic.ViewPort.Context,
-        Scenic.ViewPort.Tables
-      ],
-      Drivers: [
-        Scenic.ViewPort.Driver,
-        Scenic.ViewPort.Driver.Config,
-        Scenic.ViewPort.Driver.Info
-      ],
-      Cache: [
-        Scenic.Cache.Static.Texture,
-        Scenic.Cache.Dynamic.Texture,
-        Scenic.Cache.Static.Font,
-        Scenic.Cache.Static.FontMetrics,
-        Scenic.Cache.Base,
-        Scenic.Cache.Support.File,
-        Scenic.Cache.Support.Hash,
-        Scenic.Cache.Support.Supervisor,
-        Scenic.Cache.Hash
-      ],
       Utilities: [
-        Scenic.Utilities.Texture,
-        Scenic.Utilities.Enum,
-        Scenic.Utilities.Map
+        Scenic.Utilities.Map,
+        Scenic.Utilities.Validators
       ]
     ]
   end

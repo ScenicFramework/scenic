@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2018-06-05.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Copyright © 2018-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Style.Fill do
@@ -10,11 +10,19 @@ defmodule Scenic.Primitive.Style.Fill do
   Example:
 
       graph
-      |> rectangle({10, 20}, fill: :blue)
+      |> rectangle( {10, 20}, fill: :blue )
 
-  ## Data
+  ### Data Format
 
-  Any [valid paint](Scenic.Primitive.Style.Paint.html).
+  Any valid paint. This can any be any paint format defined by the following modules:
+
+  * `Scenic.Primitive.Style.Paint.Color`
+  * `Scenic.Primitive.Style.Paint.Image`
+  * `Scenic.Primitive.Style.Paint.LinearGradient`
+  * `Scenic.Primitive.Style.Paint.RadialGradient`
+  * `Scenic.Primitive.Style.Paint.Stream`
+
+  See the documentation for the paint module for further details.
   """
 
   use Scenic.Primitive.Style
@@ -23,29 +31,21 @@ defmodule Scenic.Primitive.Style.Fill do
   # ============================================================================
   # data verification and serialization
 
-  # --------------------------------------------------------
   @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be a valid paint type
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
-      #{IO.ANSI.default_color()}
-    """
+  def validate(paint) do
+    case Paint.validate(paint) do
+      {:ok, paint} ->
+        {:ok, paint}
 
-  # --------------------------------------------------------
-  @doc false
-  def verify(paint) do
-    try do
-      normalize(paint)
-      true
-    rescue
-      _ -> false
+      {:error, error_str} ->
+        {
+          :error,
+          """
+          #{IO.ANSI.red()}Invalid Fill specification - must be a valid paint
+          Received: #{inspect(paint)}
+          #{error_str}
+          """
+        }
     end
-  end
-
-  # --------------------------------------------------------
-  @doc false
-  def normalize(paint) do
-    Paint.normalize(paint)
   end
 end

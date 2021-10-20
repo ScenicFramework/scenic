@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-10-02.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Transform.Rotate do
@@ -17,11 +17,14 @@ defmodule Scenic.Primitive.Transform.Rotate do
   [`:pin`](Scenic.Primitive.Transform.Pin.html) that you assign explicitly.
 
   Example:
-      graph
-      |> text("Rotated!", rotate: 1.2)
-      |> text("Rotated!", rotate: 1.2, pin: {10, 20})
 
-  ## Shortcut
+  ```elixir
+  graph
+    |> text("Rotated!", rotate: 1.2)
+    |> text("Rotated!", rotate: 1.2, pin: {10, 20})
+  ```
+
+  ### Shortcut
 
   Rotation is common enough that you can use `:r` as a shortcut.
 
@@ -34,29 +37,17 @@ defmodule Scenic.Primitive.Transform.Rotate do
   # ============================================================================
   # data verification and serialization
 
-  # --------------------------------------------------------
-  @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be a number
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
+  def validate(radians) when is_number(radians), do: {:ok, radians}
 
-      The value is the amount to rotate in radians
-
-      #{IO.ANSI.default_color()}
-    """
-
-  # --------------------------------------------------------
-  @doc false
-  def verify(angle) do
-    normalize(angle)
-    true
-  rescue
-    _ -> false
+  def validate(data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Rotation
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The :rotate / :r option must be a number in radians#{IO.ANSI.default_color()}
+      """
+    }
   end
-
-  # --------------------------------------------------------
-  @doc false
-  @spec normalize(number()) :: number()
-  def normalize(a) when is_number(a), do: a
 end

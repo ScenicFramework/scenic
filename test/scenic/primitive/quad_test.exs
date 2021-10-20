@@ -1,12 +1,12 @@
 #
 #  Created by Boyd Multerer on 2017-05-17.
 #  Re-written on 11/01/17
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.QuadTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive.Quad
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Quad
@@ -28,30 +28,43 @@ defmodule Scenic.Primitive.QuadTest do
   end
 
   # ============================================================================
-  # verify
 
-  test "info works" do
-    assert Quad.info(:test_data) =~ ":test_data"
+  test "validate accepts valid data" do
+    assert Quad.validate(@convex) == {:ok, @convex}
+    assert Quad.validate(@reverse) == {:ok, @reverse}
   end
 
-  test "verify passes valid convex" do
-    assert Quad.verify(@convex) == {:ok, @convex}
-  end
+  test "validate rejects bad data" do
+    {:error, msg} = Quad.validate({{100, 300}, {300, 180}, {"400", 310}, {300, 520}})
+    assert msg =~ "Invalid Quad"
 
-  test "verify fails obviously invalid quads" do
-    assert Quad.verify({{10, 11}, 40, 80, 666}) == :invalid_data
-    assert Quad.verify({10, 40, 80}) == :invalid_data
-    assert Quad.verify({{10, 11, 12}, 40, 80}) == :invalid_data
-    assert Quad.verify({{10, 11}, 40, :banana}) == :invalid_data
-    assert Quad.verify({{10, :banana}, 40, 80}) == :invalid_data
-    assert Quad.verify(:banana) == :invalid_data
+    {:error, msg} = Quad.validate(:banana)
+    assert msg =~ "Invalid Quad"
   end
 
   # ============================================================================
   # styles
 
   test "valid_styles works" do
-    assert Quad.valid_styles() == [:hidden, :fill, :stroke, :join, :miter_limit]
+    assert Quad.valid_styles() == [
+             :hidden,
+             :scissor,
+             :fill,
+             :stroke_width,
+             :stroke_fill,
+             :join,
+             :miter_limit
+           ]
+  end
+
+  # ============================================================================
+  # compile
+
+  test "compile works" do
+    p = Quad.build(@convex)
+
+    assert Quad.compile(p, %{stroke_fill: :blue}) ==
+             [{:draw_quad, {100, 300, 300, 180, 400, 310, 300, 520, :stroke}}]
   end
 
   # ============================================================================
@@ -82,33 +95,5 @@ defmodule Scenic.Primitive.QuadTest do
     assert Quad.contains_point?(@convex, {400, 180}) == false
     assert Quad.contains_point?(@convex, {400, 520}) == false
     assert Quad.contains_point?(@convex, {100, 520}) == false
-  end
-
-  # ============================================================================
-  # expand
-
-  # only works if it is square...
-  defp quad_square_area({{x0, y0}, {x1, _}, {_, y2}, _}) do
-    w = abs(x1 - x0) * 1.0
-    h = abs(y2 - y0) * 1.0
-    w * h
-  end
-
-  test "expand clockwise works" do
-    quad = {{10, 10}, {20, 10}, {20, 20}, {10, 20}}
-    expanded = Quad.expand(quad, 2)
-    shrunk = Quad.expand(quad, -2)
-
-    assert quad_square_area(expanded) > quad_square_area(quad)
-    assert quad_square_area(shrunk) < quad_square_area(quad)
-  end
-
-  test "expand counter-clockwise works" do
-    quad = {{10, 20}, {20, 20}, {20, 10}, {10, 10}}
-    expanded = Quad.expand(quad, 2)
-    shrunk = Quad.expand(quad, -2)
-
-    assert quad_square_area(expanded) > quad_square_area(quad)
-    assert quad_square_area(shrunk) < quad_square_area(quad)
   end
 end

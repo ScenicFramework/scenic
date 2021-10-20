@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2018-06-05.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Circle do
@@ -25,46 +25,63 @@ defmodule Scenic.Primitive.Circle do
 
   You should add/modify primitives via the helper functions in
   [`Scenic.Primitives`](Scenic.Primitives.html#circle/3)
+
+  ```elixir
+  graph
+    |> circle( 100, stroke: {1, :yellow} )
+  ```
   """
 
   use Scenic.Primitive
+  alias Scenic.Script
+  alias Scenic.Primitive
+  alias Scenic.Primitive.Style
 
-  @styles [:hidden, :fill, :stroke]
+  @type t :: radius :: number
+  @type styles_t :: [:hidden | :scissor | :fill | :stroke_width | :stroke_fill | :cap]
 
-  # ============================================================================
-  # data verification and serialization
+  @styles [:hidden, :scissor, :fill, :stroke_width, :stroke_fill]
 
-  # --------------------------------------------------------
-  @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be: radius
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
-      #{IO.ANSI.default_color()}
-    """
+  @impl Primitive
+  @spec validate(t()) :: {:ok, radius :: number} | {:error, String.t()}
+  def validate(radius)
+      when is_number(radius) do
+    {:ok, radius}
+  end
 
-  # --------------------------------------------------------
-  @doc false
-  def verify(data) do
-    normalize(data)
-    {:ok, data}
-  rescue
-    _ -> :invalid_data
+  def validate(data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Circle specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The data for an Circle is radius.{IO.ANSI.default_color()}
+      """
+    }
   end
 
   # --------------------------------------------------------
-  @doc false
-  @spec normalize(number()) :: number()
-  def normalize(radius) when is_number(radius) do
-    radius
-  end
-
-  # ============================================================================
   @doc """
   Returns a list of styles recognized by this primitive.
   """
-  @spec valid_styles() :: [:hidden | :fill | :stroke]
+  @impl Primitive
+  @spec valid_styles() :: styles_t()
   def valid_styles(), do: @styles
+
+  # --------------------------------------------------------
+  @doc """
+  Compile the data for this primitive into a mini script. This can be combined with others to
+  generate a larger script and is called when a graph is compiled.
+  """
+  @spec compile(primitive :: Primitive.t(), styles :: Style.t()) :: Script.t()
+  @impl Primitive
+  def compile(%Primitive{module: __MODULE__, data: radius}, styles) do
+    Script.draw_circle([], radius, Script.draw_flag(styles))
+  end
+
+  # ============================================================================
+  # data verification and serialization
 
   # --------------------------------------------------------
   def contains_point?(radius, {xp, yp}) do

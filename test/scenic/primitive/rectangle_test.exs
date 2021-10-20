@@ -1,12 +1,12 @@
 #
 #  Created by Boyd Multerer on 2017-05-08.
 #  Re-written on 11/01/17
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.RectangleTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive.Rectangle
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Rectangle
@@ -25,27 +25,37 @@ defmodule Scenic.Primitive.RectangleTest do
   end
 
   # ============================================================================
-  # verify
 
-  test "info works" do
-    assert Rectangle.info(:test_data) =~ ":test_data"
+  test "validate accepts valid data" do
+    assert Rectangle.validate(@data) == {:ok, @data}
+    assert Rectangle.validate(@data_neg_w) == {:ok, @data_neg_w}
+    assert Rectangle.validate(@data_neg_h) == {:ok, @data_neg_h}
   end
 
-  test "verify passes valid data" do
-    assert Rectangle.verify(@data) == {:ok, @data}
-  end
+  test "validate rejects bad data" do
+    {:error, msg} = Rectangle.validate({40, "80"})
+    assert msg =~ "Invalid Rectangle"
 
-  test "verify fails invalid data" do
-    assert Rectangle.verify({10, 40, 80}) == :invalid_data
-    assert Rectangle.verify({40, :banana}) == :invalid_data
-    assert Rectangle.verify(:banana) == :invalid_data
+    {:error, msg} = Rectangle.validate(:banana)
+    assert msg =~ "Invalid Rectangle"
   end
 
   # ============================================================================
   # styles
 
   test "valid_styles works" do
-    assert Rectangle.valid_styles() == [:hidden, :fill, :stroke, :join, :miter_limit]
+    assert Rectangle.valid_styles() ==
+             [:hidden, :scissor, :fill, :stroke_width, :stroke_fill, :join, :miter_limit]
+  end
+
+  # ============================================================================
+  # compile
+
+  test "compile works" do
+    p = Rectangle.build(@data)
+
+    assert Rectangle.compile(p, %{stroke_fill: :blue}) ==
+             [{:draw_rect, {40, 80, :stroke}}]
   end
 
   # ============================================================================

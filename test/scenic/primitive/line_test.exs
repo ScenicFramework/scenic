@@ -1,12 +1,12 @@
 #
 #  Created by Boyd Multerer on 2017-05-08. 
 #  Re-written on 11/01/17
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.LineTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive.Line
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Line
@@ -23,30 +23,33 @@ defmodule Scenic.Primitive.LineTest do
   end
 
   # ============================================================================
-  # verify
 
-  test "info works" do
-    assert Line.info(:test_data) =~ ":test_data"
+  test "validate accepts valid data" do
+    assert Line.validate({{10, 12}, {40, 80}}) == {:ok, {{10, 12}, {40, 80}}}
+    assert Line.validate({{10.5, 12}, {40, 80}}) == {:ok, {{10.5, 12}, {40, 80}}}
   end
 
-  test "verify passes valid data" do
-    assert Line.verify(@data) == {:ok, @data}
-  end
+  test "validate rejects bad data" do
+    {:error, msg} = Line.validate({{"10.5", 12}, {40, 80}})
+    assert msg =~ "Invalid Line"
 
-  test "verify fails invalid data" do
-    assert Line.verify({{10, 12}, 40, 80}) == :invalid_data
-    assert Line.verify({10, 12, 40, 80}) == :invalid_data
-    assert Line.verify({10, 40, 80}) == :invalid_data
-    assert Line.verify({{10, 12}, {40, :banana}}) == :invalid_data
-    assert Line.verify({{10, :banana}, {40, 80}}) == :invalid_data
-    assert Line.verify(:banana) == :invalid_data
+    {:error, msg} = Line.validate(:banana)
+    assert msg =~ "Invalid Line"
   end
 
   # ============================================================================
   # styles
 
   test "valid_styles works" do
-    assert Line.valid_styles() == [:hidden, :stroke, :cap]
+    assert Line.valid_styles() == [:hidden, :scissor, :stroke_width, :stroke_fill, :cap]
+  end
+
+  # ============================================================================
+  # compile
+
+  test "compile works" do
+    p = Line.build(@data)
+    assert Line.compile(p, %{stroke_fill: :blue}) == [{:draw_line, {10, 12, 40, 80, :stroke}}]
   end
 
   # ============================================================================

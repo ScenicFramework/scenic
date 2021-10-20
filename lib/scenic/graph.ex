@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-05-06.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Graph do
@@ -17,34 +17,53 @@ defmodule Scenic.Graph do
   hierarchical tree of data that describes a set of things to draw on the screen.
 
   You build a graph by appending primitives (individual things to draw) to the current
-  node in the tree. Nodes are represented by the Group primitive in Scenic.
+  node in the tree. Nodes are represented by `Scenic.Primitive.Group`.
 
   The following example builds a simple graph that displays some text, creates a group,
   then adds more text and a rounded rectangle to it.
 
-      @graph  Scenic.Graph.build()
-      |> text( "This is some text", translate: {20, 20} )
-      |> group( fn(graph) ->
-        graph
-        |> text( "This text is in a group", translate: {200, 24} )
-        |> rounded_rectangle( {400, 30}, stroke: {2, :blue})
-      end, translate: {20, 100}, text_align: :center)
+  ```elixir
+  @graph  Scenic.Graph.build()
+  |> text( "This is some text", translate: {20, 20} )
+  |> group( fn(graph) ->
+    graph
+    |> text( "This text is in a group", translate: {200, 24} )
+    |> rounded_rectangle( {400, 30}, stroke: {2, :blue})
+  end, translate: {20, 100}, text_align: :center)
+  ```
 
-  There is a fair amount going on in the example above, we will break it down line by line.
-  The first line
+  There is a fair amount going on in the example above. The first line builds an empty
+  graph with only one group as the root node.
 
-      @graph  Scenic.Graph.build()
+  ```elixir
+  @graph Scenic.Graph.build()
+  ```
 
-  builds an empty graph with only one group as the root node. By assigning it to the
-  compile directive @group, we know that this group will be built once at compile
-  time and will be very fast to access later during runtime.
+  By assigning it to the
+  compile directive `@group`, we know that this group will be built once at compile
+  time and will be very fast to access later during runtime. You could also do this
+  at runtime, in your init function for example.
 
-  The empty graph that is returned from `build()` is then passed to `text(...)`, which
-  adds a text primitive to the root group. The graph returned from that call is then
-  passed again into the `group(...)` call. This creates a new group and then calls an
-  anonymous function that you can use to add primitives to the newly created group.
+  The empty graph that is returned from `build()` is then passed to
 
-  Notice that the anonymous "builder" function receives a graph as its only parameter.
+  ```elixir
+  |> text( "This is some text", translate: {20, 20} )
+  ```
+
+  This adds a text primitive to the root group. The graph returned from that call is then
+  passed again into
+
+  ```elixir
+  |> group( fn(graph) ->
+    graph
+    |> text( "This text is in a group", translate: {200, 24} )
+    |> rounded_rectangle( {400, 30}, stroke: {2, :blue})
+  end, translate: {20, 100}, text_align: :center)
+  ```
+
+  This creates a new group which is filled with several other primitives.
+
+  Notice that the anonymous group "builder" function receives a graph as its only parameter.
   This is the same graph that we are building, except that it has a marker indicating
   that new primitives added to it are inserted into the new group instead of the
   root of the graph.
@@ -60,13 +79,15 @@ defmodule Scenic.Graph do
   contained by that group will have those properties applied to them too. This is true
   even if the primitive is nested in several groups at the same time.
 
-      @graph  Scenic.Graph.build(font: :roboto_mono)
-      |> text( "This text inherits the font", translate: {20, 20} )
-      |> group( fn(graph) ->
-        graph
-        |> text( "This text also inherits the font", translate: {200, 24} )
-        |> text( "This text overrides the font", font: :roboto )
-      end, translate: {20, 100}, text_align: :center)
+  ```elixir
+  @graph  Scenic.Graph.build(font: :roboto_mono)
+  |> text( "This text inherits the font", translate: {20, 20} )
+  |> group( fn(graph) ->
+    graph
+    |> text( "This text also inherits the font", translate: {200, 24} )
+    |> text( "This text overrides the font", font: :roboto )
+  end, translate: {20, 100}, text_align: :center)
+  ```
 
   Transforms, such as translate, rotate, scale, also inherit down the graph, but do
   so slightly differently than the styles. With a style, when you set a specific value
@@ -75,6 +96,8 @@ defmodule Scenic.Graph do
   With a transform, the values multiply together. This allows you to position items
   within a group relative to the origin {0,0}, then move the group as a whole, keeping
   the interior positions unchanged.
+
+  Styles, however, are NOT inherited by components even though transforms are.
 
   ## Modifying a Graph
 
@@ -90,17 +113,21 @@ defmodule Scenic.Graph do
 
   For example, lets go back to our graph with the two text items in it.
 
-      @graph Graph.build(font: :roboto, font_size: 24, rotate: 0.4)
-        |> text("Hello World", translate: {300, 300}, id: :small_text)
-        |> text("Bigger Hello", font_size: 40, scale: 1.5, id: :big_text)
+  ```elixir
+  @graph Graph.build(font: :roboto, font_size: 24, rotate: 0.4)
+    |> text("Hello World", translate: {300, 300}, id: :small_text)
+    |> text("Bigger Hello", font_size: 40, scale: 1.5, id: :big_text)
+  ```
 
   This time, we've assigned ids to both of the text primitives. This makes it easy to
   find and modify that primitive in the graph.
 
-      graph =
-        @graph
-        |> Graph.modify( :small_text, &text(&1, "Smaller Hello", font_size: 16))
-        |> Graph.modify( :big_text, &text(&1, "Bigger Hello", font_size: 60))
+  ```elixir
+  graph =
+    @graph
+    |> Graph.modify( :small_text, &text(&1, "Smaller Hello", font_size: 16))
+    |> Graph.modify( :big_text, &text(&1, "Bigger Hello", font_size: 60))
+  ```
 
   Notice that the graph is modified multiple times in the pipeline. The `push_graph/1`
   function is relatively heavy when the graph references other scenes. The recommended
@@ -111,9 +138,11 @@ defmodule Scenic.Graph do
   When using a Graph, it is extremely common to access and modify primitives. The way
   you do this is by putting an id on the primitives you care about in a graph.
 
-      @graph Graph.build()
-        |> text("small text", id: :small_text)
-        |> text("bit text", id: :big_text)
+  ```elixir
+  @graph Graph.build()
+    |> text("small text", id: :small_text)
+    |> text("bit text", id: :big_text)
+  ```
 
   When you get primitives, or modify a graph, you specify them by id. This happens
   quickly, but at a cost of using a little memory. If you aren't going to access
@@ -132,9 +161,6 @@ defmodule Scenic.Graph do
 
   @default_max_depth 128
 
-  @default_font :roboto
-  @default_font_size 24
-
   @root_id :_root_
 
   defstruct primitives: %{}, ids: %{}, next_uid: 1, add_to: 0, animations: []
@@ -146,9 +172,9 @@ defmodule Scenic.Graph do
           add_to: non_neg_integer
         }
 
-  @type deferred :: (t -> t)
+  @type bounds :: {left :: number, top :: number, right :: number, bottom :: number}
 
-  @type key :: {:graph, Scenic.Scene.ref(), any}
+  @type deferred :: (t -> t)
 
   # ===========================================================================
   # TODO: define a policy error here - not found or something like that
@@ -162,21 +188,8 @@ defmodule Scenic.Graph do
 
   @err_msg_depth "Graph too deep. Possible circular reference!"
   @err_msg_depth_option "The :max_depth option must be a positive integer"
-  # @err_msg_group "Can only add primitives to Group nodes"
   @err_msg_put "Graph.put can only update existing items."
   @err_msg_get_id_one "Graph.get! expected to find one and only one element"
-
-  # ============================================================================
-  # @doc """
-  # Returns the root group of a graph as a primitive.
-  # Deprecated. Use `Graph.get!(graph, :_root_)` instead.
-  # """
-  # @deprecated "Use Graph.get!(graph, :_root_) instead"
-  # @spec get_root(graph :: t()) :: Primitive.t()
-  # def get_root(%__MODULE__{} = graph) do
-  #   get!(graph, :_root_)
-  #   # Map.delete(graph.primitives[@root_uid], :styles)
-  # end
 
   # ============================================================================
   # build a new graph, starting with the given element
@@ -188,10 +201,8 @@ defmodule Scenic.Graph do
   """
   @spec build(opts :: keyword) :: t()
   def build(opts \\ []) do
-    opts = handle_options(opts)
-
     []
-    |> Group.build(opts)
+    |> Group.build(Keyword.put(opts, :id, @root_id))
     |> new()
     |> set_id(opts[:id])
     |> set_max_depth(opts[:max_depth])
@@ -381,28 +392,6 @@ defmodule Scenic.Graph do
     end
   end
 
-  # handle options helper
-  defp handle_options(opts) do
-    {font, font_size} =
-      Enum.reduce(opts, {@default_font, @default_font_size}, fn
-        {:font, font}, {_, size} ->
-          {font, size}
-
-        {:font_size, size}, {font, _} ->
-          {font, size}
-
-        {:styles, styles}, {f, s} ->
-          font = styles[:font] || f
-          size = styles[:font_size] || s
-          {font, size}
-
-        _, info ->
-          info
-      end)
-
-    Keyword.merge(opts, font: font, font_size: font_size)
-  end
-
   # new
   defp new(root) do
     %__MODULE__{
@@ -579,105 +568,6 @@ defmodule Scenic.Graph do
     {Map.put(graph, :next_uid, next_uid + 1), uid}
   end
 
-  # KEEP THIS AROUND FOR NOW
-  # In case I want to reintroduce templates.
-  #   #--------------------------------------------------------
-  #   # insert a template, which is a graph that has relative uids
-  #   # can't just merge the various maps. map the incoming graph into an id space that
-  #   # starts with next_uid, then bump up next_uid to account for everything in the updated graph
-  #   defp insert_at({%Graph{primitives: p_map, ids: ids, next_uid: next_uid} = graph, parent_uid},
-  #       index,
-  #       %Graph{primitives: t_p_map, ids: t_ids, next_uid: t_next_uid} = t_graph,
-  #       opts) when is_integer(index) do
-  # IO.puts "insert_at template"
-  #     # uid for the new item
-  #     uid = next_uid
-
-  #     # start by mapping and adding the primitives to the receiver
-  #     p_map = Enum.reduce(t_p_map, p_map, fn({uid, primitive}, acc_g) ->
-  #       # map the uid
-  #       uid = uid + next_uid
-
-  #       # map the parent id
-  #       primitive = case Primitive.get_parent_uid(primitive) do
-  #         -1 -> primitive              # not in the tree. no change
-  #         parent_id -> Primitive.put_parent_uid(primitive, parent_id + next_uid)
-  #       end
-
-  #       # if this is a group, increment its children's references
-  #       primitive = case Primitive.get_module(primitive) do
-  #         Group ->  Group.increment( primitive, next_uid )
-  #         _ ->      primitive           # not a Group, do nothing.
-  #       end
-
-  #       # finally, update the internal uid of the primitive
-  #       primitive = Primitive.put_uid( primitive, uid )
-
-  #       # add the mapped primitive to the receiver's p_map
-  #       Map.put(acc_g, uid, primitive)
-  #     end)
-
-  #     # if the incoming tree was requested to be inserted into an existing group, then fix that up too
-  #     p_map = if (parent_uid >= 0) do
-  #       # we know the root of the added tree is at next_uid
-  #       p_map = Map.get(p_map, next_uid)
-  #       |> Primitive.put_parent_uid( parent_uid )
-  #       |> ( &Map.put(p_map, next_uid, &1) ).()
-
-  #       # also need to add the tree as a child to the parent
-  #       Map.get( p_map, parent_uid )
-  #       |> Group.insert_at(index, next_uid)
-  #       |> ( &Map.put(p_map, parent_uid, &1) ).()
-  #     else
-  #       p_map       # do nothing
-  #     end
-
-  #     # offset the t_ids, mapping into ids as we go
-  #     ids = Enum.reduce(t_ids, ids, fn({id,uid_list}, acc_idm) ->
-  #       Enum.reduce(uid_list, acc_idm, fn(uid, acc_acc_idm) ->
-  #         do_map_id_to_uid( acc_acc_idm, id, uid + next_uid)
-  #       end)
-  #     end)
-
-  #     # if an id was given, map it to the uid
-  #     ids = case opts[:id] do
-  #       nil ->  ids
-  #       id ->   do_map_id_to_uid(ids, id, uid)
-  #     end
-
-  #     # merge any requested inputs - is optional, so must work if not actually there
-  #     input = [
-  #       Map.get(graph, :input, []),
-  #       Map.get(t_graph, :input, []),
-  #     ]
-  #     |> List.flatten()
-  #     |> Enum.uniq()
-
-  #     # offset the next_uid
-  #     next_uid = next_uid + t_next_uid
-
-  #     # return the merged graph
-  #     graph = graph
-  #     |> Map.put(:primitives, p_map)
-  #     |> Map.put(:ids, ids)
-  #     |> Map.put(:next_uid, next_uid)
-  #     # |> calculate_transforms( uid )
-
-  #     # add the input in only if there is some to add in
-  #     graph = case input do
-  #       []    -> Map.delete(graph, :input)
-  #       input -> Map.put(graph, :input, input)
-  #     end
-
-  #     {graph, uid}
-  #   end
-
-  # --------------------------------------------------------
-  # insert at the root - graph itself passed in
-  # defp insert_at(%Graph{} = graph, index, element, opts) do
-  #   insert_at({graph, @root_uid}, index, element, opts)
-  # end
-
   # ============================================================================
 
   @doc """
@@ -723,24 +613,10 @@ defmodule Scenic.Graph do
       p_original ->
         case action.(p_original) do
           # no change. do nothing
-          ^p_original ->
-            graph
-
-          # change. record it
-          %Primitive{module: mod} = p_modified ->
-            # filter the styles
-            styles =
-              p_modified
-              |> Map.get(:styles, %{})
-              |> mod.filter_styles()
-
-            p_modified = Map.put(p_modified, :styles, styles)
-
-            graph
-            |> put_by_uid(uid, p_modified)
-
-          _ ->
-            raise Error, message: "Action must return a valid primitive"
+          ^p_original -> graph
+          # changed. record it
+          %Primitive{} = p_modified -> put_by_uid(graph, uid, p_modified)
+          _ -> raise Error, message: "Action must return a valid primitive"
         end
     end
   end
@@ -762,9 +638,9 @@ defmodule Scenic.Graph do
   Examples:
 
       graph
-      |> Graph.modify( :explicit_id, &text(&1, "Updated Text 1") )
-      |> Graph.modify( {:id, 123}, &text(&1, "Updated Text 2") )
-      |> Graph.modify( &match?({:id,_},&1), &text(&1, "Updated Text 3") )
+      |> Graph.modify( :explicit_id, &text("Updated Text 1") )
+      |> Graph.modify( {:id, 123}, &text("Updated Text 2") )
+      |> Graph.modify( &match?({:id,_},&1), &text("Updated Text 3") )
   """
 
   @spec modify(
@@ -789,27 +665,6 @@ defmodule Scenic.Graph do
     |> resolve_id(id)
     |> Enum.reduce(graph, &modify_by_uid(&2, &1, action))
   end
-
-  # @doc """
-  # Modify one or more primitives in a graph via a match pattern.
-
-  # Retrieves the primitive (or primitives) that match a pattern and passes them to
-  # a callback function. The result of the callback function is stored as the new
-  # version of that primitive in the graph.
-
-  # If multiple primitives match the specified id, then each is passed, in turn,
-  # to the callback function.
-  # """
-
-  # @spec modify_match(graph :: t(), pattern :: any, action :: (... -> Primitive.t())) :: t()
-  # def modify_match(graph, pattern, action)
-
-  # # pass in an atom based id, and it will transform all mapped uids
-  # def modify_match(%__MODULE__{} = graph, pattern, action) do
-  #   graph
-  #   |> find(pattern)
-  #   |> Enum.reduce(graph, &modify_by_uid(&2, &1, action))
-  # end
 
   # ============================================================================
   # map a graph via traversal from the root node
@@ -978,4 +833,21 @@ defmodule Scenic.Graph do
         |> Map.merge(Primitive.get_styles(p))
     end
   end
+
+  # ============================================================================
+  # --------------------------------------------------------
+  @doc """
+  Compile a graph into a script.
+  """
+  @spec compile(graph :: Scenic.Graph.t()) :: {:ok, Scenic.Script.t()}
+  defdelegate compile(graph), to: Scenic.Graph.Compiler
+
+  # --------------------------------------------------------
+  @doc """
+  Compute the bounding box that contains the graph.
+
+  Returns `{left, right, top, bottom}` or `nil` if the graph is empty.
+  """
+  @spec bounds(graph :: t()) :: Scenic.Graph.bounds() | nil
+  defdelegate bounds(graph), to: Scenic.Graph.Bounds, as: :compute
 end

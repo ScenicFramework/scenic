@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-05-06.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive do
@@ -9,11 +9,11 @@ defmodule Scenic.Primitive do
 
   ## What is a primitive
 
-  A primitive is the simplest thing Scenic knows how to draw on the screen. There is is only
-  a small, fixed set of them, but they can be combined in a graph to draw very complicated
+  A primitive is the simplest thing Scenic knows how to draw on the screen. There is 
+  a, fixed set of them, but they can be combined in a graph to draw very complicated
   images.
 
-  In general, each Primitive type has a piece of data that it expects to operate on. For
+  In general, each Primitive has a piece of data that it expects to operate on. For
   example, Primitive.Text requires a bitstring. Primitive.Circle requires a radius. Please
   see the documentation for each primitive for details.
 
@@ -23,94 +23,94 @@ defmodule Scenic.Primitive do
   [`Scenic.Primitives`](Scenic.Primitives.html). These helpers can both add primitives to
   a scene you are building and modify later as you react to events.
 
+  ```elixir
+  import Scenic.Primitives
+
+  @graph Scenic.Graph.build()
+    |> rect( {100, 50}, stroke: {1, :yellow} )
+    |> rectangle( {100, 50}, stroke: {1, :yellow} )
+  ```
+
   Once you get a primitive out of a graph via functions such as `Graph.modify`, or `Graph.get`,
   You can use the generic helpers in this module to access or manipulate them.
 
-  ## Standard primitives
+  ## Standard Primitives
 
   The set of primitives supported in Scenic is fixed in any given version. They have been chosen
   to provide the maximum flexibility when combined together, while still requiring the minimal
   amount of code and maintenance.
 
-  If required, new primitives can be added in the future, but they will not work with older
-  versions of the drivers.
+  See the documentation for each primitive's module for details on it's data type.
 
-  * [`Arc`](Scenic.Primitive.Arc.html) draws an arc. This would be a line cut out of a part of the edge of a circle. If you want a shape that looks like a piece of pie, then you should use the [`Sector`](Scenic.Primitive.Sector.html).
-  * [`Circle`](Scenic.Primitive.Circle.html) draws a circle.
-  * [`Ellipse`](Scenic.Primitive.Ellipse.html) draws an ellipse.
-  * [`Group`](Scenic.Primitive.Group.html) doesn't draw anything. Instead, it creates a node in the graph that you can insert more primitives into. Any styles or transforms you apply to the Group are inherited by all the primitives below it.
-  * [`Line`](Scenic.Primitive.Line.html) draws a line.
-  * [`Path`](Scenic.Primitive.Path.html) is sort of an escape valve for complex shapes not covered by the other primitives. You supply a list of instructions, such as :move_to, :line_to, :bezier_to, etc. to generate a complex shape.
-  * [`Quad`](Scenic.Primitive.Quad.html) draws polygon with four sides.
-  * [`Rectangle`](Scenic.Primitive.Rectangle.html) draws a rectangle.
-  * [`RoundedRectangle`](Scenic.Primitive.RoundedRectangle.html) draws a rectangle with the corners rounded by a given radius.
-  * [`SceneRef`](Scenic.Primitive.SceneRef.html) doesn't draw anything by itself. Instead it points to another scene/graph and tells the driver to draw that here.
-  * [`Sector`](Scenic.Primitive.Sector.html) draws a shape that looks like a piece of pie. If you want to stroke just the curved edge, then combine it with an [`Arc`](Scenic.Primitive.Arc.html).
-  * [`Text`](Scenic.Primitive.Text.html) draws a string of text.
-  * [`Triangle`](Scenic.Primitive.Triangle.html) draws a triangle.
+  | Helper | Primitive Module | Description |
+  |---|---|---|
+  | [`arc/3`](Scenic.Primitives.html#arc/3) | `Scenic.Primitive.Arc` | Draw an arc around a circle |
+  | [`circle/3`](Scenic.Components.html#circle/3) | `Scenic.Primitive.Circle` | Draw a full circle |
+  | [`component/3`](Scenic.Primitives.html#component/3) | `Scenic.Primitive.Component` | Start a child component |
+  | [`ellipse/3`](Scenic.Primitives.html#ellipse/3) | `Scenic.Primitive.Ellipse` | Draw an ellipse |
+  | [`group/3`](Scenic.Primitives.html#group/3) | `Scenic.Primitive.Group` | Create a group |
+  | [`line/3`](Scenic.Primitives.html#line/3) | `Scenic.Primitive.Line` | Draw a line |
+  | [`path/3`](Scenic.Primitives.html#path/3) | `Scenic.Primitive.Path` | Draw a complicated path |
+  | [`quad/3`](Scenic.Primitives.html#quad/3) | `Scenic.Primitive.Quad` | Draw a quad |
+  | [`rect/3`](Scenic.Primitives.html#rect/3) | `Scenic.Primitive.Rectangle` | Draw a rectangle |
+  | [`rrect/3`](Scenic.Primitives.html#rrect/3) | `Scenic.Primitive.RoundedRectangle` | Draw a rounded rectangle |
+  | [`script/3`](Scenic.Primitives.html#script/3) | `Scenic.Primitive.Script` | Run a referenced draw script |
+  | [`sector/3`](Scenic.Primitives.html#sector/3) | `Scenic.Primitive.Sector` | A boolean toggle control. |
+  | [`sprites/3`](Scenic.Primitives.html#sprites/3) | `Scenic.Primitive.Sprites` | Draw a sector |
+  | [`text/3`](Scenic.Primitives.html#text/3) | `Scenic.Primitive.Text` | Draw a string of text |
+  | [`triangle/3`](Scenic.Primitives.html#triangle/3) | `Scenic.Primitive.Triangle` | Draw a triangle |
   """
 
   alias Scenic.Graph
+  alias Scenic.Utilities
   alias Scenic.Primitive
   alias Scenic.Primitive.Style
   alias Scenic.Primitive.Transform
 
   # alias Scenic.Math.Matrix
-
   # import IEx
-
-  @callback add_to_graph(map, any, opts :: keyword) :: map
-
-  @callback valid_styles() :: list
-  @callback filter_styles(map) :: map
-
-  @callback info(data :: any) :: bitstring
-  @callback verify(any) :: any
-
-  @callback default_pin(any) :: {float, float}
-  @callback expand(any) :: any
-
-  @callback contains_point?(any, {float, float}) :: true | false
-
-  @not_styles [
-    :module,
-    :id,
-    :name,
-    :parent_uid,
-    :builder,
-    :data,
-    :styles,
-    :transforms,
-    :pin,
-    :rotate,
-    :matrix,
-    :scale,
-    :translate
-  ]
-
-  @transform_types [:pin, :rotate, :matrix, :scale, :translate]
-
-  @standard_options [:id, :name]
-
-  # note: the following fields are all optional on a primitive.
-  # :id, :tags, :event_filter, :state, :styles, :transforms
-  # puid is managed automatically by the owning graph
-  defstruct module: nil, data: nil, parent_uid: -1, id: nil, styles: %{}, transforms: %{}
 
   @type t :: %Primitive{
           module: atom,
           data: any,
           parent_uid: integer,
+          default_pin: Scenic.Math.vector_2(),
           id: any,
           styles: map,
-          transforms: map
+          transforms: map,
+          opts: list
         }
 
+  @callback validate(data :: any) :: {:ok, data :: any} | {:error, String.t()}
+
+  @callback valid_styles() :: list
+  @callback compile(primitive :: Primitive.t(), styles :: Style.t()) ::
+              script :: Scenic.Script.t()
+
+  # @callback info(data :: any) :: bitstring
+  # @callback verify(any) :: any
+
+  # @callback add_to_graph(map, any, opts :: keyword) :: map
+  # @callback default_pin(any) :: {float, float}
+  # @callback contains_point?(any, {float, float}) :: true | false
+
+  # note: the following fields are all optional on a primitive.
+  # puid is managed automatically by the owning graph
+  # custom opts is used for components
+  defstruct module: nil,
+            data: nil,
+            parent_uid: -1,
+            id: nil,
+            styles: %{},
+            transforms: %{},
+            default_pin: {0, 0},
+            opts: []
+
   # ===========================================================================
-  defmodule Error do
-    @moduledoc false
-    defexception message: nil, error: nil, data: nil
-  end
+  # defmodule Error do
+  #   @moduledoc false
+  #   defexception message: nil
+  # end
 
   # ===========================================================================
   defmacro __using__(_opts) do
@@ -118,10 +118,7 @@ defmodule Scenic.Primitive do
       @behaviour Scenic.Primitive
 
       @doc false
-      def build(data \\ nil, opts \\ [])
-
-      def build(data, opts) do
-        data = verify!(data)
+      def build(data, opts \\ []) do
         Primitive.build(__MODULE__, data, opts)
       end
 
@@ -131,31 +128,6 @@ defmodule Scenic.Primitive do
       def add_to_graph(%Scenic.Graph{} = graph, data, opts) do
         Graph.add(graph, __MODULE__, data, opts)
       end
-
-      @doc false
-      def verify!(data) do
-        case verify(data) do
-          {:ok, data} -> data
-          err -> raise Error, message: info(data), error: err, data: data
-        end
-      end
-
-      # make sure only understood style types are carried on a primitive
-      # group is the exception. It overrides this function
-      @doc false
-      def filter_styles(styles) when is_map(styles) do
-        Enum.reduce(valid_styles(), %{}, fn k, acc ->
-          case Map.get(styles, k) do
-            nil -> acc
-            val -> Map.put(acc, k, val)
-          end
-        end)
-      end
-
-      # the default behaviour is to do nothing
-      # this is the case for groups, lines, and polygons
-      @doc false
-      def expand(data), do: data
 
       # the default is false for contains_point?. Primitive types
       # are effectively un-clickable unless this is overridden.
@@ -167,25 +139,11 @@ defmodule Scenic.Primitive do
       @doc false
       def default_pin(_), do: {0.0, 0.0}
 
-      # simple defaults that can be overridden
-      @doc false
-      def get(%Primitive{data: data}), do: data
-      @doc false
-      def put(p, data), do: Primitive.do_put(p, data)
-
-      @doc false
-      def normalize(data), do: data
-
       # --------------------------------------------------------
       defoverridable build: 2,
                      add_to_graph: 3,
-                     filter_styles: 1,
-                     expand: 1,
                      contains_point?: 2,
-                     default_pin: 1,
-                     get: 1,
-                     put: 2,
-                     normalize: 1
+                     default_pin: 1
     end
 
     # quote
@@ -217,108 +175,65 @@ defmodule Scenic.Primitive do
 
   @spec build(module :: atom, data :: any, opts :: keyword) :: Primitive.t()
   def build(module, data, opts \\ []) do
+    data =
+      case module.validate(data) do
+        {:ok, data} -> data
+        {:error, error} -> raise error
+      end
+
+    # prepare and validate the opts
+    {:ok, id, st, tx, op} = prep_opts(opts)
+
     # first build the map with the non-optional fields
     %{
       # per Jose. Declaring struct this way saves memory
       __struct__: __MODULE__,
+      id: id,
       module: module,
       data: data,
-      parent_uid: -1
+      parent_uid: -1,
+      styles: Enum.into(st, %{}),
+      transforms: Enum.into(tx, %{}),
+      default_pin: {0, 0},
+      opts: op
     }
-    |> apply_options(opts)
+    |> update_default_pin()
   end
 
-  defp apply_options(p, opts) do
-    p
-    |> apply_standard_options(opts)
-    |> apply_style_options(opts)
-    |> apply_transform_options(opts)
-  end
+  # split a primitive's options into three buckets. Styles, Transforms, and opts
+  # this is because the three groups have different render and inheritance models.
+  defp prep_opts(opts) when is_list(opts) do
+    opts = Enum.into(opts, [])
 
-  defp apply_standard_options(p, opts) do
-    # extract the standard options from the opts
-    opts = Enum.filter(opts, fn {k, _} -> Enum.member?(@standard_options, k) end)
-
-    # enumerate and apply each of the standard opts
-    Enum.reduce(opts, p, fn
-      {opt, v}, p ->
-        Map.put(p, opt, v)
-    end)
-  end
-
-  defp apply_style_options(p, opts) do
-    # Scan the options list. Merge in each style as they are found
-    Enum.reduce(opts, Map.get(p, :styles, %{}), fn
-      {:styles, styles}, s when is_map(styles) ->
-        Map.merge(s, styles)
-
-      {k, v}, s ->
-        case Enum.member?(@not_styles, k) do
-          # skip
-          true ->
-            s
-
-          false ->
-            Style.verify!(k, v)
-            Map.put(s, k, v)
+    {id, st, tx, op} =
+      Enum.reduce(
+        opts,
+        {nil, [], [], []},
+        fn {k, v}, {id, st, tx, op} ->
+          cond do
+            k == :id -> {v, st, tx, op}
+            Style.opts_map()[k] -> {id, [{k, v} | st], tx, op}
+            Transform.opts_map()[k] -> {id, st, [{k, v} | tx], op}
+            true -> {id, st, tx, [{k, v} | op]}
+          end
         end
-    end)
-    |> case do
-      s when s == %{} -> p
-      styles -> Map.put(p, :styles, styles)
-    end
+      )
+
+    # validate the opts for styles and transforms
+    st =
+      case NimbleOptions.validate(st, Style.opts_schema()) do
+        {:ok, st} -> st
+        {:error, error} -> raise Exception.message(error)
+      end
+
+    tx =
+      case NimbleOptions.validate(tx, Transform.opts_schema()) do
+        {:ok, tx} -> tx
+        {:error, error} -> raise Exception.message(error)
+      end
+
+    {:ok, id, st, tx, op}
   end
-
-  defp apply_transform_options(p, opts) do
-    # map the shortcut transforms options
-    opts =
-      Enum.map(opts, fn
-        {:t, v} -> {:translate, v}
-        {:s, v} -> {:scale, v}
-        {:r, v} -> {:rotate, v}
-        opt -> opt
-      end)
-
-    # Scan the options list. Merge in each style as they are found
-    Enum.reduce(opts, Map.get(p, :transforms, %{}), fn
-      {:transforms, txs}, t when is_map(txs) ->
-        Map.merge(t, txs)
-
-      {k, v}, t ->
-        case Enum.member?(@transform_types, k) do
-          true ->
-            Transform.verify!(k, v)
-            Map.put(t, k, v)
-
-          false ->
-            t
-        end
-    end)
-    |> case do
-      t when t == %{} -> p
-      txs -> Map.put(p, :transforms, txs)
-    end
-  end
-
-  # ============================================================================
-  # type / module
-
-  # def get_module( primitive )
-  # def get_module( %Primitive{module: mod} ) when is_atom(mod), do: mod
-
-  # --------------------------------------------------------
-  # id
-  # I'm allowing the styles to not be present on the primitive, which is why
-  # I'm not parsing it out in the function match
-
-  # def get_id( primitive )
-  # def get_id( %Primitive{} = p ) do
-  #   Map.get(p, :id)
-  # end
-
-  # def put_id( primitive, id )
-  # def put_id( %Primitive{} = p, nil ), do: Map.delete(p, :id)
-  # def put_id( %Primitive{} = p, id ), do: Map.put(p, :id, id)
 
   # ============================================================================
   # styles
@@ -389,23 +304,12 @@ defmodule Scenic.Primitive do
   """
   @spec put_style(primitive :: Primitive.t(), type :: atom, data :: any) :: Primitive.t()
   def put_style(%Primitive{} = p, type, nil) when is_atom(type) do
-    Map.get(p, :styles, %{})
-    |> Map.delete(type)
-    |> (&put_styles(p, &1)).()
+    delete_style(p, type)
   end
 
   def put_style(%Primitive{} = p, type, data) when is_atom(type) do
-    Map.get(p, :styles, %{})
-    |> Map.put(type, data)
-    |> (&put_styles(p, &1)).()
+    merge_opts(p, [{type, data}])
   end
-
-  # @deprecated "Use Primitive.merge_opts instead"
-  # def put_style(%Primitive{} = p, list) when is_list(list) do
-  #   Enum.reduce(list, p, fn {type, data}, acc ->
-  #     put_style(acc, type, data)
-  #   end)
-  # end
 
   @doc """
   Deletes a specified style from a primitive.
@@ -546,11 +450,8 @@ defmodule Scenic.Primitive do
   Returns the value of the primitive-specific data.
   """
   @spec get(primitive :: Primitive.t()) :: any
-  def get(primitive)
-
-  def get(%Primitive{module: mod} = p) do
-    # give the primitive a chance to own the get
-    mod.get(p)
+  def get(%Primitive{data: data}) do
+    data
   end
 
   # @deprecated "Use Primitive.merge_opts instead."
@@ -575,8 +476,15 @@ defmodule Scenic.Primitive do
   @spec merge_opts(primitive :: Primitive.t(), opts :: keyword) :: Primitive.t()
   def merge_opts(primitive, opts)
 
-  def merge_opts(%Primitive{} = p, opts) when is_list(opts) do
-    apply_options(p, opts)
+  def merge_opts(%Primitive{} = primitive, opts) when is_list(opts) do
+    {:ok, id, st, tx, op} = prep_opts(opts)
+
+    primitive
+    |> Utilities.Map.put_set(:id, id)
+    |> Map.put(:styles, Map.merge(primitive.styles, Enum.into(st, %{})))
+    |> Map.put(:transforms, Map.merge(primitive.transforms, Enum.into(tx, %{})))
+    |> Map.put(:opts, Keyword.merge(primitive.opts, op))
+    |> update_default_pin()
   end
 
   @doc """
@@ -597,80 +505,28 @@ defmodule Scenic.Primitive do
   def put(primitive, data, opts \\ [])
 
   def put(%Primitive{module: mod} = p, data, opts) do
-    # give the primitive a chance to own the put
-    mod.put(p, data)
-    |> apply_options(opts)
-  end
-
-  # the default behavior for put - just verify the data and put it in place
-  # not a defp because the primitives themselves call it
-  def do_put(%Primitive{module: mod} = p, data) do
-    data = mod.verify!(data)
-    Map.put(p, :data, data)
-  end
-
-  # ============================================================================
-  # reduce a primitive to its minimal form
-  # --------------------------------------------------------
-  @doc false
-  @spec minimal(primitive :: Primitive.t()) :: map
-  # parent_uid: puid
-  def minimal(%Primitive{module: mod, data: data} = p) do
-    %{
-      data: {mod, data}
-    }
-    # add styles, if any are set
-    |> mprim_add_styles(p)
-    # add the id if set
-    |> mprim_add_id(p)
-    # add transforms, if any are set
-    |> mprim_add_transforms(p)
-  end
-
-  defp mprim_add_styles(min_p, %{styles: styles}) do
-    prim_styles = Style.primitives(styles)
-
-    case prim_styles == %{} do
-      true -> min_p
-      false -> Map.put(min_p, :styles, prim_styles)
+    case mod.validate(data) do
+      {:ok, data} -> data
+      {:error, error} -> raise error
     end
+
+    # give the primitive a chance to own the put
+    p
+    |> Map.put(:data, data)
+    |> merge_opts(opts)
+    |> update_default_pin()
   end
 
-  defp mprim_add_styles(min_p, _), do: min_p
-
-  defp mprim_add_id(min_p, %{id: nil}), do: min_p
-  defp mprim_add_id(min_p, %{id: id}), do: Map.put(min_p, :id, id)
-  defp mprim_add_id(min_p, _), do: min_p
-
-  defp mprim_add_transforms(min_p, %Primitive{transforms: nil}), do: min_p
-
-  defp mprim_add_transforms(min_p, %Primitive{transforms: txs, module: module, data: data}) do
-    # if either rotate or scale is set, and pin is not, set pin to the default
-    txs =
-      if Map.get(txs, :pin) == nil &&
-           (Map.get(txs, :rotate) != nil || Map.get(txs, :scale) != nil) do
-        Map.put(txs, :pin, module.default_pin(data))
-      else
-        txs
-      end
-
-    # normalize scale if necessary
-    txs =
-      case txs[:scale] do
-        nil ->
-          txs
-
-        pct when is_number(pct) ->
-          Map.put(txs, :scale, {pct, pct})
-
-        {_, _} ->
-          txs
-      end
-
-    Map.put(min_p, :transforms, txs)
-  end
-
-  defp mprim_add_transforms(min_p, _), do: min_p
+  # # the default behavior for put - just verify the data and put it in place
+  # # not a defp because the primitives themselves call it
+  # @doc false
+  # def do_put(%Primitive{module: mod} = p, data) do
+  #   case mod.validate(data) do
+  #     {:ok, data} -> data
+  #     {:error, error} -> raise Exception.message(error)
+  #   end
+  #   Map.put(p, :data, data)
+  # end
 
   # --------------------------------------------------------
   @doc """
@@ -696,5 +552,14 @@ defmodule Scenic.Primitive do
   @spec contains_point?(primitive :: Primitive.t(), point :: Scenic.Math.point()) :: map
   def contains_point?(%Primitive{module: mod, data: data}, point) do
     mod.contains_point?(data, point)
+  end
+
+  # --------------------------------------------------------
+  @spec update_default_pin(primitive :: Primitive.t()) :: Primitive.t()
+  defp update_default_pin(%Primitive{module: module, data: data, styles: styles} = p) do
+    case Kernel.function_exported?(module, :default_pin, 2) do
+      true -> %{p | default_pin: module.default_pin(data, styles)}
+      false -> %{p | default_pin: {0, 0}}
+    end
   end
 end

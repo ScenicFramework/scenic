@@ -1,147 +1,113 @@
 #
 #  Created by Boyd Multerer on 2018-09-18.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Rewritten by Boyd Multerer on 2021-05-23
+#  Copyright © 2018-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Component.Input.RadioButtonTest do
   use ExUnit.Case, async: false
-  doctest Scenic
+  doctest Scenic.Component.Input.RadioButton
 
-  # alias Scenic.Component
-  alias Scenic.Graph
-  alias Scenic.Primitive
-  alias Scenic.ViewPort
+  alias Scenic.Scene
+  alias Scenic.ViewPort.Input
   alias Scenic.Component.Input.RadioButton
 
-  @state %{
-    graph: Graph.build(),
-    theme: Primitive.Style.Theme.preset(:primary),
-    pressed: false,
-    contained: false,
-    checked: false,
-    id: :test_id
-  }
+  # import IEx
 
-  # ============================================================================
-  # info
+  @press_in {:cursor_button, {:btn_left, 1, [], {20, 2}}}
+  @release_in {:cursor_button, {:btn_left, 0, [], {20, 2}}}
 
-  test "info works" do
-    assert is_bitstring(RadioButton.info(:bad_data))
-    assert RadioButton.info(:bad_data) =~ ":bad_data"
+  @press_out {:cursor_button, {:btn_left, 1, [], {1000, 1000}}}
+  @release_out {:cursor_button, {:btn_left, 0, [], {1000, 1000}}}
+
+  defmodule TestScene do
+    use Scenic.Scene
+
+    def graph() do
+      Scenic.Graph.build()
+      |> RadioButton.add_to_graph({"Radio Button", :radio_button, false}, id: :btn)
+    end
+
+    @impl Scenic.Scene
+    def init(scene, pid, _opts) do
+      scene =
+        scene
+        |> assign(pid: pid)
+        |> push_graph(graph())
+
+      Process.send(pid, {:up, scene}, [])
+      {:ok, scene}
+    end
+
+    @impl Scenic.Scene
+    def handle_event(event, _from, %{assigns: %{pid: pid}} = scene) do
+      send(pid, {:fwd_event, event})
+      {:noreply, scene}
+    end
   end
 
-  # ============================================================================
-  # verify
+  setup do
+    out = Scenic.Test.ViewPort.start({TestScene, self()})
+    # wait for a signal that the scene is up before proceeding
+    {:ok, scene} =
+      receive do
+        {:up, scene} -> {:ok, scene}
+      end
 
-  test "verify passes valid data" do
-    assert RadioButton.verify({"Title", :abc}) == {:ok, {"Title", :abc}}
-    assert RadioButton.verify({"Title", :abc, true}) == {:ok, {"Title", :abc, true}}
-    assert RadioButton.verify({"Title", :abc, false}) == {:ok, {"Title", :abc, false}}
+    # make sure the component is up
+    {:ok, [{_id, pid}]} = Scene.children(scene)
+    :_pong_ = GenServer.call(pid, :_ping_)
+
+    # needed to give time for the pid and vp to close
+    on_exit(fn -> Process.sleep(1) end)
+
+    Map.put(out, :scene, scene)
   end
 
-  test "verify fails invalid data" do
-    assert RadioButton.verify(:banana) == :invalid_data
-    assert RadioButton.verify({"Title", :abc, :banana}) == :invalid_data
+  test "Press in and release in sends the event", %{vp: vp} do
+    Input.send(vp, @press_in)
+    Input.send(vp, @release_in)
+    assert_receive({:fwd_event, {:click, :radio_button}}, 200)
   end
 
-  # ============================================================================
-  # init
-
-  test "init works with simple data" do
-    {:ok, state, push: graph} = RadioButton.init({"Title", :test_id}, styles: %{})
-    %Graph{} = state.graph
-    assert graph == state.graph
-    assert is_map(state.theme)
-    assert state.contained == false
-    assert state.pressed == false
-    assert state.checked == false
-    assert state.id == :test_id
-
-    {:ok, state, push: graph} =
-      RadioButton.init({"Title", :test_id, false}, styles: %{}, id: :test_id)
-
-    assert state.checked == false
-    assert graph == state.graph
-
-    {:ok, state, push: graph} =
-      RadioButton.init({"Title", :test_id, true}, styles: %{}, id: :test_id)
-
-    assert state.checked == true
-    assert graph == state.graph
+  test "Press in and release out does not send the event", %{vp: vp} do
+    Input.send(vp, @press_in)
+    Input.send(vp, @release_out)
+    refute_receive(_, 10)
   end
 
-  # ============================================================================
-  # handle_input
-
-  test "handle_input {:cursor_enter, _uid} sets contained" do
-    {:noreply, state, push: graph} =
-      RadioButton.handle_input({:cursor_enter, 1}, %{}, %{@state | pressed: true})
-
-    assert state.contained
-    assert graph == state.graph
+  test "Press out and release in does not send the event", %{vp: vp} do
+    Input.send(vp, @press_out)
+    Input.send(vp, @release_in)
+    refute_receive(_, 10)
   end
 
-  test "handle_input {:cursor_exit, _uid} clears contained" do
-    {:noreply, state, push: graph} =
-      RadioButton.handle_input({:cursor_exit, 1}, %{}, %{@state | pressed: true})
-
-    refute state.contained
-    assert graph == state.graph
+  test "ignores non-main button clicks", %{vp: vp} do
+    Input.send(vp, {:cursor_button, {1, :press, 0, {20, 2}}})
+    Input.send(vp, {:cursor_button, {2, :press, 0, {20, 2}}})
+    refute_receive(_, 10)
   end
 
-  test "handle_input {:cursor_button, :press" do
-    context = %ViewPort.Context{viewport: self()}
-
-    {:noreply, state, push: graph} =
-      RadioButton.handle_input({:cursor_button, {:left, :press, nil, nil}}, context, %{
-        @state
-        | pressed: false,
-          contained: true
-      })
-
-    assert state.pressed
-
-    # confirm the input was captured
-    assert_receive({:"$gen_cast", {:capture_input, ^context, [:cursor_button, :cursor_pos]}})
-    assert graph == state.graph
+  test "implements get/put", %{scene: scene} do
+    assert Scene.get_child(scene, :btn) == [false]
+    assert Scene.put_child(scene, :btn, true) == :ok
+    assert Scene.get_child(scene, :btn) == [true]
   end
 
-  test "handle_input {:cursor_button, :release" do
-    context = %ViewPort.Context{viewport: self()}
-
-    {:noreply, state, push: graph} =
-      RadioButton.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
-        @state
-        | pressed: true,
-          contained: true
-      })
-
-    refute state.pressed
-
-    # confirm the input was released
-    assert_receive({:"$gen_cast", {:release_input, [:cursor_button, :cursor_pos]}})
-
-    assert graph == state.graph
+  test "implements fetch/update", %{scene: scene} do
+    assert Scene.fetch_child(scene, :btn) == {:ok, [{"Radio Button", :radio_button, false}]}
+    %Scene{} = scene = Scene.update_child(scene, :btn, {"RadioMod", :radio_mod, true})
+    assert Scene.fetch_child(scene, :btn) == {:ok, [{"RadioMod", :radio_mod, true}]}
+    assert Scene.get_child(scene, :btn) == [true]
   end
 
-  test "handle_input {:cursor_button, :release sends a message if contained" do
-    self = self()
-    Process.put(:parent_pid, self)
-    context = %ViewPort.Context{viewport: self()}
+  test "bounds works with defaults" do
+    graph =
+      Scenic.Graph.build()
+      |> RadioButton.add_to_graph({"Radio Button", :rb, false}, id: :btn)
 
-    {:noreply, state, push: graph} =
-      RadioButton.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
-        @state
-        | pressed: true,
-          contained: true
-      })
-
-    assert graph == state.graph
-  end
-
-  test "handle_input does nothing on unknown input" do
-    context = %ViewPort.Context{viewport: self()}
-    {:noreply, state} = RadioButton.handle_input(:unknown, context, @state)
-    assert state == @state
+    {0.0, 0.0, r, b} = Scenic.Graph.bounds(graph)
+    assert r > 140 && r < 141
+    assert b > 23 && b < 24
   end
 end

@@ -55,7 +55,7 @@ configurations should live in your app's config.exs file.
     config :my_app, :viewport, %{
       name: :main_viewport,
       size: {700, 600},
-      default_scene: {MyApp.Scene.Example, nil},
+      default_scene: MyApp.Scene.Example,
       drivers: [
         %{
           module: Scenic.Driver.Glfw,

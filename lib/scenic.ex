@@ -34,29 +34,25 @@ defmodule Scenic do
   of an error.
   """
 
+  # put the travis badge here until I get travis working again - is a config issue on the travis side...
+  # [![Build Status](https://travis-ci.org/boydm/scenic.svg?branch=master)](https://travis-ci.org/boydm/scenic)
+
   use Supervisor
 
-  @viewports :scenic_dyn_viewports
-
+  @viewports :scenic_viewports
   @version Mix.Project.config()[:version]
-  @mix_env Mix.env()
 
   @doc """
   Return the current version of scenic
   """
   def version(), do: @version
 
-  @doc """
-  Return the current Mix env
-  """
-  def mix_env(), do: @mix_env
-
   # --------------------------------------------------------
   @doc false
-  def child_spec(opts) do
+  def child_spec(vp_opts \\ []) do
     %{
       id: __MODULE__,
-      start: {__MODULE__, :start_link, [opts]},
+      start: {__MODULE__, :start_link, [vp_opts]},
       type: :supervisor,
       restart: :permanent,
       shutdown: 500
@@ -65,39 +61,24 @@ defmodule Scenic do
 
   # --------------------------------------------------------
   @doc false
-  def start_link(opts \\ [])
-  def start_link({a, b}), do: start_link([{a, b}])
+  def start_link(vps \\ [])
 
-  def start_link(opts) when is_list(opts) do
-    Supervisor.start_link(__MODULE__, opts, name: :scenic)
+  def start_link(vps) when is_list(vps) do
+    {:ok, pid} = Supervisor.start_link(__MODULE__, nil, name: :scenic)
+
+    # start the default ViewPort
+    Enum.each(vps, &Scenic.ViewPort.start(&1))
+
+    # return the original start_link value
+    {:ok, pid}
   end
 
   # --------------------------------------------------------
   @doc false
-  def init(opts) do
-    opts
-    |> Keyword.get(:viewports, [])
-    |> do_init
-  end
-
-  # --------------------------------------------------------
-  # init with no default viewports
-  defp do_init([]) do
+  def init(_) do
     [
-      {Scenic.ViewPort.Tables, nil},
-      {Scenic.Cache.Support.Supervisor, [nil]},
-      {DynamicSupervisor, name: @viewports, strategy: :one_for_one}
-    ]
-    |> Supervisor.init(strategy: :one_for_one)
-  end
-
-  # --------------------------------------------------------
-  # init with default viewports
-  defp do_init(viewports) do
-    [
-      {Scenic.ViewPort.Tables, nil},
-      {Scenic.Cache.Support.Supervisor, [nil]},
-      {Scenic.ViewPort.SupervisorTop, [viewports]},
+      Scenic.PubSub,
+      Scenic.Assets.Stream,
       {DynamicSupervisor, name: @viewports, strategy: :one_for_one}
     ]
     |> Supervisor.init(strategy: :one_for_one)

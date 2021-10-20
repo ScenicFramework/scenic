@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-10-02.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Transform do
@@ -27,10 +27,12 @@ defmodule Scenic.Primitive.Transform do
 
   You apply transforms to a primitive the same way you specify styles.
 
-      graph =
-        Graph.build
-        |> circle( 100, fill: {:color, :green}, translate: {200, 200} )
-        |> ellipse( {40, 60, fill: {:color, :red}, rotate: 0.4, translate: {100, 100} )
+  ```elixir
+  graph =
+    Graph.build
+    |> circle( 100, fill: {:color, :green}, translate: {200, 200} )
+    |> ellipse( {40, 60, fill: {:color, :red}, rotate: 0.4, translate: {100, 100} )
+  ```
 
   Don't worry about the order you apply transforms to a single object. Scenic will multiply them together in the correct way when it comes time to render them.
   """
@@ -38,53 +40,58 @@ defmodule Scenic.Primitive.Transform do
   alias Scenic.Math.Vector2
   alias Scenic.Primitive.Transform
 
-  @callback info(data :: any) :: bitstring
-  @callback verify(any) :: boolean
+  @callback validate(data :: any) :: {:ok, data :: any} | {:error, String.t()}
 
   # ===========================================================================
-  defmodule FormatError do
-    @moduledoc false
 
-    defexception message: nil, module: nil, data: nil
-  end
-
-  @style_name_map %{
+  @opts_map %{
     :pin => Transform.Pin,
     :scale => Transform.Scale,
     :rotate => Transform.Rotate,
     :translate => Transform.Translate,
-    :matrix => Transform.Matrix
+    :matrix => Transform.Matrix,
+    :s => Transform.Scale,
+    :r => Transform.Rotate,
+    :t => Transform.Translate
   }
+
+  @opts_schema [
+    # Note: Due to https://github.com/dashbitco/nimble_options/issues/68 any
+    # `:rename_to` entries need to come before the keys that they are renaming
+    t: [rename_to: :translate],
+    s: [rename_to: :scale],
+    r: [rename_to: :rotate],
+    translate: [type: {:custom, Transform.Translate, :validate, []}],
+    scale: [type: {:custom, Transform.Scale, :validate, []}],
+    rotate: [type: {:custom, Transform.Rotate, :validate, []}],
+    pin: [type: {:custom, Transform.Pin, :validate, []}],
+    matrix: [type: {:custom, Transform.Matrix, :validate, []}]
+  ]
+
+  @primitive_transforms [
+    :pin,
+    :scale,
+    :rotate,
+    :translate,
+    :matrix
+  ]
+
+  @doc false
+  def opts_map(), do: @opts_map
+
+  @doc false
+  def opts_schema(), do: @opts_schema
 
   # ===========================================================================
   #  defmacro __using__([type_code: type_code]) when is_integer(type_code) do
   defmacro __using__(_opts) do
     quote do
       @behaviour Scenic.Primitive.Transform
-
-      @doc false
-      def verify!(data) do
-        case verify(data) do
-          true ->
-            data
-
-          false ->
-            raise FormatError, message: info(data), module: __MODULE__, data: data
-        end
-      end
     end
-
-    # quote
   end
 
-  # ===========================================================================
   @doc false
-  def verify!(tx_key, tx_data) do
-    case Map.get(@style_name_map, tx_key) do
-      nil -> raise FormatError, message: "Unknown transform", module: tx_key, data: tx_data
-      module -> module.verify!(tx_data)
-    end
-  end
+  def valid(), do: @primitive_transforms
 
   # ============================================================================
   # transform helper functions
@@ -100,22 +107,22 @@ defmodule Scenic.Primitive.Transform do
   You will not normally need to use this function. It is used internally by the input system.
   """
 
-  def calculate_local(txs)
+  def combine(txs)
 
-  def calculate_local(nil), do: nil
-  def calculate_local(txs) when txs == %{}, do: nil
+  def combine(nil), do: nil
+  def combine(txs) when txs == %{}, do: nil
 
-  def calculate_local(%{pin: _} = txs) do
+  def combine(%{pin: _} = txs) do
     # look for case where only the pin is set
     case Enum.count(txs) do
       1 -> nil
-      _ -> do_calculate_local(txs)
+      _ -> do_combine(txs)
     end
   end
 
-  def calculate_local(txs), do: do_calculate_local(txs)
+  def combine(txs), do: do_combine(txs)
 
-  defp do_calculate_local(txs) do
+  defp do_combine(txs) do
     # start with identity - which is like multiplying by 1
     Matrix.identity()
     |> multiply_partial(:matrix, txs[:matrix])
@@ -140,7 +147,7 @@ defmodule Scenic.Primitive.Transform do
 
   # --------------------------------------------------------
   defp rotate_and_scale(mx, txs) do
-    # don't do any work if neight rotate nor scale are set
+    # don't do any work if neither otate nor scale are set
     # don't need to translate twice for no reason
     case txs[:rotate] || txs[:scale] do
       nil ->

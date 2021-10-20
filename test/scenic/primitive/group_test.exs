@@ -1,11 +1,11 @@
 #
 #  Created by Boyd Multerer on 5/7817.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.GroupTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive.Group
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Group
@@ -15,7 +15,7 @@ defmodule Scenic.Primitive.GroupTest do
   # ============================================================================
   # build / add
   test "build works" do
-    p = Group.build()
+    p = Group.build([])
     assert Primitive.get(p) == []
 
     p = Group.build(@data)
@@ -23,14 +23,10 @@ defmodule Scenic.Primitive.GroupTest do
     assert Primitive.get(p) == @data
   end
 
-  test "info works" do
-    assert Group.info(:test_data) =~ ":test_data"
-  end
-
   # ============================================================================
   # child management
   test "insert_at works" do
-    group = Group.build()
+    group = Group.build([])
     assert Primitive.get(group) == []
 
     g = Group.insert_at(group, -1, 1234)
@@ -53,7 +49,7 @@ defmodule Scenic.Primitive.GroupTest do
 
   test "delete works" do
     g =
-      Group.build()
+      Group.build([])
       |> Group.insert_at(-1, 1234)
       |> Group.insert_at(-1, 12_345)
 
@@ -65,7 +61,7 @@ defmodule Scenic.Primitive.GroupTest do
 
   test "increment_data adds a constant to the child ids" do
     g =
-      Group.build()
+      Group.build([])
       |> Group.insert_at(-1, 1234)
       |> Group.insert_at(-1, 12_345)
 
@@ -76,32 +72,35 @@ defmodule Scenic.Primitive.GroupTest do
   end
 
   # ============================================================================
-  # verify
 
-  test "verify passes valid data" do
-    assert Group.verify(@data) == {:ok, @data}
+  test "validate accepts valid data" do
+    assert Group.validate(@data) == {:ok, @data}
   end
 
-  test "verify fails invalid data" do
-    assert Group.verify(12) == :invalid_data
-    assert Group.verify([1, 2, 3, :banana]) == :invalid_data
-    assert Group.verify(:banana) == :invalid_data
+  test "validate rejects bad data" do
+    {:error, msg} = Group.validate([1, -2, 3])
+    assert msg =~ "Invalid Group"
+
+    {:error, msg} = Group.validate([1, :banana, 3])
+    assert msg =~ "Invalid Group"
+
+    {:error, msg} = Group.validate(:banana)
+    assert msg =~ "Invalid Group"
   end
 
   # ============================================================================
   # styles
 
   test "valid_styles works" do
-    assert Group.valid_styles() == [:all]
+    assert Group.valid_styles() == [:hidden, :scissor]
   end
 
-  test "filter_styles passes all the style, whether or not they are standard ones" do
-    styles = %{
-      fill: :red,
-      banana: :yellow
-    }
+  # ============================================================================
+  # compile
 
-    assert Group.filter_styles(styles) == styles
+  test "compile raises - it is a special case" do
+    p = Group.build([1, 2, 3])
+    assert_raise RuntimeError, fn -> Group.compile(p, %{}) end
   end
 
   # ============================================================================

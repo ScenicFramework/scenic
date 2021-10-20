@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-10-02.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Transform.Matrix do
@@ -12,14 +12,16 @@ defmodule Scenic.Primitive.Transform.Matrix do
 
   Example:
 
-      @matrix [ 0, 1, 2, 3,
-                4, 5, 6, 7,
-                8, 9, 10, 11,
-                12, 13, 14, 15 ]
-      |> Scenic.Math.Matrix.Matrix.Utils.to_binary()
+  ```elixir
+  @matrix [ 0, 1, 2, 3,
+            4, 5, 6, 7,
+            8, 9, 10, 11,
+            12, 13, 14, 15 ]
+    |> Scenic.Math.Matrix.Matrix.Utils.to_binary()
 
-      graph
-      |> text("Transformer!", matrix: @matrix)
+  graph
+    |> text("Transformer!", matrix: @matrix)
+  ```
   """
 
   use Scenic.Primitive.Transform
@@ -29,20 +31,21 @@ defmodule Scenic.Primitive.Transform.Matrix do
   # ============================================================================
   # data verification and serialization
 
-  # --------------------------------------------------------
-  @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be a binary containing 16 32-bit floats
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
+  def validate(<<_::binary-size(@matrix_byte_size)>> = mx) do
+    {:ok, mx}
+  end
 
-      Please use the Scenic.Math.Matrix module to build this data.
+  def validate(data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Matrix
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      Matrix data must be a binary containing 16 32-bit floats
 
-      #{IO.ANSI.default_color()}
-    """
-
-  # --------------------------------------------------------
-  @doc false
-  def verify(<<_::binary-size(@matrix_byte_size)>>), do: true
-  def verify(_), do: false
+      Please use the Scenic.Math.Matrix API to build this data.#{IO.ANSI.default_color()}
+      """
+    }
+  end
 end

@@ -1,4 +1,9 @@
 defmodule Scenic.Component.Button do
+  @default_radius 3
+  @default_font :roboto
+  @default_font_size 20
+  @default_alignment :center
+
   @moduledoc """
   Add a button to a graph
 
@@ -20,7 +25,7 @@ defmodule Scenic.Component.Button do
       {:click, id}
 
   These messages can be received and handled in your scene via
-  `c:Scenic.Scene.filter_event/3`. For example:
+  `c:Scenic.Scene.handle_event/3`. For example:
 
   ```
   ...
@@ -37,7 +42,7 @@ defmodule Scenic.Component.Button do
   end
 
   @impl Scenic.Scene
-  def filter_event({:click, :sample_btn_id}, _from, state) do
+  def handle_event({:click, :sample_btn_id}, _from, state) do
     IO.puts("Sample button was clicked!")
     {:cont, event, state}
   end
@@ -51,17 +56,30 @@ defmodule Scenic.Component.Button do
   The default is `false`.
   * `:theme` - The color set used to draw. See below. The default is `:primary`
 
-  ## Additional Styles
+  ## Sendable Styles
+  Styles can be sent directly to the Button Component by adding a :styles list.
 
-  Buttons honor the following list of additional styles.
+      graph
+      |> button(
+        "Example",
+        styles: [font_size: 32, text_align: :right]
+      )
+
+  The following standard styles are supported
+
+  * `:font` - The default is #{inspect(@default_font)}
+  * `:font_size` - The default is #{inspect(@default_font_size)}
+  * `:text_align` - The default is #{inspect(@default_alignment)}
+
+
+  ## Options
+
+  Buttons the following options.
 
   * `:width` - :auto (default) or pass in a number to set the width of the button
   * `:height` - :auto (default) or pass in a number to set the height of the button.
   * `:radius` - pass in a number to set the radius of the button's rounded
-  rectangle.
-  * `:alignment` - set the alignment of the text inside the button. Can be one
-  of `:left, :right, :center`. The default is `:center`.
-  * `:button_font_size` - the size of the font in the button
+  rectangle. The default is #{inspect(@default_radius)}
 
   Buttons do not use the inherited `:font_size` style as they should look
   consistent regardless of what size the surrounding text is.
@@ -96,96 +114,141 @@ defmodule Scenic.Component.Button do
 
       graph
       |> button("Example", id: :button_id, translate: {20, 20}, theme: :warning)
+
+  The final example changes the text size and alignment
+
+      graph
+      |> button(
+        "Example",
+        id: :button_id,
+        translate: {20, 20},
+        theme: :warning,
+        styles: [text_size: 32, text_align: :right]
+      )
+
   """
   use Scenic.Component, has_children: false
 
   alias Scenic.Graph
-  alias Scenic.Primitive
-  alias Scenic.ViewPort
+  alias Scenic.Scene
   alias Scenic.Primitive.Style.Theme
+  alias Scenic.Assets.Static
+
   import Scenic.Primitives, only: [{:rrect, 3}, {:text, 3}, {:update_opts, 2}]
 
   # import IEx
+  @impl Scenic.Component
+  def validate(text) when is_bitstring(text) do
+    {:ok, text}
+  end
 
-  @default_radius 3
-
-  @default_font :roboto
-  @default_font_size 20
-  @default_alignment :center
-
-  # --------------------------------------------------------
-  @doc false
-  def info(data) do
-    """
-    #{IO.ANSI.red()}Button data must be a bitstring: initial_text
-    #{IO.ANSI.yellow()}Received: #{inspect(data)}
-    #{IO.ANSI.default_color()}
-    """
+  def validate(data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Button specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The data for a button is just the text string to be displayed in the button.#{IO.ANSI.default_color()}
+      """
+    }
   end
 
   # --------------------------------------------------------
   @doc false
-  def verify(text) when is_bitstring(text), do: {:ok, text}
-  def verify(_), do: :invalid_data
-
-  # --------------------------------------------------------
-  @doc false
-  def init(text, opts) when is_bitstring(text) and is_list(opts) do
+  @impl Scenic.Scene
+  def init(scene, text, opts) when is_bitstring(text) and is_list(opts) do
+    styles = Keyword.get(opts, :styles, [])
     id = opts[:id]
-    styles = opts[:styles]
 
     # theme is passed in as an inherited style
     theme =
-      (styles[:theme] || Theme.preset(:primary))
+      case opts[:theme] do
+        nil -> Theme.preset(:primary)
+        :dark -> Theme.preset(:primary)
+        :light -> Theme.preset(:primary)
+        theme -> theme
+      end
       |> Theme.normalize()
 
     # font related info
-    font = @default_font
-    font_size = styles[:button_font_size] || @default_font_size
-    fm = Scenic.Cache.Static.FontMetrics.get!(font)
+    font = Keyword.get(styles, :font, @default_font)
+    {:ok, {Static.Font, fm}} = Static.meta(font)
+    font_size = Keyword.get(styles, :font_size, @default_font_size)
+    alignment = Keyword.get(styles, :text_align, @default_alignment)
+
     ascent = FontMetrics.ascent(font_size, fm)
     descent = FontMetrics.descent(font_size, fm)
     fm_width = FontMetrics.width(text, font_size, fm)
 
     width =
-      case styles[:width] || opts[:w] do
+      case opts[:width] || opts[:w] do
         nil -> fm_width + ascent + ascent
         :auto -> fm_width + ascent + ascent
         width when is_number(width) and width > 0 -> width
       end
 
     height =
-      case styles[:height] || opts[:h] do
+      case opts[:height] || opts[:h] do
         nil -> font_size + ascent
         :auto -> font_size + ascent
         height when is_number(height) and height > 0 -> height
       end
 
-    radius = styles[:radius] || @default_radius
-    alignment = styles[:alignment] || @default_alignment
+    radius = opts[:radius] || @default_radius
 
     vpos = height / 2 + ascent / 2 + descent / 3
 
     # build the graph
     graph =
       Graph.build(font: font, font_size: font_size)
-      |> rrect({width, height, radius}, fill: theme.background, id: :btn)
+      |> rrect({width, height, radius}, fill: theme.background, id: :btn, input: :cursor_button)
       |> do_aligned_text(alignment, text, theme.text, width, vpos)
+      # special case the dark and light themes to show an outline
+      |> do_special_theme_outline(theme, theme.border)
+      |> update_color(theme, Scene.get(scene, :pressed, false))
 
-    # special case the dark and light themes to show an outline
-    graph = do_special_theme_outline(styles[:theme], graph, theme.border)
+    scene =
+      scene
+      |> assign(
+        vpos: vpos,
+        graph: graph,
+        theme: theme,
+        id: id,
+        text: text,
+        theme: theme,
+        opts: opts
+      )
+      |> assign_new(pressed: false)
+      |> push_graph(graph)
 
-    state = %{
-      vpos: vpos,
-      graph: graph,
-      theme: theme,
-      pressed: false,
-      contained: false,
-      align: alignment,
-      id: id
-    }
+    {:ok, scene}
+  end
 
-    {:ok, state, push: graph}
+  @impl Scenic.Component
+  def bounds(text, opts) do
+    # font related info
+    {:ok, {Static.Font, fm}} = Static.meta(@default_font)
+    font_size = opts[:button_font_size] || @default_font_size
+
+    ascent = FontMetrics.ascent(font_size, fm)
+    fm_width = FontMetrics.width(text, font_size, fm)
+
+    width =
+      case opts[:width] || opts[:w] do
+        nil -> fm_width + ascent + ascent
+        :auto -> fm_width + ascent + ascent
+        width when is_number(width) and width > 0 -> width
+      end
+
+    height =
+      case opts[:height] || opts[:h] do
+        nil -> font_size + ascent
+        :auto -> font_size + ascent
+        height when is_number(height) and height > 0 -> height
+      end
+
+    {0.0, 0.0, width, height}
   end
 
   defp do_aligned_text(graph, :center, text, fill, width, vpos) do
@@ -215,107 +278,119 @@ defmodule Scenic.Component.Button do
     )
   end
 
-  defp do_special_theme_outline(:dark, graph, border) do
+  defp do_special_theme_outline(graph, :dark, border) do
     Graph.modify(graph, :btn, &update_opts(&1, stroke: {1, border}))
   end
 
-  defp do_special_theme_outline(:light, graph, border) do
+  defp do_special_theme_outline(graph, :light, border) do
     Graph.modify(graph, :btn, &update_opts(&1, stroke: {1, border}))
   end
 
-  defp do_special_theme_outline(_, graph, _border) do
+  defp do_special_theme_outline(graph, _, _border) do
     graph
   end
 
   # --------------------------------------------------------
-  @doc false
+  # pressed in the button
+  @impl Scenic.Scene
   def handle_input(
-        {:cursor_enter, _uid},
-        _context,
-        %{
-          pressed: true
-        } = state
+        {:cursor_button, {:btn_left, 1, _, _}},
+        :btn,
+        %Scene{assigns: %{graph: graph, theme: theme}} = scene
       ) do
-    state = Map.put(state, :contained, true)
-    {:noreply, state, push: update_color(state)}
+    :ok = capture_input(scene, :cursor_button)
+
+    graph = update_color(graph, theme, true)
+
+    scene =
+      scene
+      |> assign(pressed: true)
+      |> push_graph(graph)
+
+    {:noreply, scene}
   end
 
   # --------------------------------------------------------
+  # pressed outside the button
+  # only happens when input is captured
+  # could happen when reconnecting to a driver...
   def handle_input(
-        {:cursor_exit, _uid},
-        _context,
-        %{
-          pressed: true
-        } = state
+        {:cursor_button, {:btn_left, 1, _, _}},
+        _id,
+        %Scene{assigns: %{graph: graph, theme: theme}} = scene
       ) do
-    state = Map.put(state, :contained, false)
-    {:noreply, state, push: update_color(state)}
+    :ok = release_input(scene)
+
+    graph = update_color(graph, theme, false)
+
+    scene =
+      scene
+      |> assign(pressed: false)
+      |> push_graph(graph)
+
+    {:noreply, scene}
   end
 
   # --------------------------------------------------------
-  def handle_input({:cursor_button, {:left, :press, _, _}}, context, state) do
-    state =
-      state
-      |> Map.put(:pressed, true)
-      |> Map.put(:contained, true)
-
-    update_color(state)
-
-    ViewPort.capture_input(context, [:cursor_button, :cursor_pos])
-
-    {:noreply, state, push: update_color(state)}
-  end
-
-  # --------------------------------------------------------
+  # released inside the button
   def handle_input(
-        {:cursor_button, {:left, :release, _, _}},
-        context,
-        %{pressed: pressed, contained: contained, id: id} = state
+        {:cursor_button, {:btn_left, 0, _, _}},
+        :btn,
+        %Scene{assigns: %{pressed: true, id: id, graph: graph, theme: theme}} = scene
       ) do
-    state = Map.put(state, :pressed, false)
-    update_color(state)
+    :ok = release_input(scene)
+    :ok = send_parent_event(scene, {:click, id})
 
-    ViewPort.release_input(context, [:cursor_button, :cursor_pos])
+    graph = update_color(graph, theme, false)
 
-    if pressed && contained do
-      send_event({:click, id})
-    end
+    scene =
+      scene
+      |> assign(pressed: false)
+      |> push_graph(graph)
 
-    {:noreply, state, push: update_color(state)}
+    {:noreply, scene}
   end
 
   # --------------------------------------------------------
-  def handle_input(_event, _context, state) do
-    {:noreply, state}
+  # released outside the button
+  # only happens when input is captured
+  def handle_input(
+        {:cursor_button, {:btn_left, 0, _, _}},
+        _id,
+        %Scene{assigns: %{graph: graph, theme: theme}} = scene
+      ) do
+    :ok = release_input(scene)
+
+    graph = update_color(graph, theme, false)
+
+    scene =
+      scene
+      |> assign(pressed: false)
+      |> push_graph(graph)
+
+    {:noreply, scene}
+  end
+
+  # ignore other input
+  def handle_input(_input, _id, scene) do
+    {:noreply, scene}
   end
 
   # ============================================================================
   # internal utilities
 
-  defp update_color(%{graph: graph, theme: theme, pressed: false, contained: false}) do
-    Graph.modify(graph, :btn, fn p ->
-      p
-      |> Primitive.put_style(:fill, theme.background)
-    end)
+  defp update_color(graph, theme, true) do
+    Graph.modify(graph, :btn, &update_opts(&1, fill: theme.active))
   end
 
-  defp update_color(%{graph: graph, theme: theme, pressed: false, contained: true}) do
-    Graph.modify(graph, :btn, fn p ->
-      p
-      |> Primitive.put_style(:fill, theme.background)
-    end)
+  defp update_color(graph, theme, _) do
+    Graph.modify(graph, :btn, &update_opts(&1, fill: theme.background))
   end
 
-  defp update_color(%{graph: graph, theme: theme, pressed: true, contained: false}) do
-    Graph.modify(graph, :btn, fn p ->
-      p
-      |> Primitive.put_style(:fill, theme.background)
-    end)
-  end
-
-  defp update_color(%{graph: graph, theme: theme, pressed: true, contained: true}) do
-    Graph.modify(graph, :btn, fn p ->
-      Primitive.put_style(p, :fill, theme.active)
-    end)
+  # --------------------------------------------------------
+  @doc false
+  @impl Scenic.Scene
+  def handle_fetch(_, %{assigns: %{text: text}} = scene) do
+    {:reply, {:ok, text}, scene}
   end
 end

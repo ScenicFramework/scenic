@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2018-06-04.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Style.Join do
@@ -12,13 +12,18 @@ defmodule Scenic.Primitive.Style.Join do
 
   Example:
 
-      graph
-      |> triangle( {{0,40},{40,40},{40,0}}
-        join: :round,
-        stroke: {2, :green}
-      )
+  ```elixir
+  graph
+    |> triangle( {{0,40},{40,40},{40,0}}
+      join: :round,
+      stroke: {2, :green}
+    )
+  ```
 
-  ## Data
+  ### Data Format
+
+  Join can be any of the following values:
+
   * `:miter` - Miter the pointy part of the joint.
   * `:round` - Round the entire joint.
   * `:bevel` - Bevel the joint.
@@ -29,29 +34,20 @@ defmodule Scenic.Primitive.Style.Join do
   # ============================================================================
   # data verification and serialization
 
-  # --------------------------------------------------------
   @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be one of :miter, :round, :bevel
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
-      #{IO.ANSI.default_color()}
-    """
+  def validate(:miter), do: {:ok, :miter}
+  def validate(:round), do: {:ok, :round}
+  def validate(:bevel), do: {:ok, :bevel}
 
-  # --------------------------------------------------------
-  @doc false
-  def verify(stroke) do
-    try do
-      normalize(stroke)
-      true
-    rescue
-      _ -> false
-    end
+  def validate(data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Join specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The :join style must be one of :miter, :round, or :bevel#{IO.ANSI.default_color()}
+      """
+    }
   end
-
-  # --------------------------------------------------------
-  @doc false
-  def normalize(:miter), do: :miter
-  def normalize(:round), do: :round
-  def normalize(:bevel), do: :bevel
 end

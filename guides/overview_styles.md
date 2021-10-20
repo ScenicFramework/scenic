@@ -10,22 +10,24 @@ For example, to use the style defined in the module Scenic.Primitive.Style.Font 
 
     graph =
       Graph.build
-      |> text( "Styled Text", font: :roboto_slab )
+      |> text( "Styled Text", font: :roboto_mono )
+      |> text( "Custom Text", font: "fonts/my_font.ttf" )
 
 ## Primitive Styles
 
 * [`Cap`](Scenic.Primitive.Style.Cap.html) sets how to draw the end of a line.
-* [`ClearColor`](Scenic.Primitive.Style.ClearColor.html) sets the background color. 
 * [`Fill`](Scenic.Primitive.Style.Fill.html) fills in a primitive with a [paint style](overview_styles.html#primitive-paint-styles).
 * [`Font`](Scenic.Primitive.Style.Font.html) sets the font to use to draw text.
-* [`FontBlur`](Scenic.Primitive.Style.FontBlur.html) applies a blur effect to text.
 * [`FontSize`](Scenic.Primitive.Style.FontSize.html) sets the point size text.
 * [`Hidden`](Scenic.Primitive.Style.Hidden.html) a flag that sets if a primitive is drawn at all.
+* [`Input`](Scenic.Primitive.Style.Input.html) send cursor related input to your scene when the cursor is over the primitve.
 * [`Join`](Scenic.Primitive.Style.Join.html) sets how to render the intersection of two lines. Works on the intersections of other primitives as well.
+* [`LineHeight`](Scenic.Primitive.Style.LineHeight.html) adjust the vertical distance between lines of text. Works similar to line height in css.
 * [`MiterLimit`](Scenic.Primitive.Style.MiterLimit.html) sets whether or not to miter a joint if the intersection of two lines is very sharp.
 * [`Scissor`](Scenic.Primitive.Style.Scissor.html) defines a rectangle that drawing will be clipped to.
 * [`Stroke`](Scenic.Primitive.Style.Stroke.html) defines how to draw the edge of a primitive. Specifies both a width and a [paint style](overview_styles.html#primitive-paint-styles).
-* [`TextAlign`](Scenic.Primitive.Style.TextAlign.html) sets the alignment of text relative to the starting point. Examples: :left, :center, or :right
+* [`TextAlign`](Scenic.Primitive.Style.TextAlign.html) sets the horizontal alignment of text relative to the starting point. Examples: :left, :center, or :right
+* [`TextBase`](Scenic.Primitive.Style.TextBase.html) sets the vertical alignment of text relative to the starting point. Examples: :top, :middle, :alphabetic, or :bottom
 * [`Theme`](Scenic.Primitive.Style.Theme.html) a collection of default colors. Usually passed to components, telling them how to draw in your preferred color scheme.
 
 ## Primitive Paint Styles
@@ -34,11 +36,11 @@ The `Fill` and `Stroke` styles accept a paint type. This describes what to fill 
 
 There is a fixed set of paint types that the drivers know how to render.
 
-* [`BoxGradient`](Scenic.Primitive.Style.Paint.BoxGradient.html) fills a primitive with a box gradient.
 * [`Color`](Scenic.Primitive.Style.Paint.Color.html) fills a primitive with a solid color. 
 * [`Image`](Scenic.Primitive.Style.Paint.Image.html) fills a primitive with an image that is loaded into `Scenic.Cache`.
 * [`LinearGradient`](Scenic.Primitive.Style.Paint.LinearGradient.html) fills a primitive with a linear gradient.
 * [`RadialGradient`](Scenic.Primitive.Style.Paint.RadialGradient.html) fills a primitive with a radial gradient.
+* [`Stream`](Scenic.Primitive.Style.Paint.Stream.html) fills a primitive with a streaming image.
 
 ### Specifying Paint
 

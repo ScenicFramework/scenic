@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 # NIF version of the matrix math library. Accepts only binary form of matrices

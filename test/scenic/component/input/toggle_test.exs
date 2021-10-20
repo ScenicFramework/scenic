@@ -1,160 +1,116 @@
 #
 #  Created by Eric Watson on 2018-09-18.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Rewritten by Boyd Multerer on 2021-05-16
 #
+
+# re-writing it for version 0.11 to take advantage of the new scene struct
+# and be more end-to-end in style
 
 defmodule Scenic.Component.Input.ToggleTest do
   use ExUnit.Case, async: false
-  doctest Scenic
+  doctest Scenic.Component.Input.Toggle
 
-  # alias Scenic.Component
   alias Scenic.Graph
-  alias Scenic.Primitive
-  alias Scenic.ViewPort
-  alias Scenic.Component.Input.Toggle
+  alias Scenic.Scene
+  alias Scenic.ViewPort.Input
 
-  @state %Toggle.State{
-    graph: Graph.build(),
-    theme: Primitive.Style.Theme.preset(:primary),
-    pressed?: false,
-    contained?: false,
-    on?: false,
-    id: :test_id
-  }
+  @press_in {:cursor_button, {:btn_left, 1, [], {20, 10}}}
+  @release_in {:cursor_button, {:btn_left, 0, [], {20, 10}}}
 
-  # ============================================================================
-  # info
+  @press_out {:cursor_button, {:btn_left, 1, [], {1000, 1000}}}
+  @release_out {:cursor_button, {:btn_left, 0, [], {1000, 1000}}}
 
-  test "info works" do
-    assert is_bitstring(Toggle.info(:bad_data))
-    assert Toggle.info(:bad_data) =~ ":bad_data"
+  defmodule TestScene do
+    use Scenic.Scene
+    import Scenic.Components
+
+    def graph() do
+      Graph.build()
+      |> toggle(false, id: :toggle)
+    end
+
+    @impl Scenic.Scene
+    def init(scene, pid, _opts) do
+      scene =
+        scene
+        |> assign(pid: pid)
+        |> push_graph(graph())
+
+      Process.send(pid, {:up, scene}, [])
+      {:ok, scene}
+    end
+
+    @impl Scenic.Scene
+    def handle_event(event, _from, %{assigns: %{pid: pid}} = scene) do
+      send(pid, {:fwd_event, event})
+      {:noreply, scene}
+    end
   end
 
-  # ============================================================================
-  # verify
+  setup do
+    out = Scenic.Test.ViewPort.start({TestScene, self()})
+    # wait for a signal that the scene is up before proceeding
+    {:ok, scene} =
+      receive do
+        {:up, scene} -> {:ok, scene}
+      end
 
-  test "verify passes valid data" do
-    assert Toggle.verify(true) == {:ok, true}
-    assert Toggle.verify(false) == {:ok, false}
+    # make sure the button is up
+    {:ok, [{_id, pid}]} = Scene.children(scene)
+    :_pong_ = GenServer.call(pid, :_ping_)
+
+    # needed to give time for the pid and vp to close
+    on_exit(fn -> Process.sleep(1) end)
+
+    Map.put(out, :scene, scene)
   end
 
-  test "verify fails invalid data" do
-    assert Toggle.verify(:banana) == :invalid_data
+  test "Press in and release in sends the event", %{vp: vp} do
+    Input.send(vp, @press_in)
+    Input.send(vp, @release_in)
+    assert_receive({:fwd_event, {:value_changed, :toggle, true}}, 200)
+
+    Input.send(vp, @press_in)
+    Input.send(vp, @release_in)
+    assert_receive({:fwd_event, {:value_changed, :toggle, false}}, 200)
   end
 
-  # ============================================================================
-  # init
-
-  test "init works with simple data" do
-    {:ok, state, push: graph} = Toggle.init(false, styles: %{}, id: :test_id)
-    %Graph{} = state.graph
-    assert is_map(state.theme)
-    assert state.contained? == false
-    assert state.pressed? == false
-    assert state.on? == false
-    assert state.id == :test_id
-    assert state.graph == graph
-
-    {:ok, state, push: graph} = Toggle.init(true, styles: %{}, id: :test_id)
-    assert state.on? == true
-    assert state.graph == graph
+  test "Press in and release out does not send the event", %{vp: vp} do
+    Input.send(vp, @press_in)
+    Input.send(vp, @release_out)
+    refute_receive(_, 20)
   end
 
-  # ============================================================================
-  # handle_input
-
-  test "handle_input {:cursor_enter, _uid} sets contained" do
-    {:noreply, state, push: graph} =
-      Toggle.handle_input({:cursor_enter, 1}, %{}, %{@state | pressed?: true})
-
-    assert state.contained?
-    assert state.graph == graph
+  test "Press out and release in does not send the event", %{vp: vp} do
+    Input.send(vp, @press_out)
+    Input.send(vp, @release_in)
+    refute_receive(_, 20)
   end
 
-  test "handle_input {:cursor_exit, _uid} clears contained" do
-    {:noreply, state, push: graph} =
-      Toggle.handle_input({:cursor_exit, 1}, %{}, %{@state | pressed?: true})
-
-    refute state.contained?
-    assert state.graph == graph
+  test "ignores non-main button clicks", %{vp: vp} do
+    Input.send(vp, {:cursor_button, {1, :press, 0, {20, 10}}})
+    Input.send(vp, {:cursor_button, {2, :press, 0, {20, 10}}})
+    assert Process.alive?(vp.pid)
   end
 
-  test "handle_input {:cursor_button, :press" do
-    context = %ViewPort.Context{viewport: self()}
-
-    {:noreply, state, push: graph} =
-      Toggle.handle_input({:cursor_button, {:left, :press, nil, nil}}, context, %{
-        @state
-        | pressed?: false,
-          contained?: true
-      })
-
-    assert state.pressed?
-    refute state.on?
-
-    # confirm the input was captured
-    assert_receive({:"$gen_cast", {:capture_input, ^context, [:cursor_button, :cursor_pos]}})
-    assert state.graph == graph
+  test "implements get/put", %{scene: scene} do
+    assert Scene.get_child(scene, :toggle) == [false]
+    assert Scene.put_child(scene, :toggle, true) == :ok
+    assert Scene.get_child(scene, :toggle) == [true]
   end
 
-  test "handle_input {:cursor_button, :release when off" do
-    context = %ViewPort.Context{viewport: self()}
-
-    {:noreply, state, push: graph} =
-      Toggle.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
-        @state
-        | pressed?: true,
-          contained?: true
-      })
-
-    refute state.pressed?
-    assert state.on?
-
-    # confirm the input was released
-    assert_receive({:"$gen_cast", {:release_input, [:cursor_button, :cursor_pos]}})
-    assert state.graph == graph
+  test "implements fetch/update", %{scene: scene} do
+    assert Scene.fetch_child(scene, :toggle) == {:ok, [false]}
+    %Scene{} = scene = Scene.update_child(scene, :toggle, true)
+    assert Scene.fetch_child(scene, :toggle) == {:ok, [true]}
+    assert Scene.get_child(scene, :toggle) == [true]
   end
 
-  test "handle_input {:cursor_button, :release when on" do
-    context = %ViewPort.Context{viewport: self()}
+  test "bounds works with defaults" do
+    graph =
+      Graph.build()
+      |> Scenic.Components.toggle(true)
 
-    {:noreply, state, push: graph} =
-      Toggle.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
-        @state
-        | on?: true,
-          pressed?: true,
-          contained?: true
-      })
-
-    refute state.pressed?
-    refute state.on?
-
-    # confirm the input was released
-    assert_receive({:"$gen_cast", {:release_input, [:cursor_button, :cursor_pos]}})
-    assert state.graph == graph
-  end
-
-  test "handle_input {:cursor_button, :release sends a message if contained" do
-    self = self()
-    Process.put(:parent_pid, self)
-    context = %ViewPort.Context{viewport: self()}
-
-    {:noreply, state, push: graph} =
-      Toggle.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
-        @state
-        | pressed?: true,
-          contained?: true
-      })
-
-    assert state.graph == graph
-
-    # confirm the event was sent
-    assert_receive({:"$gen_cast", {:event, {:value_changed, :test_id, true}, ^self}})
-  end
-
-  test "handle_input does nothing on unknown input" do
-    context = %ViewPort.Context{viewport: self()}
-    {:noreply, state} = Toggle.handle_input(:unknown, context, @state)
-    assert state == @state
+    {0.0, 0.0, 40.0, 24.0} = Graph.bounds(graph)
   end
 end

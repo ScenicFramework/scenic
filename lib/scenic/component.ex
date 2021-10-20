@@ -1,125 +1,192 @@
 #
 #  Created by Boyd Multerer on 2018-03-26.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Copyright © 2018-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Component do
   @moduledoc """
-  A Component is simply a Scene that is optimized to be referenced by another scene.
+  A Component is Scene that is optimized to be used as a child of another scene.
 
-  All you need to do to create a Component is call
-
-      use Scenic.Component
-
-  instead of
-
-      use Scenic.Scene
-
-  At the top of your module definition.
+  These are typically controls that you want to define once and use in multiple places.
 
   ## Standard Components
 
-  Scenic includes a small number of standard components that you can simply reuse in your
-  scenes. These were chosen to be in the main library because a) they are used frequently,
-  and b) their use promotes a certain amount of "common" look and feel.
+  Scenic includes a several standard components that you can use in your
+  scenes. These were chosen to be in the main library because:
+    * They are used frequently
+    * Their use promotes a certain amount of "common" look and feel
 
   All of these components are typically added/modified via the helper functions in the
   [`Scenic.Components`](Scenic.Components.html) module.
 
-  * [`Button`](Scenic.Component.Button.html) a simple button.
-  * [`Checkbox`](Scenic.Component.Input.Checkbox.html) a checkbox input field.
-  * [`Dropdown`](Scenic.Component.Input.Dropdown.html) a dropdown / select input field.
-  * [`RadioGroup`](Scenic.Component.Input.RadioGroup.html) a group of radio button inputs.
-  * [`Slider`](Scenic.Component.Input.Slider.html) a slider input.
-  * [`TextField`](Scenic.Component.Input.TextField.html) a text / password input field.
-  * [`Toggle`](Scenic.Component.Input.Toggle.html) an on/off toggle input.
+  | Helper | Component Module | Description |
+  |---|---|---|
+  | [`button/3`](Scenic.Components.html#button/3) | `Scenic.Component.Button` | A simple button |
+  | [`checkbox/3`](Scenic.Components.html#checkbox/3) | `Scenic.Component.Input.Checkbox` | A boolean checkbox control |
+  | [`dropdown/3`](Scenic.Components.html#dropdown/3) | `Scenic.Component.Input.Dropdown` | A menu-like dropdown control |
+  | [`radio_group/3`](Scenic.Components.html#radio_group/3) | `Scenic.Component.Input.RadioGroup` | A group of radio controls |
+  | [`slider/3`](Scenic.Components.html#slider/3) | `Scenic.Component.Input.Slider` | A slider ranging from one value to another |
+  | [`text_field/3`](Scenic.Components.html#text_field/3) | `Scenic.Component.Input.TextField` | A text input field. |
+  | [`toggle/3`](Scenic.Components.html#toggle/3) | `Scenic.Component.Input.Toggle` | A boolean toggle control. |
 
-  ## Other Components
+  ```elixir
+  defmodule MyApp.Scene.MyScene do
+    use Scenic.Scene
+    import Scenic.Components
 
-  For completeness, Scenic also includes the following standard components. They are used
-  by the components above, although you are free to use them as well if they fit your needs.
+    @impl Scenic.Scene
+    def init(scene, text, opts) do
+      graph =
+        Scenic.Graph.build()
+        |> button( "Press Me", id: :press_me )
+        |> slider( {{0,100}, 0}, id: :slide_me )
 
-  * [`Caret`](Scenic.Component.Input.Caret.html) the vertical, blinking, caret line in a text field.
-  * [`RadioButton`](Scenic.Component.Input.RadioButton.html) a single radio button in a radio group.
+      { :ok, push_graph(scene, graph) }
+    end
+  end
+  ```
 
-  ## Verifiers
+  ## Creating Custom Components
 
-  One of the main differences between a Component and a Scene is the two extra callbacks
-  that are used to verify incoming data. Since Components are meant to be reused, you
-  should do some basic validation that the data being set up is valid, then provide
-  feedback if it isn't.
+  Creating a custom component that you can use in your scenes is just like creating a scene
+  with an extra validation function. This validation function is used when the graph that 
+  uses your component is built in order to make sure it uses data that conforms to what your
+  component expects.
 
-  ## Optional: Named Component
+  ```elixir
+    defmodule MyApp.Component.Fancy do
+      use Scenic.Component
 
-  Whether you override one or more message handlers, like `handle_info/2`,
-  you might want to use registered name as
-  [`Process.dest()`](https://hexdocs.pm/elixir/Process.html?#t:dest/0).
-  For this to be possible, you might pass `name:` keyword argument in a call
-  to `use Scenic.Component`.
+      @impl Scenic.Component
+      def validate(data) when is_bitstring(data), do: {:ok, data}
+      def validate(_), do: {:error, "Descriptive error message goes here."}
 
-      use Scenic.Component, name: __MODULE__
+      @impl Scenic.Scene
+      def init(scene, data, opts) do
+        { :ok, scene }
+      end
+    end
+  ```
 
-  Once passed, it limits the usage of this particular component to
-  a single instance, because two processes cannot be registered under the same name.
+  ## Generating/Sending Events
 
-  ## Optional: No Children
+  Communication from a component to it's parent is usually done via event messages. Scenic knows how
+  to route events to a component's parent. If that parent doesn't handle it, then it is automatically
+  routed to the parent's parent. If it gets all the way to the ViewPort itself, then it is ignored.
 
-  There is an optimization you can use. If you know for certain that your component
-  will not attempt to use any components, you can set `has_children` to `false` like this.
+  ```elixir
+    defmodule MyApp.Component.Fancy do
+      
+    # ... validate, and other setup ...
 
-      use Scenic.Component, has_children: false
+      @impl Scenic.Scene
+      def init(scene, data, opts) do
+        # setup and push a graph here...
+        { :ok, assign(scene, id: opts[:id] }
+      end
 
-  Setting `has_children` to `false` this will do two things. First, it won't create
-  a dynamic supervisor for this scene, which saves some resources.
+      @impl Scenic.Scene
+      def handle_input( {:cursor_button, {0, :release, _, _}}, :btn,
+            %Scene{assigns: %{id: id}} = scene
+          ) do
+        :ok = send_parent_event( scene, {:click, id}  )
+        { :noreply, scene }
+      end
 
-  For example, the Button component sets `has_children` to `false`.
+    end
+  ```
 
-  This option is available for any Scene, not just components
+  Notice how the component saved the original `id` that was passed in to the `init` function via
+  the `opts` list. This is then used to identify the click to the parent. This is a common pattern. 
+
+
+  ## Optional: Fetch/Put Handlers
+
+  If you would like the parent scene to be able to query your component's state without waiting
+  for the component to send events, you can optionally implement the following handle_call functions.
+
+  This is an "informal" spec... You don't have to implement it, but it is nice when you do.
+
+  ```elixir
+  defmodule MyApp.Component.Fancy do
+    use Scenic.Component
+    
+    # ... init, validate, and other functions ...
+
+    def handle_call(:fetch, _, %{assigns: %{value: value}} = scene) do
+      { :reply, {:ok, value}, scene }
+    end
+
+    def handle_call({:put, value}, _, scene) when is_bitstring(value) do
+      { :reply, :ok, assign(scene, value: value) }
+    end
+
+    def handle_call({:put, _}, _, scene) do
+      {:reply, {:error, :invalid}, scene}
+    end
+  end
+  ```
+
+  To make the above example more practical, you would probably also modify and push a graph when
+  handling the `:put` message. See the code for the standard input components for deeper examples.
+
+
+  ## Optional: `has_children: false`
+
+  If you know for certain that your component will not itself use any components, you can
+  set `:has_children` to `false` like this.
+
+  ```elixir
+  defmodule MyApp.Component.Fancy do
+    use Scenic.Component, has_children: false
+    # ...
+  end
+  ```
+
+  When `:has_children` is set to `false`, no `DynamicSupervisor` is started to manage the
+  scene's children, overall resource use is improved, and startup time is faster. You will not,
+  however, be able to nested components in any scene where `:has_children` is `false`.
+
+  For example, the `Scenic.Component.Button` component sets `:has_children` to `false`.
+
+  This option is available for any Scene, not just components.
   """
 
   alias Scenic.Primitive
 
-  @optional_callbacks add_to_graph: 3, info: 1
+  @doc """
+  Add this component to a Graph.
+
+  A standard `add_to_graph/3` is automatically added to your component. Override this
+  callback if you want to customize it.
+  """
+  @callback add_to_graph(graph :: Scenic.Graph.t(), data :: any, opts :: Keyword.t()) ::
+              Scenic.Graph.t()
 
   @doc """
-  Add this component to a `Scenic.Graph`
+  Validate that the data for a component is correctly formed.
+
+  This callback is required. 
   """
-  @callback add_to_graph(graph :: Scenic.Graph.t(), data :: any, opts :: list) :: Scenic.Graph.t()
+  @callback validate(data :: any) :: {:ok, data :: any} | {:error, String.t()}
 
   @doc """
-  Verify that this the data for this component is valid.
+  Compute the bounding box of the component.
 
-  Return an `{:ok, data}` tuple if the data is valid and any other term if the data is
-  not valid. Here is an example implementation that checks if the input is a
-  valid binary:
-
-      @impl Scenic.Component
-      def verify(data) do
-        if is_binary(data) do
-          {:ok, data}
-        else
-          :invalid_data
-        end
-      end
+  This function can be called outside of the context of a running component. The box
+  should be computed as if it was running with the given data and styles.
   """
-  @callback verify(data :: any) :: {:ok, any} | any
+  @callback bounds(data :: any, styles :: map) :: Scenic.Graph.bounds()
 
   @doc """
-  Provide an info string about what was wrong with the provided data.
+  Provide a default pin for this component.
 
-  This string will typically be displayed in the terminal. Example implementation:
-
-      def info(data) do
-      \"""
-      \#{IO.ANSI.red()}Button data must be a binary
-      \#{IO.ANSI.yellow()}Received: \#{inspect(data)}
-      \#{IO.ANSI.default_color()}
-      \"""
-      end
+  If this callback is not implemented, then the default pin will be {0,0}.
   """
-  @callback info(data :: any) :: String.t()
+  @callback default_pin(data :: any, styles :: map) :: Scenic.Math.vector_2()
 
-  #  import IEx
+  @optional_callbacks bounds: 2,
+                      default_pin: 2
 
   # ===========================================================================
   defmodule Error do
@@ -132,42 +199,51 @@ defmodule Scenic.Component do
   defmacro __using__(opts) do
     quote do
       @behaviour Scenic.Component
-
       use Scenic.Scene, unquote(opts)
 
-      @spec add_to_graph(graph :: Scenic.Graph.t(), data :: any, opts :: list) :: Scenic.Graph.t()
-      def add_to_graph(graph, data \\ nil, opts \\ [])
+      def add_to_graph(graph, data, opts \\ [])
 
       def add_to_graph(%Scenic.Graph{} = graph, data, opts) do
-        verify!(data)
-        Primitive.SceneRef.add_to_graph(graph, {__MODULE__, data}, opts)
-      end
-
-      @doc false
-      @spec info(data :: any) :: String.t()
-      def info(data) do
-        """
-        #{inspect(__MODULE__)} invalid add_to_graph data
-        Received: #{inspect(data)}
-        """
-      end
-
-      @doc false
-      @spec verify!(data :: any) :: any
-      def verify!(data) do
-        case verify(data) do
-          {:ok, data} -> data
-          err -> raise Error, message: info(data), error: err, data: data
-        end
+        Primitive.Component.add_to_graph(graph, {__MODULE__, data}, opts)
       end
 
       # --------------------------------------------------------
-      defoverridable add_to_graph: 3,
-                     info: 1
+      defoverridable add_to_graph: 3
     end
 
     # quote
   end
 
   # defmacro
+
+  @filter_out [
+    :cap,
+    :fill,
+    :font,
+    :font_size,
+    :hidden,
+    :input,
+    :join,
+    :line_height,
+    :miter_limit,
+    :scissor,
+    :stroke,
+    :text_align,
+    :text_base,
+    :translate,
+    :scale,
+    :rotate,
+    :pin,
+    :matrix
+  ]
+
+  # prepare the list of opts to send to a component as it is being started up
+  # the main task is to remove styles that have already been consumed or don't make
+  # sense, while leaving any opts/styles that are intended for the component itself.
+  # also, add the viewport as an option.
+  @doc false
+  @spec filter_opts(opts :: Keyword.t()) :: Keyword.t()
+  def filter_opts(opts) when is_list(opts) do
+    Enum.reject(opts, fn {key, _} -> Enum.member?(@filter_out, key) end)
+  end
 end

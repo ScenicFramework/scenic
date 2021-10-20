@@ -1,48 +1,43 @@
 #
 #  Created by Boyd Multerer on 28/02/2019.
-#  Copyright © 2019 Kry10 Industries. All rights reserved.
+#  Copyright © 2019 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Scenes.ErrorTest do
   use ExUnit.Case, async: true
   doctest Scenic.Scenes.Error
 
+  alias Scenic.ViewPort
   alias Scenic.Scenes
 
-  defmodule FakeViewPort do
-    use GenServer
+  @viewports :scenic_viewports
 
-    def start_link(), do: GenServer.start_link(__MODULE__, nil)
-    def init(nil), do: {:ok, nil}
+  test "the error scene is startable" do
+    {:ok, pid} = DynamicSupervisor.start_link(name: @viewports, strategy: :one_for_one)
 
-    def handle_call(:query_info, _, state) do
-      {:reply, {:ok, %Scenic.ViewPort.Status{size: {500, 400}}}, state}
-    end
-  end
-
-  test "init" do
-    {:ok, fvp} = FakeViewPort.start_link()
-
-    {:ok, {:mod, :args, ^fvp}, push: _} =
-      Scenes.Error.init(
-        {{"module", "err", "args", "stack"}, :mod, :args},
-        viewport: fvp
+    {:ok, %ViewPort{} = vp} =
+      ViewPort.start(
+        size: {700, 600},
+        opts: [font: :roboto, font_size: 30, scale: 1.4],
+        default_scene: {Scenes.Error, {{"module", "err", "args", "stack"}, :mod, :args}}
       )
 
-    Process.exit(fvp, :normal)
-  end
+    Process.sleep(100)
 
-  test "filter_event {:click, :try_again}" do
-    self = self()
-    state = {:mod, :args, self}
-    {:halt, ^state} = Scenes.Error.filter_event({:click, :try_again}, nil, state)
-    assert_receive({:"$gen_cast", {:set_root, {:mod, :args}, _}})
-  end
+    # confirm it's script is in place
+    # starting the scene is async and may take some time
+    Enum.find(1..200, fn _ ->
+      case ViewPort.get_script(vp, ViewPort.main_id()) do
+        {:ok, _script} ->
+          true
 
-  test "filter_event {:click, :restart}" do
-    self = self()
-    state = {:mod, :args, self}
-    {:halt, ^state} = Scenes.Error.filter_event({:click, :restart}, nil, state)
-    assert_receive({:"$gen_cast", :reset})
+        :error ->
+          Process.sleep(1)
+          false
+      end
+    end)
+
+    DynamicSupervisor.terminate_child(@viewports, pid)
+    Process.sleep(2)
   end
 end

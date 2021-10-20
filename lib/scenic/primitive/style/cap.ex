@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2018-06-04.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Style.Cap do
@@ -10,9 +10,12 @@ defmodule Scenic.Primitive.Style.Cap do
   Example:
 
       graph
-      |> line({{0,0}, {100,100}}, cap: :round)
+      |> line( {{0,0}, {100,100}}, cap: :round )
 
-  ## Data
+  ### Data Format
+
+  Cap can be any of the following values:
+
   * `:butt` - End of the line is flat, passing through the end point.
   * `:round` - End of the line is round, radiating from the end point.
   * `:square` - End of the line is flat, but projecting a square around the end point.
@@ -23,30 +26,20 @@ defmodule Scenic.Primitive.Style.Cap do
   # ============================================================================
   # data verification and serialization
 
-  # --------------------------------------------------------
   @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be one of :butt, :round, :square
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
-      #{IO.ANSI.default_color()}
-    """
+  def validate(:butt), do: {:ok, :butt}
+  def validate(:round), do: {:ok, :round}
+  def validate(:square), do: {:ok, :square}
 
-  # --------------------------------------------------------
-  # named color
-  @doc false
-  def verify(stroke) do
-    try do
-      normalize(stroke)
-      true
-    rescue
-      _ -> false
-    end
+  def validate(data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Cap specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The :cap style must be must be one of :butt, :round, or :square#{IO.ANSI.default_color()}
+      """
+    }
   end
-
-  # --------------------------------------------------------
-  @doc false
-  def normalize(:butt), do: :butt
-  def normalize(:round), do: :round
-  def normalize(:square), do: :square
 end

@@ -6,6 +6,7 @@ There is a fixed set of primitives. This simplifies the internals of Scenic, par
 
 * [`Arc`](Scenic.Primitive.Arc.html) draws an arc. This would be a line cut out of a part of the edge of a circle. If you want a shape that looks like a piece of pie, then you should use the [`Sector`](Scenic.Primitive.Sector.html).
 * [`Circle`](Scenic.Primitive.Circle.html) draws a circle. 
+* [`Component`](Scenic.Primitive.Component.html) doesn't draw anything by itself. Instead starts a component (another scene) and tells it where to draw.
 * [`Ellipse`](Scenic.Primitive.Ellipse.html) draws an ellipse.
 * [`Group`](Scenic.Primitive.Group.html) doesn't draw anything. Instead, it creates a node in the graph that you can insert more primitives into. Any styles or transforms you apply to the Group are inherited by all the primitives below it.
 * [`Line`](Scenic.Primitive.Line.html) draws a line.
@@ -13,8 +14,9 @@ There is a fixed set of primitives. This simplifies the internals of Scenic, par
 * [`Quad`](Scenic.Primitive.Quad.html) draws polygon with four sides.
 * [`Rectangle`](Scenic.Primitive.Rectangle.html) draws a rectangle.
 * [`RoundedRectangle`](Scenic.Primitive.RoundedRectangle.html) draws a rectangle with the corners rounded by a given radius.
-* [`SceneRef`](Scenic.Primitive.SceneRef.html) doesn't draw anything by itself. Instead it points to another scene/graph and tells the driver to draw that here.
+* [`Script`](Scenic.Primitive.Script.html) draws a pre-build script.
 * [`Sector`](Scenic.Primitive.Sector.html) draws a shape that looks like a piece of pie. If you want to stroke just the curved edge, then combine it with an [`Arc`](Scenic.Primitive.Arc.html).
+* [`Sprites`](Scenic.Primitive.Sprites.html) draws one or more sub-images from a single source image.
 * [`Text`](Scenic.Primitive.Text.html) draws a string of text.
 * [`Triangle`](Scenic.Primitive.Triangle.html) draws a triangle.
 

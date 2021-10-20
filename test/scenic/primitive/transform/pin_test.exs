@@ -1,37 +1,24 @@
 #
 #  Created by Boyd Multerer on 2017-11-02.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Transform.PinTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive.Transform.Pin
 
   alias Scenic.Primitive.Transform.Pin
 
-  test "info works" do
-    assert Pin.info(:test_data) =~ ":test_data"
+  test "validate accepts valid data" do
+    assert Pin.validate({1, 2}) == {:ok, {1, 2}}
+    assert Pin.validate({1.5, 2}) == {:ok, {1.5, 2}}
   end
 
-  test "verify passes valid data" do
-    assert Pin.verify({1, 2}) == true
-  end
+  test "validate rejects bad data" do
+    {:error, msg} = Pin.validate({"1.5", 2})
+    assert msg =~ "Invalid Pin"
 
-  test "verify fails invalid data" do
-    assert Pin.verify(1) == false
-    assert Pin.verify({1}) == false
-    assert Pin.verify({1, 2, 3, 4}) == false
-    assert Pin.verify(:banana) == false
-  end
-
-  test "normalize" do
-    assert Pin.normalize({1, 2}) == {1, 2}
-    assert Pin.normalize({1.1, 2.2}) == {1.1, 2.2}
-  end
-
-  test "normalize raises on bad data" do
-    assert_raise FunctionClauseError, fn ->
-      assert Pin.normalize(:banana)
-    end
+    {:error, msg} = Pin.validate(:banana)
+    assert msg =~ "Invalid Pin"
   end
 end

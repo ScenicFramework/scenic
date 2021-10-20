@@ -1,6 +1,6 @@
 //
 //  Created by Boyd Multerer
-//  Copyright © 2017 Kry10 Industries. All rights reserved.
+//  Copyright © 2017 Kry10 Limited. All rights reserved.
 //
 
 // native matrix math functions.

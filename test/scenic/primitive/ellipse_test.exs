@@ -1,11 +1,11 @@
 #
 #  Created by Boyd Multerer on 2018-06-29.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Copyright © 2018 - 2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.EllipseTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive.Ellipse
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Ellipse
@@ -22,26 +22,33 @@ defmodule Scenic.Primitive.EllipseTest do
   end
 
   # ============================================================================
-  # verify
 
-  test "info works" do
-    assert Ellipse.info(:test_data) =~ ":test_data"
+  test "validate accepts valid data" do
+    assert Ellipse.validate({100, 200}) == {:ok, {100, 200}}
+    assert Ellipse.validate({100.5, 200}) == {:ok, {100.5, 200}}
   end
 
-  test "verify passes valid data" do
-    assert Ellipse.verify(@data) == {:ok, @data}
-  end
+  test "validate rejects bad data" do
+    {:error, msg} = Ellipse.validate({100, "1.4"})
+    assert msg =~ "Invalid Ellipse"
 
-  test "verify fails invalid data" do
-    assert Ellipse.verify({:atom, 0.0, 1.4}) == :invalid_data
-    assert Ellipse.verify(:banana) == :invalid_data
+    {:error, msg} = Ellipse.validate(:banana)
+    assert msg =~ "Invalid Ellipse"
   end
 
   # ============================================================================
   # styles
 
   test "valid_styles works" do
-    assert Ellipse.valid_styles() == [:hidden, :fill, :stroke]
+    assert Ellipse.valid_styles() == [:hidden, :scissor, :fill, :stroke_width, :stroke_fill]
+  end
+
+  # ============================================================================
+  # compile
+
+  test "compile works" do
+    p = Ellipse.build(@data)
+    assert Ellipse.compile(p, %{stroke_fill: :blue}) == [{:draw_ellipse, {100, 200, :stroke}}]
   end
 
   # ============================================================================

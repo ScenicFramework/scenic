@@ -467,6 +467,28 @@ defmodule Scenic.Math.Vector2 do
   end
 
   def project(vectors, matrix) do
-    Matrix.project_vectors(matrix, vectors)
+    Enum.map(vectors, &Matrix.project_vector(matrix, &1))
+  end
+
+  # --------------------------------------------------------
+  @doc """
+  Given a list of vectors, find the {left, top, right, bottom} of the bounding box.
+  """
+  @spec bounds(vectors :: nil | list(Math.vector_2())) ::
+          {left :: number, top :: number, right :: number, bottom :: number}
+
+  def bounds(vectors)
+
+  def bounds(nil), do: nil
+  def bounds([]), do: nil
+
+  def bounds([{x, y} | vectors]) when is_list(vectors) do
+    Enum.reduce(vectors, {x, y, x, y}, fn {x, y}, {l, t, r, b} ->
+      l = if x < l, do: x, else: l
+      t = if y < t, do: y, else: t
+      r = if x > r, do: x, else: r
+      b = if y > b, do: y, else: b
+      {l, t, r, b}
+    end)
   end
 end

@@ -1,11 +1,11 @@
 #
 #  Created by Boyd Multerer on April 2018
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Copyright © 2018 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.TextTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive.Text
 
   alias Scenic.Primitive
   alias Scenic.Primitive.Text
@@ -22,18 +22,17 @@ defmodule Scenic.Primitive.TextTest do
   end
 
   # ============================================================================
-  # verify
 
-  test "info works" do
-    assert Text.info(:test_data) =~ ":test_data"
+  test "validate accepts valid data" do
+    assert Text.validate(@data) == {:ok, @data}
   end
 
-  test "verify passes valid data" do
-    assert Text.verify(@data) == {:ok, @data}
-  end
+  test "validate rejects bad data" do
+    {:error, msg} = Text.validate({100, "1.4"})
+    assert msg =~ "Invalid Text"
 
-  test "verify fails invalid data" do
-    assert Text.verify(:text_text) == :invalid_data
+    {:error, msg} = Text.validate(:banana)
+    assert msg =~ "Invalid Text"
   end
 
   # ============================================================================
@@ -42,13 +41,22 @@ defmodule Scenic.Primitive.TextTest do
   test "valid_styles works" do
     assert Text.valid_styles() == [
              :hidden,
-             :fill,
+             :scissor,
              :font,
              :font_size,
-             :font_blur,
+             :line_height,
              :text_align,
-             :text_height
+             :text_base,
+             :line_height
            ]
+  end
+
+  # ============================================================================
+  # compile
+
+  test "compile raises - it is a special case" do
+    p = Text.build(@data)
+    assert_raise RuntimeError, fn -> Text.compile(p, %{}) end
   end
 
   # ============================================================================
@@ -56,16 +64,5 @@ defmodule Scenic.Primitive.TextTest do
 
   test "default_pin returns the origin of the text" do
     assert Text.default_pin(@data) == {0, 0}
-  end
-
-  # ============================================================================
-  # put
-
-  test "put can update position and string" do
-    p =
-      Text.build(@data)
-      |> Text.put("new text")
-
-    assert Primitive.get(p) == "new text"
   end
 end

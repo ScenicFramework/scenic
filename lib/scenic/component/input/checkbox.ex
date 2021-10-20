@@ -18,7 +18,7 @@ defmodule Scenic.Component.Input.Checkbox do
 
   ## Styles
 
-  Buttons honor the following standard styles
+  Buttons honor the following styles
 
   * `:hidden` - If `false` the component is rendered. If `true`, it is skipped.
   The default is `false`.
@@ -52,9 +52,14 @@ defmodule Scenic.Component.Input.Checkbox do
   use Scenic.Component, has_children: false
 
   alias Scenic.Graph
+  alias Scenic.Scene
   alias Scenic.Primitive
-  alias Scenic.ViewPort
   alias Scenic.Primitive.Style.Theme
+  alias Scenic.Script
+  alias Scenic.Assets.Static
+
+  require Logger
+
   import Scenic.Primitives
 
   # import IEx
@@ -62,184 +67,264 @@ defmodule Scenic.Component.Input.Checkbox do
   @default_font :roboto
   @default_font_size 20
 
-  # @default_width     140
-  # @default_height    16
-  # @default_radius    3
+  @border_width 2
 
   # --------------------------------------------------------
-  @doc false
-  def info(data) do
-    """
-    #{IO.ANSI.red()}Checkbox data must be: {text, checked?}
-    #{IO.ANSI.yellow()}Received: #{inspect(data)}
-    #{IO.ANSI.default_color()}
-    """
+  @impl Scenic.Component
+  def validate({text, checked}) when is_bitstring(text) and is_boolean(checked) do
+    {:ok, {text, checked}}
+  end
+
+  def validate(data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Checkbox specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The data for a Checkbox is {text, checked?}#{IO.ANSI.default_color()}
+      """
+    }
   end
 
   # --------------------------------------------------------
   @doc false
-  def verify({text, checked} = data) when is_bitstring(text) and is_boolean(checked) do
-    {:ok, data}
-  end
-
-  def verify(_), do: :invalid_data
-
-  # --------------------------------------------------------
-  @doc false
-  def init({text, checked?}, opts) do
+  @impl Scenic.Scene
+  def init(scene, {text, checked?}, opts) do
     id = opts[:id]
-    styles = opts[:styles]
 
     # theme is passed in as an inherited style
     theme =
-      (styles[:theme] || Theme.preset(:primary))
+      (opts[:theme] || Theme.preset(:dark))
       |> Theme.normalize()
 
     # font related info
-    fm = Scenic.Cache.Static.FontMetrics.get!(@default_font)
+    {:ok, {Static.Font, fm}} = Static.meta(@default_font)
     ascent = FontMetrics.ascent(@default_font_size, fm)
     fm_width = FontMetrics.width(text, @default_font_size, fm)
     space_width = FontMetrics.width(' ', @default_font_size, fm)
-    box_width = fm_width + ascent + space_width * 2
-    box_height = trunc(ascent) + 1
+    # box_width = fm_width + ascent + space_width * 2 + @border_width
+
+    box_height = ascent
+    box_width = fm_width + box_height + space_width + @border_width
+
+    # build the checkmark script
+    # I'd build it at compile time if it weren't for the theme.thumb color...
+    chx_script =
+      Script.start()
+      |> Script.push_state()
+      |> Script.join(:round)
+      |> Script.stroke_width(@border_width + 1)
+      |> Script.stroke_color(theme.thumb)
+      |> Script.begin_path()
+      |> Script.move_to(0, 8)
+      |> Script.line_to(5, 13)
+      |> Script.line_to(12, 1)
+      |> Script.stroke_path()
+      |> Script.pop_state()
+      |> Script.finish()
+
+    chx_id = scene.id <> "_chk"
+    scene = push_script(scene, chx_script, chx_id)
+
+    # tune final position
+    dx = @border_width / 2
+    dy = @border_width / 2
 
     graph =
-      Graph.build(font: @default_font, font_size: @default_font_size)
-      |> group(
-        fn graph ->
-          graph
-          |> rect(
-            {box_width, box_height},
-            fill: :clear,
-            translate: {-2, -2}
-          )
-          |> rrect({box_height, box_height, 3},
-            fill: theme.background,
-            stroke: {2, theme.border},
-            id: :box,
-            translate: {-2, -2}
-          )
-          |> group(
-            fn graph ->
-              graph
-              # this is the checkmark
-              |> path(
-                [
-                  {:move_to, 1, 7},
-                  {:line_to, 5, 10},
-                  {:line_to, 10, 1}
-                ],
-                stroke: {2, theme.thumb},
-                join: :round
-              )
-            end,
-            id: :chx,
-            hidden: !checked?
-          )
-        end,
-        translate: {0, -11}
+      Graph.build(font: @default_font, font_size: @default_font_size, t: {dx, dy})
+      |> group(fn graph ->
+        graph
+        |> rect(
+          {box_width, box_height},
+          id: :btn,
+          input: :cursor_button
+        )
+        |> rrect({box_height, box_height, 3},
+          fill: theme.background,
+          stroke: {@border_width, theme.border},
+          id: :box
+        )
+        |> script(chx_id, id: :chx, hidden: !checked?, t: {3, 2})
+      end)
+      |> text(text,
+        fill: theme.text,
+        translate: {box_height + space_width + @border_width, ascent - @border_width}
       )
-      |> text(text, fill: theme.text, translate: {box_height + space_width, 0})
+      |> update_highlight(theme, Scene.get(scene, :pressed, false))
 
-    state = %{
-      graph: graph,
-      theme: theme,
-      pressed: false,
-      contained: false,
-      checked: checked?,
-      id: id
-    }
+    scene =
+      scene
+      |> assign(
+        graph: graph,
+        theme: theme,
+        checked: checked?,
+        text: text,
+        id: id
+      )
+      |> assign_new(pressed: false)
+      |> push_graph(graph)
 
-    {:ok, state, push: graph}
+    {:ok, scene}
+  end
+
+  @impl Scenic.Component
+  def bounds({text, chk?}, _styles) when is_bitstring(text) and is_boolean(chk?) do
+    {:ok, {Static.Font, fm}} = Static.meta(@default_font)
+    ascent = FontMetrics.ascent(@default_font_size, fm)
+    descent = FontMetrics.descent(@default_font_size, fm)
+    fm_width = FontMetrics.width(text, @default_font_size, fm)
+    space_width = FontMetrics.width(' ', @default_font_size, fm)
+    box_width = fm_width + ascent + space_width + @border_width
+    {0, 0, box_width, ascent - descent}
+  end
+
+  # --------------------------------------------------------
+  # pressed in the button
+  @impl Scenic.Scene
+  def handle_input(
+        {:cursor_button, {:btn_left, 1, _, _}},
+        :btn,
+        %{assigns: %{graph: graph, theme: theme}} = scene
+      ) do
+    :ok = capture_input(scene, :cursor_button)
+
+    graph = update_highlight(graph, theme, true)
+
+    scene =
+      scene
+      |> assign(graph: graph, pressed: true)
+      |> push_graph(graph)
+
+    {:noreply, scene}
+  end
+
+  # --------------------------------------------------------
+  # pressed outside the button
+  # only happens when input is captured
+  # could happen when reconnecting to a driver...
+  def handle_input(
+        {:cursor_button, {:btn_left, 1, _, _}},
+        _id,
+        %{assigns: %{graph: graph, theme: theme}} = scene
+      ) do
+    :ok = release_input(scene)
+
+    graph = update_highlight(graph, theme, false)
+
+    scene =
+      scene
+      |> assign(graph: graph, pressed: false)
+      |> push_graph(graph)
+
+    {:noreply, scene}
+  end
+
+  # --------------------------------------------------------
+  # released inside the button while pressed
+  def handle_input(
+        {:cursor_button, {:btn_left, 0, _, _}},
+        :btn,
+        %{
+          assigns: %{
+            pressed: true,
+            id: id,
+            graph: graph,
+            checked: checked,
+            theme: theme
+          }
+        } = scene
+      ) do
+    :ok = release_input(scene)
+    send_parent_event(scene, {:value_changed, id, !checked})
+
+    graph =
+      graph
+      |> Graph.modify(:chx, &Primitive.put_style(&1, :hidden, checked))
+      |> update_highlight(theme, false)
+
+    scene =
+      scene
+      |> assign(graph: graph, checked: !checked, pressed: false)
+      |> push_graph(graph)
+
+    {:noreply, scene}
+  end
+
+  # --------------------------------------------------------
+  # released either outside the button or when not pressed
+  # only happens when input is captured
+  def handle_input(
+        {:cursor_button, {:btn_left, 0, _, _}},
+        _id,
+        %{assigns: %{graph: graph, theme: theme}} = scene
+      ) do
+    :ok = release_input(scene)
+
+    graph = update_highlight(graph, theme, false)
+
+    scene =
+      scene
+      |> assign(graph: graph, pressed: false)
+      |> push_graph(graph)
+
+    {:noreply, scene}
+  end
+
+  # ignore other button press events
+  def handle_input({:cursor_button, {_, _, _, _}}, _id, scene) do
+    {:noreply, scene}
+  end
+
+  # --------------------------------------------------------
+  defp update_highlight(graph, theme, true) do
+    Graph.modify(graph, :box, &update_opts(&1, fill: theme.active))
+  end
+
+  defp update_highlight(graph, theme, _) do
+    Graph.modify(graph, :box, &update_opts(&1, fill: theme.background))
   end
 
   # --------------------------------------------------------
   @doc false
-  def handle_input({:cursor_enter, _uid}, _, %{pressed: true} = state) do
-    state = Map.put(state, :contained, true)
-    graph = update_graph(state)
-    {:noreply, %{state | graph: graph}, push: graph}
+  @impl Scenic.Scene
+  def handle_get(_, %{assigns: %{checked: checked?}} = scene) do
+    {:reply, checked?, scene}
   end
 
-  # --------------------------------------------------------
-  def handle_input({:cursor_exit, _uid}, _, %{pressed: true} = state) do
-    state = Map.put(state, :contained, false)
-    graph = update_graph(state)
-    {:noreply, %{state | graph: graph}, push: graph}
+  @doc false
+  @impl Scenic.Scene
+  def handle_put(chk?, %{assigns: %{checked: checked}} = scene) when chk? == checked do
+    # no change
+    {:noreply, scene}
   end
 
-  # --------------------------------------------------------
-  def handle_input({:cursor_button, {:left, :press, _, _}}, context, state) do
-    state =
-      state
-      |> Map.put(:pressed, true)
-      |> Map.put(:contained, true)
+  def handle_put(chk?, %{assigns: %{graph: graph, id: id}} = scene) when is_boolean(chk?) do
+    send_parent_event(scene, {:value_changed, id, chk?})
 
-    graph = update_graph(state)
-
-    ViewPort.capture_input(context, [:cursor_button, :cursor_pos])
-
-    {:noreply, %{state | graph: graph}, push: graph}
-  end
-
-  # --------------------------------------------------------
-  def handle_input(
-        {:cursor_button, {:left, :release, _, _}},
-        context,
-        %{contained: contained, id: id, pressed: pressed, checked: checked} = state
-      ) do
-    state = Map.put(state, :pressed, false)
-
-    ViewPort.release_input(context, [:cursor_button, :cursor_pos])
-
-    # only do the action if the cursor is still contained in the target
-    state =
-      case pressed && contained do
-        true ->
-          checked = !checked
-          send_event({:value_changed, id, checked})
-          Map.put(state, :checked, checked)
-
-        false ->
-          state
-      end
-
-    graph = update_graph(state)
-
-    {:noreply, %{state | graph: graph}, push: graph}
-  end
-
-  # --------------------------------------------------------
-  def handle_input(_event, _context, state) do
-    {:noreply, state}
-  end
-
-  # ============================================================================
-  # internal utilities
-  # {text_color, box_background, border_color, pressed_color, checkmark_color}
-
-  defp update_graph(%{
-         graph: graph,
-         theme: theme,
-         pressed: pressed,
-         contained: contained,
-         checked: checked
-       }) do
     graph =
-      case pressed && contained do
-        true ->
-          Graph.modify(graph, :box, &Primitive.put_style(&1, :fill, theme.active))
+      graph
+      |> Graph.modify(:chx, &Primitive.put_style(&1, :hidden, !chk?))
 
-        false ->
-          Graph.modify(graph, :box, &Primitive.put_style(&1, :fill, theme.background))
-      end
+    scene =
+      scene
+      |> assign(graph: graph, checked: chk?)
+      |> push_graph(graph)
 
-    case checked do
-      true ->
-        Graph.modify(graph, :chx, &Primitive.put_style(&1, :hidden, false))
+    {:noreply, scene}
+  end
 
-      false ->
-        Graph.modify(graph, :chx, &Primitive.put_style(&1, :hidden, true))
-    end
+  def handle_put(v, %{assigns: %{id: id}} = scene) do
+    Logger.warn(
+      "Attempted to put an invalid value on Checkbox id: #{inspect(id)}, value: #{inspect(v)}"
+    )
+
+    {:noreply, scene}
+  end
+
+  @doc false
+  @impl Scenic.Scene
+  def handle_fetch(_, %{assigns: %{text: text, checked: checked?}} = scene) do
+    {:reply, {:ok, {text, checked?}}, scene}
   end
 end

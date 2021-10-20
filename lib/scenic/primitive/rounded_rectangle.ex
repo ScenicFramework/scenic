@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-05-08.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.RoundedRectangle do
@@ -27,39 +27,34 @@ defmodule Scenic.Primitive.RoundedRectangle do
 
   You should add/modify primitives via the helper functions in
   [`Scenic.Primitives`](Scenic.Primitives.html#rounded_rectangle/3)
+
+  ```elixir
+  graph
+    |> rrect( {100, 50, 4}, stroke: {1, :yellow} )
+    |> rounded_rectangle( {100, 50, 4}, stroke: {1, :yellow} )
+  ```
+
+  Note: `rrect` is a shortcut for `rounded_rectangle` and they can be used
+  interchangeably.
   """
 
   use Scenic.Primitive
+  alias Scenic.Script
+  alias Scenic.Primitive
+  alias Scenic.Primitive.Style
 
   # import IEx
 
-  @styles [:hidden, :fill, :stroke]
+  @type t :: {width :: number, height :: number, radius :: number}
+  @type styles_t :: [:hidden | :scissor | :fill | :stroke_width | :stroke_fill]
 
-  # ============================================================================
-  # data verification and serialization
+  @styles [:hidden, :scissor, :fill, :stroke_width, :stroke_fill]
 
-  # --------------------------------------------------------
-  @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be: {width, height, radius}
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
-      "Radius will be clamped to half of the smaller of width or height."
-      #{IO.ANSI.default_color()}
-    """
+  @impl Primitive
+  @spec validate(t()) :: {:ok, t()} | {:error, String.t()}
 
-  # --------------------------------------------------------
-  @doc false
-  def verify(data) do
-    normalize(data)
-    {:ok, data}
-  rescue
-    _ -> :invalid_data
-  end
-
-  # --------------------------------------------------------
-  def normalize({width, height, radius})
-      when is_number(width) and is_number(height) and is_number(radius) and radius >= 0 do
+  def validate({width, height, radius})
+      when is_number(width) and is_number(height) and is_number(radius) do
     w = abs(width)
     h = abs(height)
 
@@ -72,15 +67,41 @@ defmodule Scenic.Primitive.RoundedRectangle do
         false -> min(radius, h / 2)
       end
 
-    {width, height, radius}
+    {:ok, {width, height, radius}}
   end
 
-  # ============================================================================
+  def validate(data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Rounded Rectangle specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The data for a Rounded Rectangle is {height, width, radius}
+      If you choose a radius that is larger than either the height or width,
+      then it will be clamped to half of the smaller one.#{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  # --------------------------------------------------------
   @doc """
   Returns a list of styles recognized by this primitive.
   """
-  @spec valid_styles() :: [:fill | :hidden | :stroke, ...]
+  @impl Primitive
+  @spec valid_styles() :: styles_t()
   def valid_styles(), do: @styles
+
+  # --------------------------------------------------------
+  @doc """
+  Compile the data for this primitive into a mini script. This can be combined with others to
+  generate a larger script and is called when a graph is compiled.
+  """
+  @impl Primitive
+  @spec compile(primitive :: Primitive.t(), styles :: Style.t()) :: Script.t()
+  def compile(%Primitive{module: __MODULE__, data: {width, height, radius}}, styles) do
+    Script.draw_rounded_rectangle([], width, height, radius, Script.draw_flag(styles))
+  end
 
   # --------------------------------------------------------
   def default_pin(data), do: centroid(data)
@@ -129,5 +150,11 @@ defmodule Scenic.Primitive.RoundedRectangle do
     else
       false
     end
+  end
+
+  # --------------------------------------------------------
+  @doc false
+  def default_pin({width, height, _radius}, _styles) do
+    {width / 2, height / 2}
   end
 end

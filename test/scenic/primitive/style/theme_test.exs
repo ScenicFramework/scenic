@@ -1,61 +1,68 @@
 #
 #  Created by Boyd Multerer on 2018-09-25.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Copyright © 2018-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Style.ThemeTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive.Style.Theme
 
-  alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Theme
 
-  test "info works" do
-    assert Theme.info(:test_data) =~ ":test_data"
+  test "validate accepts the named themes" do
+    assert Theme.validate(:dark) == {:ok, :dark}
+    assert Theme.validate(:light) == {:ok, :light}
+    assert Theme.validate(:primary) == {:ok, :primary}
+    assert Theme.validate(:secondary) == {:ok, :secondary}
+    assert Theme.validate(:success) == {:ok, :success}
+    assert Theme.validate(:danger) == {:ok, :danger}
+    assert Theme.validate(:warning) == {:ok, :warning}
+    assert Theme.validate(:info) == {:ok, :info}
+    assert Theme.validate(:text) == {:ok, :text}
   end
 
-  # ============================================================================
-  # verify - various forms
-
-  test "verify works with presets" do
-    assert Theme.verify(:dark)
-    assert Theme.verify(:light)
-    assert Theme.verify(:primary)
-    assert Theme.verify(:secondary)
-    assert Theme.verify(:success)
-    assert Theme.verify(:danger)
-    assert Theme.verify(:warning)
-    assert Theme.verify(:info)
-    assert Theme.verify(:text)
+  test "validate rejects invalid theme names" do
+    {:error, msg} = Theme.validate(:invalid)
+    assert msg =~ "Named themes must be from the following list"
   end
 
-  test "verify works with color maps" do
-    assert Theme.verify(%{some_name: :red, another_name: :blue})
+  test "validate accepts maps of colors" do
+    color_map = %{
+      text: :red,
+      background: :green,
+      border: :blue,
+      active: :magenta,
+      thumb: :cyan,
+      focus: :yellow,
+      my_color: :black
+    }
+
+    assert Theme.validate(color_map) == {:ok, color_map}
   end
 
-  test "verify rejects invalid values" do
-    refute Theme.verify("banana")
+  test "validate rejects maps with invalid colors" do
+    color_map = %{
+      text: :red,
+      background: :green,
+      border: :invalid,
+      active: :magenta,
+      thumb: :cyan,
+      focus: :yellow,
+      my_color: :black
+    }
+
+    {:error, msg} = Theme.validate(color_map)
+    assert msg =~ "Map entry: :border"
+    assert msg =~ "Invalid Color specification: :invalid"
   end
 
-  test "verify rejects maps with invalid colors" do
-    refute Theme.verify(%{some_name: "red", another_name: :blue})
+  test "verify rejects maps without the standard colors" do
+    color_map = %{some_name: :red}
+    {:error, msg} = Theme.validate(color_map)
+    assert msg =~ "didn't include all the required color"
   end
 
-  test "verify! works" do
-    assert Theme.verify!(:primary)
-  end
-
-  test "verify! raises an error" do
-    assert_raise Style.FormatError, fn ->
-      Theme.verify!("banana")
-    end
-  end
-
-  # ============================================================================
-  # normalize - various forms
-
-  test "normalize works" do
-    assert is_map(Theme.normalize(:primary))
-    assert is_map(Theme.normalize(%{some_name: :red, another_name: :blue}))
+  test "verify rejects  invalid values" do
+    {:error, _msg} = Theme.validate("totally wrong")
   end
 end

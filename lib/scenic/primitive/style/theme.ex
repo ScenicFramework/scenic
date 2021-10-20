@@ -1,23 +1,24 @@
 #
 #  Created by Boyd Multerer on 2018-08-18.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Copyright © 2018 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Style.Theme do
   @moduledoc """
-  The theme style is a way to bundle up default colors that are intended to be used by dynamic components invoked by a scene.
+  Themes are a way to bundle up a set of colors that are intended to be used
+  by components invoked by a scene.
 
-  There is a set of pre-defined themes.
-  You can also pass in a map of theme values.
+  There are a set of pre-defined themes.
+  You can also pass in a map of color values.
 
-  Unlike other styles, these are a guide to the components.
+  Unlike other styles, The currently set theme is given to child components.
   Each component gets to pick, choose, or ignore any colors in a given style.
 
-  ## Main Predefined Themes
+  ### Predefined Themes
   * `:dark` - This is the default and most common. Use when the background is dark.
   * `:light` - Use when the background is light colored.
 
-  ## Specialty Themes
+  ### Specialty Themes
 
   The remaining themes are designed to color the standard components and don't really
   make much sense when applied to the root of a graph. You could, but it would be...
@@ -44,7 +45,8 @@ defmodule Scenic.Primitive.Style.Theme do
     border: :dark_grey,
     active: {215, 215, 215},
     thumb: :cornflower_blue,
-    focus: :blue
+    focus: :blue,
+    highlight: :saddle_brown
   }
 
   @theme_dark %{
@@ -53,7 +55,8 @@ defmodule Scenic.Primitive.Style.Theme do
     border: :light_grey,
     active: {40, 40, 40},
     thumb: :cornflower_blue,
-    focus: :cornflower_blue
+    focus: :cornflower_blue,
+    highlight: :sandy_brown
   }
 
   # specialty themes
@@ -79,32 +82,99 @@ defmodule Scenic.Primitive.Style.Theme do
 
   # ============================================================================
   # data verification and serialization
-
-  # --------------------------------------------------------
   @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must either a preset theme or a map of named colors
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
+  def validate(theme)
+  def validate(:light), do: {:ok, :light}
+  def validate(:dark), do: {:ok, :dark}
+  def validate(:primary), do: {:ok, :primary}
+  def validate(:secondary), do: {:ok, :secondary}
+  def validate(:success), do: {:ok, :success}
+  def validate(:danger), do: {:ok, :danger}
+  def validate(:warning), do: {:ok, :warning}
+  def validate(:info), do: {:ok, :info}
+  def validate(:text), do: {:ok, :text}
 
-      The predefined themes are:
-      :dark, :light, :primary, :secondary, :success, :danger, :warning, :info, :text
+  def validate(
+        %{
+          text: _,
+          background: _,
+          border: _,
+          active: _,
+          thumb: _,
+          focus: _
+        } = theme
+      ) do
+    # we know all the required colors are there.
+    # now make sure they are all valid colors, including any custom added ones.
+    theme
+    |> Enum.reduce({:ok, theme}, fn
+      _, {:error, msg} ->
+        {:error, msg}
 
-      If you pass in a map of colors, the common ones used in the controls are:
-      :text, :background, :border, :active, :thumb, :focus
-
-      #{IO.ANSI.default_color()}
-    """
-
-  # --------------------------------------------------------
-  @doc false
-  def verify(name) when is_atom(name), do: Map.has_key?(@themes, name)
-
-  def verify(custom) when is_map(custom) do
-    Enum.all?(custom, fn {_, color} -> Color.verify(color) end)
+      {key, color}, {:ok, _} = acc ->
+        case Color.validate(color) do
+          {:ok, _} -> acc
+          {:error, msg} -> err_color(key, msg)
+        end
+    end)
   end
 
-  def verify(_), do: false
+  def validate(name) when is_atom(name) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid theme name
+      Received: #{inspect(name)}
+      #{IO.ANSI.yellow()}
+      Named themes must be from the following list:
+        :light, :dark, :primary, :secondary, :success, :danger, :warning, :info, :text#{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  def validate(%{} = map) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid theme specification
+      Received: #{inspect(map)}
+      #{IO.ANSI.yellow()}
+      You passed in a map, but it didn't include all the required color specifications.
+      It must contain a valid color for each of the following entries.
+        :text, :background, :border, :active, :thumb, :focus
+      #{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  def validate(data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid theme specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      Themes can be a name from this list:
+        :light, :dark, :primary, :secondary, :success, :danger, :warning, :info, :text
+
+      Or it may also be a map defining colors for the values of
+          :text, :background, :border, :active, :thumb, :focus
+
+      If you pass in a map, you may add your own colors in addition to the required ones.#{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  defp err_color(key, msg) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid color in map
+      Map entry: #{inspect(key)}
+      #{msg}
+      """
+    }
+  end
 
   # --------------------------------------------------------
   @doc false

@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 28/02/2019.
-#  Copyright © 2019 Kry10 Industries. All rights reserved.
+#  Copyright © 2019 Kry10 Limited. All rights reserved.
 #
 
 # This scene is automatically set as the root when any other scene
@@ -14,6 +14,7 @@ defmodule Scenic.Scenes.Error do
 
   alias Scenic.ViewPort
   alias Scenic.Graph
+  alias Scenic.Assets.Static
 
   import Scenic.Primitives
   import Scenic.Components
@@ -30,34 +31,33 @@ defmodule Scenic.Scenes.Error do
   @args_header "Scene Args\n  "
   @mod_header " crashed during init/2"
 
-  @font :roboto_mono
+  @default_font :roboto
   @error_color :orange_red
   @args_color :yellow
 
   # --------------------------------------------------------
-  def init({{module_msg, err_msg, args_msg, stack_msg}, scene_mod, scene_args}, opts) do
+  @impl Scenic.Scene
+  def init(scene, {{module_msg, err_msg, args_msg, stack_msg}, scene_mod, scene_args}, _opts) do
     # Get the viewport width
-    {:ok, %ViewPort.Status{size: {width, _}}} =
-      opts[:viewport]
-      |> ViewPort.info()
+    {width, _} = scene.viewport.size
 
-    fm = Scenic.Cache.Static.FontMetrics.get(@font)
+    {:ok, {Static.Font, fm}} = Static.meta(@default_font)
     wrap_width = width - @margin_h * 2
 
     head_msg = module_msg <> @mod_header
 
     err_msg =
       (@error_header <> err_msg)
-      |> FontMetrics.wrap(wrap_width, @size, fm, indent: 4)
+      |> FontMetrics.wrap(wrap_width, @size, fm)
 
     args_msg =
       (@args_header <> args_msg)
-      |> FontMetrics.wrap(wrap_width, @size, fm, indent: 4)
+      |> FontMetrics.wrap(wrap_width, @size, fm)
 
     stack_msg =
       (@stack_header <> stack_msg)
       |> String.replace("    ", "  ")
-      |> FontMetrics.wrap(wrap_width, @size, fm, indent: 4)
+      |> FontMetrics.wrap(wrap_width, @size, fm)
 
     head_v = 80
     args_v = head_v + msg_height(head_msg, @size) + @v_spacing
@@ -65,27 +65,26 @@ defmodule Scenic.Scenes.Error do
     stack_v = err_v + msg_height(err_msg, @size) + @v_spacing
 
     graph =
-      Graph.build(font: @font, font_size: @size, t: {@margin_h, @margin_v})
+      Graph.build(font: @default_font, font_size: @size, translate: {@margin_h, @margin_v})
       |> button("Try Again", id: :try_again, theme: :warning)
-      |> button("Reset", id: :restart, translate: {116, 0})
       |> text(head_msg, translate: {0, head_v}, font_size: @size + 4)
       |> text(args_msg, translate: {0, args_v}, fill: @args_color)
       |> text(err_msg, translate: {0, err_v}, fill: @error_color)
       |> text(stack_msg, translate: {0, stack_v}, fill: @error_color)
 
-    {:ok, {scene_mod, scene_args, opts[:viewport]}, push: graph}
+    scene =
+      scene
+      |> assign(args: scene_args, mod: scene_mod)
+      |> push_graph(graph)
+
+    {:ok, scene}
   end
 
   # --------------------------------------------------------
-  def filter_event({:click, :try_again}, _, {scene_mod, scene_args, vp} = state) do
-    ViewPort.set_root(vp, {scene_mod, scene_args})
-    {:halt, state}
-  end
-
-  # --------------------------------------------------------
-  def filter_event({:click, :restart}, _, {_, _, vp} = state) do
-    ViewPort.reset(vp)
-    {:halt, state}
+  @impl Scenic.Scene
+  def handle_event({:click, :try_again}, _, %{assigns: %{args: args, mod: mod}} = scene) do
+    ViewPort.set_root(scene.viewport, mod, args)
+    {:noreply, scene}
   end
 
   defp msg_height(msg, pixel_size) do

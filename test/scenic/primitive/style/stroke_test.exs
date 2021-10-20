@@ -1,76 +1,69 @@
 #
 #  Created by Boyd Multerer on 2018-06-18.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Copyright © 2018-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Style.StrokeTest do
   use ExUnit.Case, async: true
-  doctest Scenic
+  doctest Scenic.Primitive.Style.Stroke
 
-  alias Scenic.Primitive.Style
   alias Scenic.Primitive.Style.Stroke
 
-  test "info works" do
-    assert Stroke.info(:test_data) =~ ":test_data"
+  test "validate accepts color paint" do
+    assert Stroke.validate({1, :red}) == {:ok, {1, {:color, {:color_rgba, {255, 0, 0, 255}}}}}
+
+    assert Stroke.validate({1.5, {:color, :red}}) ==
+             {:ok, {1.5, {:color, {:color_rgba, {255, 0, 0, 255}}}}}
   end
 
-  # ============================================================================
-  # verify - various forms
-
-  test "verfy accepts width and a single color" do
-    assert Stroke.verify({4, :red})
-    assert Stroke.verify({4, {:red, 128}})
-    assert Stroke.verify({4, {1, 2, 3}})
-    assert Stroke.verify({4, {1, 2, 3, 4}})
-
-    assert Stroke.verify({4, {:color, :red}})
-    assert Stroke.verify({4, {:color, {:red, 128}}})
+  test "validate accepts streaming paint" do
+    assert Stroke.validate({1, {:stream, "tex"}}) == {:ok, {1, {:stream, "tex"}}}
   end
 
-  test "verfy accepts a linear gradient" do
-    assert Stroke.verify({4, {:linear, {0, 0, 160, 100, :yellow, :purple}}})
+  test "validate accepts image paint" do
+    assert Stroke.validate({1, {:image, :parrot}}) ==
+             {:ok, {1, {:image, :parrot}}}
+
+    assert Stroke.validate({1, {:image, {:test_assets, "images/parrot.png"}}}) ==
+             {:ok, {1, {:image, {:test_assets, "images/parrot.png"}}}}
   end
 
-  test "verfy accepts a box gradient" do
-    assert Stroke.verify({4, {:box, {0, 0, 160, 100, 100, 20, :yellow, :purple}}})
+  test "validate accepts linear graient paint" do
+    assert Stroke.validate({1, {:linear, {1, 2, 3, 4, :red, :green}}}) ==
+             {:ok,
+              {1,
+               {:linear,
+                {1, 2, 3, 4, {:color_rgba, {255, 0, 0, 255}}, {:color_rgba, {0, 128, 0, 255}}}}}}
   end
 
-  test "verfy accepts a radial gradient" do
-    assert Stroke.verify({4, {:radial, {80, 50, 20, 60, {:yellow, 128}, {:purple, 128}}}})
+  test "validate accepts radial graient paint" do
+    assert Stroke.validate({1, {:radial, {1, 2, 3, 4, :red, :green}}}) ==
+             {:ok,
+              {1,
+               {:radial,
+                {1, 2, 3, 4, {:color_rgba, {255, 0, 0, 255}}, {:color_rgba, {0, 128, 0, 255}}}}}}
   end
 
-  test "verify rejects invalid values" do
-    refute Stroke.verify({4, :not_a_color})
-    refute Stroke.verify({"4", :red})
+  test "validate rejects invalid colors" do
+    {:error, _} = assert Stroke.validate({1, :invalid})
+    {:error, _} = assert Stroke.validate({1, {:color, :invalid}})
   end
 
-  test "verify! works" do
-    assert Stroke.verify!({4, :red})
-    assert Stroke.verify!({4, {:color, :red}})
-    assert Stroke.verify!({4, {:linear, {0, 0, 160, 100, :yellow, :purple}}})
-    assert Stroke.verify!({4, {:box, {0, 0, 160, 100, 100, 20, :yellow, :purple}}})
-    assert Stroke.verify!({4, {:radial, {80, 50, 20, 60, {:yellow, 128}, {:purple, 128}}}})
+  test "validate rejects invalid colors in linear gradient" do
+    {:error, _} = assert Stroke.validate({1, {:linear, {1, 2, 3, 4, :red, :invalid}}})
   end
 
-  test "verify! raises an error" do
-    assert_raise Style.FormatError, fn ->
-      Stroke.verify!({4, "red"})
-    end
+  test "validate rejects invalid colors in radial gradient" do
+    {:error, _} = assert Stroke.validate({1, {:radial, {1, 2, 3, 4, :red, :invalid}}})
   end
 
-  # ============================================================================
-  # normalize - various forms
+  test "validate negative width" do
+    {:error, msg} = Stroke.validate({-1, :red})
+    assert msg =~ "positive"
+  end
 
-  test "normalize works" do
-    assert Stroke.normalize({4, :red}) == {4, {:color, {255, 0, 0, 255}}}
-
-    assert Stroke.normalize({4, {:linear, {0, 0, 160, 100, :yellow, :purple}}}) ==
-             {4, {:linear, {0, 0, 160, 100, {255, 255, 0, 255}, {128, 0, 128, 255}}}}
-
-    assert Stroke.normalize({4, {:box, {0, 0, 160, 100, 100, 20, :yellow, :purple}}}) ==
-             {4, {:box, {0, 0, 160, 100, 100, 20, {255, 255, 0, 255}, {128, 0, 128, 255}}}}
-
-    assert Stroke.normalize({4, {:radial, {80, 50, 20, 60, :yellow, :purple}}}) ==
-             {4, {:radial, {80, 50, 20, 60, {255, 255, 0, 255}, {128, 0, 128, 255}}}}
+  test "validate rejects bad data" do
+    {:error, msg} = Stroke.validate(:invalid)
+    assert msg =~ "positive"
   end
 end

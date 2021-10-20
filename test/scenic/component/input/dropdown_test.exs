@@ -1,241 +1,175 @@
 #
-#  Created by Boyd Multerer on 2018-11-18.
-#  Copyright © 2018 Kry10 Industries. All rights reserved.
+#  Created by Boyd Multerer on 2018-11-18
+#  Rewritten by Boyd Multerer on 2021-05-16
+#  Copyright © 2018-2021 Kry10 Limited. All rights reserved.
 #
+
+# re-writing it for version 0.11 to take advantage of the new scene struct
+# and be more end-to-end in style
 
 defmodule Scenic.Component.Input.DropdownTest do
   use ExUnit.Case, async: false
-  doctest Scenic
+  doctest Scenic.Component.Input.Dropdown
 
-  # alias Scenic.Component
   alias Scenic.Graph
-  alias Scenic.Primitive
-  alias Scenic.ViewPort
-  alias Scenic.Component.Input.Dropdown
+  alias Scenic.Scene
+  alias Scenic.ViewPort.Input
 
-  @items [{"a", 1}, {"b", 2}]
-  @initial_item 2
-  @data {@items, @initial_item}
+  # import IEx
 
-  @state %{
-    graph: Graph.build(),
-    selected_id: @initial_item,
-    theme: Primitive.Style.Theme.preset(:primary),
-    id: :test_id,
-    down: false,
-    hover_id: nil,
-    items: @items,
-    drop_time: 0,
-    rotate_caret: 0
-  }
+  @press_in {:cursor_button, {:btn_left, 1, [], {20, 20}}}
+  @release_in {:cursor_button, {:btn_left, 0, [], {20, 20}}}
 
-  @button_id :__dropbox_btn__
+  @press_a {:cursor_button, {:btn_left, 1, [], {20, 50}}}
+  @release_a {:cursor_button, {:btn_left, 0, [], {20, 50}}}
 
-  # ============================================================================
-  # info
+  @press_b {:cursor_button, {:btn_left, 1, [], {20, 80}}}
+  @release_b {:cursor_button, {:btn_left, 0, [], {20, 80}}}
 
-  test "info works" do
-    assert is_bitstring(Dropdown.info(:bad_data))
-    assert Dropdown.info(:bad_data) =~ ":bad_data"
+  @press_out {:cursor_button, {:btn_left, 1, [], {1000, 1000}}}
+  @release_out {:cursor_button, {:btn_left, 1, [], {1000, 1000}}}
+
+  defmodule TestScene do
+    use Scenic.Scene
+    import Scenic.Components
+
+    def graph() do
+      Graph.build()
+      |> dropdown({[{"Option One", 1}, {"Option Two", 2}], 2}, id: :dropdown)
+    end
+
+    @impl Scenic.Scene
+    def init(scene, pid, _opts) do
+      scene =
+        scene
+        |> assign(pid: pid)
+        |> push_graph(graph())
+
+      Process.send(pid, {:up, scene}, [])
+      {:ok, scene}
+    end
+
+    @impl Scenic.Scene
+    def handle_event(event, _from, %{assigns: %{pid: pid}} = scene) do
+      send(pid, {:fwd_event, event})
+      {:noreply, scene}
+    end
   end
 
-  # ============================================================================
-  # verify
+  setup do
+    out = Scenic.Test.ViewPort.start({TestScene, self()})
+    # wait for a signal that the scene is up before proceeding
+    {:ok, scene} =
+      receive do
+        {:up, scene} -> {:ok, scene}
+      end
 
-  test "verify passes valid data" do
-    assert Dropdown.verify(@data) == {:ok, @data}
+    # make sure the button is up
+    {:ok, [{_id, pid}]} = Scene.children(scene)
+    :_pong_ = GenServer.call(pid, :_ping_)
+
+    # needed to give time for the pid and vp to close
+    on_exit(fn -> Process.sleep(1) end)
+
+    out
+    |> Map.put(:scene, scene)
+    |> Map.put(:comp_pid, pid)
   end
 
-  test "verify fails invalid data" do
-    assert Dropdown.verify(:banana) == :invalid_data
-
-    # invalid item in list
-    data = {[{:a, 1}, {"b", 2}], 2}
-    assert Dropdown.verify(data) == :invalid_data
-
-    # selected is not in list
-    data = {[{"a", 1}, {"b", 2}], 3}
-    assert Dropdown.verify(data) == :invalid_data
+  defp force_sync(vp_pid, scene_pid) do
+    :_pong_ = GenServer.call(vp_pid, :_ping_)
+    :_pong_ = GenServer.call(scene_pid, :_ping_)
+    :_pong_ = GenServer.call(vp_pid, :_ping_)
   end
 
-  # ============================================================================
-  # init
+  test "press_in and release_a sends the event", %{vp: vp, comp_pid: comp_pid} do
+    Input.send(vp, @press_in)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @release_a)
 
-  test "init works with simple data" do
-    {:ok, state, push: graph} = Dropdown.init(@data, styles: %{}, id: :test_id)
-    %Graph{} = state.graph
-    assert state.graph == graph
-    assert state.selected_id == @initial_item
-    assert is_map(state.theme)
-    assert state.down == false
-    assert state.hover_id == nil
-    assert state.items == @items
-    assert state.id == :test_id
+    assert_receive({:fwd_event, {:value_changed, :dropdown, 1}}, 100)
   end
 
-  # ============================================================================
-  # handle_input - up
+  test "press_in/release_in/press_in does nothing", %{vp: vp, comp_pid: comp_pid} do
+    Input.send(vp, @press_in)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @release_in)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @press_in)
 
-  test "handle_input {:cursor_enter, _uid} - up" do
-    {:noreply, state} =
-      Dropdown.handle_input({:cursor_enter, 1}, %{id: 123}, %{@state | down: false})
-
-    assert state.hover_id == 123
+    refute_receive(_, 10)
   end
 
-  test "handle_input {:cursor_exit, _uid} - up" do
-    {:noreply, state} =
-      Dropdown.handle_input({:cursor_exit, 1}, %{id: 123}, %{@state | down: false})
+  test "press_in and release_b sends the event", %{vp: vp, comp_pid: comp_pid} do
+    Input.send(vp, @press_in)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @release_b)
 
-    assert state.hover_id == nil
+    assert_receive({:fwd_event, {:value_changed, :dropdown, 2}}, 100)
   end
 
-  test "handle_input {:cursor_button, :press - up" do
-    context = %ViewPort.Context{viewport: self(), id: @button_id}
-
-    {:noreply, state, push: graph} =
-      Dropdown.handle_input({:cursor_button, {:left, :press, nil, nil}}, context, %{
-        @state
-        | down: false
-      })
-
-    assert state.down == true
-    assert is_integer(state.drop_time) && state.drop_time > 0
-
-    # confirm the input was captured
-    assert_receive({:"$gen_cast", {:capture_input, ^context, [:cursor_button, :cursor_pos]}})
-
-    assert state.graph == graph
+  test "ignores non-main button clicks", %{vp: vp} do
+    Input.send(vp, {:cursor_button, {1, :press, 0, {20, 20}}})
+    Input.send(vp, {:cursor_button, {2, :press, 0, {20, 20}}})
+    refute_receive(_, 10)
   end
 
-  # ============================================================================
-  # handle_input - down
-
-  test "handle_input {:cursor_enter, _uid} - down" do
-    context = %ViewPort.Context{viewport: self(), id: 1}
-
-    {:noreply, state, push: graph} =
-      Dropdown.handle_input({:cursor_enter, 1}, context, %{@state | down: true})
-
-    assert state.hover_id == 1
-
-    assert state.graph == graph
+  test "open press_a sends the event", %{vp: vp, comp_pid: comp_pid} do
+    Input.send(vp, @press_in)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @release_in)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @press_a)
+    assert_receive({:fwd_event, {:value_changed, :dropdown, 1}}, 100)
   end
 
-  test "handle_input {:cursor_exit, _uid} - down" do
-    context = %ViewPort.Context{viewport: self(), id: 1}
-
-    {:noreply, state, push: graph} =
-      Dropdown.handle_input({:cursor_exit, 1}, context, %{@state | down: true})
-
-    assert state.hover_id == nil
-
-    assert state.graph == graph
+  test "open press_b sends the event", %{vp: vp, comp_pid: comp_pid} do
+    Input.send(vp, @press_in)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @release_in)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @press_b)
+    assert_receive({:fwd_event, {:value_changed, :dropdown, 2}}, 100)
   end
 
-  # mouse down outside menu
-  test "handle_input {:cursor_button, :press nil - down" do
-    context = %ViewPort.Context{viewport: self(), id: nil}
+  test "Press in and release out does not send the event", %{vp: vp, comp_pid: comp_pid} do
+    Input.send(vp, @press_in)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @release_out)
 
-    {:noreply, state, push: graph} =
-      Dropdown.handle_input({:cursor_button, {:left, :press, nil, nil}}, context, %{
-        @state
-        | down: true
-      })
-
-    assert state.down == false
-
-    # confirm the input was released
-    assert_receive({:"$gen_cast", {:release_input, [:cursor_button, :cursor_pos]}})
-
-    assert state.graph == graph
+    refute_receive(_, 10)
   end
 
-  # mouse down inside button - slow
-  test "handle_input {:cursor_button, :press button - down - slow - should close" do
-    context = %ViewPort.Context{viewport: self(), id: @button_id}
+  test "Press out and release in does not send the event", %{vp: vp, comp_pid: comp_pid} do
+    Input.send(vp, @press_out)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @release_in)
 
-    {:noreply, state, push: graph} =
-      Dropdown.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
-        @state
-        | down: true
-      })
-
-    assert state.down == false
-
-    # confirm the input was released
-    assert_receive({:"$gen_cast", {:release_input, [:cursor_button, :cursor_pos]}})
-
-    assert state.graph == graph
+    refute_receive(_, 10)
   end
 
-  # mouse down inside button - fast
-  test "handle_input {:cursor_button, :press button - down - fast - should stay down" do
-    context = %ViewPort.Context{viewport: self(), id: @button_id}
-
-    {:noreply, state} =
-      Dropdown.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
-        @state
-        | down: true,
-          drop_time: :os.system_time(:milli_seconds)
-      })
-
-    assert state.down == true
-
-    # confirm the input was not released
-    refute_receive({:"$gen_cast", {:release_input, [:cursor_button, :cursor_pos]}})
+  test "implements get/put", %{scene: scene} do
+    assert Scene.get_child(scene, :dropdown) == [2]
+    assert Scene.put_child(scene, :dropdown, 1) == :ok
+    assert Scene.get_child(scene, :dropdown) == [1]
   end
 
-  # mouse released outside dropdown space
-  test "handle_input {:cursor_button, :release button - outside menu" do
-    context = %ViewPort.Context{viewport: self(), id: nil}
+  test "implements fetch/update", %{scene: scene} do
+    assert Scene.fetch_child(scene, :dropdown) ==
+             {:ok, [{[{"Option One", 1}, {"Option Two", 2}], 2}]}
 
-    {:noreply, state, push: graph} =
-      Dropdown.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
-        @state
-        | down: true,
-          drop_time: :os.system_time(:milli_seconds)
-      })
-
-    assert state.down == false
-    assert state.selected_id == @initial_item
-
-    # confirm the input was released
-    assert_receive({:"$gen_cast", {:release_input, [:cursor_button, :cursor_pos]}})
-
-    # confirm the value change was not sent
-    refute_receive({:"$gen_cast", {:event, {:value_changed, _, _}, _}})
-
-    assert state.graph == graph
+    %Scene{} = scene = Scene.update_child(scene, :dropdown, {[{"mod One", 1}, {"mod Two", 2}], 1})
+    assert Scene.fetch_child(scene, :dropdown) == {:ok, [{[{"mod One", 1}, {"mod Two", 2}], 1}]}
+    assert Scene.get_child(scene, :dropdown) == [1]
   end
 
-  # mouse released inside dropdown space
-  test "handle_input {:cursor_button, :release button - inside menu" do
-    self = self()
-    Process.put(:parent_pid, self)
-    context = %ViewPort.Context{viewport: self, id: 1}
+  test "bounds works with defaults" do
+    graph =
+      Graph.build()
+      |> Scenic.Components.dropdown({[{"Option One", 1}, {"Option Two", 2}], 2}, id: :dd)
 
-    {:noreply, state, push: graph} =
-      Dropdown.handle_input({:cursor_button, {:left, :release, nil, nil}}, context, %{
-        @state
-        | down: true
-      })
-
-    assert state.down == false
-    assert state.selected_id == 1
-
-    # confirm the input was released
-    assert_receive({:"$gen_cast", {:release_input, [:cursor_button, :cursor_pos]}})
-
-    # confirm the value change was not sent
-    assert_receive({:"$gen_cast", {:event, {:value_changed, :test_id, 1}, ^self}})
-
-    assert state.graph == graph
-  end
-
-  test "handle_input does nothing on unknown input" do
-    context = %ViewPort.Context{viewport: self()}
-    {:noreply, state} = Dropdown.handle_input(:unknown, context, @state)
-    assert state == @state
+    {0.0, 0.0, r, b} = Graph.bounds(graph)
+    assert r > 157 && r < 158
+    assert b > 38 && b < 39
   end
 end

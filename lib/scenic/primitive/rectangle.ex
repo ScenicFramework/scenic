@@ -1,6 +1,6 @@
 #
 #  Created by Boyd Multerer on 2017-05-08.
-#  Copyright © 2017 Kry10 Industries. All rights reserved.
+#  Copyright © 2017-2021 Kry10 Limited. All rights reserved.
 #
 
 defmodule Scenic.Primitive.Rectangle do
@@ -28,38 +28,64 @@ defmodule Scenic.Primitive.Rectangle do
 
   You should add/modify primitives via the helper functions in
   [`Scenic.Primitives`](Scenic.Primitives.html#rectangle/3)
+
+  ```elixir
+  graph
+    |> rect( {100, 50}, stroke: {1, :yellow} )
+    |> rectangle( {100, 50}, stroke: {1, :yellow} )
+  ```
+
+  Note: `rect` is a shortcut for `rectangle` and they can be used interchangeably.
   """
 
   use Scenic.Primitive
+  alias Scenic.Script
+  alias Scenic.Primitive
+  alias Scenic.Primitive.Style
 
-  @styles [:hidden, :fill, :stroke, :join, :miter_limit]
+  @type t :: {width :: number, height :: number}
+  @type styles_t :: [
+          :hidden | :scissor | :fill | :stroke_width | :stroke_fill | :join | :miter_limit
+        ]
 
-  # ============================================================================
-  # data verification and serialization
+  @styles [:hidden, :scissor, :fill, :stroke_width, :stroke_fill, :join, :miter_limit]
 
-  # --------------------------------------------------------
-  @doc false
-  def info(data),
-    do: """
-      #{IO.ANSI.red()}#{__MODULE__} data must be: {width, height}
-      #{IO.ANSI.yellow()}Received: #{inspect(data)}
-      #{IO.ANSI.default_color()}
-    """
-
-  # --------------------------------------------------------
-  @doc false
-  def verify({width, height} = data) when is_number(width) and is_number(height) do
-    {:ok, data}
+  @impl Primitive
+  @spec validate(t()) :: {:ok, t()} | {:error, String.t()}
+  def validate({width, height}) when is_number(width) and is_number(height) do
+    {:ok, {width, height}}
   end
 
-  def verify(_), do: :invalid_data
+  def validate(data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid Rectangle specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      The data for a Rectangle is {height, width}#{IO.ANSI.default_color()}
+      """
+    }
+  end
 
-  # ============================================================================
+  # --------------------------------------------------------
   @doc """
   Returns a list of styles recognized by this primitive.
   """
-  @spec valid_styles() :: [:fill | :hidden | :stroke, ...]
+  @impl Primitive
+  @spec valid_styles() :: styles_t()
   def valid_styles(), do: @styles
+
+  # --------------------------------------------------------
+  @doc """
+  Compile the data for this primitive into a mini script. This can be combined with others to
+  generate a larger script and is called when a graph is compiled.
+  """
+  @impl Primitive
+  @spec compile(primitive :: Primitive.t(), styles :: Style.t()) :: Script.t()
+  def compile(%Primitive{module: __MODULE__, data: {width, height}}, styles) do
+    Script.draw_rectangle([], width, height, Script.draw_flag(styles))
+  end
 
   # --------------------------------------------------------
   def default_pin(data), do: centroid(data)
@@ -82,5 +108,11 @@ defmodule Scenic.Primitive.Rectangle do
     # xp must be less than the width
     # yp must be less than the height
     xp * w >= 0 && yp * h >= 0 && abs(xp) <= abs(w) && abs(yp) <= abs(h)
+  end
+
+  # --------------------------------------------------------
+  @doc false
+  def default_pin({width, height}, _styles) do
+    {width / 2, height / 2}
   end
 end
