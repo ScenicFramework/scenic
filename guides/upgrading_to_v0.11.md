@@ -20,6 +20,7 @@ This guide is a good first pass. As you use it in the Beta, if you see things th
     * The `:text_align` style lets you align text vertically.
     * There is a new Scenic.Asset.Stream type for dynamic textures.
     * New Sprite Sheet support via the Sprites primitive
+    * Built-in mouse cursor support on Nerves (works, but is not optimized yet)
   * There are multiple smaller deprecations. Notably
     * The `:text_height` style is replaced by :line_height, which works the same way line_height does in CSS.
     * The `Path` primitive (which almost got cut, but survived) no longer has the solid and hole commands.
