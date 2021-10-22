@@ -6,7 +6,7 @@ Version v0.11 is a MAJOR overhaul from the top to the bottom. For the first time
 
 This guide is a good first pass. As you use it in the Beta, if you see things that need improving, please contribute!
 
-  
+
   * `Scenic.Cache` is gone. It is replaced by a **much** easier to use asset pipeline.
   * `push_graph` is back. WHAT! Didn't it go away last time? Yes. I've been struggling with the way scene state is handled. Coupled with the scene state change (next in this list), it finally makes sense.
   * State for a scene is now tracked similar to how you add state to a socket in a Phoenix Channel or a Plug conn. The state is always a `%Scene{}` object and you can assign() state into it.
@@ -64,6 +64,76 @@ Version 0.11 finally takes a crack at making Scenic remotable. Enough time and u
 
 Now that the Kry10 Operating System is operational (Scenic long awaited design target), it was time to fix the things that didn't work so well and properly build remoting. These are the sorts of changes that have ripples up the stack and create breaking changes. So best to get it all done in fell swoop.
 
+## Upgrading a v0.10 project to v0.11
+
+* Update mix.exs
+
+Delete your old scenic dependencies in `mix.exs`, they now look like this:
+
+```
+{:scenic, "~> 0.11.0-beta.0"},
+{:scenic_driver_local, "~> 0.11.0-beta.0"},
+```
+
+You may need to use `mix deps.clean --all` and/or `mix deps.unlock` to get it to work.
+
+* Change the incoming viewport options to be a keyword list
+
+The main options for your Scenic app have changed from a map to a Keyword list. For example, if this was your old options map:
+
+```
+%{
+  name: :main_viewport,
+  size: {1200, 600},
+  default_scene: {MyProject.RootScene, nil},
+  drivers: [
+    %{
+      module: Scenic.Driver.Glfw,
+      name: :glfw,
+      opts: [resizeable: false, title: @title]
+    }
+  ]
+}
+```
+
+It would now look like this:
+
+```
+[
+  name: :main_viewport,
+  size: {1200, 600},
+  default_scene: {MyProject.RootScene, nil},
+  drivers: [
+    [
+      module: Scenic.Driver.Local,
+      name: :local
+    ]
+  ]
+]
+```
+
+Finally, where you are adding Scenic to the supervision tree, you will probably have to wrap these options in another list, assuming you use the above config exactly as is:
+
+```
+children = [
+  {Scenic, [default_viewport_config()]},
+]
+```
+
+where default_viewport_config() resolves to the above config list.
+
+* Change the driver module
+
+Assuming you have already upgraded your dependencies in mix.exs, you just need to make sure that you're using the correct driver module in your config.
+
+```
+drivers: [
+    [
+      module: Scenic.Driver.Local,
+      name: :local
+    ]
+  ]
+```
 
 ## Scene State
 The most immediate change that you will need to be addressed is now state in a scene is stored and how scenes are started up.
@@ -73,6 +143,50 @@ In the old system, I was trying to hard to keep the developer focused on the fun
 The only thing that really works is to adopt the same state model as sockets/conns from Phoenix and Plug. That is, there is no state kept under the covers. The state presented to a scene is always now a `%Scenic.Scene{}` struct. Just like Plug and Sockets, there is an `:assigns` map in the struct that the scene developer uses to store their state. Just like those others systems, `assigns()` helpers are provided.
 
 This will require some porting work as you move to v0.11, but at least it feels like the right long-term solution.
+
+### Upgrade steps
+
+* Upgrade init/2 to init/3
+
+Previously `init/2` accepted params, and a list of options. Now it also accepts a scene as the first parameter. This scene must be saved into the state, or set as the entire state of the scene. An example implementation is below.
+
+```
+@impl Scenic.Scene
+def init(scene, _params, _opts) do
+  # put your init logic here
+  {:ok, scene}
+end
+```
+
+* Update the scene to use push_graph/2
+
+Previously in v0.10, graphs were pushed by including a `push: graph` option at the end of each callback:
+
+```
+def handle_cast(msg, state) do
+  new_graph = calc_new_graph(state)
+  {:noreply, %{state|graph: new_graph}, push: new_graph}
+end
+```
+
+This has now been deprecated, in favour of the function `push_graph/2`
+
+Example:
+
+```
+def handle_cast(msg, scene) do
+  new_graph = calc_new_graph(scene, msg)
+  new_scene =
+    scene
+    |> assign(graph: new_graph)
+    |> push_graph(new_graph)
+  {:noreply, new_scene}
+end
+```
+
+Note that, in this example, we are holding the `Scene` variable inside the state. This scene is passed in as the new param to `init/3` now, and we MUST use this scene when we perform a push_graph. We CANNOT simply construct a new scene and use that, it must be the orginal one.
+
+### Example
 
 ```elixir
 defmodule MyDevice.Scene.Example do
@@ -148,7 +262,7 @@ Here is an example from the Button control. In this case, update_color calls the
   def handle_input( {:cursor_button, {0, :press, _, _}}, :btn, scene ) do
     :ok = capture_input( scene, :cursor_button )
 
-    scene = 
+    scene =
       scene
       |> update_color( true, true )
       |> assign( pressed: true )
@@ -158,6 +272,18 @@ Here is an example from the Button control. In this case, update_color calls the
 ```
 
 Also notice that which mouse button was clicked is now a number instead of :left or :right. it was presumptive to assume that :left was the primary button. This is neutral and no longer handedness-biased.
+
+## Upgrading custom Scenic.Components
+
+* Change verify/1 to validate/1
+
+The name of the function which validates incoming parameters has changed, but the behaviour is essentially the same. An example implementation is below.
+
+```
+@impl Scenic.Component
+def validate(data) when is_bitstring(data), do: {:ok, data}
+def validate(_), do: {:error, "Descriptive error message goes here."}
+```
 
 
 ## [The Static Asset Library](overview_assets.html)
