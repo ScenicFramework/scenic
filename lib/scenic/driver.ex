@@ -390,7 +390,7 @@ defmodule Scenic.Driver do
   @doc """
   Send input from the driver.
 
-  Send input from the driver to its ViewPort. `:cursor_pos` and `:cursor_scroll`
+  Send input from the driver to its ViewPort. `:cursor_pos`, `:cursor_scroll`, and `:viewport_reshape`
   input will be buffered/rate limited according the driver's `:limit_ms` setting.
   """
   @spec send_input(driver :: Driver.t(), input :: ViewPort.Input.t()) :: Driver.t()
@@ -404,6 +404,7 @@ defmodule Scenic.Driver do
     case class do
       :cursor_pos -> %{driver | input_buffer: Map.put(buffer, class, input)}
       :cursor_scroll -> %{driver | input_buffer: Map.put(buffer, class, input)}
+      {:viewport, {:reshape, _}} -> %{driver | input_buffer: Map.put(buffer, class, input)}
       # Everything else is sent right away
       _ -> do_send_input(driver, input)
     end
@@ -420,6 +421,10 @@ defmodule Scenic.Driver do
         do_send_input(%{driver | input_limited: true}, input)
 
       :cursor_scroll ->
+        Process.send_after(self(), @input_limiter, limit_ms)
+        do_send_input(%{driver | input_limited: true}, input)
+
+      {:viewport, {:reshape, _}} ->
         Process.send_after(self(), @input_limiter, limit_ms)
         do_send_input(%{driver | input_limited: true}, input)
 
