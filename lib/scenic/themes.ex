@@ -1,4 +1,48 @@
 defmodule Scenic.Themes do
+  @moduledoc """
+  Manages theme libraries by registering your map of themes to a library key.
+  By registering themes in this way you can safely pull in themes from external libraries,
+  without theme names colliding, as well as get all the validation.
+
+  ### Required Configuration
+  Setting up themes requires some initial setup.
+
+  Example:
+
+   ```elixir
+  defmodule MyApplication.Themes do
+    @themes %{
+      light: @theme_light,
+      dark: @theme_dark,
+      primary: @primary,
+      secondary: @secondary,
+      success: @success,
+      danger: @danger,
+      warning: @warning,
+      info: @info,
+      text: @text
+    }
+
+    use Scenic.Themes,
+      sources: [
+        {:scenic, Scenic.Themes"},
+        {:my_app, load()}
+      ]
+
+    def load(), do: @themes
+  end
+  ```
+
+  After the Themes modules has been defined you need to configure it in your config file.any()
+
+  ```elixir
+  config :scenic, :themes,
+    module: MyApplication.Themes
+  ```
+
+  Now themes are passed around scenic in the form of `{:library_name, :theme_name}` as opposed to just :theme_name.
+  """
+
   @theme_light %{
     text: :black,
     background: :white,
