@@ -266,7 +266,7 @@ defmodule Scenic.ViewPortTest do
 
   # set the theme - this should restart the current scene
   test "set_theme works", %{vp: vp} do
-    assert ViewPort.set_theme(vp, :dark) == :ok
+    assert ViewPort.set_theme(vp, {:scenic, :dark}) == :ok
   end
 
   # ---------------------------------------------------------------------------

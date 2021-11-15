@@ -47,7 +47,7 @@ defmodule Scenic.Component.Input.Caret do
     ]
 
   alias Scenic.Graph
-  alias Scenic.Primitive.Style.Theme
+  alias Scenic.Themes
 
   @width 2
   @inset_v 4
@@ -86,7 +86,7 @@ defmodule Scenic.Component.Input.Caret do
       case opts[:color] do
         nil ->
           opts[:theme]
-          |> Theme.normalize()
+          |> Themes.normalize()
           |> Map.get(:highlight)
 
         c ->

@@ -59,7 +59,7 @@ defmodule Scenic.Component.Input.Toggle do
   alias Scenic.Graph
   alias Scenic.Primitive
   alias Scenic.Primitive.Group
-  alias Scenic.Primitive.Style.Theme
+  alias Scenic.Themes
   alias Scenic.ViewPort
 
   import Scenic.Primitives
@@ -131,7 +131,7 @@ defmodule Scenic.Component.Input.Toggle do
     # theme is passed in as an inherited style
     theme =
       opts[:theme]
-      |> Theme.normalize()
+      |> Themes.normalize()
 
     # get toggle specific opts
     thumb_radius = Keyword.get(opts, :thumb_radius, @default_thumb_radius)

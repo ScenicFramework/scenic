@@ -26,7 +26,7 @@ defmodule Scenic.Test.ViewPort do
       )
 
     scene_state = %{
-      theme: :dark,
+      theme: {:scenic, :dark},
       has_children: true,
       name: nil,
       module: __MODULE__,

@@ -76,7 +76,7 @@ defmodule Scenic.Graph.CompilerTest do
   # ---------------------------------------------------------
   test "simple_theme graph works" do
     {:ok, list} =
-      Graph.build(font: :roboto, font_size: 26, theme: :dark)
+      Graph.build(font: :roboto, font_size: 26, theme: {:scenic, :dark})
       |> text("theme")
       |> Compiler.compile()
 
@@ -250,7 +250,7 @@ defmodule Scenic.Graph.CompilerTest do
   end
 
   # ---------------------------------------------------------
-  # Should correctly compile fill and stroke. Note that 
+  # Should correctly compile fill and stroke. Note that
   # primitives with neither fill nor stroke are eliminated completely
   test "fill and stroke are compiled correctly" do
     {:ok, list} =
@@ -380,7 +380,7 @@ defmodule Scenic.Graph.CompilerTest do
   # ---------------------------------------------------------
   test "font_styles graph works" do
     {:ok, list} =
-      Graph.build(theme: :dark)
+      Graph.build(theme: {:scenic, :dark})
       |> text("roboto", font: :roboto)
       |> text("size_64", font_size: 64)
       |> text("left", text_align: :left)

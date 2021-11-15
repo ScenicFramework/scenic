@@ -80,7 +80,7 @@ defmodule Scenic.Component.Input.TextField do
 
   alias Scenic.Graph
   alias Scenic.Component.Input.Caret
-  alias Scenic.Primitive.Style.Theme
+  alias Scenic.Themes
   # alias Scenic.Assets.Static
 
   require Logger
@@ -138,8 +138,8 @@ defmodule Scenic.Component.Input.TextField do
 
     # theme is passed in as an inherited style
     theme =
-      (opts[:theme] || Theme.preset(:dark))
-      |> Theme.normalize()
+      (opts[:theme] || Themes.preset({:scenic, :dark}))
+      |> Themes.normalize()
 
     # get the text_field specific opts
     hint = opts[:hint] || @default_hint

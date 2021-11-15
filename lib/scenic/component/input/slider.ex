@@ -69,7 +69,7 @@ defmodule Scenic.Component.Input.Slider do
   use Scenic.Component, has_children: false
 
   alias Scenic.Graph
-  alias Scenic.Primitive.Style.Theme
+  alias Scenic.Themes
   import Scenic.Primitives, only: [{:rect, 3}, {:line, 3}, {:rrect, 3}, {:update_opts, 2}]
 
   require Logger
@@ -192,8 +192,8 @@ defmodule Scenic.Component.Input.Slider do
 
     # theme is passed in as an inherited style
     theme =
-      (opts[:theme] || Theme.preset(:primary))
-      |> Theme.normalize()
+      (opts[:theme] || Themes.preset(:primary))
+      |> Themes.normalize()
 
     # get button specific styles
     width = opts[:width] || @default_width

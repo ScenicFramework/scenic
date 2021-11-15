@@ -54,7 +54,7 @@ defmodule Scenic.Component.Input.Checkbox do
   alias Scenic.Graph
   alias Scenic.Scene
   alias Scenic.Primitive
-  alias Scenic.Primitive.Style.Theme
+  alias Scenic.Themes
   alias Scenic.Script
   alias Scenic.Assets.Static
 
@@ -95,8 +95,8 @@ defmodule Scenic.Component.Input.Checkbox do
 
     # theme is passed in as an inherited style
     theme =
-      (opts[:theme] || Theme.preset(:dark))
-      |> Theme.normalize()
+      (opts[:theme] || Themes.preset({:scenic, :dark}))
+      |> Themes.normalize()
 
     # font related info
     {:ok, {Static.Font, fm}} = Static.meta(@default_font)

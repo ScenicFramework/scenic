@@ -131,7 +131,7 @@ defmodule Scenic.Component.Button do
 
   alias Scenic.Graph
   alias Scenic.Scene
-  alias Scenic.Primitive.Style.Theme
+  alias Scenic.Themes
   alias Scenic.Assets.Static
 
   import Scenic.Primitives, only: [{:rrect, 3}, {:text, 3}, {:update_opts, 2}]
@@ -164,12 +164,12 @@ defmodule Scenic.Component.Button do
     # theme is passed in as an inherited style
     theme =
       case opts[:theme] do
-        nil -> Theme.preset(:primary)
-        :dark -> Theme.preset(:primary)
-        :light -> Theme.preset(:primary)
+        nil -> Themes.preset({:scenic, :primary})
+        {:scenic, :dark} -> Themes.preset({:scenic, :primary})
+        {:scenic, :light} -> Themes.preset({:scenic, :primary})
         theme -> theme
       end
-      |> Theme.normalize()
+      |> Themes.normalize()
 
     # font related info
     font = Keyword.get(styles, :font, @default_font)
@@ -278,11 +278,11 @@ defmodule Scenic.Component.Button do
     )
   end
 
-  defp do_special_theme_outline(graph, :dark, border) do
+  defp do_special_theme_outline(graph, {:scenic, :dark}, border) do
     Graph.modify(graph, :btn, &update_opts(&1, stroke: {1, border}))
   end
 
-  defp do_special_theme_outline(graph, :light, border) do
+  defp do_special_theme_outline(graph, {:scenic, :light}, border) do
     Graph.modify(graph, :btn, &update_opts(&1, stroke: {1, border}))
   end
 

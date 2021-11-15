@@ -30,7 +30,7 @@ defmodule Scenic.Component.Input.RadioButton do
   alias Scenic.Scene
   alias Scenic.Graph
   alias Scenic.Primitive
-  alias Scenic.Primitive.Style.Theme
+  alias Scenic.Themes
   alias Scenic.Assets.Static
 
   require Logger
@@ -70,8 +70,8 @@ defmodule Scenic.Component.Input.RadioButton do
   def init(scene, {text, id, checked?}, opts) do
     # theme is passed in as an inherited style
     theme =
-      (opts[:theme] || Theme.preset(:dark))
-      |> Theme.normalize()
+      (opts[:theme] || Themes.preset(:dark))
+      |> Themes.normalize()
 
     # font related info
     {:ok, {Static.Font, fm}} = Static.meta(@default_font)
