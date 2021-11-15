@@ -63,6 +63,24 @@ defmodule Scenic.ThemesTest do
     assert Themes.normalize({:scenic, :dark}) == @theme_dark
   end
 
+  test "custom validate method accepts names themes" do
+    assert Themes.validate({:custom_scenic, :custom_dark}) == {:ok, {:custom_scenic, :custom_dark}}
+    assert Themes.validate({:custom_scenic, :custom_light}) == {:ok, {:custom_scenic, :custom_light}}
+    assert Themes.validate({:custom_scenic, :custom_primary}) == {:ok, {:custom_scenic, :custom_primary}}
+    assert Themes.validate({:custom_scenic, :custom_secondary}) == {:ok, {:custom_scenic, :custom_secondary}}
+    assert Themes.validate({:custom_scenic, :custom_success}) == {:ok, {:custom_scenic, :custom_success}}
+    assert Themes.validate({:custom_scenic, :custom_danger}) == {:ok, {:custom_scenic, :custom_danger}}
+    assert Themes.validate({:custom_scenic, :custom_warning}) == {:ok, {:custom_scenic, :custom_warning}}
+    assert Themes.validate({:custom_scenic, :custom_info}) == {:ok, {:custom_scenic, :custom_info}}
+    assert Themes.validate({:custom_scenic, :custom_text}) == {:ok, {:custom_scenic, :custom_text}}
+  end
+
+  test "custom validate method rejects map without custom standard color" do
+    {:error, msg} = Themes.validate({:custom_scenic, :custom_invalid})
+    assert msg =~ "Invalid theme specification"
+    assert msg =~ "Map entry: :surface"
+  end
+
   test "validate accepts the named themes" do
     assert Themes.validate({:scenic, :dark}) == {:ok, {:scenic, :dark}}
     assert Themes.validate({:scenic, :light}) == {:ok, {:scenic, :light}}
