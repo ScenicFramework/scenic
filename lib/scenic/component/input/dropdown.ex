@@ -188,7 +188,7 @@ defmodule Scenic.Component.Input.Dropdown do
 
     # theme is passed in as an inherited style
     theme =
-      (opts[:theme] || Themes.preset(:dark))
+      (opts[:theme] || Themes.preset({:scenic, :dark}))
       |> Themes.normalize()
 
     # font related info

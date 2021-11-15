@@ -70,7 +70,7 @@ defmodule Scenic.Component.Input.RadioButton do
   def init(scene, {text, id, checked?}, opts) do
     # theme is passed in as an inherited style
     theme =
-      (opts[:theme] || Themes.preset(:dark))
+      (opts[:theme] || Themes.preset({:scenic, :dark}))
       |> Themes.normalize()
 
     # font related info

@@ -192,7 +192,7 @@ defmodule Scenic.Component.Input.Slider do
 
     # theme is passed in as an inherited style
     theme =
-      (opts[:theme] || Themes.preset(:primary))
+      (opts[:theme] || Themes.preset({:scenic, :dark}))
       |> Themes.normalize()
 
     # get button specific styles
