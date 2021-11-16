@@ -3,6 +3,7 @@ defmodule Scenic.ThemesTest do
   doctest Scenic.Themes
 
   alias Scenic.Themes
+  alias Scenic.Color
 
   # we expect errors to be logged in this set of tests. This happens when we purposefully
   # attempted to load an asset that has been tampered with. So turn off the logging to
@@ -49,21 +50,27 @@ defmodule Scenic.ThemesTest do
     text: @text
   }
 
+  @properly_configured_module [
+    name: :scenic,
+    themes: @themes,
+    palette: Scenic.Palette.get()
+  ]
+
   # import IEx
 
-  test "module returns the configured library module" do
+  test "module returns the module" do
     assert Themes.module() == Scenic.Test.Themes
   end
 
-  test "load returns the themes" do
-    assert Themes.load() == @themes
+  test "load returns the properly configured themes" do
+    assert Themes.load() == @properly_configured_module
   end
 
   test "normalize returns the correct theme" do
     assert Themes.normalize({:scenic, :dark}) == @theme_dark
   end
 
-  test "custom validate method accepts names themes" do
+  test "custom validate method accepts custom named themes" do
     assert Themes.validate({:custom_scenic, :custom_dark}) == {:ok, {:custom_scenic, :custom_dark}}
     assert Themes.validate({:custom_scenic, :custom_light}) == {:ok, {:custom_scenic, :custom_light}}
     assert Themes.validate({:custom_scenic, :custom_primary}) == {:ok, {:custom_scenic, :custom_primary}}
@@ -136,5 +143,16 @@ defmodule Scenic.ThemesTest do
 
   test "verify rejects invalid values" do
     {:error, _msg} = Themes.validate("totally wrong")
+  end
+
+  @default_schema [:text, :background, :border, :active, :thumb, :focus]
+
+  test "get_schema returns the correct schema" do
+    assert Themes.get_schema(:scenic) == @default_schema
+  end
+
+  test "custom color can be retrieved" do
+   correct_color = {0xFF, 0xF6, 0x00}
+   assert Color.to_rgb(:yellow_1) == {:color_rgb, {255, 246, 0}}
   end
 end

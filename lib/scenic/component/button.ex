@@ -167,9 +167,12 @@ defmodule Scenic.Component.Button do
         nil -> Themes.preset({:scenic, :primary})
         {:scenic, :dark} -> Themes.preset({:scenic, :primary})
         {:scenic, :light} -> Themes.preset({:scenic, :primary})
-        theme -> theme
+        theme ->
+          case Themes.normalize(theme) do
+            nil -> Themes.preset({:scenic, :primary})
+            theme -> theme
+          end
       end
-      |> Themes.normalize()
 
     # font related info
     font = Keyword.get(styles, :font, @default_font)

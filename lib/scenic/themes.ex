@@ -1,4 +1,5 @@
 defmodule Scenic.Themes do
+  alias Scenic.Palette
   @moduledoc """
   Manages theme libraries by registering your map of themes to a library key.
   By registering themes in this way you can safely pull in themes from external libraries,
@@ -31,7 +32,7 @@ defmodule Scenic.Themes do
     schema [:surface] # add additional required keys to your theme
 
     use Scenic.Themes,
-      sources: [
+      [
         {:scenic, Scenic.Themes"},
         {:my_app, load()}
       ]
@@ -49,40 +50,73 @@ defmodule Scenic.Themes do
 
   Now themes are passed around scenic in the form of `{:library_name, :theme_name}` as opposed to just :theme_name.
   """
-  @callback load() :: {map, list} | map
+  @callback load() :: keyword
   @optional_callbacks load: 0
 
-  defmacro __using__(using_opts \\ []) do
+  defmacro __using__(sources \\ []) do
     quote do
       alias Scenic.Primitive.Style.Paint.Color
       @behaviour Scenic.Themes
-      @sources Keyword.get(unquote(using_opts), :sources, [])
+      @opts_schema [
+        name: [required: true, type: :atom],
+        themes: [required: true, type: :any],
+        schema: [required: false, type: :any],
+        palette: [required: false, type: :any]
+      ]
       @default_schema [:text, :background, :border, :active, :thumb, :focus]
+      @palette %{}
 
-      @library_themes Enum.reduce(@sources, %{}, fn
-        {lib, module}, acc when is_atom(module) ->
-          case module.load() do
-            {themes, schema} ->
-              Map.put_new(acc, lib, {themes, List.flatten([@default_schema | schema])})
-            themes ->
-              Map.put_new(acc, lib, {themes, @default_schema})
-          end
-        {lib, {themes, schema}}, acc ->
-          Map.put_new(acc, lib, {themes, List.flatten([@default_schema | schema])})
-        {lib, themes}, acc ->
-          Map.put_new(acc, lib, {themes, @default_schema})
-        _, acc -> acc
+      @library_themes Enum.reduce(unquote(sources), %{}, fn lib_opts, acc ->
+        case NimbleOptions.validate(lib_opts, @opts_schema) do
+          {:ok, lib_opts} ->
+            name = lib_opts[:name]
+            themes = lib_opts[:themes]
+            schema = lib_opts[:schema] || []
+            palette = lib_opts[:palette] || %{}
+            @palette Map.merge(@palette, palette)
+            case themes do
+              themes when is_map(themes) ->
+                # not a module so we can load in the settings directly
+                Map.put_new(acc, name, {themes, List.flatten([@default_schema | schema])})
+              themes ->
+                # this is a module so we have to load the settings
+                lib_opts = themes.load()
+                themes = lib_opts[:themes]
+                schema = lib_opts[:schema] || []
+                palette = lib_opts[:palette] || %{}
+                IO.inspect palette
+                @palette Map.merge(@palette, palette)
+                Map.put_new(acc, name, {themes, List.flatten([@default_schema | schema])})
+            end
+          {:error, error} ->
+            raise Exception.message(error)
+        end
       end)
 
+      # validate the passed options
       def validate(theme)
       def validate({lib, theme_name} = lib_theme) when is_atom(theme_name) do
-        {_, schema} = Map.get(@library_themes, lib)
-        case normalize(lib_theme) do
-          theme ->
+        case Map.get(@library_themes, lib) do
+          {themes, schema} ->
             # validate against the schema
-            case validate(theme, schema) do
-              {:ok, _} -> {:ok, lib_theme}
-              error -> error
+            case Map.get(themes, theme_name) do
+              nil ->
+                {
+                  :error,
+                  """
+                  #{IO.ANSI.red()}Invalid theme specification
+                  Received: #{inspect(theme_name)}
+                  #{IO.ANSI.yellow()}
+                  The theme could not be found in library #{inspect(lib)}.
+                  Ensure you got the name correct.
+                  #{IO.ANSI.default_color()}
+                  """
+                }
+              theme ->
+                case validate(theme, schema) do
+                  {:ok, _} -> {:ok, lib_theme}
+                  error -> error
+                end
             end
           nil ->
             {
@@ -178,9 +212,22 @@ defmodule Scenic.Themes do
       end
 
       @doc false
+      def get_schema(lib) do
+        case Map.get(@library_themes, lib) do
+          {_, schema} -> schema
+          nil -> nil
+        end
+      end
+
+      @doc false
+      def get_palette() do
+        @palette
+      end
+
+      @doc false
       def normalize({lib, theme_name}) when is_atom(theme_name) do
         case Map.get(@library_themes, lib) do
-          {themes, schema} -> Map.get(themes, theme_name)
+          {themes, _schema} -> Map.get(themes, theme_name)
           nil -> nil
         end
       end
@@ -236,10 +283,8 @@ defmodule Scenic.Themes do
         Example Themes module that includes an optional alias:
 
           defmodule MyApplication.Themes do
-            use Scenic.Assets.Static,
-              otp_app: :my_application,
-              alias: [
-                scenic: Scenic.Themes,
+            use Scenic.Themes, [
+                [name: scenic: themes: Scenic.Themes],
               ]
           end
 
@@ -251,14 +296,33 @@ defmodule Scenic.Themes do
     end
   end
 
-  @doc false
+  @spec validate({atom, atom} | {atom, map} | map) :: {:ok, term} | {:error, term}
+  @doc """
+  Validate a theme
+  """
   def validate(theme), do: module().validate(theme)
 
+  @spec get_schema(atom) :: list
+  @doc """
+  Retrieve a library's schema
+  """
+  def get_schema(lib), do: module().get_schema(lib)
+
+  @spec normalize({atom, atom} | map) :: map | nil
   @doc false
   def normalize(theme), do: module().normalize(theme)
 
-  @doc false
+  @spec preset({atom, atom} | map) :: map | nil
+  @doc """
+  Get a theme.
+  """
   def preset(theme), do: module().preset(theme)
+
+  @spec get_palette() :: map
+  @doc """
+  Get the palette of colors.
+  """
+  def get_palette(), do: module().get_palette()
 
   @theme_light %{
     text: :black,
@@ -300,5 +364,5 @@ defmodule Scenic.Themes do
   }
 
   @doc false
-  def load(), do: @themes
+  def load(), do: [name: :scenic, themes: @themes, palette: Palette.get()]
 end

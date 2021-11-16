@@ -4,6 +4,8 @@
 #
 
 defmodule Scenic.Color do
+  alias Scenic.Themes
+
   @named_colors %{
     alice_blue: {0xF0, 0xF8, 0xFF},
     antique_white: {0xFA, 0xEB, 0xD7},
@@ -173,7 +175,7 @@ defmodule Scenic.Color do
 
   Most of the time, you will use one of the pre-defined named colors from the
   Named Colors table. However, there are times when you want to work with
-  other color formats ranging from simple grayscale to rgb to hsl. 
+  other color formats ranging from simple grayscale to rgb to hsl.
 
   The following formats are all supported by the `Scenic.Color` module.
   The values of r, g, b, and a are integers between 0 and 255.
@@ -616,7 +618,7 @@ defmodule Scenic.Color do
   @doc """
   Return map of all named colors and their values
   """
-  def named(), do: @named_colors
+  def named(), do: Themes.get_palette()
 
   # --------------------------------------------------------
   # @doc """

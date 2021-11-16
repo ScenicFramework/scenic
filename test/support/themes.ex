@@ -39,8 +39,8 @@ defmodule Scenic.Test.Themes do
   # }
 
   use Scenic.Themes,
-    sources: [
-      {:scenic, Scenic.Themes},
-      {:custom_scenic, Scenic.Test.CustomThemes}
+    [
+      [name: :scenic, themes: Scenic.Themes],
+      [name: :custom_scenic, themes: Scenic.Test.CustomThemes]
     ]
 end

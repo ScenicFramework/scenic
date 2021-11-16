@@ -53,10 +53,11 @@ defmodule Scenic.Test.CustomThemes do
 
   @schema [:surface]
 
-  use Scenic.Themes,
-    sources: [
-      {:custom_scenic, {@themes, @schema}}
-    ]
+  @colors %{
+    yellow_1: {0xFF, 0xF6, 0x00}
+  }
 
-  def load(), do: {@themes, @schema}
+  use Scenic.Themes, []
+
+  def load(), do: [themes: @themes, schema: @schema, palette: @colors]
 end
