@@ -249,7 +249,10 @@ defmodule Scenic.Themes do
     module()._get_palette()
   end
 
-  @doc false
+  @spec normalize({atom, atom} | map) :: map | nil
+  @doc """
+  Converts a theme from it's tuple form to it's map form.
+  """
   def normalize({lib, theme_name}) when is_atom(theme_name) do
     themes = module().library()
     case Map.get(themes, lib) do
@@ -257,12 +260,6 @@ defmodule Scenic.Themes do
       nil -> nil
     end
   end
-
-  @spec normalize({atom, atom} | map) :: map | nil
-  @doc """
-  Converts a theme from it's tuple form to it's map form.
-  """
-  def normalize(theme) when is_map(theme), do: theme
 
   @spec preset({atom, atom} | map) :: map | nil
   @doc """
@@ -275,6 +272,8 @@ defmodule Scenic.Themes do
       nil -> nil
     end
   end
+
+  def preset(theme) when is_map(theme), do: theme
 
   @theme_light %{
     text: :black,
