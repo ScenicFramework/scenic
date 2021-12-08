@@ -152,7 +152,6 @@ defmodule Scenic.ThemesTest do
   end
 
   test "custom color can be retrieved" do
-   correct_color = {0xFF, 0xF6, 0x00}
    assert Color.to_rgb(:yellow_1) == {:color_rgb, {255, 246, 0}}
   end
 end

@@ -1,5 +1,6 @@
 defmodule Scenic.Themes do
   alias Scenic.Palette
+  alias Scenic.Primitive.Style.Paint.Color
   @moduledoc """
   Manages theme libraries by registering your map of themes to a library key.
   By registering themes in this way you can safely pull in themes from external libraries,
@@ -33,11 +34,11 @@ defmodule Scenic.Themes do
 
     use Scenic.Themes,
       [
-        {:scenic, Scenic.Themes"},
+        {:scenic, Scenic.Themes},
         {:my_app, load()}
       ]
 
-    def load(), do: {@themes, @schema}
+    def load(), do: [name: :my_library, themes: @themes, schema: @schema, palette: @palette]
   end
   ```
 
@@ -55,7 +56,6 @@ defmodule Scenic.Themes do
 
   defmacro __using__(sources \\ []) do
     quote do
-      alias Scenic.Primitive.Style.Paint.Color
       @behaviour Scenic.Themes
       @opts_schema [
         name: [required: true, type: :atom],
@@ -64,7 +64,7 @@ defmodule Scenic.Themes do
         palette: [required: false, type: :any]
       ]
       @default_schema [:text, :background, :border, :active, :thumb, :focus]
-      @palette %{}
+      @_palette %{}
 
       @library_themes Enum.reduce(unquote(sources), %{}, fn lib_opts, acc ->
         case NimbleOptions.validate(lib_opts, @opts_schema) do
@@ -73,7 +73,7 @@ defmodule Scenic.Themes do
             themes = lib_opts[:themes]
             schema = lib_opts[:schema] || []
             palette = lib_opts[:palette] || %{}
-            @palette Map.merge(@palette, palette)
+            @_palette Map.merge(@_palette, palette)
             case themes do
               themes when is_map(themes) ->
                 # not a module so we can load in the settings directly
@@ -84,8 +84,7 @@ defmodule Scenic.Themes do
                 themes = lib_opts[:themes]
                 schema = lib_opts[:schema] || []
                 palette = lib_opts[:palette] || %{}
-                IO.inspect palette
-                @palette Map.merge(@palette, palette)
+                @_palette Map.merge(@_palette, palette)
                 Map.put_new(acc, name, {themes, List.flatten([@default_schema | schema])})
             end
           {:error, error} ->
@@ -94,177 +93,9 @@ defmodule Scenic.Themes do
       end)
 
       # validate the passed options
-      def validate(theme)
-      def validate({lib, theme_name} = lib_theme) when is_atom(theme_name) do
-        case Map.get(@library_themes, lib) do
-          {themes, schema} ->
-            # validate against the schema
-            case Map.get(themes, theme_name) do
-              nil ->
-                {
-                  :error,
-                  """
-                  #{IO.ANSI.red()}Invalid theme specification
-                  Received: #{inspect(theme_name)}
-                  #{IO.ANSI.yellow()}
-                  The theme could not be found in library #{inspect(lib)}.
-                  Ensure you got the name correct.
-                  #{IO.ANSI.default_color()}
-                  """
-                }
-              theme ->
-                case validate(theme, schema) do
-                  {:ok, _} -> {:ok, lib_theme}
-                  error -> error
-                end
-            end
-          nil ->
-            {
-              :error,
-              """
-              #{IO.ANSI.red()}Invalid theme specification
-              Received: #{inspect(lib_theme)}
-              #{IO.ANSI.yellow()}
-              You passed in a tuple representing a library theme, but it could not be found.
-              Please ensure you've imported the the library correctly in your Themes module.
-              #{IO.ANSI.default_color()}
-              """
-            }
-        end
-      end
+      def library(), do: @library_themes
 
-      def validate(
-            theme,
-            schema
-          ) do
-        # we have the schema so we can validate against it.
-        schema
-        |> Enum.reduce({:ok, theme}, fn
-          _, {:error, msg} ->
-            {:error, msg}
-          key, {:ok, _} = acc ->
-            case Map.has_key?(theme, key) do
-              true -> acc
-              false -> err_key(key, theme)
-            end
-        end)
-      end
-
-      def validate(
-            %{
-              text: _,
-              background: _,
-              border: _,
-              active: _,
-              thumb: _,
-              focus: _
-            } = theme
-          ) do
-        # we dont have the schema so validate against the default,
-        # this is not ideal, but should be fine for now.
-        # we know all the required colors are there.
-        # now make sure they are all valid colors, including any custom added ones.
-        theme
-        |> Enum.reduce({:ok, theme}, fn
-          _, {:error, msg} ->
-            {:error, msg}
-
-          {key, color}, {:ok, _} = acc ->
-            case Color.validate(color) do
-              {:ok, _} -> acc
-              {:error, msg} -> err_color(key, msg)
-            end
-        end)
-      end
-
-      def validate(%{} = map) do
-        {
-          :error,
-          """
-          #{IO.ANSI.red()}Invalid theme specification
-          Received: #{inspect(map)}
-          #{IO.ANSI.yellow()}
-          You passed in a map, but it didn't include all the required color specifications.
-          It must contain a valid color for each of the following entries.
-            :text, :background, :border, :active, :thumb, :focus
-          If you're using a custom theme please check the documentation for that specific theme.
-          #{IO.ANSI.default_color()}
-          """
-        }
-      end
-
-      def validate(data) do
-        {
-          :error,
-          """
-          #{IO.ANSI.red()}Invalid theme specification
-          Received: #{inspect(data)}
-          #{IO.ANSI.yellow()}
-          Themes can be a tuple represent a theme for example:
-            {:scenic, :light}, {:scenic, :dark}
-
-          Or it may also be a map defining colors for the values of
-              :text, :background, :border, :active, :thumb, :focus
-
-          If you pass in a map, you may add your own colors in addition to the required ones.#{IO.ANSI.default_color()}
-          """
-        }
-      end
-
-      @doc false
-      def get_schema(lib) do
-        case Map.get(@library_themes, lib) do
-          {_, schema} -> schema
-          nil -> nil
-        end
-      end
-
-      @doc false
-      def get_palette() do
-        @palette
-      end
-
-      @doc false
-      def normalize({lib, theme_name}) when is_atom(theme_name) do
-        case Map.get(@library_themes, lib) do
-          {themes, _schema} -> Map.get(themes, theme_name)
-          nil -> nil
-        end
-      end
-
-      def normalize(theme) when is_map(theme), do: theme
-
-      @doc false
-      def preset({lib, theme_name}) do
-        case Map.get(@library_themes, lib) do
-          {themes, schema} -> Map.get(themes, theme_name)
-          nil -> nil
-        end
-      end
-
-      defp err_key(key, map) do
-        {
-          :error,
-          """
-          #{IO.ANSI.red()}Invalid theme specification
-          Received: #{inspect(map)}
-          #{IO.ANSI.yellow()}
-          Map entry: #{inspect(key)}
-          #{IO.ANSI.default_color()}
-          """
-        }
-      end
-
-      defp err_color(key, msg) do
-        {
-          :error,
-          """
-          #{IO.ANSI.red()}Invalid color in map
-          Map entry: #{inspect(key)}
-          #{msg}
-          """
-        }
-      end
+      def _get_palette(), do: @_palette
     end
   end
 
@@ -275,54 +106,175 @@ defmodule Scenic.Themes do
       module
     else
       _ ->
-        raise """
-        No Themes module is configured.
-        You need to create themes module in your application.
-        Then connect it to Scenic with some config.
-
-        Example Themes module that includes an optional alias:
-
-          defmodule MyApplication.Themes do
-            use Scenic.Themes, [
-                [name: scenic: themes: Scenic.Themes],
-              ]
-          end
-
-        Example configuration script (this goes in your config.exs file):
-
-          config :scenic, :themes,
-            module: MyApplication.Themes
-        """
+        # No module configure return the default
+        __MODULE__
     end
   end
 
-  @spec validate({atom, atom} | {atom, map} | map) :: {:ok, term} | {:error, term}
-  @doc """
-  Validate a theme
-  """
-  def validate(theme), do: module().validate(theme)
+  def validate(theme)
+  def validate({lib, theme_name} = lib_theme) when is_atom(theme_name) do
+    themes = module().library()
+    case Map.get(themes, lib) do
+      {themes, schema} ->
+        # validate against the schema
+        case Map.get(themes, theme_name) do
+          nil ->
+            {
+              :error,
+              """
+              #{IO.ANSI.red()}Invalid theme specification
+              Received: #{inspect(theme_name)}
+              #{IO.ANSI.yellow()}
+              The theme could not be found in library #{inspect(lib)}.
+              Ensure you got the name correct.
+              #{IO.ANSI.default_color()}
+              """
+            }
+          theme ->
+            case validate(theme, schema) do
+              {:ok, _} -> {:ok, lib_theme}
+              error -> error
+            end
+        end
+      nil ->
+        {
+          :error,
+          """
+          #{IO.ANSI.red()}Invalid theme specification
+          Received: #{inspect(lib_theme)}
+          #{IO.ANSI.yellow()}
+          You passed in a tuple representing a library theme, but it could not be found.
+          Please ensure you've imported the the library correctly in your Themes module.
+          #{IO.ANSI.default_color()}
+          """
+        }
+    end
+  end
+
+  def validate(
+        %{
+          text: _,
+          background: _,
+          border: _,
+          active: _,
+          thumb: _,
+          focus: _
+        } = theme
+      ) do
+    # we dont have the schema so validate against the default,
+    # this is not ideal, but should be fine for now.
+    # we know all the required colors are there.
+    # now make sure they are all valid colors, including any custom added ones.
+    theme
+    |> Enum.reduce({:ok, theme}, fn
+      _, {:error, msg} ->
+        {:error, msg}
+
+      {key, color}, {:ok, _} = acc ->
+        case Color.validate(color) do
+          {:ok, _} -> acc
+          {:error, msg} -> err_color(key, msg)
+        end
+    end)
+  end
+
+  def validate(%{} = map) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid theme specification
+      Received: #{inspect(map)}
+      #{IO.ANSI.yellow()}
+      You passed in a map, but it didn't include all the required color specifications.
+      It must contain a valid color for each of the following entries.
+        :text, :background, :border, :active, :thumb, :focus
+      If you're using a custom theme please check the documentation for that specific theme.
+      #{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  def validate(data) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid theme specification
+      Received: #{inspect(data)}
+      #{IO.ANSI.yellow()}
+      Themes can be a tuple represent a theme for example:
+        {:scenic, :light}, {:scenic, :dark}
+
+      Or it may also be a map defining colors for the values of
+          :text, :background, :border, :active, :thumb, :focus
+
+      If you pass in a map, you may add your own colors in addition to the required ones.#{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  def validate(
+        theme,
+        schema
+      ) do
+    # we have the schema so we can validate against it.
+    schema
+    |> Enum.reduce({:ok, theme}, fn
+      _, {:error, msg} ->
+        {:error, msg}
+      key, {:ok, _} = acc ->
+        case Map.has_key?(theme, key) do
+          true -> acc
+          false -> err_key(key, theme)
+        end
+    end)
+  end
 
   @spec get_schema(atom) :: list
   @doc """
   Retrieve a library's schema
   """
-  def get_schema(lib), do: module().get_schema(lib)
+  def get_schema(lib) do
+    themes = module().library()
+    case Map.get(themes, lib) do
+      {_, schema} -> schema
+      nil -> nil
+    end
+  end
+
+  @spec get_palette() :: map
+  @doc """
+  Retrieve the color palette
+  """
+  def get_palette() do
+    module()._get_palette()
+  end
+
+  @doc false
+  def normalize({lib, theme_name}) when is_atom(theme_name) do
+    themes = module().library()
+    case Map.get(themes, lib) do
+      {themes, _schema} -> Map.get(themes, theme_name)
+      nil -> nil
+    end
+  end
 
   @spec normalize({atom, atom} | map) :: map | nil
-  @doc false
-  def normalize(theme), do: module().normalize(theme)
+  @doc """
+  Converts a theme from it's tuple form to it's map form.
+  """
+  def normalize(theme) when is_map(theme), do: theme
 
   @spec preset({atom, atom} | map) :: map | nil
   @doc """
   Get a theme.
   """
-  def preset(theme), do: module().preset(theme)
-
-  @spec get_palette() :: map
-  @doc """
-  Get the palette of colors.
-  """
-  def get_palette(), do: module().get_palette()
+  def preset({lib, theme_name}) do
+    themes = module().library()
+    case Map.get(themes, lib) do
+      {themes, _schema} -> Map.get(themes, theme_name)
+      nil -> nil
+    end
+  end
 
   @theme_light %{
     text: :black,
@@ -362,7 +314,37 @@ defmodule Scenic.Themes do
     info: @info,
     text: @text
   }
+  @default_schema [:text, :background, :border, :active, :thumb, :focus]
+  @palette Palette.get()
+
+  def _get_palette(), do: @palette
+
+  def library(), do: %{scenic: {@themes, @default_schema}}
 
   @doc false
-  def load(), do: [name: :scenic, themes: @themes, palette: Palette.get()]
+  def load(), do: [name: :scenic, themes: @themes, palette: @palette]
+
+  defp err_key(key, map) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid theme specification
+      Received: #{inspect(map)}
+      #{IO.ANSI.yellow()}
+      Map entry: #{inspect(key)}
+      #{IO.ANSI.default_color()}
+      """
+    }
+  end
+
+  defp err_color(key, msg) do
+    {
+      :error,
+      """
+      #{IO.ANSI.red()}Invalid color in map
+      Map entry: #{inspect(key)}
+      #{msg}
+      """
+    }
+  end
 end
