@@ -261,6 +261,8 @@ defmodule Scenic.Themes do
     end
   end
 
+  def normalize(theme) when is_map(theme), do: theme
+
   @spec preset({atom, atom} | map) :: map | nil
   @doc """
   Get a theme.
