@@ -70,6 +70,10 @@ defmodule Scenic.ThemesTest do
     assert Themes.normalize({:scenic, :dark}) == @theme_dark
   end
 
+  test "normalize returns default scenic theme when an atom is passed" do
+    assert Themes.normalize(:dark) == @theme_dark
+  end
+
   test "custom validate method accepts custom named themes" do
     assert Themes.validate({:custom_scenic, :custom_dark}) == {:ok, {:custom_scenic, :custom_dark}}
     assert Themes.validate({:custom_scenic, :custom_light}) == {:ok, {:custom_scenic, :custom_light}}
@@ -102,7 +106,11 @@ defmodule Scenic.ThemesTest do
 
   test "validate rejects invalid theme names" do
     {:error, msg} = Themes.validate(:invalid)
-    assert msg =~ "Themes can be a tuple represent a theme for example:"
+    assert msg =~ "The theme could not be found in library"
+  end
+
+  test "validate defaults to the scenic library when an atom is passed" do
+    assert Themes.validate(:primary) == {:ok, :primary}
   end
 
   test "validate accepts maps of colors" do

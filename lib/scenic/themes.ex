@@ -151,6 +151,30 @@ defmodule Scenic.Themes do
     end
   end
 
+  def validate(theme_name) when is_atom(theme_name) do
+    lib = module().library()
+    {themes, schema} = Map.get(lib, :scenic)
+    case Map.get(themes, theme_name) do
+      nil ->
+        {
+          :error,
+          """
+          #{IO.ANSI.red()}Invalid theme specification
+          Received: #{inspect(theme_name)}
+          #{IO.ANSI.yellow()}
+          The theme could not be found in library #{inspect(:scenic)}.
+          Ensure you got the name correct.
+          #{IO.ANSI.default_color()}
+          """
+        }
+      theme ->
+        case validate(theme, schema) do
+          {:ok, _} -> {:ok, theme_name}
+          error -> error
+        end
+    end
+  end
+
   def validate(
         %{
           text: _,
@@ -201,8 +225,11 @@ defmodule Scenic.Themes do
       #{IO.ANSI.red()}Invalid theme specification
       Received: #{inspect(data)}
       #{IO.ANSI.yellow()}
-      Themes can be a tuple represent a theme for example:
+      Themes can be a tuple representing a theme for example:
         {:scenic, :light}, {:scenic, :dark}
+
+      Or an atom representing one of scenics default themes:
+        :primary, :secondary
 
       Or it may also be a map defining colors for the values of
           :text, :background, :border, :active, :thumb, :focus
@@ -249,7 +276,7 @@ defmodule Scenic.Themes do
     module()._get_palette()
   end
 
-  @spec normalize({atom, atom} | map) :: map | nil
+  @spec normalize({atom, atom} | map | atom) :: map | nil
   @doc """
   Converts a theme from it's tuple form to it's map form.
   """
@@ -261,15 +288,31 @@ defmodule Scenic.Themes do
     end
   end
 
+  def normalize(theme_name) when is_atom(theme_name) do
+    themes = module().library()
+    case Map.get(themes, :scenic) do
+      {themes, _schema} -> Map.get(themes, theme_name)
+      nil -> nil
+    end
+  end
+
   def normalize(theme) when is_map(theme), do: theme
 
-  @spec preset({atom, atom} | map) :: map | nil
+  @spec preset({atom, atom} | map | atom) :: map | nil
   @doc """
   Get a theme.
   """
   def preset({lib, theme_name}) do
     themes = module().library()
     case Map.get(themes, lib) do
+      {themes, _schema} -> Map.get(themes, theme_name)
+      nil -> nil
+    end
+  end
+
+  def preset(theme_name) when is_atom(theme_name) do
+    themes = module().library()
+    case Map.get(themes, :scenic) do
       {themes, _schema} -> Map.get(themes, theme_name)
       nil -> nil
     end
