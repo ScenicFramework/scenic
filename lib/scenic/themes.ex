@@ -240,6 +240,54 @@ defmodule Scenic.Themes do
   end
 
   def validate(
+        {lib, theme_name} = lib_theme,
+        schema
+      ) do
+    # we have the schema so we can validate against it.
+    themes = module().library()
+    case Map.get(themes, lib) do
+      {themes, _schema} ->
+        case Map.get(themes, theme_name) do
+          nil ->
+            {
+              :error,
+              """
+              #{IO.ANSI.red()}Invalid theme specification
+              Received: #{inspect(lib_theme)}
+              #{IO.ANSI.yellow()}
+              The theme could not be found in library #{inspect(:scenic)}.
+              Ensure you got the name correct.
+              #{IO.ANSI.default_color()}
+              """
+            }
+          theme ->
+            schema
+            |> Enum.reduce({:ok, theme}, fn
+              _, {:error, msg} ->
+                {:error, msg}
+              key, {:ok, _} = acc ->
+                case Map.has_key?(theme, key) do
+                  true -> acc
+                  false -> err_key(key, theme)
+                end
+            end)
+        end
+      nil ->
+        {
+          :error,
+          """
+          #{IO.ANSI.red()}Invalid theme specification
+          Received: #{inspect(lib_theme)}
+          #{IO.ANSI.yellow()}
+          You passed in a tuple representing a library theme, but it could not be found.
+          Please ensure you've imported the the library correctly in your Themes module.
+          #{IO.ANSI.default_color()}
+          """
+        }
+      end
+  end
+
+  def validate(
         theme,
         schema
       ) do

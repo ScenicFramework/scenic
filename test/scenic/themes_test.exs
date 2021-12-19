@@ -50,6 +50,8 @@ defmodule Scenic.ThemesTest do
     text: @text
   }
 
+  @schema [:background, :text, :thumb, :focus, :highlight]
+
   @properly_configured_module [
     name: :scenic,
     themes: @themes,
@@ -143,13 +145,17 @@ defmodule Scenic.ThemesTest do
     assert msg =~ "Invalid Color specification: :invalid"
   end
 
-  test "verify rejects maps without the standard colors" do
+  test "validate accepts a theme against a schema passed in" do
+    assert Themes.validate({:scenic, :primary}, @schema)
+  end
+
+  test "validate rejects maps without the standard colors" do
     color_map = %{some_name: :red}
     {:error, msg} = Themes.validate(color_map)
     assert msg =~ "didn't include all the required color"
   end
 
-  test "verify rejects invalid values" do
+  test "validate rejects invalid values" do
     {:error, _msg} = Themes.validate("totally wrong")
   end
 
