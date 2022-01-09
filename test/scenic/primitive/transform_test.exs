@@ -45,7 +45,7 @@ defmodule Scenic.Primitive.TransformTest do
     tx = [s: 0.6]
 
     assert NimbleOptions.validate(tx, Transform.opts_schema()) ==
-             {:ok, [s: 0.6, scale: {0.6, 0.6}]}
+             {:ok, [s: {0.6, 0.6}]}
   end
 
   test "combine calculates the local matrix in the right order" do
