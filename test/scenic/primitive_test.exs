@@ -177,6 +177,21 @@ defmodule Scenic.PrimitiveTest do
            }
   end
 
+  test "merge_opts supports t translate shortcut" do
+    assert Primitive.merge_opts(@primitive, t: {10, 42}).transforms ==
+             Primitive.merge_opts(@primitive, translate: {10, 42}).transforms
+  end
+
+  test "merge_opts supports s scale shortcut" do
+    assert Primitive.merge_opts(@primitive, s: 1.2).transforms ==
+             Primitive.merge_opts(@primitive, scale: 1.2).transforms
+  end
+
+  test "merge_opts supports r rotate shortcut" do
+    assert Primitive.merge_opts(@primitive, r: 1.4).transforms ==
+             Primitive.merge_opts(@primitive, rotate: 1.4).transforms
+  end
+
   test "merge_opts rejects invalid style" do
     assert_raise RuntimeError, fn ->
       Primitive.merge_opts(@primitive, fill: :invalid)

@@ -56,13 +56,12 @@ defmodule Scenic.Primitive.Transform do
   }
 
   @opts_schema [
-    # Note: Due to https://github.com/dashbitco/nimble_options/issues/68 any
-    # `:rename_to` entries need to come before the keys that they are renaming
-    t: [rename_to: :translate],
-    s: [rename_to: :scale],
-    r: [rename_to: :rotate],
+    # Note: the shortcut versions are translated to the full versions in Scenic.Primitive
+    t: [type: {:custom, Transform.Translate, :validate, []}],
     translate: [type: {:custom, Transform.Translate, :validate, []}],
+    s: [type: {:custom, Transform.Scale, :validate, []}],
     scale: [type: {:custom, Transform.Scale, :validate, []}],
+    r: [type: {:custom, Transform.Rotate, :validate, []}],
     rotate: [type: {:custom, Transform.Rotate, :validate, []}],
     pin: [type: {:custom, Transform.Pin, :validate, []}],
     matrix: [type: {:custom, Transform.Matrix, :validate, []}]

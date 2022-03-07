@@ -228,11 +228,22 @@ defmodule Scenic.Primitive do
 
     tx =
       case NimbleOptions.validate(tx, Transform.opts_schema()) do
-        {:ok, tx} -> tx
+        {:ok, tx} -> apply_opts_shortcuts(tx)
         {:error, error} -> raise Exception.message(error)
       end
 
     {:ok, id, st, tx, op}
+  end
+
+  # Work around NimbleOptions rename_to deprecation
+  # https://github.com/dashbitco/nimble_options/issues/78
+  defp apply_opts_shortcuts(opts) do
+    Enum.map(opts, fn
+      {:t, val} -> {:translate, val}
+      {:s, val} -> {:scale, val}
+      {:r, val} -> {:rotate, val}
+      {key, val} -> {key, val}
+    end)
   end
 
   # ============================================================================
