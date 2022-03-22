@@ -284,28 +284,28 @@ defmodule Scenic.Assets.Stream.Bitmap do
   def put_offset(mutable, offset, color)
 
   def put_offset({@mutable, {w, h, :g}, p}, offset, color) when is_integer(offset) do
-    if offset > w * h, do: raise "Offset is out of bounds"
+    if offset > w * h, do: raise("Offset is out of bounds")
     {:color_g, g} = Color.to_g(color)
     nif_put(p, offset, g)
     {@mutable, {w, h, :g}, p}
   end
 
   def put_offset({@mutable, {w, h, :ga}, p}, offset, color) when is_integer(offset) do
-    if offset > w * h, do: raise "Offset is out of bounds"
+    if offset > w * h, do: raise("Offset is out of bounds")
     {:color_ga, {g, a}} = Color.to_ga(color)
     nif_put(p, offset, g, a)
     {@mutable, {w, h, :ga}, p}
   end
 
   def put_offset({@mutable, {w, h, :rgb}, p}, offset, color) when is_integer(offset) do
-    if offset > w * h, do: raise "Offset is out of bounds"
+    if offset > w * h, do: raise("Offset is out of bounds")
     {:color_rgb, {r, g, b}} = Color.to_rgb(color)
     nif_put(p, offset, r, g, b)
     {@mutable, {w, h, :rgb}, p}
   end
 
   def put_offset({@mutable, {w, h, :rgba}, p}, offset, color) when is_integer(offset) do
-    if offset > w * h, do: raise "Offset is out of bounds"
+    if offset > w * h, do: raise("Offset is out of bounds")
     {:color_rgba, {r, g, b, a}} = Color.to_rgba(color)
     nif_put(p, offset, r, g, b, a)
     {@mutable, {w, h, :rgba}, p}
