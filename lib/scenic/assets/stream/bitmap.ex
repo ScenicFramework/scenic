@@ -265,6 +265,52 @@ defmodule Scenic.Assets.Stream.Bitmap do
     {@mutable, {w, h, :rgba}, p}
   end
 
+  # --------------------------------------------------------
+  @doc """
+  Set the color value of a single pixel in a bitmap using an offset from the start.
+
+  Only works with mutable bitmaps.
+
+  The color you provide can be any valid value from the `Scenic.Color` module.
+
+  Unlike the `put` function, which specifies the pixel by `x` and `y` position,
+  `put_offset` takes an offset directly into the data.
+
+  The offset would be the same as y * width + x.
+  """
+
+  @spec put_offset(mutable :: m(), offset :: pos_integer, color :: Color.t()) ::
+          mutable :: m()
+  def put_offset(mutable, offset, color)
+
+  def put_offset({@mutable, {w, h, :g}, p}, offset, color) when is_integer(offset) do
+    if offset > w * h, do: raise "Offset is out of bounds"
+    {:color_g, g} = Color.to_g(color)
+    nif_put(p, offset, g)
+    {@mutable, {w, h, :g}, p}
+  end
+
+  def put_offset({@mutable, {w, h, :ga}, p}, offset, color) when is_integer(offset) do
+    if offset > w * h, do: raise "Offset is out of bounds"
+    {:color_ga, {g, a}} = Color.to_ga(color)
+    nif_put(p, offset, g, a)
+    {@mutable, {w, h, :ga}, p}
+  end
+
+  def put_offset({@mutable, {w, h, :rgb}, p}, offset, color) when is_integer(offset) do
+    if offset > w * h, do: raise "Offset is out of bounds"
+    {:color_rgb, {r, g, b}} = Color.to_rgb(color)
+    nif_put(p, offset, r, g, b)
+    {@mutable, {w, h, :rgb}, p}
+  end
+
+  def put_offset({@mutable, {w, h, :rgba}, p}, offset, color) when is_integer(offset) do
+    if offset > w * h, do: raise "Offset is out of bounds"
+    {:color_rgba, {r, g, b, a}} = Color.to_rgba(color)
+    nif_put(p, offset, r, g, b, a)
+    {@mutable, {w, h, :rgba}, p}
+  end
+
   defp nif_put(_, _, _), do: :erlang.nif_error("Did not find nif_put_g")
   defp nif_put(_, _, _, _), do: :erlang.nif_error("Did not find nif_put_ga")
   defp nif_put(_, _, _, _, _), do: :erlang.nif_error("Did not find nif_put_rgb")

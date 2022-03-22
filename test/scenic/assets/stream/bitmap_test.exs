@@ -182,6 +182,43 @@ defmodule Scenic.Assets.Stream.BitmapTest do
   end
 
   # --------------------------------------------------------
+  test "put_offset :g works" do
+    color = Color.to_g(5)
+
+    mut = Bitmap.build(:g, @width, @height)
+    assert Bitmap.get(mut, 2, 2) == {:color_g, 0}
+    mut = Bitmap.put_offset(mut, @width * 2 + 2, color)
+    assert Bitmap.get(mut, 2, 2) == color
+  end
+
+  test "put_offset :ga works" do
+    color = Color.to_ga({5, 100})
+
+    mut = Bitmap.build(:ga, @width, @height)
+    assert Bitmap.get(mut, 2, 2) == {:color_ga, {0, 0}}
+    mut = Bitmap.put_offset(mut, @width * 2 + 2, color)
+    assert Bitmap.get(mut, 2, 2) == color
+  end
+
+  test "put_offset :rgb works" do
+    color = Color.to_rgb({1, 2, 3})
+
+    mut = Bitmap.build(:rgb, @width, @height)
+    assert Bitmap.get(mut, 2, 2) == {:color_rgb, {0, 0, 0}}
+    mut = Bitmap.put_offset(mut, @width * 2 + 2, color)
+    assert Bitmap.get(mut, 2, 2) == color
+  end
+
+  test "put_offset :rgba works" do
+    color = Color.to_rgba({1, 2, 3, 100})
+
+    mut = Bitmap.build(:rgba, @width, @height)
+    assert Bitmap.get(mut, 2, 2) == {:color_rgba, {0, 0, 0, 0}}
+    mut = Bitmap.put_offset(mut, @width * 2 + 2, color)
+    assert Bitmap.get(mut, 2, 2) == color
+  end
+
+  # --------------------------------------------------------
   test "clear :g works" do
     color = Color.to_g(5)
 
