@@ -83,6 +83,7 @@ defmodule Scenic.ViewPortTest do
     def request_input(_input, driver), do: {:ok, driver}
     def reset_scene(driver), do: {:ok, driver}
     def clear_color(_color, driver), do: {:ok, driver}
+    def take_screenshot(driver), do: {:ok, driver, {1, 1, :rgba, <<0x00, 0x00, 0x00, 0xFF>>}}
 
     def handle_info(_, driver), do: {:noreply, driver}
     def handle_cast(_, driver), do: {:noreply, driver}
