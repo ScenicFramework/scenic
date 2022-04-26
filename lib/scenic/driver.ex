@@ -348,7 +348,7 @@ defmodule Scenic.Driver do
   This callback is optional.
   """
   @callback take_screenshot(driver :: Driver.t()) ::
-              {:ok, :not_supported} | {:ok, screenshot_t, Driver.t()}
+              {:ok, :not_supported, Driver.t()} | {:ok, screenshot_t, Driver.t()}
 
   @optional_callbacks reset_scene: 1,
                       request_input: 2,
