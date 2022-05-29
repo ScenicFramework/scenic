@@ -18,14 +18,13 @@ These drivers have been combined into a new driver that covers both scenarios. S
 
 The configuration options for `:scenic_driver_local` are similar to, but not the same as, those for the previous drivers. This is because as a unified driver, we can't make certain assumptions.
 
-For example, the window title, or whether or not it is resizable has not meaning on an embedded device, but is still used on a PC.
+For example, the window title, or whether or not it is resizable has no meaning on an embedded device, but is still used on a PC.
 
-Another example is that the actions it should take when the the driver closes is different. An embedded device should always do its best to stay running, whereas closing the window on a Mac should probably cause it to stop the app.
+Another example is that the actions it should take when the driver closes is different. An embedded device should always do its best to stay running, whereas closing the window on a Mac should probably cause it to stop the app.
 
 You will need to make a few config tweaks.
 
 There are a few new options that probably make more sense on an embedded device but are very cool... You can now rotate the UI, scale it to fit a screen, center it, etc, just by setting config options.
-
 
 This is an example of a config (which is in turn part of a ViewPort config) that is oriented toward running on a Mac/PC/Linux machine.
 
