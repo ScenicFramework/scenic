@@ -236,7 +236,7 @@ defmodule Scenic.ViewPort do
   @doc """
   Retrieve a %ViewPort{} struct given just the viewport's pid
   """
-  @spec info(pid :: ViewPort.t() | GenServer.server()) :: map
+  @spec info(pid :: ViewPort.t() | GenServer.server()) :: {:ok, map}
   def info(%ViewPort{pid: pid}), do: info(pid)
 
   def info(pid) when is_pid(pid) or is_atom(pid) do
