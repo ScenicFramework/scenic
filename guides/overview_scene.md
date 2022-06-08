@@ -102,7 +102,7 @@ The second argument, `param`, is any term that you pass to your scene when
 you reference it or otherwise configure it in the ViewPort. Look at an example
 configuration of a ViewPort from the config.exs file...
 
-      use Mix.Config
+      import Config
 
       # Configure the main viewport for the Scenic application
       config :my_app, :viewport, %{

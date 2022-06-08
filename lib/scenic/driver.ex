@@ -49,7 +49,7 @@ defmodule Scenic.Driver do
   same time and will receive the same messages from the ViewPort.
 
   Drivers can be dynamically started on a `ViewPort` using
-  `Scenic.ViewPort.start_driver/2`. They can be dyncamically stopped on
+  `Scenic.ViewPort.start_driver/2`. They can be dynamically stopped on
   a `ViewPort` using  `Scenic.ViewPort.stop_driver/2`.
 
   Drivers can also define their own configuration options. See the

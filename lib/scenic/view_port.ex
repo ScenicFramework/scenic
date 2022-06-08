@@ -234,9 +234,9 @@ defmodule Scenic.ViewPort do
 
   # --------------------------------------------------------
   @doc """
-  Retrieve a %ViewPort{} struct given just the viewport's pid
+  Retrieve a `%ViewPort{}` struct given just the viewport's pid
   """
-  @spec info(pid :: ViewPort.t() | GenServer.server()) :: map
+  @spec info(pid :: ViewPort.t() | GenServer.server()) :: {:ok, map}
   def info(%ViewPort{pid: pid}), do: info(pid)
 
   def info(pid) when is_pid(pid) or is_atom(pid) do
@@ -264,7 +264,7 @@ defmodule Scenic.ViewPort do
   @doc """
   Put a script by name.
 
-  returns {:ok, id}
+  returns `{:ok, id}`
   """
   @spec put_script(
           viewport :: ViewPort.t(),
@@ -389,7 +389,9 @@ defmodule Scenic.ViewPort do
   @doc """
   Set the root theme for the ViewPort.
 
-  WARNING: this will restart the current root scene
+  > #### Warning {: .error}
+  >
+  > This will restart the current root scene
   """
   @spec set_theme(viewport :: ViewPort.t(), theme :: atom | map) :: :ok
   def set_theme(viewport, theme)
