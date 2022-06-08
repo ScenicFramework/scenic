@@ -54,7 +54,7 @@ ViewPorts.
 These configuration maps will be passed in to the main Scenic supervisor. These
 configurations should live in your app's config.exs file.
 
-    use Mix.Config
+    import Config
 
     # Configure the main viewport for the Scenic application
     config :my_app, :viewport, %{
