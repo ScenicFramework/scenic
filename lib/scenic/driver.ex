@@ -887,7 +887,11 @@ defmodule Scenic.Driver do
     name: [type: :atom]
   ]
 
-  @doc false
+  @doc """
+  Validate driver configuration
+
+  Used primarily for dynamic view port creation
+  """
   def validate([]), do: {:ok, []}
 
   def validate(drivers) do
