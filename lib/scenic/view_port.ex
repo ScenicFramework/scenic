@@ -96,6 +96,9 @@ defmodule Scenic.ViewPort do
   Pass in the same set of opts that you would use when starting `Scenic` in your
   supervision tree. For example:
 
+      # Assuming you use the default view port name from the generator
+      {:ok, view_port} = Scenic.ViewPort.info(:main_viewport)
+
       opts = [
         name: name,
         module: Scenic.Driver.Local,
