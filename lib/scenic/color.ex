@@ -180,15 +180,15 @@ defmodule Scenic.Color do
   For HSL and HSV, h is a float between 0 and 360, while the s, v and l values
   are floats between 0 and 100.
 
-  | Format          | Implicit | Explicit  |
-  |---------------|------------------------|-----------|
-  | Named Color | *na* | See the Named Color Table |
-  | Grayscale | `g` | `{:g, g}` |
-  | Gray, Alpha | `{g, a}` | `{:g, {g, a}}` |
-  | Red, Green, Blue | `{r, g, b}` | `{:rgb, {r, g, b}}` |
-  | Red, Green, Blue, Alpha | `{r, g, b, a}` | `{:rgba, {r, g, b, a}}` |
-  | Hue, Saturation, Value | *na* | `{:hsv, {h, s, v}}` |
-  | Hue, Saturation, Lightness | *na* | `{:hsl, {h, s, l}}` |
+  | Format                     | Implicit       | Explicit                  |
+  |----------------------------|----------------|---------------------------|
+  | Named Color                | *na*           | See the Named Color Table |
+  | Grayscale                  | `g`            | `{:g, g}`                 |
+  | Gray, Alpha                | `{g, a}`       | `{:g, {g, a}}`            |
+  | Red, Green, Blue           | `{r, g, b}`    | `{:rgb, {r, g, b}}`       |
+  | Red, Green, Blue, Alpha    | `{r, g, b, a}` | `{:rgba, {r, g, b, a}}`   |
+  | Hue, Saturation, Value     | *na*           | `{:hsv, {h, s, v}}`       |
+  | Hue, Saturation, Lightness | *na*           | `{:hsl, {h, s, l}}`       |
 
 
   ## Named Colors
@@ -204,15 +204,16 @@ defmodule Scenic.Color do
 
   ## Additional Named Colors
 
-    | Name          | Value                  |
-  |---------------|------------------------|
-  | `:clear` | `{0x80, 0x80, 0x80, 0x00}` |
+  | Name          | Value                       |
+  |---------------|-----------------------------|
+  | `:clear` | `{0x80, 0x80, 0x80, 0x00}`       |
   | `:transparent` | `{0x80, 0x80, 0x80, 0x00}` |
 
   ## Converting Between Color Formats
 
-  By using the functions `to_g`, `to_ga`, `to_rgb`, `to_rgb`, `to_hsl`, and `to_hsv`
-  you can convert between any implicit or explicit color type to any explicit color type.
+  By using the functions `to_g/1`, `to_ga/1`, `to_rgb/1`, `to_rgb/1`,
+  `to_hsl/1`, and `to_hsv/1` you can convert between any implicit or explicit
+  color type to any explicit color type.
   """
 
   # import IEx
