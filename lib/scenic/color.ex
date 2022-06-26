@@ -156,6 +156,13 @@ defmodule Scenic.Color do
     yellow_green: {0x9A, 0xCD, 0x32}
   }
 
+  @g :color_g
+  @ga :color_ga
+  @rgb :color_rgb
+  @rgba :color_rgba
+  @hsv :color_hsv
+  @hsl :color_hsl
+
   @moduledoc """
   APIs to create and work with colors.
 
@@ -180,15 +187,15 @@ defmodule Scenic.Color do
   For HSL and HSV, h is a float between 0 and 360, while the s, v and l values
   are floats between 0 and 100.
 
-  | Format                     | Implicit       | Explicit                  |
-  |----------------------------|----------------|---------------------------|
-  | Named Color                | *na*           | See the Named Color Table |
-  | Grayscale                  | `g`            | `{:g, g}`                 |
-  | Gray, Alpha                | `{g, a}`       | `{:g, {g, a}}`            |
-  | Red, Green, Blue           | `{r, g, b}`    | `{:rgb, {r, g, b}}`       |
-  | Red, Green, Blue, Alpha    | `{r, g, b, a}` | `{:rgba, {r, g, b, a}}`   |
-  | Hue, Saturation, Value     | *na*           | `{:hsv, {h, s, v}}`       |
-  | Hue, Saturation, Lightness | *na*           | `{:hsl, {h, s, l}}`       |
+  | Format                     | Implicit       | Explicit                    |
+  |----------------------------|----------------|-----------------------------|
+  | Named Color                | *na*           | See the Named Color Table   |
+  | Grayscale                  | `g`            | `{:#{@g}, g}`               |
+  | Gray, Alpha                | `{g, a}`       | `{:#{@ga}, {g, a}}`         |
+  | Red, Green, Blue           | `{r, g, b}`    | `{:#{@rgb}, {r, g, b}}`     |
+  | Red, Green, Blue, Alpha    | `{r, g, b, a}` | `{:#{@rgba}, {r, g, b, a}}` |
+  | Hue, Saturation, Value     | *na*           | `{:#{@hsv}, {h, s, v}}`     |
+  | Hue, Saturation, Lightness | *na*           | `{:#{@hsl}, {h, s, l}}`     |
 
 
   ## Named Colors
@@ -217,13 +224,6 @@ defmodule Scenic.Color do
   """
 
   # import IEx
-
-  @g :color_g
-  @ga :color_ga
-  @rgb :color_rgb
-  @rgba :color_rgba
-  @hsv :color_hsv
-  @hsl :color_hsl
 
   @type implicit ::
           atom
