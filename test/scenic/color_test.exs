@@ -175,6 +175,12 @@ defmodule Scenic.ColorTest do
     assert Color.to_hsl({:color_hsl, {1.1, 1.2, 1.3}}) == {:color_hsl, {1.1, 1.2, 1.3}}
   end
 
+  test "white hsl to hsv to rgb" do
+    assert Color.to_hsv(:white)
+           |> Color.to_hsl()
+           |> Color.to_rgb() == {:color_rgb, {255, 255, 255}}
+  end
+
   test "named looks right" do
     Color.named()
     |> Enum.each(fn {n, {r, g, b}} ->

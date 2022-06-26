@@ -535,7 +535,7 @@ defmodule Scenic.Color do
 
     s =
       case delta do
-        0 -> 0
+        0.0 -> 0.0
         d -> d / (1 - abs(2 * l - 1))
       end
 
