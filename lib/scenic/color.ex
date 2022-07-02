@@ -224,6 +224,10 @@ defmodule Scenic.Color do
   @hsv :color_hsv
   @hsl :color_hsl
 
+  # Epsilon value from JS
+  # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON
+  @epsilon 2.22044e-16
+
   @type implicit ::
           atom
           | {name :: atom, a :: integer}
@@ -534,9 +538,9 @@ defmodule Scenic.Color do
     l = (max + min) / 2
 
     s =
-      case delta do
-        0.0 -> 0.0
-        d -> d / (1 - abs(2 * l - 1))
+      cond do
+        delta < @epsilon -> 0.0
+        true -> delta / (1 - abs(2 * l - 1))
       end
 
     {h, s * 100, l * 100}
