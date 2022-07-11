@@ -68,8 +68,9 @@ defmodule Scenic.Graph do
   that new primitives added to it are inserted into the new group instead of the
   root of the graph.
 
-  Finally, when the group is finished, a translation matrix and a `:text_align` style
-  are added to it. These properties are _inherited_ by the primitives in the group.
+  Finally, when the group is finished, a translation matrix and a `:text_align`
+  style (see `Scenic.Primitive.Style.TextAlign`) are added to it. These
+  properties are _inherited_ by the primitives in the group.
 
   ## Inheritance
 
