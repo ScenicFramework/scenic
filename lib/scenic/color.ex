@@ -222,8 +222,17 @@ defmodule Scenic.Color do
   `to_hsl/1`, and `to_hsv/1` you can convert between any implicit or explicit
   color type to any explicit color type.
   """
+  
+  @g :color_g
+  @ga :color_ga
+  @rgb :color_rgb
+  @rgba :color_rgba
+  @hsv :color_hsv
+  @hsl :color_hsl
 
-  # import IEx
+  # Epsilon value from JS
+  # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON
+  @epsilon 2.22044e-16
 
   @type implicit ::
           atom
@@ -535,9 +544,9 @@ defmodule Scenic.Color do
     l = (max + min) / 2
 
     s =
-      case delta do
-        0 -> 0
-        d -> d / (1 - abs(2 * l - 1))
+      cond do
+        delta < @epsilon -> 0.0
+        true -> delta / (1 - abs(2 * l - 1))
       end
 
     {h, s * 100, l * 100}
