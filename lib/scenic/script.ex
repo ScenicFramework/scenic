@@ -19,8 +19,8 @@ defmodule Scenic.Script do
 
   Simply put, Scenic.Script produces a list of static drawing commands that are
   sent, unmodified, to the drivers through the ViewPort. These scripts are
-  generated for you when you use push_graph, or you can create them yourself
-  by using this api.
+  generated for you when you use `Scenic.Scene.push_graph/3`, or you can create
+  them yourself by using this api.
 
   If you use Scenic.Script directly, you can create more complicated and/or
   reusable graphics than you could by using Graphs alone.
@@ -31,17 +31,17 @@ defmodule Scenic.Script do
   that which changes frequently. When a graph is pushed to the ViewPort, the 
   entire thing is compiled into a script, which is sent as a whole to the Drivers.
 
-  If that graph references a script tho, only the reference is sent, not the contents
-  of the script. This means you can modify the graph frequently without sending
-  the contents of the scripts.
+  However if that graph references a script, only the reference to the script is
+  sent, not the contents of the script. This means you can modify the graph
+  frequently without sending the contents of the scripts.
 
   The opposite is also true. You can generate and push the scripts frequently
   without causing the graphs that reference them to be recompiled or resent.
 
-  And example of this might be a graph that implements a chart of some sort.
-
-  The contents of the chart could be a script that is updated as new data comes
-  in without needed all the chrome around it to be recompiled or sent.
+  An example of this might be a graph that implements a chart of some sort. The
+  contents of the chart could be a script that is updated as new data comes in
+  without needing all the chrome around it to be recompiled or sent for every
+  update.
 
   ## API Patterns
 
