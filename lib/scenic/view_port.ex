@@ -100,7 +100,6 @@ defmodule Scenic.ViewPort do
       {:ok, view_port} = Scenic.ViewPort.info(:main_viewport)
 
       opts = [
-        name: name,
         module: Scenic.Driver.Local,
         window: [resizeable: false, title: "My Example Scenic App"],
         on_close: :stop_system
