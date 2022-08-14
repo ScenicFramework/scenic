@@ -7,28 +7,28 @@ defmodule Scenic.Primitive.Component do
   @moduledoc """
   Add a child component to a graph.
 
-  When a scene pushes a graph containing a Component to it's ViewPort,
+  When a scene pushes a graph containing a Component to its ViewPort,
   a new scene, containing the component, is created and added as a child
   to the scene that created it.
 
   Any events the new component creates are sent up the parent. The parent
-  can use functions in the Scenic.Scene module to manage it's children,
+  can use functions in the `Scenic.Scene` module to manage its children,
   send them messages and such.
 
   The standard components, such as button, slider, etc. have wrapper functions
   making them very easy to add to a graph. However, if you have a custom
-  component you can add it to any graph manually using the add_to_graph
+  component you can add it to any graph manually using the `add_to_graph/3`
   function.
 
-  You typically want to give components an :id. This will be used to identify
+  You typically want to give components an `:id`. This will be used to identify
   events coming from that components back to your scene.
 
   ```elixir
   import Components  # contains the button helper
 
   graph
-    |> button( "Press Me", id: :press_me )
-    |> MyComponent.add_to_graph( {"Some data", 123}, id: :my_component )
+  |> button("Press Me", id: :press_me)
+  |> MyComponent.add_to_graph({"Some data", 123}, id: :my_component)
   ```
 
   """
