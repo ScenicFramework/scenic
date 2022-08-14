@@ -576,15 +576,13 @@ defmodule Scenic.Graph do
 
   Pass in a function that accepts a primitive and returns a boolean.
 
-  Returns a list of tuples containing the matching id at the primitive.
-
-  `[{id, primitive}]`
+  Returns a list of primitives.
 
   __Warning:__ This function crawls the entire graph and is thus slower than
   accessing items via a fully-specified id.
   """
 
-  @spec find(graph :: t(), (any -> as_boolean(term()))) :: list({any, Primitive.t()})
+  @spec find(graph :: t(), (any -> as_boolean(term()))) :: list(Primitive.t())
   def find(graph, finder)
 
   # pass in an atom based id, and it will transform all mapped uids
