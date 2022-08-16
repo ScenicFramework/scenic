@@ -208,7 +208,7 @@ defmodule MyDevice.Scene.Example do
 
   # display any received events
   def handle_event(event, _, %{assigns: %{graph: graph}} = scene) do
-    graph = Graph.modify( graph, :text, &text(&1, inspect(event))
+    graph = Graph.modify( graph, :text, &text(&1, inspect(event)))
 
     scene =
       scene
