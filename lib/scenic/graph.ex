@@ -846,7 +846,7 @@ defmodule Scenic.Graph do
   @doc """
   Compute the bounding box that contains the graph.
 
-  Returns `{left, right, top, bottom}` or `nil` if the graph is empty.
+  Returns `{left, top, right, bottom}` or `nil` if the graph is empty.
   """
   @spec bounds(graph :: t()) :: Scenic.Graph.bounds() | nil
   defdelegate bounds(graph), to: Scenic.Graph.Bounds, as: :compute
