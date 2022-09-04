@@ -3,10 +3,9 @@
 This guide will walk you through installing the new project generator, then
 building your first Scenic application.
 
-Some initial setup is required for windows.  You'll need 
-windows services for linux (WSL) and VcXsrv,
-[Jeffrey Borchert's article details these steps.](https://medium.com/@jeffborch/running-the-scenic-elixir-gui-framework-on-windows-10-using-wsl-f9c01fd276f6)
-You'll come back here to finish.
+## Install Dependencies
+
+See [Install Dependencies](install_dependencies.html)
 
 ## Install `scenic.new`
 
