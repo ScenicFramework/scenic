@@ -20,15 +20,15 @@ defmodule Scenic.Primitive do
   ## How to use primitives
 
   By far, the easiest way to use primitives is to import the helper functions in
-  [`Scenic.Primitives`](Scenic.Primitives.html). These helpers can both add primitives to
+  `Scenic.Primitives`. These helpers can both add primitives to
   a scene you are building and modify later as you react to events.
 
   ```elixir
   import Scenic.Primitives
 
   @graph Scenic.Graph.build()
-    |> rect( {100, 50}, stroke: {1, :yellow} )
-    |> rectangle( {100, 50}, stroke: {1, :yellow} )
+         |> rect({100, 50}, stroke: {1, :yellow})
+         |> rectangle({100, 50}, stroke: {1, :yellow})
   ```
 
   Once you get a primitive out of a graph via functions such as `Graph.modify`, or `Graph.get`,
@@ -44,21 +44,20 @@ defmodule Scenic.Primitive do
 
   | Helper | Primitive Module | Description |
   |---|---|---|
-  | [`arc/3`](Scenic.Primitives.html#arc/3) | `Scenic.Primitive.Arc` | Draw an arc around a circle |
-  | [`circle/3`](Scenic.Components.html#circle/3) | `Scenic.Primitive.Circle` | Draw a full circle |
-  | [`component/3`](Scenic.Primitives.html#component/3) | `Scenic.Primitive.Component` | Start a child component |
-  | [`ellipse/3`](Scenic.Primitives.html#ellipse/3) | `Scenic.Primitive.Ellipse` | Draw an ellipse |
-  | [`group/3`](Scenic.Primitives.html#group/3) | `Scenic.Primitive.Group` | Create a group |
-  | [`line/3`](Scenic.Primitives.html#line/3) | `Scenic.Primitive.Line` | Draw a line |
-  | [`path/3`](Scenic.Primitives.html#path/3) | `Scenic.Primitive.Path` | Draw a complicated path |
-  | [`quad/3`](Scenic.Primitives.html#quad/3) | `Scenic.Primitive.Quad` | Draw a quad |
-  | [`rect/3`](Scenic.Primitives.html#rect/3) | `Scenic.Primitive.Rectangle` | Draw a rectangle |
-  | [`rrect/3`](Scenic.Primitives.html#rrect/3) | `Scenic.Primitive.RoundedRectangle` | Draw a rounded rectangle |
-  | [`script/3`](Scenic.Primitives.html#script/3) | `Scenic.Primitive.Script` | Run a referenced draw script |
-  | [`sector/3`](Scenic.Primitives.html#sector/3) | `Scenic.Primitive.Sector` | A boolean toggle control. |
-  | [`sprites/3`](Scenic.Primitives.html#sprites/3) | `Scenic.Primitive.Sprites` | Draw a sector |
-  | [`text/3`](Scenic.Primitives.html#text/3) | `Scenic.Primitive.Text` | Draw a string of text |
-  | [`triangle/3`](Scenic.Primitives.html#triangle/3) | `Scenic.Primitive.Triangle` | Draw a triangle |
+  | [`arc/3`](`Scenic.Primitives.arc/3`) | `Scenic.Primitive.Arc` | Draw an arc around a circle |
+  | [`circle/3`](`Scenic.Primitives.circle/3`) | `Scenic.Primitive.Circle` | Draw a full circle |
+  | [`ellipse/3`](`Scenic.Primitives.ellipse/3`) | `Scenic.Primitive.Ellipse` | Draw an ellipse |
+  | [`group/3`](`Scenic.Primitives.group/3`) | `Scenic.Primitive.Group` | Create a group |
+  | [`line/3`](`Scenic.Primitives.line/3`) | `Scenic.Primitive.Line` | Draw a line |
+  | [`path/3`](`Scenic.Primitives.path/3`) | `Scenic.Primitive.Path` | Draw a complicated path |
+  | [`quad/3`](`Scenic.Primitives.quad/3`) | `Scenic.Primitive.Quad` | Draw a quad |
+  | [`rect/3`](`Scenic.Primitives.rect/3`) | `Scenic.Primitive.Rectangle` | Draw a rectangle |
+  | [`rrect/3`](`Scenic.Primitives.rrect/3`) | `Scenic.Primitive.RoundedRectangle` | Draw a rounded rectangle |
+  | [`script/3`](`Scenic.Primitives.script/3`) | `Scenic.Primitive.Script` | Run a referenced draw script |
+  | [`sector/3`](`Scenic.Primitives.sector/3`) | `Scenic.Primitive.Sector` | A boolean toggle control. |
+  | [`sprites/3`](`Scenic.Primitives.sprites/3`) | `Scenic.Primitive.Sprites` | Draw a sector |
+  | [`text/3`](`Scenic.Primitives.text/3`) | `Scenic.Primitive.Text` | Draw a string of text |
+  | [`triangle/3`](`Scenic.Primitives.triangle/3`) | `Scenic.Primitive.Triangle` | Draw a triangle |
   """
 
   alias Scenic.Graph
@@ -145,11 +144,7 @@ defmodule Scenic.Primitive do
                      contains_point?: 2,
                      default_pin: 1
     end
-
-    # quote
   end
-
-  # defmacro
 
   # ============================================================================
   # build and add
@@ -163,7 +158,7 @@ defmodule Scenic.Primitive do
   Generic builder to create a new primitive.
 
   This function is used internally. You should almost always use the helpers in
-  [Scenic.Primitives](Scenic.Primitives.html) instead.
+  `Scenic.Primitives` instead.
 
   Parameters:
   * `module` - The module of the primitive you are building
@@ -501,8 +496,8 @@ defmodule Scenic.Primitive do
   @doc """
   Put primitive-specific data onto the primitive.
 
-  Like many of the functions in the Scenic.Primitive module, you are usually better
-  off using the helper functions in [`Scenic.Primitives`](Scenic.Primitives.html) instead.
+  Like many of the functions in the `Scenic.Primitive` module, you are usually better
+  off using the helper functions in `Scenic.Primitives` instead.
 
   Parameters:
   * `primitive` - The primitive
