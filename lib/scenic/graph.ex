@@ -68,8 +68,9 @@ defmodule Scenic.Graph do
   that new primitives added to it are inserted into the new group instead of the
   root of the graph.
 
-  Finally, when the group is finished, a translation matrix and a `:text_align` style
-  are added to it. These properties are _inherited_ by the primitives in the group.
+  Finally, when the group is finished, a translation matrix and a `:text_align`
+  style (see `Scenic.Primitive.Style.TextAlign`) are added to it. These
+  properties are _inherited_ by the primitives in the group.
 
   ## Inheritance
 
@@ -575,15 +576,13 @@ defmodule Scenic.Graph do
 
   Pass in a function that accepts a primitive and returns a boolean.
 
-  Returns a list of tuples containing the matching id at the primitive.
-
-  `[{id, primitive}]`
+  Returns a list of primitives.
 
   __Warning:__ This function crawls the entire graph and is thus slower than
   accessing items via a fully-specified id.
   """
 
-  @spec find(graph :: t(), (any -> as_boolean(term()))) :: list({any, Primitive.t()})
+  @spec find(graph :: t(), (any -> as_boolean(term()))) :: list(Primitive.t())
   def find(graph, finder)
 
   # pass in an atom based id, and it will transform all mapped uids

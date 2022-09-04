@@ -210,11 +210,7 @@ defmodule Scenic.Component do
       # --------------------------------------------------------
       defoverridable add_to_graph: 3
     end
-
-    # quote
   end
-
-  # defmacro
 
   @filter_out [
     :cap,
@@ -240,7 +236,6 @@ defmodule Scenic.Component do
   # prepare the list of opts to send to a component as it is being started up
   # the main task is to remove styles that have already been consumed or don't make
   # sense, while leaving any opts/styles that are intended for the component itself.
-  # also, add the viewport as an option.
   @doc false
   @spec filter_opts(opts :: Keyword.t()) :: Keyword.t()
   def filter_opts(opts) when is_list(opts) do

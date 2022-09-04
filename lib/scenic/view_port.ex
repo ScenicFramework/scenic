@@ -91,6 +91,22 @@ defmodule Scenic.ViewPort do
   leave the scene that thinks it has "captured" the input in an inconsistent
   state, so this is not recommended.
 
+  ## Dynamically Creating View Ports
+
+  Pass in the same set of opts that you would use when starting `Scenic` in your
+  supervision tree. For example:
+
+      # Assuming you use the default view port name from the generator
+      {:ok, view_port} = Scenic.ViewPort.info(:main_viewport)
+
+      opts = [
+        module: Scenic.Driver.Local,
+        window: [resizeable: false, title: "My Example Scenic App"],
+        on_close: :stop_system
+      ]
+
+      {:ok, [opts]} = Scenic.Driver.validate([opts])
+      Scenic.ViewPort.start_driver(view_port, opts)
   """
 
   @type t :: %ViewPort{

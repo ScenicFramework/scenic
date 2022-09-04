@@ -4,8 +4,9 @@ The design of Scenic goes to great lengths to minimize its dependencies to just
 the minimum. Namely, it needs Erlang/Elixir and OpenGL.
 
 Rendering your application into a window on your local computer (MacOS, Ubuntu
-and others) is done by the `scenic_driver_glfw` driver. It uses the GLFW and
-GLEW libraries to connect to OpenGL.
+and others) is done by the
+[`scenic_driver_local`](https://github.com/ScenicFramework/scenic_driver_local)
+driver. It uses the GLFW and GLEW libraries to connect to OpenGL.
 
 The instructions below assume you have already installed Elixir/Erlang. If you
 need to install Elixir/Erlang there are instructions on the [elixir-lang
@@ -22,7 +23,13 @@ brew install glfw3 glew pkg-config
 ```
 
 Once these components have been installed, you should be able to build the
-`scenic_driver_glfw` driver.
+`scenic_driver_local` driver.
+
+## On Windows
+
+Some initial setup is required for windows. You'll need windows services for
+linux (WSL) and VcXsrv, [Jeffrey Borchert's article details these
+steps.](https://medium.com/@jeffborch/running-the-scenic-elixir-gui-framework-on-windows-10-using-wsl-f9c01fd276f6)
 
 ## On Ubuntu 16
 

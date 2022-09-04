@@ -1195,8 +1195,8 @@ defmodule Scenic.Primitives do
     then draw it again without blur, slightly offset, you get a nice drop shadow
     effect. The default is to draw with no blur.
   * `:text_align` - Specify the alignment of the text you are drawing. You will
-    usually specify one of: `:left`, `:center`, or `:right`. You can also specify
-    vertical alignment. See `Scenic.Primitive.Style.TextAlign` for details.
+    usually specify one of: `:left`, `:center`, or `:right`. See
+    `Scenic.Primitive.Style.TextAlign` for details.
   * `:text_height` - Specify the vertical spacing between rows of text.
 
 

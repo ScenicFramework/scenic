@@ -156,6 +156,13 @@ defmodule Scenic.Color do
     yellow_green: {0x9A, 0xCD, 0x32}
   }
 
+  @g :color_g
+  @ga :color_ga
+  @rgb :color_rgb
+  @rgba :color_rgba
+  @hsv :color_hsv
+  @hsl :color_hsl
+
   @moduledoc """
   APIs to create and work with colors.
 
@@ -180,15 +187,15 @@ defmodule Scenic.Color do
   For HSL and HSV, h is a float between 0 and 360, while the s, v and l values
   are floats between 0 and 100.
 
-  | Format          | Implicit | Explicit  |
-  |---------------|------------------------|-----------|
-  | Named Color | *na* | See the Named Color Table |
-  | Grayscale | `g` | `{:g, g}` |
-  | Gray, Alpha | `{g, a}` | `{:g, {g, a}}` |
-  | Red, Green, Blue | `{r, g, b}` | `{:rgb, {r, g, b}}` |
-  | Red, Green, Blue, Alpha | `{r, g, b, a}` | `{:rgba, {r, g, b, a}}` |
-  | Hue, Saturation, Value | *na* | `{:hsv, {h, s, v}}` |
-  | Hue, Saturation, Lightness | *na* | `{:hsl, {h, s, l}}` |
+  | Format                     | Implicit       | Explicit                    |
+  |----------------------------|----------------|-----------------------------|
+  | Named Color                | *na*           | See the Named Color Table   |
+  | Grayscale                  | `g`            | `{:#{@g}, g}`               |
+  | Gray, Alpha                | `{g, a}`       | `{:#{@ga}, {g, a}}`         |
+  | Red, Green, Blue           | `{r, g, b}`    | `{:#{@rgb}, {r, g, b}}`     |
+  | Red, Green, Blue, Alpha    | `{r, g, b, a}` | `{:#{@rgba}, {r, g, b, a}}` |
+  | Hue, Saturation, Value     | *na*           | `{:#{@hsv}, {h, s, v}}`     |
+  | Hue, Saturation, Lightness | *na*           | `{:#{@hsl}, {h, s, l}}`     |
 
 
   ## Named Colors
@@ -204,18 +211,17 @@ defmodule Scenic.Color do
 
   ## Additional Named Colors
 
-    | Name          | Value                  |
-  |---------------|------------------------|
-  | `:clear` | `{0x80, 0x80, 0x80, 0x00}` |
+  | Name          | Value                       |
+  |---------------|-----------------------------|
+  | `:clear` | `{0x80, 0x80, 0x80, 0x00}`       |
   | `:transparent` | `{0x80, 0x80, 0x80, 0x00}` |
 
   ## Converting Between Color Formats
 
-  By using the functions `to_g`, `to_ga`, `to_rgb`, `to_rgb`, `to_hsl`, and `to_hsv`
-  you can convert between any implicit or explicit color type to any explicit color type.
+  By using the functions `to_g/1`, `to_ga/1`, `to_rgb/1`, `to_rgb/1`,
+  `to_hsl/1`, and `to_hsv/1` you can convert between any implicit or explicit
+  color type to any explicit color type.
   """
-
-  # import IEx
 
   @g :color_g
   @ga :color_ga
@@ -223,6 +229,10 @@ defmodule Scenic.Color do
   @rgba :color_rgba
   @hsv :color_hsv
   @hsl :color_hsl
+
+  # Epsilon value from JS
+  # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON
+  @epsilon 2.22044e-16
 
   @type implicit ::
           atom
@@ -534,9 +544,9 @@ defmodule Scenic.Color do
     l = (max + min) / 2
 
     s =
-      case delta do
-        0 -> 0
-        d -> d / (1 - abs(2 * l - 1))
+      cond do
+        delta < @epsilon -> 0.0
+        true -> delta / (1 - abs(2 * l - 1))
       end
 
     {h, s * 100, l * 100}
