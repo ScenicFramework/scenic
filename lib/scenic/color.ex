@@ -222,7 +222,7 @@ defmodule Scenic.Color do
   `to_hsl/1`, and `to_hsv/1` you can convert between any implicit or explicit
   color type to any explicit color type.
   """
-  
+
   @g :color_g
   @ga :color_ga
   @rgb :color_rgb
