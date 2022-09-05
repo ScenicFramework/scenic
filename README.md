@@ -17,12 +17,12 @@ See the [getting started guide](https://hexdocs.pm/scenic/getting_started.html) 
 
 
 # Current Status! __Important!__
-Version 0.11 is a major upgrade. There are numerous breaking changes. The docs have been upgraded, but will get another pass before it leaves beta. The upgrade guide (in the docs) explains the major pieces.
+Version 0.11 is a major upgrade. There are numerous breaking changes. Please read the upgrade guide in the docs.
 
 __READ THAT FIRST__
 
 
-Please note that when v.11 is out of beta it will move into the /ScenicFramework org on GitHub...
+Please note that when v.11 is now in the /ScenicFramework org on GitHub...
 
 
 ## Goals

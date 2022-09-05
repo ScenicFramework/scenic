@@ -12,9 +12,6 @@ be used to build portable applications.
 
 If you have used versions before v0.11, please see the [Upgrading to v0.11 Guide](upgrading_to_v0-11.html).
 
-This is a beta of v0.11. Documentation has been updated, but may still need changes. Please pitch in with
-a PR, or at least a note, if you see something that needs improving.
-
 ## How to get started?
 
 If you are new to Scenic, then you should read the following guides.

@@ -4,7 +4,7 @@
 
 Version v0.11 is a MAJOR overhaul from the top to the bottom. For the first time, Scenic feels like something approaching a 1.0 in design.
 
-This guide is a good first pass. As you use it in the Beta, if you see things that need improving, please contribute!
+This guide is a good first pass. If you see things that need improving, please contribute!
 
 
   * `Scenic.Cache` is gone. It is replaced by a **much** easier to use asset pipeline.
@@ -72,8 +72,8 @@ Now that the Kry10 Operating System is operational (Scenic long awaited design t
 Delete your old scenic dependencies in `mix.exs`, they now look like this:
 
 ```
-{:scenic, "~> 0.11.0-beta.0"},
-{:scenic_driver_local, "~> 0.11.0-beta.0"},
+{:scenic, "~> 0.11.0"},
+{:scenic_driver_local, "~> 0.11.0"},
 ```
 
 You may need to use `mix deps.clean --all` and/or `mix deps.unlock` to get it to work.
@@ -380,7 +380,7 @@ You can also specify new textures to be cleared with a specific color and/or com
 
 ## Standard Driver
 
-The new standard render driver for all Scenic apps is `:scenic_driver_local`, which is being published to hex at roughly the same time as the beta for Scenic v0.11.
+The new standard render driver for all Scenic apps is `:scenic_driver_local`.
 
 Both `:scenic_driver_glfw` and `:scenic_drives_nerves_rpi` are retired.
 
