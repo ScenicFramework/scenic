@@ -466,10 +466,10 @@ defmodule Scenic.Assets.Static do
 
     # build the file data and metas from the sources
     library =
-      case opts[:sources] do
-        nil -> [{opts[:otp_app], @default_src_dir}, {:scenic, "deps/scenic/assets"}]
-        srcs -> srcs
-      end
+      opts
+      |> Keyword.get(:sources, [])
+      |> Keyword.put_new(opts[:otp_app], @default_src_dir)
+      |> Keyword.put_new(:scenic, "deps/scenic/assets")
       |> Enum.reduce(library, &build_from_source(&2, &1, dst))
 
     # add the default aliases
