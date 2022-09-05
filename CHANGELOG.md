@@ -1,14 +1,12 @@
 # Changelog
 
 ## 0.11.0
+* The GitHub repo was moved to the new ScenicFramework GitHub organization
 * Add the Scenic.Assets.Stream.Bitmap.put_offset/3 api
 * Various cleanup and documentation fixes
 * This is a __MAJOR__ update. As Connor Rigby put it in a call... "What hasn't changed?"
-* See the v.11 upgrade guide for an overview.
-
-## 0.11.0-beta.0
-* This is a __MAJOR__ update. As Connor Rigby put it in a call... "What hasn't changed?"
-* See the v.11 upgrade guide for an overview.
+* Read the [version 0.11 upgrade guide](./guides/upgrading_to_v0.11.md) for details
+  about how to upgrade your application to 0.11.
 
 ## 0.10.4
 * Can pass in a :name option to scenes/components @am-kantox
@@ -33,12 +31,12 @@
 * Minor improvements to do error scene readability. Thank you @lmarlow
 
 ## 0.10.1
-* Addded the `Graph.add_to/3` function so you can add primitives to an existing group in a graph
+* Added the `Graph.add_to/3` function so you can add primitives to an existing group in a graph
 * Remove runtime dependency on Mix
 * Various doc fixes.
 
 ## 0.10.0
-* Integration of font metrics
+* Integration of [font metrics](https://github.com/boydm/font_metrics)
   * Buttons, checkboxes, radios, etc. can be auto-sized to fix their text
   * FontMetrics can be used to measure strings, trim to fit, and more
 * Much improved error handling when a scene crashes during its init phase. Instead of quickly

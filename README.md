@@ -14,16 +14,11 @@ See the [getting started guide](https://hexdocs.pm/scenic/getting_started.html) 
 
 - [Introducing Scenic](https://www.youtube.com/watch?v=1QNxLNMq3Uw), a video from ElixirConf 2018, which introduces Scenic and the problems it strives to solve.
 
-
-
-# Current Status! __Important!__
-Version 0.11 is a major upgrade. There are numerous breaking changes. Please read the upgrade guide in the docs.
-
-__READ THAT FIRST__
-
-
-Please note that when v.11 is now in the /ScenicFramework org on GitHub...
-
+> **Warning** Version 0.11 is a **MAJOR** upgrade!
+>
+> There are numerous breaking changes. Please read the [version 0.11 upgrade
+> guide](./guides/upgrading_to_v0.11.md) for details about how to upgrade your
+> application to 0.11.
 
 ## Goals
 
@@ -41,9 +36,9 @@ Please note that when v.11 is now in the /ScenicFramework org on GitHub...
   on new products and only updating the old ones as the business needs.
 
 - **Remotable:** Scenic devices know how to run themselves, but can still be
-  accessed remotely. Remote traffic attempts to be as small so it can be used
-  over the Internet, cellular modems, Bluetooth, etc. This is actively under
-  development and coming soon.
+  accessed remotely. Remote traffic attempts to be as small as possible so it
+  can be used over the Internet, cellular modems, Bluetooth, etc. This is
+  actively under development and coming soon.
 
 - **Reusable:** Collections of UI can be packaged up for reuse with, and across
   applications. I expect to see Hex packages of controls, graphs, and more
