@@ -74,7 +74,7 @@ defmodule Scenic.Mixfile do
       name: @app_name,
       contributors: ["Boyd Multerer"],
       maintainers: ["Boyd Multerer"],
-      licenses: ["Apache 2"],
+      licenses: ["Apache-2.0"],
       links: %{Github: @github},
       files: [
         "Makefile",
