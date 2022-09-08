@@ -22,7 +22,7 @@ defmodule Scenic.Assets.Static do
   * __Assets Directory__: Typically `/assets` in your main app source directory. This is the
     folder that holds your raw asset files.
   * __Assets Module__: A module in your application that builds and holds the asset library.
-  * __Assets Config__: Configuration scripts in your application that indicates where the 
+  * __Assets Config__: Configuration scripts in your application that indicates where the
     assets directory is and your assets module.
 
   #### Assets Directory
@@ -98,7 +98,7 @@ defmodule Scenic.Assets.Static do
 
 
   IMPORTANT NOTE: When you add a new asset to the assets directory, you may need to force this
-  module to recompile for them to be usable. Adding or removing a return at the end should do 
+  module to recompile for them to be usable. Adding or removing a return at the end should do
   the trick. In the future, there will be a file system watcher (much like Phoenix has) that
   will do this automatically. Until then, it is pretty easy to do manually.
 
@@ -306,7 +306,7 @@ defmodule Scenic.Assets.Static do
       _ ->
         raise """
         No assets module is configured.
-        You need to create an assets modulein your application.
+        You need to create an assets module in your application.
         Then connect it to Scenic with some config.
 
         Example assets module that includes an optional alias:
