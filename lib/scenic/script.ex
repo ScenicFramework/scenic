@@ -126,7 +126,7 @@ defmodule Scenic.Script do
   ```elixir
   graph =
     Graph.build()
-      |> script(chx_id, id: :chx, hidden: !checked?})
+      |> script(chx_id, id: :chx, hidden: !checked?)
   ```
 
   ## Script State
