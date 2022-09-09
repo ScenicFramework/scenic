@@ -262,12 +262,12 @@ defmodule Scenic.Primitives do
 
   An arc is the outer edge of a part of a circle or ellipse. It
   is the sort of thing you would use a compass to draw on a piece
-  of paper. It has a radius, a start angle and an ending angle. The
-  angles are specified in radians.
+  of paper. It has a radius, and angle that defines how much of
+  the arc to sweep through. The angle is specified in radians.
 
   Data:
 
-      {radius, start, finish}
+      {radius, angle}
 
   If you want something that looks like a piece of pie (maybe for a
   pie chart??), then you want a Sector, not an Arc.
@@ -279,7 +279,16 @@ defmodule Scenic.Primitives do
   starting straight out to the right, then going down 0.4 radians.
 
       graph
-      |> arc( {100, 0, 0.4} )
+      |> arc( {100, 0.6} )
+
+  ### Note
+
+  The format for Arc has changed since v0.10. It used to be
+  {radius, start_angle, end_angle}. You can achieve the same effect in the
+  new, simpler format by using the same radius and the new angle is the
+  difference between the old end_angle and start_angle. Then you can apply
+  a rotation transform to get it in the right position.
+
 
   ### Styles
 
@@ -296,12 +305,12 @@ defmodule Scenic.Primitives do
   Example:
 
       graph
-      |> arc( {100, 0, 0.4}, stroke: {4, :blue} )
+      |> arc( {100, 0.4}, stroke: {4, :blue} )
 
   """
   @spec arc(
           source :: Graph.t() | Primitive.t(),
-          arc :: {radius :: number, start :: number, finish :: number},
+          arc :: {radius :: number, angle :: number},
           options :: list
         ) :: Graph.t() | Primitive.t()
 
@@ -325,10 +334,19 @@ defmodule Scenic.Primitives do
 
       arc = arc_spec( {100, 0, 0.4}, stroke: {4, :blue} )
       graph = arc.(graph)
+
+
+  ### Note
+
+  The format for Arc has changed since v0.10. It used to be
+  {radius, start_angle, end_angle}. You can achieve the same effect in the
+  new, simpler format by using the same radius and the new angle is the
+  difference between the old end_angle and start_angle. Then you can apply
+  a rotation transform to get it in the right position.
   """
 
   @spec arc_spec(
-          arc :: {radius :: number, start :: number, finish :: number},
+          arc :: {radius :: number, angle :: number},
           options :: list
         ) :: Graph.deferred()
 
@@ -1086,12 +1104,12 @@ defmodule Scenic.Primitives do
   Add a sector to a graph
 
   A sector looks like a piece of pie. It is wedge shaped with a pointy
-  bit on one side and a rounded bit on the other. It has a radius, a
-  start angle and a finish angle. The angles are specified in radians.
+  bit on one side and a rounded bit on the other. It has a radius, and angle that
+  defines how much of the arc to sweep through. The angle is specified in radians.
 
   Data:
 
-      {radius, start, finish}
+      {radius, angle}
 
   To create a sector of an ellipse, create a normal sector, and apply
   a `:scale` transform with unequal x and y sizing.
@@ -1099,7 +1117,15 @@ defmodule Scenic.Primitives do
   The following example will draw a sector with a radius of 100,
   starting straight out to the right, then going down 0.4 radians.
 
-      |> sector( {100, 0, 0.4} )
+      |> sector( {100, 0.4} )
+
+  ### Note
+
+  The format for Sector has changed since v0.10. It used to be
+  {radius, start_angle, end_angle}. You can achieve the same effect in the
+  new, simpler format by using the same radius and the new angle is the
+  difference between the old end_angle and start_angle. Then you can apply
+  a rotation transform to get it in the right position.
 
   ### Styles
 
@@ -1155,8 +1181,16 @@ defmodule Scenic.Primitives do
 
   Example:
 
-      sector = sector_spec( {100, 0, 0.4}, fill: :red )
+      sector = sector_spec( {100, 0.4}, fill: :red )
       graph  = sector.(graph)
+
+  ### Note
+
+  The format for Sector has changed since v0.10. It used to be
+  {radius, start_angle, end_angle}. You can achieve the same effect in the
+  new, simpler format by using the same radius and the new angle is the
+  difference between the old end_angle and start_angle. Then you can apply
+  a rotation transform to get it in the right position.
   """
 
   @spec sector_spec(
