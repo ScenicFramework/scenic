@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11.1
+* A variety of minor documentation and spec bug fixes. The most important one
+  fixes the docs for Primitives.arc and Primitives.sector, which did not reflect
+  the actual format those primitives required.
+
 ## 0.11.0
 * The GitHub repo was moved to the new ScenicFramework GitHub organization
 * Add the Scenic.Assets.Stream.Bitmap.put_offset/3 api
