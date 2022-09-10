@@ -118,6 +118,75 @@ defmodule Scenic.ScriptTest do
              [{:draw_rrect, {13.0, 12.0, 6.0, :stroke}}]
   end
 
+  test "draw_rounded_rectangle varying all corners works" do
+    expected = [{:draw_rrectv, {10.0, 11.0, 2.0, 3.0, 4.0, 5.0, :fill}}]
+    assert Script.draw_rounded_rectangle([], 10, 11, 2, 3, 4, 5, :fill) == expected
+    assert expected == Script.serialize(expected) |> Script.deserialize()
+
+    assert Script.draw_rounded_rectangle([], 10, 11, 2, 3, 4, 5, :stroke) ==
+             [{:draw_rrectv, {10.0, 11.0, 2.0, 3.0, 4.0, 5.0, :stroke}}]
+
+    assert Script.draw_rounded_rectangle([], 10, 11, 2, 3, 4, 5, :fill_stroke) ==
+             [{:draw_rrectv, {10.0, 11.0, 2.0, 3.0, 4.0, 5.0, :fill_stroke}}]
+  end
+
+  test "draw_rounded_rectangle varying 3 corners works" do
+    expected = [{:draw_rrectv, {10.0, 11.0, 2.0, 3.0, 4.0, 3.0, :fill}}]
+    assert Script.draw_rounded_rectangle([], 10, 11, 2, 3, 4, :fill) == expected
+    assert expected == Script.serialize(expected) |> Script.deserialize()
+
+    assert Script.draw_rounded_rectangle([], 10, 11, 2, 3, 4, :stroke) ==
+             [{:draw_rrectv, {10.0, 11.0, 2.0, 3.0, 4.0, 3.0, :stroke}}]
+
+    assert Script.draw_rounded_rectangle([], 10, 11, 2, 3, 4, :fill_stroke) ==
+             [{:draw_rrectv, {10.0, 11.0, 2.0, 3.0, 4.0, 3.0, :fill_stroke}}]
+  end
+
+  test "draw_rounded_rectangle varying 2 corners works" do
+    expected = [{:draw_rrectv, {10.0, 11.0, 2.0, 3.0, 2.0, 3.0, :fill}}]
+    assert Script.draw_rounded_rectangle([], 10, 11, 2, 3, :fill) == expected
+    assert expected == Script.serialize(expected) |> Script.deserialize()
+
+    assert Script.draw_rounded_rectangle([], 10, 11, 2, 3, :stroke) ==
+             [{:draw_rrectv, {10.0, 11.0, 2.0, 3.0, 2.0, 3.0, :stroke}}]
+
+    assert Script.draw_rounded_rectangle([], 10, 11, 2, 3, :fill_stroke) ==
+             [{:draw_rrectv, {10.0, 11.0, 2.0, 3.0, 2.0, 3.0, :fill_stroke}}]
+  end
+
+  test "draw_rounded_rectangle varying all corners shrinks radius if too big" do
+    assert Script.draw_rounded_rectangle([], 10, 12, 30, 40, 50, 4, :fill) ==
+             [{:draw_rrectv, {10.0, 12.0, 5.0, 5.0, 5.0, 4.0, :fill}}]
+
+    assert Script.draw_rounded_rectangle([], 13, 12, 30, 40, 5, 60, :stroke) ==
+             [{:draw_rrectv, {13.0, 12.0, 6.0, 6.0, 5.0, 6.0, :stroke}}]
+
+    assert Script.draw_rounded_rectangle([], 13, 12, 30, 4, 50, 60, :stroke) ==
+             [{:draw_rrectv, {13.0, 12.0, 6.0, 4.0, 6.0, 6.0, :stroke}}]
+
+    assert Script.draw_rounded_rectangle([], 13, 12, 3, 40, 50, 60, :stroke) ==
+             [{:draw_rrectv, {13.0, 12.0, 3.0, 6.0, 6.0, 6.0, :stroke}}]
+  end
+
+  test "draw_rounded_rectangle varying 3 corners shrinks radius if too big" do
+    assert Script.draw_rounded_rectangle([], 10, 12, 30, 40, 5, :fill) ==
+             [{:draw_rrectv, {10.0, 12.0, 5.0, 5.0, 5.0, 5.0, :fill}}]
+
+    assert Script.draw_rounded_rectangle([], 13, 12, 30, 4, 50, :stroke) ==
+             [{:draw_rrectv, {13.0, 12.0, 6.0, 4.0, 6.0, 4.0, :stroke}}]
+
+    assert Script.draw_rounded_rectangle([], 13, 12, 3, 40, 50, :stroke) ==
+             [{:draw_rrectv, {13.0, 12.0, 3.0, 6.0, 6.0, 6.0, :stroke}}]
+  end
+
+  test "draw_rounded_rectangle varying 2 corners shrinks radius if too big" do
+    assert Script.draw_rounded_rectangle([], 10, 12, 30, 4, :fill) ==
+             [{:draw_rrectv, {10.0, 12.0, 5.0, 4.0, 5.0, 4.0, :fill}}]
+
+    assert Script.draw_rounded_rectangle([], 13, 12, 3, 40, :stroke) ==
+             [{:draw_rrectv, {13.0, 12.0, 3.0, 6.0, 3.0, 6.0, :stroke}}]
+  end
+
   test "draw_sector works" do
     expected = [{:draw_sector, {10.0, 3.0, :fill}}]
     assert Script.draw_sector([], 10, 3, :fill) == expected
