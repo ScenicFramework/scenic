@@ -195,6 +195,19 @@ defmodule Scenic.SceneTest do
     assert scene.assigns == %{one: 1, two: 2, three: "three"}
   end
 
+  test "assign assigns multiple values in a map", %{scene: scene} do
+    assert scene.assigns == %{}
+
+    scene =
+      Scene.assign(scene, %{
+        one: 1,
+        two: 2,
+        three: "three"
+      })
+
+    assert scene.assigns == %{one: 1, two: 2, three: "three"}
+  end
+
   test "get gets a value from assigns - works like map", %{scene: scene} do
     scene =
       Scene.assign(scene,
