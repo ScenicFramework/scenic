@@ -296,9 +296,10 @@ defmodule Scenic.Component.Button do
   def handle_input(
         {:cursor_button, {:btn_left, 1, _, _}},
         :btn,
-        %Scene{assigns: %{graph: graph, theme: theme}} = scene
+        %Scene{assigns: %{id: id, graph: graph, theme: theme}} = scene
       ) do
     :ok = capture_input(scene, :cursor_button)
+    :ok = send_parent_event(scene, {:btn_pressed, id})
 
     graph = update_color(graph, theme, true)
 
@@ -340,6 +341,7 @@ defmodule Scenic.Component.Button do
       ) do
     :ok = release_input(scene)
     :ok = send_parent_event(scene, {:click, id})
+    :ok = send_parent_event(scene, {:btn_released, id})
 
     graph = update_color(graph, theme, false)
 
