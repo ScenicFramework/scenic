@@ -391,11 +391,15 @@ defmodule Scenic.Scene do
   end
 
   @doc """
-  Convenience function to assign a list of values into a scene struct.
+  Convenience function to assign a list or map of values into a scene struct.
   """
-  @spec assign(scene :: Scene.t(), key_list :: Keyword.t()) :: Scene.t()
-  def assign(%Scene{} = scene, key_list) when is_list(key_list) do
-    Enum.reduce(key_list, scene, fn {k, v}, acc -> assign(acc, k, v) end)
+  @spec assign(scene :: Scene.t(), assigns :: Keyword.t() | map()) :: Scene.t()
+  def assign(%Scene{} = scene, assigns) when is_list(assigns) do
+    Enum.reduce(assigns, scene, fn {k, v}, acc -> assign(acc, k, v) end)
+  end
+
+  def assign(%Scene{} = scene, assigns) when is_map(assigns) do
+    %Scene{scene | assigns: Map.merge(scene.assigns, assigns)}
   end
 
   @doc """
