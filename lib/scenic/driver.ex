@@ -358,13 +358,17 @@ defmodule Scenic.Driver do
   end
 
   @doc """
-  Convenience function to assign a list of new values into a driver struct.
+  Convenience function to assign a list or map of new values into a driver struct.
 
   Only values that do not already exist will be assigned
   """
-  @spec assign_new(driver :: Driver.t(), key_list :: Keyword.t()) :: Driver.t()
+  @spec assign_new(driver :: Driver.t(), key_list :: Keyword.t() | map) :: Driver.t()
   def assign_new(%Driver{} = driver, key_list) when is_list(key_list) do
     Enum.reduce(key_list, driver, fn {k, v}, acc -> assign_new(acc, k, v) end)
+  end
+
+  def assign_new(%Driver{assigns: assigns} = driver, key_map) when is_map(key_map) do
+    %{driver | assigns: Map.merge(key_map, assigns)}
   end
 
   @doc """

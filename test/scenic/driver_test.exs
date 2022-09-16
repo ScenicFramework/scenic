@@ -214,6 +214,24 @@ defmodule Scenic.DriverTest do
     assert Driver.fetch(driver, :def) == {:ok, 456}
   end
 
+  test "assign_new assigns map of values" do
+    driver =
+      %Driver{}
+      |> Driver.assign_new(%{abc: 123, def: 456})
+
+    assert Driver.fetch(driver, :abc) == {:ok, 123}
+    assert Driver.fetch(driver, :def) == {:ok, 456}
+  end
+
+  test "assign_new with a map ignores existing values" do
+    driver =
+      %Driver{assigns: %{abc: 123}}
+      |> Driver.assign_new(%{abc: 789, def: 456})
+
+    assert Driver.fetch(driver, :abc) == {:ok, 123}
+    assert Driver.fetch(driver, :def) == {:ok, 456}
+  end
+
   test "set_busy sets the busy flag" do
     driver = %Driver{}
     assert Map.get(driver, :busy) == false
