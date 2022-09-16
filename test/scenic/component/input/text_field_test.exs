@@ -94,25 +94,29 @@ defmodule Scenic.Component.Input.TextFieldTest do
     :_pong_ = GenServer.call(vp_pid, :_ping_)
   end
 
-  test "press_in captures and starts editing", %{vp: vp, pid: pid} do
+  test "press_in captures, starts editing and fire focus_in event", %{vp: vp, pid: pid} do
     assert Input.fetch_captures!(vp) == {:ok, []}
     Input.send(vp, @press_in)
     force_sync(vp.pid, pid)
+
     assert Input.fetch_captures!(vp) ~> {:ok, sorted_list([:codepoint, :cursor_button, :key])}
+    assert_receive({:fwd_event, {:focus_in, :text_field}}, 200)
 
     Input.send(vp, @cp_k)
     assert_receive({:fwd_event, {:value_changed, :text_field, "kInitial value"}}, 200)
   end
 
-  test "press_out releases and ends editing", %{vp: vp, pid: pid} do
+  test "press_out releases, ends editing and fire focus_out event", %{vp: vp, pid: pid} do
     Input.send(vp, @press_in)
     force_sync(vp.pid, pid)
 
     assert Input.fetch_captures!(vp) ~> {:ok, sorted_list([:codepoint, :cursor_button, :key])}
+    assert_receive({:fwd_event, {:focus_in, :text_field}}, 200)
 
     Input.send(vp, @press_out)
     force_sync(vp.pid, pid)
     assert Input.fetch_captures!(vp) == {:ok, []}
+    assert_receive({:fwd_event, {:focus_out, :text_field}}, 200)
 
     Input.send(vp, @cp_k)
     refute_receive(_, 10)
@@ -121,6 +125,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
   test "pressing in the field moves the cursor to the nearst character gap", %{vp: vp, pid: pid} do
     Input.send(vp, @press_in)
     force_sync(vp.pid, pid)
+    assert_receive({:fwd_event, {:focus_in, :text_field}}, 200)
 
     Input.send(vp, @cp_k)
     assert_receive({:fwd_event, {:value_changed, :text_field, "kInitial value"}}, 200)
@@ -201,6 +206,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
   test "backspace does nothing at the start of the string", %{vp: vp, pid: pid} do
     Input.send(vp, @press_in)
     force_sync(vp.pid, pid)
+    assert_receive({:fwd_event, {:focus_in, :text_field}}, 200)
 
     Input.send(vp, @key_backspace)
     refute_receive(_, 10)
@@ -217,6 +223,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
   test "delete does nothing at the end of the field", %{vp: vp, pid: pid} do
     Input.send(vp, @press_in)
     force_sync(vp.pid, pid)
+    assert_receive({:fwd_event, {:focus_in, :text_field}}, 200)
 
     Input.send(vp, @key_end)
     Input.send(vp, @key_delete)
@@ -229,6 +236,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
 
     Input.send(vp, {:cursor_button, {:btn_left, 1, [], {20, 60}}})
     force_sync(vp.pid, pid)
+    assert_receive({:fwd_event, {:focus_in, :number_field}}, 200)
 
     Input.send(vp, {:codepoint, {"a", []}})
     refute_receive(_, 10)
@@ -248,6 +256,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
 
     Input.send(vp, {:cursor_button, {:btn_left, 1, [], {14, 86}}})
     force_sync(vp.pid, pid)
+    assert_receive({:fwd_event, {:focus_in, :integer_field}}, 200)
 
     Input.send(vp, {:codepoint, {"a", []}})
     refute_receive(_, 10)
@@ -267,6 +276,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
 
     Input.send(vp, {:cursor_button, {:btn_left, 1, [], {14, 121}}})
     force_sync(vp.pid, pid)
+    assert_receive({:fwd_event, {:focus_in, :abcdefg_field}}, 200)
 
     Input.send(vp, {:codepoint, {"a", []}})
     assert_receive({:fwd_event, {:value_changed, :abcdefg_field, "a"}}, 200)
@@ -284,6 +294,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
 
     Input.send(vp, {:cursor_button, {:btn_left, 1, [], {14, 171}}})
     force_sync(vp.pid, pid)
+    assert_receive({:fwd_event, {:focus_in, :fn_field}}, 200)
 
     Input.send(vp, {:codepoint, {"a", []}})
     refute_receive(_, 10)

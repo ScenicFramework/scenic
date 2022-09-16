@@ -254,9 +254,10 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   # --------------------------------------------------------
-  defp capture_focus(%{assigns: %{focused: false, graph: graph, theme: theme}} = scene) do
+  defp capture_focus(%{assigns: %{focused: false, graph: graph, id: id, theme: theme}} = scene) do
     # capture the input
     capture_input(scene, @input_capture)
+    :ok = send_parent_event(scene, {:focus_in, id})
 
     # start animating the caret
     cast_children(scene, :start_caret)
@@ -274,9 +275,10 @@ defmodule Scenic.Component.Input.TextField do
   end
 
   # --------------------------------------------------------
-  defp release_focus(%{assigns: %{focused: true, graph: graph, theme: theme}} = scene) do
+  defp release_focus(%{assigns: %{focused: true, graph: graph, id: id, theme: theme}} = scene) do
     # release the input
     release_input(scene)
+    :ok = send_parent_event(scene, {:focus_out, id})
 
     # stop animating the caret
     cast_children(scene, :stop_caret)
