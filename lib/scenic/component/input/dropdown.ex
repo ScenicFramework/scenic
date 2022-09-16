@@ -441,6 +441,8 @@ defmodule Scenic.Component.Input.Dropdown do
     # set the appropriate hilighting for each of the items
     graph = update_highlighting(graph, items, selected_id, id, theme)
 
+    :ok = send_parent_event(scene, {:dropdown_item_hover, id})
+
     scene =
       scene
       |> assign(hover_id: nil, graph: graph)
@@ -453,10 +455,12 @@ defmodule Scenic.Component.Input.Dropdown do
   def handle_input(
         {:cursor_button, {:btn_left, 1, _, _}},
         @button_id,
-        %Scene{assigns: %{down: false, graph: graph, rotate_caret: rotate_caret}} = scene
+        %Scene{assigns: %{down: false, graph: graph, id: id, rotate_caret: rotate_caret}} = scene
       ) do
     # capture input
     :ok = capture_input(scene, [:cursor_button, :cursor_pos])
+
+    :ok = send_parent_event(scene, {:dropdown_opened, id})
 
     # drop the menu
     graph =
@@ -483,6 +487,7 @@ defmodule Scenic.Component.Input.Dropdown do
             theme: theme,
             items: items,
             graph: graph,
+            id: id,
             selected_id: selected_id
           }
         } = scene
@@ -495,6 +500,8 @@ defmodule Scenic.Component.Input.Dropdown do
       |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
 
     :ok = release_input(scene)
+
+    :ok = send_parent_event(scene, {:dropdown_closed, id})
 
     scene =
       scene
