@@ -208,6 +208,36 @@ defmodule Scenic.SceneTest do
     assert scene.assigns == %{one: 1, two: 2, three: "three"}
   end
 
+  test "assign_new assigns list of values", %{scene: scene} do
+    scene = Scene.assign_new(scene, abc: 123, def: 456)
+
+    assert scene.assigns == %{abc: 123, def: 456}
+  end
+
+  test "assign_new ignores existing values", %{scene: scene} do
+    scene =
+      scene
+      |> Scene.assign(abc: :original)
+      |> Scene.assign_new(abc: 123, def: 456)
+
+    assert scene.assigns == %{abc: :original, def: 456}
+  end
+
+  test "assign_new assigns map of values", %{scene: scene} do
+    scene = Scene.assign_new(scene, %{abc: 123, def: 456})
+
+    assert scene.assigns == %{abc: 123, def: 456}
+  end
+
+  test "assign_new with a map ignores existing values", %{scene: scene} do
+    scene =
+      scene
+      |> Scene.assign(abc: :original)
+      |> Scene.assign_new(%{abc: 123, def: 456})
+
+    assert scene.assigns == %{abc: :original, def: 456}
+  end
+
   test "get gets a value from assigns - works like map", %{scene: scene} do
     scene =
       Scene.assign(scene,

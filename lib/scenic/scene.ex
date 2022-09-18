@@ -415,9 +415,13 @@ defmodule Scenic.Scene do
 
   Only values that do not already exist will be assigned
   """
-  @spec assign_new(scene :: Scene.t(), key_list :: Keyword.t()) :: Scene.t()
+  @spec assign_new(scene :: Scene.t(), key_list :: Keyword.t() | map) :: Scene.t()
   def assign_new(%Scene{} = scene, key_list) when is_list(key_list) do
     Enum.reduce(key_list, scene, fn {k, v}, acc -> assign_new(acc, k, v) end)
+  end
+
+  def assign_new(%Scene{assigns: assigns} = scene, key_map) when is_map(key_map) do
+    %{scene | assigns: Map.merge(key_map, assigns)}
   end
 
   @doc """

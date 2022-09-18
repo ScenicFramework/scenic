@@ -188,6 +188,25 @@ defmodule Scenic.DriverTest do
     assert Driver.fetch(driver, :def) == {:ok, 456}
   end
 
+  test "assign assigns map of values" do
+    driver =
+      %Driver{}
+      |> Driver.assign(%{abc: 123, def: 456})
+
+    assert Driver.fetch(driver, :abc) == {:ok, 123}
+    assert Driver.fetch(driver, :def) == {:ok, 456}
+  end
+
+  test "assign_new overrides existing values" do
+    driver =
+      %Driver{assigns: %{abc: 123, hij: :original}}
+      |> Driver.assign(abc: 789, def: 456)
+
+    assert Driver.fetch(driver, :abc) == {:ok, 789}
+    assert Driver.fetch(driver, :def) == {:ok, 456}
+    assert Driver.fetch(driver, :hij) == {:ok, :original}
+  end
+
   test "assign_new assigns single value" do
     driver =
       %Driver{}
@@ -209,6 +228,24 @@ defmodule Scenic.DriverTest do
     driver =
       %Driver{assigns: %{abc: 123}}
       |> Driver.assign_new(abc: 789, def: 456)
+
+    assert Driver.fetch(driver, :abc) == {:ok, 123}
+    assert Driver.fetch(driver, :def) == {:ok, 456}
+  end
+
+  test "assign_new assigns map of values" do
+    driver =
+      %Driver{}
+      |> Driver.assign_new(%{abc: 123, def: 456})
+
+    assert Driver.fetch(driver, :abc) == {:ok, 123}
+    assert Driver.fetch(driver, :def) == {:ok, 456}
+  end
+
+  test "assign_new with a map ignores existing values" do
+    driver =
+      %Driver{assigns: %{abc: 123}}
+      |> Driver.assign_new(%{abc: 789, def: 456})
 
     assert Driver.fetch(driver, :abc) == {:ok, 123}
     assert Driver.fetch(driver, :def) == {:ok, 456}
