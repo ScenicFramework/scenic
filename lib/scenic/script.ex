@@ -540,76 +540,9 @@ defmodule Scenic.Script do
   end
 
   @doc """
-  Draw a rounded rectangle defined by height, width, radius1 and radius2. Can be filled or stroked.
-
-  Radius1 and radius2 values will be set as follow:
-
-  - Upper left corner: radius1
-  - Upper right corner: radius2
-  - Lower right corner: radius1
-  - Lower left corner: radius2
-
-  Creates a new path and draws it.
-  """
-  @spec draw_rounded_rectangle(
-          ops :: t(),
-          width :: number,
-          height :: number,
-          r1 :: number,
-          r2 :: number,
-          fill_stroke_flags :: fill_stroke()
-        ) :: ops :: t()
-  def draw_rounded_rectangle(ops, width, height, r1, r2, flag) do
-    upperLeftRadius = smallest([r1, width / 2, height / 2])
-    upperRightRadius = smallest([r2, width / 2, height / 2])
-    lowerRightRadius = smallest([r1, width / 2, height / 2])
-    lowerLeftRadius = smallest([r2, width / 2, height / 2])
-
-    [
-      {:draw_rrectv,
-       {width, height, upperLeftRadius, upperRightRadius, lowerRightRadius, lowerLeftRadius, flag}}
-      | ops
-    ]
-  end
-
-  @doc """
-  Draw a rounded rectangle defined by height, width, radius1, radius2 and radius3. Can be filled or stroked.
-
-  Radius1 and radius2 values will be set as follow:
-
-  - Upper left corner: radius1
-  - Upper right corner: radius2
-  - Lower right corner: radius3
-  - Lower left corner: radius2
-
-  Creates a new path and draws it.
-  """
-  @spec draw_rounded_rectangle(
-          ops :: t(),
-          width :: number,
-          height :: number,
-          r1 :: number,
-          r2 :: number,
-          r3 :: number,
-          fill_stroke_flags :: fill_stroke()
-        ) :: ops :: t()
-  def draw_rounded_rectangle(ops, width, height, r1, r2, r3, flag) do
-    upperLeftRadius = smallest([r1, width / 2, height / 2])
-    upperRightRadius = smallest([r2, width / 2, height / 2])
-    lowerRightRadius = smallest([r3, width / 2, height / 2])
-    lowerLeftRadius = smallest([r2, width / 2, height / 2])
-
-    [
-      {:draw_rrectv,
-       {width, height, upperLeftRadius, upperRightRadius, lowerRightRadius, lowerLeftRadius, flag}}
-      | ops
-    ]
-  end
-
-  @doc """
   Draw a rounded rectangle defined by height, width, radius1, radius2, radius3 and radius4. Can be filled or stroked.
 
-  Radius1 and radius2 values will be set as follow:
+  Radii values will be set as follow:
 
   - Upper left corner: radius1
   - Upper right corner: radius2
@@ -618,7 +551,7 @@ defmodule Scenic.Script do
 
   Creates a new path and draws it.
   """
-  @spec draw_rounded_rectangle(
+  @spec draw_variable_rounded_rectangle(
           ops :: t(),
           width :: number,
           height :: number,
@@ -628,7 +561,7 @@ defmodule Scenic.Script do
           r4 :: number,
           fill_stroke_flags :: fill_stroke()
         ) :: ops :: t()
-  def draw_rounded_rectangle(ops, width, height, r1, r2, r3, r4, flag) do
+  def draw_variable_rounded_rectangle(ops, width, height, r1, r2, r3, r4, flag) do
     upperLeftRadius = smallest([r1, width / 2, height / 2])
     upperRightRadius = smallest([r2, width / 2, height / 2])
     lowerRightRadius = smallest([r3, width / 2, height / 2])
