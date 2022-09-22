@@ -105,18 +105,18 @@ configuration of a ViewPort from the config.exs file...
       import Config
 
       # Configure the main viewport for the Scenic application
-      config :my_app, :viewport, %{
+      config :my_app, :viewport, [
             name: :main_viewport,
             size: {700, 600},
             default_scene: {MyApp.Scene.Example, :scene_init_data},
             drivers: [
-              %{
-                module: Scenic.Driver.Glfw,
-                name: :glfw,
+              [
+                module: Scenic.Driver.Local,
+                name: :local,
                 opts: [resizeable: false, title: "Example Application"],
-              }
+              ]
             ]
-          }
+          ]
 
 The line `default_scene: {MyApp.Scene.Example, :scene_init_data}`
 configures the ViewPort to always start the scene defined by the
