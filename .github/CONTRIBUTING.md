@@ -158,7 +158,7 @@ excellent pull request:
    # Navigate to the newly cloned directory
    cd scenic
    # Assign the original repo to a remote called "upstream"
-   git remote add upstream https://github.com/boydm/scenic
+   git remote add upstream https://github.com/ScenicFramework/scenic
    ```
 
 2. If you cloned a while ago, get the latest changes from upstream, and update
