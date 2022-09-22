@@ -56,18 +56,18 @@ configurations should live in your app's config.exs file.
     import Config
 
     # Configure the main viewport for the Scenic application
-    config :my_app, :viewport, %{
+    config :my_app, :viewport, [
       name: :main_viewport,
       size: {700, 600},
       default_scene: MyApp.Scene.Example,
       drivers: [
-        %{
+        [
           module: Scenic.Driver.Glfw,
           name: :glfw,
           opts: [resizeable: false, title: "Example Application"],
-        }
+        ]
       ]
-    }
+    ]
 
 Then use that config to start your supervisor with the `Scenic` supervisor.
 
