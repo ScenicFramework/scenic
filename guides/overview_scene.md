@@ -113,7 +113,7 @@ configuration of a ViewPort from the config.exs file...
               [
                 module: Scenic.Driver.Local,
                 name: :local,
-                opts: [resizeable: false, title: "Example Application"],
+                window: [resizeable: false, title: "Example Application"],
               ]
             ]
           ]

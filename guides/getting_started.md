@@ -62,9 +62,9 @@ configurations should live in your app's config.exs file.
       default_scene: MyApp.Scene.Example,
       drivers: [
         [
-          module: Scenic.Driver.Glfw,
-          name: :glfw,
-          opts: [resizeable: false, title: "Example Application"],
+          module: Scenic.Driver.Local,
+          name: :local,
+          window: [resizeable: false, title: "Example Application"],
         ]
       ]
     ]
