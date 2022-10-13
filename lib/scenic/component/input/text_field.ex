@@ -20,6 +20,11 @@ defmodule Scenic.Component.Input.TextField do
 
   `{:value_changed, id, value}`
 
+  It also sends other two events when focus is gained or lost, respectively:
+
+  `{:focus_in, id}`
+  `{:focus_out, id}`
+
   ## Styles
 
   Text fields honor the following styles

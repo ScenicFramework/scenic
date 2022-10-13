@@ -170,11 +170,11 @@ defmodule Scenic.Component.Input.DropdownTest do
 
     Input.send(vp, @hover_a)
     force_sync(vp.pid, comp_pid)
-    assert_receive({:fwd_event, {:dropdown_item_hover, 1}}, 100)
+    assert_receive({:fwd_event, {:dropdown_item_hover, :dropdown, 1}}, 100)
 
     Input.send(vp, @hover_b)
     force_sync(vp.pid, comp_pid)
-    assert_receive({:fwd_event, {:dropdown_item_hover, 2}}, 100)
+    assert_receive({:fwd_event, {:dropdown_item_hover, :dropdown, 2}}, 100)
 
     refute_receive(_, 10)
   end

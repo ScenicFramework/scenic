@@ -22,7 +22,16 @@ defmodule Scenic.Component.Button do
   If a button press is successful, it sends an event message to the host scene
   in the form of:
 
-      {:click, id}
+      `{:click, id}`
+
+  This event is only sent after the button is released. There're also, though,
+  two other events that you can receive:
+
+      `{:btn_pressed, id}`
+
+  and
+
+      `{:btn_released, id}`
 
   These messages can be received and handled in your scene via
   `c:Scenic.Scene.handle_event/3`. For example:
