@@ -22,8 +22,8 @@ defmodule Scenic.Component.Input.TextField do
 
   It also sends other two events when focus is gained or lost, respectively:
 
-  `{:focus_in, id}`
-  `{:focus_out, id}`
+  `{:focus, id}`
+  `{:blur, id}`
 
   ## Styles
 
@@ -262,7 +262,7 @@ defmodule Scenic.Component.Input.TextField do
   defp capture_focus(%{assigns: %{focused: false, graph: graph, id: id, theme: theme}} = scene) do
     # capture the input
     capture_input(scene, @input_capture)
-    :ok = send_parent_event(scene, {:focus_in, id})
+    :ok = send_parent_event(scene, {:focus, id})
 
     # start animating the caret
     cast_children(scene, :start_caret)
@@ -283,7 +283,7 @@ defmodule Scenic.Component.Input.TextField do
   defp release_focus(%{assigns: %{focused: true, graph: graph, id: id, theme: theme}} = scene) do
     # release the input
     release_input(scene)
-    :ok = send_parent_event(scene, {:focus_out, id})
+    :ok = send_parent_event(scene, {:blur, id})
 
     # stop animating the caret
     cast_children(scene, :stop_caret)
