@@ -28,6 +28,7 @@ This guide is a good first pass. If you see things that need improving, please c
     * The `:clear_color` style (which was always weird) is gone. You can now set a theme on the viewport (in config), which sets the background color.
     * The SceneRef primitive is gone, and replaced with a combination of Component and Script primitives.
     * The `:font_blur` primitive is gone. Sorry. Didn't have a close enough analog in Canvas
+    * Input events are no longer implicitly requested for a scene. You can explicitly request the input events you want using `Scene.request_input/2` or `Scene.capture_input/2`
     * The format of the input messages have changed - see the docs
     * The optional styles on some of the standard components (Button) have changed to be more consistent with the standard styles. See documentation.
 
