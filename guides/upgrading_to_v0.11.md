@@ -192,7 +192,7 @@ Note that, in this example, we are holding the `Scene` variable inside the state
 ```elixir
 defmodule MyDevice.Scene.Example do
   use Scenic.Scene
-  import Primitives
+  import Scenic.Primitives
 
   def init(scene, _param, _opts) do
     graph = Scenic.Graph.build( font: :roboto )
