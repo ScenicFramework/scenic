@@ -694,8 +694,8 @@ defmodule Scenic.Primitives do
 
   Example:
 
-      ellipse = ellipse_spec( { 40, 60 }, stroke: {4, :blue} )
-      graph = ellipse.(graph)
+      line = line_spec( {{0,0}, {100,200}, stroke: {4, :blue} )
+      graph = line.(graph)
   """
 
   @spec line_spec(
