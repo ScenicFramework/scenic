@@ -11,7 +11,7 @@ defmodule Scenic.Primitive.Style.MiterLimit do
 
   ```elixir
   graph
-    |> triangle( {{0,40},{40,40},{40,0}}
+    |> triangle({{0, 40}, {40, 40}, {40, 0}},
       miter_limit: 2,
       stroke: {2, :green}
     )
