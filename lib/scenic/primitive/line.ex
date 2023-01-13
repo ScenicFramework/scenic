@@ -19,6 +19,7 @@ defmodule Scenic.Primitive.Line do
 
   This primitive recognizes the following styles
   * [`hidden`](Scenic.Primitive.Style.Hidden.html) - show or hide the primitive
+  * [`scissor`](Scenic.Primitive.Style.Scissor.html) - "scissor rectangle" that drawing will be clipped to.
   * [`cap`](Scenic.Primitive.Style.Cap.html) - says how to draw the ends of the line.
   * [`stroke`](Scenic.Primitive.Style.Stroke.html) - stroke the outline of the primitive. In this case, only the curvy part.
 

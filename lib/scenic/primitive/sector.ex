@@ -29,6 +29,7 @@ defmodule Scenic.Primitive.Sector do
 
   This primitive recognizes the following styles
   * [`hidden`](Scenic.Primitive.Style.Hidden.html) - show or hide the primitive
+  * [`scissor`](Scenic.Primitive.Style.Scissor.html) - "scissor rectangle" that drawing will be clipped to.
   * [`fill`](Scenic.Primitive.Style.Fill.html) - fill in the area of the primitive
   * [`stroke`](Scenic.Primitive.Style.Stroke.html) - stroke the outline of the primitive. In this case, only the curvy part.
 
