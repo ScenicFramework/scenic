@@ -43,10 +43,10 @@ defmodule Scenic.Primitive.Sprites do
   Sprites are common in the game industry and can be used to
   create animations, manage large numbers of small images and more.
 
-  For example, in many games a character walking is built as a  series
+  For example, in many games a character walking is built as a series
   of frames in an animation that all live together in a single image
   file. When it comes time to draw, the different frames are rendered
-  to the screen on after the other to give the appearance that the
+  to the screen one after the other to give the appearance that the
   character is animating.
 
   A simpler example would be an image of a device with a blinking
