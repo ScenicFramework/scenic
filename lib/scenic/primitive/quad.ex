@@ -34,7 +34,7 @@ defmodule Scenic.Primitive.Quad do
   ```elixir
   graph
     |> quad(
-      {{10, 0}, {20, 40}, {17, 50}, 0, 10}},
+      {{10, 0}, {20, 40}, {17, 50}, {0, 10}},
       stroke: {1, :yellow}
     )
   ```
