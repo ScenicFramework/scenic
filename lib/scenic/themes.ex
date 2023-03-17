@@ -321,7 +321,8 @@ defmodule Scenic.Themes do
   Retrieve the color palette
   """
   def get_palette() do
-    module()._get_palette()
+    module = module()
+    if function_exported?(module, :_get_palette, 0), do: apply(module, :_get_palette, []), else: _get_palette()
   end
 
   @spec normalize({atom, atom} | map | atom) :: map | nil
