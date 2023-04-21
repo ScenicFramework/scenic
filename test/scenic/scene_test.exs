@@ -13,6 +13,8 @@ defmodule Scenic.SceneTest do
   alias Scenic.Script
   import Scenic.Components
 
+  import ExUnit.CaptureLog
+
   @root_id ViewPort.root_id()
 
   # import IEx
@@ -64,6 +66,23 @@ defmodule Scenic.SceneTest do
     @impl Scenic.Scene
     def init(scene, pid, _opts) do
       request_input(scene, :codepoint)
+      Process.send(pid, {:up, scene}, [])
+      scene = assign(scene, pid: pid)
+      {:ok, scene}
+    end
+
+    @impl Scenic.Scene
+    def handle_input(input, id, %{assigns: %{pid: pid}} = scene) do
+      send(pid, {:input_test, input, id})
+      {:noreply, scene}
+    end
+  end
+
+  defmodule TestSceneNoInputHandler do
+    use Scenic.Scene
+
+    @impl Scenic.Scene
+    def init(scene, pid, _opts) do
       Process.send(pid, {:up, scene}, [])
       scene = assign(scene, pid: pid)
       {:ok, scene}
@@ -401,6 +420,20 @@ defmodule Scenic.SceneTest do
 
     assert Scene.fetch_requests(scene) ==
              {:ok, [:cursor_pos, :cursor_button, :codepoint]}
+  end
+
+  test "request_input warns when handle_input is not implements" do
+    Scenic.Test.ViewPort.start({TestSceneNoInputHandler, self()})
+
+    scene =
+      receive do
+        {:up, scene} -> scene
+      end
+
+    assert capture_log(fn ->
+      Scenic.Scene.request_input(scene, [:key])
+    end)
+    =~ "handle_input/3 not implemented"
   end
 
   test "unrequest_input works", %{scene: scene} do

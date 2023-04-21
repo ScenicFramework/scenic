@@ -27,6 +27,10 @@ defmodule Scenic.ViewPort.InputTest do
     # def handle_input( input, %{assigns: %{pid: pid}} = scene ) do
     #   Process.send( pid, {:test_input, input}, [] )
     # end
+
+    def handle_input(_, _, scene) do
+      {:noreply, scene}
+    end
   end
 
   setup do
