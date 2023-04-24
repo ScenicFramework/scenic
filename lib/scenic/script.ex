@@ -87,7 +87,7 @@ defmodule Scenic.Script do
   The canonical example is the checkmark symbol used in the `Checkbox` component.
   This is two lines, with rounded endpoints and rounded joint between them.
   It could be described using a Path primitive, but there is no need to
-  send it's instructions ever time it is shown or hidden since it's shape
+  send its instructions every time it is shown or hidden since its shape
   doesn't actually change.
 
   The Checkbox component creates and publishes this script using something very
@@ -118,8 +118,8 @@ defmodule Scenic.Script do
   Building and using a custom script happens in three parts. First, the script itself
   is created using the `Scenic.Script` api.
 
-  Then the script is published to the ViewPort using the push_script (part of Scenic.Scene)
-  with a unique name.
+  Then the script is published to the ViewPort using `Scenic.Scene/push_script/4` with a
+  unique name.
 
   Later, the graph for the checkbox references this script, which is what triggers it to be drawn.
 
