@@ -34,4 +34,3 @@ boxes that apply: -->
 apply. -->
 
 - [ ] Check other PRs and make sure that the changes are not done yet.
-- [ ] The PR title is no longer than 64 characters.
