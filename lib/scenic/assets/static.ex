@@ -451,10 +451,12 @@ defmodule Scenic.Assets.Static do
         |> :code.lib_dir()
         |> Path.join(Static.dst_dir())
       rescue
-        _ ->
-          raise """
-          'use Scenic.Assets.Static' requires a valid :otp_app option.
-          """
+        e ->
+          Logger.warn(
+            "'use Scenic.Assets.Static' requires a valid :otp_app option. Received otp_app #{opts[:otp_app]}"
+          )
+
+          reraise e, __STACKTRACE__
       end
 
     # make sure the destination directory exists (delete and recreate to keep it clean)
