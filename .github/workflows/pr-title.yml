@@ -1,0 +1,15 @@
+name: Playwright Integration Tests
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  test:
+    name: Playwright Integration Tests
+
+    steps:
+    - uses: deepakputhraya/action-pr-title@master
+      with:
+        max_length: 64 # Max length of the title
+        github_token: ${{ github.token }} # Default: ${{ github.token }}
