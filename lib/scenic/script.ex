@@ -28,7 +28,7 @@ defmodule Scenic.Script do
   ## Update Isolation
 
   Another way to use scripts is to separate large static bits of a graph from
-  that which changes frequently. When a graph is pushed to the ViewPort, the 
+  that which changes frequently. When a graph is pushed to the ViewPort, the
   entire thing is compiled into a script, which is sent as a whole to the Drivers.
 
   However if that graph references a script, only the reference to the script is
@@ -135,7 +135,7 @@ defmodule Scenic.Script do
   pictures maintains a set of current drawing state, which can be pushed and popped
   from a stack via the `push_state/1`, `pop_state/1`, and `pop_push_state/1` apis.
 
-  These functions are  analogous to the state
+  These functions are analogous to the state
   [save/restore APIs in Canvas](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/save).
 
   ## Transforms
@@ -150,7 +150,7 @@ defmodule Scenic.Script do
   ## Binary Format
 
   The `serialize/3` and `deserialize/1` go back and forth from the list format to a binary
-  representation of the script. The `serialize/3` function produces at IO list, and `deserialize`
+  representation of the script. The `serialize/3` function produces an IO list, and `deserialize`
   goes back into a list of instructions.
 
   There is a standard format to the binary, but that needs to be independently documented. You
