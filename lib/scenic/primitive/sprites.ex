@@ -81,7 +81,8 @@ defmodule Scenic.Primitive.Sprites do
           {sx :: number, sy :: number},
           {sw :: number, sh :: number},
           {dx :: number, dy :: number},
-          {dw :: number, dh :: number}
+          {dw :: number, dh :: number},
+          alpha :: number
         }
   @type draw_cmds :: [draw_cmd()]
 
@@ -223,11 +224,12 @@ defmodule Scenic.Primitive.Sprites do
       _, {:error, _} = error ->
         error
 
-      {{src_x, src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}}, acc
+      {{src_x, src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}, alpha}, acc
       when is_number(src_x) and is_number(src_y) and
              is_number(src_w) and is_number(src_h) and
              is_number(dst_x) and is_number(dst_y) and
-             is_number(dst_w) and is_number(dst_h) ->
+             is_number(dst_w) and is_number(dst_h) and
+             is_number(alpha) ->
         acc
 
       cmd, _ ->

@@ -1451,7 +1451,7 @@ defmodule Scenic.Script do
 
     {cmds, count} =
       Enum.reduce(cmds, {[], 0}, fn
-        {{sx, sy}, {sw, sh}, {dx, dy}, {dw, dh}}, {cmds, count} ->
+        {{sx, sy}, {sw, sh}, {dx, dy}, {dw, dh}, alpha}, {cmds, count} ->
           {
             [
               <<
@@ -1462,7 +1462,8 @@ defmodule Scenic.Script do
                 dx::float-32-big,
                 dy::float-32-big,
                 dw::float-32-big,
-                dh::float-32-big
+                dh::float-32-big,
+                alpha::float-32-big
               >>
               | cmds
             ],
@@ -2204,10 +2205,11 @@ defmodule Scenic.Script do
           dy::float-32-big,
           dw::float-32-big,
           dh::float-32-big,
+          alpha::float-32-big,
           bin::binary
         >> = bin
 
-        {[{{sx, sy}, {sw, sh}, {dx, dy}, {dw, dh}} | cmds], bin}
+        {[{{sx, sy}, {sw, sh}, {dx, dy}, {dw, dh}, alpha} | cmds], bin}
       end)
 
     cmds = Enum.reverse(cmds)

@@ -226,7 +226,7 @@ defmodule Scenic.Graph.Bounds do
   end
 
   defp points(Primitive.Sprites, {_id, cmds}, _st) do
-    Enum.reduce(cmds, [], fn {_, _, {x, y}, {w, h}}, acc ->
+    Enum.reduce(cmds, [], fn {_, _, {x, y}, {w, h}, _alpha}, acc ->
       [[{x, y}, {x + w, y}, {x + w, y + h}, {x, y + h}, {x, y}] | acc]
     end)
   end
