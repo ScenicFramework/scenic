@@ -146,7 +146,7 @@ defmodule Scenic.Primitive.Transform do
 
   # --------------------------------------------------------
   defp rotate_and_scale(mx, txs) do
-    # don't do any work if neither otate nor scale are set
+    # don't do any work if neither rotate nor scale are set
     # don't need to translate twice for no reason
     case txs[:rotate] || txs[:scale] do
       nil ->

@@ -28,7 +28,7 @@ defmodule Scenic.Script do
   ## Update Isolation
 
   Another way to use scripts is to separate large static bits of a graph from
-  that which changes frequently. When a graph is pushed to the ViewPort, the 
+  that which changes frequently. When a graph is pushed to the ViewPort, the
   entire thing is compiled into a script, which is sent as a whole to the Drivers.
 
   However if that graph references a script, only the reference to the script is
