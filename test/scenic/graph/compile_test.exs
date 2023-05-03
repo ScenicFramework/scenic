@@ -193,8 +193,8 @@ defmodule Scenic.Graph.CompilerTest do
   # ---------------------------------------------------------
   test "graph with sprites works" do
     cmds = [
-      {{0, 1}, {10, 11}, {2, 3}, {12, 13}},
-      {{2, 3}, {10, 11}, {4, 5}, {12, 13}}
+      {{0, 1}, {10, 11}, {2, 3}, {12, 13}, 1},
+      {{2, 3}, {10, 11}, {4, 5}, {12, 13}, 1}
     ]
 
     {:ok, list} =
@@ -250,7 +250,7 @@ defmodule Scenic.Graph.CompilerTest do
   end
 
   # ---------------------------------------------------------
-  # Should correctly compile fill and stroke. Note that 
+  # Should correctly compile fill and stroke. Note that
   # primitives with neither fill nor stroke are eliminated completely
   test "fill and stroke are compiled correctly" do
     {:ok, list} =
