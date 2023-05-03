@@ -98,6 +98,7 @@ defmodule Scenic.Primitive.Triangle do
 
   # --------------------------------------------------------
   def default_pin(data), do: centroid(data)
+  def default_pin(data, _styles), do: centroid(data)
 
   # --------------------------------------------------------
   @doc """
@@ -143,14 +144,5 @@ defmodule Scenic.Primitive.Triangle do
       # Check if point is in triangle
       u >= 0 && v >= 0 && u + v < 1
     end
-  end
-
-  # --------------------------------------------------------
-  @doc false
-  def default_pin({{x0, y0}, {x1, y1}, {x2, y2}}, _styles) do
-    {
-      (x0 + x1 + x2) / 3,
-      (y0 + y1 + y2) / 3
-    }
   end
 end
