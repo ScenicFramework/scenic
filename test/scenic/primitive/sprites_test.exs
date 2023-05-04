@@ -11,8 +11,13 @@ defmodule Scenic.Primitive.SpritesTest do
   alias Scenic.Primitive.Sprites
 
   @cmds [
+    {{0, 1}, {10, 11}, {2, 3}, {12, 13}},
+    {{2, 3}, {10, 11}, {4, 5}, {12, 13}, 0.8}
+  ]
+
+  @enhanced_cmds [
     {{0, 1}, {10, 11}, {2, 3}, {12, 13}, 1},
-    {{2, 3}, {10, 11}, {4, 5}, {12, 13}, 1}
+    {{2, 3}, {10, 11}, {4, 5}, {12, 13}, 0.8}
   ]
 
   # ============================================================================
@@ -21,16 +26,16 @@ defmodule Scenic.Primitive.SpritesTest do
   test "build works" do
     p = Sprites.build({:parrot, @cmds})
     assert p.module == Sprites
-    assert Primitive.get(p) == {:parrot, @cmds}
+    assert Primitive.get(p) == {:parrot, @enhanced_cmds}
   end
 
   # ============================================================================
 
   test "validate accepts valid data" do
-    assert Sprites.validate({:parrot, @cmds}) == {:ok, {:parrot, @cmds}}
+    assert Sprites.validate({:parrot, @cmds}) == {:ok, {:parrot, @enhanced_cmds}}
 
     assert Sprites.validate({{:test_assets, "images/parrot.png"}, @cmds}) ==
-             {:ok, {{:test_assets, "images/parrot.png"}, @cmds}}
+             {:ok, {{:test_assets, "images/parrot.png"}, @enhanced_cmds}}
   end
 
   test "validate rejects bad data" do
@@ -65,7 +70,7 @@ defmodule Scenic.Primitive.SpritesTest do
     p = Sprites.build({:parrot, @cmds})
 
     assert Sprites.compile(p, %{stroke_fill: :blue}) == [
-             {:draw_sprites, {"VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns", @cmds}}
+             {:draw_sprites, {"VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns", @enhanced_cmds}}
            ]
   end
 end
