@@ -218,23 +218,41 @@ defmodule Scenic.Primitive.Sprites do
     end
   end
 
+  @default_alpha 1
+
   defp validate_commands(commands) do
-    commands
-    |> Enum.reduce({:ok, commands}, fn
-      _, {:error, _} = error ->
-        error
+    validate =
+      Enum.reduce(commands, {:ok, []}, fn
+        _, {:error, _} = error ->
+          error
 
-      {{src_x, src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}, alpha}, acc
-      when is_number(src_x) and is_number(src_y) and
-             is_number(src_w) and is_number(src_h) and
-             is_number(dst_x) and is_number(dst_y) and
-             is_number(dst_w) and is_number(dst_h) and
-             is_number(alpha) ->
-        acc
+        {{src_x, src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}}, {:ok, cmds}
+        when is_number(src_x) and is_number(src_y) and
+               is_number(src_w) and is_number(src_h) and
+               is_number(dst_x) and is_number(dst_y) and
+               is_number(dst_w) and is_number(dst_h) ->
+          {:ok,
+           [
+             {{src_x, src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}, @default_alpha}
+             | cmds
+           ]}
 
-      cmd, _ ->
-        {:error, :command, cmd}
-    end)
+        cmd = {{src_x, src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}, alpha}, {:ok, cmds}
+        when is_number(src_x) and is_number(src_y) and
+               is_number(src_w) and is_number(src_h) and
+               is_number(dst_x) and is_number(dst_y) and
+               is_number(dst_w) and is_number(dst_h) and
+               is_number(alpha) ->
+          {:ok, [cmd | cmds]}
+
+        cmd, _ ->
+          {:error, :command, cmd}
+      end)
+
+    case validate do
+      {:ok, cmds} -> {:ok, Enum.reverse(cmds)}
+      error -> error
+    end
   end
 
   # --------------------------------------------------------
