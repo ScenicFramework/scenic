@@ -25,10 +25,15 @@ defmodule Scenic.Primitive.Sprites do
   are executed in order when the primitive renders.
 
   `[ {{src_x, src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}} ]`
+  or
+  `[ {{src_x, src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}}, alpha ]`
 
   Each draw command is an x/y position and width/height of a rectangle in
   the source image, followed by the x/y position and width/height
   rectangle in the destination space.
+
+  An optional alpha channel can be set in last position to apply a transparency
+  effect on the sprite.
 
   In other words, This copies rectangular images from the source
   indicated by image_id and draws them in the coordinate space of
@@ -59,14 +64,16 @@ defmodule Scenic.Primitive.Sprites do
   You should add/modify primitives via the helper functions in
   [`Scenic.Primitives`](Scenic.Primitives.html#sprites/3)
 
-  This example draws the same source rectangle twice in different locations.
-  The first is at full size, the second is expanded 10x.
+  This example draws the same source rectangle three times in different locations.
+  The first is at full size, the second is expanded 10x, the third is with a
+  50% transparency effect.
 
   ```elixir
   graph
     |> sprites( { "images/my_sprites.png", [
       {{0,0}, {10, 20}, {10, 10}, {10, 20}},
       {{0,0}, {10, 20}, {100, 100}, {100, 200}},
+      {{0,0}, {10, 20}, {100, 100}, {100, 200}, 0.5}
     ]})
   ```
   """
