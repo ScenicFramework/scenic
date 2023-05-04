@@ -222,20 +222,18 @@ defmodule Scenic.Primitive.Sprites do
 
   defp validate_commands(commands) do
     validate =
-      Enum.reduce(commands, {:ok, []}, fn
-        _, {:error, _} = error ->
-          error
-
+      Enum.reduce_while(commands, {:ok, []}, fn
         {{src_x, src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}}, {:ok, cmds}
         when is_number(src_x) and is_number(src_y) and
                is_number(src_w) and is_number(src_h) and
                is_number(dst_x) and is_number(dst_y) and
                is_number(dst_w) and is_number(dst_h) ->
-          {:ok,
-           [
-             {{src_x, src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}, @default_alpha}
-             | cmds
-           ]}
+          {:cont,
+           {:ok,
+            [
+              {{src_x, src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}, @default_alpha}
+              | cmds
+            ]}}
 
         cmd = {{src_x, src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}, alpha}, {:ok, cmds}
         when is_number(src_x) and is_number(src_y) and
@@ -243,10 +241,10 @@ defmodule Scenic.Primitive.Sprites do
                is_number(dst_x) and is_number(dst_y) and
                is_number(dst_w) and is_number(dst_h) and
                is_number(alpha) ->
-          {:ok, [cmd | cmds]}
+          {:cont, {:ok, [cmd | cmds]}}
 
         cmd, _ ->
-          {:error, :command, cmd}
+          {:halt, {:error, :command, cmd}}
       end)
 
     case validate do
