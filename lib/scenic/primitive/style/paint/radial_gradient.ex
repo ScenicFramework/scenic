@@ -16,7 +16,7 @@ defmodule Scenic.Primitive.Style.Paint.RadialGradient do
 
   ```elixir
   Graph.build()
-    |> rect( {100, 50}, fill: {:linear, {50, 25, 10, 45, :blue, :yellow}} )
+    |> rect( {100, 50}, fill: {:radial, {50, 25, 10, 45, :blue, :yellow}} )
   ```
   """
 
