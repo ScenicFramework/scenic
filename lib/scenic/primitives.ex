@@ -1419,7 +1419,7 @@ defmodule Scenic.Primitives do
 
   # --------------------------------------------------------
   @doc """
-  Add a sprites list a graph.
+  Add a sprites list to a graph.
   """
   @spec sprites(
           source :: Graph.t() | Primitive.t(),
