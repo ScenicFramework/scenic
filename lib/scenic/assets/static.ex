@@ -342,7 +342,7 @@ defmodule Scenic.Assets.Static do
   Example:
   ```elixir
   alias Scenic.Assets.Static
-  library = Scenic.Assets.Static.library()
+  library = Static.library()
 
   {:ok, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"} = Static.hash( library, :parrot )
   {:ok, "VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns"} = Static.hash( library, "images/parrot.png" )
@@ -370,7 +370,7 @@ defmodule Scenic.Assets.Static do
 
   Example:
   ```elixir
-  {:ok, meta} = Scenic.Assets.Static.fetch( :parrot )
+  {:ok, meta} = Scenic.Assets.Static.meta( :parrot )
   ```
   """
   @spec meta(id :: any) :: {:ok, meta :: any} | :error
