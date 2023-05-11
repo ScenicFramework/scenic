@@ -17,7 +17,7 @@ This guide is a good first pass. If you see things that need improving, please c
     * The Component primitive is used to refer to, and start components.
     * The Script primitive refers to arbitrary scripts that you can send to drivers.
     * The `:line_height` style now sets the spacing between lines of text. Works like CSS.
-    * The `:text_align` style lets you align text vertically.
+    * The `:text_base` style lets you align text vertically.
     * There is a new Scenic.Asset.Stream type for dynamic textures.
     * New Sprite Sheet support via the Sprites primitive
     * Built-in mouse cursor support on Nerves (works, but is not optimized yet)
