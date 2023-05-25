@@ -354,7 +354,7 @@ nif_multiply_list(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   // get the length of the list. Bail early if this fails (not a list)
   if ( !enif_get_list_length(env, tail_term, &list_len) )    {return enif_make_badarg(env);}
 
-  // initilize c to identity
+  // initialize c to identity
   memcpy( product[0], matrix_identity, MATRIX_SIZE );
 
   // loop the list, multiplying each array into c
