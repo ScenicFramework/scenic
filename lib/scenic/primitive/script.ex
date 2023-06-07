@@ -24,19 +24,19 @@ defmodule Scenic.Primitive.Script do
 
   ## `Script` vs. `Path`
 
-  Both the `Path` and the `Script` primitives use the `Scenic.Script` to create scripts
-  are sent to the drivers for drawing. The difference is that a Path is far more limited
+  Both the `Path` and the `Script` primitives use the `Scenic.Script` to create scripts that
+  are sent to the driver for drawing. The difference is that a Path is far more limited
   in what it can do, and is inserted inline with the compiled graph that created it.
 
   The script primitive, on the other hand, has full access to the API set of
   `Scenic.Script` and accesses scripts by reference.
 
-  The inline vs. reference difference is important. A simple path will be consume
-  fewer resources. BUT it will cause the entire graph to be recompile and resent
-  to the drivers if you change it.
+  The inline vs. reference difference is important. A simple path will consume
+  fewer resources. BUT it will cause the entire graph to be recompiled and resent
+  to the driver if you change it.
 
   A script primitive references a script that you create separately from the
-  the graph. This means that any changes to the graph (such as an animation) will
+  graph. This means that any changes to the graph (such as an animation) will
   NOT need to recompile or resend the script.
 
   ## Usage

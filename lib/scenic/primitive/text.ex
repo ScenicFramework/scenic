@@ -22,9 +22,9 @@ defmodule Scenic.Primitive.Text do
   * [`fill`](Scenic.Primitive.Style.Fill.html) - fill in the area of the text. Only solid colors!
   * [`font`](Scenic.Primitive.Style.Font.html) - name (or key) of font to use
   * [`font_size`](Scenic.Primitive.Style.FontSize.html) - point size of the font
-  * [`font_blur`](Scenic.Primitive.Style.FontBlur.html) - option to blur the characters
-  * [`text_align`](Scenic.Primitive.Style.TextAlign.html) - alignment of lines of text
-  * [`text_height`](Scenic.Primitive.Style.TextHeight.html) - spacing between lines of text
+  * [`text_align`](Scenic.Primitive.Style.TextAlign.html) - horizontal alignment of lines of text
+  * [`text_base`](Scenic.Primitive.Style.TextBase.html) - vertical alignment of lines of text
+  * [`line_height`](Scenic.Primitive.Style.LineHeight.html) - spacing between lines of text
 
   ## Usage
 

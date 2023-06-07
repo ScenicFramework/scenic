@@ -18,9 +18,9 @@ defmodule Scenic.Primitive.Style.TextAlign do
 
   TextAlign can be any one of the following values
 
-  * `:left` - Left side horizontally. Base of the text vertically.
-  * `:right` - Right side horizontally. Base of the text vertically.
-  * `:center` - Centered horizontally. Base of the text vertically.
+  * `:left` - Left side alignment.
+  * `:right` - Right side alignment.
+  * `:center` - Centered alignment.
   """
   use Scenic.Primitive.Style
 
