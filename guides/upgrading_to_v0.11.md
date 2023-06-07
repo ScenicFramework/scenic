@@ -392,9 +392,9 @@ This driver provides a single rendering code base for both hosted (Mac/PC/Linux)
 
 Another big change to Scenic is the re-write of the driver model. If your work is all at the scene layer, then this shouldn't affect you. But if you have a custom driver that renders graphs, it will need to be re-written.
 
-The old model sent graphs directly to the drivers. They would then traverse these graphs, translating them into some render specific linear list of commands, which when then, in turn, be passed on to the actual renderer. It was complicated, repeated the same difficult code in every driver, and was difficult to maintain.
+The old model sent graphs directly to the drivers. They would then traverse these graphs, translating them into some render specific linear list of commands, which were then, in turn, passed to the actual renderer. It was complicated, repeated the same difficult code in every driver, and was difficult to maintain.
 
-The new model moves the traversal or "compilation" of the graphs into the ViewPort layer and standardizes the set of draw commands in the form a linear script. This means the difficult part of all drivers has been done once in the ViewPort layer and drivers themselves have become much simpler.
+The new model moves the traversal or "compilation" of the graphs into the ViewPort layer and standardizes the set of draw commands in the form of a linear script. This means the difficult part of all drivers has been done once in the ViewPort layer and drivers themselves have become much simpler.
 
 Drivers are still in charge of how often to render, how to deal with latency, and can intercept/customize the serialization of these scripts into binary form.
 
