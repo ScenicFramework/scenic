@@ -33,40 +33,6 @@ At some point, depending on your target processor, you will start to have perfor
 
 The good news is that as you switch away to different root scenes, all the old components are automatically cleaned up for you.
 
-
-## App Supervised Scenes
-
-If you have a component scene that is used by may other scenes, or even in multiple ViewPorts at the same time, you can save memory and reduce load by supervising those scenes yourself.
-
-To do this, create a supervisor in your application and start one or more scenes under it. You can give these scenes names, which is how you will reference them from your graphs.
-
-    defmodule MyApp.Scene.Supervisor do
-      use Supervisor
-
-      def start_link() do
-        Supervisor.start_link(__MODULE__, :ok)
-      end
-
-      def init(:ok) do
-        children = [
-          {MyApp.Scene.AppScene, {:some_init_data, [name: :app_scene]}},
-          {Scenic.Clock.Digital, {[], [name: :clock]}}
-        ]
-        Supervisor.init(children, strategy: :one_for_one)
-      end
-    end
-
-When you build your graphs, you can now use this statically supervised scene directly through the `scene_ref/3` helper in `Scenic.Primitives`.
-
-    @graph Graph.build()
-      |> scene_ref(:app_scene, translate: {300, 300})
-      |> scene_ref(:clock, translate: {400, 20})
-
-The main trade-off you make when you supervise a scene yourself is that the scene no longer knows which ViewPort it is running in. It could be several at the same time! You will not be able to use functions like `ViewPort.set_root` from these scenes.
-
-The second trade-off is that if the root scene _doesn't_ reference a scene you are supervising yourself, then that scene is still taking up memory in both the scene and the driver even though it isn't being drawn.
-
-
 ## What to read next?
 
 If you are exploring Scenic, then you should read the [Graph Overview](overview_graph.html) next.

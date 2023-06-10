@@ -22,11 +22,6 @@ defmodule Scenic.Primitives do
            radius :: number
          }
 
-  # @typep scene_ref ::
-  #          {:graph, reference, any}
-  #          | {module :: atom, init_data :: any}
-  #          | (scene_name :: atom)
-
   @typep sector :: {
            radius :: number,
            start :: number,
