@@ -1571,8 +1571,9 @@ defmodule Scenic.Scene do
     try do
       module._has_children?()
     rescue
-      UndefinedFunctionError ->
-        raise "Attempted to start uncompiled scene: #{inspect(module)}"
+      error in [UndefinedFunctionError] ->
+        Logger.error("Attempted to start uncompiled scene: #{inspect(module)}")
+        reraise error, __STACKTRACE__
     end
     # start a supervisor - or not - depending on if there are children
     |> case do
