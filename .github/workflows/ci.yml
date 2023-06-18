@@ -49,3 +49,5 @@ jobs:
       run: mix compile
     - name: Run Tests
       run: mix test
+    - name: Run credo
+      run: mix credo suggest --min-priority=high --ignore-checks Credo.Check.Design.DuplicatedCode

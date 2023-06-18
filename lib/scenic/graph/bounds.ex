@@ -279,17 +279,17 @@ defmodule Scenic.Graph.Bounds do
 
   defp pts_arc_to([{x0, y0} | _] = pts, x1, y1, x2, y2, r) do
     # recreate as two vectors point out of the 1 point
-    vAx = x0 - x1
-    vAy = y0 - y1
-    vBx = x2 - x1
-    vBy = y2 - y1
-    vA = {vAx, vAy}
-    vB = {vBx, vBy}
+    v_ax = x0 - x1
+    v_ay = y0 - y1
+    v_bx = x2 - x1
+    v_by = y2 - y1
+    v_a = {v_ax, v_ay}
+    v_b = {v_bx, v_by}
 
     # use the dot product to find the angle between them
-    # angle = Vector2.dot( vA, vB )
+    # angle = Vector2.dot( v_a, v_b )
     # |> :math.acos()
-    angle = angle(vA, vB)
+    angle = angle(v_a, v_b)
     ha = angle / 2
 
     # calculate the hypotenuse
@@ -301,18 +301,18 @@ defmodule Scenic.Graph.Bounds do
 
     # Find the arc starting point
     ratio = dist_tan / Vector2.distance({x0, y0}, {x1, y1})
-    {vx, vy} = vA2 = Vector2.mul(vA, ratio)
+    {vx, vy} = v_a2 = Vector2.mul(v_a, ratio)
     {sx, sy} = pt_start = {x1 + vx, y1 + vy}
 
     # Find the arc ending point
     ratio = dist_tan / Vector2.distance({x2, y2}, {x1, y1})
-    {vx, vy} = vB2 = Vector2.mul(vB, ratio)
+    {vx, vy} = v_b2 = Vector2.mul(v_b, ratio)
     {ex, ey} = pt_end = {x1 + vx, y1 + vy}
 
-    # the center point should be on the vector defined by adding vA2 + vB2
-    vC = Vector2.add(vA2, vB2)
-    ratio = hypotenuse / Vector2.length(vC)
-    {vx, vy} = Vector2.mul(vC, ratio)
+    # the center point should be on the vector defined by adding v_a2 + v_b2
+    v_c = Vector2.add(v_a2, v_b2)
+    ratio = hypotenuse / Vector2.length(v_c)
+    {vx, vy} = Vector2.mul(v_c, ratio)
     {cx, cy} = {x1 + vx, y1 + vy}
 
     # now if re-orient ourselves around the center point, we can create
