@@ -562,14 +562,14 @@ defmodule Scenic.Script do
           fill_stroke_flags :: fill_stroke()
         ) :: ops :: t()
   def draw_variable_rounded_rectangle(ops, width, height, r1, r2, r3, r4, flag) do
-    upperLeftRadius = smallest([r1, width / 2, height / 2])
-    upperRightRadius = smallest([r2, width / 2, height / 2])
-    lowerRightRadius = smallest([r3, width / 2, height / 2])
-    lowerLeftRadius = smallest([r4, width / 2, height / 2])
+    upper_left_radius = smallest([r1, width / 2, height / 2])
+    upper_right_radius = smallest([r2, width / 2, height / 2])
+    lower_right_radius = smallest([r3, width / 2, height / 2])
+    lower_left_radius = smallest([r4, width / 2, height / 2])
 
     [
       {:draw_rrectv,
-       {width, height, upperLeftRadius, upperRightRadius, lowerRightRadius, lowerLeftRadius, flag}}
+       {width, height, upper_left_radius, upper_right_radius, lower_right_radius, lower_left_radius, flag}}
       | ops
     ]
   end
