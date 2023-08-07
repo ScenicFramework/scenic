@@ -351,6 +351,12 @@ defmodule Scenic.ScriptTest do
     assert expected == Script.serialize(expected) |> Script.deserialize()
   end
 
+  test "arc works" do
+    expected = [{:arc, {0.0, 0.0, 5.0, 0.0, 6.0, 1}}]
+    assert Script.arc([], 0, 0, 5, 0, 6, 1) == expected
+    assert expected == Script.serialize(expected) |> Script.deserialize()
+  end
+
   # --------------------------------------------------------
   # transform commands
 
