@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+* Variety of minor updates, bug fixes, and doc updates
+* `Scenic.Scene.assign/2` now accepts a map by @amclain in https://github.com/ScenicFramework/scenic/pull/291
+* Allow `Scenic.Scene.assign_new/2` and `Scenic.Driver.assign_new/2` to take a map of values by @adkron in https://github.com/ScenicFramework/scenic/pull/293
+* Update nimble_options by @axelson in https://github.com/ScenicFramework/scenic/pull/300
+* Improve static assets otp_app error message by @axelson in https://github.com/ScenicFramework/scenic/pull/305
+* Upgrade elixir_make and ssl_verify_fun by @ohrite in https://github.com/ScenicFramework/scenic/pull/321
+
+### New Contributors
+* @amclain made their first contribution in https://github.com/ScenicFramework/scenic/pull/291
+* @adkron made their first contribution in https://github.com/ScenicFramework/scenic/pull/293
+* @seb3s made their first contribution in https://github.com/ScenicFramework/scenic/pull/294
+* @rkenzhebekov made their first contribution in https://github.com/ScenicFramework/scenic/pull/303
+* @ohrite made their first contribution in https://github.com/ScenicFramework/scenic/pull/321
+
+**Full Changelog**: https://github.com/ScenicFramework/scenic/compare/v0.11.1...v0.11.2
+
 ## 0.11.1
 * A variety of minor documentation and spec bug fixes. The most important one
   fixes the docs for Primitives.arc and Primitives.sector, which did not reflect
