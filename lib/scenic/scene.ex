@@ -595,7 +595,7 @@ defmodule Scenic.Scene do
 
             _ ->
               # invalid data. log a warning
-              Logger.warn(
+              Logger.warning(
                 "Attempted to update component with invalid data. id: #{inspect(id)}, data: #{inspect(new_value)}"
               )
 

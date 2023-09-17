@@ -118,7 +118,7 @@ defmodule Scenic.Script do
   Building and using a custom script happens in three parts. First, the script itself
   is created using the `Scenic.Script` api.
 
-  Then the script is published to the ViewPort using `Scenic.Scene/push_script/4` with a
+  Then the script is published to the ViewPort using `Scenic.Scene.push_script/4` with a
   unique name.
 
   Later, the graph for the checkbox references this script, which is what triggers it to be drawn.

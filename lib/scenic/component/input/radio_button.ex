@@ -302,7 +302,7 @@ defmodule Scenic.Component.Input.RadioButton do
   end
 
   def handle_put(v, %{assigns: %{id: id}} = scene) do
-    Logger.warn(
+    Logger.warning(
       "Attempted to put an invalid value on Radio Button id: #{inspect(id)}, value: #{inspect(v)}"
     )
 

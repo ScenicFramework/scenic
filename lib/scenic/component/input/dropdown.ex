@@ -678,7 +678,7 @@ defmodule Scenic.Component.Input.Dropdown do
     scene =
       case Enum.find(items, fn {_, id} -> id == s_id end) do
         nil ->
-          Logger.warn(
+          Logger.warning(
             "Attempted to put an invalid value on Dropdown id: #{inspect(id)}, value: #{inspect(s_id)}"
           )
 
@@ -709,7 +709,7 @@ defmodule Scenic.Component.Input.Dropdown do
   end
 
   def handle_put(v, %{assigns: %{id: id}} = scene) do
-    Logger.warn(
+    Logger.warning(
       "Attempted to put an invalid value on Dropdown id: #{inspect(id)}, value: #{inspect(v)}"
     )
 

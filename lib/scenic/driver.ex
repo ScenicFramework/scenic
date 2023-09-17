@@ -408,7 +408,7 @@ defmodule Scenic.Driver do
         %Driver{input_limited: true, input_buffer: buffer} = driver,
         {class, _} = input
       ) do
-    # Logger.warn( "input_limited #{inspect({input})}" )
+    # Logger.warning( "input_limited #{inspect({input})}" )
     case class do
       :cursor_pos -> %{driver | input_buffer: Map.put(buffer, class, input)}
       :cursor_scroll -> %{driver | input_buffer: Map.put(buffer, class, input)}
@@ -421,7 +421,7 @@ defmodule Scenic.Driver do
         %Driver{limit_ms: limit_ms} = driver,
         {class, _} = input
       ) do
-    # Logger.warn( "input #{inspect({input})}" )
+    # Logger.warning( "input #{inspect({input})}" )
     case class do
       :cursor_pos ->
         Process.send_after(self(), @input_limiter, limit_ms)

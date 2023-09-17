@@ -315,7 +315,7 @@ defmodule Scenic.Component.Input.Checkbox do
   end
 
   def handle_put(v, %{assigns: %{id: id}} = scene) do
-    Logger.warn(
+    Logger.warning(
       "Attempted to put an invalid value on Checkbox id: #{inspect(id)}, value: #{inspect(v)}"
     )
 

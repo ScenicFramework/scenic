@@ -392,7 +392,7 @@ defmodule Scenic.Component.Input.Slider do
     scene =
       case Enum.member?(extents, value) do
         false ->
-          Logger.warn(
+          Logger.warning(
             "Attempted to put an invalid value on Slider id: #{inspect(id)}, value: #{inspect(value)}"
           )
 
@@ -444,7 +444,7 @@ defmodule Scenic.Component.Input.Slider do
   end
 
   def handle_put(v, %{assigns: %{id: id}} = scene) do
-    Logger.warn(
+    Logger.warning(
       "Attempted to put an invalid value on Slider id: #{inspect(id)}, value: #{inspect(v)}"
     )
 

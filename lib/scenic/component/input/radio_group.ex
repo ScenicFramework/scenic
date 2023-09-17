@@ -267,7 +267,7 @@ defmodule Scenic.Component.Input.RadioGroup do
     scene =
       case Enum.find(items, fn {_, id} -> id == value end) do
         nil ->
-          Logger.warn(
+          Logger.warning(
             "Attempted to put an invalid value on Radio Group id: #{inspect(id)}, value: #{inspect(value)}"
           )
 
@@ -284,7 +284,7 @@ defmodule Scenic.Component.Input.RadioGroup do
   end
 
   def handle_put(v, %{assigns: %{id: id}} = scene) do
-    Logger.warn(
+    Logger.warning(
       "Attempted to put an invalid value on Dropdown id: #{inspect(id)}, value: #{inspect(v)}"
     )
 
