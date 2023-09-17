@@ -20,6 +20,8 @@ jobs:
         include:
           - elixir: '1.11.4'
             otp: '24.2'
+	  - elixir: '1.15.5'
+            otp: '26.0'
 
     steps:
     - uses: actions/checkout@v3
@@ -46,7 +48,7 @@ jobs:
     - name: Compile Deps
       run: mix deps.compile
     - name: Compile
-      run: mix compile
+      run: mix compile --warnings-as-errors
     - name: Run Tests
       run: mix test
     - name: Run credo
