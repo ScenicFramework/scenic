@@ -583,11 +583,21 @@ defmodule Scenic.Graph do
   """
 
   @spec find(graph :: t(), (any -> as_boolean(term()))) :: list(Primitive.t())
-  def find(graph, finder)
-
   def find(%__MODULE__{} = graph, finder) do
     reduce(graph, [], fn p, acc ->
       p
+      |> finder.()
+      |> case do
+        true -> [p | acc]
+        false -> acc
+      end
+    end)
+    |> Enum.reverse()
+  end
+
+  def find_by_id(%__MODULE__{} = graph, finder) do
+    reduce(graph, [], fn p, acc ->
+      Map.get(p, :id)
       |> finder.()
       |> case do
         true -> [p | acc]
@@ -651,7 +661,7 @@ defmodule Scenic.Graph do
   # pass in a finder function
   def modify(%__MODULE__{} = graph, finder, action) when is_function(finder, 1) do
     graph
-    |> find(finder)
+    |> find_by_id(finder)
     |> Enum.map(fn %{id: id} -> id end)
     |> Enum.uniq()
     |> Enum.reduce(graph, &modify(&2, &1, action))
