@@ -595,6 +595,16 @@ defmodule Scenic.Graph do
     |> Enum.reverse()
   end
 
+  @doc """
+  Find one or more primitives in a graph by id via a filter function.
+
+  Pass in a function that accepts a primitive's id and returns a boolean.
+
+  Returns a list of primitives.
+
+  __Warning:__ This function crawls the entire graph and is thus slower than
+  accessing items via a fully-specified id.
+  """
   def find_by_id(%__MODULE__{} = graph, finder) do
     reduce(graph, [], fn p, acc ->
       Map.get(p, :id)
