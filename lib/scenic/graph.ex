@@ -585,10 +585,9 @@ defmodule Scenic.Graph do
   @spec find(graph :: t(), (any -> as_boolean(term()))) :: list(Primitive.t())
   def find(graph, finder)
 
-  # pass in an atom based id, and it will transform all mapped uids
-  def find(%__MODULE__{} = graph, finder) when is_function(finder, 1) do
+  def find(%__MODULE__{} = graph, finder) do
     reduce(graph, [], fn p, acc ->
-      Map.get(p, :id)
+      p
       |> finder.()
       |> case do
         true -> [p | acc]
