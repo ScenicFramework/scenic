@@ -373,7 +373,7 @@ defmodule Scenic.Component.Input.Toggle do
   end
 
   def handle_put(v, %{assigns: %{id: id}} = scene) do
-    Logger.warn(
+    Logger.warning(
       "Attempted to put an invalid value on Toggle id: #{inspect(id)}, value: #{inspect(v)}"
     )
 

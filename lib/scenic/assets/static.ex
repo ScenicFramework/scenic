@@ -452,7 +452,7 @@ defmodule Scenic.Assets.Static do
         |> Path.join(Static.dst_dir())
       rescue
         e ->
-          Logger.warn(
+          Logger.warning(
             "'use Scenic.Assets.Static' requires a valid :otp_app option. Received otp_app #{opts[:otp_app]}"
           )
 
@@ -583,7 +583,7 @@ defmodule Scenic.Assets.Static do
         assign(lib, :aliases, new_alias, hash)
 
       _ ->
-        Logger.warn("Attempted to alias #{inspect(new_alias)} to unknown asset: #{inspect(to)}")
+        Logger.warning("Attempted to alias #{inspect(new_alias)} to unknown asset: #{inspect(to)}")
         lib
     end
   end
