@@ -4,7 +4,7 @@
 #
 
 defmodule Scenic.ViewPort.InputTest do
-  use ExUnit.Case, async: false
+  use Scenic.Test.DataCase, async: false
   doctest Scenic.ViewPort.Input
 
   alias Scenic.ViewPort
@@ -46,86 +46,86 @@ defmodule Scenic.ViewPort.InputTest do
   end
 
   test "Test that capture/release/list_captures work", %{vp: vp} do
-    assert Input.fetch_captures(vp) == {:ok, []}
+    assert Input.fetch_captures(vp) ~> {:ok, sorted_list([])}
 
     :ok = Input.capture(vp, :cursor_pos)
-    assert Input.fetch_captures(vp) == {:ok, [:cursor_pos]}
+    assert Input.fetch_captures(vp) ~> {:ok, sorted_list([:cursor_pos])}
 
     :ok = Input.capture(vp, [:key, :codepoint])
-    assert Input.fetch_captures(vp) == {:ok, [:key, :cursor_pos, :codepoint]}
+    assert Input.fetch_captures(vp) ~> {:ok, sorted_list([:key, :cursor_pos, :codepoint])}
 
     :ok = Input.release(vp, :key)
-    assert Input.fetch_captures(vp) == {:ok, [:cursor_pos, :codepoint]}
+    assert Input.fetch_captures(vp) ~> {:ok, sorted_list([:cursor_pos, :codepoint])}
 
     :ok = Input.release(vp, :all)
-    assert Input.fetch_captures(vp) == {:ok, []}
+    assert Input.fetch_captures(vp) ~> {:ok, sorted_list([])}
   end
 
   test "list_captures and list_captures! work", %{vp: vp} do
-    assert Input.fetch_captures(vp) == {:ok, []}
-    assert Input.fetch_captures!(vp) == {:ok, []}
+    assert Input.fetch_captures(vp) ~> {:ok, sorted_list([])}
+    assert Input.fetch_captures!(vp) ~> {:ok, sorted_list([])}
 
     Agent.start(fn ->
       :ok = Input.capture(vp, [:codepoint])
     end)
 
-    assert Input.fetch_captures(vp) == {:ok, []}
-    assert Input.fetch_captures!(vp) == {:ok, [:codepoint]}
+    assert Input.fetch_captures(vp) ~> {:ok, sorted_list([])}
+    assert Input.fetch_captures!(vp) ~> {:ok, sorted_list([:codepoint])}
 
     :ok = Input.capture(vp, :cursor_pos)
-    assert Input.fetch_captures(vp) == {:ok, [:cursor_pos]}
-    assert Input.fetch_captures!(vp) == {:ok, [:codepoint, :cursor_pos]}
+    assert Input.fetch_captures(vp) ~> {:ok, sorted_list([:cursor_pos])}
+    assert Input.fetch_captures!(vp) ~> {:ok, sorted_list([:codepoint, :cursor_pos])}
   end
 
   test "captures are cleaned up when the owning process stops", %{vp: vp} do
     # set up a capture
     :ok = Input.capture(vp, [:codepoint])
-    assert Input.fetch_captures!(vp) == {:ok, [:codepoint]}
+    assert Input.fetch_captures!(vp) ~> {:ok, sorted_list([:codepoint])}
 
     # fake indicate this process went down
     Process.send(vp.pid, {:DOWN, make_ref(), :process, self(), :test}, [])
 
-    assert Input.fetch_captures!(vp) == {:ok, []}
+    assert Input.fetch_captures!(vp) ~> {:ok, sorted_list([])}
   end
 
   test "Test that request/unrequest/list_requests work", %{vp: vp} do
-    assert Input.fetch_requests(vp) == {:ok, []}
+    assert Input.fetch_requests(vp) ~> {:ok, sorted_list([])}
 
     :ok = Input.request(vp, :cursor_pos)
-    assert Input.fetch_requests(vp) == {:ok, [:cursor_pos]}
+    assert Input.fetch_requests(vp) ~> {:ok, sorted_list([:cursor_pos])}
 
     :ok = Input.request(vp, [:key, :codepoint])
-    assert Input.fetch_requests(vp) == {:ok, [:key, :cursor_pos, :codepoint]}
+    assert Input.fetch_requests(vp) ~> {:ok, sorted_list([:key, :cursor_pos, :codepoint])}
 
     :ok = Input.unrequest(vp, :key)
-    assert Input.fetch_requests(vp) == {:ok, [:cursor_pos, :codepoint]}
+    assert Input.fetch_requests(vp) ~> {:ok, sorted_list([:cursor_pos, :codepoint])}
 
     :ok = Input.unrequest(vp, :all)
-    assert Input.fetch_requests(vp) == {:ok, []}
+    assert Input.fetch_requests(vp) ~> {:ok, sorted_list([])}
   end
 
   test "fetch_requests and fetch_requests! work", %{vp: vp} do
-    assert Input.fetch_requests(vp) == {:ok, []}
-    assert Input.fetch_requests!(vp) == {:ok, []}
+    assert Input.fetch_requests(vp) ~> {:ok, sorted_list([])}
+    assert Input.fetch_requests!(vp) ~> {:ok, sorted_list([])}
 
     Agent.start(fn ->
       :ok = Input.request(vp, [:codepoint])
     end)
 
-    assert Input.fetch_captures(vp) == {:ok, []}
-    assert Input.fetch_requests!(vp) == {:ok, [:codepoint]}
+    assert Input.fetch_captures(vp) ~> {:ok, sorted_list([])}
+    assert Input.fetch_requests!(vp) ~> {:ok, sorted_list([:codepoint])}
 
     :ok = Input.request(vp, :cursor_pos)
-    assert Input.fetch_requests(vp) == {:ok, [:cursor_pos]}
-    assert Input.fetch_requests!(vp) == {:ok, [:codepoint, :cursor_pos]}
+    assert Input.fetch_requests(vp) ~> {:ok, sorted_list([:cursor_pos])}
+    assert Input.fetch_requests!(vp) ~> {:ok, sorted_list([:codepoint, :cursor_pos])}
   end
 
   test "requests are cleaned up with the owning process stops", %{vp: vp, scene: scene} do
     :ok = Input.request(vp, :cursor_pos)
     Scenic.Scene.request_input(scene, :codepoint)
-    assert Input.fetch_requests!(vp) == {:ok, [:codepoint, :cursor_pos]}
+    assert Input.fetch_requests!(vp) ~> {:ok, sorted_list([:codepoint, :cursor_pos])}
     Scenic.Scene.stop(scene)
-    assert Input.fetch_requests!(vp) == {:ok, [:cursor_pos]}
+    assert Input.fetch_requests!(vp) ~> {:ok, sorted_list([:cursor_pos])}
   end
 
   # ----------------
@@ -135,7 +135,7 @@ defmodule Scenic.ViewPort.InputTest do
        %{vp: vp, scene: scene} do
     # make like a driver
     GenServer.cast(vp.pid, {:register_driver, self()})
-    assert Input.fetch_requests!(vp) == {:ok, []}
+    assert Input.fetch_requests!(vp) ~> {:ok, sorted_list([])}
 
     graph =
       Scenic.Graph.build()
@@ -162,7 +162,7 @@ defmodule Scenic.ViewPort.InputTest do
   } do
     # make like a driver
     GenServer.cast(vp.pid, {:register_driver, self()})
-    assert Input.fetch_requests!(vp) == {:ok, []}
+    assert Input.fetch_requests!(vp) ~> {:ok, sorted_list([])}
 
     graph =
       Scenic.Graph.build()
@@ -179,7 +179,7 @@ defmodule Scenic.ViewPort.InputTest do
   } do
     # make like a driver
     GenServer.cast(vp.pid, {:register_driver, self()})
-    assert Input.fetch_requests!(vp) == {:ok, []}
+    assert Input.fetch_requests!(vp) ~> {:ok, sorted_list([])}
 
     graph =
       Scenic.Graph.build()
@@ -193,7 +193,7 @@ defmodule Scenic.ViewPort.InputTest do
   test ":cursor_pos only the input listed in a input style is requested", %{vp: vp, scene: scene} do
     # make like a driver
     GenServer.cast(vp.pid, {:register_driver, self()})
-    assert Input.fetch_requests!(vp) == {:ok, []}
+    assert Input.fetch_requests!(vp) ~> {:ok, sorted_list([])}
 
     graph =
       Scenic.Graph.build()
@@ -333,11 +333,11 @@ defmodule Scenic.ViewPort.InputTest do
   # specific input types
 
   test "cursor_scroll request works", %{vp: vp} do
-    assert Input.fetch_captures!(vp) == {:ok, []}
-    assert Input.fetch_requests(vp) == {:ok, []}
+    assert Input.fetch_captures!(vp) ~> {:ok, sorted_list([])}
+    assert Input.fetch_requests(vp) ~> {:ok, sorted_list([])}
 
     :ok = Input.request(vp, :cursor_scroll)
-    assert Input.fetch_requests(vp) == {:ok, [:cursor_scroll]}
+    assert Input.fetch_requests(vp) ~> {:ok, sorted_list([:cursor_scroll])}
 
     assert Input.send(vp, {:cursor_scroll, {{1, 2}, {3, 4}}}) == :ok
 
@@ -348,11 +348,11 @@ defmodule Scenic.ViewPort.InputTest do
   end
 
   test "cursor_scroll capture works", %{vp: vp} do
-    assert Input.fetch_captures(vp) == {:ok, []}
-    assert Input.fetch_requests(vp) == {:ok, []}
+    assert Input.fetch_captures(vp) ~> {:ok, sorted_list([])}
+    assert Input.fetch_requests(vp) ~> {:ok, sorted_list([])}
 
     :ok = Input.capture(vp, :cursor_scroll)
-    assert Input.fetch_captures(vp) == {:ok, [:cursor_scroll]}
+    assert Input.fetch_captures(vp) ~> {:ok, sorted_list([:cursor_scroll])}
 
     assert Input.send(vp, {:cursor_scroll, {{1, 2}, {3, 4}}}) == :ok
 
@@ -363,11 +363,11 @@ defmodule Scenic.ViewPort.InputTest do
   end
 
   test "cursor_pos request works", %{vp: vp} do
-    assert Input.fetch_captures!(vp) == {:ok, []}
-    assert Input.fetch_requests(vp) == {:ok, []}
+    assert Input.fetch_captures!(vp) ~> {:ok, sorted_list([])}
+    assert Input.fetch_requests(vp) ~> {:ok, sorted_list([])}
 
     :ok = Input.request(vp, :cursor_pos)
-    assert Input.fetch_requests(vp) == {:ok, [:cursor_pos]}
+    assert Input.fetch_requests(vp) ~> {:ok, sorted_list([:cursor_pos])}
 
     assert Input.send(vp, {:cursor_pos, {1, 2}}) == :ok
 
@@ -378,11 +378,11 @@ defmodule Scenic.ViewPort.InputTest do
   end
 
   test "cursor_pos capture works", %{vp: vp} do
-    assert Input.fetch_captures(vp) == {:ok, []}
-    assert Input.fetch_requests(vp) == {:ok, []}
+    assert Input.fetch_captures(vp) ~> {:ok, sorted_list([])}
+    assert Input.fetch_requests(vp) ~> {:ok, sorted_list([])}
 
     :ok = Input.capture(vp, :cursor_pos)
-    assert Input.fetch_captures(vp) == {:ok, [:cursor_pos]}
+    assert Input.fetch_captures(vp) ~> {:ok, sorted_list([:cursor_pos])}
 
     assert Input.send(vp, {:cursor_pos, {1, 2}}) == :ok
 
@@ -396,7 +396,7 @@ defmodule Scenic.ViewPort.InputTest do
   # drivers are sent input updates
 
   test "drivers are sent requested input updates", %{vp: vp} do
-    assert Input.fetch_requests!(vp) == {:ok, []}
+    assert Input.fetch_requests!(vp) ~> {:ok, sorted_list([])}
     :ok = Input.request(vp, :cursor_button)
 
     GenServer.cast(vp.pid, {:register_driver, self()})
@@ -418,7 +418,7 @@ defmodule Scenic.ViewPort.InputTest do
   test "drivers are sent requested input updates when a scene goes down", %{vp: vp, scene: scene} do
     Scenic.Scene.request_input(scene, :cursor_button)
 
-    assert Input.fetch_requests!(vp) == {:ok, [:cursor_button]}
+    assert Input.fetch_requests!(vp) ~> {:ok, sorted_list([:cursor_button])}
 
     GenServer.cast(vp.pid, {:register_driver, self()})
     assert_receive({:_request_input_, [:cursor_button]}, 100)
@@ -432,8 +432,8 @@ defmodule Scenic.ViewPort.InputTest do
   test "drivers are sent captured input updates", %{vp: vp, scene: scene} do
     Scenic.Scene.request_input(scene, :cursor_button)
 
-    assert Input.fetch_captures!(vp) == {:ok, []}
-    assert Input.fetch_requests!(vp) == {:ok, [:cursor_button]}
+    assert Input.fetch_captures!(vp) ~> {:ok, sorted_list([])}
+    assert Input.fetch_requests!(vp) ~> {:ok, sorted_list([:cursor_button])}
 
     GenServer.cast(vp.pid, {:register_driver, self()})
     assert_receive({:_request_input_, [:cursor_button]}, 100)
@@ -454,7 +454,7 @@ defmodule Scenic.ViewPort.InputTest do
   test "drivers are sent captured input updates when a scene goes down", %{vp: vp, scene: scene} do
     Scenic.Scene.request_input(scene, :cursor_button)
 
-    assert Input.fetch_requests!(vp) == {:ok, [:cursor_button]}
+    assert Input.fetch_requests!(vp) ~> {:ok, sorted_list([:cursor_button])}
     self = self()
     # have to have an agent do the capture so that it comes from a different pid than this
     # test, which is pretending to be a driver...
@@ -479,7 +479,7 @@ defmodule Scenic.ViewPort.InputTest do
 
     # should get an update when the owning pid goes down
     # calling fetch_requests! makes sure the vp has processed the agent DOWN message
-    assert Input.fetch_requests!(vp) == {:ok, [:cursor_button]}
+    assert Input.fetch_requests!(vp) ~> {:ok, sorted_list([:cursor_button])}
     assert_receive({:_request_input_, [:cursor_button]}, 100)
   end
 

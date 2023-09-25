@@ -5,7 +5,7 @@
 #
 
 defmodule Scenic.SceneTest do
-  use ExUnit.Case, async: false
+  use Scenic.Test.DataCase, async: false
   doctest Scenic.Scene
 
   alias Scenic.ViewPort
@@ -382,34 +382,32 @@ defmodule Scenic.SceneTest do
   test "fetch_requests works", %{scene: scene} do
     Scenic.Scene.request_input(scene, :cursor_button)
 
-    assert Scene.fetch_requests(scene) == {:ok, [:cursor_button, :codepoint]}
+    assert Scene.fetch_requests(scene) ~> {:ok, sorted_list([:cursor_button, :codepoint])}
 
     # request input from outside the scene
     :ok = ViewPort.Input.request(scene.viewport, :cursor_pos)
 
     # should only show input form the scene even though this is the caller
-    assert Scene.fetch_requests(scene) == {:ok, [:cursor_button, :codepoint]}
+    assert Scene.fetch_requests(scene) ~> {:ok, sorted_list([:cursor_button, :codepoint])}
   end
 
   test "request_input works", %{scene: scene} do
     Scenic.Scene.request_input(scene, :cursor_button)
 
-    assert Scene.fetch_requests(scene) ==
-             {:ok, [:cursor_button, :codepoint]}
+    assert Scene.fetch_requests(scene) ~> {:ok, sorted_list([:cursor_button, :codepoint])}
 
     :ok = Scene.request_input(scene, :cursor_pos)
 
-    assert Scene.fetch_requests(scene) ==
-             {:ok, [:cursor_pos, :cursor_button, :codepoint]}
+    assert Scene.fetch_requests(scene) ~> {:ok, sorted_list([:cursor_pos, :cursor_button, :codepoint])}
   end
 
   test "unrequest_input works", %{scene: scene} do
     Scenic.Scene.request_input(scene, :cursor_button)
 
-    assert Scene.fetch_requests(scene) == {:ok, [:cursor_button, :codepoint]}
+    assert Scene.fetch_requests(scene) ~> {:ok, sorted_list([:cursor_button, :codepoint])}
 
     :ok = Scene.unrequest_input(scene, :codepoint)
-    assert Scene.fetch_requests(scene) == {:ok, [:cursor_button]}
+    assert Scene.fetch_requests(scene) ~> {:ok, sorted_list([:cursor_button])}
   end
 
   test "fetch_captures works", %{scene: scene} do

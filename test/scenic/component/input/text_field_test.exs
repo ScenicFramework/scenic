@@ -5,7 +5,9 @@
 #
 
 defmodule Scenic.Component.Input.TextFieldTest do
-  use ExUnit.Case, async: false
+  use Scenic.Test.DataCase, async: false
+  use Machete
+  import Scenic.Test.SortedListMatcher
   doctest Scenic.Component.Input.TextField
 
   alias Scenic.Graph
@@ -96,7 +98,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
     assert Input.fetch_captures!(vp) == {:ok, []}
     Input.send(vp, @press_in)
     force_sync(vp.pid, pid)
-    assert Input.fetch_captures!(vp) == {:ok, [:codepoint, :cursor_button, :key]}
+    assert Input.fetch_captures!(vp) ~> {:ok, sorted_list([:codepoint, :cursor_button, :key])}
 
     Input.send(vp, @cp_k)
     assert_receive({:fwd_event, {:value_changed, :text_field, "kInitial value"}}, 200)
@@ -105,7 +107,8 @@ defmodule Scenic.Component.Input.TextFieldTest do
   test "press_out releases and ends editing", %{vp: vp, pid: pid} do
     Input.send(vp, @press_in)
     force_sync(vp.pid, pid)
-    assert Input.fetch_captures!(vp) == {:ok, [:codepoint, :cursor_button, :key]}
+
+    assert Input.fetch_captures!(vp) ~> {:ok, sorted_list([:codepoint, :cursor_button, :key])}
 
     Input.send(vp, @press_out)
     force_sync(vp.pid, pid)
