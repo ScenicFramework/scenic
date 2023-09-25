@@ -77,7 +77,7 @@ defmodule Scenic.Component.Input.RadioButton do
     {:ok, {Static.Font, fm}} = Static.meta(@default_font)
     ascent = FontMetrics.ascent(@default_font_size, fm)
     fm_width = FontMetrics.width(text, @default_font_size, fm)
-    space_width = FontMetrics.width(' ', @default_font_size, fm)
+    space_width = FontMetrics.width(~c" ", @default_font_size, fm)
     outer_radius = ascent * 0.5
     inner_radius = ascent * 0.3125
 
@@ -140,7 +140,7 @@ defmodule Scenic.Component.Input.RadioButton do
     ascent = FontMetrics.ascent(@default_font_size, fm)
     descent = FontMetrics.descent(@default_font_size, fm)
     fm_width = FontMetrics.width(text, @default_font_size, fm)
-    space_width = FontMetrics.width(' ', @default_font_size, fm)
+    space_width = FontMetrics.width(~c" ", @default_font_size, fm)
     box_width = fm_width + ascent + space_width + @border_width
     {0, 0, box_width, ascent - descent}
   end

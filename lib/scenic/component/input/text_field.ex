@@ -110,7 +110,7 @@ defmodule Scenic.Component.Input.TextField do
 
   @input_capture [:cursor_button, :codepoint, :key]
 
-  @password_char '*'
+  @password_char ~c"*"
 
   # --------------------------------------------------------
   @impl Scenic.Component

@@ -224,7 +224,7 @@ defmodule Scenic.Component.Input.RadioGroup do
         end
       end)
 
-    space_width = FontMetrics.width(' ', @default_font_size, fm)
+    space_width = FontMetrics.width(~c" ", @default_font_size, fm)
     box_width = fm_width + ascent + space_width + @border_width
     {0, 0, box_width, @line_height * Enum.count(items)}
   end
