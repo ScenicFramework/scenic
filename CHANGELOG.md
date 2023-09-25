@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.11.2
 
 * Variety of minor updates, bug fixes, and doc updates
 * `Scenic.Scene.assign/2` now accepts a map by @amclain in https://github.com/ScenicFramework/scenic/pull/291
