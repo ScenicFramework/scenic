@@ -1,6 +1,6 @@
 <!--
 MAKE SURE TO READ THE CONTRIBUTING GUIDE BEFORE CREATING A PR
-https://github.com/boydm/scenic/blob/master/.github/CONTRIBUTING.md
+https://github.com/ScenicFramework/scenic/blob/main/.github/CONTRIBUTING.md
 -->
 
 <!-- Provide a general summary of your changes in the Title above -->
