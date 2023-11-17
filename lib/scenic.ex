@@ -64,13 +64,17 @@ defmodule Scenic do
   def start_link(vps \\ [])
 
   def start_link(vps) when is_list(vps) do
-    {:ok, pid} = Supervisor.start_link(__MODULE__, nil, name: :scenic)
+    case Supervisor.start_link(__MODULE__, nil, name: :scenic) do
+      {:ok, pid} ->
+        # start the default ViewPort
+        Enum.each(vps, &Scenic.ViewPort.start(&1))
 
-    # start the default ViewPort
-    Enum.each(vps, &Scenic.ViewPort.start(&1))
+        # return the original start_link value
+        {:ok, pid}
 
-    # return the original start_link value
-    {:ok, pid}
+      error ->
+        error
+    end
   end
 
   # --------------------------------------------------------
