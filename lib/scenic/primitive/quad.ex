@@ -103,9 +103,17 @@ defmodule Scenic.Primitive.Quad do
   end
 
   # --------------------------------------------------------
-  def default_pin(data)
+  def default_pin(data), do: centroid(data)
+  def default_pin(data, _styles), do: centroid(data)
 
-  def default_pin({{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}}) do
+  # --------------------------------------------------------
+  @doc """
+  Returns the centroid of the quad. This is used as the default pin when applying
+  rotate or scale transforms.
+  """
+  def centroid(data)
+
+  def centroid({{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}}) do
     {
       (x0 + x1 + x2 + x3) / 4,
       (y0 + y1 + y2 + y3) / 4
@@ -148,14 +156,5 @@ defmodule Scenic.Primitive.Quad do
   def contains_point?({p0, p1, p2, p3}, px) do
     # assumes convex, which is verified above
     Triangle.contains_point?({p0, p1, p2}, px) || Triangle.contains_point?({p1, p2, p3}, px)
-  end
-
-  # --------------------------------------------------------
-  @doc false
-  def default_pin({{x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}}, _styles) do
-    {
-      (x0 + x1 + x2 + x3) / 4,
-      (y0 + y1 + y2 + y3) / 4
-    }
   end
 end
