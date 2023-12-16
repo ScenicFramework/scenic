@@ -583,7 +583,10 @@ defmodule Scenic.Assets.Static do
         assign(lib, :aliases, new_alias, hash)
 
       _ ->
-        Logger.warning("Attempted to alias #{inspect(new_alias)} to unknown asset: #{inspect(to)}")
+        Logger.warning(
+          "Attempted to alias #{inspect(new_alias)} to unknown asset: #{inspect(to)}"
+        )
+
         lib
     end
   end

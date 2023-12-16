@@ -34,7 +34,7 @@ defmodule Scenic.Math.Matrix do
     :ok =
       @app
       |> :code.priv_dir()
-      |> :filename.join('matrix')
+      |> :filename.join(~c"matrix")
       |> :erlang.load_nif(0)
   end
 

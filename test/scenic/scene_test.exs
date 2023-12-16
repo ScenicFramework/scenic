@@ -398,7 +398,8 @@ defmodule Scenic.SceneTest do
 
     :ok = Scene.request_input(scene, :cursor_pos)
 
-    assert Scene.fetch_requests(scene) ~> {:ok, sorted_list([:cursor_pos, :cursor_button, :codepoint])}
+    assert Scene.fetch_requests(scene)
+           ~> {:ok, sorted_list([:cursor_pos, :cursor_button, :codepoint])}
   end
 
   test "unrequest_input works", %{scene: scene} do

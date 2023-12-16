@@ -78,7 +78,7 @@ defmodule Scenic.Assets.Stream.Bitmap do
     :ok =
       @app
       |> :code.priv_dir()
-      |> :filename.join('bitmap')
+      |> :filename.join(~c"bitmap")
       |> :erlang.load_nif(0)
   end
 

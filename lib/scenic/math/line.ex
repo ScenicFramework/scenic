@@ -28,7 +28,7 @@ defmodule Scenic.Math.Line do
     :ok =
       @app
       |> :code.priv_dir()
-      |> :filename.join('line')
+      |> :filename.join(~c"line")
       |> :erlang.load_nif(0)
   end
 
