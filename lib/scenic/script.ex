@@ -202,6 +202,7 @@ defmodule Scenic.Script do
   @op_sector 0x2F
   @op_circle 0x30
   @op_ellipse 0x31
+  @op_arc 0x32
 
   @op_push_state 0x40
   @op_pop_state 0x41
@@ -827,6 +828,33 @@ defmodule Scenic.Script do
   @spec ellipse(ops :: t(), radius0 :: number, radius1 :: number) :: ops :: t()
   def ellipse(ops, radius0, radius1) do
     [{:ellipse, {radius0, radius1}} | ops]
+  end
+
+  @doc """
+  Adds a new **circle arc** shaped segment to the path.
+
+  This adds to the current path. It does not fill or stroke anything.
+
+  ## Parameters
+
+    - cx, cy: The coordinates of the arc's center.
+    - r: the radius of the arc.
+    - a0, a1: the angles which the arc is drawn from angle a0 to a1, in radians.
+    - dir: s the direction of the arc sweep:
+      - `1` for counter clockwise sweep;
+      - `2` for clockwise sweep.
+  """
+  @spec arc(
+          ops :: t(),
+          cx :: number,
+          cy :: number,
+          r :: number,
+          a0 :: number,
+          a1 :: number,
+          dir :: integer
+        ) :: ops :: t()
+  def arc(ops, cx, cy, r, a0, a1, dir) do
+    [{:arc, {cx, cy, r, a0, a1, dir}} | ops]
   end
 
   @doc """
@@ -1534,6 +1562,23 @@ defmodule Scenic.Script do
         x2::float-32-big,
         y2::float-32-big,
         radius::float-32-big
+      >>
+    ]
+  end
+
+  defp serialize_op({:arc, {cx, cy, r, a0, a1, dir}}) do
+    [
+      <<
+        @op_arc::16-big,
+        0::16
+      >>,
+      <<
+        cx::float-32-big,
+        cy::float-32-big,
+        r::float-32-big,
+        a0::float-32-big,
+        a1::float-32-big,
+        dir::32-big
       >>
     ]
   end
@@ -2259,6 +2304,20 @@ defmodule Scenic.Script do
          bin::binary
        >>) do
     {{:arc_to, {x1, y1, x2, y2, radius}}, bin}
+  end
+
+  defp deserialize_op(<<
+         @op_arc::16-big,
+         0::16,
+         cx::float-32-big,
+         cy::float-32-big,
+         r::float-32-big,
+         a0::float-32-big,
+         a1::float-32-big,
+         dir::32-big,
+         bin::binary
+       >>) do
+    {{:arc, {cx, cy, r, a0, a1, dir}}, bin}
   end
 
   defp deserialize_op(<<
