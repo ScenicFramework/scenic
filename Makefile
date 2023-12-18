@@ -53,16 +53,12 @@ docs_report:
 	MIX_ENV=docs mix inch.report
 
 $(BUILD)/%.o: c_src/%.c
+	@echo " CC $(notdir $@)"
 	$(CC) -c $(ERL_CFLAGS) $(CFLAGS) -o $@ $<
 
-$(PREFIX)/line.so: $(BUILD)/line.o
-	$(CC) $^ $(ERL_LDFLAGS) $(LDFLAGS) -o $@
-
-$(PREFIX)/matrix.so: $(BUILD)/matrix.o
-	$(CC) $^ $(ERL_LDFLAGS) $(LDFLAGS) -o $@
-
-$(PREFIX)/bitmap.so: $(BUILD)/bitmap.o
-	$(CC) $^ $(ERL_LDFLAGS) $(LDFLAGS) -o $@
+$(PREFIX)/%.so: $(BUILD)/%.o
+	@echo " LD $(notdir $@)"
+	$(CC) $< $(ERL_LDFLAGS) $(LDFLAGS) -o $@
 
 $(PREFIX) $(BUILD):
 	mkdir -p $@
@@ -70,3 +66,5 @@ $(PREFIX) $(BUILD):
 clean:
 	$(RM) $(NIF) c_src/*.o
 
+# Don't echo commands unless the caller exports "V=1"
+${V}.SILENT:
