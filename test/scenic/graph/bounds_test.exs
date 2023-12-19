@@ -155,7 +155,7 @@ defmodule Scenic.Graph.BoundsTest do
   end
 
   test "finds the natural bounds of a single sprite" do
-    graph = Graph.build() |> sprites({:parrot, [{{0, 0}, {10, 10}, {10, 20}, {30, 15}}]})
+    graph = Graph.build() |> sprites({:parrot, [{{0, 0}, {10, 10}, {10, 20}, {30, 15}, 1}]})
     {10.0, 20.0, 40.0, 35.0} = Graph.bounds(graph)
   end
 
@@ -165,8 +165,8 @@ defmodule Scenic.Graph.BoundsTest do
       |> sprites(
         {:parrot,
          [
-           {{0, 0}, {10, 10}, {10, 20}, {30, 15}},
-           {{0, 0}, {10, 10}, {40, -3}, {30, 15}}
+           {{0, 0}, {10, 10}, {10, 20}, {30, 15}, 1},
+           {{0, 0}, {10, 10}, {40, -3}, {30, 15}, 1}
          ]}
       )
 
