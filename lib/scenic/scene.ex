@@ -722,7 +722,10 @@ defmodule Scenic.Scene do
   def request_input(scene, input_class)
   def request_input(scene, input) when is_atom(input), do: request_input(scene, [input])
 
-  def request_input(%Scene{viewport: vp, pid: pid}, inputs) when is_list(inputs) do
+  def request_input(%Scene{viewport: vp, pid: pid, module: module}, inputs) when is_list(inputs) do
+    unless Kernel.function_exported?(module, :handle_input, 3) do
+      Logger.warn("Requesting input for #{inspect inputs} - #{module}.handle_input/3 not implemented")
+    end
     ViewPort.Input.request(vp, inputs, pid: pid)
   end
 
