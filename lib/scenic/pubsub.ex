@@ -74,9 +74,9 @@ defmodule Scenic.PubSub do
 
   event | message sent to subscribers
   --- | ---
-  data published | `{{Scenic.PubSub, :data}, {source_id, value, timestamp}}` 
-  source registered | `{{Scenic.PubSub, :registered}, {source_id, opts}}` 
-  source unregistered | `{{Scenic.PubSub, :unregistered}, source_id}` 
+  data published | `{{Scenic.PubSub, :data}, {source_id, value, timestamp}}`
+  source registered | `{{Scenic.PubSub, :registered}, {source_id, opts}}`
+  source unregistered | `{{Scenic.PubSub, :unregistered}, source_id}`
 
 
 
@@ -186,7 +186,7 @@ defmodule Scenic.PubSub do
 
   If the data source is either not registered, or has not yet published any data, get returns
 
-        {:error, :no_data} 
+        {:error, :no_data}
   """
 
   @spec fetch(source_id :: atom) :: {:ok, any} | {:error, :not_found}
@@ -220,7 +220,7 @@ defmodule Scenic.PubSub do
 
   If the data source is either not registered, or has not yet published any data, get returns
 
-        {:error, :not_found} 
+        {:error, :not_found}
   """
 
   @spec query(source_id :: atom) :: {:ok, any} | {:error, :not_found}
@@ -296,6 +296,9 @@ defmodule Scenic.PubSub do
     end
   end
 
+  @subscribe_opts_schema [
+    immediate: [type: :boolean, doc: "If false, current value will not be sent immediately"]
+  ]
   # --------------------------------------------------------
   @doc """
   Subscribe the calling process to receive events about a data source.
@@ -304,20 +307,29 @@ defmodule Scenic.PubSub do
 
   event | message sent to subscribers
   --- | ---
-  data published | `{{Scenic.PubSub, :data}, {source_id, value, timestamp}}` 
-  source registered | `{{Scenic.PubSub, :registered}, {source_id, opts}}` 
-  source unregistered | `{{Scenic.PubSub, :unregistered}, source_id}` 
+  data published | `{{Scenic.PubSub, :data}, {source_id, value, timestamp}}`
+  source registered | `{{Scenic.PubSub, :registered}, {source_id, opts}}`
+  source unregistered | `{{Scenic.PubSub, :unregistered}, source_id}`
 
   ## Parameters
   * `source_id` an atom that is registered to a data source.
+  * `opts` options.
+
+  Supported options:\n#{NimbleOptions.docs(@subscribe_opts_schema)}
 
   ## Return Value
 
   On success, returns `:ok`
   """
-  @spec subscribe(source_id :: atom) :: :ok
-  def subscribe(source_id) when is_atom(source_id) do
-    GenServer.call(@name, {:subscribe, source_id, self()})
+  @spec subscribe(source_id :: atom, opts :: Keyword.t()) :: :ok
+  def subscribe(source_id, opts \\ []) when is_atom(source_id) do
+    case NimbleOptions.validate(opts, @subscribe_opts_schema) do
+      {:ok, opts} -> opts
+      {:error, error} -> raise Error, message: error, source_id: source_id
+    end
+
+    immediate = Keyword.get(opts, :immediate, true)
+    GenServer.call(@name, {:subscribe, immediate, source_id, self()})
   end
 
   # --------------------------------------------------------
@@ -469,13 +481,15 @@ defmodule Scenic.PubSub do
 
   # --------------------------------------------------------
   @doc false
-  def handle_call({:subscribe, source_id, pid}, _from, state) do
+  def handle_call({:subscribe, immediate, source_id, pid}, _from, state) do
     {reply, state} = do_subscribe(pid, source_id, state)
 
     # send the already-set value if one is set
-    case query(source_id) do
-      {:ok, data} -> send(pid, {@data, data})
-      _ -> :ok
+    if immediate do
+      case query(source_id) do
+        {:ok, data} -> send(pid, {@data, data})
+        _ -> :ok
+      end
     end
 
     {:reply, reply, state}
