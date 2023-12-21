@@ -49,6 +49,7 @@ defmodule Scenic.Primitive.Style do
   """
 
   alias Scenic.Primitive.Style
+  alias Scenic.Themes
 
   # import IEx
 
@@ -85,7 +86,7 @@ defmodule Scenic.Primitive.Style do
     :stroke => Style.Stroke,
     :text_align => Style.TextAlign,
     :text_base => Style.TextBase,
-    :theme => Style.Theme
+    :theme => Themes
   }
 
   @valid_styles @opts_map
@@ -106,7 +107,7 @@ defmodule Scenic.Primitive.Style do
     stroke: [type: {:custom, Style.Stroke, :validate, []}],
     text_align: [type: {:custom, Style.TextAlign, :validate, []}],
     text_base: [type: {:custom, Style.TextBase, :validate, []}],
-    theme: [type: {:custom, Style.Theme, :validate, []}]
+    theme: [type: {:custom, Themes, :validate, []}]
   ]
 
   @callback validate(data :: any) :: {:ok, data :: any} | {:error, String.t()}

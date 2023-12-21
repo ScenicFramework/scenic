@@ -134,7 +134,7 @@ defmodule Scenic.SceneTest do
     %ViewPort{} = vp
     assert is_pid(pid)
     assert module == TestSceneNoKids
-    assert theme == :dark
+    assert theme == {:scenic, :dark}
     assert is_pid(parent)
     assert children == nil
     assert child_supervisor == nil
@@ -167,7 +167,7 @@ defmodule Scenic.SceneTest do
     %ViewPort{} = vp
     assert is_pid(pid)
     assert module == TestSceneKids
-    assert theme == :dark
+    assert theme == {:scenic, :dark}
     assert is_pid(parent)
     %{} = children
     assert is_pid(child_supervisor)

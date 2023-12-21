@@ -12,7 +12,7 @@ defmodule Scenic.Graph.Compiler do
   alias Scenic.Primitive
   alias Scenic.Graph
   alias Scenic.Color
-  alias Scenic.Primitive.Style.Theme
+  alias Scenic.Themes
   alias Scenic.Graph.Compiler
 
   # import IEx
@@ -271,7 +271,7 @@ defmodule Scenic.Graph.Compiler do
   defp do_text_color(ops, %{reqs: %{theme: theme}} = state) do
     color =
       theme
-      |> Theme.normalize()
+      |> Themes.normalize()
       |> Map.get(:text)
       |> Color.to_rgba()
 

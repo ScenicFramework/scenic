@@ -84,7 +84,7 @@ defmodule Scenic.Component.Input.Dropdown do
 
   alias Scenic.Graph
   alias Scenic.Scene
-  alias Scenic.Primitive.Style.Theme
+  alias Scenic.Themes
   import Scenic.Primitives
   alias Scenic.Assets.Static
 
@@ -188,8 +188,8 @@ defmodule Scenic.Component.Input.Dropdown do
 
     # theme is passed in as an inherited style
     theme =
-      (opts[:theme] || Theme.preset(:dark))
-      |> Theme.normalize()
+      (opts[:theme] || Themes.preset({:scenic, :dark}))
+      |> Themes.normalize()
 
     # font related info
     {:ok, {Static.Font, fm}} = Static.meta(@default_font)

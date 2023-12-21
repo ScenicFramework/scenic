@@ -66,7 +66,7 @@ defmodule Scenic.Scenes.Error do
 
     graph =
       Graph.build(font: @default_font, font_size: @size, translate: {@margin_h, @margin_v})
-      |> button("Try Again", id: :try_again, theme: :warning)
+      |> button("Try Again", id: :try_again, theme: {:scenic, :warning})
       |> text(head_msg, translate: {0, head_v}, font_size: @size + 4)
       |> text(args_msg, translate: {0, args_v}, fill: @args_color)
       |> text(err_msg, translate: {0, err_v}, fill: @error_color)

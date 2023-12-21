@@ -19,7 +19,7 @@ defmodule Scenic.ViewPort do
 
   # alias Scenic.Utilities
   alias Scenic.Utilities.Validators
-  alias Scenic.Primitive.Style.Theme
+  alias Scenic.Themes
 
   require Logger
 
@@ -134,7 +134,7 @@ defmodule Scenic.ViewPort do
       required: true,
       type: {:custom, Validators, :validate_scene, [:default_scene]}
     ],
-    theme: [type: {:custom, Theme, :validate, []}, default: :dark],
+    theme: [type: {:custom, Themes, :validate, []}, default: {:scenic, :dark}],
     drivers: [type: {:custom, Driver, :validate, []}, default: []],
     input_filter: [type: {:custom, __MODULE__, :validate_input_filter, []}, default: :all],
     opts: [
@@ -413,7 +413,7 @@ defmodule Scenic.ViewPort do
   def set_theme(viewport, theme)
 
   def set_theme(%ViewPort{pid: pid}, theme) do
-    case Theme.validate(theme) do
+    case Themes.validate(theme) do
       # {:ok, theme} -> GenServer.cast( pid, {:set_theme, theme} )
       {:ok, theme} -> GenServer.call(pid, {:set_theme, theme})
       err -> err
@@ -534,7 +534,7 @@ defmodule Scenic.ViewPort do
       # ets table for scripts. Public. Readable and Writable by others. The intended
       # use is that Scenes compile graphs in their own process and insert the scripts
       # in parallel to each other. (Trying to avoid serializing the VP on large messages)
-      # containing either script of graph data. The scripts can be read by multiple 
+      # containing either script of graph data. The scripts can be read by multiple
       # drivers at the same time, so is read parallel optimized. If the public write
       # becomes problematic, the next step is to have the scripts compile, then send
       # finished scripts to the VP for writing.
@@ -865,7 +865,7 @@ defmodule Scenic.ViewPort do
     # get the background from the theme
     background =
       theme
-      |> Theme.normalize()
+      |> Themes.normalize()
       |> Map.get(:background)
 
     send(pid, {@clear_color, background})
@@ -1189,7 +1189,7 @@ defmodule Scenic.ViewPort do
 
     background =
       theme
-      |> Theme.normalize()
+      |> Themes.normalize()
       |> Map.get(:background)
 
     case DynamicSupervisor.start_child(driver_sup, {Driver, {info, opts}}) do
@@ -1206,7 +1206,7 @@ defmodule Scenic.ViewPort do
     # get the background from the theme
     background =
       theme
-      |> Theme.normalize()
+      |> Themes.normalize()
       |> Map.get(:background)
 
     # tell the drivers the background changed
@@ -1659,7 +1659,7 @@ defmodule Scenic.ViewPort do
   # skip script primitives - no input handlers there
   defp comp_input_prim(input, _uid, %Primitive{module: Primitive.Script}, _, _tx), do: input
 
-  # it is a group. Calc the local transform if there one, but doesn't go into the 
+  # it is a group. Calc the local transform if there one, but doesn't go into the
   # list as a component itself...
   defp comp_input_prim(
          input,
