@@ -31,6 +31,12 @@ defmodule Scenic.Component.Input.Dropdown do
 
   `{:value_changed, id, selected_item_id}`
 
+  It also send the following events:
+
+  `{:dropdown_opened, id}` - sent when the dropdown opens
+  `{:dropdown_closed, id}` - sent when the dropdown closes
+  `{:dropdown_item_hover, id, item_id}` - sent when and item is hovered
+
   ## Options
 
   Dropdowns honor the following list of options.
@@ -431,6 +437,7 @@ defmodule Scenic.Component.Input.Dropdown do
         %Scene{
           assigns: %{
             down: true,
+            id: component_id,
             items: items,
             graph: graph,
             selected_id: selected_id,
@@ -440,6 +447,8 @@ defmodule Scenic.Component.Input.Dropdown do
       ) do
     # set the appropriate hilighting for each of the items
     graph = update_highlighting(graph, items, selected_id, id, theme)
+
+    :ok = send_parent_event(scene, {:dropdown_item_hover, component_id, id})
 
     scene =
       scene
@@ -453,10 +462,12 @@ defmodule Scenic.Component.Input.Dropdown do
   def handle_input(
         {:cursor_button, {:btn_left, 1, _, _}},
         @button_id,
-        %Scene{assigns: %{down: false, graph: graph, rotate_caret: rotate_caret}} = scene
+        %Scene{assigns: %{down: false, graph: graph, id: id, rotate_caret: rotate_caret}} = scene
       ) do
     # capture input
     :ok = capture_input(scene, [:cursor_button, :cursor_pos])
+
+    :ok = send_parent_event(scene, {:dropdown_opened, id})
 
     # drop the menu
     graph =
@@ -483,6 +494,7 @@ defmodule Scenic.Component.Input.Dropdown do
             theme: theme,
             items: items,
             graph: graph,
+            id: id,
             selected_id: selected_id
           }
         } = scene
@@ -495,6 +507,8 @@ defmodule Scenic.Component.Input.Dropdown do
       |> Graph.modify(@dropbox_id, &update_opts(&1, hidden: true))
 
     :ok = release_input(scene)
+
+    :ok = send_parent_event(scene, {:dropdown_closed, id})
 
     scene =
       scene

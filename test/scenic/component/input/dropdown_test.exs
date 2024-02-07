@@ -29,6 +29,9 @@ defmodule Scenic.Component.Input.DropdownTest do
   @press_out {:cursor_button, {:btn_left, 1, [], {1000, 1000}}}
   @release_out {:cursor_button, {:btn_left, 1, [], {1000, 1000}}}
 
+  @hover_a {:cursor_pos, {20, 50}}
+  @hover_b {:cursor_pos, {20, 80}}
+
   defmodule TestScene do
     use Scenic.Scene
     import Scenic.Components
@@ -90,13 +93,18 @@ defmodule Scenic.Component.Input.DropdownTest do
     assert_receive({:fwd_event, {:value_changed, :dropdown, 1}}, 100)
   end
 
-  test "press_in/release_in/press_in does nothing", %{vp: vp, comp_pid: comp_pid} do
+  test "press_in/release_in/press_in will fire open and close events", %{
+    vp: vp,
+    comp_pid: comp_pid
+  } do
     Input.send(vp, @press_in)
     force_sync(vp.pid, comp_pid)
     Input.send(vp, @release_in)
     force_sync(vp.pid, comp_pid)
-    Input.send(vp, @press_in)
+    assert_receive({:fwd_event, {:dropdown_opened, :dropdown}}, 100)
 
+    Input.send(vp, @press_in)
+    assert_receive({:fwd_event, {:dropdown_closed, :dropdown}}, 100)
     refute_receive(_, 10)
   end
 
@@ -119,6 +127,8 @@ defmodule Scenic.Component.Input.DropdownTest do
     force_sync(vp.pid, comp_pid)
     Input.send(vp, @release_in)
     force_sync(vp.pid, comp_pid)
+    assert_receive({:fwd_event, {:dropdown_opened, :dropdown}}, 100)
+
     Input.send(vp, @press_a)
     assert_receive({:fwd_event, {:value_changed, :dropdown, 1}}, 100)
   end
@@ -128,15 +138,18 @@ defmodule Scenic.Component.Input.DropdownTest do
     force_sync(vp.pid, comp_pid)
     Input.send(vp, @release_in)
     force_sync(vp.pid, comp_pid)
+    assert_receive({:fwd_event, {:dropdown_opened, :dropdown}}, 100)
+
     Input.send(vp, @press_b)
     assert_receive({:fwd_event, {:value_changed, :dropdown, 2}}, 100)
   end
 
-  test "Press in and release out does not send the event", %{vp: vp, comp_pid: comp_pid} do
+  test "Press in and release out send only opened event", %{vp: vp, comp_pid: comp_pid} do
     Input.send(vp, @press_in)
     force_sync(vp.pid, comp_pid)
-    Input.send(vp, @release_out)
+    assert_receive({:fwd_event, {:dropdown_opened, :dropdown}}, 100)
 
+    Input.send(vp, @release_out)
     refute_receive(_, 10)
   end
 
@@ -144,6 +157,24 @@ defmodule Scenic.Component.Input.DropdownTest do
     Input.send(vp, @press_out)
     force_sync(vp.pid, comp_pid)
     Input.send(vp, @release_in)
+
+    refute_receive(_, 10)
+  end
+
+  test "", %{vp: vp, comp_pid: comp_pid} do
+    Input.send(vp, @press_in)
+    force_sync(vp.pid, comp_pid)
+    Input.send(vp, @release_in)
+    force_sync(vp.pid, comp_pid)
+    assert_receive({:fwd_event, {:dropdown_opened, :dropdown}}, 100)
+
+    Input.send(vp, @hover_a)
+    force_sync(vp.pid, comp_pid)
+    assert_receive({:fwd_event, {:dropdown_item_hover, :dropdown, 1}}, 100)
+
+    Input.send(vp, @hover_b)
+    force_sync(vp.pid, comp_pid)
+    assert_receive({:fwd_event, {:dropdown_item_hover, :dropdown, 2}}, 100)
 
     refute_receive(_, 10)
   end

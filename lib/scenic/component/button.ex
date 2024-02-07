@@ -22,7 +22,16 @@ defmodule Scenic.Component.Button do
   If a button press is successful, it sends an event message to the host scene
   in the form of:
 
-      {:click, id}
+      `{:click, id}`
+
+  This event is only sent after the button is released. There're also, though,
+  two other events that you can receive:
+
+      `{:btn_pressed, id}`
+
+  and
+
+      `{:btn_released, id}`
 
   These messages can be received and handled in your scene via
   `c:Scenic.Scene.handle_event/3`. For example:
@@ -296,9 +305,10 @@ defmodule Scenic.Component.Button do
   def handle_input(
         {:cursor_button, {:btn_left, 1, _, _}},
         :btn,
-        %Scene{assigns: %{graph: graph, theme: theme}} = scene
+        %Scene{assigns: %{id: id, graph: graph, theme: theme}} = scene
       ) do
     :ok = capture_input(scene, :cursor_button)
+    :ok = send_parent_event(scene, {:btn_pressed, id})
 
     graph = update_color(graph, theme, true)
 
@@ -340,6 +350,7 @@ defmodule Scenic.Component.Button do
       ) do
     :ok = release_input(scene)
     :ok = send_parent_event(scene, {:click, id})
+    :ok = send_parent_event(scene, {:btn_released, id})
 
     graph = update_color(graph, theme, false)
 
