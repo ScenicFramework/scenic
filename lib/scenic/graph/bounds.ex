@@ -337,10 +337,10 @@ defmodule Scenic.Graph.Bounds do
     # special case vertical lines so we don't divide by zero
     sa =
       case Vector2.normalize(v_c_start) do
-        {0.0, 1.0} ->
+        {+0.0, 1.0} ->
           @tau_14
 
-        {0.0, -1.0} ->
+        {+0.0, -1.0} ->
           -1 * @tau_14
 
         {x, y} ->

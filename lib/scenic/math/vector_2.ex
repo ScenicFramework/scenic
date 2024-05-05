@@ -264,7 +264,7 @@ defmodule Scenic.Math.Vector2 do
 
   def normalize({ax, ay}) do
     case Vector2.length({ax, ay}) do
-      0.0 ->
+      +0.0 ->
         {ax, ay}
 
       len ->
