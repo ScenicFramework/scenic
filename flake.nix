@@ -19,9 +19,6 @@
         buildInputs = [
           elixir
           elixir_ls
-#          glibcLocales
-#          glew glfw pkg-config
-#          xorg.libX11 xorg.libXau xorg.libXdmcp
         ] ++ optional stdenv.isLinux inotify-tools
           ++ optional stdenv.isDarwin terminal-notifier
           ++ optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [
