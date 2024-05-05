@@ -238,7 +238,7 @@ defmodule Scenic.ScriptTest do
   end
 
   test "draw_sprites works" do
-    cmds = [{{10, 11}, {30, 40}, {2, 3}, {60, 70}}]
+    cmds = [{{10, 11}, {30, 40}, {2, 3}, {60, 70}, 1}]
     expected = [{:draw_sprites, {"VvWQFjblIwTGsvGx866t8MIG2czWyIc8by6Xc88AOns", cmds}}]
     assert Script.draw_sprites([], :parrot, cmds) == expected
     assert expected == Script.serialize(expected) |> Script.deserialize()

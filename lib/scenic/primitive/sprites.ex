@@ -25,10 +25,15 @@ defmodule Scenic.Primitive.Sprites do
   are executed in order when the primitive renders.
 
   `[ {{src_x, src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}} ]`
+  or
+  `[ {{src_x, src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}}, alpha ]`
 
   Each draw command is an x/y position and width/height of a rectangle in
   the source image, followed by the x/y position and width/height
   rectangle in the destination space.
+
+  An optional alpha channel can be set in last position to apply a transparency
+  effect on the sprite.
 
   In other words, This copies rectangular images from the source
   indicated by image_id and draws them in the coordinate space of
@@ -59,14 +64,16 @@ defmodule Scenic.Primitive.Sprites do
   You should add/modify primitives via the helper functions in
   [`Scenic.Primitives`](Scenic.Primitives.html#sprites/3)
 
-  This example draws the same source rectangle twice in different locations.
-  The first is at full size, the second is expanded 10x.
+  This example draws the same source rectangle three times in different locations.
+  The first is at full size, the second is expanded 10x, the third is with a
+  50% transparency effect.
 
   ```elixir
   graph
     |> sprites( { "images/my_sprites.png", [
       {{0,0}, {10, 20}, {10, 10}, {10, 20}},
       {{0,0}, {10, 20}, {100, 100}, {100, 200}},
+      {{0,0}, {10, 20}, {100, 100}, {100, 200}, 0.5}
     ]})
   ```
   """
@@ -81,7 +88,8 @@ defmodule Scenic.Primitive.Sprites do
           {sx :: number, sy :: number},
           {sw :: number, sh :: number},
           {dx :: number, dy :: number},
-          {dw :: number, dh :: number}
+          {dw :: number, dh :: number},
+          alpha :: number
         }
   @type draw_cmds :: [draw_cmd()]
 
@@ -217,22 +225,39 @@ defmodule Scenic.Primitive.Sprites do
     end
   end
 
+  @default_alpha 1
+
   defp validate_commands(commands) do
-    commands
-    |> Enum.reduce({:ok, commands}, fn
-      _, {:error, _} = error ->
-        error
+    validate =
+      Enum.reduce_while(commands, {:ok, []}, fn
+        {{src_x, src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}}, {:ok, cmds}
+        when is_number(src_x) and is_number(src_y) and
+               is_number(src_w) and is_number(src_h) and
+               is_number(dst_x) and is_number(dst_y) and
+               is_number(dst_w) and is_number(dst_h) ->
+          {:cont,
+           {:ok,
+            [
+              {{src_x, src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}, @default_alpha}
+              | cmds
+            ]}}
 
-      {{src_x, src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}}, acc
-      when is_number(src_x) and is_number(src_y) and
-             is_number(src_w) and is_number(src_h) and
-             is_number(dst_x) and is_number(dst_y) and
-             is_number(dst_w) and is_number(dst_h) ->
-        acc
+        cmd = {{src_x, src_y}, {src_w, src_h}, {dst_x, dst_y}, {dst_w, dst_h}, alpha}, {:ok, cmds}
+        when is_number(src_x) and is_number(src_y) and
+               is_number(src_w) and is_number(src_h) and
+               is_number(dst_x) and is_number(dst_y) and
+               is_number(dst_w) and is_number(dst_h) and
+               is_number(alpha) ->
+          {:cont, {:ok, [cmd | cmds]}}
 
-      cmd, _ ->
-        {:error, :command, cmd}
-    end)
+        cmd, _ ->
+          {:halt, {:error, :command, cmd}}
+      end)
+
+    case validate do
+      {:ok, cmds} -> {:ok, Enum.reverse(cmds)}
+      error -> error
+    end
   end
 
   # --------------------------------------------------------
