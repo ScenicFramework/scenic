@@ -83,15 +83,22 @@ defmodule Scenic.Component.ButtonTest do
     refute_receive(_, 10)
   end
 
-  test "Press in and release in sends the event", %{vp: vp} do
+  test "Press in and release in sends 'click' and 'btn_released' events", %{vp: vp} do
     Input.send(vp, @press_in)
     Input.send(vp, @release_in)
     assert_receive({:fwd_event, {:click, :test_btn}}, 200)
+    assert_receive({:fwd_event, {:btn_released, :test_btn}}, 200)
+  end
+
+  test "Press in sends a btn_pressed event", %{vp: vp} do
+    Input.send(vp, @press_in)
+    assert_receive({:fwd_event, {:btn_pressed, :test_btn}}, 200)
   end
 
   test "Press in and release out does not send the event", %{vp: vp} do
     Input.send(vp, @press_in)
     Input.send(vp, @release_out)
+    assert_receive({:fwd_event, {:btn_pressed, :test_btn}}, 10)
     refute_receive(_, 10)
   end
 
