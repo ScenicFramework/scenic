@@ -106,15 +106,16 @@ defmodule Scenic.Primitive.RoundedRectangle do
 
   # --------------------------------------------------------
   def default_pin(data), do: centroid(data)
+  def default_pin(data, _styles), do: centroid(data)
 
   # --------------------------------------------------------
   @doc """
-  Returns a the centroid of the rectangle. This is used as the default pin when applying
+  Returns the centroid of the rectangle. This is used as the default pin when applying
   rotate or scale transforms.
   """
   def centroid(data)
 
-  def centroid({width, height, _}) do
+  def centroid({width, height, _radius}) do
     {width / 2, height / 2}
   end
 
@@ -151,11 +152,5 @@ defmodule Scenic.Primitive.RoundedRectangle do
     else
       false
     end
-  end
-
-  # --------------------------------------------------------
-  @doc false
-  def default_pin({width, height, _radius}, _styles) do
-    {width / 2, height / 2}
   end
 end

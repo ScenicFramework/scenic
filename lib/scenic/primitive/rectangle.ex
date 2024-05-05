@@ -90,6 +90,7 @@ defmodule Scenic.Primitive.Rectangle do
 
   # --------------------------------------------------------
   def default_pin(data), do: centroid(data)
+  def default_pin(data, _styles), do: centroid(data)
 
   # --------------------------------------------------------
   @doc """
@@ -109,11 +110,5 @@ defmodule Scenic.Primitive.Rectangle do
     # xp must be less than the width
     # yp must be less than the height
     xp * w >= 0 && yp * h >= 0 && abs(xp) <= abs(w) && abs(yp) <= abs(h)
-  end
-
-  # --------------------------------------------------------
-  @doc false
-  def default_pin({width, height}, _styles) do
-    {width / 2, height / 2}
   end
 end
