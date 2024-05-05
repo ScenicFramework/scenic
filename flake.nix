@@ -1,5 +1,5 @@
 {
-  description = "Flake for building scenic driver local.";
+  description = "Flake for building scenic.";
 
   inputs = {
     nixpkgs = { url = "github:NixOS/nixpkgs/nixos-23.05"; };
