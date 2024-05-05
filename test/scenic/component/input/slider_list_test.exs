@@ -159,7 +159,7 @@ defmodule Scenic.Component.Input.SliderListTest do
       Scenic.Graph.build()
       |> Scenic.Components.slider({[:a, :b, :c, :d, :e], :b}, id: :sl)
 
-    {0.0, 0.0, 300.0, 18.0} = Scenic.Graph.bounds(graph)
+    {+0.0, +0.0, 300.0, 18.0} = Scenic.Graph.bounds(graph)
   end
 
   test "bounds works with overrides" do
@@ -167,6 +167,6 @@ defmodule Scenic.Component.Input.SliderListTest do
       Graph.build()
       |> Scenic.Components.slider({[:a, :b, :c, :d, :e], :b}, id: :sl, width: 400)
 
-    assert Graph.bounds(graph) == {0.0, 0.0, 400.0, 18.0}
+    assert Graph.bounds(graph) == {+0.0, +0.0, 400.0, 18.0}
   end
 end

@@ -113,10 +113,10 @@ defmodule Scenic.ColorTest do
 
     assert Color.to_hsv(0) == {:color_hsv, {0, 0, 0}}
 
-    {:color_hsv, {0.0, 0.0, v}} = Color.to_hsv(128)
+    {:color_hsv, {+0.0, +0.0, v}} = Color.to_hsv(128)
     assert v > 50 && v < 51
 
-    {:color_hsv, {0.0, 0.0, v}} = Color.to_hsv({128, 200})
+    {:color_hsv, {+0.0, +0.0, v}} = Color.to_hsv({128, 200})
     assert v > 50 && v < 51
 
     assert Color.to_hsv(:bisque) |> Color.to_rgb() == rgb
@@ -130,10 +130,10 @@ defmodule Scenic.ColorTest do
     hsl = Color.to_hsl(:bisque)
     rgb = Color.to_rgb(:bisque)
 
-    {:color_hsv, {0.0, 0.0, v}} = Color.to_hsv({:color_g, 128})
+    {:color_hsv, {+0.0, +0.0, v}} = Color.to_hsv({:color_g, 128})
     assert v > 50 && v < 51
 
-    {:color_hsv, {0.0, 0.0, v}} = Color.to_hsv({:color_ga, {128, 200}})
+    {:color_hsv, {+0.0, +0.0, v}} = Color.to_hsv({:color_ga, {128, 200}})
     assert v > 50 && v < 51
 
     assert Color.to_hsv(rgb) |> Color.to_rgb() == rgb
@@ -148,10 +148,10 @@ defmodule Scenic.ColorTest do
 
     assert Color.to_hsl(0) == {:color_hsl, {0, 0, 0}}
 
-    {:color_hsl, {0.0, 0.0, l}} = Color.to_hsl(128)
+    {:color_hsl, {+0.0, +0.0, l}} = Color.to_hsl(128)
     assert l > 50 && l < 51
 
-    {:color_hsl, {0.0, 0.0, l}} = Color.to_hsl({128, 200})
+    {:color_hsl, {+0.0, +0.0, l}} = Color.to_hsl({128, 200})
     assert l > 50 && l < 51
 
     assert Color.to_hsl(:bisque) |> Color.to_rgb() == rgb
@@ -164,10 +164,10 @@ defmodule Scenic.ColorTest do
     # from bisque
     rgb = Color.to_rgb(:bisque)
 
-    {:color_hsl, {0.0, 0.0, l}} = Color.to_hsl({:color_g, 128})
+    {:color_hsl, {+0.0, +0.0, l}} = Color.to_hsl({:color_g, 128})
     assert l > 50 && l < 51
 
-    {:color_hsl, {0.0, 0.0, l}} = Color.to_hsl({:color_ga, {128, 200}})
+    {:color_hsl, {+0.0, +0.0, l}} = Color.to_hsl({:color_ga, {128, 200}})
     assert l > 50 && l < 51
 
     assert Color.to_hsl({:color_rgb, {0xFF, 0xE4, 0xC4}}) |> Color.to_rgb() == rgb

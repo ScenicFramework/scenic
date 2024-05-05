@@ -106,7 +106,7 @@ defmodule Scenic.Component.Input.RadioButtonTest do
       Scenic.Graph.build()
       |> RadioButton.add_to_graph({"Radio Button", :rb, false}, id: :btn)
 
-    {0.0, 0.0, r, b} = Scenic.Graph.bounds(graph)
+    {+0.0, +0.0, r, b} = Scenic.Graph.bounds(graph)
     assert r > 140 && r < 141
     assert b > 23 && b < 24
   end

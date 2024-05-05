@@ -9,8 +9,6 @@ defmodule Scenic.Graph.BoundsTest do
 
   alias Scenic.Graph
 
-  # import IEx
-
   import Scenic.Primitives
 
   defmodule ComponentBounds do
@@ -28,7 +26,7 @@ defmodule Scenic.Graph.BoundsTest do
 
   test "finds the natural bounds of an arc" do
     graph = Graph.build() |> arc({100, 1.2})
-    {l, 0.0, 100.0, b} = Graph.bounds(graph)
+    {l, +0.0, 100.0, b} = Graph.bounds(graph)
     assert l > 36 && l < 37
     assert b > 93 && b < 94
   end
@@ -150,7 +148,7 @@ defmodule Scenic.Graph.BoundsTest do
 
   test "finds the natural bounds of a sector" do
     graph = Graph.build() |> sector({100, 1.2})
-    {0.0, 0.0, 100.0, b} = Graph.bounds(graph)
+    {+0.0, +0.0, 100.0, b} = Graph.bounds(graph)
     assert b > 93 && b < 94
   end
 
@@ -183,7 +181,7 @@ defmodule Scenic.Graph.BoundsTest do
       )
       |> text("This is a test")
 
-    {0.0, 0.0, w, h} = Graph.bounds(graph)
+    {+0.0, +0.0, w, h} = Graph.bounds(graph)
     assert w > 168 && w < 169
     assert h > 26 && h < 27
   end
@@ -199,7 +197,7 @@ defmodule Scenic.Graph.BoundsTest do
       )
       |> text("This is a test\nMulti line")
 
-    {0.0, 0.0, w, h} = Graph.bounds(graph)
+    {+0.0, +0.0, w, h} = Graph.bounds(graph)
 
     assert w > 168 && w < 169
     assert h > 58 && h < 59

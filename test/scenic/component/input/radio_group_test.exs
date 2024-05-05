@@ -221,7 +221,7 @@ defmodule Scenic.Component.Input.RadioGroupTest do
         id: :rg
       )
 
-    {0.0, 0.0, r, 72.0} = Scenic.Graph.bounds(graph)
+    {+0.0, +0.0, r, 72.0} = Scenic.Graph.bounds(graph)
     assert r > 94 && r < 95
   end
 end

@@ -199,7 +199,7 @@ defmodule Scenic.Component.Input.DropdownTest do
       Graph.build()
       |> Scenic.Components.dropdown({[{"Option One", 1}, {"Option Two", 2}], 2}, id: :dd)
 
-    {0.0, 0.0, r, b} = Graph.bounds(graph)
+    {+0.0, +0.0, r, b} = Graph.bounds(graph)
     assert r > 157 && r < 158
     assert b > 38 && b < 39
   end

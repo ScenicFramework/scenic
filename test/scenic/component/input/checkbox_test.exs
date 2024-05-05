@@ -112,7 +112,7 @@ defmodule Scenic.Component.Input.CheckboxTest do
       Graph.build()
       |> Scenic.Components.checkbox({"Test Checkbox", false})
 
-    {0.0, 0.0, r, b} = Graph.bounds(graph)
+    {+0.0, +0.0, r, b} = Graph.bounds(graph)
     assert r > 157 && r < 158
     assert b > 23 && b < 24
   end
