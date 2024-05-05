@@ -339,7 +339,7 @@ defmodule Scenic.Component.Input.TextFieldTest do
       Graph.build()
       |> Scenic.Components.text_field("Test Field")
 
-    {0.0, 0.0, 288.0, 30.0} = Graph.bounds(graph)
+    {+0.0, +0.0, 288.0, 30.0} = Graph.bounds(graph)
   end
 
   test "bounds works with overrides" do
@@ -347,6 +347,6 @@ defmodule Scenic.Component.Input.TextFieldTest do
       Graph.build()
       |> Scenic.Components.text_field("Test Field", width: 300, height: 40)
 
-    {0.0, 0.0, 300.0, 40.0} = Graph.bounds(graph)
+    {+0.0, +0.0, 300.0, 40.0} = Graph.bounds(graph)
   end
 end

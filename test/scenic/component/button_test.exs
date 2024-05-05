@@ -123,7 +123,7 @@ defmodule Scenic.Component.ButtonTest do
       Graph.build()
       |> Scenic.Components.button("Test Button")
 
-    {0.0, 0.0, r, b} = Graph.bounds(graph)
+    {+0.0, +0.0, r, b} = Graph.bounds(graph)
     assert r > 140 && r < 141
     assert b > 38 && b < 39
   end
@@ -133,6 +133,6 @@ defmodule Scenic.Component.ButtonTest do
       Graph.build()
       |> Scenic.Components.button("Test Button", width: 200, height: 100)
 
-    assert Graph.bounds(graph) == {0.0, 0.0, 200.0, 100.0}
+    assert Graph.bounds(graph) == {+0.0, +0.0, 200.0, 100.0}
   end
 end

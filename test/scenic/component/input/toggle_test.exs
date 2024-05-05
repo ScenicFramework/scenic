@@ -111,6 +111,6 @@ defmodule Scenic.Component.Input.ToggleTest do
       Graph.build()
       |> Scenic.Components.toggle(true)
 
-    {0.0, 0.0, 40.0, 24.0} = Graph.bounds(graph)
+    {+0.0, +0.0, 40.0, 24.0} = Graph.bounds(graph)
   end
 end

@@ -41,40 +41,40 @@ defmodule Scenic.Math.Matrix do
   @matrix_size 4 * 16
 
   @matrix_zero <<
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native
   >>
 
   @matrix_identity <<
     1.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
     1.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
     1.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
-    0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
+    +0.0::float-size(32)-native,
     1.0::float-size(32)-native
   >>
 
@@ -116,19 +116,19 @@ defmodule Scenic.Math.Matrix do
   #   <<
   #     v0x::float-size(32)-native,
   #     v0y::float-size(32)-native,
-  #     0.0::float-size(32)-native,
-  #     0.0::float-size(32)-native,
+  #     +0.0::float-size(32)-native,
+  #     +0.0::float-size(32)-native,
   #     v1x::float-size(32)-native,
   #     v1y::float-size(32)-native,
-  #     0.0::float-size(32)-native,
-  #     0.0::float-size(32)-native,
-  #     0.0::float-size(32)-native,
-  #     0.0::float-size(32)-native,
+  #     +0.0::float-size(32)-native,
+  #     +0.0::float-size(32)-native,
+  #     +0.0::float-size(32)-native,
+  #     +0.0::float-size(32)-native,
   #     1.0::float-size(32)-native,
-  #     0.0::float-size(32)-native,
-  #     0.0::float-size(32)-native,
-  #     0.0::float-size(32)-native,
-  #     0.0::float-size(32)-native,
+  #     +0.0::float-size(32)-native,
+  #     +0.0::float-size(32)-native,
+  #     +0.0::float-size(32)-native,
+  #     +0.0::float-size(32)-native,
   #     1.0::float-size(32)-native
   #   >>
   # end
@@ -140,18 +140,18 @@ defmodule Scenic.Math.Matrix do
   #     v0x::float-size(32)-native,
   #     v0y::float-size(32)-native,
   #     v0z::float-size(32)-native,
-  #     0.0::float-size(32)-native,
+  #     +0.0::float-size(32)-native,
   #     v1x::float-size(32)-native,
   #     v1y::float-size(32)-native,
   #     v1z::float-size(32)-native,
-  #     0.0::float-size(32)-native,
+  #     +0.0::float-size(32)-native,
   #     v2x::float-size(32)-native,
   #     v2y::float-size(32)-native,
   #     v2z::float-size(32)-native,
-  #     0.0::float-size(32)-native,
-  #     0.0::float-size(32)-native,
-  #     0.0::float-size(32)-native,
-  #     0.0::float-size(32)-native,
+  #     +0.0::float-size(32)-native,
+  #     +0.0::float-size(32)-native,
+  #     +0.0::float-size(32)-native,
+  #     +0.0::float-size(32)-native,
   #     1.0::float-size(32)-native
   #   >>
   # end
@@ -200,26 +200,26 @@ defmodule Scenic.Math.Matrix do
   """
   @spec build_translation(vector_2 :: Math.vector_2()) :: Math.matrix()
   def build_translation(vector_2)
-  def build_translation({x, y}), do: do_build_translation({x, y, 0.0})
+  def build_translation({x, y}), do: do_build_translation({x, y, +0.0})
   # def build_translation({x, y, z}), do: build_translation(x, y, z)
-  # def build_translation(x, y), do: build_translation(x, y, 0.0)
+  # def build_translation(x, y), do: build_translation(x, y, +0.0)
   defp do_build_translation({x, y, z}) do
     <<
       1.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
       x * 1.0::float-size(32)-native,
-      0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
       1.0::float-size(32)-native,
-      0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
       y * 1.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
       1.0::float-size(32)-native,
       z * 1.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
       1.0::float-size(32)-native
     >>
   end
@@ -243,20 +243,20 @@ defmodule Scenic.Math.Matrix do
   defp do_build_scale({x, y, z}) do
     <<
       x * 1.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
       y * 1.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
       z * 1.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
       1.0::float-size(32)-native
     >>
   end
@@ -290,23 +290,23 @@ defmodule Scenic.Math.Matrix do
   #   sin = :math.sin( radians )
   #   <<
   #     1.0 :: float-size(32)-native,
-  #     0.0 :: float-size(32)-native,
-  #     0.0 :: float-size(32)-native,
-  #     0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
 
-  #     0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
   #     cos :: float-size(32)-native,
   #     sin :: float-size(32)-native,
-  #     0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
 
-  #     0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
   #     -sin :: float-size(32)-native,
   #     cos :: float-size(32)-native,
-  #     0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
 
-  #     0.0 :: float-size(32)-native,
-  #     0.0 :: float-size(32)-native,
-  #     0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
   #     1.0 :: float-size(32)-native
   #   >>
   # end
@@ -316,23 +316,23 @@ defmodule Scenic.Math.Matrix do
   #   sin = :math.sin( radians )
   #   <<
   #     cos :: float-size(32)-native,
-  #     0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
   #     sin :: float-size(32)-native,
-  #     0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
 
-  #     0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
   #     1.0 :: float-size(32)-native,
-  #     0.0 :: float-size(32)-native,
-  #     0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
 
   #     -sin :: float-size(32)-native,
-  #     0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
   #     cos :: float-size(32)-native,
-  #     0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
 
-  #     0.0 :: float-size(32)-native,
-  #     0.0 :: float-size(32)-native,
-  #     0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
+  #     +0.0 :: float-size(32)-native,
   #     1.0 :: float-size(32)-native
   #   >>
   # end
@@ -344,19 +344,19 @@ defmodule Scenic.Math.Matrix do
     <<
       cos::float-size(32)-native,
       -sin::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
       sin::float-size(32)-native,
       cos::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
       1.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
-      0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
+      +0.0::float-size(32)-native,
       1.0::float-size(32)-native
     >>
   end
@@ -579,14 +579,14 @@ defmodule Scenic.Math.Matrix do
   Parameters:
   * matrix_a: The first matrix
   * matrix_b: The second matrix
-  * tolerance: Defines what close means. Defaults to: 0.000001
+  * tolerance: Defines what close means. Defaults to: +0.000001
 
   Returns:
   A boolean
   """
   @spec close?(matrix_a :: Math.matrix(), matrix_a :: Math.matrix(), tolerance :: number) ::
           boolean
-  def close?(matrix_a, matrix_b, tolerance \\ 0.000001)
+  def close?(matrix_a, matrix_b, tolerance \\ +0.000001)
 
   def close?(<<_::binary-size(@matrix_size)>> = a, <<_::binary-size(@matrix_size)>> = b, t)
       when is_float(t) do
@@ -790,7 +790,7 @@ defmodule Scenic.Math.Matrix do
   @spec invert(matrix :: Math.matrix()) :: Math.matrix()
   def invert(matrix) do
     case nif_determinant(matrix) do
-      0.0 ->
+      +0.0 ->
         :err_zero_determinant
 
       det ->
