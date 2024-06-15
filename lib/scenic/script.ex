@@ -184,6 +184,7 @@ defmodule Scenic.Script do
   @op_draw_ellipse 0x09
   @op_draw_text 0x0A
   @op_draw_sprites 0x0B
+  @op_draw_rrectv 0x0C
   @op_draw_script 0x0F
 
   @op_begin_path 0x20
@@ -273,6 +274,10 @@ defmodule Scenic.Script do
               x3 :: number, y3 :: number, fill_stroke()}}
           | {:draw_rect, {width :: number, height :: number, fill_stroke()}}
           | {:draw_rrect, {width :: number, height :: number, radius :: number, fill_stroke()}}
+          | {:draw_rrectv,
+             {width :: number, height :: number, upperLeftRadius :: number,
+              upperRightRadius :: number, lowerRightRadius :: number, lowerLeftRadius :: number,
+              fill_stroke()}}
           | {:draw_sector, {radius :: number, radians :: number, fill_stroke()}}
           | {:draw_arc, {radius :: number, radians :: number, fill_stroke()}}
           | {:draw_circle, {radius :: number, fill_stroke()}}
@@ -533,6 +538,41 @@ defmodule Scenic.Script do
   def draw_rounded_rectangle(ops, width, height, radius, flag) do
     radius = smallest([radius, width / 2, height / 2])
     [{:draw_rrect, {width, height, radius, flag}} | ops]
+  end
+
+  @doc """
+  Draw a rounded rectangle defined by height, width, radius1, radius2, radius3 and radius4. Can be filled or stroked.
+
+  Radii values will be set as follow:
+
+  - Upper left corner: radius1
+  - Upper right corner: radius2
+  - Lower right corner: radius3
+  - Lower left corner: radius4
+
+  Creates a new path and draws it.
+  """
+  @spec draw_variable_rounded_rectangle(
+          ops :: t(),
+          width :: number,
+          height :: number,
+          r1 :: number,
+          r2 :: number,
+          r3 :: number,
+          r4 :: number,
+          fill_stroke_flags :: fill_stroke()
+        ) :: ops :: t()
+  def draw_variable_rounded_rectangle(ops, width, height, r1, r2, r3, r4, flag) do
+    upper_left_radius = smallest([r1, width / 2, height / 2])
+    upper_right_radius = smallest([r2, width / 2, height / 2])
+    lower_right_radius = smallest([r3, width / 2, height / 2])
+    lower_left_radius = smallest([r4, width / 2, height / 2])
+
+    [
+      {:draw_rrectv,
+       {width, height, upper_left_radius, upper_right_radius, lower_right_radius, lower_left_radius, flag}}
+      | ops
+    ]
   end
 
   @doc """
@@ -1510,6 +1550,19 @@ defmodule Scenic.Script do
     ]
   end
 
+  defp serialize_op({:draw_rrectv, {w, h, ulR, urR, lrR, llR, flag}}) do
+    <<
+      @op_draw_rrectv::16-big,
+      to_flag(flag)::16-big,
+      w::float-32-big,
+      h::float-32-big,
+      ulR::float-32-big,
+      urR::float-32-big,
+      lrR::float-32-big,
+      llR::float-32-big
+    >>
+  end
+
   defp serialize_op({:script, id}) do
     [
       <<
@@ -2259,6 +2312,20 @@ defmodule Scenic.Script do
 
     cmds = Enum.reverse(cmds)
     {{:draw_sprites, {id, cmds}}, bin}
+  end
+
+  defp deserialize_op(<<
+         @op_draw_rrectv::16-big,
+         flag::16-big,
+         w::float-32-big,
+         h::float-32-big,
+         ulR::float-32-big,
+         urR::float-32-big,
+         lrR::float-32-big,
+         llR::float-32-big,
+         bin::binary
+       >>) do
+    {{:draw_rrectv, {w, h, ulR, urR, lrR, llR, from_flag(flag)}}, bin}
   end
 
   defp deserialize_op(<<
