@@ -267,7 +267,25 @@ defmodule Scenic.GraphTest do
   end
 
   # ============================================================================
-  test "find returns the matching items" do
+    test "find returns the matching items" do
+      graph =
+        Graph.build()
+        |> Text.add_to_graph("text one", id: {:a, :one})
+        |> Text.add_to_graph("text two", id: {:a, :two})
+        |> Text.add_to_graph("text three", id: {:b, :three})
+
+      # confirm result
+      assert Graph.find(graph, &match?({:a, :one}, &1.id)) == [
+        Graph.get!(graph, {:a, :one})
+      ]
+
+      assert Graph.find(graph, &match?({:b, :three}, &1.id)) == [
+        Graph.get!(graph, {:b, :three})
+      ]
+    end
+
+  # ============================================================================
+  test "find_by_id returns the matching items" do
     graph =
       Graph.build()
       |> Text.add_to_graph("text one", id: {:a, :one})
@@ -275,12 +293,12 @@ defmodule Scenic.GraphTest do
       |> Text.add_to_graph("text three", id: {:b, :three})
 
     # confirm result
-    assert Graph.find(graph, &match?({:a, _}, &1)) == [
+    assert Graph.find_by_id(graph, &match?({:a, _}, &1)) == [
              Graph.get!(graph, {:a, :one}),
              Graph.get!(graph, {:a, :two})
            ]
 
-    assert Graph.find(graph, &match?({:b, _}, &1)) == [
+    assert Graph.find_by_id(graph, &match?({:b, _}, &1)) == [
              Graph.get!(graph, {:b, :three})
            ]
   end
