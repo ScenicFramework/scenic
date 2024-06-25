@@ -3,9 +3,9 @@ defmodule Scenic.Mixfile do
 
   @app_name :scenic
 
-  @version "0.11.2"
+  @version "0.12.0-rc.0"
 
-  @elixir_version "~> 1.11"
+  @elixir_version "~> 1.16"
   @github "https://github.com/ScenicFramework/scenic"
 
   def project do
@@ -47,18 +47,18 @@ defmodule Scenic.Mixfile do
   defp deps do
     [
       {:font_metrics, "~> 0.5.0"},
-      {:nimble_options, "~> 0.3.4 or ~> 0.4.0 or ~> 0.5.0 or ~> 1.0"},
+      {:nimble_options, "~> 0.3.4 or ~> 0.4.0 or ~> 0.5.0 or ~> 1.1"},
       {:ex_image_info, "~> 0.2.4"},
       {:truetype_metrics, "~> 0.6"},
 
       # Tools
-      {:elixir_make, "~> 0.8.3", runtime: false},
-      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
-      {:credo, ">= 0.0.0", only: [:dev, :test], runtime: false},
-      {:excoveralls, ">= 0.0.0", only: :test, runtime: false},
+      {:elixir_make, "~> 0.8.4", runtime: false},
+      {:ex_doc, "~> 0.34.1", only: :dev, runtime: false},
+      {:credo, "~> 1.7.7", only: [:dev, :test], runtime: false},
+      {:excoveralls, "~> 0.18.1", only: :test, runtime: false},
       {:inch_ex, "~> 2.0", only: [:dev, :docs], runtime: false},
-      {:dialyxir, "~> 1.1", only: :dev, runtime: false},
-      {:machete, "~> 0.2.8", only: :test}
+      {:dialyxir, "~> 1.4.3", only: :dev, runtime: false},
+      {:machete, "~> 0.3.3", only: :test}
     ]
   end
 
