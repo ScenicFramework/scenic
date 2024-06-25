@@ -570,7 +570,8 @@ defmodule Scenic.Script do
 
     [
       {:draw_rrectv,
-       {width, height, upper_left_radius, upper_right_radius, lower_right_radius, lower_left_radius, flag}}
+       {width, height, upper_left_radius, upper_right_radius, lower_right_radius,
+        lower_left_radius, flag}}
       | ops
     ]
   end
