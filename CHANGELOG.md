@@ -1,6 +1,9 @@
 # Changelog
 
 ## 0.12.0-rc.0
+
+**Note: as of v0.12.0 we'll be requiring at least Elixir 1.16**
+
 This is a major update that adds fixes and support for new operations:
 
 * CI improvements - @axelson
