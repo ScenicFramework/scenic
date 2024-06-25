@@ -156,19 +156,21 @@ defmodule Scenic.Graph.Compiler do
   defp compile_styles(desired, %Compiler{} = state) when is_list(desired) do
     Enum.reduce(desired, {[], state}, fn k, {ops, state} ->
       # if not requested, there is no style to compile...
-      with {:ok, req} <- fetch_req(state, k) do
-        case fetch_set(state, k) do
-          {:ok, ^req} ->
-            # Nothing to do. The correct style is already set
-            {ops, state}
+      case fetch_req(state, k) do
+        {:ok, req} ->
+          case fetch_set(state, k) do
+            {:ok, ^req} ->
+              # Nothing to do. The correct style is already set
+              {ops, state}
 
-          _ ->
-            # Whatever is set (or not) is different than what is requested
-            {compile_style(ops, {k, req}), put_set(state, k, req)}
-        end
-      else
+            _ ->
+              # Whatever is set (or not) is different than what is requested
+              {compile_style(ops, {k, req}), put_set(state, k, req)}
+          end
+
         # not requested at all case
-        _ -> {ops, state}
+        _ ->
+          {ops, state}
       end
     end)
   end

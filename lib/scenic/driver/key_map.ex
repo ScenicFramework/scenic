@@ -64,7 +64,7 @@ defmodule Scenic.Driver.KeyMap do
   """
   @spec caps_lock?(keys :: keys) :: boolean
   def caps_lock?(keys) do
-    is_pressed?(keys[:virt_caps_lock])
+    pressed?(keys[:virt_caps_lock])
   end
 
   @doc """
@@ -74,7 +74,7 @@ defmodule Scenic.Driver.KeyMap do
   """
   @spec num_lock?(keys :: keys) :: boolean
   def num_lock?(keys) do
-    is_pressed?(keys[:virt_num_lock])
+    pressed?(keys[:virt_num_lock])
   end
 
   @doc """
@@ -84,7 +84,7 @@ defmodule Scenic.Driver.KeyMap do
   """
   @spec scroll_lock?(keys :: keys) :: boolean
   def scroll_lock?(keys) do
-    is_pressed?(keys[:virt_scroll_lock])
+    pressed?(keys[:virt_scroll_lock])
   end
 
   @doc """
@@ -94,9 +94,9 @@ defmodule Scenic.Driver.KeyMap do
   """
   @spec shift?(keys :: keys) :: boolean
   def shift?(keys) do
-    is_pressed?(keys[:key_shift]) ||
-      is_pressed?(keys[:key_leftshift]) ||
-      is_pressed?(keys[:key_rightshift])
+    pressed?(keys[:key_shift]) ||
+      pressed?(keys[:key_leftshift]) ||
+      pressed?(keys[:key_rightshift])
   end
 
   @doc """
@@ -104,9 +104,9 @@ defmodule Scenic.Driver.KeyMap do
   """
   @spec alt?(keys :: keys) :: boolean
   def alt?(keys) do
-    is_pressed?(keys[:key_alt]) ||
-      is_pressed?(keys[:key_leftalt]) ||
-      is_pressed?(keys[:key_rightalt])
+    pressed?(keys[:key_alt]) ||
+      pressed?(keys[:key_leftalt]) ||
+      pressed?(keys[:key_rightalt])
   end
 
   @doc """
@@ -114,9 +114,9 @@ defmodule Scenic.Driver.KeyMap do
   """
   @spec ctrl?(keys :: keys) :: boolean
   def ctrl?(keys) do
-    is_pressed?(keys[:key_ctrl]) ||
-      is_pressed?(keys[:key_leftctrl]) ||
-      is_pressed?(keys[:key_rightctrl])
+    pressed?(keys[:key_ctrl]) ||
+      pressed?(keys[:key_leftctrl]) ||
+      pressed?(keys[:key_rightctrl])
   end
 
   @doc """
@@ -124,9 +124,9 @@ defmodule Scenic.Driver.KeyMap do
   """
   @spec meta?(keys :: keys) :: boolean
   def meta?(keys) do
-    is_pressed?(keys[:key_meta]) ||
-      is_pressed?(keys[:key_leftmeta]) ||
-      is_pressed?(keys[:key_rightmeta])
+    pressed?(keys[:key_meta]) ||
+      pressed?(keys[:key_leftmeta]) ||
+      pressed?(keys[:key_rightmeta])
   end
 
   @doc """
@@ -144,9 +144,9 @@ defmodule Scenic.Driver.KeyMap do
     |> add_if_set(:scroll_lock, scroll_lock?(keys))
   end
 
-  defp is_pressed?(nil), do: false
-  defp is_pressed?(0), do: false
-  defp is_pressed?(_), do: true
+  defp pressed?(nil), do: false
+  defp pressed?(0), do: false
+  defp pressed?(_), do: true
 
   defp add_if_set(list, value, true), do: [value | list]
   defp add_if_set(list, _value, false), do: list

@@ -430,9 +430,9 @@ defmodule Scenic.SceneTest do
       end
 
     assert capture_log(fn ->
-      Scenic.Scene.request_input(scene, [:key])
-    end)
-    =~ "handle_input/3 not implemented"
+             Scenic.Scene.request_input(scene, [:key])
+           end) =~
+             "handle_input/3 not implemented"
   end
 
   test "unrequest_input works", %{scene: scene} do

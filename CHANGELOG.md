@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.12.0-rc.0
+
+**Note: as of v0.12.0 we'll be requiring at least Elixir 1.16**
+
+This is a major update that adds fixes and support for new operations:
+
+* CI improvements - @axelson
+* Formatting updates - @axelson
+* Support for Elixir 1.16 - @axelson
+* Update getting started guide for Scenic in supervision tree - @amclain
+* Fix `already_started` error propogation failure - @seb3s
+* Add development Nix flake - @crertel
+* Reduce makefile compilation spam - @jjcartsens
+* Simplify `default_pin` and `centroid` code - @seb3s
+* Add new input events (`:btn_pressed`, `:btn_released`, `:dropdown_opened`, `:dropdown_closed`, `:dropdown_item_hover`, `:focus`, `:blur`) - @GPrimola
+* Add warning for missing `handle_input/3` on `request_input/2` - @BinaryNoggin
+* Add alpha channel to sprites - @seb3s
+* Add script arc functions - @GPrimola
+* Add extended rounded rectangle drawing - @GPrimola
+* Assorted updates for deprecations and warnings
+
+
 ## 0.11.2
 
 * Variety of minor updates, bug fixes, and doc updates
@@ -113,7 +135,7 @@ continue to work, but will log a warning when used.
 
 | Asset Class   | Module  |
 | ------------- | -----|
-| Fonts      | `Scenic.Cache.Static.Font` |  
+| Fonts      | `Scenic.Cache.Static.Font` |
 | Font Metrics | `Scenic.Cache.Static.FontMetrics` |
 | Textures (images in a fill) | `Scenic.Cache.Static.Texture` |
 | Raw Pixel Maps | `Scenic.Cache.Dynamic.Texture` |
