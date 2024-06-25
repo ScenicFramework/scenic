@@ -180,7 +180,7 @@ defmodule Scenic.Color do
 
   Most of the time, you will use one of the pre-defined named colors from the
   Named Colors table. However, there are times when you want to work with
-  other color formats ranging from simple grayscale to rgb to hsl. 
+  other color formats ranging from simple grayscale to rgb to hsl.
 
   The following formats are all supported by the `Scenic.Color` module.
   The values of r, g, b, and a are integers between 0 and 255.
@@ -543,11 +543,12 @@ defmodule Scenic.Color do
     h = rgb_to_hue(r, g, b)
     l = (max + min) / 2
 
-    s =
-      cond do
-        delta < @epsilon -> 0.0
-        true -> delta / (1 - abs(2 * l - 1))
-      end
+    s = if delta < @epsilon do
+          0.0
+        else
+          delta / (1 - abs(2 * l - 1))
+        end
+
 
     {h, s * 100, l * 100}
   end
