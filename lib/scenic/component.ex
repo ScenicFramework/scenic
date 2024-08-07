@@ -5,7 +5,7 @@
 
 defmodule Scenic.Component do
   @moduledoc """
-  A Component is Scene that is optimized to be used as a child of another scene.
+  A Component is a Scene that is optimized to be used as a child of another scene.
 
   These are typically controls that you want to define once and use in multiple places.
 
@@ -145,7 +145,7 @@ defmodule Scenic.Component do
 
   When `:has_children` is set to `false`, no `DynamicSupervisor` is started to manage the
   scene's children, overall resource use is improved, and startup time is faster. You will not,
-  however, be able to nested components in any scene where `:has_children` is `false`.
+  however, be able to nest components in any scene where `:has_children` is `false`.
 
   For example, the `Scenic.Component.Button` component sets `:has_children` to `false`.
 
