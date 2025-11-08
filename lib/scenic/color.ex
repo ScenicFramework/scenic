@@ -543,12 +543,12 @@ defmodule Scenic.Color do
     h = rgb_to_hue(r, g, b)
     l = (max + min) / 2
 
-    s = if delta < @epsilon do
-          0.0
-        else
-          delta / (1 - abs(2 * l - 1))
-        end
-
+    s =
+      if delta < @epsilon do
+        0.0
+      else
+        delta / (1 - abs(2 * l - 1))
+      end
 
     {h, s * 100, l * 100}
   end
