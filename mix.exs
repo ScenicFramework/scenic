@@ -25,7 +25,6 @@ defmodule Scenic.Mixfile do
       package: package(),
       dialyzer: [plt_add_deps: :transitive, plt_add_apps: [:mix, :iex]],
       test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: cli_env(),
       elixirc_paths: elixirc_paths(Mix.env())
     ]
   end
@@ -62,11 +61,13 @@ defmodule Scenic.Mixfile do
     ]
   end
 
-  defp cli_env do
+  def cli do
     [
-      coveralls: :test,
-      "coveralls.html": :test,
-      "coveralls.json": :test
+      preferred_envs: [
+        coveralls: :test,
+        "coveralls.html": :test,
+        "coveralls.json": :test
+      ]
     ]
   end
 
