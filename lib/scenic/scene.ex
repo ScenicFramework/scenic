@@ -1011,11 +1011,6 @@ defmodule Scenic.Scene do
   The callback supports all the return values of the
   [`init`](https://hexdocs.pm/elixir/GenServer.html#c:handle_cast/2)
   callback in [`Genserver`](https://hexdocs.pm/elixir/GenServer.html).
-
-  In addition to the normal return values defined by GenServer, a `Scene` can
-  add an optional `{push: graph}` term, which pushes the graph to the viewport.
-
-  This has replaced push_graph() as the preferred way to push a graph.
   """
   @callback handle_input(input :: Scenic.ViewPort.Input.t(), id :: any, scene :: Scene.t()) ::
               {:noreply, scene}
@@ -1052,11 +1047,6 @@ defmodule Scenic.Scene do
   The callback supports all the return values of the
   [`init`](https://hexdocs.pm/elixir/GenServer.html#c:handle_cast/2)
   callback in [`Genserver`](https://hexdocs.pm/elixir/GenServer.html).
-
-  In addition to the normal return values defined by GenServer, a `Scene` can
-  add an optional `{push: graph}` term, which pushes the graph to the viewport.
-
-  This has replaced push_graph() as the preferred way to push a graph.
   """
   @callback handle_event(event :: term, from :: pid, scene :: Scene.t()) ::
               {:noreply, scene}
@@ -1094,12 +1084,6 @@ defmodule Scenic.Scene do
   The callback supports all the return values of the
   [`init`](https://hexdocs.pm/elixir/GenServer.html#c:init/1)
   callback in [`Genserver`](https://hexdocs.pm/elixir/GenServer.html).
-
-  In addition to the normal return values defined by GenServer, a `Scene` can
-  return two new ones that push a graph to the viewport
-
-  Returning `{:ok, state, push: graph}` will push the indicated graph
-  to the ViewPort. This is preferable to the old push_graph() function.
   """
 
   @callback init(scene :: Scene.t(), args :: term(), options :: Keyword.t()) ::
