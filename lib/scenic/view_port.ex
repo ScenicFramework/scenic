@@ -790,7 +790,7 @@ defmodule Scenic.ViewPort do
     # scan the incoming input list and extract any scene transforms
     txs =
       Enum.reduce(input, txs, fn
-        {Scenic.Primitive.Component, script_id, local_tx, _pid, _uid, _local_id}, acc ->
+        {Scenic.Primitive.Component, script_id, local_tx, _pid, _uid, _local_id, _scissor}, acc ->
           Map.put(acc, script_id, {local_tx, name})
 
         _, acc ->
@@ -1638,11 +1638,11 @@ defmodule Scenic.ViewPort do
   defp compile_input(graph)
 
   defp compile_input(%Graph{primitives: primitives}) do
-    input = comp_input_prim([], 0, primitives[0], primitives, Math.Matrix.identity())
+    input = comp_input_prim([], 0, primitives[0], primitives, Math.Matrix.identity(), nil)
 
     # compile the requested input types
     types =
-      Enum.reduce(input, [], fn {_mod, _name, _tx, _pid, types, _id}, acc ->
+      Enum.reduce(input, [], fn {_mod, _name, _tx, _pid, types, _id, _scissor}, acc ->
         [types | acc]
       end)
       |> List.flatten()
@@ -1651,28 +1651,38 @@ defmodule Scenic.ViewPort do
     {:ok, {input, types}}
   end
 
-  defp comp_input_prim(input, uid, primitive, primitives, tx)
+  defp comp_input_prim(input, uid, primitive, primitives, tx, scissor)
 
   # skip anything hidden
-  defp comp_input_prim(input, _uid, %Primitive{styles: %{hidden: true}}, _, _tx), do: input
+  defp comp_input_prim(input, _uid, %Primitive{styles: %{hidden: true}}, _, _tx, _scissor), do: input
 
   # skip script primitives - no input handlers there
-  defp comp_input_prim(input, _uid, %Primitive{module: Primitive.Script}, _, _tx), do: input
+  defp comp_input_prim(input, _uid, %Primitive{module: Primitive.Script}, _, _tx, _scissor), do: input
 
-  # it is a group. Calc the local transform if there one, but doesn't go into the 
+  # it is a group. Calc the local transform if there one, but doesn't go into the
   # list as a component itself...
   defp comp_input_prim(
          input,
          _uid,
-         %Primitive{module: Primitive.Group, data: ids, transforms: txs},
+         %Primitive{module: Primitive.Group, data: ids, transforms: txs, styles: styles},
          primitives,
-         tx
+         tx,
+         scissor
        ) do
     # calculate the graph-local transform
     local_tx = local_tx(txs, tx)
+
+    # if this group has a scissor style, create scissor bounds for children
+    # scissor is {w, h} and clips to {0, 0, w, h} in the group's local space
+    child_scissor =
+      case Map.get(styles, :scissor) do
+        {w, h} -> {local_tx, w, h}
+        _ -> scissor
+      end
+
     # reduce the group
     Enum.reduce(ids, input, fn id, inpt ->
-      comp_input_prim(inpt, id, primitives[id], primitives, local_tx)
+      comp_input_prim(inpt, id, primitives[id], primitives, local_tx, child_scissor)
     end)
   end
 
@@ -1682,11 +1692,12 @@ defmodule Scenic.ViewPort do
          _uid,
          %Primitive{module: Primitive.Component, data: {_, _, name}, transforms: txs},
          _,
-         tx
+         tx,
+         scissor
        ) do
     # calculate the graph-local transform
     local_tx = local_tx(txs, tx)
-    [{Primitive.Component, name, local_tx, self(), [], nil} | input]
+    [{Primitive.Component, name, local_tx, self(), [], nil, scissor} | input]
   end
 
   defp comp_input_prim(
@@ -1700,16 +1711,17 @@ defmodule Scenic.ViewPort do
            styles: %{input: input_types}
          },
          _,
-         tx
+         tx,
+         scissor
          # ) when is_list(input_types) do
        ) do
     # calculate the graph-local transform
     local_tx = local_tx(txs, tx)
-    [{module, data, local_tx, self(), input_types, id} | input]
+    [{module, data, local_tx, self(), input_types, id, scissor} | input]
   end
 
   # primitives that don't have input set are skipped
-  defp comp_input_prim(input, _uid, _primitive, _, _tx), do: input
+  defp comp_input_prim(input, _uid, _primitive, _, _tx, _scissor), do: input
 
   defp local_tx(txs, tx_parent) do
     cond do
@@ -1721,6 +1733,21 @@ defmodule Scenic.ViewPort do
         # multiply the local txs into the tx_parent
         Math.Matrix.mul(tx_parent, Transform.combine(txs))
     end
+  end
+
+  # Check if a global point is clipped by a scissor rectangle.
+  # Returns true if the point is OUTSIDE the scissor (i.e. clipped/hidden).
+  # scissor_tx is the scissor group's accumulated transform within its own graph.
+  # parent_tx is the transform that maps from the graph's local space to global space.
+  defp scissor_clips?(nil, _gx, _gy, _parent_tx), do: false
+
+  defp scissor_clips?({scissor_tx, w, h}, gx, gy, parent_tx) do
+    # Compose parent_tx with scissor_tx to get full global transform
+    global_scissor_tx = Math.Matrix.mul(parent_tx, scissor_tx)
+    inv = Math.Matrix.invert(global_scissor_tx)
+    {sx, sy} = Math.Vector2.project({gx, gy}, inv)
+    # Clipped if outside the scissor rectangle {0, 0, w, h}
+    sx < 0 or sx > w or sy < 0 or sy > h
   end
 
   # coalesce the requested positional input into a single simple list
@@ -1761,47 +1788,54 @@ defmodule Scenic.ViewPort do
 
   # components recurse
   defp do_find_hit(
-         [{Primitive.Component, data, local_tx, _pid, _uid, _id} | tail],
+         [{Primitive.Component, data, local_tx, _pid, _uid, _id, scissor} | tail],
          input_type,
-         global_point,
+         {gx, gy} = global_point,
          lists,
          name,
          parent_tx
        ) do
-    # calculate the local matrix, which becomes the parent of the component
-    local_tx = Math.Matrix.mul(parent_tx, local_tx)
+    # if there's a scissor, check the global point is within scissor bounds
+    # before recursing into the component
+    if scissor_clips?(scissor, gx, gy, parent_tx) do
+      do_find_hit(tail, input_type, global_point, lists, name, parent_tx)
+    else
+      # calculate the local matrix, which becomes the parent of the component
+      local_tx = Math.Matrix.mul(parent_tx, local_tx)
 
-    # recurse to test the component
-    case input_find_hit(lists, input_type, data, global_point, local_tx) do
-      {:ok, _, _, _, _} = hit ->
-        # Rhere was a hit inside the component. Return result as we are done.
-        hit
+      # recurse to test the component
+      case input_find_hit(lists, input_type, data, global_point, local_tx) do
+        {:ok, _, _, _, _} = hit ->
+          # There was a hit inside the component. Return result as we are done.
+          hit
 
-      :not_found ->
-        # if not found, keep going
-        do_find_hit(tail, input_type, global_point, lists, name, parent_tx)
+        :not_found ->
+          # if not found, keep going
+          do_find_hit(tail, input_type, global_point, lists, name, parent_tx)
+      end
     end
   end
 
   # actual thing to test against
   defp do_find_hit(
-         [{module, data, local_tx, pid, types, id} | tail],
+         [{module, data, local_tx, pid, types, id, scissor} | tail],
          input_type,
          {gx, gy} = gp,
          lists,
          name,
          parent_tx
        ) do
-    # calculate the inverse maxtrix of parent_tx x local_tx
+    # calculate the inverse matrix of parent_tx x local_tx
     local_tx = Math.Matrix.mul(parent_tx, local_tx)
     invert_tx = Math.Matrix.invert(local_tx)
 
     # project the global point by the inverse matrix
     {x, y} = Math.Vector2.project({gx, gy}, invert_tx)
 
-    # for this to be a yet, it must be both a valid input type on the primitive
-    # AND in the primitive itself.
-    with true <- input_type == :any || Enum.member?(types, input_type),
+    # for this to be a hit, it must pass the scissor check, be a valid input type
+    # on the primitive, AND be within the primitive itself.
+    with false <- scissor_clips?(scissor, gx, gy, parent_tx),
+         true <- input_type == :any || Enum.member?(types, input_type),
          true <- module.contains_point?(data, {x, y}) do
       # return the xy in parent coordinate space
       inv = Math.Matrix.invert(parent_tx)
@@ -1815,8 +1849,8 @@ defmodule Scenic.ViewPort do
         id
       }
     else
-      false ->
-        # No hit here. Keep going
+      _ ->
+        # No hit here (scissor clipped, wrong input type, or outside primitive)
         do_find_hit(tail, input_type, gp, lists, name, parent_tx)
     end
   end
