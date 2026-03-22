@@ -1952,13 +1952,21 @@ defmodule Scenic.ViewPort do
         do_captured_input(input, pids, state)
 
       :error ->
-        if Enum.member?(input_positional, input_type) do
+        listed_result = if Enum.member?(input_positional, input_type) do
           do_listed_input(input, state)
         end
 
-        case Map.fetch(requests, input_type) do
-          {:ok, pids} -> do_requested_input(input, pids, state)
-          :error -> :ok
+        # Scroll targeting: when a hit-tested scrollable handles the event,
+        # don't also broadcast to request_input listeners. This makes nested
+        # scrollables work — innermost gets the event exclusively.
+        # If it can't handle it, it returns {:cont, scene} which bubbles up.
+        skip_requested = input_type == :cursor_scroll and listed_result == :hit
+
+        unless skip_requested do
+          case Map.fetch(requests, input_type) do
+            {:ok, pids} -> do_requested_input(input, pids, state)
+            :error -> :ok
+          end
         end
     end
 
@@ -2080,8 +2088,12 @@ defmodule Scenic.ViewPort do
   end
 
   defp do_listed_input({:cursor_scroll, {delta, gxy}} = input, %{input_lists: ils}) do
-    with {:ok, pid, xy, _inv_tx, id} <- input_find_hit(ils, :cursor_scroll, @root_id, gxy) do
-      send(pid, {:_input, {:cursor_scroll, {delta, xy}}, input, id})
+    case input_find_hit(ils, :cursor_scroll, @root_id, gxy) do
+      {:ok, pid, xy, _inv_tx, id} ->
+        send(pid, {:_input, {:cursor_scroll, {delta, xy}}, input, id})
+        :hit
+      _ ->
+        :not_found
     end
   end
 
