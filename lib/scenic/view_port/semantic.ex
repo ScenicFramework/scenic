@@ -43,24 +43,14 @@ defmodule Scenic.ViewPort.Semantic do
   - `{:error, :not_found}` - Element not found
   - `{:error, :semantic_disabled}` - Semantic system not enabled
   """
-  @spec find_element(ViewPort.t() | pid(), atom() | binary()) ::
+  @spec find_element(ViewPort.t() | pid(), atom() | tuple() | binary()) ::
           {:ok, Entry.t()} | {:error, atom()}
   def find_element(viewport, element_id)
 
   def find_element(%ViewPort{} = viewport, element_id) do
-    if viewport.semantic_enabled do
-      case lookup_in_index(viewport.semantic_index, element_id) do
-        {:ok, key} ->
-          case :ets.lookup(viewport.semantic_table, key) do
-            [{^key, entry}] -> {:ok, entry}
-            [] -> {:error, :not_found}
-          end
-
-        :not_found ->
-          {:error, :not_found}
-      end
-    else
-      {:error, :semantic_disabled}
+    case find_element_with_scene(viewport, element_id) do
+      {:ok, entry, _scene_name} -> {:ok, entry}
+      error -> error
     end
   end
 
@@ -169,45 +159,83 @@ defmodule Scenic.ViewPort.Semantic do
   @doc """
   Click element by ID.
 
-  Finds the element, calculates its center, and sends mouse click events
-  through the driver (simulating real user input).
+  Finds the element, calculates its center, and sends mouse click events.
+  Uses SSM screen_bounds (full transform chain) for accurate coordinates.
+
+  ## Options
+
+  - `:via` - How to deliver the click event:
+    - `:driver` (default) — simulates real user input through the driver stack.
+      Best for integration testing since it exercises the full pipeline.
+    - `:viewport` — sends input directly to the viewport GenServer.
+      Faster, works headless (no driver needed), same hit-testing.
 
   ## Parameters
 
   - `viewport` - ViewPort struct or PID
   - `element_id` - Atom or string ID of the element
+  - `opts` - Keyword list of options
 
   ## Returns
 
   - `{:ok, {x, y}}` - Clicked at coordinates
   - `{:error, reason}` - Failed to click
   """
-  @spec click_element(ViewPort.t() | pid(), atom() | binary()) ::
+  @spec click_element(ViewPort.t() | pid(), atom() | binary(), keyword()) ::
           {:ok, {number(), number()}} | {:error, atom()}
-  def click_element(viewport, element_id)
+  def click_element(viewport, element_id, opts \\ [])
 
-  def click_element(%ViewPort{} = viewport, element_id) do
-    with {:ok, element} <- find_element(viewport, element_id),
-         {:ok, center} <- calculate_center(element.screen_bounds),
-         {:ok, driver_state} <- get_driver_state(viewport) do
-      # Send mouse press through driver
-      input = {:cursor_button, {:btn_left, 1, [], center}}
-      Scenic.Driver.send_input(driver_state, input)
+  def click_element(%ViewPort{} = viewport, element_id, opts) do
+    via = Keyword.get(opts, :via, :driver)
 
-      # Small delay between press and release
-      Process.sleep(10)
-
-      # Send mouse release through driver
-      input = {:cursor_button, {:btn_left, 0, [], center}}
-      Scenic.Driver.send_input(driver_state, input)
-
-      {:ok, center}
+    with {:ok, element, scene_name} <- find_element_with_scene(viewport, element_id),
+         {:ok, local_center} <- calculate_center(element.screen_bounds),
+         {:ok, screen_center} <- to_screen_coords(viewport, scene_name, local_center) do
+      do_click(viewport, screen_center, via)
+      {:ok, screen_center}
     end
   end
 
-  def click_element(pid, element_id) when is_pid(pid) or is_atom(pid) do
+  def click_element(pid, element_id, opts) when is_pid(pid) or is_atom(pid) do
     case ViewPort.info(pid) do
-      {:ok, viewport} -> click_element(viewport, element_id)
+      {:ok, viewport} -> click_element(viewport, element_id, opts)
+      error -> error
+    end
+  end
+
+  @doc """
+  Hover over element by ID.
+
+  Moves the cursor to the element's center, triggering SSM-powered
+  cursor_enter/cursor_leave events. Useful for testing hover effects.
+
+  ## Options
+
+  Same `:via` options as `click_element/3`.
+
+  ## Returns
+
+  - `{:ok, {x, y}}` - Hovered at coordinates
+  - `{:error, reason}` - Failed to hover
+  """
+  @spec hover_element(ViewPort.t() | pid(), atom() | binary(), keyword()) ::
+          {:ok, {number(), number()}} | {:error, atom()}
+  def hover_element(viewport, element_id, opts \\ [])
+
+  def hover_element(%ViewPort{} = viewport, element_id, opts) do
+    via = Keyword.get(opts, :via, :driver)
+
+    with {:ok, element, scene_name} <- find_element_with_scene(viewport, element_id),
+         {:ok, local_center} <- calculate_center(element.screen_bounds),
+         {:ok, screen_center} <- to_screen_coords(viewport, scene_name, local_center) do
+      do_hover(viewport, screen_center, via)
+      {:ok, screen_center}
+    end
+  end
+
+  def hover_element(pid, element_id, opts) when is_pid(pid) or is_atom(pid) do
+    case ViewPort.info(pid) do
+      {:ok, viewport} -> hover_element(viewport, element_id, opts)
       error -> error
     end
   end
@@ -247,14 +275,79 @@ defmodule Scenic.ViewPort.Semantic do
 
   # Private helpers
 
-  # Get driver state for sending input events
+  # Find element and return its scene_name (needed for transform chain lookup)
+  defp find_element_with_scene(%ViewPort{} = viewport, element_id) do
+    if viewport.semantic_enabled do
+      case lookup_in_index(viewport.semantic_index, element_id) do
+        {:ok, {scene_name, _entry_id} = key} ->
+          case :ets.lookup(viewport.semantic_table, key) do
+            [{^key, entry}] -> {:ok, entry, scene_name}
+            [] -> {:error, :not_found}
+          end
+
+        :not_found ->
+          {:error, :not_found}
+      end
+    else
+      {:error, :semantic_disabled}
+    end
+  end
+
+  # Convert local coordinates to screen coordinates by walking the scene transform chain.
+  # Uses the viewport's scene_transforms (built from input_list component placement).
+  defp to_screen_coords(%ViewPort{pid: pid}, scene_name, local_point) do
+    case GenServer.call(pid, {:fetch_scene_tx, scene_name}) do
+      {:ok, scene_tx} ->
+        screen_point = Scenic.Math.Matrix.project_vector(scene_tx, local_point)
+        {:ok, screen_point}
+
+      {:error, :not_found} ->
+        # Root scene or no transform found — local coords ARE screen coords
+        {:ok, local_point}
+    end
+  end
+
+  # Click via viewport — direct to GenServer, no driver needed
+  defp do_click(viewport, center, :viewport) do
+    ViewPort.input(viewport, {:cursor_button, {:btn_left, 1, [], center}})
+    Process.sleep(10)
+    ViewPort.input(viewport, {:cursor_button, {:btn_left, 0, [], center}})
+  end
+
+  # Click via driver — full pipeline integration test
+  defp do_click(viewport, center, :driver) do
+    case get_driver_state(viewport) do
+      {:ok, driver_state} ->
+        Scenic.Driver.send_input(driver_state, {:cursor_button, {:btn_left, 1, [], center}})
+        Process.sleep(10)
+        Scenic.Driver.send_input(driver_state, {:cursor_button, {:btn_left, 0, [], center}})
+
+      {:error, _reason} ->
+        # Fall back to viewport-direct if no driver available (headless)
+        do_click(viewport, center, :viewport)
+    end
+  end
+
+  # Hover via viewport — direct cursor_pos to trigger SSM hover tracking
+  defp do_hover(viewport, center, :viewport) do
+    ViewPort.input(viewport, {:cursor_pos, center})
+  end
+
+  # Hover via driver — full pipeline
+  defp do_hover(viewport, center, :driver) do
+    case get_driver_state(viewport) do
+      {:ok, driver_state} ->
+        Scenic.Driver.send_input(driver_state, {:cursor_pos, center})
+
+      {:error, _reason} ->
+        do_hover(viewport, center, :viewport)
+    end
+  end
+
   defp get_driver_state(%ViewPort{pid: viewport_pid}) do
-    # Get viewport state to access driver_pids
     case :sys.get_state(viewport_pid, 5000) do
       %{driver_pids: [driver_pid | _]} ->
-        # Get the first driver's state
-        driver_state = :sys.get_state(driver_pid, 5000)
-        {:ok, driver_state}
+        {:ok, :sys.get_state(driver_pid, 5000)}
 
       %{driver_pids: []} ->
         {:error, :no_driver}
@@ -263,16 +356,15 @@ defmodule Scenic.ViewPort.Semantic do
         {:error, :invalid_viewport_state}
     end
   rescue
-    error ->
-      {:error, {:driver_state_failed, Exception.message(error)}}
+    _ -> {:error, :driver_state_failed}
   end
 
   # Lookup element key in index table
   defp lookup_in_index(semantic_index, element_id) do
-    # Normalize ID to atom
     id =
       case element_id do
         id when is_atom(id) -> id
+        id when is_tuple(id) -> id
         id when is_binary(id) -> String.to_existing_atom(id)
       end
 

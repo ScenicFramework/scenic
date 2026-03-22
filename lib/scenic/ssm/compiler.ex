@@ -164,11 +164,10 @@ defmodule Scenic.SSM.Compiler do
 
   # ── Semantic entry building ──
 
-  defp build_semantic_entry(primitive, parent_id, z_index, _screen_tx) do
+  defp build_semantic_entry(primitive, parent_id, z_index, screen_tx) do
     local_bounds = calculate_local_bounds(primitive)
-    # Phase 1: screen_bounds from primitive transforms only
-    # Phase 2: will use full screen_tx matrix
-    screen_bounds = apply_transforms(local_bounds, primitive.transforms)
+    # Phase 2: project local bounds through full transform chain
+    screen_bounds = project_bounds(local_bounds, screen_tx)
 
     input_types = Map.get(primitive.styles || %{}, :input, [])
 
@@ -250,14 +249,26 @@ defmodule Scenic.SSM.Compiler do
     end
   end
 
-  defp apply_transforms(bounds, nil), do: bounds
-  defp apply_transforms(bounds, txs) when map_size(txs) == 0, do: bounds
-  defp apply_transforms(bounds, txs) do
-    case Map.get(txs, :translate) do
-      {tx, ty} when is_number(tx) and is_number(ty) ->
-        %{bounds | left: bounds.left + tx, top: bounds.top + ty}
-      _ -> bounds
-    end
+  # Project local bounds through the full accumulated transform matrix.
+  # Transforms the top-left and bottom-right corners, then computes the
+  # axis-aligned bounding box of the result. Handles translate, scale, rotate.
+  defp project_bounds(bounds, screen_tx) do
+    tl = {bounds.left, bounds.top}
+    br = {bounds.left + bounds.width, bounds.top + bounds.height}
+
+    {sx1, sy1} = Math.Matrix.project_vector(screen_tx, tl)
+    {sx2, sy2} = Math.Matrix.project_vector(screen_tx, br)
+
+    # Axis-aligned bounding box (handles negative scale / rotation)
+    left = min(sx1, sx2)
+    top = min(sy1, sy2)
+
+    %{
+      left: left,
+      top: top,
+      width: abs(sx2 - sx1),
+      height: abs(sy2 - sy1)
+    }
   end
 
   defp is_clickable?(primitive, input_types) do
