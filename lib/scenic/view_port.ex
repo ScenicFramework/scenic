@@ -552,12 +552,11 @@ defmodule Scenic.ViewPort do
       end
 
     with {:ok, script} <- GraphCompiler.compile(graph),
-         {:ok, input_list} <- compile_input(graph) do
-      # Parallel semantic compilation (Phase 1)
+         {:ok, {input, input_types, semantic_entries}} <- Scenic.SSM.Compiler.compile(graph) do
+      input_list = {input, input_types}
+      # Synchronous semantic compilation via SSM (replaces async Task)
       if viewport.semantic_enabled do
-        Task.start(fn ->
-          compile_and_store_semantics(viewport, name, graph, opts)
-        end)
+        store_semantic_entries(viewport, name, semantic_entries)
       end
 
       # write the script - but only if it has actually changed
@@ -889,6 +888,10 @@ defmodule Scenic.ViewPort do
       # route them, although that routing depends on the input type.
       # input_requests: %{},
       _input_requests: %{},
+
+      # SSM hover tracking — which element is currently under the cursor
+      # nil | {pid, inv_tx, element_id}
+      _hover_target: nil,
 
       # Keep track of the pid for the current root scene
       # this is used to shutdown the current scene when a new one is set
@@ -1533,17 +1536,11 @@ defmodule Scenic.ViewPort do
   # internal utilities
 
   # Compile and store semantic elements (Phase 1)
-  defp compile_and_store_semantics(viewport, scene_name, graph, _opts) do
-    # Compile semantic tree
-    {:ok, entries} = Scenic.Semantic.Compiler.compile(graph)
-
-    # Store in ETS tables
+  # Store pre-compiled semantic entries into ETS tables (synchronous, from SSM compiler)
+  defp store_semantic_entries(viewport, scene_name, entries) do
     Enum.each(entries, fn entry ->
-      # Store in main semantic table (hierarchical key)
       key = {scene_name, entry.id}
       :ets.insert(viewport.semantic_table, {key, entry})
-
-      # Store in index table (flat lookup)
       :ets.insert(viewport.semantic_index, {entry.id, key})
     end)
 
@@ -1553,7 +1550,7 @@ defmodule Scenic.ViewPort do
       require Logger
 
       Logger.warning(
-        "Semantic compilation failed for #{inspect(scene_name)}: #{Exception.message(error)}"
+        "Semantic storage failed for #{inspect(scene_name)}: #{Exception.message(error)}"
       )
 
       :ok
@@ -1628,7 +1625,7 @@ defmodule Scenic.ViewPort do
        ) do
     state =
       with {:ok, script} <- GraphCompiler.compile(graph),
-           {:ok, {input_list, input_types}} <- compile_input(graph) do
+           {:ok, {input_list, input_types, _semantic_entries}} <- Scenic.SSM.Compiler.compile(graph) do
         # write the script to the table
         case :ets.lookup(script_table, name) do
           # do nothing if the script is in the table and has not changed
@@ -1857,7 +1854,91 @@ defmodule Scenic.ViewPort do
   end
 
   # --------------------------------------------------------
-  # receive input from a driver and cast it to a scene
+  # cursor_pos — do normal routing PLUS hover tracking for cursor_enter/leave
+  defp handle_input(
+         {:cursor_pos, gxy} = input,
+         %{
+           _input_captures: captures,
+           _input_requests: requests,
+           input_positional: input_positional,
+           _hover_target: prev_hover
+         } = state
+       ) do
+    case Map.fetch(captures, :cursor_pos) do
+      {:ok, pids} ->
+        do_captured_input(input, pids, state)
+        {:noreply, state}
+
+      :error ->
+        # Single hit-test with :any — reuse for both cursor_pos delivery and hover
+        hit = if Enum.member?(input_positional, :cursor_pos) or
+                 Enum.member?(input_positional, :cursor_enter) do
+          input_find_hit(state.input_lists, :any, @root_id, gxy)
+        else
+          :not_found
+        end
+
+        # Deliver cursor_pos to the hit element (if it accepts cursor_pos)
+        case hit do
+          {:ok, pid, xy, _inv_tx, id} ->
+            send(pid, {:_input, {:cursor_pos, xy}, input, id})
+          _ -> :ok
+        end
+
+        # Deliver to request listeners
+        case Map.fetch(requests, :cursor_pos) do
+          {:ok, pids} -> do_requested_input(input, pids, state)
+          :error -> :ok
+        end
+
+        # Hover tracking — compare current hit with previous hover target
+        curr_key = case hit do
+          {:ok, pid, _xy, inv_tx, id} -> {pid, inv_tx, id}
+          _ -> nil
+        end
+
+        prev_key = prev_hover
+
+        state = if hover_target_changed?(prev_key, curr_key) do
+          # Fire cursor_leave to old target
+          fire_cursor_leave(prev_key, gxy)
+          # Fire cursor_enter to new target
+          fire_cursor_enter(curr_key, gxy, hit)
+          %{state | _hover_target: curr_key}
+        else
+          state
+        end
+
+        {:noreply, state}
+    end
+  end
+
+  # viewport exit — clear hover target
+  defp handle_input(
+         {:viewport, {:exit, _pos}} = input,
+         %{_hover_target: hover} = state
+       ) do
+    # Fire leave to current hover target
+    if hover do
+      fire_cursor_leave(hover, {0, 0})
+    end
+    state = %{state | _hover_target: nil}
+
+    # Continue with normal viewport event handling
+    %{_input_captures: captures, _input_requests: requests, input_positional: input_positional} = state
+    case Map.fetch(captures, :viewport) do
+      {:ok, pids} -> do_captured_input(input, pids, state)
+      :error ->
+        if Enum.member?(input_positional, :viewport), do: do_listed_input(input, state)
+        case Map.fetch(requests, :viewport) do
+          {:ok, pids} -> do_requested_input(input, pids, state)
+          :error -> :ok
+        end
+    end
+    {:noreply, state}
+  end
+
+  # receive input from a driver and cast it to a scene (generic handler)
   defp handle_input(
          {input_type, _} = input,
          %{
@@ -1888,6 +1969,30 @@ defmodule Scenic.ViewPort do
   # a scene decided to let others continue processing the input
   def handle_continue_input(raw_input, state) do
     handle_input(raw_input, state)
+  end
+
+  # ── SSM hover tracking helpers ──
+
+  defp hover_target_changed?(nil, nil), do: false
+  defp hover_target_changed?(nil, _), do: true
+  defp hover_target_changed?(_, nil), do: true
+  defp hover_target_changed?({pid_a, _, id_a}, {pid_b, _, id_b}),
+    do: pid_a != pid_b or id_a != id_b
+
+  defp fire_cursor_leave(nil, _gxy), do: :ok
+  defp fire_cursor_leave({pid, inv_tx, id}, gxy) do
+    xy = Math.Vector2.project(gxy, inv_tx)
+    send(pid, {:_input, {:cursor_leave, xy}, {:cursor_leave, gxy}, id})
+  rescue
+    _ -> :ok
+  end
+
+  defp fire_cursor_enter(nil, _gxy, _hit), do: :ok
+  defp fire_cursor_enter({_pid, _inv_tx, _id}, _gxy, :not_found), do: :ok
+  defp fire_cursor_enter({pid, _inv_tx, id}, _gxy, {:ok, _pid, xy, _inv, _id}) do
+    send(pid, {:_input, {:cursor_enter, xy}, {:cursor_enter, xy}, id})
+  rescue
+    _ -> :ok
   end
 
   # --------------------------------------------------------
@@ -2013,6 +2118,12 @@ defmodule Scenic.ViewPort do
   # --------------------------------------------------------
   # a monitored pid has gone down. Clean up any input in state for it
   defp input_pid_down(pid, %{_input_captures: captures, _input_requests: requests} = state) do
+    # Clear hover target if the hovered scene went down
+    state = case state._hover_target do
+      {^pid, _, _} -> %{state | _hover_target: nil}
+      _ -> state
+    end
+
     state =
       captures
       |> Map.keys()
@@ -2172,6 +2283,15 @@ defmodule Scenic.ViewPort do
       |> List.flatten()
       |> Enum.uniq()
       |> Enum.sort()
+
+    # If any primitive wants cursor_enter, ensure cursor_pos is requested
+    # from the driver (viewport generates enter/leave from cursor_pos events)
+    input_positional =
+      if :cursor_enter in input_positional and :cursor_pos not in input_positional do
+        Enum.sort([:cursor_pos | input_positional])
+      else
+        input_positional
+      end
 
     %{state | input_positional: input_positional}
   end

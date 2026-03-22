@@ -81,6 +81,8 @@ defmodule Scenic.ViewPort.Input do
               position :: Math.point()}}
           | {:cursor_scroll, {offset :: Math.point(), position :: Math.point()}}
           | {:cursor_pos, position :: Math.point()}
+          | {:cursor_enter, position :: Math.point()}
+          | {:cursor_leave, position :: Math.point()}
           | {:viewport, {:enter | :exit | :reshape, xy :: Math.point()}}
           | {:relative, vector :: Math.point()}
           | {:led, {id :: atom, value :: integer}}
@@ -90,6 +92,8 @@ defmodule Scenic.ViewPort.Input do
           :cursor_button
           | :cursor_scroll
           | :cursor_pos
+          | :cursor_enter
+          | :cursor_leave
           | :codepoint
           | :key
           | :viewport
@@ -109,6 +113,8 @@ defmodule Scenic.ViewPort.Input do
       :cursor_button,
       :cursor_scroll,
       :cursor_pos,
+      :cursor_enter,
+      :cursor_leave,
       :codepoint,
       :key,
       :viewport,
@@ -125,6 +131,7 @@ defmodule Scenic.ViewPort.Input do
       :cursor_button,
       :cursor_scroll,
       :cursor_pos,
+      :cursor_enter,
       :relative
     ]
   end
@@ -390,6 +397,8 @@ defmodule Scenic.ViewPort.Input do
       do: :ok
 
   def validate({:cursor_pos, {x, y}}) when is_number(x) and is_number(y), do: :ok
+  def validate({:cursor_enter, {x, y}}) when is_number(x) and is_number(y), do: :ok
+  def validate({:cursor_leave, {x, y}}) when is_number(x) and is_number(y), do: :ok
 
   def validate({:viewport, {:enter, {x, y}}}) when is_number(x) and is_number(y), do: :ok
   def validate({:viewport, {:exit, {x, y}}}) when is_number(x) and is_number(y), do: :ok
