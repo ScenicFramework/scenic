@@ -1,28 +1,51 @@
 defmodule Scenic.Widget do
   @moduledoc """
-  A Widget is a Frame-aware Component.
+  A Widget is a Frame-aware Component with declarative rendering.
 
   Where a Component is a "small scene managed by another scene", a Widget goes
   further: it receives a `Widgex.Frame` as part of its data — its allocated space.
   A Widget renders within that frame without knowing or caring about its container.
   Same abstraction at every nesting level.
 
-  ## The Browser Analogy
+  ## Rendering Model
 
-  | Browser         | Scenic Widget                     |
-  |-----------------|-----------------------------------|
-  | CSS box model   | `Widgex.Frame` (pin + size)       |
-  | `resize` event  | `handle_frame_change/2`           |
-  | React `render`  | `render/1` callback               |
-  | CSS Grid        | `Widgex.Frame.Grid` (layout)      |
-  | DOM element     | Scenic primitive tree             |
+  Widgets use a **hybrid immediate/retained** rendering model:
+
+  - **Immediate-style authoring**: `render/1` rebuilds the graph from state every time
+    (like React's render function). No manual graph mutation needed.
+  - **Retained-mode execution**: the `widget_push/2` function handles how the new graph
+    gets applied. By default it uses Scenic's `push_graph` (full replace). Override it
+    to use a differ (e.g., ScenicDiff) for incremental updates.
+
+  This gives you the convenience of "re-render from scratch" thinking with the option
+  of retained-mode performance when you need it.
+
+  ```elixir
+  # Default: full graph push (simple, correct)
+  defp widget_push(scene, graph), do: push_graph(scene, graph)
+
+  # Override for diff-based updates (efficient for complex graphs):
+  defp widget_push(scene, graph), do: ScenicDiff.push(scene, graph)
+  ```
+
+  ## The Browser/React Analogy
+
+  | Browser/React         | Scenic Widget                     |
+  |-----------------------|-----------------------------------|
+  | CSS box model         | `Widgex.Frame` (pin + size)       |
+  | `resize` observer     | `handle_frame_change/2`           |
+  | `render()`            | `render/1` callback (pure)        |
+  | Virtual DOM diff      | `widget_push/2` (configurable)    |
+  | CSS Grid              | `Widgex.Frame.Grid`               |
+  | Render props / slots  | `render_item` function injection  |
+  | `useEffect([], ...)`  | `init_widget/3`                   |
 
   ## Usage
 
       defmodule MyApp.Panel do
         use Scenic.Widget
 
-        @impl Scenic.Widget
+        @impl Scenic.Component
         def validate(%{frame: %Widgex.Frame{}} = data), do: {:ok, data}
         def validate(_), do: {:error, "Panel requires a frame"}
 
@@ -33,48 +56,20 @@ defmodule Scenic.Widget do
 
           Scenic.Graph.build()
           |> Scenic.Primitives.rect({w, h}, fill: :steel_blue)
-          |> Scenic.Primitives.text("Hello",
-            translate: {w / 2, h / 2},
-            text_align: :center,
-            fill: :white
-          )
         end
+
+        # Opt into diff-based rendering:
+        # defp widget_push(scene, graph), do: ScenicDiff.push(scene, graph)
       end
-
-  ## Adding to a Parent Graph
-
-      # Parent computes child frames via Grid or Layout:
-      grid = Frame.Grid.new(viewport_frame)
-        |> Frame.Grid.rows([40, :auto])
-        |> Frame.Grid.columns([1.0])
-      cells = Frame.Grid.calculate(grid)
-      panel_frame = Frame.Grid.cell_frame(cells, 1, 0)
-
-      MyApp.Panel.add_to_graph(graph,
-        %{frame: panel_frame, title: "My Panel"},
-        id: :my_panel,
-        translate: panel_frame.pin.point
-      )
-
-  ## Frame
-
-  Widgets use `Widgex.Frame` — the standard bounds representation across the
-  flx ecosystem. A Frame has:
-  - `pin` — position (`%{x, y, point: {x, y}}`)
-  - `size` — dimensions (`%{width, height, box: {w, h}}`)
-
-  Parents compute child frames using `Widgex.Frame.Grid` (CSS Grid layout),
-  `Widgex.Frame.Utils` (splits), or `Scenic.Layout` (simple helpers).
 
   ## Lifecycle
 
   1. Parent computes child frames (Grid, Layout, or manual)
   2. Parent adds widget to graph with frame in data
-  3. Widget's `init_widget/3` is called — set up state
-  4. `render/1` is called — build graph from frame
-  5. Parent recomputes frames (e.g., on viewport resize)
-  6. `manage_children` detects change → `handle_update` fires
-  7. Widget detects frame changed → `handle_frame_change/2` → re-render
+  3. Widget's `render/1` builds initial graph → pushed via `widget_push/2`
+  4. Widget's `init_widget/3` runs (subscriptions, timers, etc.)
+  5. Parent provides new frame → `handle_frame_change/2` → re-render
+  6. Data changes (same frame) → `handle_update` → re-render
 
   ## Options
 
@@ -83,20 +78,13 @@ defmodule Scenic.Widget do
   """
 
   @doc """
-  Render the widget's graph from its assigns.
-
-  Called by the default `handle_frame_change/2`. Returns a `Scenic.Graph.t()`
-  built from `assigns.data.frame`.
+  Render the widget's graph from its assigns. Pure function: assigns → Graph.
   """
   @callback render(assigns :: map()) :: Scenic.Graph.t()
 
   @doc """
-  Handle a frame change from the parent.
-
-  Called when the parent provides a new frame (different size or position).
-  Default implementation calls `render/1` and pushes the new graph.
-
-  Override for custom resize behavior (debounce, animate, skip unchanged).
+  Handle a frame change. Default calls `render/1` and pushes via `widget_push/2`.
+  Override for custom resize behavior (debounce, animate, skip).
   """
   @callback handle_frame_change(
               frame :: struct(),
@@ -104,10 +92,7 @@ defmodule Scenic.Widget do
             ) :: {:ok, Scenic.Scene.t()}
 
   @doc """
-  Initialize the widget after the first render.
-
-  Called after `render/1` has been called and the graph pushed. The scene
-  already has `data` in assigns. Use this for subscriptions, timers, etc.
+  Initialize after first render. For subscriptions, timers, one-time setup.
   """
   @callback init_widget(
               scene :: Scenic.Scene.t(),
@@ -128,7 +113,7 @@ defmodule Scenic.Widget do
       def init(scene, data, opts) do
         scene = assign(scene, data: data)
         graph = render(scene.assigns)
-        scene = scene |> push_graph(graph)
+        scene = widget_push(scene, graph)
         init_widget(scene, data, opts)
       end
 
@@ -145,7 +130,7 @@ defmodule Scenic.Widget do
         else
           # Data changed but frame didn't — still re-render
           graph = render(scene.assigns)
-          {:ok, scene |> push_graph(graph)}
+          {:ok, widget_push(scene, graph)}
         end
       end
 
@@ -153,23 +138,28 @@ defmodule Scenic.Widget do
 
       def handle_frame_change(_frame, scene) do
         graph = render(scene.assigns)
-        {:ok, scene |> push_graph(graph)}
+        {:ok, widget_push(scene, graph)}
       end
 
       def init_widget(scene, _data, _opts), do: {:ok, scene}
 
+      # ── Graph push strategy ──
+      # Default: Scenic's push_graph (full replace, simple, always correct).
+      # Override to use ScenicDiff.push for diff-based updates on complex graphs.
+      defp widget_push(scene, graph) do
+        push_graph(scene, graph)
+      end
+
       # ── Frame comparison ──
-      # Compares size only — position changes are handled by Scenic's
-      # :translate style, not by the widget re-rendering.
+      # Size-only — position changes handled by Scenic's :translate.
       defp frames_differ?(nil, _new), do: true
       defp frames_differ?(_old, nil), do: true
-      defp frames_differ?(old, new) do
-        old.size != new.size
-      end
+      defp frames_differ?(old, new), do: old.size != new.size
 
       # ── Allow overrides ──
       defoverridable init_widget: 3,
                      handle_frame_change: 2,
+                     widget_push: 2,
                      init: 3,
                      handle_update: 3
     end
