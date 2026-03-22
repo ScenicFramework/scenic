@@ -2097,6 +2097,10 @@ defmodule Scenic.ViewPort do
     end
   end
 
+  # cursor_enter/leave are synthetic events fired by hover tracking — not routed via listed input
+  defp do_listed_input({:cursor_enter, _}, _state), do: :ok
+  defp do_listed_input({:cursor_leave, _}, _state), do: :ok
+
   defp do_listed_input({:cursor_pos, gxy} = input, %{input_lists: ils}) do
     with {:ok, pid, xy, _inv_tx, id} <- input_find_hit(ils, :cursor_pos, @root_id, gxy) do
       send(pid, {:_input, {:cursor_pos, xy}, input, id})
