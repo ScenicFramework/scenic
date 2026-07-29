@@ -77,11 +77,16 @@ defmodule Scenic do
   # --------------------------------------------------------
   @doc false
   def init(_) do
-    [
-      Scenic.PubSub,
+    # PubSub may already be started by RadixCache (or another app) — skip if so
+    pubsub_children = case GenServer.whereis(Scenic.PubSub) do
+      nil -> [Scenic.PubSub]
+      _pid -> []
+    end
+
+    (pubsub_children ++ [
       Scenic.Assets.Stream,
       {DynamicSupervisor, name: @viewports, strategy: :one_for_one}
-    ]
+    ])
     |> Supervisor.init(strategy: :one_for_one)
   end
 

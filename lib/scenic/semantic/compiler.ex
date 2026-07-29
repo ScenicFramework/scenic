@@ -50,7 +50,8 @@ defmodule Scenic.Semantic.Compiler do
             role: atom() | nil,
             value: any(),
             hidden: boolean(),
-            z_index: integer()
+            z_index: integer(),
+            metadata: map()
           }
 
     defstruct [
@@ -67,7 +68,8 @@ defmodule Scenic.Semantic.Compiler do
       role: nil,
       value: nil,
       hidden: false,
-      z_index: 0
+      z_index: 0,
+      metadata: %{}
     ]
   end
 

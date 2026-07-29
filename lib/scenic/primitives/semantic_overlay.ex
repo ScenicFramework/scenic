@@ -37,7 +37,7 @@ defmodule Scenic.Primitives.SemanticOverlay do
     styles = Keyword.take(opts, [:translate, :scale, :rotate, :pin, :hidden])
     
     # Add the component
-    Graph.add_to_graph(
+    Graph.add_to(
       graph,
       {SemanticOverlay, [viewport: viewport, enabled: enabled, graph_key: graph_key]},
       Keyword.merge([id: :semantic_overlay], styles)

@@ -22,81 +22,114 @@ defmodule Scenic.Component.SemanticOverlay do
   use Scenic.Component
   
   alias Scenic.{Graph, ViewPort}
-  alias Scenic.Semantic.Query
   
   # Component callbacks
   
-  @impl true
-  def init(opts, _scenic_opts) do
-    viewport = Keyword.fetch!(opts, :viewport)
-    enabled = Keyword.get(opts, :enabled, false)
-    graph_key = Keyword.get(opts, :graph_key, :main)
+  @impl Scenic.Component
+  def validate(params) when is_list(params) do
+    if Keyword.has_key?(params, :viewport) do
+      {:ok, params}
+    else
+      {:error, "SemanticOverlay requires a :viewport option"}
+    end
+  end
+
+  def validate(_), do: {:error, "SemanticOverlay params must be a keyword list with :viewport"}
+  
+  @impl Scenic.Scene
+  def init(scene, params, _opts) do
+    viewport = Keyword.fetch!(params, :viewport)
+    enabled = Keyword.get(params, :enabled, false)
+    graph_key = Keyword.get(params, :graph_key, :main)
     
-    state = %{
-      viewport: viewport,
-      enabled: enabled,
-      graph_key: graph_key,
-      graph: Graph.build()
-    }
+    graph = Graph.build()
     
     if enabled do
       Process.send_after(self(), :update_overlay, 100)
     end
     
-    {:ok, state, push: state.graph}
+    scene =
+      scene
+      |> assign(
+        viewport: viewport,
+        enabled: enabled,
+        graph_key: graph_key
+      )
+      |> push_graph(graph)
+    
+    {:ok, scene}
   end
   
-  @impl true
-  def handle_cast({:semantic_overlay, :toggle}, state) do
-    new_state = %{state | enabled: not state.enabled}
+  @impl GenServer
+  def handle_cast({:semantic_overlay, :toggle}, scene) do
+    enabled = scene.assigns.enabled
     
-    if new_state.enabled and not state.enabled do
+    if not enabled do
       send(self(), :update_overlay)
     end
     
-    graph = if new_state.enabled do
-      build_overlay(new_state)
+    new_enabled = not enabled
+    
+    graph = if new_enabled do
+      build_overlay(scene.assigns)
     else
       Graph.build()
     end
     
-    {:noreply, %{new_state | graph: graph}, push: graph}
+    scene =
+      scene
+      |> assign(enabled: new_enabled)
+      |> push_graph(graph)
+    
+    {:noreply, scene}
   end
   
-  def handle_cast({:semantic_overlay, :show}, state) do
-    if not state.enabled do
+  def handle_cast({:semantic_overlay, :show}, scene) do
+    if not scene.assigns.enabled do
       send(self(), :update_overlay)
     end
     
-    new_state = %{state | enabled: true}
-    graph = build_overlay(new_state)
-    {:noreply, %{new_state | graph: graph}, push: graph}
+    graph = build_overlay(scene.assigns)
+    
+    scene =
+      scene
+      |> assign(enabled: true)
+      |> push_graph(graph)
+    
+    {:noreply, scene}
   end
   
-  def handle_cast({:semantic_overlay, :hide}, state) do
-    new_state = %{state | enabled: false}
+  def handle_cast({:semantic_overlay, :hide}, scene) do
     graph = Graph.build()
-    {:noreply, %{new_state | graph: graph}, push: graph}
+    
+    scene =
+      scene
+      |> assign(enabled: false)
+      |> push_graph(graph)
+    
+    {:noreply, scene}
   end
   
-  @impl true
-  def handle_info(:update_overlay, %{enabled: false} = state) do
-    {:noreply, state}
+  @impl GenServer
+  def handle_info(:update_overlay, %{assigns: %{enabled: false}} = scene) do
+    {:noreply, scene}
   end
   
-  def handle_info(:update_overlay, %{enabled: true} = state) do
-    graph = build_overlay(state)
+  def handle_info(:update_overlay, %{assigns: %{enabled: true}} = scene) do
+    graph = build_overlay(scene.assigns)
     
     # Schedule next update
     Process.send_after(self(), :update_overlay, 1000)
     
-    {:noreply, %{state | graph: graph}, push: graph}
+    scene = push_graph(scene, graph)
+    
+    {:noreply, scene}
   end
   
   # Private functions
   
-  defp build_overlay(state) do
-    case ViewPort.get_semantic(state.viewport, state.graph_key) do
+  defp build_overlay(assigns) do
+    case ViewPort.get_semantic(assigns.viewport, assigns.graph_key) do
       {:ok, info} ->
         build_semantic_visualization(info)
       {:error, _} ->

@@ -1023,6 +1023,23 @@ defmodule Scenic.Scene do
 
   This has replaced push_graph() as the preferred way to push a graph.
   """
+  @callback handle_input(input :: Scenic.ViewPort.Input.t(), id :: any, scene :: Scene.t()) ::
+              {:noreply, scene}
+              | {:noreply, scene}
+              | {:noreply, scene, timeout}
+              | {:noreply, scene, :hibernate}
+              | {:noreply, scene, opts :: response_opts()}
+              | {:halt, scene}
+              | {:halt, scene, timeout}
+              | {:halt, scene, :hibernate}
+              | {:halt, scene, opts :: response_opts()}
+              | {:cont, input, scene}
+              | {:cont, input, scene, timeout}
+              | {:cont, input, scene, :hibernate}
+              | {:cont, input, scene, opts :: response_opts()}
+              | {:stop, reason, scene}
+            when scene: Scene.t(), reason: term, input: term
+
   @doc """
   Invoked to observe input before it's routed to handlers.
 
@@ -1045,23 +1062,6 @@ defmodule Scenic.Scene do
   """
   @callback observe_input(input :: Scenic.ViewPort.Input.t(), id :: any, scene :: Scene.t()) ::
               {:noreply, scene} when scene: Scene.t()
-
-  @callback handle_input(input :: Scenic.ViewPort.Input.t(), id :: any, scene :: Scene.t()) ::
-              {:noreply, scene}
-              | {:noreply, scene}
-              | {:noreply, scene, timeout}
-              | {:noreply, scene, :hibernate}
-              | {:noreply, scene, opts :: response_opts()}
-              | {:halt, scene}
-              | {:halt, scene, timeout}
-              | {:halt, scene, :hibernate}
-              | {:halt, scene, opts :: response_opts()}
-              | {:cont, input, scene}
-              | {:cont, input, scene, timeout}
-              | {:cont, input, scene, :hibernate}
-              | {:cont, input, scene, opts :: response_opts()}
-              | {:stop, reason, scene}
-            when scene: Scene.t(), reason: term, input: term
 
   @doc """
   Invoked when the `Scene` receives an event from another scene.
