@@ -577,11 +577,17 @@ defmodule Scenic.ViewPort do
           true = :ets.insert(semantic_table, {name, semantic_info})
 
           # Build and store enhanced scene script information
+          new_graph? = not :ets.member(scene_script_table, name)
           scene_script_info = build_scene_script_info(graph, name, script, %{})
           true = :ets.insert(scene_script_table, {name, scene_script_info})
 
-          # Recompute hierarchy for all graphs after each update
-          recompute_scene_script_hierarchy(scene_script_table)
+          # Hierarchy (parent/child/depth) only changes when the SET of
+          # graphs changes — recomputing it on every content push made each
+          # push O(all graphs ever seen), so a busy editor got slower with
+          # every accumulated scene (per-keystroke latency growing over a
+          # session). Recompute only when a new graph name appears; removals
+          # recompute in the :DOWN / del_graph cleanup paths.
+          if new_graph?, do: recompute_scene_script_hierarchy(scene_script_table)
 
           # send the input list to the viewport
           GenServer.cast(pid, {:input_list, input_list, name, owner})
@@ -599,7 +605,19 @@ defmodule Scenic.ViewPort do
   Same as del_script/2
   """
   @spec del_graph(viewport :: ViewPort.t(), name :: any) :: :ok
-  def del_graph(%ViewPort{} = viewport, name), do: del_script(viewport, name)
+  def del_graph(%ViewPort{semantic_table: semantic_table, scene_script_table: scene_script_table} = viewport, name) do
+    # Mirror put_graph: a deleted graph must not leave ghost semantic /
+    # scene-script rows behind (see the :DOWN handler for the full story).
+    if semantic_table, do: :ets.delete(semantic_table, name)
+
+    if scene_script_table do
+      :ets.delete(scene_script_table, name)
+      # Set shrank — refresh hierarchy (put_graph only recomputes on set growth)
+      recompute_scene_script_hierarchy(scene_script_table)
+    end
+
+    del_script(viewport, name)
+  end
 
   # --------------------------------------------------------
   @doc """
@@ -980,14 +998,44 @@ defmodule Scenic.ViewPort do
           input_lists: input_lists,
           scene_transforms: scene_transforms,
           script_table: script_table,
+          semantic_table: semantic_table,
+          scene_script_table: scene_script_table,
           scenes_by_pid: scenes_by_pid,
           scenes_by_id: scenes_by_id,
           starting_scenes: starting_scenes,
           monitors: monitors
         } = old_state
       ) do
+    # Collect this pid's graph names BEFORE deleting its scripts, so the
+    # matching semantic / scene-script rows can be purged with them. Without
+    # this, every dead scene leaves ghost rows in the semantic table (its
+    # last-rendered text, cursor, etc.), which shadow the live scene's data
+    # for any "find latest entry of type X" style query — the root cause of
+    # an entire class of order-dependent test flakes.
+    owned_names = :ets.match(script_table, {:"$1", :_, pid}) |> List.flatten()
+
     # cleanup scripts & names tables
     :ets.match_delete(script_table, {:_, :_, pid})
+
+    # Tell the DRIVERS too — the explicit del_script path casts @del_scripts,
+    # but this death path never did, so the render side accumulated every
+    # dead scene's scripts for the life of the session. The C driver's
+    # per-frame work grew with each dead scene: measured as GPU render time
+    # degrading ~2x over a long run (and an editor session "getting slow").
+    if owned_names != [] do
+      cast_drivers(old_state, {@del_scripts, owned_names})
+    end
+
+    Enum.each(owned_names, fn name ->
+      if semantic_table, do: :ets.delete(semantic_table, name)
+      if scene_script_table, do: :ets.delete(scene_script_table, name)
+    end)
+
+    # The graph set shrank — refresh hierarchy once (put_graph no longer
+    # recomputes on every push, only on set changes).
+    if scene_script_table != nil and owned_names != [] do
+      recompute_scene_script_hierarchy(scene_script_table)
+    end
 
     # clean up any input requested by the pid
     state = input_pid_down(pid, old_state)
@@ -2039,36 +2087,50 @@ defmodule Scenic.ViewPort do
   # --------------------------------------------------------
   defp do_requested_input({:cursor_button, {button, action, mods, gxy}} = input, pids, state) do
     # send the input to each requesting pid. But... needs to be in the local
-    # coord space and indicate if it was over an input
+    # coord space and indicate if it was over an input.
+    #
+    # If the scene's transform cannot be resolved, DROP the event for that
+    # pid — the captured-input path already does this for buttons.
+    #
+    # Measured: this fires ~676×/suite-run, i.e. it is the COMMON case for
+    # a non-positional requester when the click hits some other component,
+    # not a rare race. Forwarding raw GLOBAL coords (the old behavior) made
+    # the receiver run local math on global values — e.g. a menu-bar click
+    # at global y=17 is "inside" a full-height editor pane's local box, so
+    # the editor treated menu clicks as text clicks. Components had grown
+    # ad-hoc defenses against this (see TextField's overlay-click filter).
+    # Dropping is both safer and cheaper.
     Enum.each(pids, fn pid ->
       case prep_gxy_input(gxy, :any, pid, state) do
         {:ok, xy, id} ->
           send(pid, {:_input, {:cursor_button, {button, action, mods, xy}}, input, id})
 
         _ ->
-          send(pid, {:_input, {:cursor_button, {button, action, mods, gxy}}, input, nil})
+          :ok
       end
     end)
   end
 
   defp do_requested_input({:cursor_scroll, {delta, gxy}} = input, pids, state) do
     # send the input to each requesting pid. But... needs to be in the local
-    # coord space and indicate if it was over an input
+    # coord space and indicate if it was over an input.
+    # Unresolvable transform → drop for that pid (see cursor_button above).
     Enum.each(pids, fn pid ->
       case prep_gxy_input(gxy, :any, pid, state) do
         {:ok, xy, id} -> send(pid, {:_input, {:cursor_scroll, {delta, xy}}, input, id})
-        _ -> send(pid, {:_input, {:cursor_scroll, {delta, gxy}}, input, nil})
+        _ -> :ok
       end
     end)
   end
 
   defp do_requested_input({:cursor_pos, gxy} = input, pids, state) do
     # send the input to each requesting pid. But... needs to be in the local
-    # coord space and indicate if it was over an input
+    # coord space and indicate if it was over an input.
+    # Unresolvable transform → drop for that pid (see cursor_button above).
     Enum.each(pids, fn pid ->
       case prep_gxy_input(gxy, :any, pid, state) do
         {:ok, xy, id} -> send(pid, {:_input, {:cursor_pos, xy}, input, id})
-        _ -> send(pid, {:_input, {:cursor_pos, gxy}, input, nil})
+        _ -> :ok
       end
     end)
   end
