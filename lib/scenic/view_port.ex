@@ -541,7 +541,16 @@ defmodule Scenic.ViewPort do
           graph :: Graph.t(),
           opts :: Keyword.t()
         ) :: {:ok, name :: any} | {:error, atom}
-  def put_graph(%ViewPort{pid: pid, semantic_table: semantic_table, scene_script_table: scene_script_table} = viewport, name, %Graph{} = graph, opts \\ []) do
+  def put_graph(
+        %ViewPort{
+          pid: pid,
+          semantic_table: semantic_table,
+          scene_script_table: scene_script_table
+        } = viewport,
+        name,
+        %Graph{} = graph,
+        opts \\ []
+      ) do
     opts =
       opts
       |> Enum.into([])
@@ -605,7 +614,11 @@ defmodule Scenic.ViewPort do
   Same as del_script/2
   """
   @spec del_graph(viewport :: ViewPort.t(), name :: any) :: :ok
-  def del_graph(%ViewPort{semantic_table: semantic_table, scene_script_table: scene_script_table} = viewport, name) do
+  def del_graph(
+        %ViewPort{semantic_table: semantic_table, scene_script_table: scene_script_table} =
+          viewport,
+        name
+      ) do
     # Mirror put_graph: a deleted graph must not leave ghost semantic /
     # scene-script rows behind (see the :DOWN handler for the full story).
     if semantic_table, do: :ets.delete(semantic_table, name)
@@ -1451,40 +1464,52 @@ defmodule Scenic.ViewPort do
   # --------------------------------------------------------
   # Semantic information access
   def handle_call({:get_semantic, graph_key}, _from, %{semantic_table: semantic_table} = state) do
-    result = case :ets.lookup(semantic_table, graph_key) do
-      [{^graph_key, info}] -> {:ok, info}
-      [] -> {:error, :no_semantic_info}
-    end
+    result =
+      case :ets.lookup(semantic_table, graph_key) do
+        [{^graph_key, info}] -> {:ok, info}
+        [] -> {:error, :no_semantic_info}
+      end
+
     {:reply, result, state}
   end
 
   # Register a semantic element
-  def handle_call({:register_semantic, graph_key, element_id, semantic_data}, _from, %{semantic_table: semantic_table} = state) do
+  def handle_call(
+        {:register_semantic, graph_key, element_id, semantic_data},
+        _from,
+        %{semantic_table: semantic_table} = state
+      ) do
     # Get current semantic data for this graph, or create new
-    current_data = case :ets.lookup(semantic_table, graph_key) do
-      [{^graph_key, data}] -> data
-      [] -> %{
-        graph_key: graph_key,
-        timestamp: System.system_time(:millisecond),
-        elements: %{},
-        by_type: %{}
-      }
-    end
+    current_data =
+      case :ets.lookup(semantic_table, graph_key) do
+        [{^graph_key, data}] ->
+          data
+
+        [] ->
+          %{
+            graph_key: graph_key,
+            timestamp: System.system_time(:millisecond),
+            elements: %{},
+            by_type: %{}
+          }
+      end
 
     # Add the new element
     element_type = Map.get(semantic_data, :type, :unknown)
 
-    updated_data = current_data
-    |> put_in([:elements, element_id], Map.merge(semantic_data, %{id: element_id}))
-    |> update_in([:by_type, element_type], fn existing ->
-      existing = existing || []
-      if element_id in existing do
-        existing
-      else
-        [element_id | existing]
-      end
-    end)
-    |> Map.put(:timestamp, System.system_time(:millisecond))
+    updated_data =
+      current_data
+      |> put_in([:elements, element_id], Map.merge(semantic_data, %{id: element_id}))
+      |> update_in([:by_type, element_type], fn existing ->
+        existing = existing || []
+
+        if element_id in existing do
+          existing
+        else
+          [element_id | existing]
+        end
+      end)
+      |> Map.put(:timestamp, System.system_time(:millisecond))
 
     # Store back in ETS
     :ets.insert(semantic_table, {graph_key, updated_data})
@@ -1669,11 +1694,17 @@ defmodule Scenic.ViewPort do
   defp internal_put_graph(
          %Graph{} = graph,
          name,
-         %{input_lists: ils, script_table: script_table, semantic_table: semantic_table, scene_script_table: scene_script_table} = state
+         %{
+           input_lists: ils,
+           script_table: script_table,
+           semantic_table: semantic_table,
+           scene_script_table: scene_script_table
+         } = state
        ) do
     state =
       with {:ok, script} <- GraphCompiler.compile(graph),
-           {:ok, {input_list, input_types, _semantic_entries}} <- Scenic.SSM.Compiler.compile(graph) do
+           {:ok, {input_list, input_types, _semantic_entries}} <-
+             Scenic.SSM.Compiler.compile(graph) do
         # write the script to the table
         case :ets.lookup(script_table, name) do
           # do nothing if the script is in the table and has not changed
@@ -1919,18 +1950,21 @@ defmodule Scenic.ViewPort do
 
       :error ->
         # Single hit-test with :any — reuse for both cursor_pos delivery and hover
-        hit = if Enum.member?(input_positional, :cursor_pos) or
-                 Enum.member?(input_positional, :cursor_enter) do
-          input_find_hit(state.input_lists, :any, @root_id, gxy)
-        else
-          :not_found
-        end
+        hit =
+          if Enum.member?(input_positional, :cursor_pos) or
+               Enum.member?(input_positional, :cursor_enter) do
+            input_find_hit(state.input_lists, :any, @root_id, gxy)
+          else
+            :not_found
+          end
 
         # Deliver cursor_pos to the hit element (if it accepts cursor_pos)
         case hit do
           {:ok, pid, xy, _inv_tx, id} ->
             send(pid, {:_input, {:cursor_pos, xy}, input, id})
-          _ -> :ok
+
+          _ ->
+            :ok
         end
 
         # Deliver to request listeners
@@ -1940,22 +1974,24 @@ defmodule Scenic.ViewPort do
         end
 
         # Hover tracking — compare current hit with previous hover target
-        curr_key = case hit do
-          {:ok, pid, _xy, inv_tx, id} -> {pid, inv_tx, id}
-          _ -> nil
-        end
+        curr_key =
+          case hit do
+            {:ok, pid, _xy, inv_tx, id} -> {pid, inv_tx, id}
+            _ -> nil
+          end
 
         prev_key = prev_hover
 
-        state = if hover_target_changed?(prev_key, curr_key) do
-          # Fire cursor_leave to old target
-          fire_cursor_leave(prev_key, gxy)
-          # Fire cursor_enter to new target
-          fire_cursor_enter(curr_key, gxy, hit)
-          %{state | _hover_target: curr_key}
-        else
-          state
-        end
+        state =
+          if hover_target_changed?(prev_key, curr_key) do
+            # Fire cursor_leave to old target
+            fire_cursor_leave(prev_key, gxy)
+            # Fire cursor_enter to new target
+            fire_cursor_enter(curr_key, gxy, hit)
+            %{state | _hover_target: curr_key}
+          else
+            state
+          end
 
         {:noreply, state}
     end
@@ -1970,19 +2006,26 @@ defmodule Scenic.ViewPort do
     if hover do
       fire_cursor_leave(hover, {0, 0})
     end
+
     state = %{state | _hover_target: nil}
 
     # Continue with normal viewport event handling
-    %{_input_captures: captures, _input_requests: requests, input_positional: input_positional} = state
+    %{_input_captures: captures, _input_requests: requests, input_positional: input_positional} =
+      state
+
     case Map.fetch(captures, :viewport) do
-      {:ok, pids} -> do_captured_input(input, pids, state)
+      {:ok, pids} ->
+        do_captured_input(input, pids, state)
+
       :error ->
         if Enum.member?(input_positional, :viewport), do: do_listed_input(input, state)
+
         case Map.fetch(requests, :viewport) do
           {:ok, pids} -> do_requested_input(input, pids, state)
           :error -> :ok
         end
     end
+
     {:noreply, state}
   end
 
@@ -2000,9 +2043,10 @@ defmodule Scenic.ViewPort do
         do_captured_input(input, pids, state)
 
       :error ->
-        listed_result = if Enum.member?(input_positional, input_type) do
-          do_listed_input(input, state)
-        end
+        listed_result =
+          if Enum.member?(input_positional, input_type) do
+            do_listed_input(input, state)
+          end
 
         # Scroll targeting: when a hit-tested scrollable handles the event,
         # don't also broadcast to request_input listeners. This makes nested
@@ -2032,10 +2076,12 @@ defmodule Scenic.ViewPort do
   defp hover_target_changed?(nil, nil), do: false
   defp hover_target_changed?(nil, _), do: true
   defp hover_target_changed?(_, nil), do: true
+
   defp hover_target_changed?({pid_a, _, id_a}, {pid_b, _, id_b}),
     do: pid_a != pid_b or id_a != id_b
 
   defp fire_cursor_leave(nil, _gxy), do: :ok
+
   defp fire_cursor_leave({pid, inv_tx, id}, gxy) do
     xy = Math.Vector2.project(gxy, inv_tx)
     send(pid, {:_input, {:cursor_leave, xy}, {:cursor_leave, gxy}, id})
@@ -2045,6 +2091,7 @@ defmodule Scenic.ViewPort do
 
   defp fire_cursor_enter(nil, _gxy, _hit), do: :ok
   defp fire_cursor_enter({_pid, _inv_tx, _id}, _gxy, :not_found), do: :ok
+
   defp fire_cursor_enter({pid, _inv_tx, id}, _gxy, {:ok, _pid, xy, _inv, _id}) do
     send(pid, {:_input, {:cursor_enter, xy}, {:cursor_enter, xy}, id})
   rescue
@@ -2154,6 +2201,7 @@ defmodule Scenic.ViewPort do
       {:ok, pid, xy, _inv_tx, id} ->
         send(pid, {:_input, {:cursor_scroll, {delta, xy}}, input, id})
         :hit
+
       _ ->
         :not_found
     end
@@ -2197,10 +2245,11 @@ defmodule Scenic.ViewPort do
   # a monitored pid has gone down. Clean up any input in state for it
   defp input_pid_down(pid, %{_input_captures: captures, _input_requests: requests} = state) do
     # Clear hover target if the hovered scene went down
-    state = case state._hover_target do
-      {^pid, _, _} -> %{state | _hover_target: nil}
-      _ -> state
-    end
+    state =
+      case state._hover_target do
+        {^pid, _, _} -> %{state | _hover_target: nil}
+        _ -> state
+      end
 
     state =
       captures
@@ -2239,7 +2288,7 @@ defmodule Scenic.ViewPort do
   defp compile_input(graph)
 
   defp compile_input(%Graph{primitives: primitives}) do
-    input = comp_input_prim([], 0, primitives[0], primitives, Math.Matrix.identity(), nil)
+    input = comp_input_prim([], 0, primitives[0], primitives, Math.Matrix.identity(), [])
 
     # compile the requested input types
     types =
@@ -2255,10 +2304,12 @@ defmodule Scenic.ViewPort do
   defp comp_input_prim(input, uid, primitive, primitives, tx, scissor)
 
   # skip anything hidden
-  defp comp_input_prim(input, _uid, %Primitive{styles: %{hidden: true}}, _, _tx, _scissor), do: input
+  defp comp_input_prim(input, _uid, %Primitive{styles: %{hidden: true}}, _, _tx, _scissor),
+    do: input
 
   # skip script primitives - no input handlers there
-  defp comp_input_prim(input, _uid, %Primitive{module: Primitive.Script}, _, _tx, _scissor), do: input
+  defp comp_input_prim(input, _uid, %Primitive{module: Primitive.Script}, _, _tx, _scissor),
+    do: input
 
   # it is a group. Calc the local transform if there one, but doesn't go into the
   # list as a component itself...
@@ -2277,7 +2328,7 @@ defmodule Scenic.ViewPort do
     # scissor is {w, h} and clips to {0, 0, w, h} in the group's local space
     child_scissor =
       case Map.get(styles, :scissor) do
-        {w, h} -> {local_tx, w, h}
+        {w, h} -> [{local_tx, w, h} | scissor]
         _ -> scissor
       end
 
@@ -2341,6 +2392,11 @@ defmodule Scenic.ViewPort do
   # scissor_tx is the scissor group's accumulated transform within its own graph.
   # parent_tx is the transform that maps from the graph's local space to global space.
   defp scissor_clips?(nil, _gx, _gy, _parent_tx), do: false
+  defp scissor_clips?([], _gx, _gy, _parent_tx), do: false
+
+  defp scissor_clips?(scissors, gx, gy, parent_tx) when is_list(scissors) do
+    Enum.any?(scissors, &scissor_clips?(&1, gx, gy, parent_tx))
+  end
 
   defp scissor_clips?({scissor_tx, w, h}, gx, gy, parent_tx) do
     # Compose parent_tx with scissor_tx to get full global transform
@@ -2350,6 +2406,10 @@ defmodule Scenic.ViewPort do
     # Clipped if outside the scissor rectangle {0, 0, w, h}
     sx < 0 or sx > w or sy < 0 or sy > h
   end
+
+  @doc false
+  def point_clipped?(scissors, {gx, gy}, parent_tx),
+    do: scissor_clips?(scissors, gx, gy, parent_tx)
 
   # coalesce the requested positional input into a single simple list
   defp update_positional_input(%{input_lists: input_lists} = state) do
@@ -2415,24 +2475,24 @@ defmodule Scenic.ViewPort do
     if scissor_clips?(scissor, gx, gy, parent_tx) do
       do_find_hit(tail, input_type, global_point, lists, name, parent_tx)
     else
-    # require Logger
-    # Logger.info("🔍 Component hit test: name=#{inspect(name)}, component_id=#{inspect(data)}, point=#{inspect(global_point)}")
+      # require Logger
+      # Logger.info("🔍 Component hit test: name=#{inspect(name)}, component_id=#{inspect(data)}, point=#{inspect(global_point)}")
 
-    # calculate the local matrix, which becomes the parent of the component
-    local_tx = Math.Matrix.mul(parent_tx, local_tx)
+      # calculate the local matrix, which becomes the parent of the component
+      local_tx = Math.Matrix.mul(parent_tx, local_tx)
 
-    # recurse to test the component
-    case input_find_hit(lists, input_type, data, global_point, local_tx) do
-      {:ok, _, _, _, _} = hit ->
-        # There was a hit inside the component. Return result as we are done.
-        # Logger.info("✅ Component hit found!")
-        hit
+      # recurse to test the component
+      case input_find_hit(lists, input_type, data, global_point, local_tx) do
+        {:ok, _, _, _, _} = hit ->
+          # There was a hit inside the component. Return result as we are done.
+          # Logger.info("✅ Component hit found!")
+          hit
 
-      :not_found ->
-        # if not found, keep going
-        # Logger.info("❌ Component hit not found, continuing...")
-        do_find_hit(tail, input_type, global_point, lists, name, parent_tx)
-    end
+        :not_found ->
+          # if not found, keep going
+          # Logger.info("❌ Component hit not found, continuing...")
+          do_find_hit(tail, input_type, global_point, lists, name, parent_tx)
+      end
     end
   end
 
@@ -2483,10 +2543,12 @@ defmodule Scenic.ViewPort do
         # Extract semantic data if present - use direct access for struct fields
         # Check if primitive has opts field and it contains semantic data
         opts = Map.get(primitive, :opts, [])
-        semantic = case opts do
-          opts when is_list(opts) -> Keyword.get(opts, :semantic)
-          _ -> nil
-        end
+
+        semantic =
+          case opts do
+            opts when is_list(opts) -> Keyword.get(opts, :semantic)
+            _ -> nil
+          end
 
         if semantic do
           # The ID is stored in primitive.id field, not in opts
@@ -2502,6 +2564,7 @@ defmodule Scenic.ViewPort do
             # Store transform for position info if needed
             transforms: primitive.transforms
           }
+
           Map.put(acc, symbolic_id, element_info)
         else
           acc
@@ -2534,9 +2597,12 @@ defmodule Scenic.ViewPort do
       # === HIERARCHY INFORMATION ===
       graph_key: graph_key,
       children: children,
-      parent: nil,                    # Will be computed during hierarchy pass
-      depth: 0,                      # Will be computed during hierarchy pass
-      render_order: 0,               # Will be computed during hierarchy pass
+      # Will be computed during hierarchy pass
+      parent: nil,
+      # Will be computed during hierarchy pass
+      depth: 0,
+      # Will be computed during hierarchy pass
+      render_order: 0,
 
       # === METADATA ===
       timestamp: System.system_time(:millisecond),
@@ -2544,7 +2610,8 @@ defmodule Scenic.ViewPort do
 
       # === VISUAL INFORMATION ===
       transforms: extract_graph_transforms(script),
-      bounds: %{x: 0, y: 0, w: 0, h: 0},  # Will be computed from primitives
+      # Will be computed from primitives
+      bounds: %{x: 0, y: 0, w: 0, h: 0},
 
       # === ELEMENTS (Enhanced from current semantic system) ===
       elements: enhanced_elements,
@@ -2574,9 +2641,11 @@ defmodule Scenic.ViewPort do
 
         # Computed properties for automation
         clickable: is_clickable_primitive(primitive),
-        visible: true,  # Will be computed based on transforms/clips
+        # Will be computed based on transforms/clips
+        visible: true,
         text_selectable: is_text_selectable(primitive)
       }
+
       Map.put(acc, id, element_info)
     end)
   end
@@ -2592,18 +2661,20 @@ defmodule Scenic.ViewPort do
 
   # Extract script references from compiled script
   defp extract_script_references(script) when is_list(script) do
-    references = script
-    |> Enum.filter(fn
-      {:script, _child_key} -> true
-      _ -> false
-    end)
-    |> Enum.map(fn {:script, key} -> key end)
-    |> Enum.uniq()
+    references =
+      script
+      |> Enum.filter(fn
+        {:script, _child_key} -> true
+        _ -> false
+      end)
+      |> Enum.map(fn {:script, key} -> key end)
+      |> Enum.uniq()
 
     # Debug output (removed for production)
 
     references
   end
+
   defp extract_script_references(_), do: []
 
   # Extract graph-level transforms from script
@@ -2617,6 +2688,7 @@ defmodule Scenic.ViewPort do
       _ -> false
     end)
   end
+
   defp extract_graph_transforms(_), do: []
 
   # Enhance elements with computed properties
@@ -2631,9 +2703,11 @@ defmodule Scenic.ViewPort do
   defp is_clickable_primitive(%{module: Scenic.Primitive.Rectangle}), do: true
   defp is_clickable_primitive(%{module: Scenic.Primitive.Circle}), do: true
   defp is_clickable_primitive(%{module: Scenic.Primitive.Ellipse}), do: true
+
   defp is_clickable_primitive(primitive) do
     # Check if primitive has semantic role that suggests clickability
     semantic = extract_semantic_data(primitive)
+
     case Map.get(semantic, :role) do
       :button -> true
       :link -> true
@@ -2643,6 +2717,7 @@ defmodule Scenic.ViewPort do
 
   # Determine if primitive contains selectable text
   defp is_text_selectable(%{module: Scenic.Primitive.Text}), do: true
+
   defp is_text_selectable(primitive) do
     semantic = extract_semantic_data(primitive)
     Map.get(semantic, :type) == :text_buffer
@@ -2696,11 +2771,12 @@ defmodule Scenic.ViewPort do
     data_map = Map.new(entries)
 
     # Build parent relationships by finding who references each graph
-    entries_with_parents = Enum.map(entries, fn {key, data} ->
-      parent = find_parent_graph(key, data_map)
-      updated_data = Map.put(data, :parent, parent)
-      {key, updated_data}
-    end)
+    entries_with_parents =
+      Enum.map(entries, fn {key, data} ->
+        parent = find_parent_graph(key, data_map)
+        updated_data = Map.put(data, :parent, parent)
+        {key, updated_data}
+      end)
 
     # Compute depths starting from root nodes
     entries_with_depths = compute_depths(entries_with_parents)
@@ -2724,9 +2800,10 @@ defmodule Scenic.ViewPort do
     data_map = Map.new(entries_with_parents)
 
     # Find root graphs (no parent)
-    roots = Enum.filter(entries_with_parents, fn {_key, data} ->
-      data.parent == nil
-    end)
+    roots =
+      Enum.filter(entries_with_parents, fn {_key, data} ->
+        data.parent == nil
+      end)
 
     # Assign depths starting from roots
     depth_assignments = compute_depths_recursive(roots, data_map, %{}, 0)
@@ -2742,23 +2819,26 @@ defmodule Scenic.ViewPort do
   # Recursively compute depths for the hierarchy
   defp compute_depths_recursive(nodes, data_map, depth_map, current_depth) do
     # Assign current depth to all nodes at this level
-    updated_depth_map = Enum.reduce(nodes, depth_map, fn {key, _data}, acc ->
-      Map.put(acc, key, current_depth)
-    end)
+    updated_depth_map =
+      Enum.reduce(nodes, depth_map, fn {key, _data}, acc ->
+        Map.put(acc, key, current_depth)
+      end)
 
     # Find all children of current nodes
-    children = Enum.flat_map(nodes, fn {_key, data} ->
-      data.children
-      |> Enum.map(fn child_key ->
-        child_data = Map.get(data_map, child_key)
-        if child_data do
-          {child_key, child_data}
-        else
-          nil
-        end
+    children =
+      Enum.flat_map(nodes, fn {_key, data} ->
+        data.children
+        |> Enum.map(fn child_key ->
+          child_data = Map.get(data_map, child_key)
+
+          if child_data do
+            {child_key, child_data}
+          else
+            nil
+          end
+        end)
+        |> Enum.filter(& &1)
       end)
-      |> Enum.filter(& &1)
-    end)
 
     # Recurse for children if any exist
     if children != [] do
