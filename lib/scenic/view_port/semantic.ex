@@ -361,19 +361,37 @@ defmodule Scenic.ViewPort.Semantic do
 
   # Lookup element key in index table
   defp lookup_in_index(semantic_index, element_id) do
-    id =
+    # Element ids come in BOTH shapes, and both are legitimate. Components that
+    # build ids from static names use atoms (:icon_menu_file); components whose
+    # ids derive from runtime data — a buffer UUID, a row key — keep them as
+    # strings ("tab_bar_close_29bcf5d5-...") because coercing unbounded
+    # external data into atoms leaks the atom table.
+    #
+    # Coercing a binary to an atom before lookup therefore found the first kind
+    # and silently missed the second: a tab's close button could not be
+    # resolved by id even though it was registered.
+    candidates =
       case element_id do
-        id when is_atom(id) -> id
-        id when is_tuple(id) -> id
-        id when is_binary(id) -> String.to_existing_atom(id)
+        id when is_binary(id) -> [id, safe_existing_atom(id)]
+        id -> [id]
       end
 
-    case :ets.lookup(semantic_index, id) do
-      [{^id, key}] -> {:ok, key}
-      [] -> :not_found
-    end
+    Enum.find_value(candidates, :not_found, fn
+      nil ->
+        nil
+
+      id ->
+        case :ets.lookup(semantic_index, id) do
+          [{^id, key}] -> {:ok, key}
+          [] -> nil
+        end
+    end)
+  end
+
+  defp safe_existing_atom(str) do
+    String.to_existing_atom(str)
   rescue
-    ArgumentError -> :not_found
+    ArgumentError -> nil
   end
 
   # Apply filter criteria to element list
