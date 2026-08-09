@@ -2107,9 +2107,17 @@ defmodule Scenic.ViewPort do
   # 3: send the event with the local coords and the found item
 
   defp do_captured_input({:cursor_button, {button, action, mods, gxy}} = input, [pid | _], state) do
-    # prep the gxy. Throw away the input if it doesn't succeed
-    with {:ok, xy, id} <- prep_gxy_input(gxy, :any, pid, state) do
-      send(pid, {:_input, {:cursor_button, {button, action, mods, xy}}, input, id})
+    # A capture promises delivery even when the pointer has left the capturing
+    # scene or its transform is temporarily unavailable. In that case retain
+    # the driver's global coordinates, matching cursor_pos/cursor_scroll. Most
+    # importantly, never discard a captured button release: doing so strands
+    # drag state and input capture indefinitely.
+    case prep_gxy_input(gxy, :any, pid, state) do
+      {:ok, xy, id} ->
+        send(pid, {:_input, {:cursor_button, {button, action, mods, xy}}, input, id})
+
+      _ ->
+        send(pid, {:_input, {:cursor_button, {button, action, mods, gxy}}, input, nil})
     end
   end
 
