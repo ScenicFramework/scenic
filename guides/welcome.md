@@ -27,6 +27,7 @@ If you are new to Scenic, then you should read the following guides.
 * [Standard Components](Scenic.Components.html)
 * [Styles](overview_styles.html)
 * [Transforms](overview_transforms.html)
+* [Testing and Automation](testing_and_automation.html)
 * [Contributing](contributing.html)
 * [Code of Conduct](code_of_conduct.html)
 

@@ -208,10 +208,23 @@ defmodule Scenic.Component.Button do
 
     vpos = height / 2 + ascent / 2 + descent / 3
 
-    # build the graph
+    # build the graph - add semantic info to make button clickable via MCP
+    semantic_opts = if id do
+      [
+        semantic: %{
+          type: :button,
+          label: text,
+          clickable: true,
+          bounds: %{left: 0, top: 0, width: width, height: height}
+        }
+      ]
+    else
+      []
+    end
+
     graph =
       Graph.build(font: font, font_size: font_size)
-      |> rrect({width, height, radius}, fill: theme.background, id: :btn, input: :cursor_button)
+      |> rrect({width, height, radius}, [fill: theme.background, id: id || :btn, input: :cursor_button] ++ semantic_opts)
       |> do_aligned_text(alignment, text, theme.text, width, vpos)
       # special case the dark and light themes to show an outline
       |> do_special_theme_outline(theme, theme.border)
@@ -225,7 +238,6 @@ defmodule Scenic.Component.Button do
         theme: theme,
         id: id,
         text: text,
-        theme: theme,
         opts: opts
       )
       |> assign_new(pressed: false)
@@ -304,9 +316,9 @@ defmodule Scenic.Component.Button do
   @impl Scenic.Scene
   def handle_input(
         {:cursor_button, {:btn_left, 1, _, _}},
-        :btn,
+        button_id,
         %Scene{assigns: %{id: id, graph: graph, theme: theme}} = scene
-      ) do
+      ) when button_id == id or button_id == :btn do
     :ok = capture_input(scene, :cursor_button)
     :ok = send_parent_event(scene, {:btn_pressed, id})
 
@@ -345,9 +357,9 @@ defmodule Scenic.Component.Button do
   # released inside the button
   def handle_input(
         {:cursor_button, {:btn_left, 0, _, _}},
-        :btn,
+        button_id,
         %Scene{assigns: %{pressed: true, id: id, graph: graph, theme: theme}} = scene
-      ) do
+      ) when button_id == id or button_id == :btn do
     :ok = release_input(scene)
     :ok = send_parent_event(scene, {:click, id})
     :ok = send_parent_event(scene, {:btn_released, id})
@@ -383,7 +395,9 @@ defmodule Scenic.Component.Button do
   end
 
   # ignore other input
-  def handle_input(_input, _id, scene) do
+  def handle_input(input, id, scene) do
+    require Logger
+    Logger.info("🔘 Button handle_input catch-all: #{inspect(input)}, id: #{inspect(id)}")
     {:noreply, scene}
   end
 

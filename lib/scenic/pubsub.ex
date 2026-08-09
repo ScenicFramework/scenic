@@ -450,8 +450,13 @@ defmodule Scenic.PubSub do
     # unsubscribe everything this pid was listening to
     state = do_unsubscribe(pid, :all, state)
 
-    # if this pid was registered as a data source, unregister it
-    :ets.match(@table, {{:registration, :"$1"}, :_, :_, pid})
+    # if this pid was registered as a data source, unregister it.
+    # Registration entries are 3-tuples `{key, opts, pid}` (see do_register/4
+    # at line 515 and list/0 at line 257). The match shape must match —
+    # an earlier 4-tuple pattern here silently failed to clean up dead
+    # registrations, locking out the supervisor-restarted process from
+    # ever re-registering and silently dropping its publishes.
+    :ets.match(@table, {{:registration, :"$1"}, :_, pid})
     |> Enum.each(fn [id] -> do_unregister(id, pid, state) end)
 
     {:noreply, state}

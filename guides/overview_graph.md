@@ -87,6 +87,27 @@ This time, we've assigned ids to both of the text primitives. This makes it easy
 
 Notice that the graph is modified multiple times in the pipeline.
 
+## IDs Enable Testing and Automation
+
+Beyond modification, IDs serve another critical purpose: they enable automated testing and AI-driven interaction with your application.
+
+When you assign an ID to a primitive, Scenic automatically registers it in a semantic element registry. This lets you find and interact with elements by ID rather than hardcoded coordinates:
+
+```elixir
+# In your graph
+@graph Graph.build()
+  |> rectangle({100, 40}, id: :save_button, translate: {200, 100})
+  |> text("Click Me", id: :button_label, translate: {210, 115})
+
+# In your tests or automation scripts
+{:ok, viewport} = Scenic.ViewPort.info(:main_viewport)
+{:ok, coords} = Scenic.ViewPort.Semantic.click_element(viewport, :save_button)
+#=> {:ok, {250.0, 120.0}}  # Automatically calculated center!
+```
+
+This is similar to how Playwright and Puppeteer work with web browsers - you can click elements by ID without knowing where they are on screen. Layout changes don't break your tests.
+
+[Read more about testing and automation here.](testing_and_automation.html)
 
 ## What to read next?
 

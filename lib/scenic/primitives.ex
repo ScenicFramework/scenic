@@ -1480,6 +1480,28 @@ defmodule Scenic.Primitives do
 
   def update_opts(p, opts), do: Primitive.merge_opts(p, opts)
 
+  # --------------------------------------------------------
+  @doc """
+  Add a semantic overlay component to a graph.
+  
+  The semantic overlay displays real-time information about semantic
+  annotations in your GUI, useful for development and debugging.
+  
+  ## Examples
+  
+      @graph Graph.build()
+        |> semantic_overlay(viewport: viewport)
+        
+      # With options
+      @graph Graph.build()  
+        |> semantic_overlay(
+          viewport: viewport,
+          enabled: true,
+          translate: {500, 10}
+        )
+  """
+  defdelegate semantic_overlay(graph, opts \\ []), to: Scenic.Primitives.SemanticOverlay
+
   # ============================================================================
   # generic workhorse versions
 
