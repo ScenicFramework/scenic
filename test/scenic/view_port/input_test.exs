@@ -336,6 +336,22 @@ defmodule Scenic.ViewPort.InputTest do
   # ----------------
   # specific input types
 
+  test "cursor_button capture delivers when no scene transform is available", %{vp: vp} do
+    # The test process deliberately is not a scene in the viewport graph, so
+    # its local transform cannot be resolved. Capture still promises delivery;
+    # drag owners rely on receiving button-up to release their capture.
+    :ok = Input.capture(vp, :cursor_button)
+    assert Input.fetch_captures(vp) ~> {:ok, sorted_list([:cursor_button])}
+
+    input = {:cursor_button, {:button_left, 0, [], {310, 420}}}
+    assert Input.send(vp, input) == :ok
+
+    assert_receive(
+      {:_input, {:cursor_button, {:button_left, 0, [], {310, 420}}}, ^input, nil},
+      100
+    )
+  end
+
   test "cursor_scroll request works", %{vp: vp} do
     assert Input.fetch_captures!(vp) ~> {:ok, sorted_list([])}
     assert Input.fetch_requests(vp) ~> {:ok, sorted_list([])}
