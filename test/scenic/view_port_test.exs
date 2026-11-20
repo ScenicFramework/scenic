@@ -17,6 +17,8 @@ defmodule Scenic.ViewPortTest do
 
   @root_id ViewPort.root_id()
   @main_id ViewPort.main_id()
+  @put_scripts ViewPort.msg_put_scripts()
+  @del_scripts ViewPort.msg_del_scripts()
 
   @simple_graph_red Scenic.Graph.build()
                     |> Scenic.Primitives.rect({200, 100}, fill: :red)
@@ -213,6 +215,27 @@ defmodule Scenic.ViewPortTest do
 
   test "del_script does nothing if script is not there", %{vp: vp} do
     :ok = ViewPort.del_script(vp, "unknown_name")
+  end
+
+  test "scripts owned by a process that goes down are deleted from the drivers", %{vp: vp} do
+    # stand in for a driver so the viewport's driver messages come here
+    GenServer.cast(vp.pid, {:register_driver, self()})
+    assert_receive({@put_scripts, _})
+
+    test_pid = self()
+
+    owner =
+      spawn(fn ->
+        {:ok, "owned"} = ViewPort.put_script(vp, "owned", [1, 2, 3], owner: self())
+        send(test_pid, :script_put)
+        Process.sleep(:infinity)
+      end)
+
+    assert_receive(:script_put)
+    Process.exit(owner, :kill)
+
+    assert_receive({@del_scripts, ["owned"]}, 200)
+    assert ViewPort.get_script(vp, "owned") == {:error, :not_found}
   end
 
   test "all_script_ids gets a list of script ids", %{vp: vp} do

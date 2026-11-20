@@ -662,7 +662,13 @@ defmodule Scenic.ViewPort do
           monitors: monitors
         } = old_state
       ) do
-    # cleanup scripts & names tables
+    # cleanup scripts & names tables. Tell the drivers too, the same as
+    # del_script does, or they keep the dead scripts until the next reset
+    case :ets.match(script_table, {:"$1", :_, pid}) do
+      [] -> :ok
+      names -> cast_drivers(old_state, {@del_scripts, List.flatten(names)})
+    end
+
     :ets.match_delete(script_table, {:_, :_, pid})
 
     # clean up any input requested by the pid
