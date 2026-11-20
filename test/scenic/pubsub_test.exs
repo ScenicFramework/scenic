@@ -111,4 +111,25 @@ defmodule Scenic.PubSubTest do
       PubSub.get!(:abc)
     end
   end
+
+  test "a data source that exits is unregistered and its id can be registered again" do
+    :ok = PubSub.subscribe(:abc)
+    test_pid = self()
+
+    source =
+      spawn(fn ->
+        {:ok, :abc} = PubSub.register(:abc)
+        send(test_pid, :registered)
+        Process.sleep(:infinity)
+      end)
+
+    assert_receive(:registered)
+    assert [{:abc, _, ^source}] = PubSub.list()
+
+    Process.exit(source, :kill)
+
+    assert_receive({@unregistered, :abc})
+    assert PubSub.list() == []
+    assert {:ok, :abc} = PubSub.register(:abc)
+  end
 end
