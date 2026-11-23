@@ -33,6 +33,37 @@ defmodule Scenic.ViewPort.InputTest do
     end
   end
 
+  defmodule TestScissorComponent do
+    use Scenic.Component
+
+    @impl Scenic.Component
+    def validate(pid) when is_pid(pid), do: {:ok, pid}
+
+    @impl Scenic.Scene
+    def init(scene, pid, _opts) do
+      graph =
+        Scenic.Graph.build()
+        |> Scenic.Primitives.rect({80, 80},
+          id: :child_rect,
+          input: [:cursor_button, :cursor_pos, :cursor_scroll]
+        )
+
+      scene =
+        scene
+        |> assign(:pid, pid)
+        |> push_graph(graph)
+
+      Process.send(pid, {:scissor_child_up, scene}, [])
+      {:ok, scene}
+    end
+
+    @impl Scenic.Scene
+    def handle_input(input, id, %{assigns: %{pid: pid}} = scene) do
+      send(pid, {:child_input, input, id})
+      {:noreply, scene}
+    end
+  end
+
   setup do
     # needed to give time for the pid and vp to close
     on_exit(fn -> Process.sleep(1) end)
@@ -158,6 +189,176 @@ defmodule Scenic.ViewPort.InputTest do
 
     Scenic.Scene.push_graph(scene, graph)
     assert_receive({:_request_input_, []}, 100)
+  end
+
+  test "positional hits and inputs respect both group and root scissors", %{
+    vp: vp,
+    scene: scene
+  } do
+    GenServer.cast(vp.pid, {:register_driver, self()})
+    assert Input.fetch_requests!(vp) ~> {:ok, sorted_list([])}
+
+    graph =
+      Scenic.Graph.build(scissor: {40, 40})
+      |> Scenic.Primitives.group(
+        fn graph ->
+          Scenic.Primitives.rect(graph, {80, 80},
+            id: :test,
+            input: [:cursor_button, :cursor_pos, :cursor_scroll]
+          )
+        end,
+        scissor: {20, 60},
+        translate: {10, 0}
+      )
+
+    Scenic.Scene.push_graph(scene, graph)
+
+    # input types inside scissored groups are still registered with drivers
+    assert_receive(
+      {:_request_input_, [:cursor_button, :cursor_pos, :cursor_scroll]},
+      100
+    )
+
+    # point inside both root scissor {40, 40} and translated group scissor {10..30, 0..60}
+    assert {:ok, _, :test} = ViewPort.find_point(vp, {15, 10})
+
+    for input <- [
+          {:cursor_button, {:button_left, 1, [], {15.0, 10.0}}},
+          {:cursor_pos, {15.0, 10.0}},
+          {:cursor_scroll, {{1.0, 2.0}, {15.0, 10.0}}}
+        ] do
+      assert :ok = Input.send(vp, input)
+      assert_receive({:_input, ^input, ^input, :test}, 100)
+    end
+
+    # clipped by group scissor (x = 35 is outside x in [10, 30])
+    assert {:error, :not_found} = ViewPort.find_point(vp, {35, 10})
+
+    # clipped by root scissor (y = 50 is outside y in [0, 40])
+    assert {:error, :not_found} = ViewPort.find_point(vp, {15, 50})
+
+    for clipped_point <- [{35.0, 10.0}, {15.0, 50.0}],
+        input <- [
+          {:cursor_button, {:button_left, 1, [], clipped_point}},
+          {:cursor_pos, clipped_point},
+          {:cursor_scroll, {{1.0, 2.0}, clipped_point}}
+        ] do
+      assert :ok = Input.send(vp, input)
+      refute_receive({:_input, _, _, :test}, 20)
+    end
+  end
+
+  test "scissored leaf primitives clip hits to their scissor bounds", %{vp: vp, scene: scene} do
+    graph =
+      Scenic.Graph.build()
+      |> Scenic.Primitives.rect({100, 100},
+        id: :leaf,
+        input: :cursor_button,
+        scissor: {30, 20},
+        translate: {10, 15}
+      )
+
+    Scenic.Scene.push_graph(scene, graph)
+
+    assert {:ok, _, :leaf} = ViewPort.find_point(vp, {25, 25})
+    assert {:error, :not_found} = ViewPort.find_point(vp, {50, 25})
+    assert {:error, :not_found} = ViewPort.find_point(vp, {25, 45})
+
+    inside = {:cursor_button, {:button_left, 1, [], {25.0, 25.0}}}
+    assert :ok = Input.send(vp, inside)
+    assert_receive({:_input, ^inside, ^inside, :leaf}, 100)
+
+    outside = {:cursor_button, {:button_left, 1, [], {50.0, 25.0}}}
+    assert :ok = Input.send(vp, outside)
+    refute_receive({:_input, _, _, :leaf}, 20)
+  end
+
+  test "clipped scissored group falls through to underlying sibling and intersects nested scissors",
+       %{vp: vp, scene: scene} do
+    graph =
+      Scenic.Graph.build()
+      |> Scenic.Primitives.rect({100, 100}, id: :under, input: :cursor_button)
+      |> Scenic.Primitives.group(
+        fn graph ->
+          Scenic.Primitives.group(
+            graph,
+            fn inner ->
+              Scenic.Primitives.rect(inner, {80, 80}, id: :over, input: :cursor_button)
+            end,
+            scissor: {30, 30},
+            translate: {10, 10}
+          )
+        end,
+        scissor: {30, 30},
+        translate: {10, 10}
+      )
+
+    Scenic.Scene.push_graph(scene, graph)
+
+    # outer scissor: [10..40, 10..40], inner scissor: [20..50, 20..50]
+    # intersection is [20..40, 20..40]
+    assert {:ok, _, :over} = ViewPort.find_point(vp, {30, 30})
+    # inside outer scissor but outside inner scissor -> falls through to :under
+    assert {:ok, _, :under} = ViewPort.find_point(vp, {15, 15})
+    # inside inner scissor but outside outer scissor -> falls through to :under
+    assert {:ok, _, :under} = ViewPort.find_point(vp, {45, 45})
+
+    clipped = {:cursor_button, {:button_left, 1, [], {45.0, 45.0}}}
+    assert :ok = Input.send(vp, clipped)
+    assert_receive({:_input, ^clipped, ^clipped, :under}, 100)
+  end
+
+  test "components inside scissored groups and scissored components resolve transforms and clip hits",
+       %{vp: vp, scene: scene} do
+    graph =
+      Scenic.Graph.build()
+      |> Scenic.Primitives.group(
+        fn graph ->
+          TestScissorComponent.add_to_graph(graph, self(),
+            id: :child_comp,
+            scissor: {30, 60},
+            translate: {10, 10}
+          )
+        end,
+        scissor: {50, 30},
+        translate: {20, 20}
+      )
+
+    Scenic.Scene.push_graph(scene, graph)
+
+    child_scene =
+      receive do
+        {:scissor_child_up, child_scene} -> child_scene
+      after
+        200 -> flunk("expected TestScissorComponent to initialize")
+      end
+
+    :_pong_ = GenServer.call(vp.pid, :_ping_)
+
+    # Scene.fetch_transform still resolves the component inside the scissored group
+    assert {:ok, tx} = Scenic.Scene.fetch_transform(child_scene)
+    assert tx == Scenic.Math.Matrix.build_translation({30, 30})
+
+    # parent scissor: [20..70, 20..50], component scissor: [30..60, 30..90]
+    # intersection: [30..60, 30..50]
+    child_pid = child_scene.pid
+    assert {:ok, ^child_pid, :child_rect} = ViewPort.find_point(vp, {40, 40})
+    # outside component scissor (x = 65 > 60), inside parent scissor
+    assert {:error, :not_found} = ViewPort.find_point(vp, {65, 40})
+    # outside parent scissor (y = 60 > 50), inside component scissor
+    assert {:error, :not_found} = ViewPort.find_point(vp, {40, 60})
+
+    # inside both scissors -> delivered with local coordinates ({40 - 30, 40 - 30})
+    assert :ok = Input.send(vp, {:cursor_button, {:button_left, 1, [], {40.0, 40.0}}})
+
+    assert_receive(
+      {:child_input, {:cursor_button, {:button_left, 1, [], {10.0, 10.0}}}, :child_rect},
+      100
+    )
+
+    # outside parent scissor -> clipped
+    assert :ok = Input.send(vp, {:cursor_button, {:button_left, 1, [], {40.0, 60.0}}})
+    refute_receive({:child_input, _, _}, 20)
   end
 
   test ":cursor_button only the input listed in a input style is requested", %{

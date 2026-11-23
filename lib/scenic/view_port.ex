@@ -795,7 +795,7 @@ defmodule Scenic.ViewPort do
 
     # scan the incoming input list and extract any scene transforms
     txs =
-      Enum.reduce(input, txs, fn
+      reduce_input(input, txs, fn
         {Scenic.Primitive.Component, script_id, local_tx, _pid, _uid, _local_id}, acc ->
           Map.put(acc, script_id, {local_tx, name})
 
@@ -1648,7 +1648,7 @@ defmodule Scenic.ViewPort do
   # the output is already a reversed list.
   # i.e. the last thing draw, is the first thing tested
   @spec compile_input(graph :: Graph.t()) ::
-          {:ok, {binary, types :: [ViewPort.Input.positional()]}}
+          {:ok, {list(), types :: [ViewPort.Input.positional()]}}
   defp compile_input(graph)
 
   defp compile_input(%Graph{primitives: primitives}) do
@@ -1656,13 +1656,21 @@ defmodule Scenic.ViewPort do
 
     # compile the requested input types
     types =
-      Enum.reduce(input, [], fn {_mod, _name, _tx, _pid, types, _id}, acc ->
+      reduce_input(input, [], fn {_mod, _name, _tx, _pid, types, _id}, acc ->
         [types | acc]
       end)
       |> List.flatten()
       |> Enum.uniq()
 
     {:ok, {input, types}}
+  end
+
+  # walk an input list, recursing into nested :scissor regions
+  defp reduce_input(input, acc, fun) do
+    Enum.reduce(input, acc, fn
+      {:scissor, _size, _tx, sub_list}, acc -> reduce_input(sub_list, acc, fun)
+      entry, acc -> fun.(entry, acc)
+    end)
   end
 
   defp comp_input_prim(input, uid, primitive, primitives, tx)
@@ -1672,6 +1680,27 @@ defmodule Scenic.ViewPort do
 
   # skip script primitives - no input handlers there
   defp comp_input_prim(input, _uid, %Primitive{module: Primitive.Script}, _, _tx), do: input
+
+  # wrap any scissored primitive (group, component, or leaf) so hit-testing
+  # clips nested entries to the scissor rect; omit empty scissor regions
+  defp comp_input_prim(
+         input,
+         uid,
+         %Primitive{styles: %{scissor: {w, h}}, transforms: txs} = prim,
+         primitives,
+         tx
+       ) do
+    unscissored = %{prim | styles: Map.delete(prim.styles, :scissor)}
+
+    case comp_input_prim([], uid, unscissored, primitives, tx) do
+      [] ->
+        input
+
+      sub_list ->
+        local_tx = local_tx(txs, tx)
+        [{:scissor, {w, h}, local_tx, sub_list} | input]
+    end
+  end
 
   # it is a group. Calc the local transform if there one, but doesn't go into the 
   # list as a component itself...
@@ -1772,6 +1801,36 @@ defmodule Scenic.ViewPort do
 
   defp do_find_hit(input_list, input_type, global_point, lists, name, parent_tx)
   defp do_find_hit([], _, _, _, _, _), do: :not_found
+
+  # scissor regions clip nested input entries to their local bounds
+  defp do_find_hit(
+         [{:scissor, {w, h}, scissor_tx, sub_list} | tail],
+         input_type,
+         global_point,
+         lists,
+         name,
+         parent_tx
+       ) do
+    # calculate the inverse matrix of parent_tx x scissor_tx
+    invert_tx =
+      parent_tx
+      |> Math.Matrix.mul(scissor_tx)
+      |> Math.Matrix.invert()
+
+    # project the global point into the scissor's local coordinate space
+    local_point = Math.Vector2.project(global_point, invert_tx)
+
+    # only search nested entries when the point falls inside the scissor rect;
+    # otherwise skip the branch and continue with the remaining siblings
+    with true <- Primitive.Rectangle.contains_point?({w, h}, local_point),
+         {:ok, _, _, _, _} = hit <-
+           do_find_hit(sub_list, input_type, global_point, lists, name, parent_tx) do
+      hit
+    else
+      _ ->
+        do_find_hit(tail, input_type, global_point, lists, name, parent_tx)
+    end
+  end
 
   # components recurse
   defp do_find_hit(
