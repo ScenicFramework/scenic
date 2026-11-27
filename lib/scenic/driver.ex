@@ -311,11 +311,51 @@ defmodule Scenic.Driver do
               driver :: Driver.t()
             ) :: {:ok, Driver.t()}
 
+  @typedoc """
+  An encoding for the bytes in a screenshot.
+
+  * `:rgba` is 32-bit `:rgba`
+  * `:rgb` is 24-bit `:rgb`
+  """
+  @type screenshot_encoding_t :: :rgba | :rgb
+
+  @typedoc """
+  A screenshot, a tuple consisting of
+
+  `{width, height, encoding, <bytes>}`
+
+  where
+
+  * `width` is a positive (>0) integer
+  * `height` is a positive (>0) integer
+  * `encoding` is a `screenshot_encoding_t`
+  * `bytes` is a bitstring frame buffer of size `width * height * <size of encoding>`
+
+  `size_of_encoding` can be 3 (for `rgb`) or 4 (for `rgba`).
+  """
+  @type screenshot_t :: {
+          pos_integer(),
+          pos_integer(),
+          screenshot_encoding_t,
+          bitstring()
+        }
+
+  @doc """
+  Called to get a screenshot of the current backbuffer.
+
+  This is a synchronous call in order to support remote/web drivers.
+
+  This callback is optional.
+  """
+  @callback take_screenshot(driver :: Driver.t()) ::
+              {:ok, :not_supported, Driver.t()} | {:ok, screenshot_t, Driver.t()}
+
   @optional_callbacks reset_scene: 1,
                       request_input: 2,
                       update_scene: 2,
                       del_scripts: 2,
-                      clear_color: 2
+                      clear_color: 2,
+                      take_screenshot: 1
 
   # ===========================================================================
   defmodule Error do
